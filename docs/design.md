@@ -11,7 +11,7 @@
 
 ## Architecture
 
-`cmd/prmap` constructs one application service used directly by Cobra commands and by thin ConnectRPC handlers. The service owns validation and derived state. The SQLite repository owns persistence and transactions. A GitHub provider interface isolates network synchronization and makes fixtures deterministic.
+`cmd/prx` constructs one application service used directly by Cobra commands and by thin ConnectRPC handlers. The service owns validation and derived state. The SQLite repository owns persistence and transactions. A GitHub provider interface isolates network synchronization and makes fixtures deterministic.
 
 The browser uses generated Protocol Buffer descriptors through ConnectRPC. It never opens SQLite or invokes the CLI. The production build is emitted into `internal/webui/dist` and embedded in the Go binary.
 
@@ -36,7 +36,7 @@ Dependencies are directed from blocker to blocked. Edge insertion loads the feat
 
 ## Storage and operational boundaries
 
-SQLite uses WAL, foreign keys, a 5-second busy timeout, and explicit transactions. Migrations are embedded and each version is committed atomically. The default database lives in the user data directory and is replaceable with `--db` or `PRMAP_DB`.
+SQLite uses WAL, foreign keys, a 5-second busy timeout, and explicit transactions. Migrations are embedded and each version is committed atomically. The default database lives in the user data directory and is replaceable with `--db` or `PRX_DB`.
 
 The CLI calls a `Service` interface. Its local implementation is used now; a future remote implementation can forward the same operations over Connect without changing command parsing.
 

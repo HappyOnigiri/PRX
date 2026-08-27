@@ -16,18 +16,18 @@ PRX is a local-first dependency control room for initiatives that span many GitH
 ```sh
 pnpm install --frozen-lockfile
 make build
-./bin/prmap seed --github-fixture demo
-./bin/prmap serve
+./bin/prx seed --github-fixture demo
+./bin/prx serve
 ```
 
-Open <http://127.0.0.1:7331>. The production web build is embedded in `bin/prmap`; no separate frontend process is needed.
+Open <http://127.0.0.1:7331>. The production web build is embedded in `bin/prx`; no separate frontend process is needed.
 
-The default database is stored under the operating system's user configuration directory. Use `--db /path/to/prmap.db` or `PRMAP_DB` to select another database. The server binds only to `127.0.0.1:7331` unless `--addr` is explicitly supplied.
+The default database is stored under the operating system's user configuration directory. Use `--db /path/to/prx.db` or `PRX_DB` to select another database. The server binds only to `127.0.0.1:7331` unless `--addr` is explicitly supplied.
 
 For frontend development, run the API and Vite separately:
 
 ```sh
-go run ./cmd/prmap --github-fixture demo serve
+go run ./cmd/prx --github-fixture demo serve
 pnpm --dir web dev
 ```
 
@@ -36,25 +36,25 @@ pnpm --dir web dev
 Every mutation is non-interactive. Add `--json` for a versioned envelope whose stdout contains JSON only; warnings and server logs go to stderr.
 
 ```sh
-prmap feature create --slug checkout --title "Checkout rollout" --json
-prmap task create --feature checkout --title "Add payment intent API" --assignee Mika --json
-prmap dependency add BLOCKER_TASK_ID BLOCKED_TASK_ID --json
-prmap pr attach --task TASK_ID --url https://github.com/acme/payments/pull/42 --json
-prmap document add --task TASK_ID --kind markdown_path --value docs/checkout.md --json
-prmap sync --feature checkout --json
-prmap graph checkout --json
-prmap ready --json
-prmap reviews --json
-prmap conflicts --json
-prmap stale --json
-prmap snapshot --json
-prmap validate --json
-prmap serve
+prx feature create --slug checkout --title "Checkout rollout" --json
+prx task create --feature checkout --title "Add payment intent API" --assignee Mika --json
+prx dependency add BLOCKER_TASK_ID BLOCKED_TASK_ID --json
+prx pr attach --task TASK_ID --url https://github.com/acme/payments/pull/42 --json
+prx document add --task TASK_ID --kind markdown_path --value docs/checkout.md --json
+prx sync --feature checkout --json
+prx graph checkout --json
+prx ready --json
+prx reviews --json
+prx conflicts --json
+prx stale --json
+prx snapshot --json
+prx validate --json
+prx serve
 ```
 
 Feature and Task deletion refuses to remove referenced data unless `--cascade` is supplied. Adding a dependency performs same-feature validation and cycle detection in the write transaction; cycle errors include the discovered path.
 
-`prmap seed --github-fixture demo --features 100 --tasks 50` creates deterministic performance data without network access. A fixture JSON file can map canonical PR URLs to GitHub states:
+`prx seed --github-fixture demo --features 100 --tasks 50` creates deterministic performance data without network access. A fixture JSON file can map canonical PR URLs to GitHub states:
 
 ```json
 {

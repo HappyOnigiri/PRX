@@ -32,7 +32,7 @@ func DefaultPath() (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return filepath.Join(dir, "prmap", "prmap.db"), nil
+	return filepath.Join(dir, "prx", "prx.db"), nil
 }
 
 func Open(ctx context.Context, path string) (*Store, error) {

@@ -12,16 +12,16 @@ import {
   DeleteTaskRequestSchema,
   DetachPullRequestRequestSchema,
   GetSnapshotRequestSchema,
-  PRMapService,
+  PRXService,
   RemoveDependencyRequestSchema,
   SyncRequestSchema,
   UpdateFeatureRequestSchema,
   UpdateTaskRequestSchema,
   type Snapshot,
-} from "./gen/prmap/v1/prmap_pb";
+} from "./gen/prx/v1/prx_pb";
 
 const transport = createConnectTransport({ baseUrl: window.location.origin });
-export const client = createClient(PRMapService, transport);
+export const client = createClient(PRXService, transport);
 
 export async function getSnapshot(): Promise<Snapshot> {
   const response = await client.getSnapshot(create(GetSnapshotRequestSchema));

@@ -19,7 +19,7 @@ const snapshot = {
       reviewWaitingCount: 1,
       conflictCount: 1,
       mergedCount: 0,
-      $typeName: "prmap.v1.Feature",
+      $typeName: "prx.v1.Feature",
     },
   ],
   tasks: [],
@@ -40,13 +40,13 @@ const snapshot = {
       ready: true,
       displayState: "unlinked",
       blockedReason: "",
-      $typeName: "prmap.v1.Task",
+      $typeName: "prx.v1.Task",
     },
   ],
   reviewWaitingTasks: [{ id: "task-2" }],
   conflictTasks: [{ id: "task-3" }],
   staleTasks: [],
-  $typeName: "prmap.v1.Snapshot",
+  $typeName: "prx.v1.Snapshot",
 };
 
 vi.mock("../src/hooks", () => ({

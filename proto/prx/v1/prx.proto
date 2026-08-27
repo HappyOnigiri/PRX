@@ -1,8 +1,8 @@
 syntax = "proto3";
 
-package prmap.v1;
+package prx.v1;
 
-option go_package = "github.com/HappyOnigiri/PRX/gen/prmap/v1;prmapv1";
+option go_package = "github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1";
 
 message Feature {
   string id = 1;
@@ -114,7 +114,7 @@ message SyncResponse { int32 succeeded = 1; int32 failed = 2; }
 message ValidateRequest {}
 message ValidateResponse { bool valid = 1; repeated string errors = 2; }
 
-service PRMapService {
+service PRXService {
   rpc GetSnapshot(GetSnapshotRequest) returns (GetSnapshotResponse);
   rpc CreateFeature(CreateFeatureRequest) returns (CreateFeatureResponse);
   rpc UpdateFeature(UpdateFeatureRequest) returns (UpdateFeatureResponse);

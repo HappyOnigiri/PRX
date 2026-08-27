@@ -44,7 +44,7 @@ e2e: web-build
 
 build: web-build
 	mkdir -p bin
-	$(GO) build -trimpath -o bin/prmap ./cmd/prmap
+	$(GO) build -trimpath -o bin/prx ./cmd/prx
 
 ci: generated-check lint test test-race build e2e
 

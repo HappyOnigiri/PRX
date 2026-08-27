@@ -41,7 +41,7 @@ type envelope struct {
 func NewRoot(out, errOut io.Writer) *cobra.Command {
 	s := &state{out: out, errOut: errOut}
 	root := &cobra.Command{
-		Use: "prmap", Short: "Manage pull-request dependency roadmaps", SilenceErrors: true, SilenceUsage: true,
+		Use: "prx", Short: "Manage pull-request dependency roadmaps", SilenceErrors: true, SilenceUsage: true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			if cmd.Name() == "help" {
 				return nil
@@ -70,7 +70,7 @@ func NewRoot(out, errOut io.Writer) *cobra.Command {
 	}
 	root.SetOut(out)
 	root.SetErr(errOut)
-	root.PersistentFlags().StringVar(&s.dbPath, "db", os.Getenv("PRMAP_DB"), "SQLite database path (env: PRMAP_DB)")
+	root.PersistentFlags().StringVar(&s.dbPath, "db", os.Getenv("PRX_DB"), "SQLite database path (env: PRX_DB)")
 	root.PersistentFlags().BoolVar(&s.json, "json", false, "emit a stable JSON envelope")
 	root.PersistentFlags().StringVar(&s.fixture, "github-fixture", "", "GitHub fixture JSON path, or demo")
 	root.AddCommand(s.featureCommand(), s.taskCommand(), s.dependencyCommand(), s.pullRequestCommand(), s.documentCommand())

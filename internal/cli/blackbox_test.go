@@ -13,8 +13,8 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
-	prmapv1 "github.com/HappyOnigiri/PRX/gen/prmap/v1"
-	"github.com/HappyOnigiri/PRX/gen/prmap/v1/prmapv1connect"
+	prxv1 "github.com/HappyOnigiri/PRX/gen/prx/v1"
+	"github.com/HappyOnigiri/PRX/gen/prx/v1/prxv1connect"
 )
 
 type resultEnvelope struct {
@@ -28,8 +28,8 @@ type resultEnvelope struct {
 
 func buildCLI(t *testing.T) string {
 	t.Helper()
-	binary := filepath.Join(t.TempDir(), "prmap")
-	command := exec.CommandContext(context.Background(), "go", "build", "-o", binary, "../../cmd/prmap")
+	binary := filepath.Join(t.TempDir(), "prx")
+	command := exec.CommandContext(context.Background(), "go", "build", "-o", binary, "../../cmd/prx")
 	if output, err := command.CombinedOutput(); err != nil {
 		t.Fatalf("build CLI: %v\n%s", err, output)
 	}
@@ -135,8 +135,8 @@ func TestBlackBoxServerAndCLIShareDatabase(t *testing.T) {
 		_ = server.Wait()
 		t.Fatalf("CLI write failed: %+v", created)
 	}
-	rpcClient := prmapv1connect.NewPRMapServiceClient(http.DefaultClient, "http://"+address)
-	snapshot, err := rpcClient.GetSnapshot(context.Background(), connect.NewRequest(&prmapv1.GetSnapshotRequest{}))
+	rpcClient := prxv1connect.NewPRXServiceClient(http.DefaultClient, "http://"+address)
+	snapshot, err := rpcClient.GetSnapshot(context.Background(), connect.NewRequest(&prxv1.GetSnapshotRequest{}))
 	if err != nil {
 		t.Fatal(err)
 	}

@@ -36,7 +36,7 @@ func NewLiveProvider(ctx context.Context) (*LiveProvider, error) {
 		token = strings.TrimSpace(string(output))
 	}
 	client := gh.NewClient(oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})))
-	client.UserAgent = "prmap/0.1"
+	client.UserAgent = "prx/0.1"
 	return &LiveProvider{client: client}, nil
 }
 

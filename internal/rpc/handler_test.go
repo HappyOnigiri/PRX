@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
-	prmapv1 "github.com/HappyOnigiri/PRX/gen/prmap/v1"
-	"github.com/HappyOnigiri/PRX/gen/prmap/v1/prmapv1connect"
+	prxv1 "github.com/HappyOnigiri/PRX/gen/prx/v1"
+	"github.com/HappyOnigiri/PRX/gen/prx/v1/prxv1connect"
 	"github.com/HappyOnigiri/PRX/internal/app"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/rpc"
@@ -30,27 +30,27 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	mux.Handle(path, handler)
 	server := httptest.NewServer(mux)
 	defer server.Close()
-	client := prmapv1connect.NewPRMapServiceClient(server.Client(), server.URL)
-	feature, err := client.CreateFeature(ctx, connect.NewRequest(&prmapv1.CreateFeatureRequest{Slug: "rpc-feature", Title: "RPC feature"}))
+	client := prxv1connect.NewPRXServiceClient(server.Client(), server.URL)
+	feature, err := client.CreateFeature(ctx, connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "rpc-feature", Title: "RPC feature"}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	a, err := client.CreateTask(ctx, connect.NewRequest(&prmapv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "A", Kind: "pr"}))
+	a, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "A", Kind: "pr"}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := client.CreateTask(ctx, connect.NewRequest(&prmapv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "B", Kind: "pr"}))
+	b, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "B", Kind: "pr"}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = client.AddDependency(ctx, connect.NewRequest(&prmapv1.AddDependencyRequest{BlockerTaskId: a.Msg.Task.Id, BlockedTaskId: b.Msg.Task.Id})); err != nil {
+	if _, err = client.AddDependency(ctx, connect.NewRequest(&prxv1.AddDependencyRequest{BlockerTaskId: a.Msg.Task.Id, BlockedTaskId: b.Msg.Task.Id})); err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.AddDependency(ctx, connect.NewRequest(&prmapv1.AddDependencyRequest{BlockerTaskId: b.Msg.Task.Id, BlockedTaskId: a.Msg.Task.Id}))
+	_, err = client.AddDependency(ctx, connect.NewRequest(&prxv1.AddDependencyRequest{BlockerTaskId: b.Msg.Task.Id, BlockedTaskId: a.Msg.Task.Id}))
 	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
 		t.Fatalf("cycle RPC code=%s err=%v", connect.CodeOf(err), err)
 	}
-	snapshot, err := client.GetSnapshot(ctx, connect.NewRequest(&prmapv1.GetSnapshotRequest{}))
+	snapshot, err := client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
 	if err != nil {
 		t.Fatal(err)
 	}

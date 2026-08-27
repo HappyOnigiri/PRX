@@ -2,9 +2,9 @@
 // versions:
 // 	protoc-gen-go v1.36.12
 // 	protoc        (unknown)
-// source: prmap/v1/prmap.proto
+// source: prx/v1/prx.proto
 
-package prmapv1
+package prxv1
 
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
@@ -42,7 +42,7 @@ type Feature struct {
 
 func (x *Feature) Reset() {
 	*x = Feature{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[0]
+	mi := &file_prx_v1_prx_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -54,7 +54,7 @@ func (x *Feature) String() string {
 func (*Feature) ProtoMessage() {}
 
 func (x *Feature) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[0]
+	mi := &file_prx_v1_prx_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -67,7 +67,7 @@ func (x *Feature) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Feature.ProtoReflect.Descriptor instead.
 func (*Feature) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{0}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{0}
 }
 
 func (x *Feature) GetId() string {
@@ -181,7 +181,7 @@ type Task struct {
 
 func (x *Task) Reset() {
 	*x = Task{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[1]
+	mi := &file_prx_v1_prx_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -193,7 +193,7 @@ func (x *Task) String() string {
 func (*Task) ProtoMessage() {}
 
 func (x *Task) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[1]
+	mi := &file_prx_v1_prx_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -206,7 +206,7 @@ func (x *Task) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Task.ProtoReflect.Descriptor instead.
 func (*Task) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{1}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{1}
 }
 
 func (x *Task) GetId() string {
@@ -304,7 +304,7 @@ type Dependency struct {
 
 func (x *Dependency) Reset() {
 	*x = Dependency{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[2]
+	mi := &file_prx_v1_prx_proto_msgTypes[2]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -316,7 +316,7 @@ func (x *Dependency) String() string {
 func (*Dependency) ProtoMessage() {}
 
 func (x *Dependency) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[2]
+	mi := &file_prx_v1_prx_proto_msgTypes[2]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -329,7 +329,7 @@ func (x *Dependency) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Dependency.ProtoReflect.Descriptor instead.
 func (*Dependency) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{2}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{2}
 }
 
 func (x *Dependency) GetBlockerTaskId() string {
@@ -378,7 +378,7 @@ type PullRequest struct {
 
 func (x *PullRequest) Reset() {
 	*x = PullRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[3]
+	mi := &file_prx_v1_prx_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -390,7 +390,7 @@ func (x *PullRequest) String() string {
 func (*PullRequest) ProtoMessage() {}
 
 func (x *PullRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[3]
+	mi := &file_prx_v1_prx_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -403,7 +403,7 @@ func (x *PullRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequest.ProtoReflect.Descriptor instead.
 func (*PullRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{3}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *PullRequest) GetTaskId() string {
@@ -540,7 +540,7 @@ type Document struct {
 
 func (x *Document) Reset() {
 	*x = Document{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[4]
+	mi := &file_prx_v1_prx_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -552,7 +552,7 @@ func (x *Document) String() string {
 func (*Document) ProtoMessage() {}
 
 func (x *Document) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[4]
+	mi := &file_prx_v1_prx_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -565,7 +565,7 @@ func (x *Document) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Document.ProtoReflect.Descriptor instead.
 func (*Document) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{4}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Document) GetId() string {
@@ -634,7 +634,7 @@ type Snapshot struct {
 
 func (x *Snapshot) Reset() {
 	*x = Snapshot{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[5]
+	mi := &file_prx_v1_prx_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -646,7 +646,7 @@ func (x *Snapshot) String() string {
 func (*Snapshot) ProtoMessage() {}
 
 func (x *Snapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[5]
+	mi := &file_prx_v1_prx_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -659,7 +659,7 @@ func (x *Snapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Snapshot.ProtoReflect.Descriptor instead.
 func (*Snapshot) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{5}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Snapshot) GetFeatures() []*Feature {
@@ -733,7 +733,7 @@ type GetSnapshotRequest struct {
 
 func (x *GetSnapshotRequest) Reset() {
 	*x = GetSnapshotRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[6]
+	mi := &file_prx_v1_prx_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -745,7 +745,7 @@ func (x *GetSnapshotRequest) String() string {
 func (*GetSnapshotRequest) ProtoMessage() {}
 
 func (x *GetSnapshotRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[6]
+	mi := &file_prx_v1_prx_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -758,7 +758,7 @@ func (x *GetSnapshotRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSnapshotRequest.ProtoReflect.Descriptor instead.
 func (*GetSnapshotRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{6}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{6}
 }
 
 type GetSnapshotResponse struct {
@@ -770,7 +770,7 @@ type GetSnapshotResponse struct {
 
 func (x *GetSnapshotResponse) Reset() {
 	*x = GetSnapshotResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[7]
+	mi := &file_prx_v1_prx_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -782,7 +782,7 @@ func (x *GetSnapshotResponse) String() string {
 func (*GetSnapshotResponse) ProtoMessage() {}
 
 func (x *GetSnapshotResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[7]
+	mi := &file_prx_v1_prx_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -795,7 +795,7 @@ func (x *GetSnapshotResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSnapshotResponse.ProtoReflect.Descriptor instead.
 func (*GetSnapshotResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{7}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *GetSnapshotResponse) GetSnapshot() *Snapshot {
@@ -816,7 +816,7 @@ type CreateFeatureRequest struct {
 
 func (x *CreateFeatureRequest) Reset() {
 	*x = CreateFeatureRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[8]
+	mi := &file_prx_v1_prx_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -828,7 +828,7 @@ func (x *CreateFeatureRequest) String() string {
 func (*CreateFeatureRequest) ProtoMessage() {}
 
 func (x *CreateFeatureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[8]
+	mi := &file_prx_v1_prx_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -841,7 +841,7 @@ func (x *CreateFeatureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateFeatureRequest.ProtoReflect.Descriptor instead.
 func (*CreateFeatureRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{8}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *CreateFeatureRequest) GetSlug() string {
@@ -874,7 +874,7 @@ type CreateFeatureResponse struct {
 
 func (x *CreateFeatureResponse) Reset() {
 	*x = CreateFeatureResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[9]
+	mi := &file_prx_v1_prx_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -886,7 +886,7 @@ func (x *CreateFeatureResponse) String() string {
 func (*CreateFeatureResponse) ProtoMessage() {}
 
 func (x *CreateFeatureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[9]
+	mi := &file_prx_v1_prx_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -899,7 +899,7 @@ func (x *CreateFeatureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateFeatureResponse.ProtoReflect.Descriptor instead.
 func (*CreateFeatureResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{9}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{9}
 }
 
 func (x *CreateFeatureResponse) GetFeature() *Feature {
@@ -923,7 +923,7 @@ type UpdateFeatureRequest struct {
 
 func (x *UpdateFeatureRequest) Reset() {
 	*x = UpdateFeatureRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[10]
+	mi := &file_prx_v1_prx_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -935,7 +935,7 @@ func (x *UpdateFeatureRequest) String() string {
 func (*UpdateFeatureRequest) ProtoMessage() {}
 
 func (x *UpdateFeatureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[10]
+	mi := &file_prx_v1_prx_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -948,7 +948,7 @@ func (x *UpdateFeatureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateFeatureRequest.ProtoReflect.Descriptor instead.
 func (*UpdateFeatureRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{10}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *UpdateFeatureRequest) GetId() string {
@@ -1002,7 +1002,7 @@ type UpdateFeatureResponse struct {
 
 func (x *UpdateFeatureResponse) Reset() {
 	*x = UpdateFeatureResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[11]
+	mi := &file_prx_v1_prx_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1014,7 +1014,7 @@ func (x *UpdateFeatureResponse) String() string {
 func (*UpdateFeatureResponse) ProtoMessage() {}
 
 func (x *UpdateFeatureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[11]
+	mi := &file_prx_v1_prx_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1027,7 +1027,7 @@ func (x *UpdateFeatureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateFeatureResponse.ProtoReflect.Descriptor instead.
 func (*UpdateFeatureResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{11}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *UpdateFeatureResponse) GetFeature() *Feature {
@@ -1047,7 +1047,7 @@ type DeleteFeatureRequest struct {
 
 func (x *DeleteFeatureRequest) Reset() {
 	*x = DeleteFeatureRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[12]
+	mi := &file_prx_v1_prx_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1059,7 +1059,7 @@ func (x *DeleteFeatureRequest) String() string {
 func (*DeleteFeatureRequest) ProtoMessage() {}
 
 func (x *DeleteFeatureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[12]
+	mi := &file_prx_v1_prx_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1072,7 +1072,7 @@ func (x *DeleteFeatureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFeatureRequest.ProtoReflect.Descriptor instead.
 func (*DeleteFeatureRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{12}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *DeleteFeatureRequest) GetId() string {
@@ -1097,7 +1097,7 @@ type DeleteFeatureResponse struct {
 
 func (x *DeleteFeatureResponse) Reset() {
 	*x = DeleteFeatureResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[13]
+	mi := &file_prx_v1_prx_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1109,7 +1109,7 @@ func (x *DeleteFeatureResponse) String() string {
 func (*DeleteFeatureResponse) ProtoMessage() {}
 
 func (x *DeleteFeatureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[13]
+	mi := &file_prx_v1_prx_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1122,7 +1122,7 @@ func (x *DeleteFeatureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFeatureResponse.ProtoReflect.Descriptor instead.
 func (*DeleteFeatureResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{13}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{13}
 }
 
 type CreateTaskRequest struct {
@@ -1138,7 +1138,7 @@ type CreateTaskRequest struct {
 
 func (x *CreateTaskRequest) Reset() {
 	*x = CreateTaskRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[14]
+	mi := &file_prx_v1_prx_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1150,7 +1150,7 @@ func (x *CreateTaskRequest) String() string {
 func (*CreateTaskRequest) ProtoMessage() {}
 
 func (x *CreateTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[14]
+	mi := &file_prx_v1_prx_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1163,7 +1163,7 @@ func (x *CreateTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTaskRequest.ProtoReflect.Descriptor instead.
 func (*CreateTaskRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{14}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{14}
 }
 
 func (x *CreateTaskRequest) GetFeatureId() string {
@@ -1210,7 +1210,7 @@ type CreateTaskResponse struct {
 
 func (x *CreateTaskResponse) Reset() {
 	*x = CreateTaskResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[15]
+	mi := &file_prx_v1_prx_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1222,7 +1222,7 @@ func (x *CreateTaskResponse) String() string {
 func (*CreateTaskResponse) ProtoMessage() {}
 
 func (x *CreateTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[15]
+	mi := &file_prx_v1_prx_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1235,7 +1235,7 @@ func (x *CreateTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTaskResponse.ProtoReflect.Descriptor instead.
 func (*CreateTaskResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{15}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *CreateTaskResponse) GetTask() *Task {
@@ -1258,7 +1258,7 @@ type UpdateTaskRequest struct {
 
 func (x *UpdateTaskRequest) Reset() {
 	*x = UpdateTaskRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[16]
+	mi := &file_prx_v1_prx_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1270,7 +1270,7 @@ func (x *UpdateTaskRequest) String() string {
 func (*UpdateTaskRequest) ProtoMessage() {}
 
 func (x *UpdateTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[16]
+	mi := &file_prx_v1_prx_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1283,7 +1283,7 @@ func (x *UpdateTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTaskRequest.ProtoReflect.Descriptor instead.
 func (*UpdateTaskRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{16}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *UpdateTaskRequest) GetId() string {
@@ -1330,7 +1330,7 @@ type UpdateTaskResponse struct {
 
 func (x *UpdateTaskResponse) Reset() {
 	*x = UpdateTaskResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[17]
+	mi := &file_prx_v1_prx_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1342,7 +1342,7 @@ func (x *UpdateTaskResponse) String() string {
 func (*UpdateTaskResponse) ProtoMessage() {}
 
 func (x *UpdateTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[17]
+	mi := &file_prx_v1_prx_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1355,7 +1355,7 @@ func (x *UpdateTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTaskResponse.ProtoReflect.Descriptor instead.
 func (*UpdateTaskResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{17}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *UpdateTaskResponse) GetTask() *Task {
@@ -1375,7 +1375,7 @@ type DeleteTaskRequest struct {
 
 func (x *DeleteTaskRequest) Reset() {
 	*x = DeleteTaskRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[18]
+	mi := &file_prx_v1_prx_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1387,7 +1387,7 @@ func (x *DeleteTaskRequest) String() string {
 func (*DeleteTaskRequest) ProtoMessage() {}
 
 func (x *DeleteTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[18]
+	mi := &file_prx_v1_prx_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1400,7 +1400,7 @@ func (x *DeleteTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTaskRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTaskRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{18}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *DeleteTaskRequest) GetId() string {
@@ -1425,7 +1425,7 @@ type DeleteTaskResponse struct {
 
 func (x *DeleteTaskResponse) Reset() {
 	*x = DeleteTaskResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[19]
+	mi := &file_prx_v1_prx_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1437,7 +1437,7 @@ func (x *DeleteTaskResponse) String() string {
 func (*DeleteTaskResponse) ProtoMessage() {}
 
 func (x *DeleteTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[19]
+	mi := &file_prx_v1_prx_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1450,7 +1450,7 @@ func (x *DeleteTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTaskResponse.ProtoReflect.Descriptor instead.
 func (*DeleteTaskResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{19}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{19}
 }
 
 type AddDependencyRequest struct {
@@ -1463,7 +1463,7 @@ type AddDependencyRequest struct {
 
 func (x *AddDependencyRequest) Reset() {
 	*x = AddDependencyRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[20]
+	mi := &file_prx_v1_prx_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1475,7 +1475,7 @@ func (x *AddDependencyRequest) String() string {
 func (*AddDependencyRequest) ProtoMessage() {}
 
 func (x *AddDependencyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[20]
+	mi := &file_prx_v1_prx_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1488,7 +1488,7 @@ func (x *AddDependencyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDependencyRequest.ProtoReflect.Descriptor instead.
 func (*AddDependencyRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{20}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *AddDependencyRequest) GetBlockerTaskId() string {
@@ -1514,7 +1514,7 @@ type AddDependencyResponse struct {
 
 func (x *AddDependencyResponse) Reset() {
 	*x = AddDependencyResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[21]
+	mi := &file_prx_v1_prx_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1526,7 +1526,7 @@ func (x *AddDependencyResponse) String() string {
 func (*AddDependencyResponse) ProtoMessage() {}
 
 func (x *AddDependencyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[21]
+	mi := &file_prx_v1_prx_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1539,7 +1539,7 @@ func (x *AddDependencyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDependencyResponse.ProtoReflect.Descriptor instead.
 func (*AddDependencyResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{21}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *AddDependencyResponse) GetDependency() *Dependency {
@@ -1559,7 +1559,7 @@ type RemoveDependencyRequest struct {
 
 func (x *RemoveDependencyRequest) Reset() {
 	*x = RemoveDependencyRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[22]
+	mi := &file_prx_v1_prx_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1571,7 +1571,7 @@ func (x *RemoveDependencyRequest) String() string {
 func (*RemoveDependencyRequest) ProtoMessage() {}
 
 func (x *RemoveDependencyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[22]
+	mi := &file_prx_v1_prx_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1584,7 +1584,7 @@ func (x *RemoveDependencyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveDependencyRequest.ProtoReflect.Descriptor instead.
 func (*RemoveDependencyRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{22}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *RemoveDependencyRequest) GetBlockerTaskId() string {
@@ -1609,7 +1609,7 @@ type RemoveDependencyResponse struct {
 
 func (x *RemoveDependencyResponse) Reset() {
 	*x = RemoveDependencyResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[23]
+	mi := &file_prx_v1_prx_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1621,7 +1621,7 @@ func (x *RemoveDependencyResponse) String() string {
 func (*RemoveDependencyResponse) ProtoMessage() {}
 
 func (x *RemoveDependencyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[23]
+	mi := &file_prx_v1_prx_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1634,7 +1634,7 @@ func (x *RemoveDependencyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveDependencyResponse.ProtoReflect.Descriptor instead.
 func (*RemoveDependencyResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{23}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{23}
 }
 
 type AttachPullRequestRequest struct {
@@ -1647,7 +1647,7 @@ type AttachPullRequestRequest struct {
 
 func (x *AttachPullRequestRequest) Reset() {
 	*x = AttachPullRequestRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[24]
+	mi := &file_prx_v1_prx_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1659,7 +1659,7 @@ func (x *AttachPullRequestRequest) String() string {
 func (*AttachPullRequestRequest) ProtoMessage() {}
 
 func (x *AttachPullRequestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[24]
+	mi := &file_prx_v1_prx_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1672,7 +1672,7 @@ func (x *AttachPullRequestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttachPullRequestRequest.ProtoReflect.Descriptor instead.
 func (*AttachPullRequestRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{24}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *AttachPullRequestRequest) GetTaskId() string {
@@ -1698,7 +1698,7 @@ type AttachPullRequestResponse struct {
 
 func (x *AttachPullRequestResponse) Reset() {
 	*x = AttachPullRequestResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[25]
+	mi := &file_prx_v1_prx_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1710,7 +1710,7 @@ func (x *AttachPullRequestResponse) String() string {
 func (*AttachPullRequestResponse) ProtoMessage() {}
 
 func (x *AttachPullRequestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[25]
+	mi := &file_prx_v1_prx_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1723,7 +1723,7 @@ func (x *AttachPullRequestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttachPullRequestResponse.ProtoReflect.Descriptor instead.
 func (*AttachPullRequestResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{25}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *AttachPullRequestResponse) GetPullRequest() *PullRequest {
@@ -1742,7 +1742,7 @@ type DetachPullRequestRequest struct {
 
 func (x *DetachPullRequestRequest) Reset() {
 	*x = DetachPullRequestRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[26]
+	mi := &file_prx_v1_prx_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1754,7 +1754,7 @@ func (x *DetachPullRequestRequest) String() string {
 func (*DetachPullRequestRequest) ProtoMessage() {}
 
 func (x *DetachPullRequestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[26]
+	mi := &file_prx_v1_prx_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1767,7 +1767,7 @@ func (x *DetachPullRequestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DetachPullRequestRequest.ProtoReflect.Descriptor instead.
 func (*DetachPullRequestRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{26}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *DetachPullRequestRequest) GetTaskId() string {
@@ -1785,7 +1785,7 @@ type DetachPullRequestResponse struct {
 
 func (x *DetachPullRequestResponse) Reset() {
 	*x = DetachPullRequestResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[27]
+	mi := &file_prx_v1_prx_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1797,7 +1797,7 @@ func (x *DetachPullRequestResponse) String() string {
 func (*DetachPullRequestResponse) ProtoMessage() {}
 
 func (x *DetachPullRequestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[27]
+	mi := &file_prx_v1_prx_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1810,7 +1810,7 @@ func (x *DetachPullRequestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DetachPullRequestResponse.ProtoReflect.Descriptor instead.
 func (*DetachPullRequestResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{27}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{27}
 }
 
 type AddDocumentRequest struct {
@@ -1826,7 +1826,7 @@ type AddDocumentRequest struct {
 
 func (x *AddDocumentRequest) Reset() {
 	*x = AddDocumentRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[28]
+	mi := &file_prx_v1_prx_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1838,7 +1838,7 @@ func (x *AddDocumentRequest) String() string {
 func (*AddDocumentRequest) ProtoMessage() {}
 
 func (x *AddDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[28]
+	mi := &file_prx_v1_prx_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1851,7 +1851,7 @@ func (x *AddDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDocumentRequest.ProtoReflect.Descriptor instead.
 func (*AddDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{28}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{28}
 }
 
 func (x *AddDocumentRequest) GetFeatureId() string {
@@ -1898,7 +1898,7 @@ type AddDocumentResponse struct {
 
 func (x *AddDocumentResponse) Reset() {
 	*x = AddDocumentResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[29]
+	mi := &file_prx_v1_prx_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1910,7 +1910,7 @@ func (x *AddDocumentResponse) String() string {
 func (*AddDocumentResponse) ProtoMessage() {}
 
 func (x *AddDocumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[29]
+	mi := &file_prx_v1_prx_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1923,7 +1923,7 @@ func (x *AddDocumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDocumentResponse.ProtoReflect.Descriptor instead.
 func (*AddDocumentResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{29}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *AddDocumentResponse) GetDocument() *Document {
@@ -1942,7 +1942,7 @@ type DeleteDocumentRequest struct {
 
 func (x *DeleteDocumentRequest) Reset() {
 	*x = DeleteDocumentRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[30]
+	mi := &file_prx_v1_prx_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1954,7 +1954,7 @@ func (x *DeleteDocumentRequest) String() string {
 func (*DeleteDocumentRequest) ProtoMessage() {}
 
 func (x *DeleteDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[30]
+	mi := &file_prx_v1_prx_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1967,7 +1967,7 @@ func (x *DeleteDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDocumentRequest.ProtoReflect.Descriptor instead.
 func (*DeleteDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{30}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *DeleteDocumentRequest) GetId() string {
@@ -1985,7 +1985,7 @@ type DeleteDocumentResponse struct {
 
 func (x *DeleteDocumentResponse) Reset() {
 	*x = DeleteDocumentResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[31]
+	mi := &file_prx_v1_prx_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1997,7 +1997,7 @@ func (x *DeleteDocumentResponse) String() string {
 func (*DeleteDocumentResponse) ProtoMessage() {}
 
 func (x *DeleteDocumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[31]
+	mi := &file_prx_v1_prx_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2010,7 +2010,7 @@ func (x *DeleteDocumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDocumentResponse.ProtoReflect.Descriptor instead.
 func (*DeleteDocumentResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{31}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{31}
 }
 
 type SyncRequest struct {
@@ -2023,7 +2023,7 @@ type SyncRequest struct {
 
 func (x *SyncRequest) Reset() {
 	*x = SyncRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[32]
+	mi := &file_prx_v1_prx_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2035,7 +2035,7 @@ func (x *SyncRequest) String() string {
 func (*SyncRequest) ProtoMessage() {}
 
 func (x *SyncRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[32]
+	mi := &file_prx_v1_prx_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2048,7 +2048,7 @@ func (x *SyncRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncRequest.ProtoReflect.Descriptor instead.
 func (*SyncRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{32}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{32}
 }
 
 func (x *SyncRequest) GetFeatureId() string {
@@ -2075,7 +2075,7 @@ type SyncResponse struct {
 
 func (x *SyncResponse) Reset() {
 	*x = SyncResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[33]
+	mi := &file_prx_v1_prx_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2087,7 +2087,7 @@ func (x *SyncResponse) String() string {
 func (*SyncResponse) ProtoMessage() {}
 
 func (x *SyncResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[33]
+	mi := &file_prx_v1_prx_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2100,7 +2100,7 @@ func (x *SyncResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncResponse.ProtoReflect.Descriptor instead.
 func (*SyncResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{33}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *SyncResponse) GetSucceeded() int32 {
@@ -2125,7 +2125,7 @@ type ValidateRequest struct {
 
 func (x *ValidateRequest) Reset() {
 	*x = ValidateRequest{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[34]
+	mi := &file_prx_v1_prx_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2137,7 +2137,7 @@ func (x *ValidateRequest) String() string {
 func (*ValidateRequest) ProtoMessage() {}
 
 func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[34]
+	mi := &file_prx_v1_prx_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2150,7 +2150,7 @@ func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateRequest.ProtoReflect.Descriptor instead.
 func (*ValidateRequest) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{34}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{34}
 }
 
 type ValidateResponse struct {
@@ -2163,7 +2163,7 @@ type ValidateResponse struct {
 
 func (x *ValidateResponse) Reset() {
 	*x = ValidateResponse{}
-	mi := &file_prmap_v1_prmap_proto_msgTypes[35]
+	mi := &file_prx_v1_prx_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2175,7 +2175,7 @@ func (x *ValidateResponse) String() string {
 func (*ValidateResponse) ProtoMessage() {}
 
 func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prmap_v1_prmap_proto_msgTypes[35]
+	mi := &file_prx_v1_prx_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2188,7 +2188,7 @@ func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateResponse.ProtoReflect.Descriptor instead.
 func (*ValidateResponse) Descriptor() ([]byte, []int) {
-	return file_prmap_v1_prmap_proto_rawDescGZIP(), []int{35}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *ValidateResponse) GetValid() bool {
@@ -2205,11 +2205,11 @@ func (x *ValidateResponse) GetErrors() []string {
 	return nil
 }
 
-var File_prmap_v1_prmap_proto protoreflect.FileDescriptor
+var File_prx_v1_prx_proto protoreflect.FileDescriptor
 
-const file_prmap_v1_prmap_proto_rawDesc = "" +
+const file_prx_v1_prx_proto_rawDesc = "" +
 	"\n" +
-	"\x14prmap/v1/prmap.proto\x12\bprmap.v1\"\x93\x03\n" +
+	"\x10prx/v1/prx.proto\x12\x06prx.v1\"\x93\x03\n" +
 	"\aFeature\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04slug\x18\x02 \x01(\tR\x04slug\x12\x14\n" +
@@ -2283,37 +2283,37 @@ const file_prmap_v1_prmap_proto_rawDesc = "" +
 	"\x05title\x18\x05 \x01(\tR\x05title\x12\x14\n" +
 	"\x05value\x18\x06 \x01(\tR\x05value\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\a \x01(\tR\tcreatedAt\"\xe2\x03\n" +
-	"\bSnapshot\x12-\n" +
-	"\bfeatures\x18\x01 \x03(\v2\x11.prmap.v1.FeatureR\bfeatures\x12$\n" +
-	"\x05tasks\x18\x02 \x03(\v2\x0e.prmap.v1.TaskR\x05tasks\x128\n" +
-	"\fdependencies\x18\x03 \x03(\v2\x14.prmap.v1.DependencyR\fdependencies\x12:\n" +
-	"\rpull_requests\x18\x04 \x03(\v2\x15.prmap.v1.PullRequestR\fpullRequests\x120\n" +
-	"\tdocuments\x18\x05 \x03(\v2\x12.prmap.v1.DocumentR\tdocuments\x12/\n" +
-	"\vready_tasks\x18\x06 \x03(\v2\x0e.prmap.v1.TaskR\n" +
-	"readyTasks\x12@\n" +
-	"\x14review_waiting_tasks\x18\a \x03(\v2\x0e.prmap.v1.TaskR\x12reviewWaitingTasks\x125\n" +
-	"\x0econflict_tasks\x18\b \x03(\v2\x0e.prmap.v1.TaskR\rconflictTasks\x12/\n" +
-	"\vstale_tasks\x18\t \x03(\v2\x0e.prmap.v1.TaskR\n" +
+	"created_at\x18\a \x01(\tR\tcreatedAt\"\xd0\x03\n" +
+	"\bSnapshot\x12+\n" +
+	"\bfeatures\x18\x01 \x03(\v2\x0f.prx.v1.FeatureR\bfeatures\x12\"\n" +
+	"\x05tasks\x18\x02 \x03(\v2\f.prx.v1.TaskR\x05tasks\x126\n" +
+	"\fdependencies\x18\x03 \x03(\v2\x12.prx.v1.DependencyR\fdependencies\x128\n" +
+	"\rpull_requests\x18\x04 \x03(\v2\x13.prx.v1.PullRequestR\fpullRequests\x12.\n" +
+	"\tdocuments\x18\x05 \x03(\v2\x10.prx.v1.DocumentR\tdocuments\x12-\n" +
+	"\vready_tasks\x18\x06 \x03(\v2\f.prx.v1.TaskR\n" +
+	"readyTasks\x12>\n" +
+	"\x14review_waiting_tasks\x18\a \x03(\v2\f.prx.v1.TaskR\x12reviewWaitingTasks\x123\n" +
+	"\x0econflict_tasks\x18\b \x03(\v2\f.prx.v1.TaskR\rconflictTasks\x12-\n" +
+	"\vstale_tasks\x18\t \x03(\v2\f.prx.v1.TaskR\n" +
 	"staleTasks\"\x14\n" +
-	"\x12GetSnapshotRequest\"E\n" +
-	"\x13GetSnapshotResponse\x12.\n" +
-	"\bsnapshot\x18\x01 \x01(\v2\x12.prmap.v1.SnapshotR\bsnapshot\"b\n" +
+	"\x12GetSnapshotRequest\"C\n" +
+	"\x13GetSnapshotResponse\x12,\n" +
+	"\bsnapshot\x18\x01 \x01(\v2\x10.prx.v1.SnapshotR\bsnapshot\"b\n" +
 	"\x14CreateFeatureRequest\x12\x12\n" +
 	"\x04slug\x18\x01 \x01(\tR\x04slug\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\"D\n" +
-	"\x15CreateFeatureResponse\x12+\n" +
-	"\afeature\x18\x01 \x01(\v2\x11.prmap.v1.FeatureR\afeature\"\xa6\x01\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\"B\n" +
+	"\x15CreateFeatureResponse\x12)\n" +
+	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"\xa6\x01\n" +
 	"\x14UpdateFeatureRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04slug\x18\x02 \x01(\tR\x04slug\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\x16\n" +
 	"\x06status\x18\x05 \x01(\tR\x06status\x12\x1a\n" +
-	"\barchived\x18\x06 \x01(\bR\barchived\"D\n" +
-	"\x15UpdateFeatureResponse\x12+\n" +
-	"\afeature\x18\x01 \x01(\v2\x11.prmap.v1.FeatureR\afeature\"@\n" +
+	"\barchived\x18\x06 \x01(\bR\barchived\"B\n" +
+	"\x15UpdateFeatureResponse\x12)\n" +
+	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"@\n" +
 	"\x14DeleteFeatureRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
 	"\acascade\x18\x02 \x01(\bR\acascade\"\x17\n" +
@@ -2324,27 +2324,27 @@ const file_prmap_v1_prmap_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x14\n" +
 	"\x05scope\x18\x03 \x01(\tR\x05scope\x12\x12\n" +
 	"\x04kind\x18\x04 \x01(\tR\x04kind\x12\x1a\n" +
-	"\bassignee\x18\x05 \x01(\tR\bassignee\"8\n" +
-	"\x12CreateTaskResponse\x12\"\n" +
-	"\x04task\x18\x01 \x01(\v2\x0e.prmap.v1.TaskR\x04task\"\x83\x01\n" +
+	"\bassignee\x18\x05 \x01(\tR\bassignee\"6\n" +
+	"\x12CreateTaskResponse\x12 \n" +
+	"\x04task\x18\x01 \x01(\v2\f.prx.v1.TaskR\x04task\"\x83\x01\n" +
 	"\x11UpdateTaskRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x14\n" +
 	"\x05scope\x18\x03 \x01(\tR\x05scope\x12\x16\n" +
 	"\x06status\x18\x04 \x01(\tR\x06status\x12\x1a\n" +
-	"\bassignee\x18\x05 \x01(\tR\bassignee\"8\n" +
-	"\x12UpdateTaskResponse\x12\"\n" +
-	"\x04task\x18\x01 \x01(\v2\x0e.prmap.v1.TaskR\x04task\"=\n" +
+	"\bassignee\x18\x05 \x01(\tR\bassignee\"6\n" +
+	"\x12UpdateTaskResponse\x12 \n" +
+	"\x04task\x18\x01 \x01(\v2\f.prx.v1.TaskR\x04task\"=\n" +
 	"\x11DeleteTaskRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
 	"\acascade\x18\x02 \x01(\bR\acascade\"\x14\n" +
 	"\x12DeleteTaskResponse\"f\n" +
 	"\x14AddDependencyRequest\x12&\n" +
 	"\x0fblocker_task_id\x18\x01 \x01(\tR\rblockerTaskId\x12&\n" +
-	"\x0fblocked_task_id\x18\x02 \x01(\tR\rblockedTaskId\"M\n" +
-	"\x15AddDependencyResponse\x124\n" +
+	"\x0fblocked_task_id\x18\x02 \x01(\tR\rblockedTaskId\"K\n" +
+	"\x15AddDependencyResponse\x122\n" +
 	"\n" +
-	"dependency\x18\x01 \x01(\v2\x14.prmap.v1.DependencyR\n" +
+	"dependency\x18\x01 \x01(\v2\x12.prx.v1.DependencyR\n" +
 	"dependency\"i\n" +
 	"\x17RemoveDependencyRequest\x12&\n" +
 	"\x0fblocker_task_id\x18\x01 \x01(\tR\rblockerTaskId\x12&\n" +
@@ -2352,9 +2352,9 @@ const file_prmap_v1_prmap_proto_rawDesc = "" +
 	"\x18RemoveDependencyResponse\"E\n" +
 	"\x18AttachPullRequestRequest\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x10\n" +
-	"\x03url\x18\x02 \x01(\tR\x03url\"U\n" +
-	"\x19AttachPullRequestResponse\x128\n" +
-	"\fpull_request\x18\x01 \x01(\v2\x15.prmap.v1.PullRequestR\vpullRequest\"3\n" +
+	"\x03url\x18\x02 \x01(\tR\x03url\"S\n" +
+	"\x19AttachPullRequestResponse\x126\n" +
+	"\fpull_request\x18\x01 \x01(\v2\x13.prx.v1.PullRequestR\vpullRequest\"3\n" +
 	"\x18DetachPullRequestRequest\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\"\x1b\n" +
 	"\x19DetachPullRequestResponse\"\x8c\x01\n" +
@@ -2364,9 +2364,9 @@ const file_prmap_v1_prmap_proto_rawDesc = "" +
 	"\atask_id\x18\x02 \x01(\tR\x06taskId\x12\x12\n" +
 	"\x04kind\x18\x03 \x01(\tR\x04kind\x12\x14\n" +
 	"\x05title\x18\x04 \x01(\tR\x05title\x12\x14\n" +
-	"\x05value\x18\x05 \x01(\tR\x05value\"E\n" +
-	"\x13AddDocumentResponse\x12.\n" +
-	"\bdocument\x18\x01 \x01(\v2\x12.prmap.v1.DocumentR\bdocument\"'\n" +
+	"\x05value\x18\x05 \x01(\tR\x05value\"C\n" +
+	"\x13AddDocumentResponse\x12,\n" +
+	"\bdocument\x18\x01 \x01(\v2\x10.prx.v1.DocumentR\bdocument\"'\n" +
 	"\x15DeleteDocumentRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x18\n" +
 	"\x16DeleteDocumentResponse\"E\n" +
@@ -2380,126 +2380,127 @@ const file_prmap_v1_prmap_proto_rawDesc = "" +
 	"\x0fValidateRequest\"@\n" +
 	"\x10ValidateResponse\x12\x14\n" +
 	"\x05valid\x18\x01 \x01(\bR\x05valid\x12\x16\n" +
-	"\x06errors\x18\x02 \x03(\tR\x06errors2\xaf\t\n" +
-	"\fPRMapService\x12J\n" +
-	"\vGetSnapshot\x12\x1c.prmap.v1.GetSnapshotRequest\x1a\x1d.prmap.v1.GetSnapshotResponse\x12P\n" +
-	"\rCreateFeature\x12\x1e.prmap.v1.CreateFeatureRequest\x1a\x1f.prmap.v1.CreateFeatureResponse\x12P\n" +
-	"\rUpdateFeature\x12\x1e.prmap.v1.UpdateFeatureRequest\x1a\x1f.prmap.v1.UpdateFeatureResponse\x12P\n" +
-	"\rDeleteFeature\x12\x1e.prmap.v1.DeleteFeatureRequest\x1a\x1f.prmap.v1.DeleteFeatureResponse\x12G\n" +
+	"\x06errors\x18\x02 \x03(\tR\x06errors2\xf1\b\n" +
 	"\n" +
-	"CreateTask\x12\x1b.prmap.v1.CreateTaskRequest\x1a\x1c.prmap.v1.CreateTaskResponse\x12G\n" +
+	"PRXService\x12F\n" +
+	"\vGetSnapshot\x12\x1a.prx.v1.GetSnapshotRequest\x1a\x1b.prx.v1.GetSnapshotResponse\x12L\n" +
+	"\rCreateFeature\x12\x1c.prx.v1.CreateFeatureRequest\x1a\x1d.prx.v1.CreateFeatureResponse\x12L\n" +
+	"\rUpdateFeature\x12\x1c.prx.v1.UpdateFeatureRequest\x1a\x1d.prx.v1.UpdateFeatureResponse\x12L\n" +
+	"\rDeleteFeature\x12\x1c.prx.v1.DeleteFeatureRequest\x1a\x1d.prx.v1.DeleteFeatureResponse\x12C\n" +
 	"\n" +
-	"UpdateTask\x12\x1b.prmap.v1.UpdateTaskRequest\x1a\x1c.prmap.v1.UpdateTaskResponse\x12G\n" +
+	"CreateTask\x12\x19.prx.v1.CreateTaskRequest\x1a\x1a.prx.v1.CreateTaskResponse\x12C\n" +
 	"\n" +
-	"DeleteTask\x12\x1b.prmap.v1.DeleteTaskRequest\x1a\x1c.prmap.v1.DeleteTaskResponse\x12P\n" +
-	"\rAddDependency\x12\x1e.prmap.v1.AddDependencyRequest\x1a\x1f.prmap.v1.AddDependencyResponse\x12Y\n" +
-	"\x10RemoveDependency\x12!.prmap.v1.RemoveDependencyRequest\x1a\".prmap.v1.RemoveDependencyResponse\x12\\\n" +
-	"\x11AttachPullRequest\x12\".prmap.v1.AttachPullRequestRequest\x1a#.prmap.v1.AttachPullRequestResponse\x12\\\n" +
-	"\x11DetachPullRequest\x12\".prmap.v1.DetachPullRequestRequest\x1a#.prmap.v1.DetachPullRequestResponse\x12J\n" +
-	"\vAddDocument\x12\x1c.prmap.v1.AddDocumentRequest\x1a\x1d.prmap.v1.AddDocumentResponse\x12S\n" +
-	"\x0eDeleteDocument\x12\x1f.prmap.v1.DeleteDocumentRequest\x1a .prmap.v1.DeleteDocumentResponse\x125\n" +
-	"\x04Sync\x12\x15.prmap.v1.SyncRequest\x1a\x16.prmap.v1.SyncResponse\x12A\n" +
-	"\bValidate\x12\x19.prmap.v1.ValidateRequest\x1a\x1a.prmap.v1.ValidateResponseB2Z0github.com/HappyOnigiri/PRX/gen/prmap/v1;prmapv1b\x06proto3"
+	"UpdateTask\x12\x19.prx.v1.UpdateTaskRequest\x1a\x1a.prx.v1.UpdateTaskResponse\x12C\n" +
+	"\n" +
+	"DeleteTask\x12\x19.prx.v1.DeleteTaskRequest\x1a\x1a.prx.v1.DeleteTaskResponse\x12L\n" +
+	"\rAddDependency\x12\x1c.prx.v1.AddDependencyRequest\x1a\x1d.prx.v1.AddDependencyResponse\x12U\n" +
+	"\x10RemoveDependency\x12\x1f.prx.v1.RemoveDependencyRequest\x1a .prx.v1.RemoveDependencyResponse\x12X\n" +
+	"\x11AttachPullRequest\x12 .prx.v1.AttachPullRequestRequest\x1a!.prx.v1.AttachPullRequestResponse\x12X\n" +
+	"\x11DetachPullRequest\x12 .prx.v1.DetachPullRequestRequest\x1a!.prx.v1.DetachPullRequestResponse\x12F\n" +
+	"\vAddDocument\x12\x1a.prx.v1.AddDocumentRequest\x1a\x1b.prx.v1.AddDocumentResponse\x12O\n" +
+	"\x0eDeleteDocument\x12\x1d.prx.v1.DeleteDocumentRequest\x1a\x1e.prx.v1.DeleteDocumentResponse\x121\n" +
+	"\x04Sync\x12\x13.prx.v1.SyncRequest\x1a\x14.prx.v1.SyncResponse\x12=\n" +
+	"\bValidate\x12\x17.prx.v1.ValidateRequest\x1a\x18.prx.v1.ValidateResponseB.Z,github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1b\x06proto3"
 
 var (
-	file_prmap_v1_prmap_proto_rawDescOnce sync.Once
-	file_prmap_v1_prmap_proto_rawDescData []byte
+	file_prx_v1_prx_proto_rawDescOnce sync.Once
+	file_prx_v1_prx_proto_rawDescData []byte
 )
 
-func file_prmap_v1_prmap_proto_rawDescGZIP() []byte {
-	file_prmap_v1_prmap_proto_rawDescOnce.Do(func() {
-		file_prmap_v1_prmap_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_prmap_v1_prmap_proto_rawDesc), len(file_prmap_v1_prmap_proto_rawDesc)))
+func file_prx_v1_prx_proto_rawDescGZIP() []byte {
+	file_prx_v1_prx_proto_rawDescOnce.Do(func() {
+		file_prx_v1_prx_proto_rawDescData = protoimpl.X.CompressGZIP(unsafe.Slice(unsafe.StringData(file_prx_v1_prx_proto_rawDesc), len(file_prx_v1_prx_proto_rawDesc)))
 	})
-	return file_prmap_v1_prmap_proto_rawDescData
+	return file_prx_v1_prx_proto_rawDescData
 }
 
-var file_prmap_v1_prmap_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
-var file_prmap_v1_prmap_proto_goTypes = []any{
-	(*Feature)(nil),                   // 0: prmap.v1.Feature
-	(*Task)(nil),                      // 1: prmap.v1.Task
-	(*Dependency)(nil),                // 2: prmap.v1.Dependency
-	(*PullRequest)(nil),               // 3: prmap.v1.PullRequest
-	(*Document)(nil),                  // 4: prmap.v1.Document
-	(*Snapshot)(nil),                  // 5: prmap.v1.Snapshot
-	(*GetSnapshotRequest)(nil),        // 6: prmap.v1.GetSnapshotRequest
-	(*GetSnapshotResponse)(nil),       // 7: prmap.v1.GetSnapshotResponse
-	(*CreateFeatureRequest)(nil),      // 8: prmap.v1.CreateFeatureRequest
-	(*CreateFeatureResponse)(nil),     // 9: prmap.v1.CreateFeatureResponse
-	(*UpdateFeatureRequest)(nil),      // 10: prmap.v1.UpdateFeatureRequest
-	(*UpdateFeatureResponse)(nil),     // 11: prmap.v1.UpdateFeatureResponse
-	(*DeleteFeatureRequest)(nil),      // 12: prmap.v1.DeleteFeatureRequest
-	(*DeleteFeatureResponse)(nil),     // 13: prmap.v1.DeleteFeatureResponse
-	(*CreateTaskRequest)(nil),         // 14: prmap.v1.CreateTaskRequest
-	(*CreateTaskResponse)(nil),        // 15: prmap.v1.CreateTaskResponse
-	(*UpdateTaskRequest)(nil),         // 16: prmap.v1.UpdateTaskRequest
-	(*UpdateTaskResponse)(nil),        // 17: prmap.v1.UpdateTaskResponse
-	(*DeleteTaskRequest)(nil),         // 18: prmap.v1.DeleteTaskRequest
-	(*DeleteTaskResponse)(nil),        // 19: prmap.v1.DeleteTaskResponse
-	(*AddDependencyRequest)(nil),      // 20: prmap.v1.AddDependencyRequest
-	(*AddDependencyResponse)(nil),     // 21: prmap.v1.AddDependencyResponse
-	(*RemoveDependencyRequest)(nil),   // 22: prmap.v1.RemoveDependencyRequest
-	(*RemoveDependencyResponse)(nil),  // 23: prmap.v1.RemoveDependencyResponse
-	(*AttachPullRequestRequest)(nil),  // 24: prmap.v1.AttachPullRequestRequest
-	(*AttachPullRequestResponse)(nil), // 25: prmap.v1.AttachPullRequestResponse
-	(*DetachPullRequestRequest)(nil),  // 26: prmap.v1.DetachPullRequestRequest
-	(*DetachPullRequestResponse)(nil), // 27: prmap.v1.DetachPullRequestResponse
-	(*AddDocumentRequest)(nil),        // 28: prmap.v1.AddDocumentRequest
-	(*AddDocumentResponse)(nil),       // 29: prmap.v1.AddDocumentResponse
-	(*DeleteDocumentRequest)(nil),     // 30: prmap.v1.DeleteDocumentRequest
-	(*DeleteDocumentResponse)(nil),    // 31: prmap.v1.DeleteDocumentResponse
-	(*SyncRequest)(nil),               // 32: prmap.v1.SyncRequest
-	(*SyncResponse)(nil),              // 33: prmap.v1.SyncResponse
-	(*ValidateRequest)(nil),           // 34: prmap.v1.ValidateRequest
-	(*ValidateResponse)(nil),          // 35: prmap.v1.ValidateResponse
+var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 36)
+var file_prx_v1_prx_proto_goTypes = []any{
+	(*Feature)(nil),                   // 0: prx.v1.Feature
+	(*Task)(nil),                      // 1: prx.v1.Task
+	(*Dependency)(nil),                // 2: prx.v1.Dependency
+	(*PullRequest)(nil),               // 3: prx.v1.PullRequest
+	(*Document)(nil),                  // 4: prx.v1.Document
+	(*Snapshot)(nil),                  // 5: prx.v1.Snapshot
+	(*GetSnapshotRequest)(nil),        // 6: prx.v1.GetSnapshotRequest
+	(*GetSnapshotResponse)(nil),       // 7: prx.v1.GetSnapshotResponse
+	(*CreateFeatureRequest)(nil),      // 8: prx.v1.CreateFeatureRequest
+	(*CreateFeatureResponse)(nil),     // 9: prx.v1.CreateFeatureResponse
+	(*UpdateFeatureRequest)(nil),      // 10: prx.v1.UpdateFeatureRequest
+	(*UpdateFeatureResponse)(nil),     // 11: prx.v1.UpdateFeatureResponse
+	(*DeleteFeatureRequest)(nil),      // 12: prx.v1.DeleteFeatureRequest
+	(*DeleteFeatureResponse)(nil),     // 13: prx.v1.DeleteFeatureResponse
+	(*CreateTaskRequest)(nil),         // 14: prx.v1.CreateTaskRequest
+	(*CreateTaskResponse)(nil),        // 15: prx.v1.CreateTaskResponse
+	(*UpdateTaskRequest)(nil),         // 16: prx.v1.UpdateTaskRequest
+	(*UpdateTaskResponse)(nil),        // 17: prx.v1.UpdateTaskResponse
+	(*DeleteTaskRequest)(nil),         // 18: prx.v1.DeleteTaskRequest
+	(*DeleteTaskResponse)(nil),        // 19: prx.v1.DeleteTaskResponse
+	(*AddDependencyRequest)(nil),      // 20: prx.v1.AddDependencyRequest
+	(*AddDependencyResponse)(nil),     // 21: prx.v1.AddDependencyResponse
+	(*RemoveDependencyRequest)(nil),   // 22: prx.v1.RemoveDependencyRequest
+	(*RemoveDependencyResponse)(nil),  // 23: prx.v1.RemoveDependencyResponse
+	(*AttachPullRequestRequest)(nil),  // 24: prx.v1.AttachPullRequestRequest
+	(*AttachPullRequestResponse)(nil), // 25: prx.v1.AttachPullRequestResponse
+	(*DetachPullRequestRequest)(nil),  // 26: prx.v1.DetachPullRequestRequest
+	(*DetachPullRequestResponse)(nil), // 27: prx.v1.DetachPullRequestResponse
+	(*AddDocumentRequest)(nil),        // 28: prx.v1.AddDocumentRequest
+	(*AddDocumentResponse)(nil),       // 29: prx.v1.AddDocumentResponse
+	(*DeleteDocumentRequest)(nil),     // 30: prx.v1.DeleteDocumentRequest
+	(*DeleteDocumentResponse)(nil),    // 31: prx.v1.DeleteDocumentResponse
+	(*SyncRequest)(nil),               // 32: prx.v1.SyncRequest
+	(*SyncResponse)(nil),              // 33: prx.v1.SyncResponse
+	(*ValidateRequest)(nil),           // 34: prx.v1.ValidateRequest
+	(*ValidateResponse)(nil),          // 35: prx.v1.ValidateResponse
 }
-var file_prmap_v1_prmap_proto_depIdxs = []int32{
-	0,  // 0: prmap.v1.Snapshot.features:type_name -> prmap.v1.Feature
-	1,  // 1: prmap.v1.Snapshot.tasks:type_name -> prmap.v1.Task
-	2,  // 2: prmap.v1.Snapshot.dependencies:type_name -> prmap.v1.Dependency
-	3,  // 3: prmap.v1.Snapshot.pull_requests:type_name -> prmap.v1.PullRequest
-	4,  // 4: prmap.v1.Snapshot.documents:type_name -> prmap.v1.Document
-	1,  // 5: prmap.v1.Snapshot.ready_tasks:type_name -> prmap.v1.Task
-	1,  // 6: prmap.v1.Snapshot.review_waiting_tasks:type_name -> prmap.v1.Task
-	1,  // 7: prmap.v1.Snapshot.conflict_tasks:type_name -> prmap.v1.Task
-	1,  // 8: prmap.v1.Snapshot.stale_tasks:type_name -> prmap.v1.Task
-	5,  // 9: prmap.v1.GetSnapshotResponse.snapshot:type_name -> prmap.v1.Snapshot
-	0,  // 10: prmap.v1.CreateFeatureResponse.feature:type_name -> prmap.v1.Feature
-	0,  // 11: prmap.v1.UpdateFeatureResponse.feature:type_name -> prmap.v1.Feature
-	1,  // 12: prmap.v1.CreateTaskResponse.task:type_name -> prmap.v1.Task
-	1,  // 13: prmap.v1.UpdateTaskResponse.task:type_name -> prmap.v1.Task
-	2,  // 14: prmap.v1.AddDependencyResponse.dependency:type_name -> prmap.v1.Dependency
-	3,  // 15: prmap.v1.AttachPullRequestResponse.pull_request:type_name -> prmap.v1.PullRequest
-	4,  // 16: prmap.v1.AddDocumentResponse.document:type_name -> prmap.v1.Document
-	6,  // 17: prmap.v1.PRMapService.GetSnapshot:input_type -> prmap.v1.GetSnapshotRequest
-	8,  // 18: prmap.v1.PRMapService.CreateFeature:input_type -> prmap.v1.CreateFeatureRequest
-	10, // 19: prmap.v1.PRMapService.UpdateFeature:input_type -> prmap.v1.UpdateFeatureRequest
-	12, // 20: prmap.v1.PRMapService.DeleteFeature:input_type -> prmap.v1.DeleteFeatureRequest
-	14, // 21: prmap.v1.PRMapService.CreateTask:input_type -> prmap.v1.CreateTaskRequest
-	16, // 22: prmap.v1.PRMapService.UpdateTask:input_type -> prmap.v1.UpdateTaskRequest
-	18, // 23: prmap.v1.PRMapService.DeleteTask:input_type -> prmap.v1.DeleteTaskRequest
-	20, // 24: prmap.v1.PRMapService.AddDependency:input_type -> prmap.v1.AddDependencyRequest
-	22, // 25: prmap.v1.PRMapService.RemoveDependency:input_type -> prmap.v1.RemoveDependencyRequest
-	24, // 26: prmap.v1.PRMapService.AttachPullRequest:input_type -> prmap.v1.AttachPullRequestRequest
-	26, // 27: prmap.v1.PRMapService.DetachPullRequest:input_type -> prmap.v1.DetachPullRequestRequest
-	28, // 28: prmap.v1.PRMapService.AddDocument:input_type -> prmap.v1.AddDocumentRequest
-	30, // 29: prmap.v1.PRMapService.DeleteDocument:input_type -> prmap.v1.DeleteDocumentRequest
-	32, // 30: prmap.v1.PRMapService.Sync:input_type -> prmap.v1.SyncRequest
-	34, // 31: prmap.v1.PRMapService.Validate:input_type -> prmap.v1.ValidateRequest
-	7,  // 32: prmap.v1.PRMapService.GetSnapshot:output_type -> prmap.v1.GetSnapshotResponse
-	9,  // 33: prmap.v1.PRMapService.CreateFeature:output_type -> prmap.v1.CreateFeatureResponse
-	11, // 34: prmap.v1.PRMapService.UpdateFeature:output_type -> prmap.v1.UpdateFeatureResponse
-	13, // 35: prmap.v1.PRMapService.DeleteFeature:output_type -> prmap.v1.DeleteFeatureResponse
-	15, // 36: prmap.v1.PRMapService.CreateTask:output_type -> prmap.v1.CreateTaskResponse
-	17, // 37: prmap.v1.PRMapService.UpdateTask:output_type -> prmap.v1.UpdateTaskResponse
-	19, // 38: prmap.v1.PRMapService.DeleteTask:output_type -> prmap.v1.DeleteTaskResponse
-	21, // 39: prmap.v1.PRMapService.AddDependency:output_type -> prmap.v1.AddDependencyResponse
-	23, // 40: prmap.v1.PRMapService.RemoveDependency:output_type -> prmap.v1.RemoveDependencyResponse
-	25, // 41: prmap.v1.PRMapService.AttachPullRequest:output_type -> prmap.v1.AttachPullRequestResponse
-	27, // 42: prmap.v1.PRMapService.DetachPullRequest:output_type -> prmap.v1.DetachPullRequestResponse
-	29, // 43: prmap.v1.PRMapService.AddDocument:output_type -> prmap.v1.AddDocumentResponse
-	31, // 44: prmap.v1.PRMapService.DeleteDocument:output_type -> prmap.v1.DeleteDocumentResponse
-	33, // 45: prmap.v1.PRMapService.Sync:output_type -> prmap.v1.SyncResponse
-	35, // 46: prmap.v1.PRMapService.Validate:output_type -> prmap.v1.ValidateResponse
+var file_prx_v1_prx_proto_depIdxs = []int32{
+	0,  // 0: prx.v1.Snapshot.features:type_name -> prx.v1.Feature
+	1,  // 1: prx.v1.Snapshot.tasks:type_name -> prx.v1.Task
+	2,  // 2: prx.v1.Snapshot.dependencies:type_name -> prx.v1.Dependency
+	3,  // 3: prx.v1.Snapshot.pull_requests:type_name -> prx.v1.PullRequest
+	4,  // 4: prx.v1.Snapshot.documents:type_name -> prx.v1.Document
+	1,  // 5: prx.v1.Snapshot.ready_tasks:type_name -> prx.v1.Task
+	1,  // 6: prx.v1.Snapshot.review_waiting_tasks:type_name -> prx.v1.Task
+	1,  // 7: prx.v1.Snapshot.conflict_tasks:type_name -> prx.v1.Task
+	1,  // 8: prx.v1.Snapshot.stale_tasks:type_name -> prx.v1.Task
+	5,  // 9: prx.v1.GetSnapshotResponse.snapshot:type_name -> prx.v1.Snapshot
+	0,  // 10: prx.v1.CreateFeatureResponse.feature:type_name -> prx.v1.Feature
+	0,  // 11: prx.v1.UpdateFeatureResponse.feature:type_name -> prx.v1.Feature
+	1,  // 12: prx.v1.CreateTaskResponse.task:type_name -> prx.v1.Task
+	1,  // 13: prx.v1.UpdateTaskResponse.task:type_name -> prx.v1.Task
+	2,  // 14: prx.v1.AddDependencyResponse.dependency:type_name -> prx.v1.Dependency
+	3,  // 15: prx.v1.AttachPullRequestResponse.pull_request:type_name -> prx.v1.PullRequest
+	4,  // 16: prx.v1.AddDocumentResponse.document:type_name -> prx.v1.Document
+	6,  // 17: prx.v1.PRXService.GetSnapshot:input_type -> prx.v1.GetSnapshotRequest
+	8,  // 18: prx.v1.PRXService.CreateFeature:input_type -> prx.v1.CreateFeatureRequest
+	10, // 19: prx.v1.PRXService.UpdateFeature:input_type -> prx.v1.UpdateFeatureRequest
+	12, // 20: prx.v1.PRXService.DeleteFeature:input_type -> prx.v1.DeleteFeatureRequest
+	14, // 21: prx.v1.PRXService.CreateTask:input_type -> prx.v1.CreateTaskRequest
+	16, // 22: prx.v1.PRXService.UpdateTask:input_type -> prx.v1.UpdateTaskRequest
+	18, // 23: prx.v1.PRXService.DeleteTask:input_type -> prx.v1.DeleteTaskRequest
+	20, // 24: prx.v1.PRXService.AddDependency:input_type -> prx.v1.AddDependencyRequest
+	22, // 25: prx.v1.PRXService.RemoveDependency:input_type -> prx.v1.RemoveDependencyRequest
+	24, // 26: prx.v1.PRXService.AttachPullRequest:input_type -> prx.v1.AttachPullRequestRequest
+	26, // 27: prx.v1.PRXService.DetachPullRequest:input_type -> prx.v1.DetachPullRequestRequest
+	28, // 28: prx.v1.PRXService.AddDocument:input_type -> prx.v1.AddDocumentRequest
+	30, // 29: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
+	32, // 30: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
+	34, // 31: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
+	7,  // 32: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
+	9,  // 33: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
+	11, // 34: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
+	13, // 35: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
+	15, // 36: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
+	17, // 37: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
+	19, // 38: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
+	21, // 39: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
+	23, // 40: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
+	25, // 41: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
+	27, // 42: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
+	29, // 43: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
+	31, // 44: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
+	33, // 45: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
+	35, // 46: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
 	32, // [32:47] is the sub-list for method output_type
 	17, // [17:32] is the sub-list for method input_type
 	17, // [17:17] is the sub-list for extension type_name
@@ -2507,26 +2508,26 @@ var file_prmap_v1_prmap_proto_depIdxs = []int32{
 	0,  // [0:17] is the sub-list for field type_name
 }
 
-func init() { file_prmap_v1_prmap_proto_init() }
-func file_prmap_v1_prmap_proto_init() {
-	if File_prmap_v1_prmap_proto != nil {
+func init() { file_prx_v1_prx_proto_init() }
+func file_prx_v1_prx_proto_init() {
+	if File_prx_v1_prx_proto != nil {
 		return
 	}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
-			RawDescriptor: unsafe.Slice(unsafe.StringData(file_prmap_v1_prmap_proto_rawDesc), len(file_prmap_v1_prmap_proto_rawDesc)),
+			RawDescriptor: unsafe.Slice(unsafe.StringData(file_prx_v1_prx_proto_rawDesc), len(file_prx_v1_prx_proto_rawDesc)),
 			NumEnums:      0,
 			NumMessages:   36,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
-		GoTypes:           file_prmap_v1_prmap_proto_goTypes,
-		DependencyIndexes: file_prmap_v1_prmap_proto_depIdxs,
-		MessageInfos:      file_prmap_v1_prmap_proto_msgTypes,
+		GoTypes:           file_prx_v1_prx_proto_goTypes,
+		DependencyIndexes: file_prx_v1_prx_proto_depIdxs,
+		MessageInfos:      file_prx_v1_prx_proto_msgTypes,
 	}.Build()
-	File_prmap_v1_prmap_proto = out.File
-	file_prmap_v1_prmap_proto_goTypes = nil
-	file_prmap_v1_prmap_proto_depIdxs = nil
+	File_prx_v1_prx_proto = out.File
+	file_prx_v1_prx_proto_goTypes = nil
+	file_prx_v1_prx_proto_depIdxs = nil
 }
