@@ -1,7 +1,8 @@
-.PHONY: generate generated-check fmt lint test test-race test-cli web-install web-test web-build e2e build ci clean
+.PHONY: generate generated-check fmt lint test test-race test-cli web-install web-test web-build e2e build install ci clean
 
 GO ?= go
 PNPM ?= corepack pnpm@11.24.0
+INSTALL_DIR ?= $(HOME)/.local/bin
 
 generate:
 	$(GO) tool sqlc generate
@@ -45,6 +46,10 @@ e2e: web-build
 build: web-build
 	mkdir -p bin
 	$(GO) build -trimpath -o bin/prx ./cmd/prx
+
+install: build
+	install -d "$(INSTALL_DIR)"
+	install -m 0755 bin/prx "$(INSTALL_DIR)/prx"
 
 ci: generated-check lint test test-race build e2e
 
