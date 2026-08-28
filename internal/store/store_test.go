@@ -376,7 +376,7 @@ func TestPRTaskCannotBeCompletedManually(t *testing.T) {
 		t.Fatal(err)
 	}
 	completed := domain.TaskCompleted
-	if _, err := service.UpdateTask(ctx, prTask.ID, nil, nil, &completed, nil); domain.ErrorCode(err) != "invalid_status" {
+	if _, err := service.UpdateTask(ctx, prTask.ID, nil, nil, &completed, nil); domain.ErrorCode(err) != "pr_task_completes_on_merge" {
 		t.Fatalf("PR task completion code=%s err=%v", domain.ErrorCode(err), err)
 	}
 	manual, err := service.CreateTask(ctx, feature.ID, "Sign off", "", domain.TaskKindManual, "")

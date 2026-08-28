@@ -18,6 +18,10 @@ import {
   UpdateFeatureRequestSchema,
   UpdateTaskRequestSchema,
   type Snapshot,
+  DocumentKind,
+  FeatureStatus,
+  TaskKind,
+  TaskStatus,
 } from "./gen/prx/v1/prx_pb";
 
 const transport = createConnectTransport({ baseUrl: window.location.origin });
@@ -41,7 +45,7 @@ export const mutations = {
     slug?: string;
     title?: string;
     description?: string;
-    status?: string;
+    status?: FeatureStatus;
     archived?: boolean;
   }) => client.updateFeature(create(UpdateFeatureRequestSchema, input)),
   deleteFeature: (id: string) =>
@@ -52,14 +56,14 @@ export const mutations = {
     featureId: string;
     title: string;
     scope: string;
-    kind: string;
+    kind: TaskKind;
     assignee: string;
   }) => client.createTask(create(CreateTaskRequestSchema, input)),
   updateTask: (input: {
     id: string;
     title?: string;
     scope?: string;
-    status?: string;
+    status?: TaskStatus;
     assignee?: string;
   }) => client.updateTask(create(UpdateTaskRequestSchema, input)),
   deleteTask: (id: string) =>
@@ -83,7 +87,7 @@ export const mutations = {
   addDocument: (input: {
     featureId?: string;
     taskId?: string;
-    kind: string;
+    kind: DocumentKind;
     title: string;
     value: string;
   }) => client.addDocument(create(AddDocumentRequestSchema, input)),

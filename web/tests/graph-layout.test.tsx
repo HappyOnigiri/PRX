@@ -2,6 +2,12 @@ import { render, screen } from "@testing-library/react";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "../src/router";
+import {
+  FeatureStatus,
+  TaskDisplayState,
+  TaskKind,
+  TaskStatus,
+} from "../src/gen/prx/v1/prx_pb";
 
 // React Flow measures its container, which jsdom does not implement.
 class ResizeObserverStub {
@@ -19,7 +25,7 @@ const snapshot = {
       slug: "payments",
       title: "Payments rollout",
       description: "",
-      status: "active",
+      status: FeatureStatus.ACTIVE,
       archived: false,
       createdAt: "",
       updatedAt: "",
@@ -37,14 +43,13 @@ const snapshot = {
       featureId: "feature-1",
       title: "Build API",
       scope: "",
-      kind: "pr",
-      status: "planned",
+      kind: TaskKind.PULL_REQUEST,
+      status: TaskStatus.PLANNED,
       assignee: "Mika",
       createdAt: "",
       updatedAt: "",
       ready: true,
-      displayState: "unlinked",
-      blockedReason: "",
+      displayState: TaskDisplayState.UNLINKED,
       $typeName: "prx.v1.Task",
     },
   ],

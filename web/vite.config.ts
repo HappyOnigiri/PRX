@@ -15,7 +15,11 @@ export default defineConfig({
           if (id.includes("@tanstack")) return "tanstack";
           if (id.includes("@bufbuild") || id.includes("@connectrpc"))
             return "rpc";
-          if (id.includes("node_modules/react")) return "react";
+          if (
+            id.includes("/node_modules/react/") ||
+            id.includes("/node_modules/react-dom/")
+          )
+            return "react";
         },
       },
     },

@@ -1,7 +1,13 @@
-import { render, screen } from "@testing-library/react";
+import { cleanup, render, screen } from "@testing-library/react";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "../src/router";
+import {
+  FeatureStatus,
+  TaskDisplayState,
+  TaskKind,
+  TaskStatus,
+} from "../src/gen/prx/v1/prx_pb";
 
 const snapshot = {
   features: [
@@ -10,7 +16,7 @@ const snapshot = {
       slug: "payments",
       title: "Payments rollout",
       description: "",
-      status: "active",
+      status: FeatureStatus.ACTIVE,
       archived: false,
       createdAt: "",
       updatedAt: "",
@@ -32,14 +38,13 @@ const snapshot = {
       featureId: "feature-1",
       title: "Build API",
       scope: "",
-      kind: "pr",
-      status: "planned",
+      kind: TaskKind.PULL_REQUEST,
+      status: TaskStatus.PLANNED,
       assignee: "Mika",
       createdAt: "",
       updatedAt: "",
       ready: true,
-      displayState: "unlinked",
-      blockedReason: "",
+      displayState: TaskDisplayState.UNLINKED,
       $typeName: "prx.v1.Task",
     },
   ],
@@ -66,10 +71,13 @@ vi.mock("../src/hooks", () => ({
 }));
 
 describe("Dashboard", () => {
+  afterEach(cleanup);
   beforeEach(async () => {
+    localStorage.clear();
     router.update({ history: createMemoryHistory({ initialEntries: ["/"] }) });
     await router.load();
   });
+
   it("shows derived queues and the next task", async () => {
     render(<RouterProvider router={router} />);
     expect(

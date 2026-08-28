@@ -82,6 +82,12 @@ A PR task satisfies dependencies only when its PR is freshly known to be merged.
 
 Failed GitHub refreshes preserve the last successful fields and mark the record stale with a sync error. Bulk refreshes persist successes and failures independently so one inaccessible repository does not discard other results.
 
+## WebUI language
+
+The WebUI supports English and Japanese. It uses a saved display-language preference first, then the browser's preferred languages, and falls back to English. The selector in the navigation rail stores the preference in browser Local Storage; it does not alter CLI behavior or server data.
+
+ConnectRPC represents fixed domain states, blocked reasons, and known errors with enums and structured details. The WebUI turns those values into localized text. Messages from unexpected server or GitHub failures are shown in their original form.
+
 ## Data and security
 
 - Migrations are embedded and applied transactionally with a schema version table.
@@ -106,4 +112,4 @@ make e2e               # real Go server, SQLite, ConnectRPC, Chromium
 make ci                # all required checks and production build
 ```
 
-Playwright covers browser CRUD, cycle rejection, pull-request and Markdown attachment, deterministic sync, dependency removal, persistence after reload, console/network failures, 320-pixel reflow, and 8/50/100-node layouts. Graph screenshots are written to `test-results/screenshots/` and uploaded by GitHub Actions.
+Playwright covers browser CRUD, language selection persistence, cycle rejection, pull-request and Markdown attachment, deterministic sync, dependency removal, persistence after reload, console/network failures, 320-pixel reflow, and 8/50/100-node layouts. Graph screenshots are written to `test-results/screenshots/` and uploaded by GitHub Actions.

@@ -13,7 +13,7 @@
 
 `cmd/prx` constructs one application service used directly by Cobra commands and by thin ConnectRPC handlers. The service owns validation and derived state. The SQLite repository owns persistence and transactions. A GitHub provider interface isolates network synchronization and makes fixtures deterministic.
 
-The browser uses generated Protocol Buffer descriptors through ConnectRPC. It never opens SQLite or invokes the CLI. The production build is emitted into `internal/webui/dist` and embedded in the Go binary.
+The browser uses generated Protocol Buffer descriptors through ConnectRPC. It never opens SQLite or invokes the CLI. Fixed states and known reasons cross the RPC boundary as enums or structured details, while unexpected server and GitHub error messages may remain English. The production build is emitted into `internal/webui/dist` and embedded in the Go binary.
 
 ## Packages
 
@@ -47,6 +47,8 @@ GitHub calls are direct HTTP requests. Authentication checks `GITHUB_TOKEN`, the
 Three structures were considered: metric cards leading to tables, a queue/table split with a mini graph, and a full dependency canvas with navigation and an inspector. The full canvas is provisionally selected because graph causality—not generic project metrics—is the product's defining work.
 
 The palette is Blueprint `#101b2d`, Grid `#263650`, Fog `#e8edf2`, Link `#58a6ff`, Ready `#50d1c0`, Conflict `#ff756d`, and Merged `#92d06d`. DIN-style condensed headings evoke engineering drawings; system sans supports dense reading; monospace labels identify repositories and state. The signature is a directional dependency spine that remains legible from 8 to 100 nodes. Motion is limited to state transitions and disabled under reduced-motion preferences.
+
+WebUI copy uses semantic i18next keys with bundled English and Japanese resources. The initial language is selected from a saved Local Storage preference, then the browser's preferred languages, with English as the fallback. Changing the display language updates Local Storage, the document language, and the page title without changing CLI or server configuration. The server remains responsible for deriving business state; the browser only translates and assembles display text from structured RPC values.
 
 ## Trade-offs
 

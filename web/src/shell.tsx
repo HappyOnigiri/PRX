@@ -1,9 +1,14 @@
 import { FormEvent, type ReactNode, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
 import { useDomainMutation, useSnapshot } from "./hooks";
+import { formatError } from "./i18n/domain";
+import { setDisplayLanguage } from "./i18n";
+import { supportedLanguages, type SupportedLanguage } from "./i18n/settings";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const { t, i18n } = useTranslation();
   const snapshot = useSnapshot();
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
@@ -26,17 +31,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   return (
     <div className="app-shell">
       <aside className="rail">
-        <Link to="/" className="brand" aria-label="PRX dashboard">
+        <Link to="/" className="brand" aria-label={t("nav.dashboard")}>
           <span className="brand-mark">
             P<span>R</span>X
           </span>
-          <small>Dependency control</small>
+          <small>{t("nav.dependencyControl")}</small>
         </Link>
-        <nav aria-label="Features">
+        <nav aria-label={t("nav.features")}>
           <Link to="/" className="nav-link">
-            Overview <span>{snapshot.data?.features.length ?? "—"}</span>
+            {t("nav.overview")}{" "}
+            <span>{snapshot.data?.features.length ?? "—"}</span>
           </Link>
-          <div className="nav-caption">Active circuits</div>
+          <div className="nav-caption">{t("nav.activeCircuits")}</div>
           {snapshot.data?.features
             .filter((f) => !f.archived)
             .map((feature) => (
@@ -64,11 +70,29 @@ export function AppShell({ children }: { children: ReactNode }) {
             ))}
         </nav>
         <button className="rail-action" onClick={() => setShowCreate(true)}>
-          ＋ New feature
+          {t("nav.newFeature")}
         </button>
+        <label className="language-setting">
+          <span>{t("language.label")}</span>
+          <select
+            aria-label={t("language.label")}
+            value={i18n.resolvedLanguage ?? "en"}
+            onChange={(event) =>
+              void setDisplayLanguage(event.target.value as SupportedLanguage)
+            }
+          >
+            {supportedLanguages.map((language) => (
+              <option value={language} key={language}>
+                {t(`language.${language}`)}
+              </option>
+            ))}
+          </select>
+        </label>
         <div className="rail-foot">
           <span className={snapshot.isError ? "health bad" : "health"} />
-          {snapshot.isError ? "Server unavailable" : "Local database online"}
+          {snapshot.isError
+            ? t("nav.serverUnavailable")
+            : t("nav.localDatabaseOnline")}
         </div>
       </aside>
       <main className="main-stage">{children}</main>
@@ -77,34 +101,40 @@ export function AppShell({ children }: { children: ReactNode }) {
           <form
             className="dialog"
             onSubmit={submit}
-            aria-label="Create feature"
+            aria-label={t("featureCreate.formLabel")}
           >
             <header>
-              <p>New circuit</p>
-              <h2>Create feature</h2>
+              <p>{t("featureCreate.eyebrow")}</p>
+              <h2>{t("featureCreate.title")}</h2>
             </header>
             <label>
-              Slug
+              {t("common.slug")}
               <input
                 name="slug"
                 required
                 pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-                placeholder="payments-rollout"
+                placeholder={t("featureCreate.slugPlaceholder")}
               />
             </label>
             <label>
-              Title
-              <input name="title" required placeholder="Payments rollout" />
+              {t("common.title")}
+              <input
+                name="title"
+                required
+                placeholder={t("featureCreate.titlePlaceholder")}
+              />
             </label>
             <label>
-              Description
+              {t("common.description")}
               <textarea
                 name="description"
-                placeholder="What must this feature deliver?"
+                placeholder={t("featureCreate.descriptionPlaceholder")}
               />
             </label>
             {createFeature.error && (
-              <p className="form-error">{createFeature.error.message}</p>
+              <p className="form-error">
+                {formatError(createFeature.error, t)}
+              </p>
             )}
             <footer>
               <button
@@ -112,9 +142,11 @@ export function AppShell({ children }: { children: ReactNode }) {
                 className="secondary"
                 onClick={() => setShowCreate(false)}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
-              <button disabled={createFeature.isPending}>Create feature</button>
+              <button disabled={createFeature.isPending}>
+                {t("featureCreate.submit")}
+              </button>
             </footer>
           </form>
         </div>

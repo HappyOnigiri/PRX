@@ -24,13 +24,58 @@ func TestReadyFailsClosed(t *testing.T) {
 	deps := []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}
 	prs := []PullRequest{{TaskID: "a", State: "merged", Stale: true}}
 	got := Derive(tasks, deps, prs)
-	if got[1].Ready || got[1].BlockedReason == "" {
+	if got[1].Ready || got[1].BlockedReason == "" || got[1].BlockedCode != BlockedByStaleData || got[1].BlockerTaskID != "a" {
 		t.Fatalf("stale merged blocker must fail closed: %+v", got[1])
 	}
 	prs[0].Stale = false
 	got = Derive(tasks, deps, prs)
 	if !got[1].Ready {
 		t.Fatalf("fresh merged blocker should make task ready: %+v", got[1])
+	}
+}
+
+func TestReadyReportsStructuredWaitingReason(t *testing.T) {
+	tasks := []Task{{ID: "a", Title: "API", Kind: TaskKindManual, Status: TaskPlanned}, {ID: "b", Title: "UI", Kind: TaskKindManual, Status: TaskPlanned}}
+	deps := []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}
+	got := Derive(tasks, deps, nil)
+	if got[1].Ready || got[1].BlockedCode != BlockedWaitingForBlocker || got[1].BlockerTaskID != "a" {
+		t.Fatalf("unexpected structured waiting reason: %+v", got[1])
+	}
+}
+
+func TestBlockedReasonAndCodeAreSetTogether(t *testing.T) {
+	blocked := Task{ID: "b", Title: "UI", Kind: TaskKindManual, Status: TaskPlanned}
+	blocker := Task{ID: "a", Title: "API", Kind: TaskKindPR, Status: TaskInProgress}
+	cases := []struct {
+		name  string
+		tasks []Task
+		deps  []Dependency
+		prs   []PullRequest
+		code  string
+	}{
+		{"dependency data incomplete", []Task{blocked}, []Dependency{{BlockerTaskID: "missing", BlockedTaskID: "b"}}, nil, BlockedDependencyDataIncomplete},
+		{"blocker stale", []Task{blocker, blocked}, []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}, []PullRequest{{TaskID: "a", State: "merged", Stale: true}}, BlockedByStaleData},
+		{"waiting for blocker", []Task{blocker, blocked}, []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}, nil, BlockedWaitingForBlocker},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := Derive(testCase.tasks, testCase.deps, testCase.prs)
+			task := got[len(got)-1]
+			if task.BlockedCode != testCase.code {
+				t.Fatalf("blocked code=%q want %q", task.BlockedCode, testCase.code)
+			}
+			blockerTitle := ""
+			if task.BlockerTaskID == blocker.ID {
+				blockerTitle = blocker.Title
+			}
+			want := BlockedReasonText(testCase.code, blockerTitle)
+			if want == "" {
+				t.Fatalf("no wording defined for code %q", testCase.code)
+			}
+			if task.BlockedReason != want {
+				t.Fatalf("blocked reason=%q want %q", task.BlockedReason, want)
+			}
+		})
 	}
 }
 
