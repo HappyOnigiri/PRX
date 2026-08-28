@@ -128,7 +128,12 @@ test("creates and edits a feature DAG while preserving state", async ({
     .click();
   await expect(reference.locator(".document-chip")).toHaveCount(1);
   await inspector.locator("select[name=status]").selectOption("in_progress");
+  await inspector.locator("input[name=assignee]").fill("");
   await inspector.getByRole("button", { name: "Save task" }).click();
+  await page.getByRole("button", { name: "Close inspector" }).click();
+  await page.reload();
+  await openTask(page, "E2E API");
+  await expect(inspector.locator("input[name=assignee]")).toHaveValue("");
   await page.getByRole("button", { name: "Close inspector" }).click();
   await page.getByRole("button", { name: "Sync GitHub" }).click();
   await expect(

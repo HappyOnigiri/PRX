@@ -192,3 +192,39 @@ func TestValidateReportsCorruption(t *testing.T) {
 		t.Fatalf("Validate did not report the integrity_check rows: %q", errorsFound)
 	}
 }
+
+func TestUpdateClearsFieldsWhenExplicitlyEmpty(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "clearing", "Clearing", "initial description")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := service.CreateTask(ctx, feature.ID, "Task", "initial scope", domain.TaskKindManual, "mona")
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	empty := ""
+	updatedTask, err := service.UpdateTask(ctx, task.ID, nil, &empty, nil, &empty)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updatedTask.Scope != "" || updatedTask.Assignee != "" {
+		t.Fatalf("scope=%q assignee=%q, want both cleared", updatedTask.Scope, updatedTask.Assignee)
+	}
+	if updatedTask.Title != "Task" {
+		t.Fatalf("omitted title was changed to %q", updatedTask.Title)
+	}
+
+	updatedFeature, err := service.UpdateFeature(ctx, feature.ID, nil, nil, &empty, nil, false)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updatedFeature.Description != "" {
+		t.Fatalf("description=%q, want cleared", updatedFeature.Description)
+	}
+	if updatedFeature.Title != "Clearing" {
+		t.Fatalf("omitted title was changed to %q", updatedFeature.Title)
+	}
+}

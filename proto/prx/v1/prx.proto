@@ -87,13 +87,13 @@ message GetSnapshotRequest {}
 message GetSnapshotResponse { Snapshot snapshot = 1; }
 message CreateFeatureRequest { string slug = 1; string title = 2; string description = 3; }
 message CreateFeatureResponse { Feature feature = 1; }
-message UpdateFeatureRequest { string id = 1; string slug = 2; string title = 3; string description = 4; string status = 5; bool archived = 6; }
+message UpdateFeatureRequest { string id = 1; optional string slug = 2; optional string title = 3; optional string description = 4; optional string status = 5; bool archived = 6; }
 message UpdateFeatureResponse { Feature feature = 1; }
 message DeleteFeatureRequest { string id = 1; bool cascade = 2; }
 message DeleteFeatureResponse {}
 message CreateTaskRequest { string feature_id = 1; string title = 2; string scope = 3; string kind = 4; string assignee = 5; }
 message CreateTaskResponse { Task task = 1; }
-message UpdateTaskRequest { string id = 1; string title = 2; string scope = 3; string status = 4; string assignee = 5; }
+message UpdateTaskRequest { string id = 1; optional string title = 2; optional string scope = 3; optional string status = 4; optional string assignee = 5; }
 message UpdateTaskResponse { Task task = 1; }
 message DeleteTaskRequest { string id = 1; bool cascade = 2; }
 message DeleteTaskResponse {}

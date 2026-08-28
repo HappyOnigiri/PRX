@@ -37,22 +37,24 @@ func (s *Service) CreateFeature(ctx context.Context, slug, title, description st
 	return s.store.CreateFeature(ctx, slug, title, strings.TrimSpace(description))
 }
 
-func (s *Service) UpdateFeature(ctx context.Context, id, slug, title, description, status string, archived bool) (domain.Feature, error) {
+// UpdateFeature applies every field the caller supplied. A nil pointer means the
+// field was omitted; an empty string is a request to clear it.
+func (s *Service) UpdateFeature(ctx context.Context, id string, slug, title, description, status *string, archived bool) (domain.Feature, error) {
 	feature, err := s.ResolveFeature(ctx, id)
 	if err != nil {
 		return domain.Feature{}, err
 	}
-	if slug != "" {
-		feature.Slug = strings.TrimSpace(strings.ToLower(slug))
+	if slug != nil {
+		feature.Slug = strings.TrimSpace(strings.ToLower(*slug))
 	}
-	if title != "" {
-		feature.Title = strings.TrimSpace(title)
+	if title != nil {
+		feature.Title = strings.TrimSpace(*title)
 	}
-	if description != "" {
-		feature.Description = description
+	if description != nil {
+		feature.Description = *description
 	}
-	if status != "" {
-		feature.Status = status
+	if status != nil && *status != "" {
+		feature.Status = *status
 	}
 	if archived {
 		feature.Archived = true
@@ -108,22 +110,24 @@ func (s *Service) CreateTask(ctx context.Context, featureID, title, scope, kind,
 	return s.store.CreateTask(ctx, feature.ID, title, strings.TrimSpace(scope), kind, strings.TrimSpace(assignee))
 }
 
-func (s *Service) UpdateTask(ctx context.Context, id, title, scope, status, assignee string) (domain.Task, error) {
+// UpdateTask applies every field the caller supplied. A nil pointer means the
+// field was omitted; an empty string is a request to clear it.
+func (s *Service) UpdateTask(ctx context.Context, id string, title, scope, status, assignee *string) (domain.Task, error) {
 	task, err := s.store.GetTask(ctx, id)
 	if err != nil {
 		return domain.Task{}, err
 	}
-	if title != "" {
-		task.Title = strings.TrimSpace(title)
+	if title != nil {
+		task.Title = strings.TrimSpace(*title)
 	}
-	if scope != "" {
-		task.Scope = scope
+	if scope != nil {
+		task.Scope = *scope
 	}
-	if status != "" {
-		task.Status = status
+	if status != nil && *status != "" {
+		task.Status = *status
 	}
-	if assignee != "" {
-		task.Assignee = assignee
+	if assignee != nil {
+		task.Assignee = *assignee
 	}
 	if task.Title == "" {
 		return domain.Task{}, domain.NewError("invalid_title", "task title is required")

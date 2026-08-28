@@ -145,7 +145,9 @@ func (s *state) featureCommand() *cobra.Command {
 		return s.write(value)
 	}}
 	update := &cobra.Command{Use: "update ID_OR_SLUG", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
-		value, err := s.service.UpdateFeature(cmd.Context(), args[0], slug, title, description, status, archived)
+		value, err := s.service.UpdateFeature(cmd.Context(), args[0],
+			changedFlag(cmd, "slug", &slug), changedFlag(cmd, "title", &title),
+			changedFlag(cmd, "description", &description), changedFlag(cmd, "status", &status), archived)
 		if err != nil {
 			return err
 		}
@@ -157,7 +159,7 @@ func (s *state) featureCommand() *cobra.Command {
 	update.Flags().StringVar(&status, "status", "", "active, paused, completed, or cancelled")
 	update.Flags().BoolVar(&archived, "archived", false, "archive the feature")
 	archive := &cobra.Command{Use: "archive ID_OR_SLUG", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
-		value, err := s.service.UpdateFeature(cmd.Context(), args[0], "", "", "", "", true)
+		value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, true)
 		if err != nil {
 			return err
 		}
@@ -221,7 +223,9 @@ func (s *state) taskCommand() *cobra.Command {
 		return domain.NewError("not_found", "task %q was not found", args[0])
 	}}
 	update := &cobra.Command{Use: "update ID", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
-		value, err := s.service.UpdateTask(cmd.Context(), args[0], title, scope, status, assignee)
+		value, err := s.service.UpdateTask(cmd.Context(), args[0],
+			changedFlag(cmd, "title", &title), changedFlag(cmd, "scope", &scope),
+			changedFlag(cmd, "status", &status), changedFlag(cmd, "assignee", &assignee))
 		if err != nil {
 			return err
 		}
@@ -513,6 +517,15 @@ func localOnly(addr net.Addr, next http.Handler) http.Handler {
 		}
 		next.ServeHTTP(w, r)
 	})
+}
+
+// changedFlag returns the flag value only when it was given on the command line,
+// so an omitted flag leaves the field untouched while --flag "" clears it.
+func changedFlag(cmd *cobra.Command, name string, value *string) *string {
+	if !cmd.Flags().Changed(name) {
+		return nil
+	}
+	return value
 }
 
 func filterTasks(tasks []domain.Task, keep func(domain.Task) bool) []domain.Task {

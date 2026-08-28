@@ -912,10 +912,10 @@ func (x *CreateFeatureResponse) GetFeature() *Feature {
 type UpdateFeatureRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Slug          string                 `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
-	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	Description   string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	Status        string                 `protobuf:"bytes,5,opt,name=status,proto3" json:"status,omitempty"`
+	Slug          *string                `protobuf:"bytes,2,opt,name=slug,proto3,oneof" json:"slug,omitempty"`
+	Title         *string                `protobuf:"bytes,3,opt,name=title,proto3,oneof" json:"title,omitempty"`
+	Description   *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	Status        *string                `protobuf:"bytes,5,opt,name=status,proto3,oneof" json:"status,omitempty"`
 	Archived      bool                   `protobuf:"varint,6,opt,name=archived,proto3" json:"archived,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -959,29 +959,29 @@ func (x *UpdateFeatureRequest) GetId() string {
 }
 
 func (x *UpdateFeatureRequest) GetSlug() string {
-	if x != nil {
-		return x.Slug
+	if x != nil && x.Slug != nil {
+		return *x.Slug
 	}
 	return ""
 }
 
 func (x *UpdateFeatureRequest) GetTitle() string {
-	if x != nil {
-		return x.Title
+	if x != nil && x.Title != nil {
+		return *x.Title
 	}
 	return ""
 }
 
 func (x *UpdateFeatureRequest) GetDescription() string {
-	if x != nil {
-		return x.Description
+	if x != nil && x.Description != nil {
+		return *x.Description
 	}
 	return ""
 }
 
 func (x *UpdateFeatureRequest) GetStatus() string {
-	if x != nil {
-		return x.Status
+	if x != nil && x.Status != nil {
+		return *x.Status
 	}
 	return ""
 }
@@ -1248,10 +1248,10 @@ func (x *CreateTaskResponse) GetTask() *Task {
 type UpdateTaskRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Scope         string                 `protobuf:"bytes,3,opt,name=scope,proto3" json:"scope,omitempty"`
-	Status        string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
-	Assignee      string                 `protobuf:"bytes,5,opt,name=assignee,proto3" json:"assignee,omitempty"`
+	Title         *string                `protobuf:"bytes,2,opt,name=title,proto3,oneof" json:"title,omitempty"`
+	Scope         *string                `protobuf:"bytes,3,opt,name=scope,proto3,oneof" json:"scope,omitempty"`
+	Status        *string                `protobuf:"bytes,4,opt,name=status,proto3,oneof" json:"status,omitempty"`
+	Assignee      *string                `protobuf:"bytes,5,opt,name=assignee,proto3,oneof" json:"assignee,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1294,29 +1294,29 @@ func (x *UpdateTaskRequest) GetId() string {
 }
 
 func (x *UpdateTaskRequest) GetTitle() string {
-	if x != nil {
-		return x.Title
+	if x != nil && x.Title != nil {
+		return *x.Title
 	}
 	return ""
 }
 
 func (x *UpdateTaskRequest) GetScope() string {
-	if x != nil {
-		return x.Scope
+	if x != nil && x.Scope != nil {
+		return *x.Scope
 	}
 	return ""
 }
 
 func (x *UpdateTaskRequest) GetStatus() string {
-	if x != nil {
-		return x.Status
+	if x != nil && x.Status != nil {
+		return *x.Status
 	}
 	return ""
 }
 
 func (x *UpdateTaskRequest) GetAssignee() string {
-	if x != nil {
-		return x.Assignee
+	if x != nil && x.Assignee != nil {
+		return *x.Assignee
 	}
 	return ""
 }
@@ -2304,14 +2304,18 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\"B\n" +
 	"\x15CreateFeatureResponse\x12)\n" +
-	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"\xa6\x01\n" +
+	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"\xe8\x01\n" +
 	"\x14UpdateFeatureRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04slug\x18\x02 \x01(\tR\x04slug\x12\x14\n" +
-	"\x05title\x18\x03 \x01(\tR\x05title\x12 \n" +
-	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\x16\n" +
-	"\x06status\x18\x05 \x01(\tR\x06status\x12\x1a\n" +
-	"\barchived\x18\x06 \x01(\bR\barchived\"B\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\x04slug\x18\x02 \x01(\tH\x00R\x04slug\x88\x01\x01\x12\x19\n" +
+	"\x05title\x18\x03 \x01(\tH\x01R\x05title\x88\x01\x01\x12%\n" +
+	"\vdescription\x18\x04 \x01(\tH\x02R\vdescription\x88\x01\x01\x12\x1b\n" +
+	"\x06status\x18\x05 \x01(\tH\x03R\x06status\x88\x01\x01\x12\x1a\n" +
+	"\barchived\x18\x06 \x01(\bR\barchivedB\a\n" +
+	"\x05_slugB\b\n" +
+	"\x06_titleB\x0e\n" +
+	"\f_descriptionB\t\n" +
+	"\a_status\"B\n" +
 	"\x15UpdateFeatureResponse\x12)\n" +
 	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"@\n" +
 	"\x14DeleteFeatureRequest\x12\x0e\n" +
@@ -2326,13 +2330,17 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x04kind\x18\x04 \x01(\tR\x04kind\x12\x1a\n" +
 	"\bassignee\x18\x05 \x01(\tR\bassignee\"6\n" +
 	"\x12CreateTaskResponse\x12 \n" +
-	"\x04task\x18\x01 \x01(\v2\f.prx.v1.TaskR\x04task\"\x83\x01\n" +
+	"\x04task\x18\x01 \x01(\v2\f.prx.v1.TaskR\x04task\"\xc3\x01\n" +
 	"\x11UpdateTaskRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
-	"\x05title\x18\x02 \x01(\tR\x05title\x12\x14\n" +
-	"\x05scope\x18\x03 \x01(\tR\x05scope\x12\x16\n" +
-	"\x06status\x18\x04 \x01(\tR\x06status\x12\x1a\n" +
-	"\bassignee\x18\x05 \x01(\tR\bassignee\"6\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
+	"\x05title\x18\x02 \x01(\tH\x00R\x05title\x88\x01\x01\x12\x19\n" +
+	"\x05scope\x18\x03 \x01(\tH\x01R\x05scope\x88\x01\x01\x12\x1b\n" +
+	"\x06status\x18\x04 \x01(\tH\x02R\x06status\x88\x01\x01\x12\x1f\n" +
+	"\bassignee\x18\x05 \x01(\tH\x03R\bassignee\x88\x01\x01B\b\n" +
+	"\x06_titleB\b\n" +
+	"\x06_scopeB\t\n" +
+	"\a_statusB\v\n" +
+	"\t_assignee\"6\n" +
 	"\x12UpdateTaskResponse\x12 \n" +
 	"\x04task\x18\x01 \x01(\v2\f.prx.v1.TaskR\x04task\"=\n" +
 	"\x11DeleteTaskRequest\x12\x0e\n" +
@@ -2513,6 +2521,8 @@ func file_prx_v1_prx_proto_init() {
 	if File_prx_v1_prx_proto != nil {
 		return
 	}
+	file_prx_v1_prx_proto_msgTypes[10].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[16].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
