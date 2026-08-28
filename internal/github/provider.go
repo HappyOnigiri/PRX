@@ -37,7 +37,11 @@ func NewLiveProvider(ctx context.Context) (*LiveProvider, error) {
 		}
 		token = strings.TrimSpace(string(output))
 	}
-	client := gh.NewClient(oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token})))
+	// oauth2.NewClient returns a client with no timeout, so an unresponsive
+	// endpoint would stall the whole sync instead of failing that one PR.
+	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}))
+	httpClient.Timeout = 30 * time.Second
+	client := gh.NewClient(httpClient)
 	client.UserAgent = "prx/0.1"
 	return &LiveProvider{client: client}, nil
 }

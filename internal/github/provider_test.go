@@ -7,6 +7,7 @@ import (
 	"os"
 	"path/filepath"
 	"testing"
+	"time"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
 	gh "github.com/google/go-github/v80/github"
@@ -142,5 +143,41 @@ func TestFixtureRejectsValuesOutsideTheSchema(t *testing.T) {
 				t.Fatal("expected the fixture to be rejected")
 			}
 		})
+	}
+}
+
+func TestLiveProviderBoundsRequestsAndKeepsSyncing(t *testing.T) {
+	t.Setenv("GITHUB_TOKEN", "test-token")
+	provider, err := NewLiveProvider(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if timeout := provider.client.Client().Timeout; timeout == 0 {
+		t.Fatal("the GitHub HTTP client has no timeout; an unresponsive endpoint would stall the sync")
+	}
+
+	// A stalled endpoint must fail that pull request rather than hang forever, so
+	// the caller can record the failure and move on to the next one.
+	block := make(chan struct{})
+	server := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
+		<-block
+	}))
+	defer func() {
+		close(block)
+		server.Close()
+	}()
+	stalled := gh.NewClient(&http.Client{Timeout: 100 * time.Millisecond})
+	base, _ := stalled.BaseURL.Parse(server.URL + "/")
+	stalled.BaseURL = base
+	slow := &LiveProvider{client: stalled}
+	if _, err := slow.Fetch(context.Background(), domain.PullRequest{Owner: "acme", Repository: "api", Number: 7}); err == nil {
+		t.Fatal("expected the stalled request to fail")
+	}
+
+	// The next pull request still syncs through a healthy endpoint.
+	healthy := newReviewServer(t, `[{"state":"APPROVED","user":{"login":"reviewer"}}]`)
+	got, err := healthy.Fetch(context.Background(), domain.PullRequest{Owner: "acme", Repository: "api", Number: 7})
+	if err != nil || got.Stale {
+		t.Fatalf("healthy fetch after a stalled one: stale=%v err=%v", got.Stale, err)
 	}
 }
