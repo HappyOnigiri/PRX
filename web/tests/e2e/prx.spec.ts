@@ -56,18 +56,24 @@ async function addBlocker(page: Page, blockerTitle: string) {
 test("creates and edits a feature DAG while preserving state", async ({
   page,
 }) => {
+  // The server keeps one database for the whole run, so a fixed slug would make
+  // every retry fail on the unique constraint instead of absorbing a flake.
+  const slug = `e2e-rollout-${crypto.randomUUID()}`;
+  const title = `E2E rollout ${slug}`;
+  // The demo fixture derives the PR state from the number, and 4k+2 maps to a
+  // conflicting pull request. Keeping it unique avoids colliding with the pull
+  // request a previous attempt attached to a task that still exists.
+  const prNumber = Math.floor(Math.random() * 1_000_000) * 4 + 2;
   await page.goto("/");
   await page.getByRole("button", { name: "New feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
-  await featureDialog.getByLabel("Slug").fill("e2e-rollout");
-  await featureDialog.getByLabel("Title").fill("E2E rollout");
+  await featureDialog.getByLabel("Slug").fill(slug);
+  await featureDialog.getByLabel("Title").fill(title);
   await featureDialog
     .getByLabel("Description")
     .fill("Browser-tested delivery circuit");
   await featureDialog.getByRole("button", { name: "Create feature" }).click();
-  await expect(
-    page.getByRole("heading", { name: "E2E rollout" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
   await page.getByRole("button", { name: "Edit feature" }).click();
   const editFeature = page.getByRole("form", { name: "Edit feature" });
   await editFeature
@@ -110,10 +116,12 @@ test("creates and edits a feature DAG while preserving state", async ({
   browserErrors.splice(0, browserErrors.length);
   await prSection
     .getByPlaceholder("https://github.com/org/repo/pull/42")
-    .fill("https://github.com/HappyOnigiri/PRX/pull/42");
+    .fill(`https://github.com/HappyOnigiri/PRX/pull/${prNumber}`);
   await prSection.getByRole("button", { name: "Attach" }).click();
   await expect(
-    prSection.getByRole("link", { name: /HappyOnigiri\/PRX #42/ }),
+    prSection.getByRole("link", {
+      name: new RegExp(`HappyOnigiri/PRX #${prNumber}`),
+    }),
   ).toBeVisible();
   const reference = inspector
     .locator("section")
@@ -171,28 +179,26 @@ test("creates and edits a feature DAG while preserving state", async ({
 test("archives and safely deletes a feature", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "New feature" }).click();
+  const slug = `temporary-feature-${crypto.randomUUID()}`;
+  const title = `Temporary feature ${slug}`;
   const dialog = page.getByRole("form", { name: "Create feature" });
-  await dialog.getByLabel("Slug").fill("temporary-feature");
-  await dialog.getByLabel("Title").fill("Temporary feature");
+  await dialog.getByLabel("Slug").fill(slug);
+  await dialog.getByLabel("Title").fill(title);
   await dialog.getByRole("button", { name: "Create feature" }).click();
   await page.getByRole("button", { name: "Archive feature" }).click();
   await expect(
-    page
-      .getByRole("navigation", { name: "Features" })
-      .getByText("Temporary feature"),
+    page.getByRole("navigation", { name: "Features" }).getByText(title),
   ).toHaveCount(0);
   await page.getByRole("button", { name: "Unarchive feature" }).click();
   await expect(
-    page
-      .getByRole("navigation", { name: "Features" })
-      .getByText("Temporary feature"),
+    page.getByRole("navigation", { name: "Features" }).getByText(title),
   ).toHaveCount(1);
   page.once("dialog", (confirmation) => confirmation.accept());
   await page.getByRole("button", { name: "Delete feature" }).click();
   await expect(
     page.getByRole("heading", { name: /What can move/ }),
   ).toBeVisible();
-  await expect(page.getByText("Temporary feature")).toHaveCount(0);
+  await expect(page.getByText(title)).toHaveCount(0);
 });
 
 for (const size of [8, 50, 100]) {
