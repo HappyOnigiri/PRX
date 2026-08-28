@@ -25,7 +25,7 @@ import {
 } from "./gen/prx/v1/prx_pb";
 
 const transport = createConnectTransport({ baseUrl: window.location.origin });
-export const client = createClient(PRXService, transport);
+const client = createClient(PRXService, transport);
 
 export async function getSnapshot(): Promise<Snapshot> {
   const response = await client.getSnapshot(create(GetSnapshotRequestSchema));
