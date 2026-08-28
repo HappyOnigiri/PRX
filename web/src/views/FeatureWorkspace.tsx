@@ -48,7 +48,9 @@ export function FeatureWorkspace() {
   const [flow, setFlow] = useState<ReactFlowInstance<TaskFlowNode, Edge>>();
   const [showTask, setShowTask] = useState(false);
   const [showFeatureEdit, setShowFeatureEdit] = useState(false);
-  const [layoutError, setLayoutError] = useState<string>();
+  // The raw message is kept untranslated so that changing the display language
+  // does not re-run the layout effect and reset the viewport.
+  const [layoutError, setLayoutError] = useState<{ message?: string }>();
   const [layoutAttempt, setLayoutAttempt] = useState(0);
   const data = snapshot.data;
   const feature = data?.features.find((f) => f.id === featureId);
@@ -147,17 +149,15 @@ export function FeatureWorkspace() {
       })
       .catch((error: unknown) => {
         if (!current) return;
-        setLayoutError(
-          error instanceof Error
-            ? error.message
-            : t("workspace.layoutErrorFallback"),
-        );
+        setLayoutError({
+          message: error instanceof Error ? error.message : undefined,
+        });
       });
     return () => {
       current = false;
       elk.terminateWorker();
     };
-  }, [tasks, dependencies, prs, layoutAttempt, t]);
+  }, [tasks, dependencies, prs, layoutAttempt]);
   useEffect(() => {
     if (nodes.length && flow) {
       void flow.fitView({
@@ -346,7 +346,7 @@ export function FeatureWorkspace() {
           <div className="graph-empty" role="alert">
             <span>⚠</span>
             <h2>{t("workspace.layoutErrorTitle")}</h2>
-            <p>{layoutError}</p>
+            <p>{layoutError.message ?? t("workspace.layoutErrorFallback")}</p>
             <button
               onClick={() => {
                 setLayoutError(undefined);
