@@ -4,8 +4,11 @@ linters:
   default: standard
   enable:
     - bodyclose
+    - errchkjson
     - errorlint
     - noctx
+    - rowserrcheck
+    - sqlclosecheck
 
 formatters:
   enable:
