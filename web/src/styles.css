@@ -196,7 +196,7 @@ a {
 .language-setting {
   display: grid;
   gap: 6px;
-  margin: auto 18px 14px;
+  margin: 0 18px 14px;
   color: var(--muted);
   font-size: 11px;
   letter-spacing: 0.08em;
