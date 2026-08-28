@@ -70,6 +70,8 @@ Feature and Task deletion refuses to remove referenced data unless `--cascade` i
 }
 ```
 
+`state` must be `open`, `closed`, `merged`, or `unknown`; `review_state` must be `none`, `required`, `approved`, `changes_requested`, or `unknown`; `mergeability` must be `mergeable`, `conflicting`, or `unknown`. A fixture with any other value is rejected when the file is read. An entry may instead carry `"error"` to simulate a fetch failure.
+
 ## State rules
 
 Display priority is merged, closed without merge, draft, conflict, changes requested, approved, review waiting, open, then unknown. Review and mergeability remain separate stored fields.

@@ -7,6 +7,8 @@ import (
 	"net/url"
 	"os"
 	"os/exec"
+	"slices"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -118,6 +120,19 @@ type fixture struct {
 	Error        string   `json:"error"`
 }
 
+// The persisted columns carry CHECK constraints, so a typo in a hand-written
+// fixture has to fail while reading the file rather than as a raw SQLite error
+// halfway through a sync.
+var fixtureFields = []struct {
+	name    string
+	value   func(fixture) string
+	allowed []string
+}{
+	{"state", func(f fixture) string { return f.State }, []string{"open", "closed", "merged", "unknown"}},
+	{"review_state", func(f fixture) string { return f.ReviewState }, []string{"none", "required", "approved", "changes_requested", "unknown"}},
+	{"mergeability", func(f fixture) string { return f.Mergeability }, []string{"mergeable", "conflicting", "unknown"}},
+}
+
 func NewFixtureProvider(path string) (*FixtureProvider, error) {
 	if path == "demo" {
 		return &FixtureProvider{values: map[string]fixture{}}, nil
@@ -129,6 +144,24 @@ func NewFixtureProvider(path string) (*FixtureProvider, error) {
 	values := map[string]fixture{}
 	if err := json.Unmarshal(body, &values); err != nil {
 		return nil, fmt.Errorf("decode GitHub fixture: %w", err)
+	}
+	urls := make([]string, 0, len(values))
+	for url := range values {
+		urls = append(urls, url)
+	}
+	sort.Strings(urls)
+	for _, url := range urls {
+		value := values[url]
+		if value.Error != "" {
+			continue
+		}
+		for _, field := range fixtureFields {
+			current := field.value(value)
+			if !slices.Contains(field.allowed, current) {
+				return nil, fmt.Errorf("GitHub fixture %s: %s is %q; expected one of %s",
+					url, field.name, current, strings.Join(field.allowed, ", "))
+			}
+		}
 	}
 	return &FixtureProvider{values: values}, nil
 }

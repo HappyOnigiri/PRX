@@ -4,6 +4,8 @@ import (
 	"context"
 	"net/http"
 	"net/http/httptest"
+	"os"
+	"path/filepath"
 	"testing"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
@@ -112,6 +114,32 @@ func TestLiveProviderIgnoresNonDecisionReviews(t *testing.T) {
 			}
 			if got.ReviewState != tc.want {
 				t.Fatalf("review state = %q, want %q", got.ReviewState, tc.want)
+			}
+		})
+	}
+}
+
+func TestFixtureRejectsValuesOutsideTheSchema(t *testing.T) {
+	write := func(body string) string {
+		path := filepath.Join(t.TempDir(), "fixture.json")
+		if err := os.WriteFile(path, []byte(body), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		return path
+	}
+	valid := `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved","mergeability":"mergeable"}}`
+	if _, err := NewFixtureProvider(write(valid)); err != nil {
+		t.Fatalf("valid fixture rejected: %v", err)
+	}
+	cases := map[string]string{
+		"missing state":        `{"https://github.com/acme/api/pull/42":{"review_state":"approved","mergeability":"mergeable"}}`,
+		"typo in review_state": `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"aproved","mergeability":"mergeable"}}`,
+		"typo in mergeability": `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved","mergeability":"merged"}}`,
+	}
+	for name, body := range cases {
+		t.Run(name, func(t *testing.T) {
+			if _, err := NewFixtureProvider(write(body)); err == nil {
+				t.Fatal("expected the fixture to be rejected")
 			}
 		})
 	}
