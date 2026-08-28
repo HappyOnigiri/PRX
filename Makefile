@@ -31,12 +31,15 @@ test:
 	$(PNPM) --dir web test
 
 go-coverage-check:
-	@profile="$$(mktemp)"; \
+	@profile="$$(mktemp)" || exit $$?; \
 	trap 'rm -f "$$profile"' EXIT; \
-	$(GO) test -coverprofile="$$profile" $(GO_COVERAGE_PACKAGES); \
-	coverage="$$( $(GO) tool cover -func="$$profile" | awk '/^total:/ { gsub(/%/, "", $$3); print $$3 }' )"; \
+	$(GO) test -coverprofile="$$profile" $(GO_COVERAGE_PACKAGES) || exit $$?; \
+	coverage="$$( $(GO) tool cover -func="$$profile" | awk '/^total:/ { gsub(/%/, "", $$3); print $$3 }' )" || exit $$?; \
 	printf 'Go coverage: %s%% (minimum: %s%%)\n' "$$coverage" "$(GO_COVERAGE_MIN)"; \
-	awk -v actual="$$coverage" -v minimum="$(GO_COVERAGE_MIN)" 'BEGIN { if (actual + 0 < minimum + 0) exit 1 }'
+	awk -v actual="$$coverage" -v minimum="$(GO_COVERAGE_MIN)" 'BEGIN { \
+		if (actual !~ /^[0-9]+([.][0-9]+)?$$/ || minimum !~ /^[0-9]+([.][0-9]+)?$$/) exit 2; \
+		if (actual + 0 < minimum + 0) exit 1; \
+	}'
 
 test-race:
 	$(GO) test -race ./...
