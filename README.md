@@ -14,13 +14,12 @@ PRX is a local-first dependency control room for initiatives that span many GitH
 ## Build and start
 
 ```sh
-pnpm install --frozen-lockfile
 make install
 prx seed --github-fixture demo
 prx serve
 ```
 
-`make install` builds the production binary and installs it to `~/.local/bin/prx`. Set `INSTALL_DIR` to install elsewhere. Ensure the installation directory is on `PATH`, then open <http://127.0.0.1:7331>. The production web build is embedded in the binary; no separate frontend process is needed.
+`make install` installs the locked web dependencies, builds the production binary, and installs it to `~/.local/bin/prx`. Set `INSTALL_DIR` to install elsewhere. Ensure the installation directory is on `PATH`, then open <http://127.0.0.1:7331>. The production web build is embedded in the binary; no separate frontend process is needed.
 
 The default database is stored under the operating system's user configuration directory. Use `--db /path/to/prx.db` or `PRX_DB` to select another database. The server binds only to `127.0.0.1:7331` unless `--addr` is explicitly supplied.
 
@@ -111,7 +110,7 @@ make test              # Go, Vitest, and component coverage
 make go-coverage-check # handwritten Go packages must stay at or above the coverage baseline
 make test-race         # Go race detector
 make e2e               # real Go server, SQLite, ConnectRPC, Chromium
-make ci                # all required checks and production build
+make ci                # install web dependencies, run all required checks, and build production assets
 ```
 
 `GO_COVERAGE_MIN` records the current coverage baseline for the handwritten Go packages. Raise it when their coverage improves so later changes cannot reduce it.
