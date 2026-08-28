@@ -48,7 +48,7 @@ Three structures were considered: metric cards leading to tables, a queue/table 
 
 The palette is Blueprint `#101b2d`, Grid `#263650`, Fog `#e8edf2`, Link `#58a6ff`, Ready `#50d1c0`, Conflict `#ff756d`, and Merged `#92d06d`. DIN-style condensed headings evoke engineering drawings; system sans supports dense reading; monospace labels identify repositories and state. The signature is a directional dependency spine that remains legible from 8 to 100 nodes. Motion is limited to state transitions and disabled under reduced-motion preferences.
 
-WebUI copy uses semantic i18next keys with bundled English and Japanese resources. The initial language is selected from a saved Local Storage preference, then the browser's preferred languages, with English as the fallback. Changing the display language updates Local Storage, the document language, and the page title without changing CLI or server configuration. The server remains responsible for deriving business state; the browser only translates and assembles display text from structured RPC values.
+WebUI copy uses semantic i18next keys with bundled English and Japanese resources. The initial language is selected from a saved Local Storage preference, then the browser's preferred languages, with English as the fallback. Changing the display language updates Local Storage, the document language, and the page title without changing CLI or server configuration. The dependency canvas stores one user-selected zoom level in Local Storage and applies it to every feature graph while centering each graph independently. The server remains responsible for deriving business state; the browser only translates and assembles display text from structured RPC values.
 
 ## Trade-offs
 
