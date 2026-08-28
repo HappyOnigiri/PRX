@@ -257,8 +257,26 @@ func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 
 func (s *Store) Validate(ctx context.Context) []string {
 	errorsFound := []string{}
-	if err := s.db.QueryRowContext(ctx, `PRAGMA integrity_check`).Scan(new(string)); err != nil {
+	// integrity_check reports corruption as result rows, not as an error, and
+	// returns the single row "ok" when the database is sound.
+	integrity, err := s.db.QueryContext(ctx, `PRAGMA integrity_check`)
+	if err != nil {
 		errorsFound = append(errorsFound, err.Error())
+	} else {
+		for integrity.Next() {
+			var line string
+			if err := integrity.Scan(&line); err != nil {
+				errorsFound = append(errorsFound, err.Error())
+				break
+			}
+			if line != "ok" {
+				errorsFound = append(errorsFound, line)
+			}
+		}
+		if err := integrity.Err(); err != nil {
+			errorsFound = append(errorsFound, err.Error())
+		}
+		_ = integrity.Close()
 	}
 	rows, err := s.db.QueryContext(ctx, `PRAGMA foreign_key_check`)
 	if err != nil {
@@ -267,6 +285,9 @@ func (s *Store) Validate(ctx context.Context) []string {
 	defer func() { _ = rows.Close() }()
 	for rows.Next() {
 		errorsFound = append(errorsFound, "foreign key violation")
+	}
+	if err := rows.Err(); err != nil {
+		errorsFound = append(errorsFound, err.Error())
 	}
 	snapshot, err := s.Snapshot(ctx)
 	if err != nil {

@@ -5,7 +5,9 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"os"
 	"path/filepath"
+	"strings"
 	"sync"
 	"testing"
 
@@ -131,5 +133,62 @@ func TestDuplicatePullRequestAndConcurrentWriters(t *testing.T) {
 	}
 	if len(snapshot.Tasks) != writers+2 {
 		t.Fatalf("tasks=%d want=%d", len(snapshot.Tasks), writers+2)
+	}
+}
+
+func TestValidateReportsCorruption(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "corrupt.db")
+	database, err := store.Open(ctx, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	provider, _ := githubprovider.NewFixtureProvider("demo")
+	service := app.New(database, provider)
+	feature, err := service.CreateFeature(ctx, "corruption", "Corruption", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for i := 0; i < 200; i++ {
+		if _, err := service.CreateTask(ctx, feature.ID, fmt.Sprintf("task-%03d", i), strings.Repeat("x", 256), domain.TaskKindManual, ""); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if err := database.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	body, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Overwrite payload pages while leaving the header and the schema page
+	// intact, so the database still opens but no longer passes integrity_check.
+	const pageSize = 4096
+	if len(body) < 4*pageSize {
+		t.Fatalf("database is only %d bytes; expected several pages", len(body))
+	}
+	for i := 2 * pageSize; i < len(body); i++ {
+		body[i] ^= 0xff
+	}
+	if err := os.WriteFile(path, body, 0o600); err != nil {
+		t.Fatal(err)
+	}
+
+	corrupted, err := store.Open(ctx, path)
+	if err != nil {
+		t.Skipf("corrupted database could not be opened: %v", err)
+	}
+	t.Cleanup(func() { _ = corrupted.Close() })
+	errorsFound := corrupted.Validate(ctx)
+	reported := false
+	for _, line := range errorsFound {
+		if strings.Contains(line, "in database main") {
+			reported = true
+			break
+		}
+	}
+	if !reported {
+		t.Fatalf("Validate did not report the integrity_check rows: %q", errorsFound)
 	}
 }
