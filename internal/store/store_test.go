@@ -246,3 +246,53 @@ func TestArchiveRoundTrip(t *testing.T) {
 		t.Fatalf("unarchive: archived=%v err=%v", updated.Archived, err)
 	}
 }
+
+func TestConcurrentDependencyWritesDoNotLock(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "contention", "Contention", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	blocker, err := service.CreateTask(ctx, feature.ID, "Blocker", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const writers = 16
+	blocked := make([]domain.Task, writers)
+	for i := range blocked {
+		task, err := service.CreateTask(ctx, feature.ID, fmt.Sprintf("blocked-%02d", i), "", domain.TaskKindManual, "")
+		if err != nil {
+			t.Fatal(err)
+		}
+		blocked[i] = task
+	}
+	var wait sync.WaitGroup
+	errorsCh := make(chan error, writers)
+	for _, task := range blocked {
+		wait.Add(1)
+		go func(blockedID string) {
+			defer wait.Done()
+			_, err := service.AddDependency(ctx, blocker.ID, blockedID)
+			errorsCh <- err
+		}(task.ID)
+	}
+	wait.Wait()
+	close(errorsCh)
+	for err := range errorsCh {
+		// Domain errors are acceptable outcomes; a raw lock error is not.
+		if err != nil && domain.ErrorCode(err) == "" {
+			t.Fatalf("concurrent dependency write: %v", err)
+		}
+		if err != nil && strings.Contains(err.Error(), "locked") {
+			t.Fatalf("concurrent dependency write hit a lock error: %v", err)
+		}
+	}
+	snapshot, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.Dependencies) != writers {
+		t.Fatalf("dependencies=%d, want %d", len(snapshot.Dependencies), writers)
+	}
+}

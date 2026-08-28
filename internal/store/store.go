@@ -53,7 +53,10 @@ func Open(ctx context.Context, path string) (*Store, error) {
 	if strings.Contains(dsn, "?") {
 		separator = "&"
 	}
-	dsn += separator + "_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)"
+	// _txlock=immediate takes the write lock when the transaction starts. With the
+	// default deferred BEGIN, a read-modify-write transaction that reads first
+	// fails with SQLITE_BUSY_SNAPSHOT on write, which busy_timeout does not retry.
+	dsn += separator + "_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_txlock=immediate"
 	database, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
