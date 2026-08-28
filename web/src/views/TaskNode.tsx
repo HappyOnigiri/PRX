@@ -3,7 +3,7 @@ import { useTranslation } from "react-i18next";
 import { TaskDisplayState } from "../gen/prx/v1/prx_pb";
 import { taskDisplayStateLabel, taskDisplayStateToken } from "../i18n/domain";
 
-export type TaskNodeData = {
+type TaskNodeData = {
   title: string;
   repository: string;
   assignee: string;

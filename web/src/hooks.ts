@@ -1,7 +1,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getSnapshot } from "./api";
 
-export const snapshotKey = ["snapshot"] as const;
+const snapshotKey = ["snapshot"] as const;
 
 export function useSnapshot() {
   return useQuery({ queryKey: snapshotKey, queryFn: getSnapshot });
