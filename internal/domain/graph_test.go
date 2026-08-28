@@ -43,6 +43,42 @@ func TestReadyReportsStructuredWaitingReason(t *testing.T) {
 	}
 }
 
+func TestBlockedReasonAndCodeAreSetTogether(t *testing.T) {
+	blocked := Task{ID: "b", Title: "UI", Kind: TaskKindManual, Status: TaskPlanned}
+	blocker := Task{ID: "a", Title: "API", Kind: TaskKindPR, Status: TaskInProgress}
+	cases := []struct {
+		name  string
+		tasks []Task
+		deps  []Dependency
+		prs   []PullRequest
+		code  string
+	}{
+		{"dependency data incomplete", []Task{blocked}, []Dependency{{BlockerTaskID: "missing", BlockedTaskID: "b"}}, nil, BlockedDependencyDataIncomplete},
+		{"blocker stale", []Task{blocker, blocked}, []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}, []PullRequest{{TaskID: "a", State: "merged", Stale: true}}, BlockedByStaleData},
+		{"waiting for blocker", []Task{blocker, blocked}, []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}, nil, BlockedWaitingForBlocker},
+	}
+	for _, testCase := range cases {
+		t.Run(testCase.name, func(t *testing.T) {
+			got := Derive(testCase.tasks, testCase.deps, testCase.prs)
+			task := got[len(got)-1]
+			if task.BlockedCode != testCase.code {
+				t.Fatalf("blocked code=%q want %q", task.BlockedCode, testCase.code)
+			}
+			blockerTitle := ""
+			if task.BlockerTaskID == blocker.ID {
+				blockerTitle = blocker.Title
+			}
+			want := BlockedReasonText(testCase.code, blockerTitle)
+			if want == "" {
+				t.Fatalf("no wording defined for code %q", testCase.code)
+			}
+			if task.BlockedReason != want {
+				t.Fatalf("blocked reason=%q want %q", task.BlockedReason, want)
+			}
+		})
+	}
+}
+
 func TestPRDisplayPriority(t *testing.T) {
 	pr := &PullRequest{State: "merged", Draft: true, Mergeability: "conflicting", ReviewState: "changes_requested"}
 	if got := PRDisplayState(pr); got != "merged" {
