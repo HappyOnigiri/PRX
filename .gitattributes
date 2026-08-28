@@ -1,0 +1,3 @@
+gen/** linguist-generated
+internal/db/** linguist-generated
+web/src/gen/** linguist-generated

@@ -1,0 +1,133 @@
+syntax = "proto3";
+
+package prx.v1;
+
+option go_package = "github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1";
+
+message Feature {
+  string id = 1;
+  string slug = 2;
+  string title = 3;
+  string description = 4;
+  string status = 5;
+  bool archived = 6;
+  string created_at = 7;
+  string updated_at = 8;
+  int32 task_count = 9;
+  int32 ready_count = 10;
+  int32 review_waiting_count = 11;
+  int32 conflict_count = 12;
+  int32 merged_count = 13;
+}
+
+message Task {
+  string id = 1;
+  string feature_id = 2;
+  string title = 3;
+  string scope = 4;
+  string kind = 5;
+  string status = 6;
+  string assignee = 7;
+  string created_at = 8;
+  string updated_at = 9;
+  bool ready = 10;
+  string display_state = 11;
+  string blocked_reason = 12;
+}
+
+message Dependency {
+  string blocker_task_id = 1;
+  string blocked_task_id = 2;
+  string created_at = 3;
+}
+
+message PullRequest {
+  string task_id = 1;
+  string owner = 2;
+  string repository = 3;
+  int64 number = 4;
+  string url = 5;
+  string node_id = 6;
+  string author = 7;
+  repeated string assignees = 8;
+  string state = 9;
+  bool draft = 10;
+  string review_state = 11;
+  string mergeability = 12;
+  string github_updated_at = 13;
+  string last_synced_at = 14;
+  string sync_error = 15;
+  bool stale = 16;
+  string display_state = 17;
+}
+
+message Document {
+  string id = 1;
+  string feature_id = 2;
+  string task_id = 3;
+  string kind = 4;
+  string title = 5;
+  string value = 6;
+  string created_at = 7;
+}
+
+message Snapshot {
+  repeated Feature features = 1;
+  repeated Task tasks = 2;
+  repeated Dependency dependencies = 3;
+  repeated PullRequest pull_requests = 4;
+  repeated Document documents = 5;
+  repeated Task ready_tasks = 6;
+  repeated Task review_waiting_tasks = 7;
+  repeated Task conflict_tasks = 8;
+  repeated Task stale_tasks = 9;
+}
+
+message GetSnapshotRequest {}
+message GetSnapshotResponse { Snapshot snapshot = 1; }
+message CreateFeatureRequest { string slug = 1; string title = 2; string description = 3; }
+message CreateFeatureResponse { Feature feature = 1; }
+message UpdateFeatureRequest { string id = 1; optional string slug = 2; optional string title = 3; optional string description = 4; optional string status = 5; optional bool archived = 6; }
+message UpdateFeatureResponse { Feature feature = 1; }
+message DeleteFeatureRequest { string id = 1; bool cascade = 2; }
+message DeleteFeatureResponse {}
+message CreateTaskRequest { string feature_id = 1; string title = 2; string scope = 3; string kind = 4; string assignee = 5; }
+message CreateTaskResponse { Task task = 1; }
+message UpdateTaskRequest { string id = 1; optional string title = 2; optional string scope = 3; optional string status = 4; optional string assignee = 5; }
+message UpdateTaskResponse { Task task = 1; }
+message DeleteTaskRequest { string id = 1; bool cascade = 2; }
+message DeleteTaskResponse {}
+message AddDependencyRequest { string blocker_task_id = 1; string blocked_task_id = 2; }
+message AddDependencyResponse { Dependency dependency = 1; }
+message RemoveDependencyRequest { string blocker_task_id = 1; string blocked_task_id = 2; }
+message RemoveDependencyResponse {}
+message AttachPullRequestRequest { string task_id = 1; string url = 2; }
+message AttachPullRequestResponse { PullRequest pull_request = 1; }
+message DetachPullRequestRequest { string task_id = 1; }
+message DetachPullRequestResponse {}
+message AddDocumentRequest { string feature_id = 1; string task_id = 2; string kind = 3; string title = 4; string value = 5; }
+message AddDocumentResponse { Document document = 1; }
+message DeleteDocumentRequest { string id = 1; }
+message DeleteDocumentResponse {}
+message SyncRequest { string feature_id = 1; string task_id = 2; }
+message SyncResponse { int32 succeeded = 1; int32 failed = 2; }
+message ValidateRequest {}
+message ValidateResponse { bool valid = 1; repeated string errors = 2; }
+
+service PRXService {
+  rpc GetSnapshot(GetSnapshotRequest) returns (GetSnapshotResponse);
+  rpc CreateFeature(CreateFeatureRequest) returns (CreateFeatureResponse);
+  rpc UpdateFeature(UpdateFeatureRequest) returns (UpdateFeatureResponse);
+  rpc DeleteFeature(DeleteFeatureRequest) returns (DeleteFeatureResponse);
+  rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
+  rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
+  rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
+  rpc AddDependency(AddDependencyRequest) returns (AddDependencyResponse);
+  rpc RemoveDependency(RemoveDependencyRequest) returns (RemoveDependencyResponse);
+  rpc AttachPullRequest(AttachPullRequestRequest) returns (AttachPullRequestResponse);
+  rpc DetachPullRequest(DetachPullRequestRequest) returns (DetachPullRequestResponse);
+  rpc AddDocument(AddDocumentRequest) returns (AddDocumentResponse);
+  rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
+  rpc Sync(SyncRequest) returns (SyncResponse);
+  rpc Validate(ValidateRequest) returns (ValidateResponse);
+}

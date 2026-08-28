@@ -1,0 +1,17 @@
+tmp/
+/bin/
+/coverage/
+/playwright-report/
+/test-results/
+/web/node_modules/
+/node_modules/
+/web/coverage/
+/web/playwright-report/
+/web/test-results/
+/internal/webui/dist/*
+!/internal/webui/dist/.gitkeep
+*.db
+*.db-shm
+*.db-wal
+*.tsbuildinfo
+.DS_Store
