@@ -444,3 +444,26 @@ func TestInMemoryDatabaseIsSharedAcrossConcurrentCallers(t *testing.T) {
 		t.Fatalf("in-memory database is not shared: %v", err)
 	}
 }
+
+func TestPullRequestURLCasingIsNotADistinctPullRequest(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "casing", "Casing", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	first, err := service.CreateTask(ctx, feature.ID, "First", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := service.CreateTask(ctx, feature.ID, "Second", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.AttachPullRequest(ctx, first.ID, "https://github.com/Acme/API/pull/42"); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.AttachPullRequest(ctx, second.ID, "https://github.com/acme/api/pull/42"); domain.ErrorCode(err) != "duplicate_pull_request" {
+		t.Fatalf("case-only variant code=%s err=%v", domain.ErrorCode(err), err)
+	}
+}

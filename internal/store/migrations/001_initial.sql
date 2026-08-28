@@ -36,8 +36,10 @@ CREATE INDEX dependencies_blocked_idx ON dependencies(blocked_task_id);
 
 CREATE TABLE pull_requests (
   task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE RESTRICT,
-  owner TEXT NOT NULL,
-  repository TEXT NOT NULL,
+  -- GitHub treats owner and repository names case-insensitively, so the unique
+  -- constraint has to as well; otherwise the same PR can be attached twice.
+  owner TEXT NOT NULL COLLATE NOCASE,
+  repository TEXT NOT NULL COLLATE NOCASE,
   number INTEGER NOT NULL CHECK(number > 0),
   url TEXT NOT NULL,
   node_id TEXT NOT NULL DEFAULT '',
