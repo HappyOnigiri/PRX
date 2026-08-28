@@ -741,6 +741,9 @@ a {
 .node-asset:hover {
   background: #203754;
 }
+.node-asset:focus-visible {
+  outline-offset: -3px;
+}
 .node-asset span {
   color: var(--link);
   font:
