@@ -125,6 +125,7 @@ const errorKeys = {
   [DomainErrorCode.INVALID_DATABASE]: "error.invalidDatabase",
   [DomainErrorCode.INVALID_DOCUMENT]: "error.invalidDocument",
   [DomainErrorCode.INVALID_DOCUMENT_KIND]: "error.invalidDocumentKind",
+  [DomainErrorCode.INVALID_DOCUMENT_URL]: "error.invalidDocumentUrl",
   [DomainErrorCode.INVALID_KIND]: "error.invalidKind",
   [DomainErrorCode.INVALID_PARENT]: "error.invalidParent",
   [DomainErrorCode.INVALID_PULL_REQUEST_URL]: "error.invalidPullRequestUrl",
@@ -133,6 +134,9 @@ const errorKeys = {
   [DomainErrorCode.INVALID_STATUS]: "error.invalidStatus",
   [DomainErrorCode.INVALID_TITLE]: "error.invalidTitle",
   [DomainErrorCode.NOT_FOUND]: "error.notFound",
+  [DomainErrorCode.PR_TASK_COMPLETES_ON_MERGE]: "error.prTaskCompletesOnMerge",
+  [DomainErrorCode.PULL_REQUEST_ON_MANUAL_TASK]:
+    "error.pullRequestOnManualTask",
   [DomainErrorCode.REFERENCES_EXIST]: "error.referencesExist",
 } as const;
 

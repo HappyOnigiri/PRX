@@ -201,6 +201,8 @@ export const resources = {
         invalidDatabase: "The database path is invalid.",
         invalidDocument: "The reference is invalid.",
         invalidDocumentKind: "The reference type is invalid.",
+        invalidDocumentUrl:
+          "Enter a reference URL that starts with http:// or https://.",
         invalidKind: "The task type is invalid.",
         invalidParent: "Choose either a feature or a task for this reference.",
         invalidPullRequestUrl: "Enter a github.com pull request URL.",
@@ -210,6 +212,10 @@ export const resources = {
         invalidStatus: "The selected status is invalid.",
         invalidTitle: "Enter a title.",
         notFound: "The requested item was not found.",
+        prTaskCompletesOnMerge:
+          "A PR task completes when its pull request is merged.",
+        pullRequestOnManualTask:
+          "Manual tasks cannot have a pull request. Create a PR task instead.",
         referencesExist:
           "Remove dependent references before deleting this item.",
       },
@@ -418,6 +424,8 @@ export const resources = {
         invalidDatabase: "データベースのパスが正しくありません。",
         invalidDocument: "参照資料が正しくありません。",
         invalidDocumentKind: "参照資料の種類が正しくありません。",
+        invalidDocumentUrl:
+          "参照資料の URL は http:// または https:// で始まる必要があります。",
         invalidKind: "タスクの種類が正しくありません。",
         invalidParent:
           "参照先はフィーチャーまたはタスクのどちらか一方を選んでください。",
@@ -428,6 +436,10 @@ export const resources = {
         invalidStatus: "選択したステータスは正しくありません。",
         invalidTitle: "タイトルを入力してください。",
         notFound: "指定された項目が見つかりません。",
+        prTaskCompletesOnMerge:
+          "PR タスクはプルリクエストがマージされると完了します。",
+        pullRequestOnManualTask:
+          "手動タスクにはプルリクエストを関連付けられません。PR タスクを作成してください。",
         referencesExist: "先に関連する参照を削除してください。",
       },
     },

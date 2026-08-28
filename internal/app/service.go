@@ -133,7 +133,7 @@ func (s *Service) UpdateTask(ctx context.Context, id string, title, scope, statu
 	// drop the task out of the ready queue while its dependents stay blocked,
 	// since dependency satisfaction still requires a fresh merged PR.
 	if task.Kind == domain.TaskKindPR && task.Status == domain.TaskCompleted {
-		return domain.Task{}, domain.NewError("invalid_status", "a PR task completes when its pull request is merged")
+		return domain.Task{}, domain.NewError("pr_task_completes_on_merge", "a PR task completes when its pull request is merged")
 	}
 	return s.store.UpdateTask(ctx, task)
 }
@@ -154,7 +154,7 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 		return domain.PullRequest{}, err
 	}
 	if task.Kind != domain.TaskKindPR {
-		return domain.PullRequest{}, domain.NewError("invalid_kind", "manual tasks cannot have pull requests")
+		return domain.PullRequest{}, domain.NewError("pull_request_on_manual_task", "manual tasks cannot have pull requests")
 	}
 	owner, repo, number, canonical, err := githubprovider.ParsePullRequestURL(rawURL)
 	if err != nil {
@@ -181,7 +181,7 @@ func (s *Service) AddDocument(ctx context.Context, featureID, taskID, kind, titl
 	if kind == "url" {
 		parsed, err := url.Parse(value)
 		if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") {
-			return domain.Document{}, domain.NewError("invalid_document", "document URL must use http or https")
+			return domain.Document{}, domain.NewError("invalid_document_url", "document URL must use http or https")
 		}
 	}
 	if featureID != "" {

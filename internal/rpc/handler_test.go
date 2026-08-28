@@ -127,6 +127,44 @@ func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 	}
 }
 
+func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
+	ctx := context.Background()
+	client := newTestClient(t)
+	feature, err := client.CreateFeature(ctx, connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "cause-feature", Title: "Cause feature"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	manual, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "Sign off", Kind: prxv1.TaskKind_TASK_KIND_MANUAL}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	prTask, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "Ship API", Kind: prxv1.TaskKind_TASK_KIND_PULL_REQUEST}))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	_, err = client.AttachPullRequest(ctx, connect.NewRequest(&prxv1.AttachPullRequestRequest{TaskId: manual.Msg.Task.Id, Url: "https://github.com/org/repo/pull/42"}))
+	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK {
+		t.Fatalf("pull request on manual task code=%s err=%v", got, err)
+	}
+
+	completed := prxv1.TaskStatus_TASK_STATUS_COMPLETED
+	_, err = client.UpdateTask(ctx, connect.NewRequest(&prxv1.UpdateTaskRequest{Id: prTask.Msg.Task.Id, Status: &completed}))
+	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE {
+		t.Fatalf("PR task completion code=%s err=%v", got, err)
+	}
+
+	_, err = client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: manual.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_URL, Title: "Spec", Value: "ftp://example.com/spec"}))
+	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL {
+		t.Fatalf("document URL scheme code=%s err=%v", got, err)
+	}
+
+	_, err = client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: manual.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_URL, Title: "Spec", Value: "  "}))
+	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT {
+		t.Fatalf("missing document value code=%s err=%v", got, err)
+	}
+}
+
 func newTestClient(t *testing.T) prxv1connect.PRXServiceClient {
 	t.Helper()
 	ctx := context.Background()

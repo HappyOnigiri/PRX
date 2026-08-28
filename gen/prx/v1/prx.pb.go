@@ -604,24 +604,27 @@ func (BlockedReasonCode) EnumDescriptor() ([]byte, []int) {
 type DomainErrorCode int32
 
 const (
-	DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED              DomainErrorCode = 0
-	DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY DomainErrorCode = 2
-	DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE                    DomainErrorCode = 3
-	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY     DomainErrorCode = 4
-	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST   DomainErrorCode = 5
-	DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH              DomainErrorCode = 6
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE         DomainErrorCode = 7
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT         DomainErrorCode = 8
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND    DomainErrorCode = 9
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND             DomainErrorCode = 10
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT           DomainErrorCode = 11
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL DomainErrorCode = 12
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SEED             DomainErrorCode = 13
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG             DomainErrorCode = 14
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS           DomainErrorCode = 15
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE            DomainErrorCode = 16
-	DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND                DomainErrorCode = 17
-	DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST         DomainErrorCode = 18
+	DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED                 DomainErrorCode = 0
+	DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY    DomainErrorCode = 2
+	DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE                       DomainErrorCode = 3
+	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY        DomainErrorCode = 4
+	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST      DomainErrorCode = 5
+	DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH                 DomainErrorCode = 6
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE            DomainErrorCode = 7
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT            DomainErrorCode = 8
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND       DomainErrorCode = 9
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND                DomainErrorCode = 10
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT              DomainErrorCode = 11
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL    DomainErrorCode = 12
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SEED                DomainErrorCode = 13
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG                DomainErrorCode = 14
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS              DomainErrorCode = 15
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE               DomainErrorCode = 16
+	DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND                   DomainErrorCode = 17
+	DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST            DomainErrorCode = 18
+	DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK DomainErrorCode = 19
+	DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE  DomainErrorCode = 20
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL        DomainErrorCode = 21
 )
 
 // Enum value maps for DomainErrorCode.
@@ -645,26 +648,32 @@ var (
 		16: "DOMAIN_ERROR_CODE_INVALID_TITLE",
 		17: "DOMAIN_ERROR_CODE_NOT_FOUND",
 		18: "DOMAIN_ERROR_CODE_REFERENCES_EXIST",
+		19: "DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK",
+		20: "DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE",
+		21: "DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL",
 	}
 	DomainErrorCode_value = map[string]int32{
-		"DOMAIN_ERROR_CODE_UNSPECIFIED":              0,
-		"DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY": 2,
-		"DOMAIN_ERROR_CODE_CYCLE":                    3,
-		"DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY":     4,
-		"DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST":   5,
-		"DOMAIN_ERROR_CODE_GITHUB_AUTH":              6,
-		"DOMAIN_ERROR_CODE_INVALID_DATABASE":         7,
-		"DOMAIN_ERROR_CODE_INVALID_DOCUMENT":         8,
-		"DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND":    9,
-		"DOMAIN_ERROR_CODE_INVALID_KIND":             10,
-		"DOMAIN_ERROR_CODE_INVALID_PARENT":           11,
-		"DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL": 12,
-		"DOMAIN_ERROR_CODE_INVALID_SEED":             13,
-		"DOMAIN_ERROR_CODE_INVALID_SLUG":             14,
-		"DOMAIN_ERROR_CODE_INVALID_STATUS":           15,
-		"DOMAIN_ERROR_CODE_INVALID_TITLE":            16,
-		"DOMAIN_ERROR_CODE_NOT_FOUND":                17,
-		"DOMAIN_ERROR_CODE_REFERENCES_EXIST":         18,
+		"DOMAIN_ERROR_CODE_UNSPECIFIED":                 0,
+		"DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY":    2,
+		"DOMAIN_ERROR_CODE_CYCLE":                       3,
+		"DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY":        4,
+		"DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST":      5,
+		"DOMAIN_ERROR_CODE_GITHUB_AUTH":                 6,
+		"DOMAIN_ERROR_CODE_INVALID_DATABASE":            7,
+		"DOMAIN_ERROR_CODE_INVALID_DOCUMENT":            8,
+		"DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND":       9,
+		"DOMAIN_ERROR_CODE_INVALID_KIND":                10,
+		"DOMAIN_ERROR_CODE_INVALID_PARENT":              11,
+		"DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL":    12,
+		"DOMAIN_ERROR_CODE_INVALID_SEED":                13,
+		"DOMAIN_ERROR_CODE_INVALID_SLUG":                14,
+		"DOMAIN_ERROR_CODE_INVALID_STATUS":              15,
+		"DOMAIN_ERROR_CODE_INVALID_TITLE":               16,
+		"DOMAIN_ERROR_CODE_NOT_FOUND":                   17,
+		"DOMAIN_ERROR_CODE_REFERENCES_EXIST":            18,
+		"DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK": 19,
+		"DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE":  20,
+		"DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL":        21,
 	}
 )
 
@@ -3245,7 +3254,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x1fBLOCKED_REASON_CODE_UNSPECIFIED\x10\x00\x122\n" +
 	".BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE\x10\x01\x12%\n" +
 	"!BLOCKED_REASON_CODE_BLOCKER_STALE\x10\x02\x12+\n" +
-	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03*\xd1\x05\n" +
+	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03*\xe2\x06\n" +
 	"\x0fDomainErrorCode\x12!\n" +
 	"\x1dDOMAIN_ERROR_CODE_UNSPECIFIED\x10\x00\x12.\n" +
 	"*DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY\x10\x02\x12\x1b\n" +
@@ -3265,7 +3274,10 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	" DOMAIN_ERROR_CODE_INVALID_STATUS\x10\x0f\x12#\n" +
 	"\x1fDOMAIN_ERROR_CODE_INVALID_TITLE\x10\x10\x12\x1f\n" +
 	"\x1bDOMAIN_ERROR_CODE_NOT_FOUND\x10\x11\x12&\n" +
-	"\"DOMAIN_ERROR_CODE_REFERENCES_EXIST\x10\x122\xf1\b\n" +
+	"\"DOMAIN_ERROR_CODE_REFERENCES_EXIST\x10\x12\x121\n" +
+	"-DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK\x10\x13\x120\n" +
+	",DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE\x10\x14\x12*\n" +
+	"&DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL\x10\x152\xf1\b\n" +
 	"\n" +
 	"PRXService\x12F\n" +
 	"\vGetSnapshot\x12\x1a.prx.v1.GetSnapshotRequest\x1a\x1b.prx.v1.GetSnapshotResponse\x12L\n" +
