@@ -57,3 +57,62 @@ func TestFixturePreservesError(t *testing.T) {
 		t.Fatalf("fixture got=%+v err=%v", got, err)
 	}
 }
+
+func newReviewServer(t *testing.T, reviewsJSON string) *LiveProvider {
+	t.Helper()
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},"updated_at":"2026-01-01T00:00:00Z"}`))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/reviews", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(reviewsJSON))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/requested_reviewers", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"users":[],"teams":[]}`))
+	})
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+	client := gh.NewClient(nil)
+	base, _ := client.BaseURL.Parse(server.URL + "/")
+	client.BaseURL = base
+	return &LiveProvider{client: client}
+}
+
+func TestLiveProviderIgnoresNonDecisionReviews(t *testing.T) {
+	cases := []struct {
+		name    string
+		reviews string
+		want    string
+	}{
+		{
+			name:    "comment after approval keeps approved",
+			reviews: `[{"state":"APPROVED","user":{"login":"reviewer"}},{"state":"COMMENTED","user":{"login":"reviewer"}}]`,
+			want:    "approved",
+		},
+		{
+			name:    "dismissed review does not request changes",
+			reviews: `[{"state":"DISMISSED","user":{"login":"reviewer"}}]`,
+			want:    "none",
+		},
+		{
+			name:    "pending review is ignored",
+			reviews: `[{"state":"APPROVED","user":{"login":"reviewer"}},{"state":"PENDING","user":{"login":"reviewer"}}]`,
+			want:    "approved",
+		},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			provider := newReviewServer(t, tc.reviews)
+			got, err := provider.Fetch(context.Background(), domain.PullRequest{Owner: "acme", Repository: "api", Number: 7})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if got.ReviewState != tc.want {
+				t.Fatalf("review state = %q, want %q", got.ReviewState, tc.want)
+			}
+		})
+	}
+}

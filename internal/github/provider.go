@@ -56,7 +56,11 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	reviewState := "none"
 	latest := map[string]string{}
 	for _, review := range reviews {
-		latest[review.GetUser().GetLogin()] = strings.ToUpper(review.GetState())
+		state := strings.ToUpper(review.GetState())
+		if state != "APPROVED" && state != "CHANGES_REQUESTED" {
+			continue
+		}
+		latest[review.GetUser().GetLogin()] = state
 	}
 	for _, state := range latest {
 		if state == "CHANGES_REQUESTED" {
