@@ -13,6 +13,7 @@ import {
   DetachPullRequestRequestSchema,
   GetSnapshotRequestSchema,
   PRXService,
+  ReadMarkdownDocumentRequestSchema,
   RemoveDependencyRequestSchema,
   SyncRequestSchema,
   UpdateFeatureRequestSchema,
@@ -96,3 +97,10 @@ export const mutations = {
   sync: (featureId?: string, taskId?: string) =>
     client.sync(create(SyncRequestSchema, { featureId, taskId })),
 };
+
+export async function readMarkdownDocument(id: string): Promise<string> {
+  const response = await client.readMarkdownDocument(
+    create(ReadMarkdownDocumentRequestSchema, { id }),
+  );
+  return response.content;
+}

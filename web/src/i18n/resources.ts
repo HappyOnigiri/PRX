@@ -22,6 +22,7 @@ export const resources = {
         status: "Status",
         assignee: "Assignee",
         add: "Add",
+        edit: "Edit",
         retry: "Try again",
         unassigned: "Unassigned",
         ready: "READY",
@@ -77,6 +78,7 @@ export const resources = {
         syncGithub: "↻ Sync GitHub",
         addTask: "＋ Add task",
         editFeature: "Edit feature",
+        editTask: "Edit {{title}}",
         archiveFeature: "Archive feature",
         unarchiveFeature: "Unarchive feature",
         deleteFeature: "Delete feature",
@@ -95,8 +97,9 @@ export const resources = {
         layoutErrorFallback: "Graph layout failed.",
         retryLayout: "Retry layout",
         flow: {
-          nodeDescription: "Press Enter or Space to select a node.",
-          keyboardDisabled: "Select a node to open its details.",
+          nodeDescription:
+            "Use the links to open references, or the Edit button to edit this task.",
+          keyboardDisabled: "Use the Edit button to open task details.",
           edgeDescription: "An edge connects a blocker to a blocked task.",
           controls: "Graph controls",
           zoomIn: "Zoom in",
@@ -120,6 +123,17 @@ export const resources = {
         eyebrow: "Feature settings",
         title: "Edit feature",
         submit: "Save feature",
+      },
+      markdownPreview: {
+        eyebrow: "Markdown preview",
+        untitled: "Markdown document",
+        loading: "Reading Markdown file…",
+        copyContent: "Copy full text",
+        copyPath: "Copy file path",
+        contentCopied: "Full text copied.",
+        pathCopied: "File path copied.",
+        copyFailed: "Could not copy. Check the browser's clipboard permission.",
+        close: "Close Markdown preview",
       },
       inspector: {
         label: "Task inspector",
@@ -197,6 +211,9 @@ export const resources = {
         duplicateDependency: "This dependency already exists.",
         duplicatePullRequest:
           "This pull request is already attached to another task.",
+        documentReadFailed:
+          "The Markdown file could not be read. Check that the path exists and is readable from the server's working directory.",
+        documentTooLarge: "Markdown preview supports files up to 1 MiB.",
         githubAuth: "GitHub authentication failed.",
         invalidDatabase: "The database path is invalid.",
         invalidDocument: "The reference is invalid.",
@@ -244,6 +261,7 @@ export const resources = {
         status: "ステータス",
         assignee: "担当者",
         add: "追加",
+        edit: "編集",
         retry: "再試行",
         unassigned: "未割り当て",
         ready: "着手可能",
@@ -299,6 +317,7 @@ export const resources = {
         syncGithub: "↻ GitHub と同期",
         addTask: "＋ タスクを追加",
         editFeature: "フィーチャーを編集",
+        editTask: "{{title}} を編集",
         archiveFeature: "フィーチャーをアーカイブ",
         unarchiveFeature: "フィーチャーを復元",
         deleteFeature: "フィーチャーを削除",
@@ -318,8 +337,9 @@ export const resources = {
         layoutErrorFallback: "グラフの配置に失敗しました。",
         retryLayout: "配置を再試行",
         flow: {
-          nodeDescription: "Enter またはスペースキーでノードを選択します。",
-          keyboardDisabled: "ノードを選択すると詳細が開きます。",
+          nodeDescription:
+            "参照資料はリンクから開き、タスクの変更は編集ボタンから行います。",
+          keyboardDisabled: "編集ボタンからタスクの詳細を開きます。",
           edgeDescription:
             "エッジはブロッカーからブロック対象のタスクへ接続します。",
           controls: "グラフ操作",
@@ -344,6 +364,18 @@ export const resources = {
         eyebrow: "フィーチャー設定",
         title: "フィーチャーを編集",
         submit: "フィーチャーを保存",
+      },
+      markdownPreview: {
+        eyebrow: "Markdown プレビュー",
+        untitled: "Markdown ドキュメント",
+        loading: "Markdown ファイルを読み込んでいます…",
+        copyContent: "全文をコピー",
+        copyPath: "ファイルパスをコピー",
+        contentCopied: "全文をコピーしました。",
+        pathCopied: "ファイルパスをコピーしました。",
+        copyFailed:
+          "コピーできませんでした。ブラウザのクリップボード権限を確認してください。",
+        close: "Markdown プレビューを閉じる",
       },
       inspector: {
         label: "タスクインスペクター",
@@ -420,6 +452,9 @@ export const resources = {
         duplicateDependency: "この依存関係はすでに存在します。",
         duplicatePullRequest:
           "このプルリクエストは別のタスクに関連付けられています。",
+        documentReadFailed:
+          "Markdown ファイルを読み込めませんでした。パスが存在し、サーバーの作業ディレクトリから読み取れることを確認してください。",
+        documentTooLarge: "1 MiB までの Markdown ファイルを表示できます。",
         githubAuth: "GitHub の認証に失敗しました。",
         invalidDatabase: "データベースのパスが正しくありません。",
         invalidDocument: "参照資料が正しくありません。",

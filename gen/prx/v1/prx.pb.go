@@ -625,6 +625,8 @@ const (
 	DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK DomainErrorCode = 19
 	DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE  DomainErrorCode = 20
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL        DomainErrorCode = 21
+	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED        DomainErrorCode = 22
+	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE          DomainErrorCode = 23
 )
 
 // Enum value maps for DomainErrorCode.
@@ -651,6 +653,8 @@ var (
 		19: "DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK",
 		20: "DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE",
 		21: "DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL",
+		22: "DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED",
+		23: "DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE",
 	}
 	DomainErrorCode_value = map[string]int32{
 		"DOMAIN_ERROR_CODE_UNSPECIFIED":                 0,
@@ -674,6 +678,8 @@ var (
 		"DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK": 19,
 		"DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE":  20,
 		"DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL":        21,
+		"DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED":        22,
+		"DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE":          23,
 	}
 )
 
@@ -2800,6 +2806,94 @@ func (*DeleteDocumentResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{33}
 }
 
+type ReadMarkdownDocumentRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReadMarkdownDocumentRequest) Reset() {
+	*x = ReadMarkdownDocumentRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[34]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReadMarkdownDocumentRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadMarkdownDocumentRequest) ProtoMessage() {}
+
+func (x *ReadMarkdownDocumentRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[34]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadMarkdownDocumentRequest.ProtoReflect.Descriptor instead.
+func (*ReadMarkdownDocumentRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{34}
+}
+
+func (x *ReadMarkdownDocumentRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type ReadMarkdownDocumentResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Content       string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReadMarkdownDocumentResponse) Reset() {
+	*x = ReadMarkdownDocumentResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[35]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReadMarkdownDocumentResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReadMarkdownDocumentResponse) ProtoMessage() {}
+
+func (x *ReadMarkdownDocumentResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[35]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReadMarkdownDocumentResponse.ProtoReflect.Descriptor instead.
+func (*ReadMarkdownDocumentResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{35}
+}
+
+func (x *ReadMarkdownDocumentResponse) GetContent() string {
+	if x != nil {
+		return x.Content
+	}
+	return ""
+}
+
 type SyncRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	FeatureId     string                 `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
@@ -2810,7 +2904,7 @@ type SyncRequest struct {
 
 func (x *SyncRequest) Reset() {
 	*x = SyncRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[34]
+	mi := &file_prx_v1_prx_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2822,7 +2916,7 @@ func (x *SyncRequest) String() string {
 func (*SyncRequest) ProtoMessage() {}
 
 func (x *SyncRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[34]
+	mi := &file_prx_v1_prx_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2835,7 +2929,7 @@ func (x *SyncRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncRequest.ProtoReflect.Descriptor instead.
 func (*SyncRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{34}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{36}
 }
 
 func (x *SyncRequest) GetFeatureId() string {
@@ -2862,7 +2956,7 @@ type SyncResponse struct {
 
 func (x *SyncResponse) Reset() {
 	*x = SyncResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[35]
+	mi := &file_prx_v1_prx_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2874,7 +2968,7 @@ func (x *SyncResponse) String() string {
 func (*SyncResponse) ProtoMessage() {}
 
 func (x *SyncResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[35]
+	mi := &file_prx_v1_prx_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2887,7 +2981,7 @@ func (x *SyncResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncResponse.ProtoReflect.Descriptor instead.
 func (*SyncResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{35}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *SyncResponse) GetSucceeded() int32 {
@@ -2912,7 +3006,7 @@ type ValidateRequest struct {
 
 func (x *ValidateRequest) Reset() {
 	*x = ValidateRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[36]
+	mi := &file_prx_v1_prx_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2924,7 +3018,7 @@ func (x *ValidateRequest) String() string {
 func (*ValidateRequest) ProtoMessage() {}
 
 func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[36]
+	mi := &file_prx_v1_prx_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2937,7 +3031,7 @@ func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateRequest.ProtoReflect.Descriptor instead.
 func (*ValidateRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{36}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{38}
 }
 
 type ValidateResponse struct {
@@ -2950,7 +3044,7 @@ type ValidateResponse struct {
 
 func (x *ValidateResponse) Reset() {
 	*x = ValidateResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[37]
+	mi := &file_prx_v1_prx_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2962,7 +3056,7 @@ func (x *ValidateResponse) String() string {
 func (*ValidateResponse) ProtoMessage() {}
 
 func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[37]
+	mi := &file_prx_v1_prx_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2975,7 +3069,7 @@ func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateResponse.ProtoReflect.Descriptor instead.
 func (*ValidateResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{37}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *ValidateResponse) GetValid() bool {
@@ -3171,7 +3265,11 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\bdocument\x18\x01 \x01(\v2\x10.prx.v1.DocumentR\bdocument\"'\n" +
 	"\x15DeleteDocumentRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"\x18\n" +
-	"\x16DeleteDocumentResponse\"E\n" +
+	"\x16DeleteDocumentResponse\"-\n" +
+	"\x1bReadMarkdownDocumentRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"8\n" +
+	"\x1cReadMarkdownDocumentResponse\x12\x18\n" +
+	"\acontent\x18\x01 \x01(\tR\acontent\"E\n" +
 	"\vSyncRequest\x12\x1d\n" +
 	"\n" +
 	"feature_id\x18\x01 \x01(\tR\tfeatureId\x12\x17\n" +
@@ -3254,7 +3352,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x1fBLOCKED_REASON_CODE_UNSPECIFIED\x10\x00\x122\n" +
 	".BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE\x10\x01\x12%\n" +
 	"!BLOCKED_REASON_CODE_BLOCKER_STALE\x10\x02\x12+\n" +
-	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03*\xe2\x06\n" +
+	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03*\xb8\a\n" +
 	"\x0fDomainErrorCode\x12!\n" +
 	"\x1dDOMAIN_ERROR_CODE_UNSPECIFIED\x10\x00\x12.\n" +
 	"*DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY\x10\x02\x12\x1b\n" +
@@ -3277,7 +3375,9 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\"DOMAIN_ERROR_CODE_REFERENCES_EXIST\x10\x12\x121\n" +
 	"-DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK\x10\x13\x120\n" +
 	",DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE\x10\x14\x12*\n" +
-	"&DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL\x10\x152\xf1\b\n" +
+	"&DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL\x10\x15\x12*\n" +
+	"&DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED\x10\x16\x12(\n" +
+	"$DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE\x10\x172\xd4\t\n" +
 	"\n" +
 	"PRXService\x12F\n" +
 	"\vGetSnapshot\x12\x1a.prx.v1.GetSnapshotRequest\x1a\x1b.prx.v1.GetSnapshotResponse\x12L\n" +
@@ -3295,7 +3395,8 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x11AttachPullRequest\x12 .prx.v1.AttachPullRequestRequest\x1a!.prx.v1.AttachPullRequestResponse\x12X\n" +
 	"\x11DetachPullRequest\x12 .prx.v1.DetachPullRequestRequest\x1a!.prx.v1.DetachPullRequestResponse\x12F\n" +
 	"\vAddDocument\x12\x1a.prx.v1.AddDocumentRequest\x1a\x1b.prx.v1.AddDocumentResponse\x12O\n" +
-	"\x0eDeleteDocument\x12\x1d.prx.v1.DeleteDocumentRequest\x1a\x1e.prx.v1.DeleteDocumentResponse\x121\n" +
+	"\x0eDeleteDocument\x12\x1d.prx.v1.DeleteDocumentRequest\x1a\x1e.prx.v1.DeleteDocumentResponse\x12a\n" +
+	"\x14ReadMarkdownDocument\x12#.prx.v1.ReadMarkdownDocumentRequest\x1a$.prx.v1.ReadMarkdownDocumentResponse\x121\n" +
 	"\x04Sync\x12\x13.prx.v1.SyncRequest\x1a\x14.prx.v1.SyncResponse\x12=\n" +
 	"\bValidate\x12\x17.prx.v1.ValidateRequest\x1a\x18.prx.v1.ValidateResponseB.Z,github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1b\x06proto3"
 
@@ -3312,57 +3413,59 @@ func file_prx_v1_prx_proto_rawDescGZIP() []byte {
 }
 
 var file_prx_v1_prx_proto_enumTypes = make([]protoimpl.EnumInfo, 11)
-var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 38)
+var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
 var file_prx_v1_prx_proto_goTypes = []any{
-	(FeatureStatus)(0),                // 0: prx.v1.FeatureStatus
-	(TaskKind)(0),                     // 1: prx.v1.TaskKind
-	(TaskStatus)(0),                   // 2: prx.v1.TaskStatus
-	(TaskDisplayState)(0),             // 3: prx.v1.TaskDisplayState
-	(PullRequestState)(0),             // 4: prx.v1.PullRequestState
-	(ReviewState)(0),                  // 5: prx.v1.ReviewState
-	(Mergeability)(0),                 // 6: prx.v1.Mergeability
-	(PullRequestDisplayState)(0),      // 7: prx.v1.PullRequestDisplayState
-	(DocumentKind)(0),                 // 8: prx.v1.DocumentKind
-	(BlockedReasonCode)(0),            // 9: prx.v1.BlockedReasonCode
-	(DomainErrorCode)(0),              // 10: prx.v1.DomainErrorCode
-	(*BlockedReason)(nil),             // 11: prx.v1.BlockedReason
-	(*ErrorDetail)(nil),               // 12: prx.v1.ErrorDetail
-	(*Feature)(nil),                   // 13: prx.v1.Feature
-	(*Task)(nil),                      // 14: prx.v1.Task
-	(*Dependency)(nil),                // 15: prx.v1.Dependency
-	(*PullRequest)(nil),               // 16: prx.v1.PullRequest
-	(*Document)(nil),                  // 17: prx.v1.Document
-	(*Snapshot)(nil),                  // 18: prx.v1.Snapshot
-	(*GetSnapshotRequest)(nil),        // 19: prx.v1.GetSnapshotRequest
-	(*GetSnapshotResponse)(nil),       // 20: prx.v1.GetSnapshotResponse
-	(*CreateFeatureRequest)(nil),      // 21: prx.v1.CreateFeatureRequest
-	(*CreateFeatureResponse)(nil),     // 22: prx.v1.CreateFeatureResponse
-	(*UpdateFeatureRequest)(nil),      // 23: prx.v1.UpdateFeatureRequest
-	(*UpdateFeatureResponse)(nil),     // 24: prx.v1.UpdateFeatureResponse
-	(*DeleteFeatureRequest)(nil),      // 25: prx.v1.DeleteFeatureRequest
-	(*DeleteFeatureResponse)(nil),     // 26: prx.v1.DeleteFeatureResponse
-	(*CreateTaskRequest)(nil),         // 27: prx.v1.CreateTaskRequest
-	(*CreateTaskResponse)(nil),        // 28: prx.v1.CreateTaskResponse
-	(*UpdateTaskRequest)(nil),         // 29: prx.v1.UpdateTaskRequest
-	(*UpdateTaskResponse)(nil),        // 30: prx.v1.UpdateTaskResponse
-	(*DeleteTaskRequest)(nil),         // 31: prx.v1.DeleteTaskRequest
-	(*DeleteTaskResponse)(nil),        // 32: prx.v1.DeleteTaskResponse
-	(*AddDependencyRequest)(nil),      // 33: prx.v1.AddDependencyRequest
-	(*AddDependencyResponse)(nil),     // 34: prx.v1.AddDependencyResponse
-	(*RemoveDependencyRequest)(nil),   // 35: prx.v1.RemoveDependencyRequest
-	(*RemoveDependencyResponse)(nil),  // 36: prx.v1.RemoveDependencyResponse
-	(*AttachPullRequestRequest)(nil),  // 37: prx.v1.AttachPullRequestRequest
-	(*AttachPullRequestResponse)(nil), // 38: prx.v1.AttachPullRequestResponse
-	(*DetachPullRequestRequest)(nil),  // 39: prx.v1.DetachPullRequestRequest
-	(*DetachPullRequestResponse)(nil), // 40: prx.v1.DetachPullRequestResponse
-	(*AddDocumentRequest)(nil),        // 41: prx.v1.AddDocumentRequest
-	(*AddDocumentResponse)(nil),       // 42: prx.v1.AddDocumentResponse
-	(*DeleteDocumentRequest)(nil),     // 43: prx.v1.DeleteDocumentRequest
-	(*DeleteDocumentResponse)(nil),    // 44: prx.v1.DeleteDocumentResponse
-	(*SyncRequest)(nil),               // 45: prx.v1.SyncRequest
-	(*SyncResponse)(nil),              // 46: prx.v1.SyncResponse
-	(*ValidateRequest)(nil),           // 47: prx.v1.ValidateRequest
-	(*ValidateResponse)(nil),          // 48: prx.v1.ValidateResponse
+	(FeatureStatus)(0),                   // 0: prx.v1.FeatureStatus
+	(TaskKind)(0),                        // 1: prx.v1.TaskKind
+	(TaskStatus)(0),                      // 2: prx.v1.TaskStatus
+	(TaskDisplayState)(0),                // 3: prx.v1.TaskDisplayState
+	(PullRequestState)(0),                // 4: prx.v1.PullRequestState
+	(ReviewState)(0),                     // 5: prx.v1.ReviewState
+	(Mergeability)(0),                    // 6: prx.v1.Mergeability
+	(PullRequestDisplayState)(0),         // 7: prx.v1.PullRequestDisplayState
+	(DocumentKind)(0),                    // 8: prx.v1.DocumentKind
+	(BlockedReasonCode)(0),               // 9: prx.v1.BlockedReasonCode
+	(DomainErrorCode)(0),                 // 10: prx.v1.DomainErrorCode
+	(*BlockedReason)(nil),                // 11: prx.v1.BlockedReason
+	(*ErrorDetail)(nil),                  // 12: prx.v1.ErrorDetail
+	(*Feature)(nil),                      // 13: prx.v1.Feature
+	(*Task)(nil),                         // 14: prx.v1.Task
+	(*Dependency)(nil),                   // 15: prx.v1.Dependency
+	(*PullRequest)(nil),                  // 16: prx.v1.PullRequest
+	(*Document)(nil),                     // 17: prx.v1.Document
+	(*Snapshot)(nil),                     // 18: prx.v1.Snapshot
+	(*GetSnapshotRequest)(nil),           // 19: prx.v1.GetSnapshotRequest
+	(*GetSnapshotResponse)(nil),          // 20: prx.v1.GetSnapshotResponse
+	(*CreateFeatureRequest)(nil),         // 21: prx.v1.CreateFeatureRequest
+	(*CreateFeatureResponse)(nil),        // 22: prx.v1.CreateFeatureResponse
+	(*UpdateFeatureRequest)(nil),         // 23: prx.v1.UpdateFeatureRequest
+	(*UpdateFeatureResponse)(nil),        // 24: prx.v1.UpdateFeatureResponse
+	(*DeleteFeatureRequest)(nil),         // 25: prx.v1.DeleteFeatureRequest
+	(*DeleteFeatureResponse)(nil),        // 26: prx.v1.DeleteFeatureResponse
+	(*CreateTaskRequest)(nil),            // 27: prx.v1.CreateTaskRequest
+	(*CreateTaskResponse)(nil),           // 28: prx.v1.CreateTaskResponse
+	(*UpdateTaskRequest)(nil),            // 29: prx.v1.UpdateTaskRequest
+	(*UpdateTaskResponse)(nil),           // 30: prx.v1.UpdateTaskResponse
+	(*DeleteTaskRequest)(nil),            // 31: prx.v1.DeleteTaskRequest
+	(*DeleteTaskResponse)(nil),           // 32: prx.v1.DeleteTaskResponse
+	(*AddDependencyRequest)(nil),         // 33: prx.v1.AddDependencyRequest
+	(*AddDependencyResponse)(nil),        // 34: prx.v1.AddDependencyResponse
+	(*RemoveDependencyRequest)(nil),      // 35: prx.v1.RemoveDependencyRequest
+	(*RemoveDependencyResponse)(nil),     // 36: prx.v1.RemoveDependencyResponse
+	(*AttachPullRequestRequest)(nil),     // 37: prx.v1.AttachPullRequestRequest
+	(*AttachPullRequestResponse)(nil),    // 38: prx.v1.AttachPullRequestResponse
+	(*DetachPullRequestRequest)(nil),     // 39: prx.v1.DetachPullRequestRequest
+	(*DetachPullRequestResponse)(nil),    // 40: prx.v1.DetachPullRequestResponse
+	(*AddDocumentRequest)(nil),           // 41: prx.v1.AddDocumentRequest
+	(*AddDocumentResponse)(nil),          // 42: prx.v1.AddDocumentResponse
+	(*DeleteDocumentRequest)(nil),        // 43: prx.v1.DeleteDocumentRequest
+	(*DeleteDocumentResponse)(nil),       // 44: prx.v1.DeleteDocumentResponse
+	(*ReadMarkdownDocumentRequest)(nil),  // 45: prx.v1.ReadMarkdownDocumentRequest
+	(*ReadMarkdownDocumentResponse)(nil), // 46: prx.v1.ReadMarkdownDocumentResponse
+	(*SyncRequest)(nil),                  // 47: prx.v1.SyncRequest
+	(*SyncResponse)(nil),                 // 48: prx.v1.SyncResponse
+	(*ValidateRequest)(nil),              // 49: prx.v1.ValidateRequest
+	(*ValidateResponse)(nil),             // 50: prx.v1.ValidateResponse
 }
 var file_prx_v1_prx_proto_depIdxs = []int32{
 	9,  // 0: prx.v1.BlockedReason.code:type_name -> prx.v1.BlockedReasonCode
@@ -3411,25 +3514,27 @@ var file_prx_v1_prx_proto_depIdxs = []int32{
 	39, // 43: prx.v1.PRXService.DetachPullRequest:input_type -> prx.v1.DetachPullRequestRequest
 	41, // 44: prx.v1.PRXService.AddDocument:input_type -> prx.v1.AddDocumentRequest
 	43, // 45: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
-	45, // 46: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
-	47, // 47: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
-	20, // 48: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
-	22, // 49: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
-	24, // 50: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
-	26, // 51: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
-	28, // 52: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
-	30, // 53: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
-	32, // 54: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
-	34, // 55: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
-	36, // 56: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
-	38, // 57: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
-	40, // 58: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
-	42, // 59: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
-	44, // 60: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
-	46, // 61: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
-	48, // 62: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
-	48, // [48:63] is the sub-list for method output_type
-	33, // [33:48] is the sub-list for method input_type
+	45, // 46: prx.v1.PRXService.ReadMarkdownDocument:input_type -> prx.v1.ReadMarkdownDocumentRequest
+	47, // 47: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
+	49, // 48: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
+	20, // 49: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
+	22, // 50: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
+	24, // 51: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
+	26, // 52: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
+	28, // 53: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
+	30, // 54: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
+	32, // 55: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
+	34, // 56: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
+	36, // 57: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
+	38, // 58: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
+	40, // 59: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
+	42, // 60: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
+	44, // 61: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
+	46, // 62: prx.v1.PRXService.ReadMarkdownDocument:output_type -> prx.v1.ReadMarkdownDocumentResponse
+	48, // 63: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
+	50, // 64: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
+	49, // [49:65] is the sub-list for method output_type
+	33, // [33:49] is the sub-list for method input_type
 	33, // [33:33] is the sub-list for extension type_name
 	33, // [33:33] is the sub-list for extension extendee
 	0,  // [0:33] is the sub-list for field type_name
@@ -3448,7 +3553,7 @@ func file_prx_v1_prx_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_prx_v1_prx_proto_rawDesc), len(file_prx_v1_prx_proto_rawDesc)),
 			NumEnums:      11,
-			NumMessages:   38,
+			NumMessages:   40,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
