@@ -523,12 +523,18 @@ type InspectorProps = {
   }>;
   onClose: () => void;
 };
-function MutationError({ error }: { error: Error | null }) {
+function MutationError({
+  error,
+  taskTitle,
+}: {
+  error: Error | null;
+  taskTitle?: (id: string) => string | undefined;
+}) {
   const { t } = useTranslation();
   if (!error) return null;
   return (
     <p className="form-error" role="alert">
-      {formatError(error, t)}
+      {formatError(error, t, taskTitle)}
     </p>
   );
 }
@@ -728,7 +734,10 @@ function TaskInspector({
           </select>
           <button>{t("common.add")}</button>
         </form>
-        <MutationError error={addDep.error} />
+        <MutationError
+          error={addDep.error}
+          taskTitle={(id) => tasks.find((item) => item.id === id)?.title}
+        />
         <MutationError error={removeDep.error} />
       </section>
       <section>

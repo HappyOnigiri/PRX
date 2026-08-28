@@ -140,13 +140,21 @@ const errorKeys = {
   [DomainErrorCode.REFERENCES_EXIST]: "error.referencesExist",
 } as const;
 
-export function formatError(error: Error, t: TFunction): string {
+// The cycle path arrives as task IDs, so callers that know the tasks on screen
+// pass a resolver to show titles instead of raw identifiers.
+export function formatError(
+  error: Error,
+  t: TFunction,
+  taskTitle?: (id: string) => string | undefined,
+): string {
   const connectError = ConnectError.from(error);
   const detail = connectError.findDetails(ErrorDetailSchema)[0];
   if (!detail || detail.code === DomainErrorCode.UNSPECIFIED)
     return connectError.rawMessage;
   if (detail.code === DomainErrorCode.CYCLE)
-    return t("error.cycle", { path: detail.path.join(" → ") });
+    return t("error.cycle", {
+      path: detail.path.map((id) => taskTitle?.(id) ?? id).join(" → "),
+    });
   const key = errorKeys[detail.code as keyof typeof errorKeys];
   return key ? t(key) : connectError.rawMessage;
 }
