@@ -1,6 +1,10 @@
 package domain
 
-import "testing"
+import (
+	"fmt"
+	"testing"
+	"time"
+)
 
 func TestCyclePathAndTopologicalOrder(t *testing.T) {
 	tasks := []Task{{ID: "a"}, {ID: "b"}, {ID: "c"}, {ID: "d"}}
@@ -68,5 +72,56 @@ func TestSelfDependencyIsCycle(t *testing.T) {
 	path := CyclePath([]Task{{ID: "task"}}, nil, "task", "task")
 	if len(path) != 2 || path[0] != "task" || path[1] != "task" {
 		t.Fatalf("self cycle path=%v", path)
+	}
+}
+
+// A diamond chain merges and splits at every level, so a path-based search that
+// does not remember settled nodes revisits shared subgraphs once per route.
+func buildDiamondChain(levels int) ([]Task, []Dependency, string, string) {
+	tasks := []Task{{ID: "a00"}}
+	deps := []Dependency{}
+	for level := 0; level < levels; level++ {
+		left := fmt.Sprintf("l%02d", level)
+		right := fmt.Sprintf("r%02d", level)
+		next := fmt.Sprintf("a%02d", level+1)
+		current := fmt.Sprintf("a%02d", level)
+		tasks = append(tasks, Task{ID: left}, Task{ID: right}, Task{ID: next})
+		deps = append(deps,
+			Dependency{BlockerTaskID: current, BlockedTaskID: left},
+			Dependency{BlockerTaskID: current, BlockedTaskID: right},
+			Dependency{BlockerTaskID: left, BlockedTaskID: next},
+			Dependency{BlockerTaskID: right, BlockedTaskID: next},
+		)
+	}
+	return tasks, deps, fmt.Sprintf("a%02d", levels), "a00"
+}
+
+func TestCyclePathOnDiamondChainReturnsPromptly(t *testing.T) {
+	tasks, deps, last, first := buildDiamondChain(40)
+	result := make(chan []string, 1)
+	go func() { result <- CyclePath(tasks, deps, last, first) }()
+	select {
+	case path := <-result:
+		if len(path) < 3 || path[0] != path[len(path)-1] {
+			t.Fatalf("expected a cycle path, got %v", path)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("CyclePath did not return within 5s on a 40-level diamond chain")
+	}
+}
+
+func TestCyclePathClearsDiamondChainPromptly(t *testing.T) {
+	tasks, deps, last, first := buildDiamondChain(40)
+	result := make(chan []string, 1)
+	// Adding an edge along the existing direction closes no cycle, so the search
+	// has to settle the whole graph before it can answer.
+	go func() { result <- CyclePath(tasks, deps, first, last) }()
+	select {
+	case path := <-result:
+		if path != nil {
+			t.Fatalf("edge along the existing direction is not a cycle: %v", path)
+		}
+	case <-time.After(5 * time.Second):
+		t.Fatal("CyclePath did not return within 5s on a 40-level diamond chain")
 	}
 }

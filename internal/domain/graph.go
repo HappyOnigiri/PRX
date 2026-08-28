@@ -9,33 +9,45 @@ func CyclePath(tasks []Task, deps []Dependency, blocker, blocked string) []strin
 	if blocker == blocked {
 		return []string{blocker, blocker}
 	}
+	// The stored graph is already acyclic, so adding blocker→blocked closes a
+	// cycle exactly when blocker is reachable from blocked. Walking that single
+	// question with a visited set keeps the search linear in the graph size;
+	// re-running a path-based DFS from every task revisits shared subgraphs once
+	// per distinct route, which is exponential on diamond-shaped graphs.
 	adj := make(map[string][]string, len(tasks))
 	for _, dep := range deps {
 		adj[dep.BlockerTaskID] = append(adj[dep.BlockerTaskID], dep.BlockedTaskID)
 	}
-	adj[blocker] = append(adj[blocker], blocked)
 	for key := range adj {
 		sort.Strings(adj[key])
 	}
-	var visit func(string, []string, map[string]int) []string
-	visit = func(node string, path []string, active map[string]int) []string {
-		if start, ok := active[node]; ok {
-			cycle := append([]string{}, path[start:]...)
-			return append(cycle, node)
-		}
-		active[node] = len(path)
-		path = append(path, node)
-		for _, next := range adj[node] {
-			if cycle := visit(next, path, active); len(cycle) > 0 {
-				return cycle
+	parent := make(map[string]string, len(tasks))
+	visited := map[string]bool{blocked: true}
+	stack := []string{blocked}
+	for len(stack) > 0 {
+		node := stack[len(stack)-1]
+		stack = stack[:len(stack)-1]
+		if node == blocker {
+			path := []string{}
+			for current := node; ; current = parent[current] {
+				path = append(path, current)
+				if current == blocked {
+					break
+				}
 			}
+			for i, j := 0, len(path)-1; i < j; i, j = i+1, j-1 {
+				path[i], path[j] = path[j], path[i]
+			}
+			return append(path, blocked)
 		}
-		delete(active, node)
-		return nil
-	}
-	for _, task := range tasks {
-		if cycle := visit(task.ID, nil, map[string]int{}); len(cycle) > 0 {
-			return cycle
+		next := adj[node]
+		for i := len(next) - 1; i >= 0; i-- {
+			if visited[next[i]] {
+				continue
+			}
+			visited[next[i]] = true
+			parent[next[i]] = node
+			stack = append(stack, next[i])
 		}
 	}
 	return nil
