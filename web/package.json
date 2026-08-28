@@ -8,8 +8,9 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run --coverage",
-    "lint": "eslint . --max-warnings=0 && tsc -b --pretty false",
-    "format": "prettier --write src tests *.ts *.json",
+    "lint": "pnpm run format:check && eslint . --max-warnings=0 && tsc -b --pretty false",
+    "format": "prettier --write src tests index.html *.ts *.json",
+    "format:check": "prettier --check src tests index.html *.ts *.json",
     "e2e": "playwright test",
     "clean": "rm -rf coverage playwright-report test-results"
   },
