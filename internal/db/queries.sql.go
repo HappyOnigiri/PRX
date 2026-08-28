@@ -172,13 +172,16 @@ func (q *Queries) DeleteDependenciesForTask(ctx context.Context, arg DeleteDepen
 	return err
 }
 
-const deleteDocument = `-- name: DeleteDocument :exec
+const deleteDocument = `-- name: DeleteDocument :execrows
 DELETE FROM documents WHERE id=?
 `
 
-func (q *Queries) DeleteDocument(ctx context.Context, id string) error {
-	_, err := q.db.ExecContext(ctx, deleteDocument, id)
-	return err
+func (q *Queries) DeleteDocument(ctx context.Context, id string) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteDocument, id)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const deleteDocumentsForFeature = `-- name: DeleteDocumentsForFeature :exec
@@ -208,13 +211,16 @@ func (q *Queries) DeleteFeature(ctx context.Context, id string) error {
 	return err
 }
 
-const deletePullRequest = `-- name: DeletePullRequest :exec
+const deletePullRequest = `-- name: DeletePullRequest :execrows
 DELETE FROM pull_requests WHERE task_id=?
 `
 
-func (q *Queries) DeletePullRequest(ctx context.Context, taskID string) error {
-	_, err := q.db.ExecContext(ctx, deletePullRequest, taskID)
-	return err
+func (q *Queries) DeletePullRequest(ctx context.Context, taskID string) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deletePullRequest, taskID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const deletePullRequestsForFeature = `-- name: DeletePullRequestsForFeature :exec
@@ -577,7 +583,7 @@ func (q *Queries) ListTasksByFeature(ctx context.Context, featureID string) ([]T
 	return items, nil
 }
 
-const removeDependency = `-- name: RemoveDependency :exec
+const removeDependency = `-- name: RemoveDependency :execrows
 DELETE FROM dependencies WHERE blocker_task_id=? AND blocked_task_id=?
 `
 
@@ -586,9 +592,12 @@ type RemoveDependencyParams struct {
 	BlockedTaskID string `json:"blocked_task_id"`
 }
 
-func (q *Queries) RemoveDependency(ctx context.Context, arg RemoveDependencyParams) error {
-	_, err := q.db.ExecContext(ctx, removeDependency, arg.BlockerTaskID, arg.BlockedTaskID)
-	return err
+func (q *Queries) RemoveDependency(ctx context.Context, arg RemoveDependencyParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, removeDependency, arg.BlockerTaskID, arg.BlockedTaskID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const updateFeature = `-- name: UpdateFeature :one

@@ -39,7 +39,7 @@ DELETE FROM tasks WHERE id=?;
 -- name: AddDependency :one
 INSERT INTO dependencies (blocker_task_id, blocked_task_id, created_at) VALUES (?, ?, ?) RETURNING *;
 
--- name: RemoveDependency :exec
+-- name: RemoveDependency :execrows
 DELETE FROM dependencies WHERE blocker_task_id=? AND blocked_task_id=?;
 
 -- name: ListDependencies :many
@@ -70,7 +70,7 @@ SELECT * FROM pull_requests WHERE task_id=?;
 -- name: ListPullRequests :many
 SELECT * FROM pull_requests ORDER BY owner, repository, number;
 
--- name: DeletePullRequest :exec
+-- name: DeletePullRequest :execrows
 DELETE FROM pull_requests WHERE task_id=?;
 
 -- name: DeletePullRequestsForFeature :exec
@@ -82,7 +82,7 @@ INSERT INTO documents (id, feature_id, task_id, kind, title, value, created_at) 
 -- name: ListDocuments :many
 SELECT * FROM documents ORDER BY created_at, id;
 
--- name: DeleteDocument :exec
+-- name: DeleteDocument :execrows
 DELETE FROM documents WHERE id=?;
 
 -- name: DeleteDocumentsForTask :exec

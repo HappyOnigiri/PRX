@@ -467,3 +467,25 @@ func TestPullRequestURLCasingIsNotADistinctPullRequest(t *testing.T) {
 		t.Fatalf("case-only variant code=%s err=%v", domain.ErrorCode(err), err)
 	}
 }
+
+func TestDeletingWhatIsNotThereReportsNotFound(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "deletions", "Deletions", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := service.CreateTask(ctx, feature.ID, "Task", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := service.RemoveDependency(ctx, task.ID, "missing-task"); domain.ErrorCode(err) != "not_found" {
+		t.Fatalf("remove dependency code=%s err=%v", domain.ErrorCode(err), err)
+	}
+	if err := service.DetachPullRequest(ctx, task.ID); domain.ErrorCode(err) != "not_found" {
+		t.Fatalf("detach pull request code=%s err=%v", domain.ErrorCode(err), err)
+	}
+	if err := service.DeleteDocument(ctx, "missing-document"); domain.ErrorCode(err) != "not_found" {
+		t.Fatalf("delete document code=%s err=%v", domain.ErrorCode(err), err)
+	}
+}

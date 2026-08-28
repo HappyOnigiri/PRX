@@ -85,6 +85,16 @@ func TestBlackBoxJSONCRUDAndCycle(t *testing.T) {
 	if exit == 0 || value.Error == nil || value.Error.Code != "cycle" {
 		t.Fatalf("cycle result=%+v exit=%d", value, exit)
 	}
+	for _, removal := range [][]string{
+		{"dependency", "remove", at.ID, "missing-task"},
+		{"pr", "detach", at.ID},
+		{"document", "delete", "missing-document"},
+	} {
+		value, _, exit := runCLI(t, binary, dbPath, removal...)
+		if exit == 0 || value.Error == nil || value.Error.Code != "not_found" {
+			t.Fatalf("%v result=%+v exit=%d", removal, value, exit)
+		}
+	}
 	valid, _, exit := runCLI(t, binary, dbPath, "validate")
 	if exit != 0 || !valid.OK {
 		t.Fatalf("validate result=%+v", valid)

@@ -106,7 +106,14 @@ func (s *Store) AddDependency(ctx context.Context, blocker, blocked string) (dom
 }
 
 func (s *Store) RemoveDependency(ctx context.Context, blocker, blocked string) error {
-	return db.New(s.db).RemoveDependency(ctx, db.RemoveDependencyParams{BlockerTaskID: blocker, BlockedTaskID: blocked})
+	affected, err := db.New(s.db).RemoveDependency(ctx, db.RemoveDependencyParams{BlockerTaskID: blocker, BlockedTaskID: blocked})
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return domain.NewError("not_found", "dependency %q → %q was not found", blocker, blocked)
+	}
+	return nil
 }
 
 func (s *Store) DeleteTask(ctx context.Context, id string, cascade bool) error {
@@ -131,7 +138,8 @@ func (s *Store) DeleteTask(ctx context.Context, id string, cascade bool) error {
 		if err := q.DeleteDependenciesForTask(ctx, db.DeleteDependenciesForTaskParams{BlockerTaskID: id, BlockedTaskID: id}); err != nil {
 			return err
 		}
-		if err := q.DeletePullRequest(ctx, id); err != nil {
+		// Cascading removal does not require a pull request to be present.
+		if _, err := q.DeletePullRequest(ctx, id); err != nil {
 			return err
 		}
 		if err := q.DeleteDocumentsForTask(ctx, sql.NullString{String: id, Valid: true}); err != nil {
@@ -204,7 +212,14 @@ func (s *Store) GetPullRequest(ctx context.Context, taskID string) (domain.PullR
 }
 
 func (s *Store) DeletePullRequest(ctx context.Context, taskID string) error {
-	return db.New(s.db).DeletePullRequest(ctx, taskID)
+	affected, err := db.New(s.db).DeletePullRequest(ctx, taskID)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return domain.NewError("not_found", "pull request for task %q was not found", taskID)
+	}
+	return nil
 }
 
 func (s *Store) CreateDocument(ctx context.Context, featureID, taskID, kind, title, value string) (domain.Document, error) {
@@ -216,7 +231,14 @@ func (s *Store) CreateDocument(ctx context.Context, featureID, taskID, kind, tit
 }
 
 func (s *Store) DeleteDocument(ctx context.Context, id string) error {
-	return db.New(s.db).DeleteDocument(ctx, id)
+	affected, err := db.New(s.db).DeleteDocument(ctx, id)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return domain.NewError("not_found", "document %q was not found", id)
+	}
+	return nil
 }
 
 func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
