@@ -18,7 +18,9 @@ type Handler struct {
 }
 
 func New(service *app.Service) (string, http.Handler) {
-	return prxv1connect.NewPRXServiceHandler(&Handler{service: service})
+	// Requiring the Connect protocol header keeps the RPCs out of reach of
+	// simple cross-origin requests, which browsers send without a preflight.
+	return prxv1connect.NewPRXServiceHandler(&Handler{service: service}, connect.WithRequireConnectProtocolHeader())
 }
 
 func rpcError(err error) error {

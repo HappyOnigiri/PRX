@@ -135,6 +135,33 @@ func TestBlackBoxServerAndCLIShareDatabase(t *testing.T) {
 		_ = server.Wait()
 		t.Fatalf("CLI write failed: %+v", created)
 	}
+	for _, guarded := range []struct {
+		name   string
+		host   string
+		origin string
+	}{
+		{name: "rebound host", host: "attacker.example"},
+		{name: "cross origin", host: address, origin: "https://attacker.example"},
+	} {
+		request, requestErr := http.NewRequestWithContext(ctx, http.MethodGet, "http://"+address, nil)
+		if requestErr != nil {
+			t.Fatal(requestErr)
+		}
+		request.Host = guarded.host
+		if guarded.origin != "" {
+			request.Header.Set("Origin", guarded.origin)
+		}
+		response, requestErr := http.DefaultClient.Do(request)
+		if requestErr != nil {
+			t.Fatalf("%s: %v", guarded.name, requestErr)
+		}
+		_ = response.Body.Close()
+		if response.StatusCode != http.StatusForbidden {
+			cancel()
+			_ = server.Wait()
+			t.Fatalf("%s: status = %d, want %d", guarded.name, response.StatusCode, http.StatusForbidden)
+		}
+	}
 	rpcClient := prxv1connect.NewPRXServiceClient(http.DefaultClient, "http://"+address)
 	snapshot, err := rpcClient.GetSnapshot(context.Background(), connect.NewRequest(&prxv1.GetSnapshotRequest{}))
 	if err != nil {

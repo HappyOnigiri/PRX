@@ -81,6 +81,7 @@ Failed GitHub refreshes preserve the last successful fields and mark the record 
 - Migrations are embedded and applied transactionally with a schema version table.
 - SQLite enables foreign keys, WAL, a five-second busy timeout, and bounded connection pooling.
 - The browser only receives typed ConnectRPC responses and cannot invoke the CLI or read arbitrary local files.
+- `prx serve` rejects requests whose `Host` or `Origin` header does not match the listen address, and the RPC handler requires the Connect protocol header, so a rebound DNS name cannot drive the local database.
 - Markdown documents are stored as path references; their contents are not served.
 - Tokens are never written to SQLite or application logs.
 - Production responses set a restrictive content security policy and related browser headers.

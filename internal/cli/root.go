@@ -8,6 +8,7 @@ import (
 	"io"
 	"net"
 	"net/http"
+	"net/url"
 	"os"
 	"strings"
 	"time"
@@ -461,11 +462,11 @@ func (s *state) serveCommand() *cobra.Command {
 		mux := http.NewServeMux()
 		mux.Handle(rpcPath, rpcHandler)
 		mux.Handle("/", webui.Handler())
-		server := &http.Server{Addr: address, Handler: mux, ReadHeaderTimeout: 5 * time.Second}
 		listener, err := (&net.ListenConfig{}).Listen(cmd.Context(), "tcp", address)
 		if err != nil {
 			return err
 		}
+		server := &http.Server{Addr: address, Handler: localOnly(listener.Addr(), mux), ReadHeaderTimeout: 5 * time.Second}
 		_, _ = fmt.Fprintf(s.errOut, "PRX listening on http://%s\n", listener.Addr())
 		go func() {
 			<-cmd.Context().Done()
@@ -481,6 +482,37 @@ func (s *state) serveCommand() *cobra.Command {
 	}}
 	command.Flags().StringVar(&address, "addr", "127.0.0.1:7331", "listen address")
 	return command
+}
+
+// localOnly rejects requests whose Host or Origin header does not belong to the
+// address the server listens on. Without it a page on an attacker-controlled
+// domain that resolves to the loopback address is same-origin from the
+// browser's point of view and can drive every mutation on the local database.
+func localOnly(addr net.Addr, next http.Handler) http.Handler {
+	allowed := map[string]struct{}{}
+	if host, port, err := net.SplitHostPort(addr.String()); err == nil {
+		for _, name := range []string{host, "127.0.0.1", "localhost", "::1"} {
+			allowed[strings.ToLower(net.JoinHostPort(name, port))] = struct{}{}
+		}
+	}
+	permitted := func(hostPort string) bool {
+		_, ok := allowed[strings.ToLower(hostPort)]
+		return ok
+	}
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if !permitted(r.Host) {
+			http.Error(w, "forbidden host", http.StatusForbidden)
+			return
+		}
+		if origin := r.Header.Get("Origin"); origin != "" {
+			parsed, err := url.Parse(origin)
+			if err != nil || !permitted(parsed.Host) {
+				http.Error(w, "forbidden origin", http.StatusForbidden)
+				return
+			}
+		}
+		next.ServeHTTP(w, r)
+	})
 }
 
 func filterTasks(tasks []domain.Task, keep func(domain.Task) bool) []domain.Task {
