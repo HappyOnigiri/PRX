@@ -61,8 +61,15 @@ func Open(ctx context.Context, path string) (*Store, error) {
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
-	database.SetMaxOpenConns(8)
-	database.SetMaxIdleConns(4)
+	// SQLite gives every connection to :memory: its own private database, so a
+	// second pooled connection would reach an empty, unmigrated one.
+	if path == ":memory:" {
+		database.SetMaxOpenConns(1)
+		database.SetMaxIdleConns(1)
+	} else {
+		database.SetMaxOpenConns(8)
+		database.SetMaxIdleConns(4)
+	}
 	store := &Store{db: database, now: func() time.Time { return time.Now().UTC() }}
 	if err := store.migrate(ctx); err != nil {
 		_ = database.Close()

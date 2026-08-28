@@ -407,3 +407,40 @@ func TestPRTaskCannotBeCompletedManually(t *testing.T) {
 		}
 	}
 }
+
+func TestInMemoryDatabaseIsSharedAcrossConcurrentCallers(t *testing.T) {
+	ctx := context.Background()
+	database, err := store.Open(ctx, ":memory:")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+	provider, _ := githubprovider.NewFixtureProvider("demo")
+	service := app.New(database, provider)
+	feature, err := service.CreateFeature(ctx, "in-memory", "In memory", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	const readers = 12
+	var wait sync.WaitGroup
+	errorsCh := make(chan error, readers)
+	for i := 0; i < readers; i++ {
+		wait.Add(1)
+		go func() {
+			defer wait.Done()
+			snapshot, err := service.Snapshot(ctx)
+			if err != nil {
+				errorsCh <- err
+				return
+			}
+			if len(snapshot.Features) != 1 || snapshot.Features[0].ID != feature.ID {
+				errorsCh <- fmt.Errorf("concurrent reader saw %d features", len(snapshot.Features))
+			}
+		}()
+	}
+	wait.Wait()
+	close(errorsCh)
+	for err := range errorsCh {
+		t.Fatalf("in-memory database is not shared: %v", err)
+	}
+}
