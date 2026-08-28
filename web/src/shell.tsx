@@ -6,6 +6,7 @@ import { useDomainMutation, useSnapshot } from "./hooks";
 import { formatError } from "./i18n/domain";
 import { setDisplayLanguage } from "./i18n";
 import { supportedLanguages, type SupportedLanguage } from "./i18n/settings";
+import { formValue } from "./form";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, i18n } = useTranslation();
@@ -17,9 +18,9 @@ export function AppShell({ children }: { children: ReactNode }) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const response = await createFeature.mutateAsync({
-      slug: String(data.get("slug")),
-      title: String(data.get("title")),
-      description: String(data.get("description")),
+      slug: formValue(data, "slug"),
+      title: formValue(data, "title"),
+      description: formValue(data, "description"),
     });
     setShowCreate(false);
     if (response.feature)

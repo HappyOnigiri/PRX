@@ -9,7 +9,7 @@ test.use({
   baseURL: `http://127.0.0.1:${e2ePort}`,
 });
 
-test.beforeEach(async ({ page }) => {
+test.beforeEach(({ page }) => {
   browserErrors.length = 0;
   page.on("console", (message) => {
     if (message.type() === "error" || message.type() === "warning")

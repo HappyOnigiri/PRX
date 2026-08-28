@@ -155,6 +155,6 @@ export function formatError(
     return t("error.cycle", {
       path: detail.path.map((id) => taskTitle?.(id) ?? id).join(" → "),
     });
-  const key = errorKeys[detail.code as keyof typeof errorKeys];
+  const key = errorKeys[detail.code];
   return key ? t(key) : connectError.rawMessage;
 }

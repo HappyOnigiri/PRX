@@ -35,6 +35,7 @@ import {
   taskStatusLabel,
 } from "../i18n/domain";
 import { TaskNode, type TaskFlowNode } from "./TaskNode";
+import { formValue } from "../form";
 
 const nodeTypes = { task: TaskNode };
 
@@ -183,7 +184,7 @@ export function FeatureWorkspace() {
     return (
       <div className="state-message">
         <h1>{t("workspace.notFound")}</h1>
-        <button onClick={() => navigate({ to: "/" })}>
+        <button onClick={() => void navigate({ to: "/" })}>
           {t("workspace.returnOverview")}
         </button>
       </div>
@@ -194,10 +195,10 @@ export function FeatureWorkspace() {
     try {
       await createTask.mutateAsync({
         featureId,
-        title: String(form.get("title")),
-        scope: String(form.get("scope")),
-        kind: Number(form.get("kind")) as TaskKind,
-        assignee: String(form.get("assignee")),
+        title: formValue(form, "title"),
+        scope: formValue(form, "scope"),
+        kind: Number(form.get("kind")),
+        assignee: formValue(form, "assignee"),
       });
     } catch {
       return;
@@ -210,10 +211,10 @@ export function FeatureWorkspace() {
     try {
       await updateFeature.mutateAsync({
         id: featureId,
-        slug: String(form.get("slug")),
-        title: String(form.get("title")),
-        description: String(form.get("description")),
-        status: Number(form.get("status")) as FeatureStatus,
+        slug: formValue(form, "slug"),
+        title: formValue(form, "title"),
+        description: formValue(form, "description"),
+        status: Number(form.get("status")),
       });
     } catch {
       return;
@@ -598,10 +599,10 @@ function TaskInspector({
           const f = new FormData(e.currentTarget);
           update.mutate({
             id: task.id,
-            title: String(f.get("title")),
-            scope: String(f.get("scope")),
-            status: Number(f.get("status")) as TaskStatus,
-            assignee: String(f.get("assignee")),
+            title: formValue(f, "title"),
+            scope: formValue(f, "scope"),
+            status: Number(f.get("status")),
+            assignee: formValue(f, "assignee"),
           });
         }}
       >
@@ -669,7 +670,7 @@ function TaskInspector({
               e.preventDefault();
               attach.mutate({
                 taskId: task.id,
-                url: String(new FormData(e.currentTarget).get("url")),
+                url: formValue(new FormData(e.currentTarget), "url"),
               });
             }}
           >
@@ -707,7 +708,7 @@ function TaskInspector({
           onSubmit={(e) => {
             e.preventDefault();
             addDep.mutate({
-              blocker: String(new FormData(e.currentTarget).get("blocker")),
+              blocker: formValue(new FormData(e.currentTarget), "blocker"),
               blocked: task.id,
             });
           }}
@@ -765,9 +766,9 @@ function TaskInspector({
             const f = new FormData(e.currentTarget);
             addDoc.mutate({
               taskId: task.id,
-              kind: Number(f.get("kind")) as DocumentKind,
-              title: String(f.get("title")),
-              value: String(f.get("value")),
+              kind: Number(f.get("kind")),
+              title: formValue(f, "title"),
+              value: formValue(f, "value"),
             });
           }}
         >

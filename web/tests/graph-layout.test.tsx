@@ -15,8 +15,7 @@ class ResizeObserverStub {
   unobserve() {}
   disconnect() {}
 }
-globalThis.ResizeObserver =
-  ResizeObserverStub as unknown as typeof ResizeObserver;
+globalThis.ResizeObserver = ResizeObserverStub;
 
 const snapshot = {
   features: [

@@ -41,7 +41,7 @@ export function Dashboard() {
       <StateMessage
         title={t("dashboard.errorTitle")}
         detail={error ? formatError(error, t) : t("dashboard.noData")}
-        action={() => refetch()}
+        action={() => void refetch()}
       />
     );
   return (
