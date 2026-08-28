@@ -1,4 +1,4 @@
-.PHONY: generate generated-check fmt lint test test-race test-cli web-install web-test web-build e2e build install ci clean
+.PHONY: generate generated-check fmt lint check-web-quality test test-race test-cli web-install web-test web-build e2e build install ci clean
 
 GO ?= go
 PNPM ?= corepack pnpm@11.24.0
@@ -20,6 +20,10 @@ lint:
 	$(GO) vet ./...
 	golangci-lint run ./...
 	$(PNPM) --dir web lint
+
+check-web-quality:
+	python3 scripts/check_web_file_lines.py
+	$(PNPM) --dir web check:duplicates
 
 test:
 	$(GO) test ./...
@@ -51,7 +55,7 @@ install: build
 	install -d "$(INSTALL_DIR)"
 	install -m 0755 bin/prx "$(INSTALL_DIR)/prx"
 
-ci: generated-check lint test test-race build e2e
+ci: generated-check lint check-web-quality test test-race build e2e
 
 clean:
 	$(GO) clean -testcache
