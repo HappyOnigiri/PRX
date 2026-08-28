@@ -3,11 +3,12 @@ import { resources } from "../src/i18n/resources";
 import { supportedLanguages } from "../src/i18n/settings";
 
 function flattenKeys(value: object, prefix = ""): string[] {
-  return Object.entries(value).flatMap(([key, child]) =>
-    child && typeof child === "object"
-      ? flattenKeys(child, `${prefix}${key}.`)
-      : [`${prefix}${key}`],
-  );
+  return Object.entries(value).flatMap(([key, child]) => {
+    const nested: unknown = child;
+    return nested && typeof nested === "object"
+      ? flattenKeys(nested, `${prefix}${key}.`)
+      : [`${prefix}${key}`];
+  });
 }
 
 describe("translation resources", () => {
