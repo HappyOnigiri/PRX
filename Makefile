@@ -1,4 +1,4 @@
-.PHONY: generate generated-check fmt lint test test-race test-cli web-install web-test web-build e2e build install ci clean
+.PHONY: generate generated-check mod-tidy-check fmt lint test test-race test-cli web-install web-test web-build e2e build install ci clean
 
 GO ?= go
 PNPM ?= corepack pnpm@11.24.0
@@ -11,6 +11,9 @@ generate:
 
 generated-check: generate
 	git diff --exit-code -- internal/db gen web/src/gen
+
+mod-tidy-check:
+	$(GO) mod tidy -diff
 
 fmt:
 	gofmt -w $$(find cmd internal gen -name '*.go' -type f)
@@ -51,7 +54,7 @@ install: build
 	install -d "$(INSTALL_DIR)"
 	install -m 0755 bin/prx "$(INSTALL_DIR)/prx"
 
-ci: generated-check lint test test-race build e2e
+ci: generated-check mod-tidy-check lint test test-race build e2e
 
 clean:
 	$(GO) clean -testcache
