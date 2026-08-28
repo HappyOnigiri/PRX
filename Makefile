@@ -6,7 +6,7 @@ INSTALL_DIR ?= $(HOME)/.local/bin
 GO_COVERAGE_MIN ?= 68.8
 GO_COVERAGE_PACKAGES := ./internal/domain ./internal/github ./internal/rpc ./internal/store
 
-generate:
+generate: web-install
 	$(GO) tool sqlc generate
 	$(GO) tool buf lint
 	$(GO) tool buf generate
@@ -17,20 +17,20 @@ generated-check: generate
 mod-tidy-check:
 	$(GO) mod tidy -diff
 
-fmt:
+fmt: web-install
 	gofmt -w $$(find cmd internal gen -name '*.go' -type f)
 	$(PNPM) --dir web format
 
-lint:
+lint: web-install
 	$(GO) vet ./...
 	golangci-lint run ./...
 	$(PNPM) --dir web lint
 
-check-web-quality:
+check-web-quality: web-install
 	python3 scripts/check_web_file_lines.py
 	$(PNPM) --dir web check:duplicates
 
-test:
+test: web-install
 	$(GO) test ./...
 	$(PNPM) --dir web test
 
@@ -54,10 +54,10 @@ test-cli:
 web-install:
 	$(PNPM) install --frozen-lockfile
 
-web-test:
+web-test: web-install
 	$(PNPM) --dir web test
 
-web-build:
+web-build: web-install
 	$(PNPM) --dir web build
 
 e2e: web-build
