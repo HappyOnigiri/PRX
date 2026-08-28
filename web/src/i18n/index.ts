@@ -3,6 +3,7 @@ import { initReactI18next } from "react-i18next";
 import { resources } from "./resources";
 import {
   detectDisplayLanguage,
+  supportedLanguages,
   type SupportedLanguage,
   writeDisplayLanguage,
 } from "./settings";
@@ -11,7 +12,7 @@ void i18n.use(initReactI18next).init({
   resources,
   lng: detectDisplayLanguage(),
   fallbackLng: "en",
-  supportedLngs: ["en", "ja"],
+  supportedLngs: [...supportedLanguages],
   interpolation: { escapeValue: false },
   react: { useSuspense: false },
 });
