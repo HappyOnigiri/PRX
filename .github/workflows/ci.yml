@@ -41,6 +41,13 @@ jobs:
           pnpm --dir web exec playwright install --with-deps chromium
       - name: Run complete verification
         run: make ci
+      - name: Verify CI is read-only
+        run: |
+          git diff --exit-code || {
+            echo "::error::make ci produced tracked file changes."
+            git diff --stat
+            exit 1
+          }
       - name: Upload graph screenshots
         if: always()
         uses: actions/upload-artifact@v7
