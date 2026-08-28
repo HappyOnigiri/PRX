@@ -51,13 +51,26 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	if err != nil {
 		return current, fmt.Errorf("fetch pull request: %w", err)
 	}
-	reviews, _, err := p.client.PullRequests.ListReviews(ctx, current.Owner, current.Repository, int(current.Number), &gh.ListOptions{PerPage: 100})
+	reviews, err := allPages(ctx, func(ctx context.Context, options *gh.ListOptions) ([]*gh.PullRequestReview, *gh.Response, error) {
+		return p.client.PullRequests.ListReviews(ctx, current.Owner, current.Repository, int(current.Number), options)
+	})
 	if err != nil {
 		return current, fmt.Errorf("fetch reviews: %w", err)
 	}
-	requested, _, err := p.client.PullRequests.ListReviewers(ctx, current.Owner, current.Repository, int(current.Number), &gh.ListOptions{PerPage: 100})
+	requestedPages, err := allPages(ctx, func(ctx context.Context, options *gh.ListOptions) ([]*gh.Reviewers, *gh.Response, error) {
+		value, response, err := p.client.PullRequests.ListReviewers(ctx, current.Owner, current.Repository, int(current.Number), options)
+		if err != nil {
+			return nil, response, err
+		}
+		return []*gh.Reviewers{value}, response, nil
+	})
 	if err != nil {
 		return current, fmt.Errorf("fetch requested reviewers: %w", err)
+	}
+	requested := &gh.Reviewers{}
+	for _, page := range requestedPages {
+		requested.Users = append(requested.Users, page.Users...)
+		requested.Teams = append(requested.Teams, page.Teams...)
 	}
 	reviewState := "none"
 	latest := map[string]string{}
@@ -110,6 +123,25 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	current.SyncError = ""
 	current.Stale = false
 	return current, nil
+}
+
+// allPages walks every page of a GitHub list endpoint. Stopping at the first
+// page silently truncates long-lived pull requests, and the resulting review
+// state is stored as if it were fresh.
+func allPages[T any](ctx context.Context, fetch func(context.Context, *gh.ListOptions) ([]T, *gh.Response, error)) ([]T, error) {
+	options := &gh.ListOptions{PerPage: 100}
+	var all []T
+	for {
+		page, response, err := fetch(ctx, options)
+		if err != nil {
+			return nil, err
+		}
+		all = append(all, page...)
+		if response == nil || response.NextPage == 0 {
+			return all, nil
+		}
+		options.Page = response.NextPage
+	}
 }
 
 type FixtureProvider struct{ values map[string]fixture }

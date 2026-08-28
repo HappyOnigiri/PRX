@@ -181,3 +181,43 @@ func TestLiveProviderBoundsRequestsAndKeepsSyncing(t *testing.T) {
 		t.Fatalf("healthy fetch after a stalled one: stale=%v err=%v", got.Stale, err)
 	}
 }
+
+func TestLiveProviderFollowsReviewPagination(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},"updated_at":"2026-01-01T00:00:00Z"}`))
+	})
+	var reviewPages int
+	mux.HandleFunc("/repos/acme/api/pulls/7/reviews", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		reviewPages++
+		if r.URL.Query().Get("page") == "" {
+			// The decisive review lives on the second page.
+			w.Header().Set("Link", `<`+r.URL.Path+`?page=2>; rel="next"`)
+			_, _ = w.Write([]byte(`[{"state":"COMMENTED","user":{"login":"reviewer"}}]`))
+			return
+		}
+		_, _ = w.Write([]byte(`[{"state":"CHANGES_REQUESTED","user":{"login":"reviewer"}}]`))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/requested_reviewers", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"users":[],"teams":[]}`))
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := gh.NewClient(nil)
+	base, _ := client.BaseURL.Parse(server.URL + "/")
+	client.BaseURL = base
+	provider := &LiveProvider{client: client}
+	got, err := provider.Fetch(context.Background(), domain.PullRequest{Owner: "acme", Repository: "api", Number: 7})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reviewPages != 2 {
+		t.Fatalf("requested %d review pages, want 2", reviewPages)
+	}
+	if got.ReviewState != "changes_requested" {
+		t.Fatalf("review state = %q, want changes_requested from the second page", got.ReviewState)
+	}
+}
