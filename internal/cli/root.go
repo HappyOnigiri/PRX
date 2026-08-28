@@ -95,20 +95,22 @@ func Execute(ctx context.Context, args []string, out, errOut io.Writer) error {
 		return nil
 	}
 	if s.json {
-		PrintError(out, err)
+		if printErr := PrintError(out, err); printErr != nil {
+			_, _ = fmt.Fprintln(errOut, "error:", err)
+		}
 	} else {
 		_, _ = fmt.Fprintln(errOut, "error:", err)
 	}
 	return err
 }
 
-func PrintError(out io.Writer, err error) {
+func PrintError(out io.Writer, err error) error {
 	value := &domain.Error{Code: domain.ErrorCode(err), Message: err.Error()}
 	var typed *domain.Error
 	if errors.As(err, &typed) {
 		value = typed
 	}
-	_ = json.NewEncoder(out).Encode(envelope{SchemaVersion: "1", OK: false, Error: value})
+	return json.NewEncoder(out).Encode(envelope{SchemaVersion: "1", OK: false, Error: value})
 }
 
 func (s *state) write(value any) error {

@@ -283,28 +283,7 @@ func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 }
 
 func (s *Store) Validate(ctx context.Context) []string {
-	errorsFound := []string{}
-	// integrity_check reports corruption as result rows, not as an error, and
-	// returns the single row "ok" when the database is sound.
-	integrity, err := s.db.QueryContext(ctx, `PRAGMA integrity_check`)
-	if err != nil {
-		errorsFound = append(errorsFound, err.Error())
-	} else {
-		for integrity.Next() {
-			var line string
-			if err := integrity.Scan(&line); err != nil {
-				errorsFound = append(errorsFound, err.Error())
-				break
-			}
-			if line != "ok" {
-				errorsFound = append(errorsFound, line)
-			}
-		}
-		if err := integrity.Err(); err != nil {
-			errorsFound = append(errorsFound, err.Error())
-		}
-		_ = integrity.Close()
-	}
+	errorsFound := s.integrityErrors(ctx)
 	rows, err := s.db.QueryContext(ctx, `PRAGMA foreign_key_check`)
 	if err != nil {
 		return append(errorsFound, err.Error())
@@ -321,6 +300,31 @@ func (s *Store) Validate(ctx context.Context) []string {
 		return append(errorsFound, err.Error())
 	}
 	if _, err := domain.TopologicalOrder(snapshot.Tasks, snapshot.Dependencies); err != nil {
+		errorsFound = append(errorsFound, err.Error())
+	}
+	return errorsFound
+}
+
+func (s *Store) integrityErrors(ctx context.Context) []string {
+	// integrity_check reports corruption as result rows, not as an error, and
+	// returns the single row "ok" when the database is sound.
+	integrity, err := s.db.QueryContext(ctx, `PRAGMA integrity_check`)
+	if err != nil {
+		return []string{err.Error()}
+	}
+	defer func() { _ = integrity.Close() }()
+	errorsFound := []string{}
+	for integrity.Next() {
+		var line string
+		if err := integrity.Scan(&line); err != nil {
+			errorsFound = append(errorsFound, err.Error())
+			break
+		}
+		if line != "ok" {
+			errorsFound = append(errorsFound, line)
+		}
+	}
+	if err := integrity.Err(); err != nil {
 		errorsFound = append(errorsFound, err.Error())
 	}
 	return errorsFound
