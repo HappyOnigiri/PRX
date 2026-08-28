@@ -26,6 +26,11 @@ func (s *Store) GetFeature(ctx context.Context, id string) (domain.Feature, erro
 	return domainFeature(value), mapNotFound(err, "feature", id)
 }
 
+func (s *Store) GetFeatureBySlug(ctx context.Context, slug string) (domain.Feature, error) {
+	value, err := db.New(s.db).GetFeatureBySlug(ctx, slug)
+	return domainFeature(value), mapNotFound(err, "feature", slug)
+}
+
 func (s *Store) UpdateFeature(ctx context.Context, feature domain.Feature) (domain.Feature, error) {
 	value, err := db.New(s.db).UpdateFeature(ctx, db.UpdateFeatureParams{Slug: feature.Slug, Title: feature.Title, Description: feature.Description, Status: feature.Status, Archived: boolInt(feature.Archived), UpdatedAt: timestamp(s.now()), ID: feature.ID})
 	return domainFeature(value), mapNotFound(err, "feature", feature.ID)

@@ -296,3 +296,32 @@ func TestConcurrentDependencyWritesDoNotLock(t *testing.T) {
 		t.Fatalf("dependencies=%d, want %d", len(snapshot.Dependencies), writers)
 	}
 }
+
+func TestSeedDemoIsIdempotent(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	if err := service.SeedDemo(ctx, "demo-roadmap", 6); err != nil {
+		t.Fatal(err)
+	}
+	first, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := service.SeedDemo(ctx, "demo-roadmap", 6); err != nil {
+		t.Fatalf("second seed: %v", err)
+	}
+	second, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(second.Features) != len(first.Features) ||
+		len(second.Tasks) != len(first.Tasks) ||
+		len(second.Dependencies) != len(first.Dependencies) ||
+		len(second.PullRequests) != len(first.PullRequests) {
+		t.Fatalf("seed changed counts: features %d→%d tasks %d→%d deps %d→%d prs %d→%d",
+			len(first.Features), len(second.Features),
+			len(first.Tasks), len(second.Tasks),
+			len(first.Dependencies), len(second.Dependencies),
+			len(first.PullRequests), len(second.PullRequests))
+	}
+}
