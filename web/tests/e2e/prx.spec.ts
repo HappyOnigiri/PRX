@@ -172,6 +172,12 @@ test("archives and safely deletes a feature", async ({ page }) => {
       .getByRole("navigation", { name: "Features" })
       .getByText("Temporary feature"),
   ).toHaveCount(0);
+  await page.getByRole("button", { name: "Unarchive feature" }).click();
+  await expect(
+    page
+      .getByRole("navigation", { name: "Features" })
+      .getByText("Temporary feature"),
+  ).toHaveCount(1);
   page.once("dialog", (confirmation) => confirmation.accept());
   await page.getByRole("button", { name: "Delete feature" }).click();
   await expect(

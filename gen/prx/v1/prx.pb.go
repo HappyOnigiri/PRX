@@ -916,7 +916,7 @@ type UpdateFeatureRequest struct {
 	Title         *string                `protobuf:"bytes,3,opt,name=title,proto3,oneof" json:"title,omitempty"`
 	Description   *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
 	Status        *string                `protobuf:"bytes,5,opt,name=status,proto3,oneof" json:"status,omitempty"`
-	Archived      bool                   `protobuf:"varint,6,opt,name=archived,proto3" json:"archived,omitempty"`
+	Archived      *bool                  `protobuf:"varint,6,opt,name=archived,proto3,oneof" json:"archived,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -987,8 +987,8 @@ func (x *UpdateFeatureRequest) GetStatus() string {
 }
 
 func (x *UpdateFeatureRequest) GetArchived() bool {
-	if x != nil {
-		return x.Archived
+	if x != nil && x.Archived != nil {
+		return *x.Archived
 	}
 	return false
 }
@@ -2304,18 +2304,19 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\"B\n" +
 	"\x15CreateFeatureResponse\x12)\n" +
-	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"\xe8\x01\n" +
+	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"\xfa\x01\n" +
 	"\x14UpdateFeatureRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\x04slug\x18\x02 \x01(\tH\x00R\x04slug\x88\x01\x01\x12\x19\n" +
 	"\x05title\x18\x03 \x01(\tH\x01R\x05title\x88\x01\x01\x12%\n" +
 	"\vdescription\x18\x04 \x01(\tH\x02R\vdescription\x88\x01\x01\x12\x1b\n" +
-	"\x06status\x18\x05 \x01(\tH\x03R\x06status\x88\x01\x01\x12\x1a\n" +
-	"\barchived\x18\x06 \x01(\bR\barchivedB\a\n" +
+	"\x06status\x18\x05 \x01(\tH\x03R\x06status\x88\x01\x01\x12\x1f\n" +
+	"\barchived\x18\x06 \x01(\bH\x04R\barchived\x88\x01\x01B\a\n" +
 	"\x05_slugB\b\n" +
 	"\x06_titleB\x0e\n" +
 	"\f_descriptionB\t\n" +
-	"\a_status\"B\n" +
+	"\a_statusB\v\n" +
+	"\t_archived\"B\n" +
 	"\x15UpdateFeatureResponse\x12)\n" +
 	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"@\n" +
 	"\x14DeleteFeatureRequest\x12\x0e\n" +

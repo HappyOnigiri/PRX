@@ -147,7 +147,8 @@ func (s *state) featureCommand() *cobra.Command {
 	update := &cobra.Command{Use: "update ID_OR_SLUG", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		value, err := s.service.UpdateFeature(cmd.Context(), args[0],
 			changedFlag(cmd, "slug", &slug), changedFlag(cmd, "title", &title),
-			changedFlag(cmd, "description", &description), changedFlag(cmd, "status", &status), archived)
+			changedFlag(cmd, "description", &description), changedFlag(cmd, "status", &status),
+			changedBoolFlag(cmd, "archived", &archived))
 		if err != nil {
 			return err
 		}
@@ -157,9 +158,18 @@ func (s *state) featureCommand() *cobra.Command {
 	update.Flags().StringVar(&title, "title", "", "new title")
 	update.Flags().StringVar(&description, "description", "", "new description")
 	update.Flags().StringVar(&status, "status", "", "active, paused, completed, or cancelled")
-	update.Flags().BoolVar(&archived, "archived", false, "archive the feature")
+	update.Flags().BoolVar(&archived, "archived", false, "archive (true) or unarchive (false) the feature")
 	archive := &cobra.Command{Use: "archive ID_OR_SLUG", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
-		value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, true)
+		archive := true
+		value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, &archive)
+		if err != nil {
+			return err
+		}
+		return s.write(value)
+	}}
+	unarchive := &cobra.Command{Use: "unarchive ID_OR_SLUG", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
+		archive := false
+		value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, &archive)
 		if err != nil {
 			return err
 		}
@@ -172,7 +182,7 @@ func (s *state) featureCommand() *cobra.Command {
 		return s.write(map[string]string{"deleted": args[0]})
 	}}
 	deleteCmd.Flags().BoolVar(&cascade, "cascade", false, "delete contained tasks and references")
-	command.AddCommand(create, list, get, update, archive, deleteCmd)
+	command.AddCommand(create, list, get, update, archive, unarchive, deleteCmd)
 	return command
 }
 
@@ -522,6 +532,13 @@ func localOnly(addr net.Addr, next http.Handler) http.Handler {
 // changedFlag returns the flag value only when it was given on the command line,
 // so an omitted flag leaves the field untouched while --flag "" clears it.
 func changedFlag(cmd *cobra.Command, name string, value *string) *string {
+	if !cmd.Flags().Changed(name) {
+		return nil
+	}
+	return value
+}
+
+func changedBoolFlag(cmd *cobra.Command, name string, value *bool) *bool {
 	if !cmd.Flags().Changed(name) {
 		return nil
 	}

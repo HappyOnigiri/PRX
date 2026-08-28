@@ -39,7 +39,7 @@ func (s *Service) CreateFeature(ctx context.Context, slug, title, description st
 
 // UpdateFeature applies every field the caller supplied. A nil pointer means the
 // field was omitted; an empty string is a request to clear it.
-func (s *Service) UpdateFeature(ctx context.Context, id string, slug, title, description, status *string, archived bool) (domain.Feature, error) {
+func (s *Service) UpdateFeature(ctx context.Context, id string, slug, title, description, status *string, archived *bool) (domain.Feature, error) {
 	feature, err := s.ResolveFeature(ctx, id)
 	if err != nil {
 		return domain.Feature{}, err
@@ -56,8 +56,8 @@ func (s *Service) UpdateFeature(ctx context.Context, id string, slug, title, des
 	if status != nil && *status != "" {
 		feature.Status = *status
 	}
-	if archived {
-		feature.Archived = true
+	if archived != nil {
+		feature.Archived = *archived
 	}
 	if !slugPattern.MatchString(feature.Slug) {
 		return domain.Feature{}, domain.NewError("invalid_slug", "invalid feature slug")

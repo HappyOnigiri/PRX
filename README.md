@@ -52,6 +52,8 @@ prx validate --json
 prx serve
 ```
 
+`prx feature archive SLUG` hides a feature from the sidebar and `prx feature unarchive SLUG` brings it back; `prx feature update SLUG --archived=false` does the same.
+
 Feature and Task deletion refuses to remove referenced data unless `--cascade` is supplied. Adding a dependency performs same-feature validation and cycle detection in the write transaction; cycle errors include the discovered path.
 
 `prx seed --github-fixture demo --features 100 --tasks 50` creates deterministic performance data without network access. A fixture JSON file can map canonical PR URLs to GitHub states:

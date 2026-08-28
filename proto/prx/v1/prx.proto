@@ -87,7 +87,7 @@ message GetSnapshotRequest {}
 message GetSnapshotResponse { Snapshot snapshot = 1; }
 message CreateFeatureRequest { string slug = 1; string title = 2; string description = 3; }
 message CreateFeatureResponse { Feature feature = 1; }
-message UpdateFeatureRequest { string id = 1; optional string slug = 2; optional string title = 3; optional string description = 4; optional string status = 5; bool archived = 6; }
+message UpdateFeatureRequest { string id = 1; optional string slug = 2; optional string title = 3; optional string description = 4; optional string status = 5; optional bool archived = 6; }
 message UpdateFeatureResponse { Feature feature = 1; }
 message DeleteFeatureRequest { string id = 1; bool cascade = 2; }
 message DeleteFeatureResponse {}

@@ -197,9 +197,14 @@ export function FeatureWorkspace() {
           </button>
           <button
             className="icon-button"
-            aria-label="Archive feature"
+            aria-label={
+              feature.archived ? "Unarchive feature" : "Archive feature"
+            }
             onClick={() =>
-              updateFeature.mutate({ id: featureId, archived: true })
+              updateFeature.mutate({
+                id: featureId,
+                archived: !feature.archived,
+              })
             }
           >
             ⌁

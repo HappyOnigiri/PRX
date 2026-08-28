@@ -217,7 +217,7 @@ func TestUpdateClearsFieldsWhenExplicitlyEmpty(t *testing.T) {
 		t.Fatalf("omitted title was changed to %q", updatedTask.Title)
 	}
 
-	updatedFeature, err := service.UpdateFeature(ctx, feature.ID, nil, nil, &empty, nil, false)
+	updatedFeature, err := service.UpdateFeature(ctx, feature.ID, nil, nil, &empty, nil, nil)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -226,5 +226,23 @@ func TestUpdateClearsFieldsWhenExplicitlyEmpty(t *testing.T) {
 	}
 	if updatedFeature.Title != "Clearing" {
 		t.Fatalf("omitted title was changed to %q", updatedFeature.Title)
+	}
+}
+
+func TestArchiveRoundTrip(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "archivable", "Archivable", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	archived, unarchived := true, false
+	updated, err := service.UpdateFeature(ctx, feature.ID, nil, nil, nil, nil, &archived)
+	if err != nil || !updated.Archived {
+		t.Fatalf("archive: archived=%v err=%v", updated.Archived, err)
+	}
+	updated, err = service.UpdateFeature(ctx, feature.ID, nil, nil, nil, nil, &unarchived)
+	if err != nil || updated.Archived {
+		t.Fatalf("unarchive: archived=%v err=%v", updated.Archived, err)
 	}
 }
