@@ -75,6 +75,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         <label className="language-setting">
           <span>{t("language.label")}</span>
           <select
+            aria-label={t("language.label")}
             value={i18n.resolvedLanguage ?? "en"}
             onChange={(event) =>
               void setDisplayLanguage(event.target.value as SupportedLanguage)
