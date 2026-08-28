@@ -212,7 +212,6 @@ export const resources = {
         notFound: "The requested item was not found.",
         referencesExist:
           "Remove dependent references before deleting this item.",
-        internal: "An internal error occurred.",
       },
     },
   },
@@ -430,7 +429,6 @@ export const resources = {
         invalidTitle: "タイトルを入力してください。",
         notFound: "指定された項目が見つかりません。",
         referencesExist: "先に関連する参照を削除してください。",
-        internal: "内部エラーが発生しました。",
       },
     },
   },

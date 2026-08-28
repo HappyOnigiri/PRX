@@ -139,11 +139,7 @@ const errorKeys = {
 export function formatError(error: Error, t: TFunction): string {
   const connectError = ConnectError.from(error);
   const detail = connectError.findDetails(ErrorDetailSchema)[0];
-  if (
-    !detail ||
-    detail.code === DomainErrorCode.UNSPECIFIED ||
-    detail.code === DomainErrorCode.INTERNAL
-  )
+  if (!detail || detail.code === DomainErrorCode.UNSPECIFIED)
     return connectError.rawMessage;
   if (detail.code === DomainErrorCode.CYCLE)
     return t("error.cycle", { path: detail.path.join(" → ") });

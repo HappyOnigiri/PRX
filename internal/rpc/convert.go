@@ -290,7 +290,6 @@ func protoBlockedReason(task domain.Task) *prxv1.BlockedReason {
 
 func protoDomainErrorCode(value string) prxv1.DomainErrorCode {
 	codes := map[string]prxv1.DomainErrorCode{
-		"internal":                 prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INTERNAL,
 		"cross_feature_dependency": prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY,
 		"cycle":                    prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE,
 		"duplicate_dependency":     prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY,
