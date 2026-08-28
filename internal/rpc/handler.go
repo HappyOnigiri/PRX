@@ -62,7 +62,11 @@ func (h *Handler) CreateFeature(ctx context.Context, req *connect.Request[prxv1.
 }
 
 func (h *Handler) UpdateFeature(ctx context.Context, req *connect.Request[prxv1.UpdateFeatureRequest]) (*connect.Response[prxv1.UpdateFeatureResponse], error) {
-	value, err := h.service.UpdateFeature(ctx, req.Msg.Id, req.Msg.Slug, req.Msg.Title, req.Msg.Description, domainFeatureStatus(req.Msg.Status), req.Msg.Archived)
+	status, err := domainFeatureStatus(req.Msg.Status)
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	value, err := h.service.UpdateFeature(ctx, req.Msg.Id, req.Msg.Slug, req.Msg.Title, req.Msg.Description, status, req.Msg.Archived)
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -77,7 +81,11 @@ func (h *Handler) DeleteFeature(ctx context.Context, req *connect.Request[prxv1.
 }
 
 func (h *Handler) CreateTask(ctx context.Context, req *connect.Request[prxv1.CreateTaskRequest]) (*connect.Response[prxv1.CreateTaskResponse], error) {
-	value, err := h.service.CreateTask(ctx, req.Msg.FeatureId, req.Msg.Title, req.Msg.Scope, domainTaskKind(req.Msg.Kind), req.Msg.Assignee)
+	kind, err := domainTaskKind(req.Msg.Kind)
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	value, err := h.service.CreateTask(ctx, req.Msg.FeatureId, req.Msg.Title, req.Msg.Scope, kind, req.Msg.Assignee)
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -85,7 +93,11 @@ func (h *Handler) CreateTask(ctx context.Context, req *connect.Request[prxv1.Cre
 }
 
 func (h *Handler) UpdateTask(ctx context.Context, req *connect.Request[prxv1.UpdateTaskRequest]) (*connect.Response[prxv1.UpdateTaskResponse], error) {
-	value, err := h.service.UpdateTask(ctx, req.Msg.Id, req.Msg.Title, req.Msg.Scope, domainTaskStatus(req.Msg.Status), req.Msg.Assignee)
+	status, err := domainTaskStatus(req.Msg.Status)
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	value, err := h.service.UpdateTask(ctx, req.Msg.Id, req.Msg.Title, req.Msg.Scope, status, req.Msg.Assignee)
 	if err != nil {
 		return nil, rpcError(err)
 	}

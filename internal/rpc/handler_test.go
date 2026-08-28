@@ -87,3 +87,77 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 		t.Fatalf("blocked reason=%+v", snapshot.Msg.Snapshot.Tasks[1].BlockedReason)
 	}
 }
+
+func TestRPCRejectsUnknownEnumValues(t *testing.T) {
+	ctx := context.Background()
+	client := newTestClient(t)
+	feature, err := client.CreateFeature(ctx, connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "enum-feature", Title: "Enum feature"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "A", Kind: prxv1.TaskKind_TASK_KIND_MANUAL}))
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	unknownKind := prxv1.TaskKind(999)
+	if _, err = client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "B", Kind: unknownKind})); errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND {
+		t.Fatalf("unknown task kind err=%v", err)
+	}
+
+	unknownTaskStatus := prxv1.TaskStatus(999)
+	if _, err = client.UpdateTask(ctx, connect.NewRequest(&prxv1.UpdateTaskRequest{Id: task.Msg.Task.Id, Status: &unknownTaskStatus})); errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS {
+		t.Fatalf("unknown task status err=%v", err)
+	}
+
+	unknownFeatureStatus := prxv1.FeatureStatus(999)
+	if _, err = client.UpdateFeature(ctx, connect.NewRequest(&prxv1.UpdateFeatureRequest{Id: feature.Msg.Feature.Id, Status: &unknownFeatureStatus})); errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS {
+		t.Fatalf("unknown feature status err=%v", err)
+	}
+
+	snapshot, err := client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.Msg.Snapshot.Tasks) != 1 {
+		t.Fatalf("rejected requests changed state: %+v", snapshot.Msg.Snapshot.Tasks)
+	}
+	if snapshot.Msg.Snapshot.Tasks[0].Status != prxv1.TaskStatus_TASK_STATUS_PLANNED {
+		t.Fatalf("task status=%s", snapshot.Msg.Snapshot.Tasks[0].Status)
+	}
+}
+
+func newTestClient(t *testing.T) prxv1connect.PRXServiceClient {
+	t.Helper()
+	ctx := context.Background()
+	database, err := store.Open(ctx, filepath.Join(t.TempDir(), "rpc.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+	provider, _ := githubprovider.NewFixtureProvider("demo")
+	path, handler := rpc.New(app.New(database, provider))
+	mux := http.NewServeMux()
+	mux.Handle(path, handler)
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+	return prxv1connect.NewPRXServiceClient(server.Client(), server.URL)
+}
+
+func errorDetailCode(t *testing.T, err error) prxv1.DomainErrorCode {
+	t.Helper()
+	var connectErr *connect.Error
+	if !errors.As(err, &connectErr) {
+		t.Fatalf("error type=%T value=%v", err, err)
+	}
+	for _, detail := range connectErr.Details() {
+		value, detailErr := detail.Value()
+		if detailErr != nil {
+			t.Fatal(detailErr)
+		}
+		if errorDetail, ok := value.(*prxv1.ErrorDetail); ok {
+			return errorDetail.Code
+		}
+	}
+	return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
+}

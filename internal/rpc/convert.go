@@ -79,9 +79,11 @@ func protoFeatureStatus(value string) prxv1.FeatureStatus {
 	}
 }
 
-func domainFeatureStatus(value *prxv1.FeatureStatus) *string {
+// domainFeatureStatus rejects values the server cannot map instead of falling
+// back to the empty string, which the service layer reads as "field omitted".
+func domainFeatureStatus(value *prxv1.FeatureStatus) (*string, error) {
 	if value == nil {
-		return nil
+		return nil, nil
 	}
 	result := ""
 	switch *value {
@@ -93,8 +95,10 @@ func domainFeatureStatus(value *prxv1.FeatureStatus) *string {
 		result = "completed"
 	case prxv1.FeatureStatus_FEATURE_STATUS_CANCELLED:
 		result = "cancelled"
+	default:
+		return nil, domain.NewError("invalid_status", "invalid feature status")
 	}
-	return &result
+	return &result, nil
 }
 
 func protoTaskKind(value string) prxv1.TaskKind {
@@ -108,14 +112,18 @@ func protoTaskKind(value string) prxv1.TaskKind {
 	}
 }
 
-func domainTaskKind(value prxv1.TaskKind) string {
+// domainTaskKind maps the unspecified value to the empty string so the service
+// layer can apply its default, and rejects everything else it cannot map.
+func domainTaskKind(value prxv1.TaskKind) (string, error) {
 	switch value {
+	case prxv1.TaskKind_TASK_KIND_UNSPECIFIED:
+		return "", nil
 	case prxv1.TaskKind_TASK_KIND_PULL_REQUEST:
-		return domain.TaskKindPR
+		return domain.TaskKindPR, nil
 	case prxv1.TaskKind_TASK_KIND_MANUAL:
-		return domain.TaskKindManual
+		return domain.TaskKindManual, nil
 	default:
-		return ""
+		return "", domain.NewError("invalid_kind", "task kind must be pr or manual")
 	}
 }
 
@@ -134,9 +142,11 @@ func protoTaskStatus(value string) prxv1.TaskStatus {
 	}
 }
 
-func domainTaskStatus(value *prxv1.TaskStatus) *string {
+// domainTaskStatus rejects values the server cannot map instead of falling back
+// to the empty string, which the service layer reads as "field omitted".
+func domainTaskStatus(value *prxv1.TaskStatus) (*string, error) {
 	if value == nil {
-		return nil
+		return nil, nil
 	}
 	result := ""
 	switch *value {
@@ -148,8 +158,10 @@ func domainTaskStatus(value *prxv1.TaskStatus) *string {
 		result = domain.TaskCompleted
 	case prxv1.TaskStatus_TASK_STATUS_CANCELLED:
 		result = domain.TaskCancelled
+	default:
+		return nil, domain.NewError("invalid_status", "invalid task status")
 	}
-	return &result
+	return &result, nil
 }
 
 func protoTaskDisplayState(value string) prxv1.TaskDisplayState {
