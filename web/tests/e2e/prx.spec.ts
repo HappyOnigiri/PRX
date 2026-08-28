@@ -101,6 +101,15 @@ test("creates and edits a feature DAG while preserving state", async ({
     .filter({ has: page.getByRole("heading", { name: "Pull request" }) });
   await prSection
     .getByPlaceholder("https://github.com/org/repo/pull/42")
+    .fill("https://example.com/not-a-pull-request");
+  await prSection.getByRole("button", { name: "Attach" }).click();
+  await expect(prSection.getByRole("alert")).toContainText("github.com");
+  expect(
+    browserErrors.filter((item) => item.includes("400 (Bad Request)")),
+  ).toHaveLength(1);
+  browserErrors.splice(0, browserErrors.length);
+  await prSection
+    .getByPlaceholder("https://github.com/org/repo/pull/42")
     .fill("https://github.com/HappyOnigiri/PRX/pull/42");
   await prSection.getByRole("button", { name: "Attach" }).click();
   await expect(

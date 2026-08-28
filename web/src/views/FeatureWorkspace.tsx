@@ -143,31 +143,43 @@ export function FeatureWorkspace() {
   async function submitTask(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    await createTask.mutateAsync({
-      featureId,
-      title: String(form.get("title")),
-      scope: String(form.get("scope")),
-      kind: String(form.get("kind")),
-      assignee: String(form.get("assignee")),
-    });
+    try {
+      await createTask.mutateAsync({
+        featureId,
+        title: String(form.get("title")),
+        scope: String(form.get("scope")),
+        kind: String(form.get("kind")),
+        assignee: String(form.get("assignee")),
+      });
+    } catch {
+      return;
+    }
     setShowTask(false);
   }
   async function submitFeature(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    await updateFeature.mutateAsync({
-      id: featureId,
-      slug: String(form.get("slug")),
-      title: String(form.get("title")),
-      description: String(form.get("description")),
-      status: String(form.get("status")),
-    });
+    try {
+      await updateFeature.mutateAsync({
+        id: featureId,
+        slug: String(form.get("slug")),
+        title: String(form.get("title")),
+        description: String(form.get("description")),
+        status: String(form.get("status")),
+      });
+    } catch {
+      return;
+    }
     setShowFeatureEdit(false);
   }
   async function removeFeature() {
     if (!window.confirm(`Delete ${feature?.title} and every contained task?`))
       return;
-    await deleteFeature.mutateAsync(featureId);
+    try {
+      await deleteFeature.mutateAsync(featureId);
+    } catch {
+      return;
+    }
     await navigate({ to: "/" });
   }
   const selectedTask = tasks.find((task) => task.id === selected);
@@ -218,6 +230,7 @@ export function FeatureWorkspace() {
           </button>
         </div>
       </header>
+      <MutationError error={deleteFeature.error} />
       <div className="graph-legend">
         <span>
           <i className="ready" />
@@ -328,6 +341,7 @@ export function FeatureWorkspace() {
               </button>
               <button disabled={createTask.isPending}>Add task</button>
             </footer>
+            <MutationError error={createTask.error} />
           </form>
         </div>
       )}
@@ -363,9 +377,7 @@ export function FeatureWorkspace() {
                 <option value="cancelled">Cancelled</option>
               </select>
             </label>
-            {updateFeature.error && (
-              <p className="form-error">{updateFeature.error.message}</p>
-            )}
+            <MutationError error={updateFeature.error} />
             <footer>
               <button
                 type="button"
@@ -407,6 +419,15 @@ type InspectorProps = {
   documents: Array<{ id: string; kind: string; title: string; value: string }>;
   onClose: () => void;
 };
+function MutationError({ error }: { error: Error | null }) {
+  if (!error) return null;
+  return (
+    <p className="form-error" role="alert">
+      {error.message}
+    </p>
+  );
+}
+
 function TaskInspector({
   task,
   tasks,
@@ -486,6 +507,7 @@ function TaskInspector({
           </label>
         </div>
         <button disabled={update.isPending}>Save task</button>
+        <MutationError error={update.error} />
       </form>
       <section>
         <h3>Pull request</h3>
@@ -522,6 +544,8 @@ function TaskInspector({
             <button>Attach</button>
           </form>
         )}
+        <MutationError error={attach.error} />
+        <MutationError error={detach.error} />
       </section>
       <section>
         <h3>Blocked by</h3>
@@ -569,11 +593,8 @@ function TaskInspector({
           </select>
           <button>Add</button>
         </form>
-        {addDep.error && (
-          <p className="form-error" role="alert">
-            {addDep.error.message}
-          </p>
-        )}
+        <MutationError error={addDep.error} />
+        <MutationError error={removeDep.error} />
       </section>
       <section>
         <h3>References</h3>
@@ -618,18 +639,19 @@ function TaskInspector({
           />
           <button>Add reference</button>
         </form>
+        <MutationError error={addDoc.error} />
+        <MutationError error={deleteDoc.error} />
       </section>
       <button
         className="danger-zone"
         onClick={() => {
-          if (window.confirm(`Delete ${task.title}?`)) {
-            remove.mutate(task.id);
-            onClose();
-          }
+          if (!window.confirm(`Delete ${task.title}?`)) return;
+          remove.mutateAsync(task.id).then(onClose, () => {});
         }}
       >
         Delete task and references
       </button>
+      <MutationError error={remove.error} />
     </aside>
   );
 }
