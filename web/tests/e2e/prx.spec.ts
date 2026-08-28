@@ -2,6 +2,12 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
 const browserErrors: string[] = [];
+const e2ePort = process.env.PRX_E2E_PORT;
+if (!e2ePort) throw new Error("Playwright did not capture the E2E server port");
+
+test.use({
+  baseURL: `http://127.0.0.1:${e2ePort}`,
+});
 
 test.beforeEach(async ({ page }) => {
   browserErrors.length = 0;

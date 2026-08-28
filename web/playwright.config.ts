@@ -14,7 +14,6 @@ export default defineConfig({
       ]
     : "list",
   use: {
-    baseURL: "http://127.0.0.1:7331",
     trace: "retain-on-failure",
     screenshot: "only-on-failure",
     video: "retain-on-failure",
@@ -22,8 +21,11 @@ export default defineConfig({
   },
   webServer: {
     command: "../scripts/run-e2e-server.sh",
-    url: "http://127.0.0.1:7331",
-    reuseExistingServer: false,
+    wait: {
+      stderr: new RegExp(
+        "PRX listening on http://127\\.0\\.0\\.1:(?<PRX_E2E_PORT>\\d+)",
+      ),
+    },
     timeout: 120_000,
   },
 });
