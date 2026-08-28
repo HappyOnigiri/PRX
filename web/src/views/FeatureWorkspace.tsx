@@ -1,4 +1,4 @@
-import { FormEvent, useEffect, useMemo, useState } from "react";
+import { FormEvent, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import {
@@ -36,6 +36,12 @@ import {
 } from "../i18n/domain";
 import { TaskNode, type TaskFlowNode } from "./TaskNode";
 import { formValue } from "../form";
+import {
+  maxGraphZoom,
+  minGraphZoom,
+  readGraphZoom,
+  writeGraphZoom,
+} from "../i18n/settings";
 
 const nodeTypes = { task: TaskNode };
 
@@ -47,6 +53,8 @@ export function FeatureWorkspace() {
   const [selected, setSelected] = useState<string>();
   const [nodes, setNodes] = useState<TaskFlowNode[]>([]);
   const [flow, setFlow] = useState<ReactFlowInstance<TaskFlowNode, Edge>>();
+  const [initialGraphZoom] = useState(readGraphZoom);
+  const graphZoom = useRef(initialGraphZoom);
   const [showTask, setShowTask] = useState(false);
   const [showFeatureEdit, setShowFeatureEdit] = useState(false);
   // The raw message is kept untranslated so that changing the display language
@@ -161,12 +169,18 @@ export function FeatureWorkspace() {
   }, [tasks, dependencies, prs, layoutAttempt]);
   useEffect(() => {
     if (nodes.length && flow) {
-      void flow.fitView({
-        padding: 0.16,
-        duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches
-          ? 0
-          : 260,
-      });
+      const bounds = flow.getNodesBounds(nodes);
+      void flow.setCenter(
+        bounds.x + bounds.width / 2,
+        bounds.y + bounds.height / 2,
+        {
+          zoom: graphZoom.current,
+          duration: window.matchMedia("(prefers-reduced-motion: reduce)")
+            .matches
+            ? 0
+            : 260,
+        },
+      );
     }
   }, [nodes, flow]);
   const createTask = useDomainMutation(mutations.createTask);
@@ -322,10 +336,14 @@ export function FeatureWorkspace() {
           edges={edges}
           nodeTypes={nodeTypes}
           onInit={setFlow}
+          defaultViewport={{ x: 0, y: 0, zoom: initialGraphZoom }}
+          onMoveEnd={(_, viewport) => {
+            graphZoom.current = viewport.zoom;
+            writeGraphZoom(viewport.zoom);
+          }}
           onNodeClick={(_, node) => setSelected(node.id)}
-          fitView
-          minZoom={0.08}
-          maxZoom={1.7}
+          minZoom={minGraphZoom}
+          maxZoom={maxGraphZoom}
           nodesDraggable={false}
           defaultEdgeOptions={{ animated: false }}
           ariaLabelConfig={ariaLabelConfig}

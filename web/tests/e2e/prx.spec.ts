@@ -75,6 +75,13 @@ async function addBlocker(page: Page, blockerTitle: string) {
   await section.getByRole("button", { name: "Add" }).click();
 }
 
+async function graphZoom(page: Page) {
+  return page.locator(".react-flow__viewport").evaluate((viewport) => {
+    const transform = new DOMMatrix(getComputedStyle(viewport).transform);
+    return transform.a;
+  });
+}
+
 test("creates and edits a feature DAG while preserving state", async ({
   page,
 }) => {
@@ -300,6 +307,36 @@ for (const size of [8, 50, 100]) {
     await page.getByRole("button", { name: "Close inspector" }).click();
   });
 }
+
+test("keeps the user's graph zoom across features and reloads", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page
+    .getByRole("link", { name: /Cross-repository launch · 8 nodes/ })
+    .first()
+    .click();
+  await expect(page.locator(".task-node")).toHaveCount(8, { timeout: 25_000 });
+  await page.locator(".react-flow__controls-zoomout").click();
+  await page.locator(".react-flow__controls-zoomout").click();
+  await expect.poll(() => graphZoom(page)).toBeLessThan(1);
+  const savedZoom = await graphZoom(page);
+
+  await page
+    .getByRole("navigation", { name: "Features" })
+    .getByText("Cross-repository launch · 100 nodes")
+    .click();
+  await expect(page.locator(".task-node")).toHaveCount(100, {
+    timeout: 25_000,
+  });
+  await expect.poll(() => graphZoom(page)).toBeCloseTo(savedZoom, 5);
+
+  await page.reload();
+  await expect(page.locator(".task-node")).toHaveCount(100, {
+    timeout: 25_000,
+  });
+  await expect.poll(() => graphZoom(page)).toBeCloseTo(savedZoom, 5);
+});
 
 test("keeps controls usable at a narrow viewport", async ({ page }) => {
   await page.setViewportSize({ width: 320, height: 720 });
