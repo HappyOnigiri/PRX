@@ -423,41 +423,6 @@ func (q *Queries) ListDocuments(ctx context.Context) ([]Document, error) {
 	return items, nil
 }
 
-const listDocumentsByFeature = `-- name: ListDocumentsByFeature :many
-SELECT id, feature_id, task_id, kind, title, value, created_at FROM documents WHERE documents.feature_id=?1 OR documents.task_id IN (SELECT tasks.id FROM tasks WHERE tasks.feature_id=?1) ORDER BY created_at,id
-`
-
-func (q *Queries) ListDocumentsByFeature(ctx context.Context, featureID sql.NullString) ([]Document, error) {
-	rows, err := q.db.QueryContext(ctx, listDocumentsByFeature, featureID)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []Document{}
-	for rows.Next() {
-		var i Document
-		if err := rows.Scan(
-			&i.ID,
-			&i.FeatureID,
-			&i.TaskID,
-			&i.Kind,
-			&i.Title,
-			&i.Value,
-			&i.CreatedAt,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
 const listFeatures = `-- name: ListFeatures :many
 SELECT id, slug, title, description, status, archived, created_at, updated_at FROM features ORDER BY archived, updated_at DESC, slug
 `
@@ -500,50 +465,6 @@ SELECT task_id, owner, repository, number, url, node_id, author, assignees_json,
 
 func (q *Queries) ListPullRequests(ctx context.Context) ([]PullRequest, error) {
 	rows, err := q.db.QueryContext(ctx, listPullRequests)
-	if err != nil {
-		return nil, err
-	}
-	defer rows.Close()
-	items := []PullRequest{}
-	for rows.Next() {
-		var i PullRequest
-		if err := rows.Scan(
-			&i.TaskID,
-			&i.Owner,
-			&i.Repository,
-			&i.Number,
-			&i.Url,
-			&i.NodeID,
-			&i.Author,
-			&i.AssigneesJson,
-			&i.State,
-			&i.Draft,
-			&i.ReviewState,
-			&i.Mergeability,
-			&i.GithubUpdatedAt,
-			&i.LastSyncedAt,
-			&i.SyncError,
-			&i.Stale,
-		); err != nil {
-			return nil, err
-		}
-		items = append(items, i)
-	}
-	if err := rows.Close(); err != nil {
-		return nil, err
-	}
-	if err := rows.Err(); err != nil {
-		return nil, err
-	}
-	return items, nil
-}
-
-const listPullRequestsByFeature = `-- name: ListPullRequestsByFeature :many
-SELECT p.task_id, p.owner, p.repository, p.number, p.url, p.node_id, p.author, p.assignees_json, p.state, p.draft, p.review_state, p.mergeability, p.github_updated_at, p.last_synced_at, p.sync_error, p.stale FROM pull_requests p JOIN tasks t ON t.id=p.task_id WHERE t.feature_id=? ORDER BY p.owner,p.repository,p.number
-`
-
-func (q *Queries) ListPullRequestsByFeature(ctx context.Context, featureID string) ([]PullRequest, error) {
-	rows, err := q.db.QueryContext(ctx, listPullRequestsByFeature, featureID)
 	if err != nil {
 		return nil, err
 	}

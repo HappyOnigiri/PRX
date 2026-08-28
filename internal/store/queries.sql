@@ -70,9 +70,6 @@ SELECT * FROM pull_requests WHERE task_id=?;
 -- name: ListPullRequests :many
 SELECT * FROM pull_requests ORDER BY owner, repository, number;
 
--- name: ListPullRequestsByFeature :many
-SELECT p.* FROM pull_requests p JOIN tasks t ON t.id=p.task_id WHERE t.feature_id=? ORDER BY p.owner,p.repository,p.number;
-
 -- name: DeletePullRequest :exec
 DELETE FROM pull_requests WHERE task_id=?;
 
@@ -84,9 +81,6 @@ INSERT INTO documents (id, feature_id, task_id, kind, title, value, created_at) 
 
 -- name: ListDocuments :many
 SELECT * FROM documents ORDER BY created_at, id;
-
--- name: ListDocumentsByFeature :many
-SELECT * FROM documents WHERE documents.feature_id=sqlc.arg(feature_id) OR documents.task_id IN (SELECT tasks.id FROM tasks WHERE tasks.feature_id=sqlc.arg(feature_id)) ORDER BY created_at,id;
 
 -- name: DeleteDocument :exec
 DELETE FROM documents WHERE id=?;

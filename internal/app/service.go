@@ -72,14 +72,8 @@ func (s *Service) ResolveFeature(ctx context.Context, idOrSlug string) (domain.F
 	if feature, err := s.store.GetFeature(ctx, idOrSlug); err == nil {
 		return feature, nil
 	}
-	snapshot, err := s.store.Snapshot(ctx)
-	if err != nil {
-		return domain.Feature{}, err
-	}
-	for _, feature := range snapshot.Features {
-		if feature.Slug == idOrSlug {
-			return feature, nil
-		}
+	if feature, err := s.store.GetFeatureBySlug(ctx, idOrSlug); err == nil {
+		return feature, nil
 	}
 	return domain.Feature{}, domain.NewError("not_found", "feature %q was not found", idOrSlug)
 }
