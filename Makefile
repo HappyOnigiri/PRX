@@ -1,8 +1,10 @@
-.PHONY: generate generated-check mod-tidy-check fmt lint test test-race test-cli web-install web-test web-build e2e build install ci clean
+.PHONY: generate generated-check mod-tidy-check fmt lint test go-coverage-check test-race test-cli web-install web-test web-build e2e build install ci clean
 
 GO ?= go
 PNPM ?= corepack pnpm@11.24.0
 INSTALL_DIR ?= $(HOME)/.local/bin
+GO_COVERAGE_MIN ?= 68.8
+GO_COVERAGE_PACKAGES := ./internal/domain ./internal/github ./internal/rpc ./internal/store
 
 generate:
 	$(GO) tool sqlc generate
@@ -27,6 +29,14 @@ lint:
 test:
 	$(GO) test ./...
 	$(PNPM) --dir web test
+
+go-coverage-check:
+	@profile="$$(mktemp)"; \
+	trap 'rm -f "$$profile"' EXIT; \
+	$(GO) test -coverprofile="$$profile" $(GO_COVERAGE_PACKAGES); \
+	coverage="$$( $(GO) tool cover -func="$$profile" | awk '/^total:/ { gsub(/%/, "", $$3); print $$3 }' )"; \
+	printf 'Go coverage: %s%% (minimum: %s%%)\n' "$$coverage" "$(GO_COVERAGE_MIN)"; \
+	awk -v actual="$$coverage" -v minimum="$(GO_COVERAGE_MIN)" 'BEGIN { if (actual + 0 < minimum + 0) exit 1 }'
 
 test-race:
 	$(GO) test -race ./...
@@ -54,7 +64,7 @@ install: build
 	install -d "$(INSTALL_DIR)"
 	install -m 0755 bin/prx "$(INSTALL_DIR)/prx"
 
-ci: generated-check mod-tidy-check lint test test-race build e2e
+ci: generated-check mod-tidy-check lint test go-coverage-check test-race build e2e
 
 clean:
 	$(GO) clean -testcache
