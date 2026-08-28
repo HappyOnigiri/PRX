@@ -26,6 +26,8 @@ export function FeatureWorkspace() {
   const [flow, setFlow] = useState<ReactFlowInstance<TaskFlowNode, Edge>>();
   const [showTask, setShowTask] = useState(false);
   const [showFeatureEdit, setShowFeatureEdit] = useState(false);
+  const [layoutError, setLayoutError] = useState<string>();
+  const [layoutAttempt, setLayoutAttempt] = useState(0);
   const data = snapshot.data;
   const feature = data?.features.find((f) => f.id === featureId);
   const tasks = useMemo(
@@ -91,6 +93,7 @@ export function FeatureWorkspace() {
       })
       .then((layout) => {
         if (!current) return;
+        setLayoutError(undefined);
         const positions = new Map(
           layout.children?.map((child) => [
             child.id,
@@ -104,12 +107,18 @@ export function FeatureWorkspace() {
             position: positions.get(node.id) ?? { x: 0, y: 0 },
           })),
         );
+      })
+      .catch((error: unknown) => {
+        if (!current) return;
+        setLayoutError(
+          error instanceof Error ? error.message : "Graph layout failed.",
+        );
       });
     return () => {
       current = false;
       elk.terminateWorker();
     };
-  }, [tasks, dependencies, prs]);
+  }, [tasks, dependencies, prs, layoutAttempt]);
   useEffect(() => {
     if (nodes.length && flow) {
       void flow.fitView({
@@ -268,12 +277,27 @@ export function FeatureWorkspace() {
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} />
           <Controls showInteractive={false} />
         </ReactFlow>
-        {tasks.length === 0 && (
+        {tasks.length === 0 && !layoutError && (
           <div className="graph-empty">
             <span>＋</span>
             <h2>Draw the first node</h2>
             <p>Add an implementation PR or a manual gate.</p>
             <button onClick={() => setShowTask(true)}>Add task</button>
+          </div>
+        )}
+        {layoutError && (
+          <div className="graph-empty" role="alert">
+            <span>⚠</span>
+            <h2>Graph layout failed</h2>
+            <p>{layoutError}</p>
+            <button
+              onClick={() => {
+                setLayoutError(undefined);
+                setLayoutAttempt((attempt) => attempt + 1);
+              }}
+            >
+              Retry layout
+            </button>
           </div>
         )}
       </div>
