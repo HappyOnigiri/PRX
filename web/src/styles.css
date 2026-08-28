@@ -742,7 +742,8 @@ a {
   background: #203754;
 }
 .node-asset:focus-visible {
-  outline-offset: -3px;
+  outline: none;
+  background: #203754;
 }
 .node-asset span {
   color: var(--link);
