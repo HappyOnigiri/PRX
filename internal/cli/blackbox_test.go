@@ -183,3 +183,29 @@ func TestBlackBoxServerAndCLIShareDatabase(t *testing.T) {
 	cancel()
 	_ = server.Wait()
 }
+
+func TestBlackBoxJSONFlagFormsAgree(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "flagforms.db")
+	for _, flag := range []string{"--json", "--json=true"} {
+		t.Run(flag, func(t *testing.T) {
+			command := exec.CommandContext(context.Background(), binary, "--db", dbPath, flag, "task", "get", "missing-task")
+			var stdout, stderr bytes.Buffer
+			command.Stdout = &stdout
+			command.Stderr = &stderr
+			if err := command.Run(); err == nil {
+				t.Fatal("expected a non-zero exit for a missing task")
+			}
+			var envelope resultEnvelope
+			if err := json.Unmarshal(stdout.Bytes(), &envelope); err != nil {
+				t.Fatalf("stdout is not pure JSON: %v\n%s", err, stdout.String())
+			}
+			if envelope.OK || envelope.Error == nil || envelope.Error.Code != "not_found" {
+				t.Fatalf("envelope=%+v", envelope)
+			}
+			if stderr.Len() != 0 {
+				t.Fatalf("stderr must stay empty in JSON mode: %q", stderr.String())
+			}
+		})
+	}
+}

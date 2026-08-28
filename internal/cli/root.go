@@ -40,6 +40,11 @@ type envelope struct {
 }
 
 func NewRoot(out, errOut io.Writer) *cobra.Command {
+	root, _ := newRootWithState(out, errOut)
+	return root
+}
+
+func newRootWithState(out, errOut io.Writer) (*cobra.Command, *state) {
 	s := &state{out: out, errOut: errOut}
 	root := &cobra.Command{
 		Use: "prx", Short: "Manage pull-request dependency roadmaps", SilenceErrors: true, SilenceUsage: true,
@@ -76,13 +81,25 @@ func NewRoot(out, errOut io.Writer) *cobra.Command {
 	root.PersistentFlags().StringVar(&s.fixture, "github-fixture", "", "GitHub fixture JSON path, or demo")
 	root.AddCommand(s.featureCommand(), s.taskCommand(), s.dependencyCommand(), s.pullRequestCommand(), s.documentCommand())
 	root.AddCommand(s.snapshotCommand(), s.graphCommand(), s.queueCommand("ready"), s.queueCommand("reviews"), s.queueCommand("conflicts"), s.queueCommand("stale"), s.syncCommand(), s.validateCommand(), s.seedCommand(), s.serveCommand())
-	return root
+	return root, s
 }
 
+// Execute runs the CLI and formats any error according to the parsed --json
+// flag. Deciding that from os.Args would miss --json=true and would misread a
+// flag value that happens to be the literal string.
 func Execute(ctx context.Context, args []string, out, errOut io.Writer) error {
-	root := NewRoot(out, errOut)
+	root, s := newRootWithState(out, errOut)
 	root.SetArgs(args)
-	return root.ExecuteContext(ctx)
+	err := root.ExecuteContext(ctx)
+	if err == nil {
+		return nil
+	}
+	if s.json {
+		PrintError(out, err)
+	} else {
+		_, _ = fmt.Fprintln(errOut, "error:", err)
+	}
+	return err
 }
 
 func PrintError(out io.Writer, err error) {
