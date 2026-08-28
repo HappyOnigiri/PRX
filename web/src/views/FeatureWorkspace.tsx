@@ -424,6 +424,7 @@ type InspectorProps = {
     id: string;
     title: string;
     scope: string;
+    kind: string;
     status: string;
     assignee: string;
     displayState: string;
@@ -521,7 +522,10 @@ function TaskInspector({
             <select name="status" defaultValue={task.status}>
               <option value="planned">Planned</option>
               <option value="in_progress">In progress</option>
-              <option value="completed">Completed</option>
+              {/* A PR task completes when its pull request merges. */}
+              {task.kind !== "pr" && (
+                <option value="completed">Completed</option>
+              )}
               <option value="cancelled">Cancelled</option>
             </select>
           </label>

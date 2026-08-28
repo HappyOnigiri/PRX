@@ -363,3 +363,47 @@ func TestSnapshotSurvivesOrphanedTask(t *testing.T) {
 		t.Fatalf("task count=%d, want 1 (the orphan must not be credited)", snapshot.Features[0].TaskCount)
 	}
 }
+
+func TestPRTaskCannotBeCompletedManually(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "completion", "Completion", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	prTask, err := service.CreateTask(ctx, feature.ID, "Ship API", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	completed := domain.TaskCompleted
+	if _, err := service.UpdateTask(ctx, prTask.ID, nil, nil, &completed, nil); domain.ErrorCode(err) != "invalid_status" {
+		t.Fatalf("PR task completion code=%s err=%v", domain.ErrorCode(err), err)
+	}
+	manual, err := service.CreateTask(ctx, feature.ID, "Sign off", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.UpdateTask(ctx, manual.ID, nil, nil, &completed, nil); err != nil {
+		t.Fatalf("manual task completion: %v", err)
+	}
+
+	// A PR task completes only through a merged pull request.
+	if _, err := service.AttachPullRequest(ctx, prTask.ID, "https://github.com/acme/api/pull/3"); err != nil {
+		t.Fatal(err)
+	}
+	if _, _, err := service.Sync(ctx, feature.ID, ""); err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, task := range snapshot.Tasks {
+		if task.ID != prTask.ID {
+			continue
+		}
+		if task.DisplayState != "merged" {
+			t.Fatalf("PR task display state=%q, want merged", task.DisplayState)
+		}
+	}
+}

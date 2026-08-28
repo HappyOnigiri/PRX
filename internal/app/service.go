@@ -135,6 +135,12 @@ func (s *Service) UpdateTask(ctx context.Context, id string, title, scope, statu
 	if !oneOf(task.Status, domain.TaskPlanned, domain.TaskInProgress, domain.TaskCompleted, domain.TaskCancelled) {
 		return domain.Task{}, domain.NewError("invalid_status", "invalid task status")
 	}
+	// PR tasks derive completion from a merged PR. Accepting completed here would
+	// drop the task out of the ready queue while its dependents stay blocked,
+	// since dependency satisfaction still requires a fresh merged PR.
+	if task.Kind == domain.TaskKindPR && task.Status == domain.TaskCompleted {
+		return domain.Task{}, domain.NewError("invalid_status", "a PR task completes when its pull request is merged")
+	}
 	return s.store.UpdateTask(ctx, task)
 }
 
