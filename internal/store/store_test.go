@@ -325,3 +325,41 @@ func TestSeedDemoIsIdempotent(t *testing.T) {
 			len(first.PullRequests), len(second.PullRequests))
 	}
 }
+
+func TestSnapshotSurvivesOrphanedTask(t *testing.T) {
+	database, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "orphans", "Orphans", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.CreateTask(ctx, feature.ID, "Kept", "", domain.TaskKindManual, ""); err != nil {
+		t.Fatal(err)
+	}
+	orphan, err := service.CreateTask(ctx, feature.ID, "Orphan", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	// Break referential integrity the way a damaged database would: foreign key
+	// enforcement is what normally prevents this, and Validate exists to find it.
+	if _, err := database.DB().ExecContext(ctx, `PRAGMA foreign_keys = OFF`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.DB().ExecContext(ctx, `UPDATE tasks SET feature_id = 'missing-feature' WHERE id = ?`, orphan.ID); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.DB().ExecContext(ctx, `PRAGMA foreign_keys = ON`); err != nil {
+		t.Fatal(err)
+	}
+
+	snapshot, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.Features) != 1 {
+		t.Fatalf("features=%d, want 1", len(snapshot.Features))
+	}
+	if snapshot.Features[0].TaskCount != 1 {
+		t.Fatalf("task count=%d, want 1 (the orphan must not be credited)", snapshot.Features[0].TaskCount)
+	}
+}

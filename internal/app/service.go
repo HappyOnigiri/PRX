@@ -234,7 +234,13 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 		featureIndex[snapshot.Features[i].ID] = i
 	}
 	for _, task := range snapshot.Tasks {
-		i := featureIndex[task.FeatureID]
+		// A task whose feature is missing means the database has lost referential
+		// integrity; skip it rather than crediting feature zero or indexing past
+		// the end of an empty slice.
+		i, ok := featureIndex[task.FeatureID]
+		if !ok {
+			continue
+		}
 		feature := &snapshot.Features[i]
 		feature.TaskCount++
 		if task.Ready {
