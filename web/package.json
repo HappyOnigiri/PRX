@@ -21,8 +21,10 @@
     "@tanstack/react-router": "^1.131.35",
     "@xyflow/react": "^12.8.5",
     "elkjs": "^0.11.0",
+    "i18next": "^26.4.0",
     "react": "^19.1.1",
-    "react-dom": "^19.1.1"
+    "react-dom": "^19.1.1",
+    "react-i18next": "^17.0.12"
   },
   "devDependencies": {
     "@bufbuild/protoc-gen-es": "^2.9.0",

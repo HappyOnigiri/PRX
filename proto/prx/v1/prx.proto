@@ -4,12 +4,134 @@ package prx.v1;
 
 option go_package = "github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1";
 
+enum FeatureStatus {
+  FEATURE_STATUS_UNSPECIFIED = 0;
+  FEATURE_STATUS_ACTIVE = 1;
+  FEATURE_STATUS_PAUSED = 2;
+  FEATURE_STATUS_COMPLETED = 3;
+  FEATURE_STATUS_CANCELLED = 4;
+}
+
+enum TaskKind {
+  TASK_KIND_UNSPECIFIED = 0;
+  TASK_KIND_PULL_REQUEST = 1;
+  TASK_KIND_MANUAL = 2;
+}
+
+enum TaskStatus {
+  TASK_STATUS_UNSPECIFIED = 0;
+  TASK_STATUS_PLANNED = 1;
+  TASK_STATUS_IN_PROGRESS = 2;
+  TASK_STATUS_COMPLETED = 3;
+  TASK_STATUS_CANCELLED = 4;
+}
+
+enum TaskDisplayState {
+  TASK_DISPLAY_STATE_UNSPECIFIED = 0;
+  TASK_DISPLAY_STATE_PLANNED = 1;
+  TASK_DISPLAY_STATE_IN_PROGRESS = 2;
+  TASK_DISPLAY_STATE_COMPLETED = 3;
+  TASK_DISPLAY_STATE_CANCELLED = 4;
+  TASK_DISPLAY_STATE_UNLINKED = 5;
+  TASK_DISPLAY_STATE_MERGED = 6;
+  TASK_DISPLAY_STATE_CLOSED = 7;
+  TASK_DISPLAY_STATE_DRAFT = 8;
+  TASK_DISPLAY_STATE_CONFLICT = 9;
+  TASK_DISPLAY_STATE_CHANGES_REQUESTED = 10;
+  TASK_DISPLAY_STATE_APPROVED = 11;
+  TASK_DISPLAY_STATE_REVIEW_WAITING = 12;
+  TASK_DISPLAY_STATE_OPEN = 13;
+  TASK_DISPLAY_STATE_UNKNOWN = 14;
+}
+
+enum PullRequestState {
+  PULL_REQUEST_STATE_UNSPECIFIED = 0;
+  PULL_REQUEST_STATE_OPEN = 1;
+  PULL_REQUEST_STATE_CLOSED = 2;
+  PULL_REQUEST_STATE_MERGED = 3;
+  PULL_REQUEST_STATE_UNKNOWN = 4;
+}
+
+enum ReviewState {
+  REVIEW_STATE_UNSPECIFIED = 0;
+  REVIEW_STATE_NONE = 1;
+  REVIEW_STATE_REQUIRED = 2;
+  REVIEW_STATE_APPROVED = 3;
+  REVIEW_STATE_CHANGES_REQUESTED = 4;
+  REVIEW_STATE_UNKNOWN = 5;
+}
+
+enum Mergeability {
+  MERGEABILITY_UNSPECIFIED = 0;
+  MERGEABILITY_MERGEABLE = 1;
+  MERGEABILITY_CONFLICTING = 2;
+  MERGEABILITY_UNKNOWN = 3;
+}
+
+enum PullRequestDisplayState {
+  PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED = 0;
+  PULL_REQUEST_DISPLAY_STATE_MERGED = 1;
+  PULL_REQUEST_DISPLAY_STATE_CLOSED = 2;
+  PULL_REQUEST_DISPLAY_STATE_DRAFT = 3;
+  PULL_REQUEST_DISPLAY_STATE_CONFLICT = 4;
+  PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED = 5;
+  PULL_REQUEST_DISPLAY_STATE_APPROVED = 6;
+  PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING = 7;
+  PULL_REQUEST_DISPLAY_STATE_OPEN = 8;
+  PULL_REQUEST_DISPLAY_STATE_UNKNOWN = 9;
+}
+
+enum DocumentKind {
+  DOCUMENT_KIND_UNSPECIFIED = 0;
+  DOCUMENT_KIND_URL = 1;
+  DOCUMENT_KIND_MARKDOWN_PATH = 2;
+}
+
+enum BlockedReasonCode {
+  BLOCKED_REASON_CODE_UNSPECIFIED = 0;
+  BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE = 1;
+  BLOCKED_REASON_CODE_BLOCKER_STALE = 2;
+  BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER = 3;
+}
+
+enum DomainErrorCode {
+  DOMAIN_ERROR_CODE_UNSPECIFIED = 0;
+  DOMAIN_ERROR_CODE_INTERNAL = 1;
+  DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY = 2;
+  DOMAIN_ERROR_CODE_CYCLE = 3;
+  DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY = 4;
+  DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST = 5;
+  DOMAIN_ERROR_CODE_GITHUB_AUTH = 6;
+  DOMAIN_ERROR_CODE_INVALID_DATABASE = 7;
+  DOMAIN_ERROR_CODE_INVALID_DOCUMENT = 8;
+  DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND = 9;
+  DOMAIN_ERROR_CODE_INVALID_KIND = 10;
+  DOMAIN_ERROR_CODE_INVALID_PARENT = 11;
+  DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL = 12;
+  DOMAIN_ERROR_CODE_INVALID_SEED = 13;
+  DOMAIN_ERROR_CODE_INVALID_SLUG = 14;
+  DOMAIN_ERROR_CODE_INVALID_STATUS = 15;
+  DOMAIN_ERROR_CODE_INVALID_TITLE = 16;
+  DOMAIN_ERROR_CODE_NOT_FOUND = 17;
+  DOMAIN_ERROR_CODE_REFERENCES_EXIST = 18;
+}
+
+message BlockedReason {
+  BlockedReasonCode code = 1;
+  string blocker_task_id = 2;
+}
+
+message ErrorDetail {
+  DomainErrorCode code = 1;
+  repeated string path = 2;
+}
+
 message Feature {
   string id = 1;
   string slug = 2;
   string title = 3;
   string description = 4;
-  string status = 5;
+  FeatureStatus status = 5;
   bool archived = 6;
   string created_at = 7;
   string updated_at = 8;
@@ -25,14 +147,14 @@ message Task {
   string feature_id = 2;
   string title = 3;
   string scope = 4;
-  string kind = 5;
-  string status = 6;
+  TaskKind kind = 5;
+  TaskStatus status = 6;
   string assignee = 7;
   string created_at = 8;
   string updated_at = 9;
   bool ready = 10;
-  string display_state = 11;
-  string blocked_reason = 12;
+  TaskDisplayState display_state = 11;
+  BlockedReason blocked_reason = 12;
 }
 
 message Dependency {
@@ -50,22 +172,22 @@ message PullRequest {
   string node_id = 6;
   string author = 7;
   repeated string assignees = 8;
-  string state = 9;
+  PullRequestState state = 9;
   bool draft = 10;
-  string review_state = 11;
-  string mergeability = 12;
+  ReviewState review_state = 11;
+  Mergeability mergeability = 12;
   string github_updated_at = 13;
   string last_synced_at = 14;
   string sync_error = 15;
   bool stale = 16;
-  string display_state = 17;
+  PullRequestDisplayState display_state = 17;
 }
 
 message Document {
   string id = 1;
   string feature_id = 2;
   string task_id = 3;
-  string kind = 4;
+  DocumentKind kind = 4;
   string title = 5;
   string value = 6;
   string created_at = 7;
@@ -87,13 +209,13 @@ message GetSnapshotRequest {}
 message GetSnapshotResponse { Snapshot snapshot = 1; }
 message CreateFeatureRequest { string slug = 1; string title = 2; string description = 3; }
 message CreateFeatureResponse { Feature feature = 1; }
-message UpdateFeatureRequest { string id = 1; optional string slug = 2; optional string title = 3; optional string description = 4; optional string status = 5; optional bool archived = 6; }
+message UpdateFeatureRequest { string id = 1; optional string slug = 2; optional string title = 3; optional string description = 4; optional FeatureStatus status = 5; optional bool archived = 6; }
 message UpdateFeatureResponse { Feature feature = 1; }
 message DeleteFeatureRequest { string id = 1; bool cascade = 2; }
 message DeleteFeatureResponse {}
-message CreateTaskRequest { string feature_id = 1; string title = 2; string scope = 3; string kind = 4; string assignee = 5; }
+message CreateTaskRequest { string feature_id = 1; string title = 2; string scope = 3; TaskKind kind = 4; string assignee = 5; }
 message CreateTaskResponse { Task task = 1; }
-message UpdateTaskRequest { string id = 1; optional string title = 2; optional string scope = 3; optional string status = 4; optional string assignee = 5; }
+message UpdateTaskRequest { string id = 1; optional string title = 2; optional string scope = 3; optional TaskStatus status = 4; optional string assignee = 5; }
 message UpdateTaskResponse { Task task = 1; }
 message DeleteTaskRequest { string id = 1; bool cascade = 2; }
 message DeleteTaskResponse {}
@@ -105,7 +227,7 @@ message AttachPullRequestRequest { string task_id = 1; string url = 2; }
 message AttachPullRequestResponse { PullRequest pull_request = 1; }
 message DetachPullRequestRequest { string task_id = 1; }
 message DetachPullRequestResponse {}
-message AddDocumentRequest { string feature_id = 1; string task_id = 2; string kind = 3; string title = 4; string value = 5; }
+message AddDocumentRequest { string feature_id = 1; string task_id = 2; DocumentKind kind = 3; string title = 4; string value = 5; }
 message AddDocumentResponse { Document document = 1; }
 message DeleteDocumentRequest { string id = 1; }
 message DeleteDocumentResponse {}

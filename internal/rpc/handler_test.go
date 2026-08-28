@@ -2,6 +2,7 @@ package rpc_test
 
 import (
 	"context"
+	"errors"
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
@@ -35,11 +36,14 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	a, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "A", Kind: "pr"}))
+	if feature.Msg.Feature.Status != prxv1.FeatureStatus_FEATURE_STATUS_ACTIVE {
+		t.Fatalf("feature status=%s", feature.Msg.Feature.Status)
+	}
+	a, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "A", Kind: prxv1.TaskKind_TASK_KIND_PULL_REQUEST}))
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "B", Kind: "pr"}))
+	b, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "B", Kind: prxv1.TaskKind_TASK_KIND_PULL_REQUEST}))
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -50,11 +54,36 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
 		t.Fatalf("cycle RPC code=%s err=%v", connect.CodeOf(err), err)
 	}
+	var connectErr *connect.Error
+	if !errors.As(err, &connectErr) {
+		t.Fatalf("cycle RPC error type=%T", err)
+	}
+	foundCycleDetail := false
+	for _, detail := range connectErr.Details() {
+		value, detailErr := detail.Value()
+		if detailErr != nil {
+			t.Fatal(detailErr)
+		}
+		errorDetail, ok := value.(*prxv1.ErrorDetail)
+		if !ok {
+			continue
+		}
+		foundCycleDetail = errorDetail.Code == prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE && len(errorDetail.Path) >= 3
+	}
+	if !foundCycleDetail {
+		t.Fatalf("cycle RPC error missing structured detail: %v", connectErr.Details())
+	}
 	snapshot, err := client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
 	if err != nil {
 		t.Fatal(err)
 	}
 	if len(snapshot.Msg.Snapshot.Tasks) != 2 || len(snapshot.Msg.Snapshot.Dependencies) != 1 {
 		t.Fatalf("unexpected snapshot: %+v", snapshot.Msg.Snapshot)
+	}
+	if snapshot.Msg.Snapshot.Tasks[1].Kind != prxv1.TaskKind_TASK_KIND_PULL_REQUEST || snapshot.Msg.Snapshot.Tasks[1].BlockedReason == nil {
+		t.Fatalf("unexpected structured task state: %+v", snapshot.Msg.Snapshot.Tasks[1])
+	}
+	if snapshot.Msg.Snapshot.Tasks[1].BlockedReason.Code != prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER {
+		t.Fatalf("blocked reason=%+v", snapshot.Msg.Snapshot.Tasks[1].BlockedReason)
 	}
 }

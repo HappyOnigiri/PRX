@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { ReactFlowProvider, type NodeProps } from "@xyflow/react";
 import { describe, expect, it } from "vitest";
+import { TaskDisplayState } from "../src/gen/prx/v1/prx_pb";
 import { TaskNode, type TaskFlowNode } from "../src/views/TaskNode";
 
 describe("TaskNode", () => {
@@ -11,7 +12,7 @@ describe("TaskNode", () => {
         title: "Merge billing schema",
         repository: "acme/api #42",
         assignee: "Ren",
-        state: "review_waiting",
+        state: TaskDisplayState.REVIEW_WAITING,
         ready: true,
         stale: true,
       },

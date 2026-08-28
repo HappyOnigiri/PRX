@@ -24,13 +24,22 @@ func TestReadyFailsClosed(t *testing.T) {
 	deps := []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}
 	prs := []PullRequest{{TaskID: "a", State: "merged", Stale: true}}
 	got := Derive(tasks, deps, prs)
-	if got[1].Ready || got[1].BlockedReason == "" {
+	if got[1].Ready || got[1].BlockedReason == "" || got[1].BlockedCode != BlockedByStaleData || got[1].BlockerTaskID != "a" {
 		t.Fatalf("stale merged blocker must fail closed: %+v", got[1])
 	}
 	prs[0].Stale = false
 	got = Derive(tasks, deps, prs)
 	if !got[1].Ready {
 		t.Fatalf("fresh merged blocker should make task ready: %+v", got[1])
+	}
+}
+
+func TestReadyReportsStructuredWaitingReason(t *testing.T) {
+	tasks := []Task{{ID: "a", Title: "API", Kind: TaskKindManual, Status: TaskPlanned}, {ID: "b", Title: "UI", Kind: TaskKindManual, Status: TaskPlanned}}
+	deps := []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}
+	got := Derive(tasks, deps, nil)
+	if got[1].Ready || got[1].BlockedCode != BlockedWaitingForBlocker || got[1].BlockerTaskID != "a" {
+		t.Fatalf("unexpected structured waiting reason: %+v", got[1])
 	}
 }
 

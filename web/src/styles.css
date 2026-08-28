@@ -192,6 +192,28 @@ a {
   text-transform: uppercase;
   letter-spacing: 0.1em;
 }
+
+.language-setting {
+  display: grid;
+  gap: 6px;
+  margin: auto 18px 14px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.language-setting select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--fog);
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
 .health {
   width: 7px;
   height: 7px;
@@ -992,7 +1014,7 @@ a {
     height: auto;
     min-height: 0;
     display: grid;
-    grid-template-columns: 150px 1fr auto;
+    grid-template-columns: 150px 1fr auto auto;
   }
   .brand {
     height: 70px;
@@ -1019,6 +1041,16 @@ a {
   }
   .rail-action {
     margin: 14px;
+  }
+  .language-setting {
+    align-self: center;
+    margin: 10px 12px 10px 0;
+  }
+  .language-setting span {
+    display: none;
+  }
+  .language-setting select {
+    width: 94px;
   }
   .main-stage {
     min-height: calc(100vh - 70px);
@@ -1055,7 +1087,7 @@ a {
 }
 @media (max-width: 600px) {
   .rail {
-    grid-template-columns: 120px 1fr;
+    grid-template-columns: 120px 1fr auto;
   }
   .rail-action {
     display: none;

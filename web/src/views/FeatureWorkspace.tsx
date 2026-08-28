@@ -1,5 +1,6 @@
 import { FormEvent, useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import { useTranslation } from "react-i18next";
 import {
   Background,
   BackgroundVariant,
@@ -12,12 +13,33 @@ import {
 import ELK from "elkjs/lib/elk-api.js";
 import elkWorkerUrl from "elkjs/lib/elk-worker.min.js?url";
 import { mutations } from "../api";
+import {
+  DocumentKind,
+  FeatureStatus,
+  PullRequestDisplayState,
+  TaskDisplayState,
+  TaskKind,
+  TaskStatus,
+  type BlockedReason,
+} from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
+import {
+  blockedReasonLabel,
+  documentKindLabel,
+  featureStatusLabel,
+  formatError,
+  pullRequestDisplayStateLabel,
+  taskDisplayStateLabel,
+  taskDisplayStateToken,
+  taskKindLabel,
+  taskStatusLabel,
+} from "../i18n/domain";
 import { TaskNode, type TaskFlowNode } from "./TaskNode";
 
 const nodeTypes = { task: TaskNode };
 
 export function FeatureWorkspace() {
+  const { t } = useTranslation();
   const { featureId } = useParams({ from: "/features/$featureId" });
   const navigate = useNavigate();
   const snapshot = useSnapshot();
@@ -55,6 +77,21 @@ export function FeatureWorkspace() {
         className: "dependency-edge",
       })),
     [dependencies],
+  );
+  const ariaLabelConfig = useMemo(
+    () => ({
+      "node.a11yDescription.default": t("workspace.flow.nodeDescription"),
+      "node.a11yDescription.keyboardDisabled": t(
+        "workspace.flow.keyboardDisabled",
+      ),
+      "edge.a11yDescription.default": t("workspace.flow.edgeDescription"),
+      "controls.ariaLabel": t("workspace.flow.controls"),
+      "controls.zoomIn.ariaLabel": t("workspace.flow.zoomIn"),
+      "controls.zoomOut.ariaLabel": t("workspace.flow.zoomOut"),
+      "controls.fitView.ariaLabel": t("workspace.flow.fitView"),
+      "handle.ariaLabel": t("workspace.flow.handle"),
+    }),
+    [t],
   );
   useEffect(() => {
     let current = true;
@@ -111,14 +148,16 @@ export function FeatureWorkspace() {
       .catch((error: unknown) => {
         if (!current) return;
         setLayoutError(
-          error instanceof Error ? error.message : "Graph layout failed.",
+          error instanceof Error
+            ? error.message
+            : t("workspace.layoutErrorFallback"),
         );
       });
     return () => {
       current = false;
       elk.terminateWorker();
     };
-  }, [tasks, dependencies, prs, layoutAttempt]);
+  }, [tasks, dependencies, prs, layoutAttempt, t]);
   useEffect(() => {
     if (nodes.length && flow) {
       void flow.fitView({
@@ -137,15 +176,15 @@ export function FeatureWorkspace() {
     return (
       <div className="state-message">
         <div className="spinner" />
-        <h1>Tracing feature graph…</h1>
+        <h1>{t("workspace.loading")}</h1>
       </div>
     );
   if (!feature || !data)
     return (
       <div className="state-message">
-        <h1>Feature not found</h1>
+        <h1>{t("workspace.notFound")}</h1>
         <button onClick={() => navigate({ to: "/" })}>
-          Return to overview
+          {t("workspace.returnOverview")}
         </button>
       </div>
     );
@@ -157,7 +196,7 @@ export function FeatureWorkspace() {
         featureId,
         title: String(form.get("title")),
         scope: String(form.get("scope")),
-        kind: String(form.get("kind")),
+        kind: Number(form.get("kind")) as TaskKind,
         assignee: String(form.get("assignee")),
       });
     } catch {
@@ -174,7 +213,7 @@ export function FeatureWorkspace() {
         slug: String(form.get("slug")),
         title: String(form.get("title")),
         description: String(form.get("description")),
-        status: String(form.get("status")),
+        status: Number(form.get("status")) as FeatureStatus,
       });
     } catch {
       return;
@@ -182,7 +221,11 @@ export function FeatureWorkspace() {
     setShowFeatureEdit(false);
   }
   async function removeFeature() {
-    if (!window.confirm(`Delete ${feature?.title} and every contained task?`))
+    if (
+      !window.confirm(
+        t("workspace.deleteFeatureConfirm", { title: feature?.title ?? "" }),
+      )
+    )
       return;
     try {
       await deleteFeature.mutateAsync(featureId);
@@ -196,9 +239,11 @@ export function FeatureWorkspace() {
     <div className="workspace">
       <header className="workspace-head">
         <div>
-          <p className="eyebrow">Feature circuit / {feature.slug}</p>
+          <p className="eyebrow">
+            {t("workspace.eyebrow", { slug: feature.slug })}
+          </p>
           <h1>{feature.title}</h1>
-          <p>{feature.description || "No feature description yet."}</p>
+          <p>{feature.description || t("workspace.noDescription")}</p>
         </div>
         <div className="workspace-actions">
           <button
@@ -206,12 +251,16 @@ export function FeatureWorkspace() {
             onClick={() => sync.mutate(featureId)}
             disabled={sync.isPending}
           >
-            {sync.isPending ? "Syncing…" : "↻ Sync GitHub"}
+            {sync.isPending
+              ? t("workspace.syncing")
+              : t("workspace.syncGithub")}
           </button>
-          <button onClick={() => setShowTask(true)}>＋ Add task</button>
+          <button onClick={() => setShowTask(true)}>
+            {t("workspace.addTask")}
+          </button>
           <button
             className="icon-button"
-            aria-label="Edit feature"
+            aria-label={t("workspace.editFeature")}
             onClick={() => setShowFeatureEdit(true)}
           >
             ✎
@@ -219,7 +268,9 @@ export function FeatureWorkspace() {
           <button
             className="icon-button"
             aria-label={
-              feature.archived ? "Unarchive feature" : "Archive feature"
+              feature.archived
+                ? t("workspace.unarchiveFeature")
+                : t("workspace.archiveFeature")
             }
             onClick={() =>
               updateFeature.mutate({
@@ -232,7 +283,7 @@ export function FeatureWorkspace() {
           </button>
           <button
             className="icon-button danger"
-            aria-label="Delete feature"
+            aria-label={t("workspace.deleteFeature")}
             onClick={removeFeature}
           >
             ×
@@ -243,22 +294,25 @@ export function FeatureWorkspace() {
       <div className="graph-legend">
         <span>
           <i className="ready" />
-          Ready
+          {t("workspace.legend.ready")}
         </span>
         <span>
           <i className="review" />
-          Review
+          {t("workspace.legend.review")}
         </span>
         <span>
           <i className="conflict" />
-          Conflict
+          {t("workspace.legend.conflict")}
         </span>
         <span>
           <i className="merged" />
-          Merged
+          {t("workspace.legend.merged")}
         </span>
         <b>
-          {tasks.length} nodes · {dependencies.length} links
+          {t("workspace.graphSummary", {
+            nodes: tasks.length,
+            links: dependencies.length,
+          })}
         </b>
       </div>
       <div className="graph-stage" data-testid="feature-graph">
@@ -273,6 +327,7 @@ export function FeatureWorkspace() {
           maxZoom={1.7}
           nodesDraggable={false}
           defaultEdgeOptions={{ animated: false }}
+          ariaLabelConfig={ariaLabelConfig}
         >
           <Background variant={BackgroundVariant.Dots} gap={22} size={1} />
           <Controls showInteractive={false} />
@@ -280,15 +335,17 @@ export function FeatureWorkspace() {
         {tasks.length === 0 && !layoutError && (
           <div className="graph-empty">
             <span>＋</span>
-            <h2>Draw the first node</h2>
-            <p>Add an implementation PR or a manual gate.</p>
-            <button onClick={() => setShowTask(true)}>Add task</button>
+            <h2>{t("workspace.graphEmptyTitle")}</h2>
+            <p>{t("workspace.graphEmptyDetail")}</p>
+            <button onClick={() => setShowTask(true)}>
+              {t("workspace.addTaskPlain")}
+            </button>
           </div>
         )}
         {layoutError && (
           <div className="graph-empty" role="alert">
             <span>⚠</span>
-            <h2>Graph layout failed</h2>
+            <h2>{t("workspace.layoutErrorTitle")}</h2>
             <p>{layoutError}</p>
             <button
               onClick={() => {
@@ -296,7 +353,7 @@ export function FeatureWorkspace() {
                 setLayoutAttempt((attempt) => attempt + 1);
               }}
             >
-              Retry layout
+              {t("workspace.retryLayout")}
             </button>
           </div>
         )}
@@ -318,42 +375,49 @@ export function FeatureWorkspace() {
           <form
             className="dialog"
             onSubmit={submitTask}
-            aria-label="Create task"
+            aria-label={t("taskCreate.formLabel")}
           >
             <header>
-              <p>New graph node</p>
-              <h2>Add task</h2>
+              <p>{t("taskCreate.eyebrow")}</p>
+              <h2>{t("taskCreate.title")}</h2>
             </header>
             <label>
-              Title
+              {t("common.title")}
               <input
                 name="title"
                 required
-                placeholder="Implement checkout API"
+                placeholder={t("taskCreate.titlePlaceholder")}
               />
             </label>
             <label>
-              Scope
+              {t("common.scope")}
               <textarea
                 name="scope"
-                placeholder="Repository and acceptance boundary"
+                placeholder={t("taskCreate.scopePlaceholder")}
               />
             </label>
             <div className="form-row">
               <label>
-                Kind
+                {t("taskCreate.kind")}
                 <select name="kind">
-                  <option value="pr">Pull request</option>
-                  <option value="manual">Manual gate</option>
+                  <option value={TaskKind.PULL_REQUEST}>
+                    {taskKindLabel(TaskKind.PULL_REQUEST, t)}
+                  </option>
+                  <option value={TaskKind.MANUAL}>
+                    {taskKindLabel(TaskKind.MANUAL, t)}
+                  </option>
                 </select>
               </label>
               <label>
-                Assignee
-                <input name="assignee" placeholder="Mika" />
+                {t("common.assignee")}
+                <input
+                  name="assignee"
+                  placeholder={t("taskCreate.assigneePlaceholder")}
+                />
               </label>
             </div>
             {createTask.error && (
-              <p className="form-error">{createTask.error.message}</p>
+              <p className="form-error">{formatError(createTask.error, t)}</p>
             )}
             <footer>
               <button
@@ -361,9 +425,11 @@ export function FeatureWorkspace() {
                 className="secondary"
                 onClick={() => setShowTask(false)}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
-              <button disabled={createTask.isPending}>Add task</button>
+              <button disabled={createTask.isPending}>
+                {t("taskCreate.submit")}
+              </button>
             </footer>
             <MutationError error={createTask.error} />
           </form>
@@ -374,31 +440,37 @@ export function FeatureWorkspace() {
           <form
             className="dialog"
             onSubmit={submitFeature}
-            aria-label="Edit feature"
+            aria-label={t("featureEdit.formLabel")}
           >
             <header>
-              <p>Feature settings</p>
-              <h2>Edit feature</h2>
+              <p>{t("featureEdit.eyebrow")}</p>
+              <h2>{t("featureEdit.title")}</h2>
             </header>
             <label>
-              Slug
+              {t("common.slug")}
               <input name="slug" required defaultValue={feature.slug} />
             </label>
             <label>
-              Title
+              {t("common.title")}
               <input name="title" required defaultValue={feature.title} />
             </label>
             <label>
-              Description
+              {t("common.description")}
               <textarea name="description" defaultValue={feature.description} />
             </label>
             <label>
-              Status
+              {t("common.status")}
               <select name="status" defaultValue={feature.status}>
-                <option value="active">Active</option>
-                <option value="paused">Paused</option>
-                <option value="completed">Completed</option>
-                <option value="cancelled">Cancelled</option>
+                {[
+                  FeatureStatus.ACTIVE,
+                  FeatureStatus.PAUSED,
+                  FeatureStatus.COMPLETED,
+                  FeatureStatus.CANCELLED,
+                ].map((status) => (
+                  <option value={status} key={status}>
+                    {featureStatusLabel(status, t)}
+                  </option>
+                ))}
               </select>
             </label>
             <MutationError error={updateFeature.error} />
@@ -408,9 +480,11 @@ export function FeatureWorkspace() {
                 className="secondary"
                 onClick={() => setShowFeatureEdit(false)}
               >
-                Cancel
+                {t("common.cancel")}
               </button>
-              <button disabled={updateFeature.isPending}>Save feature</button>
+              <button disabled={updateFeature.isPending}>
+                {t("featureEdit.submit")}
+              </button>
             </footer>
           </form>
         </div>
@@ -424,11 +498,11 @@ type InspectorProps = {
     id: string;
     title: string;
     scope: string;
-    kind: string;
-    status: string;
+    kind: TaskKind;
+    status: TaskStatus;
     assignee: string;
-    displayState: string;
-    blockedReason: string;
+    displayState: TaskDisplayState;
+    blockedReason?: BlockedReason;
   };
   tasks: Array<{ id: string; title: string }>;
   dependencies: Array<{ blockerTaskId: string; blockedTaskId: string }>;
@@ -437,18 +511,24 @@ type InspectorProps = {
     owner: string;
     repository: string;
     number: bigint;
-    displayState: string;
+    displayState: PullRequestDisplayState;
     syncError: string;
     stale: boolean;
   };
-  documents: Array<{ id: string; kind: string; title: string; value: string }>;
+  documents: Array<{
+    id: string;
+    kind: DocumentKind;
+    title: string;
+    value: string;
+  }>;
   onClose: () => void;
 };
 function MutationError({ error }: { error: Error | null }) {
+  const { t } = useTranslation();
   if (!error) return null;
   return (
     <p className="form-error" role="alert">
-      {error.message}
+      {formatError(error, t)}
     </p>
   );
 }
@@ -461,6 +541,7 @@ function TaskInspector({
   documents,
   onClose,
 }: InspectorProps) {
+  const { t } = useTranslation();
   const update = useDomainMutation(mutations.updateTask);
   const remove = useDomainMutation(mutations.deleteTask);
   const attach = useDomainMutation(
@@ -480,20 +561,30 @@ function TaskInspector({
   const deleteDoc = useDomainMutation(mutations.deleteDocument);
   const blockers = dependencies.filter((d) => d.blockedTaskId === task.id);
   return (
-    <aside className="inspector" aria-label="Task inspector">
+    <aside className="inspector" aria-label={t("inspector.label")}>
       <header>
         <div>
-          <p>Node inspector</p>
+          <p>{t("inspector.eyebrow")}</p>
           <h2>{task.title}</h2>
         </div>
-        <button aria-label="Close inspector" onClick={onClose}>
+        <button aria-label={t("inspector.close")} onClick={onClose}>
           ×
         </button>
       </header>
-      <div className={`inspector-state state-${task.displayState}`}>
+      <div
+        className={`inspector-state state-${taskDisplayStateToken(task.displayState)}`}
+      >
         <i />
-        {task.displayState.replaceAll("_", " ")}
-        {task.blockedReason && <small>{task.blockedReason}</small>}
+        {taskDisplayStateLabel(task.displayState, t)}
+        {task.blockedReason && (
+          <small>
+            {blockedReasonLabel(
+              task.blockedReason,
+              (id) => tasks.find((item) => item.id === id)?.title,
+              t,
+            )}
+          </small>
+        )}
       </div>
       <form
         onSubmit={(e) => {
@@ -503,54 +594,66 @@ function TaskInspector({
             id: task.id,
             title: String(f.get("title")),
             scope: String(f.get("scope")),
-            status: String(f.get("status")),
+            status: Number(f.get("status")) as TaskStatus,
             assignee: String(f.get("assignee")),
           });
         }}
       >
         <label>
-          Title
+          {t("common.title")}
           <input name="title" defaultValue={task.title} />
         </label>
         <label>
-          Scope
+          {t("common.scope")}
           <textarea name="scope" defaultValue={task.scope} />
         </label>
         <div className="form-row">
           <label>
-            Status
+            {t("common.status")}
             <select name="status" defaultValue={task.status}>
-              <option value="planned">Planned</option>
-              <option value="in_progress">In progress</option>
+              <option value={TaskStatus.PLANNED}>
+                {taskStatusLabel(TaskStatus.PLANNED, t)}
+              </option>
+              <option value={TaskStatus.IN_PROGRESS}>
+                {taskStatusLabel(TaskStatus.IN_PROGRESS, t)}
+              </option>
               {/* A PR task completes when its pull request merges. */}
-              {task.kind !== "pr" && (
-                <option value="completed">Completed</option>
+              {task.kind !== TaskKind.PULL_REQUEST && (
+                <option value={TaskStatus.COMPLETED}>
+                  {taskStatusLabel(TaskStatus.COMPLETED, t)}
+                </option>
               )}
-              <option value="cancelled">Cancelled</option>
+              <option value={TaskStatus.CANCELLED}>
+                {taskStatusLabel(TaskStatus.CANCELLED, t)}
+              </option>
             </select>
           </label>
           <label>
-            Assignee
+            {t("common.assignee")}
             <input name="assignee" defaultValue={task.assignee} />
           </label>
         </div>
-        <button disabled={update.isPending}>Save task</button>
+        <button disabled={update.isPending}>{t("inspector.saveTask")}</button>
         <MutationError error={update.error} />
       </form>
       <section>
-        <h3>Pull request</h3>
+        <h3>{t("inspector.pullRequest")}</h3>
         {pr ? (
           <div className="linked-pr">
             <a href={pr.url} target="_blank" rel="noreferrer">
               {pr.owner}/{pr.repository} #{String(pr.number)}
             </a>
-            <span>{pr.stale ? "stale" : pr.displayState}</span>
+            <span>
+              {pr.stale
+                ? t("inspector.stale")
+                : pullRequestDisplayStateLabel(pr.displayState, t)}
+            </span>
             {pr.syncError && <p>{pr.syncError}</p>}
             <button
               className="text-action"
               onClick={() => detach.mutate(task.id)}
             >
-              Detach
+              {t("inspector.detach")}
             </button>
           </div>
         ) : (
@@ -569,19 +672,19 @@ function TaskInspector({
               required
               placeholder="https://github.com/org/repo/pull/42"
             />
-            <button>Attach</button>
+            <button>{t("inspector.attach")}</button>
           </form>
         )}
         <MutationError error={attach.error} />
         <MutationError error={detach.error} />
       </section>
       <section>
-        <h3>Blocked by</h3>
+        <h3>{t("inspector.blockedBy")}</h3>
         {blockers.map((dep) => (
           <div className="dependency-chip" key={dep.blockerTaskId}>
             <span>{tasks.find((t) => t.id === dep.blockerTaskId)?.title}</span>
             <button
-              aria-label="Remove dependency"
+              aria-label={t("inspector.removeDependency")}
               onClick={() =>
                 removeDep.mutate({
                   blocker: dep.blockerTaskId,
@@ -603,9 +706,13 @@ function TaskInspector({
             });
           }}
         >
-          <select name="blocker" aria-label="Blocker task" defaultValue="">
+          <select
+            name="blocker"
+            aria-label={t("inspector.blockerTask")}
+            defaultValue=""
+          >
             <option value="" disabled>
-              Select blocker
+              {t("inspector.selectBlocker")}
             </option>
             {tasks
               .filter(
@@ -619,21 +726,23 @@ function TaskInspector({
                 </option>
               ))}
           </select>
-          <button>Add</button>
+          <button>{t("common.add")}</button>
         </form>
         <MutationError error={addDep.error} />
         <MutationError error={removeDep.error} />
       </section>
       <section>
-        <h3>References</h3>
+        <h3>{t("inspector.references")}</h3>
         {documents.map((document) => (
           <div className="document-chip" key={document.id}>
             <span>
-              <b>{document.title || document.kind}</b>
+              <b>{document.title || documentKindLabel(document.kind, t)}</b>
               <small>{document.value}</small>
             </span>
             <button
-              aria-label={`Delete ${document.title || "reference"}`}
+              aria-label={t("inspector.deleteReference", {
+                title: document.title || t("inspector.referenceFallback"),
+              })}
               onClick={() => deleteDoc.mutate(document.id)}
             >
               ×
@@ -647,7 +756,7 @@ function TaskInspector({
             const f = new FormData(e.currentTarget);
             addDoc.mutate({
               taskId: task.id,
-              kind: String(f.get("kind")),
+              kind: Number(f.get("kind")) as DocumentKind,
               title: String(f.get("title")),
               value: String(f.get("value")),
             });
@@ -655,17 +764,21 @@ function TaskInspector({
         >
           <div className="form-row">
             <select name="kind">
-              <option value="url">URL</option>
-              <option value="markdown_path">Markdown path</option>
+              <option value={DocumentKind.URL}>
+                {documentKindLabel(DocumentKind.URL, t)}
+              </option>
+              <option value={DocumentKind.MARKDOWN_PATH}>
+                {documentKindLabel(DocumentKind.MARKDOWN_PATH, t)}
+              </option>
             </select>
-            <input name="title" placeholder="Design notes" />
+            <input name="title" placeholder={t("inspector.designNotes")} />
           </div>
           <input
             name="value"
             required
-            placeholder="https://… or docs/plan.md"
+            placeholder={t("inspector.referenceValue")}
           />
-          <button>Add reference</button>
+          <button>{t("inspector.addReference")}</button>
         </form>
         <MutationError error={addDoc.error} />
         <MutationError error={deleteDoc.error} />
@@ -673,11 +786,16 @@ function TaskInspector({
       <button
         className="danger-zone"
         onClick={() => {
-          if (!window.confirm(`Delete ${task.title}?`)) return;
+          if (
+            !window.confirm(
+              t("inspector.deleteTaskConfirm", { title: task.title }),
+            )
+          )
+            return;
           remove.mutateAsync(task.id).then(onClose, () => {});
         }}
       >
-        Delete task and references
+        {t("inspector.deleteTask")}
       </button>
       <MutationError error={remove.error} />
     </aside>

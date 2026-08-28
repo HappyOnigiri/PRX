@@ -37,7 +37,12 @@ func rpcError(err error) error {
 	case "github_auth":
 		code = connect.CodeUnauthenticated
 	}
-	return connect.NewError(code, err)
+	connectErr := connect.NewError(code, err)
+	detail, detailErr := connect.NewErrorDetail(&prxv1.ErrorDetail{Code: protoDomainErrorCode(domainErr.Code), Path: domainErr.Path})
+	if detailErr == nil {
+		connectErr.AddDetail(detail)
+	}
+	return connectErr
 }
 
 func (h *Handler) GetSnapshot(ctx context.Context, _ *connect.Request[prxv1.GetSnapshotRequest]) (*connect.Response[prxv1.GetSnapshotResponse], error) {
@@ -57,7 +62,7 @@ func (h *Handler) CreateFeature(ctx context.Context, req *connect.Request[prxv1.
 }
 
 func (h *Handler) UpdateFeature(ctx context.Context, req *connect.Request[prxv1.UpdateFeatureRequest]) (*connect.Response[prxv1.UpdateFeatureResponse], error) {
-	value, err := h.service.UpdateFeature(ctx, req.Msg.Id, req.Msg.Slug, req.Msg.Title, req.Msg.Description, req.Msg.Status, req.Msg.Archived)
+	value, err := h.service.UpdateFeature(ctx, req.Msg.Id, req.Msg.Slug, req.Msg.Title, req.Msg.Description, domainFeatureStatus(req.Msg.Status), req.Msg.Archived)
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -72,7 +77,7 @@ func (h *Handler) DeleteFeature(ctx context.Context, req *connect.Request[prxv1.
 }
 
 func (h *Handler) CreateTask(ctx context.Context, req *connect.Request[prxv1.CreateTaskRequest]) (*connect.Response[prxv1.CreateTaskResponse], error) {
-	value, err := h.service.CreateTask(ctx, req.Msg.FeatureId, req.Msg.Title, req.Msg.Scope, req.Msg.Kind, req.Msg.Assignee)
+	value, err := h.service.CreateTask(ctx, req.Msg.FeatureId, req.Msg.Title, req.Msg.Scope, domainTaskKind(req.Msg.Kind), req.Msg.Assignee)
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -80,7 +85,7 @@ func (h *Handler) CreateTask(ctx context.Context, req *connect.Request[prxv1.Cre
 }
 
 func (h *Handler) UpdateTask(ctx context.Context, req *connect.Request[prxv1.UpdateTaskRequest]) (*connect.Response[prxv1.UpdateTaskResponse], error) {
-	value, err := h.service.UpdateTask(ctx, req.Msg.Id, req.Msg.Title, req.Msg.Scope, req.Msg.Status, req.Msg.Assignee)
+	value, err := h.service.UpdateTask(ctx, req.Msg.Id, req.Msg.Title, req.Msg.Scope, domainTaskStatus(req.Msg.Status), req.Msg.Assignee)
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -125,7 +130,7 @@ func (h *Handler) DetachPullRequest(ctx context.Context, req *connect.Request[pr
 }
 
 func (h *Handler) AddDocument(ctx context.Context, req *connect.Request[prxv1.AddDocumentRequest]) (*connect.Response[prxv1.AddDocumentResponse], error) {
-	value, err := h.service.AddDocument(ctx, req.Msg.FeatureId, req.Msg.TaskId, req.Msg.Kind, req.Msg.Title, req.Msg.Value)
+	value, err := h.service.AddDocument(ctx, req.Msg.FeatureId, req.Msg.TaskId, domainDocumentKind(req.Msg.Kind), req.Msg.Title, req.Msg.Value)
 	if err != nil {
 		return nil, rpcError(err)
 	}

@@ -125,17 +125,22 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 			if !ok {
 				task.Ready = false
 				task.BlockedReason = "dependency data is incomplete"
+				task.BlockedCode = BlockedDependencyDataIncomplete
 				break
 			}
 			blockerPR := prByTask[blockerID]
 			if blockerPR != nil && blockerPR.Stale {
 				task.Ready = false
 				task.BlockedReason = "a blocker has stale GitHub data"
+				task.BlockedCode = BlockedByStaleData
+				task.BlockerTaskID = blockerID
 				break
 			}
 			if !IsSatisfied(blocker, blockerPR) {
 				task.Ready = false
 				task.BlockedReason = "waiting for " + blocker.Title
+				task.BlockedCode = BlockedWaitingForBlocker
+				task.BlockerTaskID = blockerID
 				break
 			}
 		}

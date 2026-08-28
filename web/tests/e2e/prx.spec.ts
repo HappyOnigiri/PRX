@@ -29,6 +29,22 @@ test.afterEach(() =>
   expect(browserErrors, browserErrors.join("\n")).toEqual([]),
 );
 
+test("switches the display language and restores it from Local Storage", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByLabel("Display language").selectOption("ja");
+  await expect(
+    page.getByRole("heading", { name: /いま動かせるタスク/ }),
+  ).toBeVisible();
+  await expect(page.locator("html")).toHaveAttribute("lang", "ja");
+  await page.reload();
+  await expect(page.getByLabel("表示言語")).toHaveValue("ja");
+  await expect(
+    page.getByRole("heading", { name: /いま動かせるタスク/ }),
+  ).toBeVisible();
+});
+
 async function addTask(page: Page, title: string) {
   await page.getByRole("button", { name: "Add task" }).first().click();
   const dialog = page.getByRole("form", { name: "Create task" });
@@ -132,14 +148,16 @@ test("creates and edits a feature DAG while preserving state", async ({
   const reference = inspector
     .locator("section")
     .filter({ has: page.getByRole("heading", { name: "Reference" }) });
-  await reference.locator("select[name=kind]").selectOption("markdown_path");
+  await reference
+    .locator("select[name=kind]")
+    .selectOption({ label: "Markdown path" });
   await reference.getByPlaceholder("Design notes").fill("Delivery plan");
   await reference
     .getByPlaceholder("https://… or docs/plan.md")
     .fill("docs/delivery.md");
   await reference.getByRole("button", { name: "Add reference" }).click();
   await expect(reference.locator(".document-chip")).toHaveCount(1);
-  await reference.locator("select[name=kind]").selectOption("url");
+  await reference.locator("select[name=kind]").selectOption({ label: "URL" });
   await reference.getByPlaceholder("Design notes").fill("Release runbook");
   await reference
     .getByPlaceholder("https://… or docs/plan.md")
@@ -150,7 +168,9 @@ test("creates and edits a feature DAG while preserving state", async ({
     .getByRole("button", { name: "Delete Release runbook" })
     .click();
   await expect(reference.locator(".document-chip")).toHaveCount(1);
-  await inspector.locator("select[name=status]").selectOption("in_progress");
+  await inspector
+    .locator("select[name=status]")
+    .selectOption({ label: "In progress" });
   await inspector.locator("input[name=assignee]").fill("");
   await inspector.getByRole("button", { name: "Save task" }).click();
   await page.getByRole("button", { name: "Close inspector" }).click();

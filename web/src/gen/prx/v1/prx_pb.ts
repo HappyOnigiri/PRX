@@ -2,15 +2,59 @@
 // @generated from file prx/v1/prx.proto (package prx.v1, syntax proto3)
 /* eslint-disable */
 
-import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
-import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { GenEnum, GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
+import { enumDesc, fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file prx/v1/prx.proto.
  */
 export const file_prx_v1_prx: GenFile = /*@__PURE__*/
-  fileDesc("ChBwcngvdjEvcHJ4LnByb3RvEgZwcngudjEihgIKB0ZlYXR1cmUSCgoCaWQYASABKAkSDAoEc2x1ZxgCIAEoCRINCgV0aXRsZRgDIAEoCRITCgtkZXNjcmlwdGlvbhgEIAEoCRIOCgZzdGF0dXMYBSABKAkSEAoIYXJjaGl2ZWQYBiABKAgSEgoKY3JlYXRlZF9hdBgHIAEoCRISCgp1cGRhdGVkX2F0GAggASgJEhIKCnRhc2tfY291bnQYCSABKAUSEwoLcmVhZHlfY291bnQYCiABKAUSHAoUcmV2aWV3X3dhaXRpbmdfY291bnQYCyABKAUSFgoOY29uZmxpY3RfY291bnQYDCABKAUSFAoMbWVyZ2VkX2NvdW50GA0gASgFItoBCgRUYXNrEgoKAmlkGAEgASgJEhIKCmZlYXR1cmVfaWQYAiABKAkSDQoFdGl0bGUYAyABKAkSDQoFc2NvcGUYBCABKAkSDAoEa2luZBgFIAEoCRIOCgZzdGF0dXMYBiABKAkSEAoIYXNzaWduZWUYByABKAkSEgoKY3JlYXRlZF9hdBgIIAEoCRISCgp1cGRhdGVkX2F0GAkgASgJEg0KBXJlYWR5GAogASgIEhUKDWRpc3BsYXlfc3RhdGUYCyABKAkSFgoOYmxvY2tlZF9yZWFzb24YDCABKAkiUgoKRGVwZW5kZW5jeRIXCg9ibG9ja2VyX3Rhc2tfaWQYASABKAkSFwoPYmxvY2tlZF90YXNrX2lkGAIgASgJEhIKCmNyZWF0ZWRfYXQYAyABKAkiyQIKC1B1bGxSZXF1ZXN0Eg8KB3Rhc2tfaWQYASABKAkSDQoFb3duZXIYAiABKAkSEgoKcmVwb3NpdG9yeRgDIAEoCRIOCgZudW1iZXIYBCABKAMSCwoDdXJsGAUgASgJEg8KB25vZGVfaWQYBiABKAkSDgoGYXV0aG9yGAcgASgJEhEKCWFzc2lnbmVlcxgIIAMoCRINCgVzdGF0ZRgJIAEoCRINCgVkcmFmdBgKIAEoCBIUCgxyZXZpZXdfc3RhdGUYCyABKAkSFAoMbWVyZ2VhYmlsaXR5GAwgASgJEhkKEWdpdGh1Yl91cGRhdGVkX2F0GA0gASgJEhYKDmxhc3Rfc3luY2VkX2F0GA4gASgJEhIKCnN5bmNfZXJyb3IYDyABKAkSDQoFc3RhbGUYECABKAgSFQoNZGlzcGxheV9zdGF0ZRgRIAEoCSJ7CghEb2N1bWVudBIKCgJpZBgBIAEoCRISCgpmZWF0dXJlX2lkGAIgASgJEg8KB3Rhc2tfaWQYAyABKAkSDAoEa2luZBgEIAEoCRINCgV0aXRsZRgFIAEoCRINCgV2YWx1ZRgGIAEoCRISCgpjcmVhdGVkX2F0GAcgASgJIt0CCghTbmFwc2hvdBIhCghmZWF0dXJlcxgBIAMoCzIPLnByeC52MS5GZWF0dXJlEhsKBXRhc2tzGAIgAygLMgwucHJ4LnYxLlRhc2sSKAoMZGVwZW5kZW5jaWVzGAMgAygLMhIucHJ4LnYxLkRlcGVuZGVuY3kSKgoNcHVsbF9yZXF1ZXN0cxgEIAMoCzITLnByeC52MS5QdWxsUmVxdWVzdBIjCglkb2N1bWVudHMYBSADKAsyEC5wcngudjEuRG9jdW1lbnQSIQoLcmVhZHlfdGFza3MYBiADKAsyDC5wcngudjEuVGFzaxIqChRyZXZpZXdfd2FpdGluZ190YXNrcxgHIAMoCzIMLnByeC52MS5UYXNrEiQKDmNvbmZsaWN0X3Rhc2tzGAggAygLMgwucHJ4LnYxLlRhc2sSIQoLc3RhbGVfdGFza3MYCSADKAsyDC5wcngudjEuVGFzayIUChJHZXRTbmFwc2hvdFJlcXVlc3QiOQoTR2V0U25hcHNob3RSZXNwb25zZRIiCghzbmFwc2hvdBgBIAEoCzIQLnByeC52MS5TbmFwc2hvdCJIChRDcmVhdGVGZWF0dXJlUmVxdWVzdBIMCgRzbHVnGAEgASgJEg0KBXRpdGxlGAIgASgJEhMKC2Rlc2NyaXB0aW9uGAMgASgJIjkKFUNyZWF0ZUZlYXR1cmVSZXNwb25zZRIgCgdmZWF0dXJlGAEgASgLMg8ucHJ4LnYxLkZlYXR1cmUiygEKFFVwZGF0ZUZlYXR1cmVSZXF1ZXN0EgoKAmlkGAEgASgJEhEKBHNsdWcYAiABKAlIAIgBARISCgV0aXRsZRgDIAEoCUgBiAEBEhgKC2Rlc2NyaXB0aW9uGAQgASgJSAKIAQESEwoGc3RhdHVzGAUgASgJSAOIAQESFQoIYXJjaGl2ZWQYBiABKAhIBIgBAUIHCgVfc2x1Z0IICgZfdGl0bGVCDgoMX2Rlc2NyaXB0aW9uQgkKB19zdGF0dXNCCwoJX2FyY2hpdmVkIjkKFVVwZGF0ZUZlYXR1cmVSZXNwb25zZRIgCgdmZWF0dXJlGAEgASgLMg8ucHJ4LnYxLkZlYXR1cmUiMwoURGVsZXRlRmVhdHVyZVJlcXVlc3QSCgoCaWQYASABKAkSDwoHY2FzY2FkZRgCIAEoCCIXChVEZWxldGVGZWF0dXJlUmVzcG9uc2UiZQoRQ3JlYXRlVGFza1JlcXVlc3QSEgoKZmVhdHVyZV9pZBgBIAEoCRINCgV0aXRsZRgCIAEoCRINCgVzY29wZRgDIAEoCRIMCgRraW5kGAQgASgJEhAKCGFzc2lnbmVlGAUgASgJIjAKEkNyZWF0ZVRhc2tSZXNwb25zZRIaCgR0YXNrGAEgASgLMgwucHJ4LnYxLlRhc2sinwEKEVVwZGF0ZVRhc2tSZXF1ZXN0EgoKAmlkGAEgASgJEhIKBXRpdGxlGAIgASgJSACIAQESEgoFc2NvcGUYAyABKAlIAYgBARITCgZzdGF0dXMYBCABKAlIAogBARIVCghhc3NpZ25lZRgFIAEoCUgDiAEBQggKBl90aXRsZUIICgZfc2NvcGVCCQoHX3N0YXR1c0ILCglfYXNzaWduZWUiMAoSVXBkYXRlVGFza1Jlc3BvbnNlEhoKBHRhc2sYASABKAsyDC5wcngudjEuVGFzayIwChFEZWxldGVUYXNrUmVxdWVzdBIKCgJpZBgBIAEoCRIPCgdjYXNjYWRlGAIgASgIIhQKEkRlbGV0ZVRhc2tSZXNwb25zZSJIChRBZGREZXBlbmRlbmN5UmVxdWVzdBIXCg9ibG9ja2VyX3Rhc2tfaWQYASABKAkSFwoPYmxvY2tlZF90YXNrX2lkGAIgASgJIj8KFUFkZERlcGVuZGVuY3lSZXNwb25zZRImCgpkZXBlbmRlbmN5GAEgASgLMhIucHJ4LnYxLkRlcGVuZGVuY3kiSwoXUmVtb3ZlRGVwZW5kZW5jeVJlcXVlc3QSFwoPYmxvY2tlcl90YXNrX2lkGAEgASgJEhcKD2Jsb2NrZWRfdGFza19pZBgCIAEoCSIaChhSZW1vdmVEZXBlbmRlbmN5UmVzcG9uc2UiOAoYQXR0YWNoUHVsbFJlcXVlc3RSZXF1ZXN0Eg8KB3Rhc2tfaWQYASABKAkSCwoDdXJsGAIgASgJIkYKGUF0dGFjaFB1bGxSZXF1ZXN0UmVzcG9uc2USKQoMcHVsbF9yZXF1ZXN0GAEgASgLMhMucHJ4LnYxLlB1bGxSZXF1ZXN0IisKGERldGFjaFB1bGxSZXF1ZXN0UmVxdWVzdBIPCgd0YXNrX2lkGAEgASgJIhsKGURldGFjaFB1bGxSZXF1ZXN0UmVzcG9uc2UiZQoSQWRkRG9jdW1lbnRSZXF1ZXN0EhIKCmZlYXR1cmVfaWQYASABKAkSDwoHdGFza19pZBgCIAEoCRIMCgRraW5kGAMgASgJEg0KBXRpdGxlGAQgASgJEg0KBXZhbHVlGAUgASgJIjkKE0FkZERvY3VtZW50UmVzcG9uc2USIgoIZG9jdW1lbnQYASABKAsyEC5wcngudjEuRG9jdW1lbnQiIwoVRGVsZXRlRG9jdW1lbnRSZXF1ZXN0EgoKAmlkGAEgASgJIhgKFkRlbGV0ZURvY3VtZW50UmVzcG9uc2UiMgoLU3luY1JlcXVlc3QSEgoKZmVhdHVyZV9pZBgBIAEoCRIPCgd0YXNrX2lkGAIgASgJIjEKDFN5bmNSZXNwb25zZRIRCglzdWNjZWVkZWQYASABKAUSDgoGZmFpbGVkGAIgASgFIhEKD1ZhbGlkYXRlUmVxdWVzdCIxChBWYWxpZGF0ZVJlc3BvbnNlEg0KBXZhbGlkGAEgASgIEg4KBmVycm9ycxgCIAMoCTLxCAoKUFJYU2VydmljZRJGCgtHZXRTbmFwc2hvdBIaLnByeC52MS5HZXRTbmFwc2hvdFJlcXVlc3QaGy5wcngudjEuR2V0U25hcHNob3RSZXNwb25zZRJMCg1DcmVhdGVGZWF0dXJlEhwucHJ4LnYxLkNyZWF0ZUZlYXR1cmVSZXF1ZXN0Gh0ucHJ4LnYxLkNyZWF0ZUZlYXR1cmVSZXNwb25zZRJMCg1VcGRhdGVGZWF0dXJlEhwucHJ4LnYxLlVwZGF0ZUZlYXR1cmVSZXF1ZXN0Gh0ucHJ4LnYxLlVwZGF0ZUZlYXR1cmVSZXNwb25zZRJMCg1EZWxldGVGZWF0dXJlEhwucHJ4LnYxLkRlbGV0ZUZlYXR1cmVSZXF1ZXN0Gh0ucHJ4LnYxLkRlbGV0ZUZlYXR1cmVSZXNwb25zZRJDCgpDcmVhdGVUYXNrEhkucHJ4LnYxLkNyZWF0ZVRhc2tSZXF1ZXN0GhoucHJ4LnYxLkNyZWF0ZVRhc2tSZXNwb25zZRJDCgpVcGRhdGVUYXNrEhkucHJ4LnYxLlVwZGF0ZVRhc2tSZXF1ZXN0GhoucHJ4LnYxLlVwZGF0ZVRhc2tSZXNwb25zZRJDCgpEZWxldGVUYXNrEhkucHJ4LnYxLkRlbGV0ZVRhc2tSZXF1ZXN0GhoucHJ4LnYxLkRlbGV0ZVRhc2tSZXNwb25zZRJMCg1BZGREZXBlbmRlbmN5EhwucHJ4LnYxLkFkZERlcGVuZGVuY3lSZXF1ZXN0Gh0ucHJ4LnYxLkFkZERlcGVuZGVuY3lSZXNwb25zZRJVChBSZW1vdmVEZXBlbmRlbmN5Eh8ucHJ4LnYxLlJlbW92ZURlcGVuZGVuY3lSZXF1ZXN0GiAucHJ4LnYxLlJlbW92ZURlcGVuZGVuY3lSZXNwb25zZRJYChFBdHRhY2hQdWxsUmVxdWVzdBIgLnByeC52MS5BdHRhY2hQdWxsUmVxdWVzdFJlcXVlc3QaIS5wcngudjEuQXR0YWNoUHVsbFJlcXVlc3RSZXNwb25zZRJYChFEZXRhY2hQdWxsUmVxdWVzdBIgLnByeC52MS5EZXRhY2hQdWxsUmVxdWVzdFJlcXVlc3QaIS5wcngudjEuRGV0YWNoUHVsbFJlcXVlc3RSZXNwb25zZRJGCgtBZGREb2N1bWVudBIaLnByeC52MS5BZGREb2N1bWVudFJlcXVlc3QaGy5wcngudjEuQWRkRG9jdW1lbnRSZXNwb25zZRJPCg5EZWxldGVEb2N1bWVudBIdLnByeC52MS5EZWxldGVEb2N1bWVudFJlcXVlc3QaHi5wcngudjEuRGVsZXRlRG9jdW1lbnRSZXNwb25zZRIxCgRTeW5jEhMucHJ4LnYxLlN5bmNSZXF1ZXN0GhQucHJ4LnYxLlN5bmNSZXNwb25zZRI9CghWYWxpZGF0ZRIXLnByeC52MS5WYWxpZGF0ZVJlcXVlc3QaGC5wcngudjEuVmFsaWRhdGVSZXNwb25zZUIuWixnaXRodWIuY29tL0hhcHB5T25pZ2lyaS9QUlgvZ2VuL3ByeC92MTtwcnh2MWIGcHJvdG8z");
+  fileDesc("ChBwcngvdjEvcHJ4LnByb3RvEgZwcngudjEiUQoNQmxvY2tlZFJlYXNvbhInCgRjb2RlGAEgASgOMhkucHJ4LnYxLkJsb2NrZWRSZWFzb25Db2RlEhcKD2Jsb2NrZXJfdGFza19pZBgCIAEoCSJCCgtFcnJvckRldGFpbBIlCgRjb2RlGAEgASgOMhcucHJ4LnYxLkRvbWFpbkVycm9yQ29kZRIMCgRwYXRoGAIgAygJIp0CCgdGZWF0dXJlEgoKAmlkGAEgASgJEgwKBHNsdWcYAiABKAkSDQoFdGl0bGUYAyABKAkSEwoLZGVzY3JpcHRpb24YBCABKAkSJQoGc3RhdHVzGAUgASgOMhUucHJ4LnYxLkZlYXR1cmVTdGF0dXMSEAoIYXJjaGl2ZWQYBiABKAgSEgoKY3JlYXRlZF9hdBgHIAEoCRISCgp1cGRhdGVkX2F0GAggASgJEhIKCnRhc2tfY291bnQYCSABKAUSEwoLcmVhZHlfY291bnQYCiABKAUSHAoUcmV2aWV3X3dhaXRpbmdfY291bnQYCyABKAUSFgoOY29uZmxpY3RfY291bnQYDCABKAUSFAoMbWVyZ2VkX2NvdW50GA0gASgFIrECCgRUYXNrEgoKAmlkGAEgASgJEhIKCmZlYXR1cmVfaWQYAiABKAkSDQoFdGl0bGUYAyABKAkSDQoFc2NvcGUYBCABKAkSHgoEa2luZBgFIAEoDjIQLnByeC52MS5UYXNrS2luZBIiCgZzdGF0dXMYBiABKA4yEi5wcngudjEuVGFza1N0YXR1cxIQCghhc3NpZ25lZRgHIAEoCRISCgpjcmVhdGVkX2F0GAggASgJEhIKCnVwZGF0ZWRfYXQYCSABKAkSDQoFcmVhZHkYCiABKAgSLwoNZGlzcGxheV9zdGF0ZRgLIAEoDjIYLnByeC52MS5UYXNrRGlzcGxheVN0YXRlEi0KDmJsb2NrZWRfcmVhc29uGAwgASgLMhUucHJ4LnYxLkJsb2NrZWRSZWFzb24iUgoKRGVwZW5kZW5jeRIXCg9ibG9ja2VyX3Rhc2tfaWQYASABKAkSFwoPYmxvY2tlZF90YXNrX2lkGAIgASgJEhIKCmNyZWF0ZWRfYXQYAyABKAkirwMKC1B1bGxSZXF1ZXN0Eg8KB3Rhc2tfaWQYASABKAkSDQoFb3duZXIYAiABKAkSEgoKcmVwb3NpdG9yeRgDIAEoCRIOCgZudW1iZXIYBCABKAMSCwoDdXJsGAUgASgJEg8KB25vZGVfaWQYBiABKAkSDgoGYXV0aG9yGAcgASgJEhEKCWFzc2lnbmVlcxgIIAMoCRInCgVzdGF0ZRgJIAEoDjIYLnByeC52MS5QdWxsUmVxdWVzdFN0YXRlEg0KBWRyYWZ0GAogASgIEikKDHJldmlld19zdGF0ZRgLIAEoDjITLnByeC52MS5SZXZpZXdTdGF0ZRIqCgxtZXJnZWFiaWxpdHkYDCABKA4yFC5wcngudjEuTWVyZ2VhYmlsaXR5EhkKEWdpdGh1Yl91cGRhdGVkX2F0GA0gASgJEhYKDmxhc3Rfc3luY2VkX2F0GA4gASgJEhIKCnN5bmNfZXJyb3IYDyABKAkSDQoFc3RhbGUYECABKAgSNgoNZGlzcGxheV9zdGF0ZRgRIAEoDjIfLnByeC52MS5QdWxsUmVxdWVzdERpc3BsYXlTdGF0ZSKRAQoIRG9jdW1lbnQSCgoCaWQYASABKAkSEgoKZmVhdHVyZV9pZBgCIAEoCRIPCgd0YXNrX2lkGAMgASgJEiIKBGtpbmQYBCABKA4yFC5wcngudjEuRG9jdW1lbnRLaW5kEg0KBXRpdGxlGAUgASgJEg0KBXZhbHVlGAYgASgJEhIKCmNyZWF0ZWRfYXQYByABKAki3QIKCFNuYXBzaG90EiEKCGZlYXR1cmVzGAEgAygLMg8ucHJ4LnYxLkZlYXR1cmUSGwoFdGFza3MYAiADKAsyDC5wcngudjEuVGFzaxIoCgxkZXBlbmRlbmNpZXMYAyADKAsyEi5wcngudjEuRGVwZW5kZW5jeRIqCg1wdWxsX3JlcXVlc3RzGAQgAygLMhMucHJ4LnYxLlB1bGxSZXF1ZXN0EiMKCWRvY3VtZW50cxgFIAMoCzIQLnByeC52MS5Eb2N1bWVudBIhCgtyZWFkeV90YXNrcxgGIAMoCzIMLnByeC52MS5UYXNrEioKFHJldmlld193YWl0aW5nX3Rhc2tzGAcgAygLMgwucHJ4LnYxLlRhc2sSJAoOY29uZmxpY3RfdGFza3MYCCADKAsyDC5wcngudjEuVGFzaxIhCgtzdGFsZV90YXNrcxgJIAMoCzIMLnByeC52MS5UYXNrIhQKEkdldFNuYXBzaG90UmVxdWVzdCI5ChNHZXRTbmFwc2hvdFJlc3BvbnNlEiIKCHNuYXBzaG90GAEgASgLMhAucHJ4LnYxLlNuYXBzaG90IkgKFENyZWF0ZUZlYXR1cmVSZXF1ZXN0EgwKBHNsdWcYASABKAkSDQoFdGl0bGUYAiABKAkSEwoLZGVzY3JpcHRpb24YAyABKAkiOQoVQ3JlYXRlRmVhdHVyZVJlc3BvbnNlEiAKB2ZlYXR1cmUYASABKAsyDy5wcngudjEuRmVhdHVyZSLhAQoUVXBkYXRlRmVhdHVyZVJlcXVlc3QSCgoCaWQYASABKAkSEQoEc2x1ZxgCIAEoCUgAiAEBEhIKBXRpdGxlGAMgASgJSAGIAQESGAoLZGVzY3JpcHRpb24YBCABKAlIAogBARIqCgZzdGF0dXMYBSABKA4yFS5wcngudjEuRmVhdHVyZVN0YXR1c0gDiAEBEhUKCGFyY2hpdmVkGAYgASgISASIAQFCBwoFX3NsdWdCCAoGX3RpdGxlQg4KDF9kZXNjcmlwdGlvbkIJCgdfc3RhdHVzQgsKCV9hcmNoaXZlZCI5ChVVcGRhdGVGZWF0dXJlUmVzcG9uc2USIAoHZmVhdHVyZRgBIAEoCzIPLnByeC52MS5GZWF0dXJlIjMKFERlbGV0ZUZlYXR1cmVSZXF1ZXN0EgoKAmlkGAEgASgJEg8KB2Nhc2NhZGUYAiABKAgiFwoVRGVsZXRlRmVhdHVyZVJlc3BvbnNlIncKEUNyZWF0ZVRhc2tSZXF1ZXN0EhIKCmZlYXR1cmVfaWQYASABKAkSDQoFdGl0bGUYAiABKAkSDQoFc2NvcGUYAyABKAkSHgoEa2luZBgEIAEoDjIQLnByeC52MS5UYXNrS2luZBIQCghhc3NpZ25lZRgFIAEoCSIwChJDcmVhdGVUYXNrUmVzcG9uc2USGgoEdGFzaxgBIAEoCzIMLnByeC52MS5UYXNrIrMBChFVcGRhdGVUYXNrUmVxdWVzdBIKCgJpZBgBIAEoCRISCgV0aXRsZRgCIAEoCUgAiAEBEhIKBXNjb3BlGAMgASgJSAGIAQESJwoGc3RhdHVzGAQgASgOMhIucHJ4LnYxLlRhc2tTdGF0dXNIAogBARIVCghhc3NpZ25lZRgFIAEoCUgDiAEBQggKBl90aXRsZUIICgZfc2NvcGVCCQoHX3N0YXR1c0ILCglfYXNzaWduZWUiMAoSVXBkYXRlVGFza1Jlc3BvbnNlEhoKBHRhc2sYASABKAsyDC5wcngudjEuVGFzayIwChFEZWxldGVUYXNrUmVxdWVzdBIKCgJpZBgBIAEoCRIPCgdjYXNjYWRlGAIgASgIIhQKEkRlbGV0ZVRhc2tSZXNwb25zZSJIChRBZGREZXBlbmRlbmN5UmVxdWVzdBIXCg9ibG9ja2VyX3Rhc2tfaWQYASABKAkSFwoPYmxvY2tlZF90YXNrX2lkGAIgASgJIj8KFUFkZERlcGVuZGVuY3lSZXNwb25zZRImCgpkZXBlbmRlbmN5GAEgASgLMhIucHJ4LnYxLkRlcGVuZGVuY3kiSwoXUmVtb3ZlRGVwZW5kZW5jeVJlcXVlc3QSFwoPYmxvY2tlcl90YXNrX2lkGAEgASgJEhcKD2Jsb2NrZWRfdGFza19pZBgCIAEoCSIaChhSZW1vdmVEZXBlbmRlbmN5UmVzcG9uc2UiOAoYQXR0YWNoUHVsbFJlcXVlc3RSZXF1ZXN0Eg8KB3Rhc2tfaWQYASABKAkSCwoDdXJsGAIgASgJIkYKGUF0dGFjaFB1bGxSZXF1ZXN0UmVzcG9uc2USKQoMcHVsbF9yZXF1ZXN0GAEgASgLMhMucHJ4LnYxLlB1bGxSZXF1ZXN0IisKGERldGFjaFB1bGxSZXF1ZXN0UmVxdWVzdBIPCgd0YXNrX2lkGAEgASgJIhsKGURldGFjaFB1bGxSZXF1ZXN0UmVzcG9uc2UiewoSQWRkRG9jdW1lbnRSZXF1ZXN0EhIKCmZlYXR1cmVfaWQYASABKAkSDwoHdGFza19pZBgCIAEoCRIiCgRraW5kGAMgASgOMhQucHJ4LnYxLkRvY3VtZW50S2luZBINCgV0aXRsZRgEIAEoCRINCgV2YWx1ZRgFIAEoCSI5ChNBZGREb2N1bWVudFJlc3BvbnNlEiIKCGRvY3VtZW50GAEgASgLMhAucHJ4LnYxLkRvY3VtZW50IiMKFURlbGV0ZURvY3VtZW50UmVxdWVzdBIKCgJpZBgBIAEoCSIYChZEZWxldGVEb2N1bWVudFJlc3BvbnNlIjIKC1N5bmNSZXF1ZXN0EhIKCmZlYXR1cmVfaWQYASABKAkSDwoHdGFza19pZBgCIAEoCSIxCgxTeW5jUmVzcG9uc2USEQoJc3VjY2VlZGVkGAEgASgFEg4KBmZhaWxlZBgCIAEoBSIRCg9WYWxpZGF0ZVJlcXVlc3QiMQoQVmFsaWRhdGVSZXNwb25zZRINCgV2YWxpZBgBIAEoCBIOCgZlcnJvcnMYAiADKAkqoQEKDUZlYXR1cmVTdGF0dXMSHgoaRkVBVFVSRV9TVEFUVVNfVU5TUEVDSUZJRUQQABIZChVGRUFUVVJFX1NUQVRVU19BQ1RJVkUQARIZChVGRUFUVVJFX1NUQVRVU19QQVVTRUQQAhIcChhGRUFUVVJFX1NUQVRVU19DT01QTEVURUQQAxIcChhGRUFUVVJFX1NUQVRVU19DQU5DRUxMRUQQBCpXCghUYXNrS2luZBIZChVUQVNLX0tJTkRfVU5TUEVDSUZJRUQQABIaChZUQVNLX0tJTkRfUFVMTF9SRVFVRVNUEAESFAoQVEFTS19LSU5EX01BTlVBTBACKpUBCgpUYXNrU3RhdHVzEhsKF1RBU0tfU1RBVFVTX1VOU1BFQ0lGSUVEEAASFwoTVEFTS19TVEFUVVNfUExBTk5FRBABEhsKF1RBU0tfU1RBVFVTX0lOX1BST0dSRVNTEAISGQoVVEFTS19TVEFUVVNfQ09NUExFVEVEEAMSGQoVVEFTS19TVEFUVVNfQ0FOQ0VMTEVEEAQqiwQKEFRhc2tEaXNwbGF5U3RhdGUSIgoeVEFTS19ESVNQTEFZX1NUQVRFX1VOU1BFQ0lGSUVEEAASHgoaVEFTS19ESVNQTEFZX1NUQVRFX1BMQU5ORUQQARIiCh5UQVNLX0RJU1BMQVlfU1RBVEVfSU5fUFJPR1JFU1MQAhIgChxUQVNLX0RJU1BMQVlfU1RBVEVfQ09NUExFVEVEEAMSIAocVEFTS19ESVNQTEFZX1NUQVRFX0NBTkNFTExFRBAEEh8KG1RBU0tfRElTUExBWV9TVEFURV9VTkxJTktFRBAFEh0KGVRBU0tfRElTUExBWV9TVEFURV9NRVJHRUQQBhIdChlUQVNLX0RJU1BMQVlfU1RBVEVfQ0xPU0VEEAcSHAoYVEFTS19ESVNQTEFZX1NUQVRFX0RSQUZUEAgSHwobVEFTS19ESVNQTEFZX1NUQVRFX0NPTkZMSUNUEAkSKAokVEFTS19ESVNQTEFZX1NUQVRFX0NIQU5HRVNfUkVRVUVTVEVEEAoSHwobVEFTS19ESVNQTEFZX1NUQVRFX0FQUFJPVkVEEAsSJQohVEFTS19ESVNQTEFZX1NUQVRFX1JFVklFV19XQUlUSU5HEAwSGwoXVEFTS19ESVNQTEFZX1NUQVRFX09QRU4QDRIeChpUQVNLX0RJU1BMQVlfU1RBVEVfVU5LTk9XThAOKrEBChBQdWxsUmVxdWVzdFN0YXRlEiIKHlBVTExfUkVRVUVTVF9TVEFURV9VTlNQRUNJRklFRBAAEhsKF1BVTExfUkVRVUVTVF9TVEFURV9PUEVOEAESHQoZUFVMTF9SRVFVRVNUX1NUQVRFX0NMT1NFRBACEh0KGVBVTExfUkVRVUVTVF9TVEFURV9NRVJHRUQQAxIeChpQVUxMX1JFUVVFU1RfU1RBVEVfVU5LTk9XThAEKrYBCgtSZXZpZXdTdGF0ZRIcChhSRVZJRVdfU1RBVEVfVU5TUEVDSUZJRUQQABIVChFSRVZJRVdfU1RBVEVfTk9ORRABEhkKFVJFVklFV19TVEFURV9SRVFVSVJFRBACEhkKFVJFVklFV19TVEFURV9BUFBST1ZFRBADEiIKHlJFVklFV19TVEFURV9DSEFOR0VTX1JFUVVFU1RFRBAEEhgKFFJFVklFV19TVEFURV9VTktOT1dOEAUqgAEKDE1lcmdlYWJpbGl0eRIcChhNRVJHRUFCSUxJVFlfVU5TUEVDSUZJRUQQABIaChZNRVJHRUFCSUxJVFlfTUVSR0VBQkxFEAESHAoYTUVSR0VBQklMSVRZX0NPTkZMSUNUSU5HEAISGAoUTUVSR0VBQklMSVRZX1VOS05PV04QAyq5AwoXUHVsbFJlcXVlc3REaXNwbGF5U3RhdGUSKgomUFVMTF9SRVFVRVNUX0RJU1BMQVlfU1RBVEVfVU5TUEVDSUZJRUQQABIlCiFQVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9NRVJHRUQQARIlCiFQVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9DTE9TRUQQAhIkCiBQVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9EUkFGVBADEicKI1BVTExfUkVRVUVTVF9ESVNQTEFZX1NUQVRFX0NPTkZMSUNUEAQSMAosUFVMTF9SRVFVRVNUX0RJU1BMQVlfU1RBVEVfQ0hBTkdFU19SRVFVRVNURUQQBRInCiNQVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9BUFBST1ZFRBAGEi0KKVBVTExfUkVRVUVTVF9ESVNQTEFZX1NUQVRFX1JFVklFV19XQUlUSU5HEAcSIwofUFVMTF9SRVFVRVNUX0RJU1BMQVlfU1RBVEVfT1BFThAIEiYKIlBVTExfUkVRVUVTVF9ESVNQTEFZX1NUQVRFX1VOS05PV04QCSplCgxEb2N1bWVudEtpbmQSHQoZRE9DVU1FTlRfS0lORF9VTlNQRUNJRklFRBAAEhUKEURPQ1VNRU5UX0tJTkRfVVJMEAESHwobRE9DVU1FTlRfS0lORF9NQVJLRE9XTl9QQVRIEAIqwAEKEUJsb2NrZWRSZWFzb25Db2RlEiMKH0JMT0NLRURfUkVBU09OX0NPREVfVU5TUEVDSUZJRUQQABIyCi5CTE9DS0VEX1JFQVNPTl9DT0RFX0RFUEVOREVOQ1lfREFUQV9JTkNPTVBMRVRFEAESJQohQkxPQ0tFRF9SRUFTT05fQ09ERV9CTE9DS0VSX1NUQUxFEAISKwonQkxPQ0tFRF9SRUFTT05fQ09ERV9XQUlUSU5HX0ZPUl9CTE9DS0VSEAMq8QUKD0RvbWFpbkVycm9yQ29kZRIhCh1ET01BSU5fRVJST1JfQ09ERV9VTlNQRUNJRklFRBAAEh4KGkRPTUFJTl9FUlJPUl9DT0RFX0lOVEVSTkFMEAESLgoqRE9NQUlOX0VSUk9SX0NPREVfQ1JPU1NfRkVBVFVSRV9ERVBFTkRFTkNZEAISGwoXRE9NQUlOX0VSUk9SX0NPREVfQ1lDTEUQAxIqCiZET01BSU5fRVJST1JfQ09ERV9EVVBMSUNBVEVfREVQRU5ERU5DWRAEEiwKKERPTUFJTl9FUlJPUl9DT0RFX0RVUExJQ0FURV9QVUxMX1JFUVVFU1QQBRIhCh1ET01BSU5fRVJST1JfQ09ERV9HSVRIVUJfQVVUSBAGEiYKIkRPTUFJTl9FUlJPUl9DT0RFX0lOVkFMSURfREFUQUJBU0UQBxImCiJET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX0RPQ1VNRU5UEAgSKwonRE9NQUlOX0VSUk9SX0NPREVfSU5WQUxJRF9ET0NVTUVOVF9LSU5EEAkSIgoeRE9NQUlOX0VSUk9SX0NPREVfSU5WQUxJRF9LSU5EEAoSJAogRE9NQUlOX0VSUk9SX0NPREVfSU5WQUxJRF9QQVJFTlQQCxIuCipET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX1BVTExfUkVRVUVTVF9VUkwQDBIiCh5ET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX1NFRUQQDRIiCh5ET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX1NMVUcQDhIkCiBET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX1NUQVRVUxAPEiMKH0RPTUFJTl9FUlJPUl9DT0RFX0lOVkFMSURfVElUTEUQEBIfChtET01BSU5fRVJST1JfQ09ERV9OT1RfRk9VTkQQERImCiJET01BSU5fRVJST1JfQ09ERV9SRUZFUkVOQ0VTX0VYSVNUEBIy8QgKClBSWFNlcnZpY2USRgoLR2V0U25hcHNob3QSGi5wcngudjEuR2V0U25hcHNob3RSZXF1ZXN0GhsucHJ4LnYxLkdldFNuYXBzaG90UmVzcG9uc2USTAoNQ3JlYXRlRmVhdHVyZRIcLnByeC52MS5DcmVhdGVGZWF0dXJlUmVxdWVzdBodLnByeC52MS5DcmVhdGVGZWF0dXJlUmVzcG9uc2USTAoNVXBkYXRlRmVhdHVyZRIcLnByeC52MS5VcGRhdGVGZWF0dXJlUmVxdWVzdBodLnByeC52MS5VcGRhdGVGZWF0dXJlUmVzcG9uc2USTAoNRGVsZXRlRmVhdHVyZRIcLnByeC52MS5EZWxldGVGZWF0dXJlUmVxdWVzdBodLnByeC52MS5EZWxldGVGZWF0dXJlUmVzcG9uc2USQwoKQ3JlYXRlVGFzaxIZLnByeC52MS5DcmVhdGVUYXNrUmVxdWVzdBoaLnByeC52MS5DcmVhdGVUYXNrUmVzcG9uc2USQwoKVXBkYXRlVGFzaxIZLnByeC52MS5VcGRhdGVUYXNrUmVxdWVzdBoaLnByeC52MS5VcGRhdGVUYXNrUmVzcG9uc2USQwoKRGVsZXRlVGFzaxIZLnByeC52MS5EZWxldGVUYXNrUmVxdWVzdBoaLnByeC52MS5EZWxldGVUYXNrUmVzcG9uc2USTAoNQWRkRGVwZW5kZW5jeRIcLnByeC52MS5BZGREZXBlbmRlbmN5UmVxdWVzdBodLnByeC52MS5BZGREZXBlbmRlbmN5UmVzcG9uc2USVQoQUmVtb3ZlRGVwZW5kZW5jeRIfLnByeC52MS5SZW1vdmVEZXBlbmRlbmN5UmVxdWVzdBogLnByeC52MS5SZW1vdmVEZXBlbmRlbmN5UmVzcG9uc2USWAoRQXR0YWNoUHVsbFJlcXVlc3QSIC5wcngudjEuQXR0YWNoUHVsbFJlcXVlc3RSZXF1ZXN0GiEucHJ4LnYxLkF0dGFjaFB1bGxSZXF1ZXN0UmVzcG9uc2USWAoRRGV0YWNoUHVsbFJlcXVlc3QSIC5wcngudjEuRGV0YWNoUHVsbFJlcXVlc3RSZXF1ZXN0GiEucHJ4LnYxLkRldGFjaFB1bGxSZXF1ZXN0UmVzcG9uc2USRgoLQWRkRG9jdW1lbnQSGi5wcngudjEuQWRkRG9jdW1lbnRSZXF1ZXN0GhsucHJ4LnYxLkFkZERvY3VtZW50UmVzcG9uc2USTwoORGVsZXRlRG9jdW1lbnQSHS5wcngudjEuRGVsZXRlRG9jdW1lbnRSZXF1ZXN0Gh4ucHJ4LnYxLkRlbGV0ZURvY3VtZW50UmVzcG9uc2USMQoEU3luYxITLnByeC52MS5TeW5jUmVxdWVzdBoULnByeC52MS5TeW5jUmVzcG9uc2USPQoIVmFsaWRhdGUSFy5wcngudjEuVmFsaWRhdGVSZXF1ZXN0GhgucHJ4LnYxLlZhbGlkYXRlUmVzcG9uc2VCLlosZ2l0aHViLmNvbS9IYXBweU9uaWdpcmkvUFJYL2dlbi9wcngvdjE7cHJ4djFiBnByb3RvMw");
+
+/**
+ * @generated from message prx.v1.BlockedReason
+ */
+export type BlockedReason = Message<"prx.v1.BlockedReason"> & {
+  /**
+   * @generated from field: prx.v1.BlockedReasonCode code = 1;
+   */
+  code: BlockedReasonCode;
+
+  /**
+   * @generated from field: string blocker_task_id = 2;
+   */
+  blockerTaskId: string;
+};
+
+/**
+ * Describes the message prx.v1.BlockedReason.
+ * Use `create(BlockedReasonSchema)` to create a new message.
+ */
+export const BlockedReasonSchema: GenMessage<BlockedReason> = /*@__PURE__*/
+  messageDesc(file_prx_v1_prx, 0);
+
+/**
+ * @generated from message prx.v1.ErrorDetail
+ */
+export type ErrorDetail = Message<"prx.v1.ErrorDetail"> & {
+  /**
+   * @generated from field: prx.v1.DomainErrorCode code = 1;
+   */
+  code: DomainErrorCode;
+
+  /**
+   * @generated from field: repeated string path = 2;
+   */
+  path: string[];
+};
+
+/**
+ * Describes the message prx.v1.ErrorDetail.
+ * Use `create(ErrorDetailSchema)` to create a new message.
+ */
+export const ErrorDetailSchema: GenMessage<ErrorDetail> = /*@__PURE__*/
+  messageDesc(file_prx_v1_prx, 1);
 
 /**
  * @generated from message prx.v1.Feature
@@ -37,9 +81,9 @@ export type Feature = Message<"prx.v1.Feature"> & {
   description: string;
 
   /**
-   * @generated from field: string status = 5;
+   * @generated from field: prx.v1.FeatureStatus status = 5;
    */
-  status: string;
+  status: FeatureStatus;
 
   /**
    * @generated from field: bool archived = 6;
@@ -87,7 +131,7 @@ export type Feature = Message<"prx.v1.Feature"> & {
  * Use `create(FeatureSchema)` to create a new message.
  */
 export const FeatureSchema: GenMessage<Feature> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 0);
+  messageDesc(file_prx_v1_prx, 2);
 
 /**
  * @generated from message prx.v1.Task
@@ -114,14 +158,14 @@ export type Task = Message<"prx.v1.Task"> & {
   scope: string;
 
   /**
-   * @generated from field: string kind = 5;
+   * @generated from field: prx.v1.TaskKind kind = 5;
    */
-  kind: string;
+  kind: TaskKind;
 
   /**
-   * @generated from field: string status = 6;
+   * @generated from field: prx.v1.TaskStatus status = 6;
    */
-  status: string;
+  status: TaskStatus;
 
   /**
    * @generated from field: string assignee = 7;
@@ -144,14 +188,14 @@ export type Task = Message<"prx.v1.Task"> & {
   ready: boolean;
 
   /**
-   * @generated from field: string display_state = 11;
+   * @generated from field: prx.v1.TaskDisplayState display_state = 11;
    */
-  displayState: string;
+  displayState: TaskDisplayState;
 
   /**
-   * @generated from field: string blocked_reason = 12;
+   * @generated from field: prx.v1.BlockedReason blocked_reason = 12;
    */
-  blockedReason: string;
+  blockedReason?: BlockedReason | undefined;
 };
 
 /**
@@ -159,7 +203,7 @@ export type Task = Message<"prx.v1.Task"> & {
  * Use `create(TaskSchema)` to create a new message.
  */
 export const TaskSchema: GenMessage<Task> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 1);
+  messageDesc(file_prx_v1_prx, 3);
 
 /**
  * @generated from message prx.v1.Dependency
@@ -186,7 +230,7 @@ export type Dependency = Message<"prx.v1.Dependency"> & {
  * Use `create(DependencySchema)` to create a new message.
  */
 export const DependencySchema: GenMessage<Dependency> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 2);
+  messageDesc(file_prx_v1_prx, 4);
 
 /**
  * @generated from message prx.v1.PullRequest
@@ -233,9 +277,9 @@ export type PullRequest = Message<"prx.v1.PullRequest"> & {
   assignees: string[];
 
   /**
-   * @generated from field: string state = 9;
+   * @generated from field: prx.v1.PullRequestState state = 9;
    */
-  state: string;
+  state: PullRequestState;
 
   /**
    * @generated from field: bool draft = 10;
@@ -243,14 +287,14 @@ export type PullRequest = Message<"prx.v1.PullRequest"> & {
   draft: boolean;
 
   /**
-   * @generated from field: string review_state = 11;
+   * @generated from field: prx.v1.ReviewState review_state = 11;
    */
-  reviewState: string;
+  reviewState: ReviewState;
 
   /**
-   * @generated from field: string mergeability = 12;
+   * @generated from field: prx.v1.Mergeability mergeability = 12;
    */
-  mergeability: string;
+  mergeability: Mergeability;
 
   /**
    * @generated from field: string github_updated_at = 13;
@@ -273,9 +317,9 @@ export type PullRequest = Message<"prx.v1.PullRequest"> & {
   stale: boolean;
 
   /**
-   * @generated from field: string display_state = 17;
+   * @generated from field: prx.v1.PullRequestDisplayState display_state = 17;
    */
-  displayState: string;
+  displayState: PullRequestDisplayState;
 };
 
 /**
@@ -283,7 +327,7 @@ export type PullRequest = Message<"prx.v1.PullRequest"> & {
  * Use `create(PullRequestSchema)` to create a new message.
  */
 export const PullRequestSchema: GenMessage<PullRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 3);
+  messageDesc(file_prx_v1_prx, 5);
 
 /**
  * @generated from message prx.v1.Document
@@ -305,9 +349,9 @@ export type Document = Message<"prx.v1.Document"> & {
   taskId: string;
 
   /**
-   * @generated from field: string kind = 4;
+   * @generated from field: prx.v1.DocumentKind kind = 4;
    */
-  kind: string;
+  kind: DocumentKind;
 
   /**
    * @generated from field: string title = 5;
@@ -330,7 +374,7 @@ export type Document = Message<"prx.v1.Document"> & {
  * Use `create(DocumentSchema)` to create a new message.
  */
 export const DocumentSchema: GenMessage<Document> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 4);
+  messageDesc(file_prx_v1_prx, 6);
 
 /**
  * @generated from message prx.v1.Snapshot
@@ -387,7 +431,7 @@ export type Snapshot = Message<"prx.v1.Snapshot"> & {
  * Use `create(SnapshotSchema)` to create a new message.
  */
 export const SnapshotSchema: GenMessage<Snapshot> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 5);
+  messageDesc(file_prx_v1_prx, 7);
 
 /**
  * @generated from message prx.v1.GetSnapshotRequest
@@ -400,7 +444,7 @@ export type GetSnapshotRequest = Message<"prx.v1.GetSnapshotRequest"> & {
  * Use `create(GetSnapshotRequestSchema)` to create a new message.
  */
 export const GetSnapshotRequestSchema: GenMessage<GetSnapshotRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 6);
+  messageDesc(file_prx_v1_prx, 8);
 
 /**
  * @generated from message prx.v1.GetSnapshotResponse
@@ -417,7 +461,7 @@ export type GetSnapshotResponse = Message<"prx.v1.GetSnapshotResponse"> & {
  * Use `create(GetSnapshotResponseSchema)` to create a new message.
  */
 export const GetSnapshotResponseSchema: GenMessage<GetSnapshotResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 7);
+  messageDesc(file_prx_v1_prx, 9);
 
 /**
  * @generated from message prx.v1.CreateFeatureRequest
@@ -444,7 +488,7 @@ export type CreateFeatureRequest = Message<"prx.v1.CreateFeatureRequest"> & {
  * Use `create(CreateFeatureRequestSchema)` to create a new message.
  */
 export const CreateFeatureRequestSchema: GenMessage<CreateFeatureRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 8);
+  messageDesc(file_prx_v1_prx, 10);
 
 /**
  * @generated from message prx.v1.CreateFeatureResponse
@@ -461,7 +505,7 @@ export type CreateFeatureResponse = Message<"prx.v1.CreateFeatureResponse"> & {
  * Use `create(CreateFeatureResponseSchema)` to create a new message.
  */
 export const CreateFeatureResponseSchema: GenMessage<CreateFeatureResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 9);
+  messageDesc(file_prx_v1_prx, 11);
 
 /**
  * @generated from message prx.v1.UpdateFeatureRequest
@@ -488,9 +532,9 @@ export type UpdateFeatureRequest = Message<"prx.v1.UpdateFeatureRequest"> & {
   description?: string | undefined;
 
   /**
-   * @generated from field: optional string status = 5;
+   * @generated from field: optional prx.v1.FeatureStatus status = 5;
    */
-  status?: string | undefined;
+  status?: FeatureStatus | undefined;
 
   /**
    * @generated from field: optional bool archived = 6;
@@ -503,7 +547,7 @@ export type UpdateFeatureRequest = Message<"prx.v1.UpdateFeatureRequest"> & {
  * Use `create(UpdateFeatureRequestSchema)` to create a new message.
  */
 export const UpdateFeatureRequestSchema: GenMessage<UpdateFeatureRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 10);
+  messageDesc(file_prx_v1_prx, 12);
 
 /**
  * @generated from message prx.v1.UpdateFeatureResponse
@@ -520,7 +564,7 @@ export type UpdateFeatureResponse = Message<"prx.v1.UpdateFeatureResponse"> & {
  * Use `create(UpdateFeatureResponseSchema)` to create a new message.
  */
 export const UpdateFeatureResponseSchema: GenMessage<UpdateFeatureResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 11);
+  messageDesc(file_prx_v1_prx, 13);
 
 /**
  * @generated from message prx.v1.DeleteFeatureRequest
@@ -542,7 +586,7 @@ export type DeleteFeatureRequest = Message<"prx.v1.DeleteFeatureRequest"> & {
  * Use `create(DeleteFeatureRequestSchema)` to create a new message.
  */
 export const DeleteFeatureRequestSchema: GenMessage<DeleteFeatureRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 12);
+  messageDesc(file_prx_v1_prx, 14);
 
 /**
  * @generated from message prx.v1.DeleteFeatureResponse
@@ -555,7 +599,7 @@ export type DeleteFeatureResponse = Message<"prx.v1.DeleteFeatureResponse"> & {
  * Use `create(DeleteFeatureResponseSchema)` to create a new message.
  */
 export const DeleteFeatureResponseSchema: GenMessage<DeleteFeatureResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 13);
+  messageDesc(file_prx_v1_prx, 15);
 
 /**
  * @generated from message prx.v1.CreateTaskRequest
@@ -577,9 +621,9 @@ export type CreateTaskRequest = Message<"prx.v1.CreateTaskRequest"> & {
   scope: string;
 
   /**
-   * @generated from field: string kind = 4;
+   * @generated from field: prx.v1.TaskKind kind = 4;
    */
-  kind: string;
+  kind: TaskKind;
 
   /**
    * @generated from field: string assignee = 5;
@@ -592,7 +636,7 @@ export type CreateTaskRequest = Message<"prx.v1.CreateTaskRequest"> & {
  * Use `create(CreateTaskRequestSchema)` to create a new message.
  */
 export const CreateTaskRequestSchema: GenMessage<CreateTaskRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 14);
+  messageDesc(file_prx_v1_prx, 16);
 
 /**
  * @generated from message prx.v1.CreateTaskResponse
@@ -609,7 +653,7 @@ export type CreateTaskResponse = Message<"prx.v1.CreateTaskResponse"> & {
  * Use `create(CreateTaskResponseSchema)` to create a new message.
  */
 export const CreateTaskResponseSchema: GenMessage<CreateTaskResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 15);
+  messageDesc(file_prx_v1_prx, 17);
 
 /**
  * @generated from message prx.v1.UpdateTaskRequest
@@ -631,9 +675,9 @@ export type UpdateTaskRequest = Message<"prx.v1.UpdateTaskRequest"> & {
   scope?: string | undefined;
 
   /**
-   * @generated from field: optional string status = 4;
+   * @generated from field: optional prx.v1.TaskStatus status = 4;
    */
-  status?: string | undefined;
+  status?: TaskStatus | undefined;
 
   /**
    * @generated from field: optional string assignee = 5;
@@ -646,7 +690,7 @@ export type UpdateTaskRequest = Message<"prx.v1.UpdateTaskRequest"> & {
  * Use `create(UpdateTaskRequestSchema)` to create a new message.
  */
 export const UpdateTaskRequestSchema: GenMessage<UpdateTaskRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 16);
+  messageDesc(file_prx_v1_prx, 18);
 
 /**
  * @generated from message prx.v1.UpdateTaskResponse
@@ -663,7 +707,7 @@ export type UpdateTaskResponse = Message<"prx.v1.UpdateTaskResponse"> & {
  * Use `create(UpdateTaskResponseSchema)` to create a new message.
  */
 export const UpdateTaskResponseSchema: GenMessage<UpdateTaskResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 17);
+  messageDesc(file_prx_v1_prx, 19);
 
 /**
  * @generated from message prx.v1.DeleteTaskRequest
@@ -685,7 +729,7 @@ export type DeleteTaskRequest = Message<"prx.v1.DeleteTaskRequest"> & {
  * Use `create(DeleteTaskRequestSchema)` to create a new message.
  */
 export const DeleteTaskRequestSchema: GenMessage<DeleteTaskRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 18);
+  messageDesc(file_prx_v1_prx, 20);
 
 /**
  * @generated from message prx.v1.DeleteTaskResponse
@@ -698,7 +742,7 @@ export type DeleteTaskResponse = Message<"prx.v1.DeleteTaskResponse"> & {
  * Use `create(DeleteTaskResponseSchema)` to create a new message.
  */
 export const DeleteTaskResponseSchema: GenMessage<DeleteTaskResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 19);
+  messageDesc(file_prx_v1_prx, 21);
 
 /**
  * @generated from message prx.v1.AddDependencyRequest
@@ -720,7 +764,7 @@ export type AddDependencyRequest = Message<"prx.v1.AddDependencyRequest"> & {
  * Use `create(AddDependencyRequestSchema)` to create a new message.
  */
 export const AddDependencyRequestSchema: GenMessage<AddDependencyRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 20);
+  messageDesc(file_prx_v1_prx, 22);
 
 /**
  * @generated from message prx.v1.AddDependencyResponse
@@ -737,7 +781,7 @@ export type AddDependencyResponse = Message<"prx.v1.AddDependencyResponse"> & {
  * Use `create(AddDependencyResponseSchema)` to create a new message.
  */
 export const AddDependencyResponseSchema: GenMessage<AddDependencyResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 21);
+  messageDesc(file_prx_v1_prx, 23);
 
 /**
  * @generated from message prx.v1.RemoveDependencyRequest
@@ -759,7 +803,7 @@ export type RemoveDependencyRequest = Message<"prx.v1.RemoveDependencyRequest"> 
  * Use `create(RemoveDependencyRequestSchema)` to create a new message.
  */
 export const RemoveDependencyRequestSchema: GenMessage<RemoveDependencyRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 22);
+  messageDesc(file_prx_v1_prx, 24);
 
 /**
  * @generated from message prx.v1.RemoveDependencyResponse
@@ -772,7 +816,7 @@ export type RemoveDependencyResponse = Message<"prx.v1.RemoveDependencyResponse"
  * Use `create(RemoveDependencyResponseSchema)` to create a new message.
  */
 export const RemoveDependencyResponseSchema: GenMessage<RemoveDependencyResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 23);
+  messageDesc(file_prx_v1_prx, 25);
 
 /**
  * @generated from message prx.v1.AttachPullRequestRequest
@@ -794,7 +838,7 @@ export type AttachPullRequestRequest = Message<"prx.v1.AttachPullRequestRequest"
  * Use `create(AttachPullRequestRequestSchema)` to create a new message.
  */
 export const AttachPullRequestRequestSchema: GenMessage<AttachPullRequestRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 24);
+  messageDesc(file_prx_v1_prx, 26);
 
 /**
  * @generated from message prx.v1.AttachPullRequestResponse
@@ -811,7 +855,7 @@ export type AttachPullRequestResponse = Message<"prx.v1.AttachPullRequestRespons
  * Use `create(AttachPullRequestResponseSchema)` to create a new message.
  */
 export const AttachPullRequestResponseSchema: GenMessage<AttachPullRequestResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 25);
+  messageDesc(file_prx_v1_prx, 27);
 
 /**
  * @generated from message prx.v1.DetachPullRequestRequest
@@ -828,7 +872,7 @@ export type DetachPullRequestRequest = Message<"prx.v1.DetachPullRequestRequest"
  * Use `create(DetachPullRequestRequestSchema)` to create a new message.
  */
 export const DetachPullRequestRequestSchema: GenMessage<DetachPullRequestRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 26);
+  messageDesc(file_prx_v1_prx, 28);
 
 /**
  * @generated from message prx.v1.DetachPullRequestResponse
@@ -841,7 +885,7 @@ export type DetachPullRequestResponse = Message<"prx.v1.DetachPullRequestRespons
  * Use `create(DetachPullRequestResponseSchema)` to create a new message.
  */
 export const DetachPullRequestResponseSchema: GenMessage<DetachPullRequestResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 27);
+  messageDesc(file_prx_v1_prx, 29);
 
 /**
  * @generated from message prx.v1.AddDocumentRequest
@@ -858,9 +902,9 @@ export type AddDocumentRequest = Message<"prx.v1.AddDocumentRequest"> & {
   taskId: string;
 
   /**
-   * @generated from field: string kind = 3;
+   * @generated from field: prx.v1.DocumentKind kind = 3;
    */
-  kind: string;
+  kind: DocumentKind;
 
   /**
    * @generated from field: string title = 4;
@@ -878,7 +922,7 @@ export type AddDocumentRequest = Message<"prx.v1.AddDocumentRequest"> & {
  * Use `create(AddDocumentRequestSchema)` to create a new message.
  */
 export const AddDocumentRequestSchema: GenMessage<AddDocumentRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 28);
+  messageDesc(file_prx_v1_prx, 30);
 
 /**
  * @generated from message prx.v1.AddDocumentResponse
@@ -895,7 +939,7 @@ export type AddDocumentResponse = Message<"prx.v1.AddDocumentResponse"> & {
  * Use `create(AddDocumentResponseSchema)` to create a new message.
  */
 export const AddDocumentResponseSchema: GenMessage<AddDocumentResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 29);
+  messageDesc(file_prx_v1_prx, 31);
 
 /**
  * @generated from message prx.v1.DeleteDocumentRequest
@@ -912,7 +956,7 @@ export type DeleteDocumentRequest = Message<"prx.v1.DeleteDocumentRequest"> & {
  * Use `create(DeleteDocumentRequestSchema)` to create a new message.
  */
 export const DeleteDocumentRequestSchema: GenMessage<DeleteDocumentRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 30);
+  messageDesc(file_prx_v1_prx, 32);
 
 /**
  * @generated from message prx.v1.DeleteDocumentResponse
@@ -925,7 +969,7 @@ export type DeleteDocumentResponse = Message<"prx.v1.DeleteDocumentResponse"> & 
  * Use `create(DeleteDocumentResponseSchema)` to create a new message.
  */
 export const DeleteDocumentResponseSchema: GenMessage<DeleteDocumentResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 31);
+  messageDesc(file_prx_v1_prx, 33);
 
 /**
  * @generated from message prx.v1.SyncRequest
@@ -947,7 +991,7 @@ export type SyncRequest = Message<"prx.v1.SyncRequest"> & {
  * Use `create(SyncRequestSchema)` to create a new message.
  */
 export const SyncRequestSchema: GenMessage<SyncRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 32);
+  messageDesc(file_prx_v1_prx, 34);
 
 /**
  * @generated from message prx.v1.SyncResponse
@@ -969,7 +1013,7 @@ export type SyncResponse = Message<"prx.v1.SyncResponse"> & {
  * Use `create(SyncResponseSchema)` to create a new message.
  */
 export const SyncResponseSchema: GenMessage<SyncResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 33);
+  messageDesc(file_prx_v1_prx, 35);
 
 /**
  * @generated from message prx.v1.ValidateRequest
@@ -982,7 +1026,7 @@ export type ValidateRequest = Message<"prx.v1.ValidateRequest"> & {
  * Use `create(ValidateRequestSchema)` to create a new message.
  */
 export const ValidateRequestSchema: GenMessage<ValidateRequest> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 34);
+  messageDesc(file_prx_v1_prx, 36);
 
 /**
  * @generated from message prx.v1.ValidateResponse
@@ -1004,7 +1048,523 @@ export type ValidateResponse = Message<"prx.v1.ValidateResponse"> & {
  * Use `create(ValidateResponseSchema)` to create a new message.
  */
 export const ValidateResponseSchema: GenMessage<ValidateResponse> = /*@__PURE__*/
-  messageDesc(file_prx_v1_prx, 35);
+  messageDesc(file_prx_v1_prx, 37);
+
+/**
+ * @generated from enum prx.v1.FeatureStatus
+ */
+export enum FeatureStatus {
+  /**
+   * @generated from enum value: FEATURE_STATUS_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: FEATURE_STATUS_ACTIVE = 1;
+   */
+  ACTIVE = 1,
+
+  /**
+   * @generated from enum value: FEATURE_STATUS_PAUSED = 2;
+   */
+  PAUSED = 2,
+
+  /**
+   * @generated from enum value: FEATURE_STATUS_COMPLETED = 3;
+   */
+  COMPLETED = 3,
+
+  /**
+   * @generated from enum value: FEATURE_STATUS_CANCELLED = 4;
+   */
+  CANCELLED = 4,
+}
+
+/**
+ * Describes the enum prx.v1.FeatureStatus.
+ */
+export const FeatureStatusSchema: GenEnum<FeatureStatus> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 0);
+
+/**
+ * @generated from enum prx.v1.TaskKind
+ */
+export enum TaskKind {
+  /**
+   * @generated from enum value: TASK_KIND_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: TASK_KIND_PULL_REQUEST = 1;
+   */
+  PULL_REQUEST = 1,
+
+  /**
+   * @generated from enum value: TASK_KIND_MANUAL = 2;
+   */
+  MANUAL = 2,
+}
+
+/**
+ * Describes the enum prx.v1.TaskKind.
+ */
+export const TaskKindSchema: GenEnum<TaskKind> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 1);
+
+/**
+ * @generated from enum prx.v1.TaskStatus
+ */
+export enum TaskStatus {
+  /**
+   * @generated from enum value: TASK_STATUS_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: TASK_STATUS_PLANNED = 1;
+   */
+  PLANNED = 1,
+
+  /**
+   * @generated from enum value: TASK_STATUS_IN_PROGRESS = 2;
+   */
+  IN_PROGRESS = 2,
+
+  /**
+   * @generated from enum value: TASK_STATUS_COMPLETED = 3;
+   */
+  COMPLETED = 3,
+
+  /**
+   * @generated from enum value: TASK_STATUS_CANCELLED = 4;
+   */
+  CANCELLED = 4,
+}
+
+/**
+ * Describes the enum prx.v1.TaskStatus.
+ */
+export const TaskStatusSchema: GenEnum<TaskStatus> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 2);
+
+/**
+ * @generated from enum prx.v1.TaskDisplayState
+ */
+export enum TaskDisplayState {
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_PLANNED = 1;
+   */
+  PLANNED = 1,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_IN_PROGRESS = 2;
+   */
+  IN_PROGRESS = 2,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_COMPLETED = 3;
+   */
+  COMPLETED = 3,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_CANCELLED = 4;
+   */
+  CANCELLED = 4,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_UNLINKED = 5;
+   */
+  UNLINKED = 5,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_MERGED = 6;
+   */
+  MERGED = 6,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_CLOSED = 7;
+   */
+  CLOSED = 7,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_DRAFT = 8;
+   */
+  DRAFT = 8,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_CONFLICT = 9;
+   */
+  CONFLICT = 9,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_CHANGES_REQUESTED = 10;
+   */
+  CHANGES_REQUESTED = 10,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_APPROVED = 11;
+   */
+  APPROVED = 11,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_REVIEW_WAITING = 12;
+   */
+  REVIEW_WAITING = 12,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_OPEN = 13;
+   */
+  OPEN = 13,
+
+  /**
+   * @generated from enum value: TASK_DISPLAY_STATE_UNKNOWN = 14;
+   */
+  UNKNOWN = 14,
+}
+
+/**
+ * Describes the enum prx.v1.TaskDisplayState.
+ */
+export const TaskDisplayStateSchema: GenEnum<TaskDisplayState> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 3);
+
+/**
+ * @generated from enum prx.v1.PullRequestState
+ */
+export enum PullRequestState {
+  /**
+   * @generated from enum value: PULL_REQUEST_STATE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_STATE_OPEN = 1;
+   */
+  OPEN = 1,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_STATE_CLOSED = 2;
+   */
+  CLOSED = 2,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_STATE_MERGED = 3;
+   */
+  MERGED = 3,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_STATE_UNKNOWN = 4;
+   */
+  UNKNOWN = 4,
+}
+
+/**
+ * Describes the enum prx.v1.PullRequestState.
+ */
+export const PullRequestStateSchema: GenEnum<PullRequestState> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 4);
+
+/**
+ * @generated from enum prx.v1.ReviewState
+ */
+export enum ReviewState {
+  /**
+   * @generated from enum value: REVIEW_STATE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: REVIEW_STATE_NONE = 1;
+   */
+  NONE = 1,
+
+  /**
+   * @generated from enum value: REVIEW_STATE_REQUIRED = 2;
+   */
+  REQUIRED = 2,
+
+  /**
+   * @generated from enum value: REVIEW_STATE_APPROVED = 3;
+   */
+  APPROVED = 3,
+
+  /**
+   * @generated from enum value: REVIEW_STATE_CHANGES_REQUESTED = 4;
+   */
+  CHANGES_REQUESTED = 4,
+
+  /**
+   * @generated from enum value: REVIEW_STATE_UNKNOWN = 5;
+   */
+  UNKNOWN = 5,
+}
+
+/**
+ * Describes the enum prx.v1.ReviewState.
+ */
+export const ReviewStateSchema: GenEnum<ReviewState> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 5);
+
+/**
+ * @generated from enum prx.v1.Mergeability
+ */
+export enum Mergeability {
+  /**
+   * @generated from enum value: MERGEABILITY_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: MERGEABILITY_MERGEABLE = 1;
+   */
+  MERGEABLE = 1,
+
+  /**
+   * @generated from enum value: MERGEABILITY_CONFLICTING = 2;
+   */
+  CONFLICTING = 2,
+
+  /**
+   * @generated from enum value: MERGEABILITY_UNKNOWN = 3;
+   */
+  UNKNOWN = 3,
+}
+
+/**
+ * Describes the enum prx.v1.Mergeability.
+ */
+export const MergeabilitySchema: GenEnum<Mergeability> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 6);
+
+/**
+ * @generated from enum prx.v1.PullRequestDisplayState
+ */
+export enum PullRequestDisplayState {
+  /**
+   * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_MERGED = 1;
+   */
+  MERGED = 1,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_CLOSED = 2;
+   */
+  CLOSED = 2,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_DRAFT = 3;
+   */
+  DRAFT = 3,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_CONFLICT = 4;
+   */
+  CONFLICT = 4,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED = 5;
+   */
+  CHANGES_REQUESTED = 5,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_APPROVED = 6;
+   */
+  APPROVED = 6,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING = 7;
+   */
+  REVIEW_WAITING = 7,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_OPEN = 8;
+   */
+  OPEN = 8,
+
+  /**
+   * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_UNKNOWN = 9;
+   */
+  UNKNOWN = 9,
+}
+
+/**
+ * Describes the enum prx.v1.PullRequestDisplayState.
+ */
+export const PullRequestDisplayStateSchema: GenEnum<PullRequestDisplayState> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 7);
+
+/**
+ * @generated from enum prx.v1.DocumentKind
+ */
+export enum DocumentKind {
+  /**
+   * @generated from enum value: DOCUMENT_KIND_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: DOCUMENT_KIND_URL = 1;
+   */
+  URL = 1,
+
+  /**
+   * @generated from enum value: DOCUMENT_KIND_MARKDOWN_PATH = 2;
+   */
+  MARKDOWN_PATH = 2,
+}
+
+/**
+ * Describes the enum prx.v1.DocumentKind.
+ */
+export const DocumentKindSchema: GenEnum<DocumentKind> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 8);
+
+/**
+ * @generated from enum prx.v1.BlockedReasonCode
+ */
+export enum BlockedReasonCode {
+  /**
+   * @generated from enum value: BLOCKED_REASON_CODE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE = 1;
+   */
+  DEPENDENCY_DATA_INCOMPLETE = 1,
+
+  /**
+   * @generated from enum value: BLOCKED_REASON_CODE_BLOCKER_STALE = 2;
+   */
+  BLOCKER_STALE = 2,
+
+  /**
+   * @generated from enum value: BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER = 3;
+   */
+  WAITING_FOR_BLOCKER = 3,
+}
+
+/**
+ * Describes the enum prx.v1.BlockedReasonCode.
+ */
+export const BlockedReasonCodeSchema: GenEnum<BlockedReasonCode> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 9);
+
+/**
+ * @generated from enum prx.v1.DomainErrorCode
+ */
+export enum DomainErrorCode {
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_UNSPECIFIED = 0;
+   */
+  UNSPECIFIED = 0,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INTERNAL = 1;
+   */
+  INTERNAL = 1,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY = 2;
+   */
+  CROSS_FEATURE_DEPENDENCY = 2,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_CYCLE = 3;
+   */
+  CYCLE = 3,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY = 4;
+   */
+  DUPLICATE_DEPENDENCY = 4,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST = 5;
+   */
+  DUPLICATE_PULL_REQUEST = 5,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_GITHUB_AUTH = 6;
+   */
+  GITHUB_AUTH = 6,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DATABASE = 7;
+   */
+  INVALID_DATABASE = 7,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DOCUMENT = 8;
+   */
+  INVALID_DOCUMENT = 8,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND = 9;
+   */
+  INVALID_DOCUMENT_KIND = 9,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_KIND = 10;
+   */
+  INVALID_KIND = 10,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_PARENT = 11;
+   */
+  INVALID_PARENT = 11,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL = 12;
+   */
+  INVALID_PULL_REQUEST_URL = 12,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_SEED = 13;
+   */
+  INVALID_SEED = 13,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_SLUG = 14;
+   */
+  INVALID_SLUG = 14,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_STATUS = 15;
+   */
+  INVALID_STATUS = 15,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_TITLE = 16;
+   */
+  INVALID_TITLE = 16,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_NOT_FOUND = 17;
+   */
+  NOT_FOUND = 17,
+
+  /**
+   * @generated from enum value: DOMAIN_ERROR_CODE_REFERENCES_EXIST = 18;
+   */
+  REFERENCES_EXIST = 18,
+}
+
+/**
+ * Describes the enum prx.v1.DomainErrorCode.
+ */
+export const DomainErrorCodeSchema: GenEnum<DomainErrorCode> = /*@__PURE__*/
+  enumDesc(file_prx_v1_prx, 10);
 
 /**
  * @generated from service prx.v1.PRXService

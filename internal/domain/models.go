@@ -10,6 +10,10 @@ const (
 	TaskInProgress = "in_progress"
 	TaskCompleted  = "completed"
 	TaskCancelled  = "cancelled"
+
+	BlockedDependencyDataIncomplete = "dependency_data_incomplete"
+	BlockedByStaleData              = "blocker_stale"
+	BlockedWaitingForBlocker        = "waiting_for_blocker"
 )
 
 type Feature struct {
@@ -41,6 +45,8 @@ type Task struct {
 	Ready         bool      `json:"ready"`
 	DisplayState  string    `json:"display_state"`
 	BlockedReason string    `json:"blocked_reason,omitempty"`
+	BlockedCode   string    `json:"-"`
+	BlockerTaskID string    `json:"-"`
 }
 
 type Dependency struct {
