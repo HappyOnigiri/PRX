@@ -30,7 +30,9 @@ describe("CopyableIdentifier", () => {
     render(<CopyableIdentifier label="Task ID" value="task-123" />);
 
     expect(screen.getByText("task-123")).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Copy Task ID" }));
+    const copyButton = screen.getByRole("button", { name: "Copy Task ID" });
+    expect(copyButton.querySelector("svg")).toBeInTheDocument();
+    fireEvent.click(copyButton);
     await act(async () => {
       await Promise.resolve();
     });

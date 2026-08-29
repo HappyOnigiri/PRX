@@ -1,3 +1,4 @@
+import { Copy } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -39,7 +40,12 @@ export function CopyableIdentifier({
         title={copyLabel}
         onClick={() => void copyIdentifier()}
       >
-        {t("common.copy")}
+        <Copy
+          aria-hidden="true"
+          focusable="false"
+          size={14}
+          strokeWidth={1.35}
+        />
       </button>
       <span className="copyable-identifier-status" aria-live="polite">
         {status === "copied" && t("common.copied")}

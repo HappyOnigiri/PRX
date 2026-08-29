@@ -2,7 +2,6 @@ export const common = {
   en: {
     common: {
       cancel: "Cancel",
-      copy: "Copy",
       copyIdentifier: "Copy {{label}}",
       copied: "Copied",
       copyFailed: "Copy failed",
@@ -24,7 +23,6 @@ export const common = {
   ja: {
     common: {
       cancel: "キャンセル",
-      copy: "コピー",
       copyIdentifier: "{{label}}をコピー",
       copied: "コピーしました",
       copyFailed: "コピーに失敗しました",

@@ -43,6 +43,9 @@
 
 .copyable-identifier-button {
   min-height: 24px;
+  width: 24px;
+  display: inline-grid;
+  place-items: center;
   flex: 0 0 auto;
   border: 0;
   border-radius: 3px;
@@ -51,6 +54,16 @@
   padding: 0 4px;
   font-size: var(--text-xs);
   font-weight: 500;
+}
+
+.copyable-identifier-button svg {
+  width: 14px;
+  height: 14px;
+  fill: none;
+  stroke: currentcolor;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 1.35;
 }
 
 .copyable-identifier-button:hover {
