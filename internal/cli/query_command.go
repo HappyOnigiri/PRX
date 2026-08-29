@@ -10,19 +10,27 @@ import (
 )
 
 func (s *state) snapshotCommand() *cobra.Command {
-	return &cobra.Command{Use: "snapshot", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		value, err := s.service.Snapshot(cmd.Context())
-		if err != nil {
-			return err
-		}
-		return s.write(value)
-	}}
+	return &cobra.Command{
+		Use:     "snapshot",
+		Short:   "Show the complete current snapshot",
+		Example: "prx snapshot --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			value, err := s.service.Snapshot(cmd.Context())
+			if err != nil {
+				return err
+			}
+			return s.write(value)
+		},
+	}
 }
 
 func (s *state) graphCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:  "graph FEATURE",
-		Args: cobra.ExactArgs(1),
+		Use:     "graph FEATURE_ID_OR_SLUG",
+		Short:   "Show a feature graph with tasks and dependencies",
+		Example: "prx graph checkout --json",
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			feature, err := s.service.ResolveFeature(cmd.Context(), args[0])
 			if err != nil {
@@ -49,73 +57,104 @@ func (s *state) graphCommand() *cobra.Command {
 }
 
 func (s *state) queueCommand(name string) *cobra.Command {
-	return &cobra.Command{Use: name, Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		snapshot, err := s.service.Snapshot(cmd.Context())
-		if err != nil {
-			return err
-		}
-		var tasks []domain.Task
-		switch name {
-		case "ready":
-			tasks = snapshot.ReadyTasks
-		case "reviews":
-			tasks = snapshot.ReviewWaitingTasks
-		case "conflicts":
-			tasks = snapshot.ConflictTasks
-		case "stale":
-			tasks = snapshot.StaleTasks
-		}
-		return s.write(tasks)
-	}}
+	documentation := map[string]struct{ short, example string }{
+		"ready":     {short: "List tasks whose blockers are satisfied", example: "prx ready --json"},
+		"reviews":   {short: "List tasks waiting for pull-request reviews", example: "prx reviews --json"},
+		"conflicts": {short: "List tasks with conflicting pull requests", example: "prx conflicts --json"},
+		"stale":     {short: "List tasks with stale GitHub state", example: "prx stale --json"},
+	}
+	doc := documentation[name]
+	return &cobra.Command{
+		Use:     name,
+		Short:   doc.short,
+		Example: doc.example,
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			snapshot, err := s.service.Snapshot(cmd.Context())
+			if err != nil {
+				return err
+			}
+			var tasks []domain.Task
+			switch name {
+			case "ready":
+				tasks = snapshot.ReadyTasks
+			case "reviews":
+				tasks = snapshot.ReviewWaitingTasks
+			case "conflicts":
+				tasks = snapshot.ConflictTasks
+			case "stale":
+				tasks = snapshot.StaleTasks
+			}
+			return s.write(tasks)
+		},
+	}
 }
 
 func (s *state) syncCommand() *cobra.Command {
 	var feature, task string
-	command := &cobra.Command{Use: "sync", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		succeeded, failed, err := s.service.Sync(cmd.Context(), feature, task)
-		if err != nil {
-			return err
-		}
-		return s.write(map[string]int{"succeeded": succeeded, "failed": failed})
-	}}
+	command := &cobra.Command{
+		Use:     "sync",
+		Short:   "Refresh GitHub state for pull-request tasks",
+		Example: "prx sync --feature checkout --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			succeeded, failed, err := s.service.Sync(cmd.Context(), feature, task)
+			if err != nil {
+				return err
+			}
+			return s.write(map[string]int{"succeeded": succeeded, "failed": failed})
+		},
+	}
 	command.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
 	command.Flags().StringVar(&task, "task", "", "task ID")
 	return command
 }
 
 func (s *state) validateCommand() *cobra.Command {
-	return &cobra.Command{Use: "validate", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		items := s.service.Validate(cmd.Context())
-		if len(items) > 0 {
-			return domain.NewError("invalid_database", "database validation failed: %s", strings.Join(items, "; "))
-		}
-		return s.write(map[string]bool{"valid": true})
-	}}
+	return &cobra.Command{
+		Use:     "validate",
+		Short:   "Validate the stored dependency data",
+		Example: "prx validate --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			items := s.service.Validate(cmd.Context())
+			if len(items) > 0 {
+				return domain.NewError("invalid_database", "database validation failed: %s", strings.Join(items, "; "))
+			}
+			return s.write(map[string]bool{"valid": true})
+		},
+	}
 }
 
 func (s *state) seedCommand() *cobra.Command {
 	var count int
 	var slug string
 	var features int
-	command := &cobra.Command{Use: "seed", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		if features < 1 {
-			return domain.NewError("invalid_seed", "features must be at least 1")
-		}
-		for index := 0; index < features; index++ {
-			featureSlug := slug
-			if features > 1 {
-				featureSlug = fmt.Sprintf("%s-%03d", slug, index+1)
+	command := &cobra.Command{
+		Use:     "seed",
+		Short:   "Create deterministic demo roadmap data",
+		Example: "prx seed --github-fixture demo --features 100 --tasks 50 --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if features < 1 {
+				return domain.NewError("invalid_seed", "features must be at least 1")
 			}
-			if err := s.service.SeedDemo(cmd.Context(), featureSlug, count); err != nil {
+			for index := 0; index < features; index++ {
+				featureSlug := slug
+				if features > 1 {
+					featureSlug = fmt.Sprintf("%s-%03d", slug, index+1)
+				}
+				if err := s.service.SeedDemo(cmd.Context(), featureSlug, count); err != nil {
+					return err
+				}
+			}
+			snapshot, err := s.service.Snapshot(cmd.Context())
+			if err != nil {
 				return err
 			}
-		}
-		snapshot, err := s.service.Snapshot(cmd.Context())
-		if err != nil {
-			return err
-		}
-		return s.write(snapshot)
-	}}
+			return s.write(snapshot)
+		},
+	}
 	command.Flags().IntVar(&count, "tasks", 8, "number of demo tasks")
 	command.Flags().StringVar(&slug, "slug", "demo-roadmap", "feature slug")
 	command.Flags().IntVar(&features, "features", 1, "number of demo features")

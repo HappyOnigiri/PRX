@@ -31,6 +31,12 @@
   overflow-wrap: anywhere;
 }
 
+.markdown-content pre,
+.markdown-content code {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+}
+
 .markdown-dialog header code {
   display: block;
   max-width: 62vw;
@@ -119,12 +125,6 @@
   border-top: 1px solid var(--border);
 }
 
-.markdown-content pre,
-.markdown-content code {
-  font-family: var(--font-mono);
-  font-size: var(--text-sm);
-}
-
 .markdown-content pre {
   overflow: auto;
   border: 1px solid var(--border);
@@ -186,7 +186,7 @@
   font-size: var(--text-xs);
 }
 
-@media (max-width: 700px) {
+@media (width <= 700px) {
   .markdown-dialog > header {
     display: grid;
     gap: 12px;

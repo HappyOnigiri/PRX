@@ -1,5 +1,5 @@
 internal/app 20.3
 internal/domain 83.1
 internal/github 86.8
-internal/rpc 71.0
+internal/rpc 78.5
 internal/store 66.1

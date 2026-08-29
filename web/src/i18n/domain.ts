@@ -83,7 +83,7 @@ export function taskDisplayStateLabel(
 }
 
 export function taskDisplayStateToken(value: TaskDisplayState): string {
-  return TaskDisplayState[value].toLowerCase();
+  return TaskDisplayState[value].toLowerCase().replaceAll("_", "-");
 }
 
 export function pullRequestDisplayStateLabel(
@@ -96,7 +96,7 @@ export function pullRequestDisplayStateLabel(
 export function pullRequestDisplayStateToken(
   value: PullRequestDisplayState,
 ): string {
-  return PullRequestDisplayState[value].toLowerCase();
+  return PullRequestDisplayState[value].toLowerCase().replaceAll("_", "-");
 }
 
 export const pullRequestDisplayStateKeys = {

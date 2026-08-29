@@ -5,15 +5,15 @@
   color: var(--text);
 }
 
-.secondary:hover,
-.icon-button:hover {
-  background: var(--surface-2);
-}
-
 .icon-button {
   width: 32px;
   min-width: 32px;
   padding: 0;
+}
+
+.secondary:hover,
+.icon-button:hover {
+  background: var(--surface-2);
 }
 
 .icon-button.danger {
@@ -132,7 +132,7 @@
   font-size: var(--text-sm);
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
   .form-row {
     grid-template-columns: 1fr;
   }

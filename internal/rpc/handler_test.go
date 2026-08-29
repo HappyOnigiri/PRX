@@ -249,6 +249,89 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	}
 }
 
+func TestRPCUpdatesOptionalFeatureAndTaskFields(t *testing.T) {
+	ctx := context.Background()
+	client := newTestClient(t)
+
+	feature, err := client.CreateFeature(
+		ctx,
+		connect.NewRequest(
+			&prxv1.CreateFeatureRequest{
+				Slug:        "before-update",
+				Title:       "Before update",
+				Description: "old description",
+			},
+		),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	featureSlug := "after-update"
+	featureTitle := "After update"
+	featureDescription := "new description"
+	featureStatus := prxv1.FeatureStatus_FEATURE_STATUS_PAUSED
+	featureArchived := true
+	updatedFeature, err := client.UpdateFeature(
+		ctx,
+		connect.NewRequest(
+			&prxv1.UpdateFeatureRequest{
+				Id:          feature.Msg.GetFeature().GetId(),
+				Slug:        &featureSlug,
+				Title:       &featureTitle,
+				Description: &featureDescription,
+				Status:      &featureStatus,
+				Archived:    &featureArchived,
+			},
+		),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := updatedFeature.Msg.GetFeature(); got.GetSlug() != featureSlug ||
+		got.GetTitle() != featureTitle || got.GetDescription() != featureDescription ||
+		got.GetStatus() != featureStatus || !got.GetArchived() {
+		t.Fatalf("updated feature=%+v", got)
+	}
+
+	task, err := client.CreateTask(
+		ctx,
+		connect.NewRequest(
+			&prxv1.CreateTaskRequest{
+				FeatureId: feature.Msg.GetFeature().GetId(),
+				Title:     "Task before update",
+				Kind:      prxv1.TaskKind_TASK_KIND_MANUAL,
+			},
+		),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	taskTitle := "Task after update"
+	taskScope := "updated scope"
+	taskStatus := prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS
+	taskAssignee := "owner"
+	updatedTask, err := client.UpdateTask(
+		ctx,
+		connect.NewRequest(
+			&prxv1.UpdateTaskRequest{
+				Id:       task.Msg.GetTask().GetId(),
+				Title:    &taskTitle,
+				Scope:    &taskScope,
+				Status:   &taskStatus,
+				Assignee: &taskAssignee,
+			},
+		),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := updatedTask.Msg.GetTask(); got.GetTitle() != taskTitle ||
+		got.GetScope() != taskScope || got.GetStatus() != taskStatus ||
+		got.GetAssignee() != taskAssignee {
+		t.Fatalf("updated task=%+v", got)
+	}
+}
+
 func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 	ctx := context.Background()
 	client := newTestClient(t)
@@ -308,6 +391,32 @@ func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 		err,
 	) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS {
 		t.Fatalf("unknown feature status err=%v", err)
+	}
+
+	unspecifiedTaskStatus := prxv1.TaskStatus_TASK_STATUS_UNSPECIFIED
+	if _, err = client.UpdateTask(
+		ctx,
+		connect.NewRequest(
+			&prxv1.UpdateTaskRequest{Id: task.Msg.GetTask().GetId(), Status: &unspecifiedTaskStatus},
+		),
+	); errorDetailCode(
+		t,
+		err,
+	) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS {
+		t.Fatalf("unspecified task status err=%v", err)
+	}
+
+	unspecifiedFeatureStatus := prxv1.FeatureStatus_FEATURE_STATUS_UNSPECIFIED
+	if _, err = client.UpdateFeature(
+		ctx,
+		connect.NewRequest(
+			&prxv1.UpdateFeatureRequest{Id: feature.Msg.GetFeature().GetId(), Status: &unspecifiedFeatureStatus},
+		),
+	); errorDetailCode(
+		t,
+		err,
+	) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS {
+		t.Fatalf("unspecified feature status err=%v", err)
 	}
 
 	snapshot, err := client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))

@@ -25,12 +25,6 @@
   font-style: normal;
 }
 
-.page-head > div > p:last-child {
-  margin: 6px 0 0;
-  color: var(--text-2);
-  font-size: var(--text-sm);
-}
-
 .clock {
   width: 180px;
   padding: 8px 0;
@@ -89,22 +83,6 @@
   margin: 0;
   color: var(--text-2);
   font-size: var(--text-xs);
-}
-
-.queue-meter.readyTasks > span {
-  color: var(--status-ready);
-}
-
-.queue-meter.reviewWaitingTasks > span {
-  color: var(--status-review);
-}
-
-.queue-meter.conflictTasks > span {
-  color: var(--status-conflict);
-}
-
-.queue-meter.staleTasks > span {
-  color: var(--text-2);
 }
 
 .dashboard-grid {
@@ -168,22 +146,6 @@
   text-decoration: underline;
 }
 
-.ready-board li p {
-  margin: 3px 0 0;
-  color: var(--text-2);
-  font-size: var(--text-xs);
-}
-
-.ready-board li > i {
-  border: 1px solid var(--status-ready);
-  border-radius: 3px;
-  color: var(--status-ready);
-  padding: 3px 6px;
-  font-size: var(--text-xs);
-  font-style: normal;
-  font-weight: 500;
-}
-
 .empty {
   min-height: 315px;
   display: flex;
@@ -212,6 +174,39 @@
   color: var(--text-2);
   font-size: var(--text-sm);
   line-height: 1.6;
+}
+
+.ready-board li p {
+  margin: 3px 0 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+
+.progress-track {
+  height: 3px;
+  background: var(--border);
+}
+
+.progress-track i {
+  display: block;
+  height: 100%;
+  background: var(--text-2);
+}
+
+.ready-board li > i {
+  border: 1px solid var(--status-ready);
+  border-radius: 3px;
+  color: var(--status-ready);
+  padding: 3px 6px;
+  font-size: var(--text-xs);
+  font-style: normal;
+  font-weight: 500;
+}
+
+.page-head > div > p:last-child {
+  margin: 6px 0 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
 }
 
 .empty.compact {
@@ -269,18 +264,23 @@
   color: var(--text-3);
 }
 
-.progress-track {
-  height: 3px;
-  background: var(--border);
+.queue-meter.queue-ready > span {
+  color: var(--status-ready);
 }
 
-.progress-track i {
-  display: block;
-  height: 100%;
-  background: var(--text-2);
+.queue-meter.queue-review-waiting > span {
+  color: var(--status-review);
 }
 
-@media (max-width: 900px) {
+.queue-meter.queue-conflict > span {
+  color: var(--status-conflict);
+}
+
+.queue-meter.queue-stale > span {
+  color: var(--text-2);
+}
+
+@media (width <= 900px) {
   .dashboard {
     padding: 28px 22px;
   }
@@ -302,7 +302,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
   .dashboard {
     padding-inline: 16px;
   }
