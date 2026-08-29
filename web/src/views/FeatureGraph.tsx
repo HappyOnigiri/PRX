@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -8,6 +7,7 @@ import {
   type Edge,
   type ReactFlowInstance,
 } from "@xyflow/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
 import {
@@ -21,7 +21,7 @@ import { useGraphLayout } from "./useGraphLayout";
 
 const nodeTypes = { task: TaskNode };
 
-type FeatureGraphProps = {
+interface FeatureGraphProps {
   tasks: Task[];
   dependencies: Dependency[];
   pullRequests: Map<string, PullRequest>;
@@ -29,7 +29,7 @@ type FeatureGraphProps = {
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onCreateTask: () => void;
-};
+}
 
 export function FeatureGraph({
   tasks,
@@ -41,7 +41,7 @@ export function FeatureGraph({
   onCreateTask,
 }: FeatureGraphProps) {
   const { t } = useTranslation();
-  const [flow, setFlow] = useState<ReactFlowInstance<TaskFlowNode, Edge>>();
+  const [flow, setFlow] = useState<ReactFlowInstance<TaskFlowNode>>();
   const [initialGraphZoom] = useState(readGraphZoom);
   const graphZoom = useRef(initialGraphZoom);
   const { nodes, layoutError, retryLayout } = useGraphLayout({

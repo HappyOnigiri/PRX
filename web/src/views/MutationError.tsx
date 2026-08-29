@@ -1,10 +1,10 @@
 import { useTranslation } from "react-i18next";
 import { formatError } from "../i18n/domain";
 
-type MutationErrorProps = {
+interface MutationErrorProps {
   error: Error | null;
   taskTitle?: (id: string) => string | undefined;
-};
+}
 
 export function MutationError({ error, taskTitle }: MutationErrorProps) {
   const { t } = useTranslation();

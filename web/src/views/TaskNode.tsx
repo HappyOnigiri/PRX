@@ -1,26 +1,26 @@
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
 import { useTranslation } from "react-i18next";
-import { DocumentKind, TaskDisplayState } from "../gen/prx/v1/prx_pb";
+import { DocumentKind, type TaskDisplayState } from "../gen/prx/v1/prx_pb";
 import { taskDisplayStateLabel, taskDisplayStateToken } from "../i18n/domain";
 
-export type TaskNodeDocument = {
+export interface TaskNodeDocument {
   id: string;
   kind: DocumentKind;
   title: string;
   value: string;
-};
+}
 
-type TaskNodeData = {
+interface TaskNodeData extends Record<string, unknown> {
   title: string;
   assignee: string;
   state: TaskDisplayState;
   ready: boolean;
   stale: boolean;
-  pullRequest?: { label: string; url: string };
+  pullRequest: { label: string; url: string } | undefined;
   documents: TaskNodeDocument[];
   onEdit: () => void;
   onPreview: (document: TaskNodeDocument) => void;
-};
+}
 export type TaskFlowNode = Node<TaskNodeData, "task">;
 
 export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
@@ -44,7 +44,7 @@ export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
         </button>
       </div>
       <h3>{data.title}</h3>
-      {(data.pullRequest || data.documents.length > 0) && (
+      {(data.pullRequest ?? data.documents.length > 0) && (
         <div className="node-assets nodrag nowheel nopan">
           {data.pullRequest && (
             <a
@@ -74,7 +74,9 @@ export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
             ) : (
               <button
                 className="node-asset"
-                onClick={() => data.onPreview(document)}
+                onClick={() => {
+                  data.onPreview(document);
+                }}
                 key={document.id}
               >
                 <span>MD</span>

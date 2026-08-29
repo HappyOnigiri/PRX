@@ -1,15 +1,15 @@
-import { useCallback, useMemo, useState } from "react";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { useDomainMutation, useSnapshot } from "../hooks";
-import { type TaskNodeDocument } from "./TaskNode";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { EditFeatureDialog } from "./EditFeatureDialog";
 import { FeatureGraph } from "./FeatureGraph";
+import { MarkdownPreview } from "./MarkdownPreview";
 import { MutationError } from "./MutationError";
 import { TaskInspector } from "./TaskInspector";
-import { MarkdownPreview } from "./MarkdownPreview";
+import { type TaskNodeDocument } from "./TaskNode";
 
 export function FeatureWorkspace() {
   const { t } = useTranslation();
@@ -109,7 +109,9 @@ export function FeatureWorkspace() {
         <div className="workspace-actions">
           <button
             className="secondary"
-            onClick={() => sync.mutate(featureId)}
+            onClick={() => {
+              sync.mutate(featureId);
+            }}
             disabled={sync.isPending}
           >
             {sync.isPending
@@ -120,7 +122,9 @@ export function FeatureWorkspace() {
           <button
             className="icon-button"
             aria-label={t("workspace.editFeature")}
-            onClick={() => setShowFeatureEdit(true)}
+            onClick={() => {
+              setShowFeatureEdit(true);
+            }}
           >
             ✎
           </button>
@@ -131,12 +135,12 @@ export function FeatureWorkspace() {
                 ? t("workspace.unarchiveFeature")
                 : t("workspace.archiveFeature")
             }
-            onClick={() =>
+            onClick={() => {
               updateFeature.mutate({
                 id: featureId,
                 archived: !feature.archived,
-              })
-            }
+              });
+            }}
           >
             ⌁
           </button>
@@ -168,7 +172,9 @@ export function FeatureWorkspace() {
             pullRequest={pullRequests.get(selectedTask.id)}
             documents={documentsByTask.get(selectedTask.id) ?? []}
             onPreview={handlePreviewDocument}
-            onClose={() => setSelected(undefined)}
+            onClose={() => {
+              setSelected(undefined);
+            }}
           />
         )}
       </div>
@@ -176,19 +182,25 @@ export function FeatureWorkspace() {
         <MarkdownPreview
           key={previewDocument.id}
           document={previewDocument}
-          onClose={() => setPreviewDocument(undefined)}
+          onClose={() => {
+            setPreviewDocument(undefined);
+          }}
         />
       )}
       {showTask && (
         <CreateTaskDialog
           featureId={featureId}
-          onClose={() => setShowTask(false)}
+          onClose={() => {
+            setShowTask(false);
+          }}
         />
       )}
       {showFeatureEdit && (
         <EditFeatureDialog
           feature={feature}
-          onClose={() => setShowFeatureEdit(false)}
+          onClose={() => {
+            setShowFeatureEdit(false);
+          }}
         />
       )}
     </div>

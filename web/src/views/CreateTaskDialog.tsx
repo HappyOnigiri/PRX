@@ -1,16 +1,16 @@
-import { FormEvent } from "react";
+import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import { formValue } from "../form";
 import { TaskKind } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
-import { formValue } from "../form";
 import { formatError, taskKindLabel } from "../i18n/domain";
 import { MutationError } from "./MutationError";
 
-type CreateTaskDialogProps = {
+interface CreateTaskDialogProps {
   featureId: string;
   onClose: () => void;
-};
+}
 
 export function CreateTaskDialog({
   featureId,
@@ -19,7 +19,7 @@ export function CreateTaskDialog({
   const { t } = useTranslation();
   const createTask = useDomainMutation(mutations.createTask);
 
-  async function submitTask(event: FormEvent<HTMLFormElement>) {
+  async function submitTask(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     try {

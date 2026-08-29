@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import { formValue } from "../form";
 import {
   TaskKind,
   TaskStatus,
@@ -8,28 +9,27 @@ import {
   type Task,
 } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
-import { formValue } from "../form";
 import {
   blockedReasonLabel,
   taskDisplayStateLabel,
   taskDisplayStateToken,
   taskStatusLabel,
 } from "../i18n/domain";
-import { type TaskNodeDocument } from "./TaskNode";
 import { MutationError } from "./MutationError";
 import { DependencySection } from "./TaskInspectorDependencies";
 import { PullRequestSection } from "./TaskInspectorPullRequest";
 import { ReferencesSection } from "./TaskInspectorReferences";
+import { type TaskNodeDocument } from "./TaskNode";
 
-export type TaskInspectorProps = {
+export interface TaskInspectorProps {
   task: Task;
   tasks: Task[];
   dependencies: Dependency[];
-  pullRequest?: PullRequest;
+  pullRequest: PullRequest | undefined;
   documents: TaskNodeDocument[];
   onPreview: (document: TaskNodeDocument) => void;
   onClose: () => void;
-};
+}
 
 export function TaskInspector({
   task,
@@ -143,7 +143,7 @@ export function TaskInspector({
             )
           )
             return;
-          deleteTask.mutateAsync(task.id).then(onClose, () => {});
+          void deleteTask.mutateAsync(task.id).then(onClose, () => undefined);
         }}
       >
         {t("inspector.deleteTask")}

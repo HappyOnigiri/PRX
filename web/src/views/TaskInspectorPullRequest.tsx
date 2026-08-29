@@ -1,18 +1,18 @@
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import { formValue } from "../form";
 import type { PullRequest } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
-import { formValue } from "../form";
 import {
   pullRequestDisplayStateLabel,
   pullRequestDisplayStateToken,
 } from "../i18n/domain";
 import { MutationError } from "./MutationError";
 
-type PullRequestSectionProps = {
+interface PullRequestSectionProps {
   taskId: string;
-  pullRequest?: PullRequest;
-};
+  pullRequest: PullRequest | undefined;
+}
 
 export function PullRequestSection({
   taskId,
@@ -42,7 +42,12 @@ export function PullRequestSection({
               : pullRequestDisplayStateLabel(pullRequest.displayState, t)}
           </span>
           {pullRequest.syncError && <p>{pullRequest.syncError}</p>}
-          <button className="text-action" onClick={() => detach.mutate(taskId)}>
+          <button
+            className="text-action"
+            onClick={() => {
+              detach.mutate(taskId);
+            }}
+          >
             {t("inspector.detach")}
           </button>
         </div>

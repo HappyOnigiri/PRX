@@ -9,8 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/HappyOnigiri/PRX/internal/domain"
 	gh "github.com/google/go-github/v80/github"
+
+	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 func TestParsePullRequestURL(t *testing.T) {
@@ -19,7 +20,8 @@ func TestParsePullRequestURL(t *testing.T) {
 		t.Fatal("suffix must be rejected")
 	}
 	owner, repo, number, canonical, err := ParsePullRequestURL("https://github.com/Acme/API/pull/42")
-	if err != nil || owner != "Acme" || repo != "API" || number != 42 || canonical != "https://github.com/Acme/API/pull/42" {
+	if err != nil || owner != "Acme" || repo != "API" || number != 42 ||
+		canonical != "https://github.com/Acme/API/pull/42" {
 		t.Fatalf("got %s/%s #%d %s err=%v", owner, repo, number, canonical, err)
 	}
 }
@@ -28,7 +30,13 @@ func TestLiveProviderMapsStates(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"number":7,"state":"open","draft":false,"mergeable":false,"node_id":"PR_7","user":{"login":"octocat"},"assignees":[{"login":"mona"}],"updated_at":"2026-01-01T00:00:00Z"}`))
+		_, _ = w.Write(
+			[]byte(
+				`{"number":7,"state":"open","draft":false,"mergeable":false,"node_id":"PR_7",` +
+					`"user":{"login":"octocat"},"assignees":[{"login":"mona"}],` +
+					`"updated_at":"2026-01-01T00:00:00Z"}`,
+			),
+		)
 	})
 	mux.HandleFunc("/repos/acme/api/pulls/7/reviews", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -48,14 +56,19 @@ func TestLiveProviderMapsStates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.ReviewState != domain.ReviewStateChangesRequested || got.Mergeability != domain.MergeabilityConflicting || got.Author != "octocat" || got.Stale {
+	if got.ReviewState != domain.ReviewStateChangesRequested || got.Mergeability != domain.MergeabilityConflicting ||
+		got.Author != "octocat" ||
+		got.Stale {
 		t.Fatalf("unexpected mapping: %+v", got)
 	}
 }
 
 func TestFixturePreservesError(t *testing.T) {
 	provider, _ := NewFixtureProvider("demo")
-	got, err := provider.Fetch(context.Background(), domain.PullRequest{Number: 3, State: domain.PullRequestStateUnknown, Stale: true})
+	got, err := provider.Fetch(
+		context.Background(),
+		domain.PullRequest{Number: 3, State: domain.PullRequestStateUnknown, Stale: true},
+	)
 	if err != nil || got.State != domain.PullRequestStateMerged || got.Stale {
 		t.Fatalf("fixture got=%+v err=%v", got, err)
 	}
@@ -66,7 +79,12 @@ func newReviewServer(t *testing.T, reviewsJSON string) *LiveProvider {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},"updated_at":"2026-01-01T00:00:00Z"}`))
+		_, _ = w.Write(
+			[]byte(
+				`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},` +
+					`"updated_at":"2026-01-01T00:00:00Z"}`,
+			),
+		)
 	})
 	mux.HandleFunc("/repos/acme/api/pulls/7/reviews", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
@@ -109,7 +127,10 @@ func TestLiveProviderIgnoresNonDecisionReviews(t *testing.T) {
 	for _, tc := range cases {
 		t.Run(tc.name, func(t *testing.T) {
 			provider := newReviewServer(t, tc.reviews)
-			got, err := provider.Fetch(context.Background(), domain.PullRequest{Owner: "acme", Repository: "api", Number: 7})
+			got, err := provider.Fetch(
+				context.Background(),
+				domain.PullRequest{Owner: "acme", Repository: "api", Number: 7},
+			)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -128,14 +149,18 @@ func TestFixtureRejectsValuesOutsideTheSchema(t *testing.T) {
 		}
 		return path
 	}
-	valid := `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved","mergeability":"mergeable"}}`
+	valid := `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved",` +
+		`"mergeability":"mergeable"}}`
 	if _, err := NewFixtureProvider(write(valid)); err != nil {
 		t.Fatalf("valid fixture rejected: %v", err)
 	}
 	cases := map[string]string{
-		"missing state":        `{"https://github.com/acme/api/pull/42":{"review_state":"approved","mergeability":"mergeable"}}`,
-		"typo in review_state": `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"aproved","mergeability":"mergeable"}}`,
-		"typo in mergeability": `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved","mergeability":"merged"}}`,
+		"missing state": `{"https://github.com/acme/api/pull/42":{"review_state":"approved",` +
+			`"mergeability":"mergeable"}}`,
+		"typo in review_state": `{"https://github.com/acme/api/pull/42":{"state":"open",` +
+			`"review_state":"aproved","mergeability":"mergeable"}}`,
+		"typo in mergeability": `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved",` +
+			`"mergeability":"merged"}}`,
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -170,7 +195,10 @@ func TestLiveProviderBoundsRequestsAndKeepsSyncing(t *testing.T) {
 	base, _ := stalled.BaseURL.Parse(server.URL + "/")
 	stalled.BaseURL = base
 	slow := &LiveProvider{client: stalled}
-	if _, err := slow.Fetch(context.Background(), domain.PullRequest{Owner: "acme", Repository: "api", Number: 7}); err == nil {
+	if _, err := slow.Fetch(
+		context.Background(),
+		domain.PullRequest{Owner: "acme", Repository: "api", Number: 7},
+	); err == nil {
 		t.Fatal("expected the stalled request to fail")
 	}
 
@@ -186,7 +214,12 @@ func TestLiveProviderFollowsReviewPagination(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},"updated_at":"2026-01-01T00:00:00Z"}`))
+		_, _ = w.Write(
+			[]byte(
+				`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},` +
+					`"updated_at":"2026-01-01T00:00:00Z"}`,
+			),
+		)
 	})
 	var reviewPages int
 	mux.HandleFunc("/repos/acme/api/pulls/7/reviews", func(w http.ResponseWriter, r *http.Request) {

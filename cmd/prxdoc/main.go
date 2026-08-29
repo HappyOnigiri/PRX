@@ -6,8 +6,9 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/HappyOnigiri/PRX/internal/cli"
 	"github.com/spf13/cobra/doc"
+
+	"github.com/HappyOnigiri/PRX/internal/cli"
 )
 
 func main() {
