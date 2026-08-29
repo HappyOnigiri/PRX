@@ -6,21 +6,25 @@ import { formatError } from "../i18n/domain";
 const queueNames = [
   [
     "readyTasks",
+    "queue-ready",
     "dashboard.queues.ready.title",
     "dashboard.queues.ready.detail",
   ],
   [
     "reviewWaitingTasks",
+    "queue-review-waiting",
     "dashboard.queues.review.title",
     "dashboard.queues.review.detail",
   ],
   [
     "conflictTasks",
+    "queue-conflict",
     "dashboard.queues.conflicts.title",
     "dashboard.queues.conflicts.detail",
   ],
   [
     "staleTasks",
+    "queue-stale",
     "dashboard.queues.stale.title",
     "dashboard.queues.stale.detail",
   ],
@@ -63,8 +67,8 @@ export function Dashboard() {
         className="queue-strip"
         aria-label={t("dashboard.roadmapStatus")}
       >
-        {queueNames.map(([key, title, detail]) => (
-          <article key={key} className={`queue-meter ${key}`}>
+        {queueNames.map(([key, className, title, detail]) => (
+          <article key={key} className={`queue-meter ${className}`}>
             <span>{data[key].length}</span>
             <div>
               <h2>{t(title)}</h2>

@@ -83,7 +83,9 @@ export function taskDisplayStateLabel(
 }
 
 export function taskDisplayStateToken(value: TaskDisplayState): string {
-  return TaskDisplayState[value]?.toLowerCase() ?? "unknown";
+  return (
+    TaskDisplayState[value]?.toLowerCase().replaceAll("_", "-") ?? "unknown"
+  );
 }
 
 export function pullRequestDisplayStateLabel(
@@ -96,7 +98,10 @@ export function pullRequestDisplayStateLabel(
 export function pullRequestDisplayStateToken(
   value: PullRequestDisplayState,
 ): string {
-  return PullRequestDisplayState[value]?.toLowerCase() ?? "unknown";
+  return (
+    PullRequestDisplayState[value]?.toLowerCase().replaceAll("_", "-") ??
+    "unknown"
+  );
 }
 
 export const pullRequestDisplayStateKeys = {

@@ -11,6 +11,16 @@
   background: var(--surface);
 }
 
+.dependency-chip button {
+  width: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  padding: 0;
+}
+
 .inspector > header {
   position: sticky;
   top: 0;
@@ -40,6 +50,21 @@
   background: transparent;
   color: var(--text-2);
   padding: 0;
+}
+
+.document-chip > button:last-child {
+  width: 28px;
+  min-width: 28px;
+  min-height: 28px;
+  border: 0;
+  background: transparent;
+  color: var(--text-2);
+  padding: 0;
+}
+
+.dependency-chip button:hover {
+  background: var(--border);
+  color: var(--text);
 }
 
 .inspector > header button:hover {
@@ -93,6 +118,11 @@
   color: var(--text);
 }
 
+.document-chip > button:last-child:hover {
+  background: var(--border);
+  color: var(--text);
+}
+
 .inspector form > button:not(.text-action):hover {
   background: var(--surface-2);
 }
@@ -108,23 +138,6 @@
   background: var(--surface-2);
   padding: 8px 10px;
   font-size: var(--text-sm);
-}
-
-.dependency-chip button,
-.document-chip > button:last-child {
-  width: 28px;
-  min-width: 28px;
-  min-height: 28px;
-  border: 0;
-  background: transparent;
-  color: var(--text-2);
-  padding: 0;
-}
-
-.dependency-chip button:hover,
-.document-chip > button:last-child:hover {
-  background: var(--border);
-  color: var(--text);
 }
 
 .linked-pr {
@@ -153,8 +166,8 @@
 }
 
 .linked-pr.state-approved span,
-.linked-pr.state-review_waiting span,
-.linked-pr.state-changes_requested span,
+.linked-pr.state-review-waiting span,
+.linked-pr.state-changes-requested span,
 .linked-pr.is-stale span {
   color: var(--status-review);
 }
@@ -212,15 +225,15 @@
   background: var(--status-merged);
 }
 
-.inspector-state.state-review_waiting,
+.inspector-state.state-review-waiting,
 .inspector-state.state-approved,
-.inspector-state.state-changes_requested {
+.inspector-state.state-changes-requested {
   color: var(--status-review);
 }
 
-.inspector-state.state-review_waiting i,
+.inspector-state.state-review-waiting i,
 .inspector-state.state-approved i,
-.inspector-state.state-changes_requested i {
+.inspector-state.state-changes-requested i {
   background: var(--status-review);
 }
 
@@ -264,13 +277,13 @@
   background: transparent;
 }
 
-@media (max-width: 900px) {
+@media (width <= 900px) {
   .inspector {
     width: calc(100% - 32px);
   }
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
   .inspector {
     top: 8px;
     right: 8px;

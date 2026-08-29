@@ -1,8 +1,9 @@
 :root {
   color-scheme: light dark;
+
   --bg: light-dark(#f5f6f8, #191b1f);
   --bg-rail: light-dark(#eef0f3, #15171b);
-  --surface: light-dark(#ffffff, #21242a);
+  --surface: light-dark(#fff, #21242a);
   --surface-2: light-dark(#e8ebef, #2a2e35);
   --border: light-dark(#d1d5db, #363a41);
   --border-strong: light-dark(#747d89, #4a5058);
@@ -11,13 +12,13 @@
   --text-3: light-dark(#5f6874, #8f96a0);
   --accent: light-dark(#245fb8, #7aaeff);
   --accent-hover: light-dark(#194f9e, #91bcff);
-  --accent-text: light-dark(#ffffff, #0f1418);
+  --accent-text: light-dark(#fff, #0f1418);
   --status-ready: light-dark(#0c715a, #4cc2a0);
   --status-review: light-dark(#7b5100, #d9a441);
   --status-conflict: light-dark(#a9322f, #ef6f66);
   --status-merged: var(--text-3);
   --status-none: var(--border-strong);
-  --scrim: light-dark(rgba(16, 20, 26, 0.5), rgba(0, 0, 0, 0.6));
+  --scrim: light-dark(rgb(16 20 26 / 50%), rgb(0 0 0 / 60%));
 }
 
 :root[data-theme="light"] {
