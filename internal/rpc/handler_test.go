@@ -249,6 +249,232 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	}
 }
 
+func TestRPCLifecyclePersistsAndDeletesResources(t *testing.T) {
+	ctx := context.Background()
+	const mergedURL = "https://github.com/acme/api/pull/42"
+	const failedURL = "https://github.com/acme/api/pull/43"
+	fixturePath := filepath.Join(t.TempDir(), "github.json")
+	fixture := `{"` + mergedURL + `":{"state":"merged","review_state":"approved",` +
+		`"mergeability":"mergeable","author":"octocat","assignees":["alice"]},` +
+		`"` + failedURL + `":{"error":"GitHub unavailable"}}`
+	if err := os.WriteFile(fixturePath, []byte(fixture), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	client := newTestClientWithFixture(t, fixturePath)
+
+	featureResponse, err := client.CreateFeature(
+		ctx,
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "rpc-lifecycle", Title: "RPC lifecycle"}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	featureID := featureResponse.Msg.GetFeature().GetId()
+	createTask := func(title string, kind prxv1.TaskKind) *prxv1.Task {
+		response, err := client.CreateTask(
+			ctx,
+			connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: featureID, Title: title, Kind: kind}),
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		return response.Msg.GetTask()
+	}
+	blocker := createTask("Merged blocker", prxv1.TaskKind_TASK_KIND_PULL_REQUEST)
+	blocked := createTask("Blocked task", prxv1.TaskKind_TASK_KIND_MANUAL)
+	failedTask := createTask("Failed sync", prxv1.TaskKind_TASK_KIND_PULL_REQUEST)
+	deletedTask := createTask("Deleted task", prxv1.TaskKind_TASK_KIND_MANUAL)
+
+	if _, err := client.AddDependency(
+		ctx,
+		connect.NewRequest(&prxv1.AddDependencyRequest{
+			BlockerTaskId: blocker.GetId(),
+			BlockedTaskId: blocked.GetId(),
+		}),
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.RemoveDependency(
+		ctx,
+		connect.NewRequest(&prxv1.RemoveDependencyRequest{
+			BlockerTaskId: blocker.GetId(),
+			BlockedTaskId: blocked.GetId(),
+		}),
+	); err != nil {
+		t.Fatal(err)
+	}
+	getSnapshot := func() *prxv1.Snapshot {
+		response, err := client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		return response.Msg.GetSnapshot()
+	}
+	if snapshot := getSnapshot(); len(snapshot.GetDependencies()) != 0 {
+		t.Fatalf("dependencies after removal=%d, want 0", len(snapshot.GetDependencies()))
+	}
+	if _, err := client.AddDependency(
+		ctx,
+		connect.NewRequest(&prxv1.AddDependencyRequest{
+			BlockerTaskId: blocker.GetId(),
+			BlockedTaskId: blocked.GetId(),
+		}),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	attached, err := client.AttachPullRequest(
+		ctx,
+		connect.NewRequest(&prxv1.AttachPullRequestRequest{TaskId: blocker.GetId(), Url: mergedURL}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	attachedPR := attached.Msg.GetPullRequest()
+	if attachedPR.GetOwner() != "acme" || attachedPR.GetRepository() != "api" || attachedPR.GetNumber() != 42 ||
+		attachedPR.GetUrl() != mergedURL || attachedPR.GetState() != prxv1.PullRequestState_PULL_REQUEST_STATE_UNKNOWN ||
+		!attachedPR.GetStale() || attachedPR.GetGithubUpdatedAt() != "" || attachedPR.GetLastSyncedAt() != "" {
+		t.Fatalf("attached pull request=%+v", attachedPR)
+	}
+	if _, err := client.AttachPullRequest(
+		ctx,
+		connect.NewRequest(&prxv1.AttachPullRequestRequest{TaskId: failedTask.GetId(), Url: failedURL}),
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	syncResponse, err := client.Sync(
+		ctx,
+		connect.NewRequest(&prxv1.SyncRequest{FeatureId: featureID}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if syncResponse.Msg.GetSucceeded() != 1 || syncResponse.Msg.GetFailed() != 1 {
+		t.Fatalf("sync response=%+v, want one success and one failure", syncResponse.Msg)
+	}
+	snapshot := getSnapshot()
+	if len(snapshot.GetPullRequests()) != 2 {
+		t.Fatalf("pull requests=%d, want 2", len(snapshot.GetPullRequests()))
+	}
+	var mergedPR, failedPR *prxv1.PullRequest
+	for _, pullRequest := range snapshot.GetPullRequests() {
+		switch pullRequest.GetTaskId() {
+		case blocker.GetId():
+			mergedPR = pullRequest
+		case failedTask.GetId():
+			failedPR = pullRequest
+		}
+	}
+	if mergedPR == nil || mergedPR.GetState() != prxv1.PullRequestState_PULL_REQUEST_STATE_MERGED ||
+		mergedPR.GetNodeId() != "fixture:42" || mergedPR.GetAuthor() != "octocat" ||
+		len(mergedPR.GetAssignees()) != 1 || mergedPR.GetAssignees()[0] != "alice" ||
+		mergedPR.GetReviewState() != prxv1.ReviewState_REVIEW_STATE_APPROVED ||
+		mergedPR.GetMergeability() != prxv1.Mergeability_MERGEABILITY_MERGEABLE ||
+		mergedPR.GetGithubUpdatedAt() == "" || mergedPR.GetLastSyncedAt() == "" ||
+		mergedPR.GetSyncError() != "" || mergedPR.GetStale() {
+		t.Fatalf("synced pull request=%+v", mergedPR)
+	}
+	if failedPR == nil || failedPR.GetSyncError() != "GitHub unavailable" || !failedPR.GetStale() ||
+		failedPR.GetLastSyncedAt() == "" {
+		t.Fatalf("failed pull request=%+v", failedPR)
+	}
+
+	deletedDocument, err := client.AddDocument(
+		ctx,
+		connect.NewRequest(&prxv1.AddDocumentRequest{
+			FeatureId: featureID,
+			Kind:      prxv1.DocumentKind_DOCUMENT_KIND_URL,
+			Title:     "Deleted document",
+			Value:     "https://example.com/deleted",
+		}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.AddDocument(
+		ctx,
+		connect.NewRequest(&prxv1.AddDocumentRequest{
+			TaskId: failedTask.GetId(),
+			Kind:   prxv1.DocumentKind_DOCUMENT_KIND_URL,
+			Title:  "Cascade document",
+			Value:  "https://example.com/cascade",
+		}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := client.DeleteDocument(
+		ctx,
+		connect.NewRequest(&prxv1.DeleteDocumentRequest{Id: deletedDocument.Msg.GetDocument().GetId()}),
+	); err != nil {
+		t.Fatal(err)
+	}
+	snapshot = getSnapshot()
+	if len(snapshot.GetDocuments()) != 1 || snapshot.GetDocuments()[0].GetTitle() != "Cascade document" {
+		t.Fatalf("documents after deletion=%+v", snapshot.GetDocuments())
+	}
+
+	if _, err := client.DetachPullRequest(
+		ctx,
+		connect.NewRequest(&prxv1.DetachPullRequestRequest{TaskId: blocker.GetId()}),
+	); err != nil {
+		t.Fatal(err)
+	}
+	snapshot = getSnapshot()
+	if len(snapshot.GetPullRequests()) != 1 || snapshot.GetPullRequests()[0].GetTaskId() != failedTask.GetId() {
+		t.Fatalf("pull requests after detach=%+v", snapshot.GetPullRequests())
+	}
+
+	if _, err := client.DeleteTask(
+		ctx,
+		connect.NewRequest(&prxv1.DeleteTaskRequest{Id: deletedTask.GetId()}),
+	); err != nil {
+		t.Fatal(err)
+	}
+	snapshot = getSnapshot()
+	for _, task := range snapshot.GetTasks() {
+		if task.GetId() == deletedTask.GetId() {
+			t.Fatalf("deleted task remains in snapshot: %+v", task)
+		}
+	}
+
+	_, err = client.DeleteFeature(
+		ctx,
+		connect.NewRequest(&prxv1.DeleteFeatureRequest{Id: featureID}),
+	)
+	if err == nil || connect.CodeOf(err) != connect.CodeFailedPrecondition ||
+		errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST {
+		t.Fatalf("non-cascade feature deletion code=%s err=%v", connect.CodeOf(err), err)
+	}
+	snapshot = getSnapshot()
+	if len(snapshot.GetFeatures()) != 1 || snapshot.GetFeatures()[0].GetId() != featureID ||
+		len(snapshot.GetTasks()) != 3 || len(snapshot.GetPullRequests()) != 1 || len(snapshot.GetDocuments()) != 1 ||
+		len(snapshot.GetDependencies()) != 1 {
+		t.Fatalf("state after rejected feature deletion=%+v", snapshot)
+	}
+
+	validation, err := client.Validate(ctx, connect.NewRequest(&prxv1.ValidateRequest{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !validation.Msg.GetValid() || len(validation.Msg.GetErrors()) != 0 {
+		t.Fatalf("validation=%+v, want a valid database", validation.Msg)
+	}
+
+	if _, err := client.DeleteFeature(
+		ctx,
+		connect.NewRequest(&prxv1.DeleteFeatureRequest{Id: featureID, Cascade: true}),
+	); err != nil {
+		t.Fatal(err)
+	}
+	snapshot = getSnapshot()
+	if len(snapshot.GetFeatures()) != 0 || len(snapshot.GetTasks()) != 0 || len(snapshot.GetDependencies()) != 0 ||
+		len(snapshot.GetPullRequests()) != 0 || len(snapshot.GetDocuments()) != 0 {
+		t.Fatalf("state after cascade deletion=%+v", snapshot)
+	}
+}
+
 func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 	ctx := context.Background()
 	client := newTestClient(t)
@@ -436,13 +662,21 @@ func (internalErrorService) Snapshot(context.Context) (domain.Snapshot, error) {
 
 func newTestClient(t *testing.T) prxv1connect.PRXServiceClient {
 	t.Helper()
+	return newTestClientWithFixture(t, "demo")
+}
+
+func newTestClientWithFixture(t *testing.T, fixturePath string) prxv1connect.PRXServiceClient {
+	t.Helper()
 	ctx := context.Background()
 	database, err := store.Open(ctx, filepath.Join(t.TempDir(), "rpc.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = database.Close() })
-	provider, _ := githubprovider.NewFixtureProvider("demo")
+	provider, err := githubprovider.NewFixtureProvider(fixturePath)
+	if err != nil {
+		t.Fatal(err)
+	}
 	path, handler := rpc.New(app.New(database, provider))
 	mux := http.NewServeMux()
 	mux.Handle(path, handler)

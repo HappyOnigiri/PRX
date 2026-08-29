@@ -113,11 +113,14 @@ make mod-tidy-check   # go.mod and go.sum must be tidy
 make lint              # go vet, auto-installed golangci-lint (gofumpt / gci / golines), deadcode, ESLint, strict TypeScript, stylelint
 make test              # Go, Vitest, and component coverage
 make go-coverage-check # handwritten Go packages must stay at or above the coverage baseline
+make go-coverage-zero-check # every function in the core Go packages must be executed by tests
 make test-race         # Go race detector
 make e2e               # real Go server, SQLite, ConnectRPC, Chromium
 make ci                # install web dependencies, run all required checks, and build production assets
 ```
 
 `GO_COVERAGE_MIN` records the current coverage baseline for the handwritten Go packages. Raise it when their coverage improves so later changes cannot reduce it.
+
+`make go-coverage-zero-check` runs the Go tests with cross-package coverage for `internal/app`, `internal/domain`, `internal/github`, `internal/rpc`, and `internal/store`, then fails if any target function has exactly 0.0% coverage. It excludes the WebUI, CLI black-box process tests, and generated code because those paths are verified by their own checks and are not part of the core package function contract.
 
 Playwright covers browser CRUD, language selection persistence, cycle rejection, pull-request and Markdown attachment, deterministic sync, dependency removal, persistence after reload, console/network failures, 320-pixel reflow, and 8/50/100-node layouts. Graph screenshots are written to `test-results/screenshots/` and uploaded by GitHub Actions.

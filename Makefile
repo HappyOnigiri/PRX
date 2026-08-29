@@ -3,10 +3,11 @@ PNPM ?= corepack pnpm
 INSTALL_DIR ?= $(HOME)/.local/bin
 GO_COVERAGE_MIN ?= 68.8
 GO_COVERAGE_PACKAGES := ./internal/domain ./internal/github ./internal/rpc ./internal/store
+GO_COVERAGE_ZERO_PACKAGES := ./internal/app $(GO_COVERAGE_PACKAGES)
 GOLANGCI_LINT_VERSION := $(shell awk '$$1 == "golangci-lint" { print $$2 }' .tool-versions)
 GOLANGCI_LINT := bin/golangci-lint
 
-.PHONY: generate generated-check mod-tidy-check fmt lint check-web-quality test go-coverage-check test-race test-cli web-install web-test web-build dev e2e build install ci clean $(GOLANGCI_LINT)
+.PHONY: generate generated-check mod-tidy-check fmt lint check-web-quality test go-coverage-check go-coverage-zero-check test-race test-cli web-install web-test web-build dev e2e build install ci clean $(GOLANGCI_LINT)
 
 generate: web-install
 	$(GO) tool sqlc generate
@@ -58,6 +59,9 @@ go-coverage-check:
 		if (actual + 0 < minimum + 0) exit 1; \
 	}'
 
+go-coverage-zero-check:
+	$(GO) run ./tools/checkgozerocoverage $(GO_COVERAGE_ZERO_PACKAGES)
+
 test-race:
 	$(GO) test -race ./...
 
@@ -87,7 +91,7 @@ install: build
 	install -d "$(INSTALL_DIR)"
 	install -m 0755 bin/prx "$(INSTALL_DIR)/prx"
 
-ci: generated-check mod-tidy-check lint check-web-quality test go-coverage-check test-race build e2e
+ci: generated-check mod-tidy-check lint check-web-quality test go-coverage-check go-coverage-zero-check test-race build e2e
 
 clean:
 	$(GO) clean -testcache
