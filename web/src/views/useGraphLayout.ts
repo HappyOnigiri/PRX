@@ -35,16 +35,18 @@ export function useGraphLayout({
       const pr = pullRequests.get(task.id);
       const documents = documentsByTask.get(task.id) ?? [];
       const assetCount = documents.length + (pr ? 1 : 0);
+      const hasSyncError = Boolean(pr?.syncError);
       return {
         id: task.id,
         width: 284,
-        height: 148 + Math.min(assetCount, 4) * 34,
+        height: 148 + Math.min(assetCount, 4) * 34 + (hasSyncError ? 22 : 0),
         data: {
           title: task.title,
           assignee: task.assignee,
           state: task.displayState,
           ready: task.ready,
           stale: pr?.stale ?? false,
+          syncError: hasSyncError,
           pullRequest: pr
             ? {
                 label: `${pr.owner}/${pr.repository} #${String(pr.number)}`,

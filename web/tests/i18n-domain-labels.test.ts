@@ -48,7 +48,7 @@ describe("domain labels", () => {
     expect(
       blockedReasonLabel(
         {
-          code: BlockedReasonCode.BLOCKER_STALE,
+          code: BlockedReasonCode.WAITING_FOR_BLOCKER,
           blockerTaskId: "task-1",
         } as BlockedReason,
         title,

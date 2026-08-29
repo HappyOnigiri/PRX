@@ -30,10 +30,11 @@ export const featureStatusKeys = {
 } as const satisfies Record<FeatureStatus, string>;
 
 export const taskStatusKeys = {
-  [TaskStatus.PLANNED]: "taskStatus.planned",
+  [TaskStatus.AUTO]: "taskStatus.auto",
+  [TaskStatus.NOT_STARTED]: "taskStatus.notStarted",
   [TaskStatus.IN_PROGRESS]: "taskStatus.inProgress",
   [TaskStatus.COMPLETED]: "taskStatus.completed",
-  [TaskStatus.CANCELLED]: "taskStatus.cancelled",
+  [TaskStatus.CLOSED]: "taskStatus.closed",
   [TaskStatus.UNSPECIFIED]: "taskStatus.unknown",
 } as const satisfies Record<TaskStatus, string>;
 
@@ -59,13 +60,12 @@ export function documentKindLabel(value: DocumentKind, t: TFunction): string {
 
 export const displayStateKeys = {
   [TaskDisplayState.UNSPECIFIED]: "displayState.unknown",
-  [TaskDisplayState.PLANNED]: "displayState.planned",
+  [TaskDisplayState.NOT_STARTED]: "displayState.notStarted",
+  [TaskDisplayState.DESIGNED]: "displayState.designed",
   [TaskDisplayState.IN_PROGRESS]: "displayState.inProgress",
   [TaskDisplayState.COMPLETED]: "displayState.completed",
-  [TaskDisplayState.CANCELLED]: "displayState.cancelled",
-  [TaskDisplayState.UNLINKED]: "displayState.unlinked",
-  [TaskDisplayState.MERGED]: "displayState.merged",
   [TaskDisplayState.CLOSED]: "displayState.closed",
+  [TaskDisplayState.MERGED]: "displayState.merged",
   [TaskDisplayState.DRAFT]: "displayState.draft",
   [TaskDisplayState.CONFLICT]: "displayState.conflict",
   [TaskDisplayState.CHANGES_REQUESTED]: "displayState.changesRequested",
@@ -116,7 +116,6 @@ export const blockedReasonKeys = {
   [BlockedReasonCode.UNSPECIFIED]: "blockedReason.unknown",
   [BlockedReasonCode.DEPENDENCY_DATA_INCOMPLETE]:
     "blockedReason.dependencyDataIncomplete",
-  [BlockedReasonCode.BLOCKER_STALE]: "blockedReason.blockerStale",
   [BlockedReasonCode.WAITING_FOR_BLOCKER]: "blockedReason.waitingForBlocker",
 } as const satisfies Record<BlockedReasonCode, string>;
 
@@ -128,8 +127,6 @@ export function blockedReasonLabel(
   if (!reason) return "";
   const title =
     taskTitle(reason.blockerTaskId) ?? t("blockedReason.unknownBlocker");
-  if (reason.code === BlockedReasonCode.BLOCKER_STALE)
-    return t(blockedReasonKeys[BlockedReasonCode.BLOCKER_STALE], { title });
   if (reason.code === BlockedReasonCode.WAITING_FOR_BLOCKER)
     return t(blockedReasonKeys[BlockedReasonCode.WAITING_FOR_BLOCKER], {
       title,
@@ -150,6 +147,10 @@ export const errorKeys = {
   [DomainErrorCode.INVALID_DOCUMENT]: "error.invalidDocument",
   [DomainErrorCode.INVALID_DOCUMENT_KIND]: "error.invalidDocumentKind",
   [DomainErrorCode.INVALID_DOCUMENT_URL]: "error.invalidDocumentUrl",
+  [DomainErrorCode.INVALID_IMPLEMENTATION_PLAN]:
+    "error.invalidImplementationPlan",
+  [DomainErrorCode.IMPLEMENTATION_PLAN_TOO_LARGE]:
+    "error.implementationPlanTooLarge",
   [DomainErrorCode.INVALID_KIND]: "error.invalidKind",
   [DomainErrorCode.INVALID_PARENT]: "error.invalidParent",
   [DomainErrorCode.INVALID_PULL_REQUEST_URL]: "error.invalidPullRequestUrl",
@@ -158,7 +159,6 @@ export const errorKeys = {
   [DomainErrorCode.INVALID_STATUS]: "error.invalidStatus",
   [DomainErrorCode.INVALID_TITLE]: "error.invalidTitle",
   [DomainErrorCode.NOT_FOUND]: "error.notFound",
-  [DomainErrorCode.PR_TASK_COMPLETES_ON_MERGE]: "error.prTaskCompletesOnMerge",
   [DomainErrorCode.PULL_REQUEST_ON_MANUAL_TASK]:
     "error.pullRequestOnManualTask",
   [DomainErrorCode.REFERENCES_EXIST]: "error.referencesExist",

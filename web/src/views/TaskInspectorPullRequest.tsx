@@ -37,11 +37,17 @@ export function PullRequestSection({
             {String(pullRequest.number)}
           </a>
           <span>
-            {pullRequest.stale
-              ? t("inspector.stale")
-              : pullRequestDisplayStateLabel(pullRequest.displayState, t)}
+            {pullRequestDisplayStateLabel(pullRequest.displayState, t)}
           </span>
-          {pullRequest.syncError && <p>{pullRequest.syncError}</p>}
+          {pullRequest.stale && (
+            <small className="pr-stale">{t("inspector.stale")}</small>
+          )}
+          {pullRequest.syncError && (
+            <p className="sync-error">
+              <strong>{t("inspector.githubSyncError")}</strong>
+              {pullRequest.syncError}
+            </p>
+          )}
           <button
             className="text-action"
             onClick={() => {

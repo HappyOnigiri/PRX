@@ -7,6 +7,7 @@ import (
 	"errors"
 	"net"
 	"net/http"
+	"os"
 	"os/exec"
 	"path/filepath"
 	"testing"
@@ -99,6 +100,113 @@ func TestBlackBoxJSONCRUDAndCycle(t *testing.T) {
 	valid, _, exit := runCLI(t, binary, dbPath, "validate")
 	if exit != 0 || !valid.OK {
 		t.Fatalf("validate result=%+v", valid)
+	}
+}
+
+func TestBlackBoxImplementationPlanCommands(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "plans.db")
+	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "plans", "--title", "Plans")
+	if exit != 0 || !feature.OK {
+		t.Fatalf("feature result=%+v exit=%d", feature, exit)
+	}
+	var featureData struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(feature.Data, &featureData); err != nil {
+		t.Fatal(err)
+	}
+	task, _, exit := runCLI(
+		t,
+		binary,
+		dbPath,
+		"task",
+		"create",
+		"--feature",
+		featureData.ID,
+		"--title",
+		"Plan task",
+		"--kind",
+		"manual",
+	)
+	if exit != 0 || !task.OK {
+		t.Fatalf("task result=%+v exit=%d", task, exit)
+	}
+	var taskData struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(task.Data, &taskData); err != nil {
+		t.Fatal(err)
+	}
+	planPath := filepath.Join(t.TempDir(), "plan.md")
+	const content = "# Plan\n\nImplement it.\n"
+	if err := os.WriteFile(planPath, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	set, _, exit := runCLI(t, binary, dbPath, "implementation-plan", "set", taskData.ID, "--file", planPath)
+	if exit != 0 || !set.OK {
+		t.Fatalf("set result=%+v exit=%d", set, exit)
+	}
+	var planData struct {
+		Content string `json:"content"`
+	}
+	if err := json.Unmarshal(set.Data, &planData); err != nil {
+		t.Fatal(err)
+	}
+	if planData.Content != content {
+		t.Fatalf("set content=%q, want %q", planData.Content, content)
+	}
+	got, _, exit := runCLI(t, binary, dbPath, "implementation-plan", "get", taskData.ID)
+	if exit != 0 || !got.OK {
+		t.Fatalf("get result=%+v exit=%d", got, exit)
+	}
+	if err := json.Unmarshal(got.Data, &planData); err != nil {
+		t.Fatal(err)
+	}
+	if planData.Content != content {
+		t.Fatalf("get content=%q, want %q", planData.Content, content)
+	}
+	taskSnapshot, _, exit := runCLI(t, binary, dbPath, "task", "get", taskData.ID)
+	if exit != 0 || !taskSnapshot.OK {
+		t.Fatalf("task get result=%+v exit=%d", taskSnapshot, exit)
+	}
+	var taskState struct {
+		HasPlan bool   `json:"has_implementation_plan"`
+		Display string `json:"display_state"`
+		Status  string `json:"status"`
+	}
+	if err := json.Unmarshal(taskSnapshot.Data, &taskState); err != nil {
+		t.Fatal(err)
+	}
+	if !taskState.HasPlan || taskState.Display != "designed" || taskState.Status != "auto" {
+		t.Fatalf("task state=%+v", taskState)
+	}
+	deleted, _, exit := runCLI(t, binary, dbPath, "implementation-plan", "delete", taskData.ID)
+	if exit != 0 || !deleted.OK {
+		t.Fatalf("delete result=%+v exit=%d", deleted, exit)
+	}
+	var deletedData struct {
+		ID string `json:"deleted"`
+	}
+	if err := json.Unmarshal(deleted.Data, &deletedData); err != nil {
+		t.Fatal(err)
+	}
+	if deletedData.ID != taskData.ID {
+		t.Fatalf("deleted=%q, want %q", deletedData.ID, taskData.ID)
+	}
+	invalid, _, exit := runCLI(
+		t,
+		binary,
+		dbPath,
+		"implementation-plan",
+		"set",
+		taskData.ID,
+		"--file",
+		planPath,
+		"--stdin",
+	)
+	if exit == 0 || invalid.Error == nil || invalid.Error.Code != "invalid_implementation_plan" {
+		t.Fatalf("invalid input result=%+v exit=%d", invalid, exit)
 	}
 }
 

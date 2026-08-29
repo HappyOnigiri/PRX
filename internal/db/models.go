@@ -35,6 +35,13 @@ type Feature struct {
 	UpdatedAt   string `json:"updated_at"`
 }
 
+type ImplementationPlan struct {
+	TaskID    string `json:"task_id"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
 type PullRequest struct {
 	TaskID          string         `json:"task_id"`
 	Owner           string         `json:"owner"`

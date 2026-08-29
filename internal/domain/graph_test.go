@@ -24,40 +24,40 @@ func TestCyclePathAndTopologicalOrder(t *testing.T) {
 	}
 }
 
-func TestReadyFailsClosed(t *testing.T) {
+func TestReadyUsesLastKnownPullRequestState(t *testing.T) {
 	tasks := []Task{
-		{ID: "a", Title: "API", Kind: TaskKindPR, Status: TaskInProgress},
-		{ID: "b", Title: "UI", Kind: TaskKindPR, Status: TaskPlanned},
+		{ID: "a", Title: "API", Kind: TaskKindPR, Status: TaskStatusAuto},
+		{ID: "b", Title: "UI", Kind: TaskKindPR, Status: TaskStatusAuto},
 	}
 	deps := []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}
 	prs := []PullRequest{{TaskID: "a", State: PullRequestStateMerged, Stale: true}}
 	got := Derive(tasks, deps, prs)
-	if got[1].Ready || got[1].BlockedReason == "" || got[1].BlockedCode != BlockedByStaleData ||
-		got[1].BlockerTaskID != "a" {
-		t.Fatalf("stale merged blocker must fail closed: %+v", got[1])
+	if !got[1].Ready || got[1].BlockedReason != "" {
+		t.Fatalf("stale merged blocker should remain satisfied: %+v", got[1])
 	}
-	prs[0].Stale = false
+	prs[0].State = PullRequestStateUnknown
 	got = Derive(tasks, deps, prs)
-	if !got[1].Ready {
-		t.Fatalf("fresh merged blocker should make task ready: %+v", got[1])
+	if got[1].Ready || got[1].BlockedCode != BlockedReasonCodeWaitingForBlocker ||
+		got[1].BlockerTaskID != "a" {
+		t.Fatalf("unknown blocker should remain blocked: %+v", got[1])
 	}
 }
 
 func TestReadyReportsStructuredWaitingReason(t *testing.T) {
 	tasks := []Task{
-		{ID: "a", Title: "API", Kind: TaskKindManual, Status: TaskPlanned},
-		{ID: "b", Title: "UI", Kind: TaskKindManual, Status: TaskPlanned},
+		{ID: "a", Title: "API", Kind: TaskKindManual, Status: TaskStatusAuto},
+		{ID: "b", Title: "UI", Kind: TaskKindManual, Status: TaskStatusAuto},
 	}
 	deps := []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}
 	got := Derive(tasks, deps, nil)
-	if got[1].Ready || got[1].BlockedCode != BlockedWaitingForBlocker || got[1].BlockerTaskID != "a" {
+	if got[1].Ready || got[1].BlockedCode != BlockedReasonCodeWaitingForBlocker || got[1].BlockerTaskID != "a" {
 		t.Fatalf("unexpected structured waiting reason: %+v", got[1])
 	}
 }
 
 func TestBlockedReasonAndCodeAreSetTogether(t *testing.T) {
-	blocked := Task{ID: "b", Title: "UI", Kind: TaskKindManual, Status: TaskPlanned}
-	blocker := Task{ID: "a", Title: "API", Kind: TaskKindPR, Status: TaskInProgress}
+	blocked := Task{ID: "b", Title: "UI", Kind: TaskKindManual, Status: TaskStatusAuto}
+	blocker := Task{ID: "a", Title: "API", Kind: TaskKindPR, Status: TaskStatusAuto}
 	cases := []struct {
 		name  string
 		tasks []Task
@@ -71,13 +71,6 @@ func TestBlockedReasonAndCodeAreSetTogether(t *testing.T) {
 			[]Dependency{{BlockerTaskID: "missing", BlockedTaskID: "b"}},
 			nil,
 			BlockedReasonCodeDependencyDataIncomplete,
-		},
-		{
-			"blocker stale",
-			[]Task{blocker, blocked},
-			[]Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}},
-			[]PullRequest{{TaskID: "a", State: PullRequestStateMerged, Stale: true}},
-			BlockedReasonCodeBlockerStale,
 		},
 		{
 			"waiting for blocker",
@@ -125,6 +118,72 @@ func TestPRDisplayPriority(t *testing.T) {
 	}
 }
 
+func TestAutomaticDisplayStateMatrix(t *testing.T) {
+	tests := []struct {
+		name  string
+		task  Task
+		pr    []PullRequest
+		want  TaskDisplayState
+		ready bool
+	}{
+		{
+			name:  "automatic task without plan",
+			task:  Task{ID: "task", Kind: TaskKindManual, Status: TaskStatusAuto},
+			want:  TaskDisplayStateNotStarted,
+			ready: true,
+		},
+		{
+			name:  "automatic task with plan",
+			task:  Task{ID: "task", Kind: TaskKindManual, Status: TaskStatusAuto, HasImplementationPlan: true},
+			want:  TaskDisplayStateDesigned,
+			ready: true,
+		},
+		{
+			name:  "manual not started override",
+			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusNotStarted, HasImplementationPlan: true},
+			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateMerged}},
+			want:  TaskDisplayStateNotStarted,
+			ready: true,
+		},
+		{
+			name:  "manual in progress override",
+			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusInProgress},
+			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
+			want:  TaskDisplayStateInProgress,
+			ready: false,
+		},
+		{
+			name:  "manual completed override",
+			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusCompleted},
+			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
+			want:  TaskDisplayStateCompleted,
+			ready: false,
+		},
+		{
+			name:  "manual closed override",
+			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusClosed},
+			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
+			want:  TaskDisplayStateClosed,
+			ready: false,
+		},
+		{
+			name:  "automatic PR unknown",
+			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusAuto},
+			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateUnknown}},
+			want:  TaskDisplayStateUnknown,
+			ready: false,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			got := Derive([]Task{test.task}, nil, test.pr)[0]
+			if got.DisplayState != test.want || got.Ready != test.ready {
+				t.Fatalf("task=%+v, want display=%q ready=%v", got, test.want, test.ready)
+			}
+		})
+	}
+}
+
 func TestDependencySatisfactionMatrix(t *testing.T) {
 	tests := []struct {
 		name string
@@ -132,27 +191,40 @@ func TestDependencySatisfactionMatrix(t *testing.T) {
 		pr   *PullRequest
 		want bool
 	}{
-		{name: "manual completed", task: Task{Kind: TaskKindManual, Status: TaskCompleted}, want: true},
-		{name: "manual cancelled", task: Task{Kind: TaskKindManual, Status: TaskCancelled}, want: false},
+		{name: "manual completed", task: Task{Kind: TaskKindManual, Status: TaskStatusCompleted}, want: true},
+		{name: "manual closed", task: Task{Kind: TaskKindManual, Status: TaskStatusClosed}, want: true},
+		{name: "manual in progress", task: Task{Kind: TaskKindManual, Status: TaskStatusInProgress}, want: false},
+		{
+			name: "PR open",
+			task: Task{Kind: TaskKindPR, Status: TaskStatusAuto},
+			pr:   &PullRequest{State: PullRequestStateOpen},
+			want: true,
+		},
+		{
+			name: "PR closed",
+			task: Task{Kind: TaskKindPR, Status: TaskStatusAuto},
+			pr:   &PullRequest{State: PullRequestStateClosed},
+			want: true,
+		},
 		{
 			name: "PR merged",
-			task: Task{Kind: TaskKindPR, Status: TaskInProgress},
+			task: Task{Kind: TaskKindPR, Status: TaskStatusAuto},
 			pr:   &PullRequest{State: PullRequestStateMerged},
 			want: true,
 		},
 		{
 			name: "PR merged but stale",
-			task: Task{Kind: TaskKindPR, Status: TaskInProgress},
+			task: Task{Kind: TaskKindPR, Status: TaskStatusAuto},
 			pr:   &PullRequest{State: PullRequestStateMerged, Stale: true},
-			want: false,
+			want: true,
 		},
 		{
-			name: "closed without merge",
-			task: Task{Kind: TaskKindPR, Status: TaskInProgress},
-			pr:   &PullRequest{State: PullRequestStateClosed},
+			name: "unknown PR",
+			task: Task{Kind: TaskKindPR, Status: TaskStatusAuto},
+			pr:   &PullRequest{State: PullRequestStateUnknown, Stale: true},
 			want: false,
 		},
-		{name: "missing PR", task: Task{Kind: TaskKindPR, Status: TaskPlanned}, want: false},
+		{name: "missing PR", task: Task{Kind: TaskKindPR, Status: TaskStatusAuto}, want: false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

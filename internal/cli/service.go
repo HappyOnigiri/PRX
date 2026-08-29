@@ -40,6 +40,10 @@ type Service interface {
 	) (domain.Task, error)
 	DeleteTask(ctx context.Context, id string, cascade bool) error
 
+	GetImplementationPlan(ctx context.Context, taskID string) (domain.ImplementationPlan, error)
+	UpsertImplementationPlan(ctx context.Context, taskID, content string) (domain.ImplementationPlan, error)
+	DeleteImplementationPlan(ctx context.Context, taskID string) error
+
 	AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error)
 	RemoveDependency(ctx context.Context, blocker, blocked string) error
 

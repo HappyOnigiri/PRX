@@ -180,6 +180,15 @@ func domainTask(value db.Task) domain.Task {
 	}
 }
 
+func domainImplementationPlan(value db.ImplementationPlan) domain.ImplementationPlan {
+	return domain.ImplementationPlan{
+		TaskID:    value.TaskID,
+		Content:   value.Content,
+		CreatedAt: parseTime(value.CreatedAt),
+		UpdatedAt: parseTime(value.UpdatedAt),
+	}
+}
+
 func domainDependency(value db.Dependency) domain.Dependency {
 	return domain.Dependency{
 		BlockerTaskID: value.BlockerTaskID,

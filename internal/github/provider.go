@@ -20,6 +20,10 @@ import (
 )
 
 type Provider interface {
+	// Fetch returns the newest pull-request record. Implementations may return a
+	// partially updated record together with an error when the pull-request body
+	// was fetched but a later metadata request failed; callers persist that
+	// partial state with the error marked stale.
 	Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error)
 }
 
@@ -52,6 +56,30 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	if err != nil {
 		return current, fmt.Errorf("fetch pull request: %w", err)
 	}
+	state := domain.PullRequestState(value.GetState())
+	if value.GetMerged() {
+		state = domain.PullRequestStateMerged
+	}
+	mergeability := domain.MergeabilityUnknown
+	if value.Mergeable != nil {
+		if value.GetMergeable() {
+			mergeability = domain.MergeabilityMergeable
+		} else {
+			mergeability = domain.MergeabilityConflicting
+		}
+	}
+	assignees := make([]string, 0, len(value.Assignees))
+	for _, assignee := range value.Assignees {
+		assignees = append(assignees, assignee.GetLogin())
+	}
+	updated := value.GetUpdatedAt().UTC()
+	current.NodeID = value.GetNodeID()
+	current.Author = value.GetUser().GetLogin()
+	current.Assignees = assignees
+	current.State = state
+	current.Draft = value.GetDraft()
+	current.Mergeability = mergeability
+	current.GitHubUpdatedAt = &updated
 	reviews, err := allPages(
 		ctx,
 		func(ctx context.Context, options *gh.ListOptions) ([]*gh.PullRequestReview, *gh.Response, error) {
@@ -112,32 +140,9 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	if reviewState == domain.ReviewStateNone && (len(requested.Users) > 0 || len(requested.Teams) > 0) {
 		reviewState = domain.ReviewStateRequired
 	}
-	state := domain.PullRequestState(value.GetState())
-	if value.GetMerged() {
-		state = domain.PullRequestStateMerged
-	}
-	mergeability := domain.MergeabilityUnknown
-	if value.Mergeable != nil {
-		if value.GetMergeable() {
-			mergeability = domain.MergeabilityMergeable
-		} else {
-			mergeability = domain.MergeabilityConflicting
-		}
-	}
-	assignees := make([]string, 0, len(value.Assignees))
-	for _, assignee := range value.Assignees {
-		assignees = append(assignees, assignee.GetLogin())
-	}
 	now := time.Now().UTC()
-	updated := value.GetUpdatedAt().UTC()
-	current.NodeID = value.GetNodeID()
-	current.Author = value.GetUser().GetLogin()
-	current.Assignees = assignees
 	current.State = state
-	current.Draft = value.GetDraft()
 	current.ReviewState = reviewState
-	current.Mergeability = mergeability
-	current.GitHubUpdatedAt = &updated
 	current.LastSyncedAt = &now
 	current.SyncError = ""
 	current.Stale = false

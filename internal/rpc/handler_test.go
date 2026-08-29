@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"strings"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -246,6 +247,96 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	if snapshot.Msg.GetSnapshot().GetTasks()[1].GetBlockedReason().GetCode() !=
 		prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER {
 		t.Fatalf("blocked reason=%+v", snapshot.Msg.GetSnapshot().GetTasks()[1].GetBlockedReason())
+	}
+}
+
+func TestRPCImplementationPlanLifecycle(t *testing.T) {
+	ctx := context.Background()
+	client := newTestClient(t)
+	feature, err := client.CreateFeature(
+		ctx,
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "rpc-plans", Title: "RPC plans"}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := client.CreateTask(
+		ctx,
+		connect.NewRequest(&prxv1.CreateTaskRequest{
+			FeatureId: feature.Msg.GetFeature().GetId(),
+			Title:     "Store a plan",
+			Kind:      prxv1.TaskKind_TASK_KIND_MANUAL,
+		}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	taskID := task.Msg.GetTask().GetId()
+	_, err = client.GetImplementationPlan(
+		ctx,
+		connect.NewRequest(&prxv1.GetImplementationPlanRequest{TaskId: taskID}),
+	)
+	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND {
+		t.Fatalf("missing plan error=%v", err)
+	}
+	const content = "# RPC plan\n\nKeep it in SQLite.\n"
+	stored, err := client.UpsertImplementationPlan(
+		ctx,
+		connect.NewRequest(&prxv1.UpsertImplementationPlanRequest{TaskId: taskID, Content: content}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.Msg.GetImplementationPlan().GetContent() != content {
+		t.Fatalf("stored plan=%+v", stored.Msg.GetImplementationPlan())
+	}
+	read, err := client.GetImplementationPlan(
+		ctx,
+		connect.NewRequest(&prxv1.GetImplementationPlanRequest{TaskId: taskID}),
+	)
+	if err != nil || read.Msg.GetImplementationPlan().GetContent() != content {
+		t.Fatalf("read plan=%+v err=%v", read.Msg.GetImplementationPlan(), err)
+	}
+	snapshot, err := client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.Msg.GetSnapshot().GetTasks()) != 1 ||
+		!snapshot.Msg.GetSnapshot().GetTasks()[0].GetHasImplementationPlan() ||
+		snapshot.Msg.GetSnapshot().GetTasks()[0].GetDisplayState() != prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED {
+		t.Fatalf("snapshot task=%+v", snapshot.Msg.GetSnapshot().GetTasks())
+	}
+	_, err = client.UpsertImplementationPlan(
+		ctx,
+		connect.NewRequest(&prxv1.UpsertImplementationPlanRequest{TaskId: taskID, Content: " \n\t"}),
+	)
+	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN {
+		t.Fatalf("blank plan error=%v", err)
+	}
+	_, err = client.UpsertImplementationPlan(
+		ctx,
+		connect.NewRequest(&prxv1.UpsertImplementationPlanRequest{
+			TaskId:  taskID,
+			Content: strings.Repeat("x", (1<<20)+1),
+		}),
+	)
+	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE {
+		t.Fatalf("large plan error=%v", err)
+	}
+	deleted, err := client.DeleteImplementationPlan(
+		ctx,
+		connect.NewRequest(&prxv1.DeleteImplementationPlanRequest{TaskId: taskID}),
+	)
+	if err != nil || deleted.Msg.GetTaskId() != taskID {
+		t.Fatalf("deleted response=%+v err=%v", deleted.Msg, err)
+	}
+	snapshot, err = client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.Msg.GetSnapshot().GetTasks()[0].GetHasImplementationPlan() ||
+		snapshot.Msg.GetSnapshot().GetTasks()[0].GetDisplayState() != prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED {
+		t.Fatalf("snapshot after deletion=%+v", snapshot.Msg.GetSnapshot().GetTasks()[0])
 	}
 }
 
@@ -543,7 +634,7 @@ func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 	if len(snapshot.Msg.GetSnapshot().GetTasks()) != 1 {
 		t.Fatalf("rejected requests changed state: %+v", snapshot.Msg.GetSnapshot().GetTasks())
 	}
-	if snapshot.Msg.GetSnapshot().GetTasks()[0].GetStatus() != prxv1.TaskStatus_TASK_STATUS_PLANNED {
+	if snapshot.Msg.GetSnapshot().GetTasks()[0].GetStatus() != prxv1.TaskStatus_TASK_STATUS_AUTO {
 		t.Fatalf("task status=%s", snapshot.Msg.GetSnapshot().GetTasks()[0].GetStatus())
 	}
 }
@@ -603,8 +694,16 @@ func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
 		ctx,
 		connect.NewRequest(&prxv1.UpdateTaskRequest{Id: prTask.Msg.GetTask().GetId(), Status: &completed}),
 	)
-	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE {
-		t.Fatalf("PR task completion code=%s err=%v", got, err)
+	if err != nil {
+		t.Fatalf("PR task completion override: %v", err)
+	}
+	closed := prxv1.TaskStatus_TASK_STATUS_CLOSED
+	closedTask, err := client.UpdateTask(
+		ctx,
+		connect.NewRequest(&prxv1.UpdateTaskRequest{Id: prTask.Msg.GetTask().GetId(), Status: &closed}),
+	)
+	if err != nil || closedTask.Msg.GetTask().GetStatus() != closed {
+		t.Fatalf("PR task closed override: task=%+v err=%v", closedTask.Msg.GetTask(), err)
 	}
 
 	_, err = client.AddDocument(

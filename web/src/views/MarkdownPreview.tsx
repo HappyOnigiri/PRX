@@ -148,19 +148,25 @@ function MarkdownBody({
       )}
       {content !== undefined && (
         <article className="markdown-content">
-          <ReactMarkdown
-            components={{
-              a: ({ children, ...props }) => (
-                <a {...props} target="_blank" rel="noreferrer">
-                  {children}
-                </a>
-              ),
-            }}
-          >
-            {content}
-          </ReactMarkdown>
+          <MarkdownContent content={content} />
         </article>
       )}
     </div>
+  );
+}
+
+export function MarkdownContent({ content }: { content: string }) {
+  return (
+    <ReactMarkdown
+      components={{
+        a: ({ children, ...props }) => (
+          <a {...props} target="_blank" rel="noreferrer">
+            {children}
+          </a>
+        ),
+      }}
+    >
+      {content}
+    </ReactMarkdown>
   );
 }

@@ -12,6 +12,7 @@ import {
   DocumentKind,
   DomainErrorCode,
   ErrorDetailSchema,
+  PullRequestDisplayState,
   TaskKind,
   TaskStatus,
 } from "../src/gen/prx/v1/prx_pb";
@@ -27,6 +28,9 @@ const inspectorMocks = vi.hoisted(() => ({
   api: {
     updateTask: vi.fn(),
     deleteTask: vi.fn(),
+    getImplementationPlan: vi.fn(),
+    upsertImplementationPlan: vi.fn(),
+    deleteImplementationPlan: vi.fn(),
     attachPR: vi.fn(),
     detachPR: vi.fn(),
     addDependency: vi.fn(),
@@ -35,7 +39,7 @@ const inspectorMocks = vi.hoisted(() => ({
     deleteDocument: vi.fn(),
   },
   hookIndex: 0,
-  mutations: Array.from({ length: 8 }, () => ({
+  mutations: Array.from({ length: 10 }, () => ({
     mutate: vi.fn(),
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
@@ -86,10 +90,10 @@ describe("TaskInspector", () => {
       title: "Current task",
       scope: "Initial scope",
       kind: TaskKind.MANUAL,
-      status: TaskStatus.PLANNED,
+      status: TaskStatus.AUTO,
       assignee: "Mika",
       blockedReason: {
-        code: BlockedReasonCode.BLOCKER_STALE,
+        code: BlockedReasonCode.WAITING_FOR_BLOCKER,
         blockerTaskId: "task-2",
       },
     });
@@ -103,6 +107,7 @@ describe("TaskInspector", () => {
       taskId: task.id,
       stale: true,
       syncError: "GitHub data is old",
+      displayState: PullRequestDisplayState.MERGED,
     });
     const markdown = makeDocument({
       id: "document-md",
@@ -119,7 +124,7 @@ describe("TaskInspector", () => {
     });
     const onClose = vi.fn();
     const onPreview = vi.fn();
-    mutationAt(4).error = new ConnectError(
+    mutationAt(6).error = new ConnectError(
       "cycle would be introduced",
       Code.FailedPrecondition,
       undefined,
@@ -146,10 +151,9 @@ describe("TaskInspector", () => {
       />,
     );
 
-    expect(
-      screen.getByText("Blocker task has stale GitHub data"),
-    ).toBeInTheDocument();
+    expect(screen.getByText("Waiting for Blocker task")).toBeInTheDocument();
     expect(screen.getByText("GitHub data is old")).toBeInTheDocument();
+    expect(screen.getByText("merged")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "acme/prx #42" })).toHaveAttribute(
       "target",
       "_blank",
@@ -170,24 +174,24 @@ describe("TaskInspector", () => {
       target: { value: "Updated scope" },
     });
     fireEvent.change(screen.getByLabelText("Status"), {
-      target: { value: String(TaskStatus.CANCELLED) },
+      target: { value: String(TaskStatus.CLOSED) },
     });
     fireEvent.change(screen.getByLabelText("Assignee"), {
       target: { value: "Ren" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Save task" }));
-    expect(mutationAt(0).mutate).toHaveBeenCalledWith({
+    expect(mutationAt(1).mutate).toHaveBeenCalledWith({
       id: task.id,
       title: "Updated task",
       scope: "Updated scope",
-      status: TaskStatus.CANCELLED,
+      status: TaskStatus.CLOSED,
       assignee: "Ren",
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Detach" }));
     expect(mutationAt(3).mutate).toHaveBeenCalledWith(task.id);
     fireEvent.click(screen.getByRole("button", { name: "Remove dependency" }));
-    expect(mutationAt(5).mutate).toHaveBeenCalledWith({
+    expect(mutationAt(7).mutate).toHaveBeenCalledWith({
       blocker: "task-2",
       blocked: task.id,
     });
@@ -196,7 +200,7 @@ describe("TaskInspector", () => {
       target: { value: "task-3" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Add" }));
-    expect(mutationAt(4).mutate).toHaveBeenCalledWith({
+    expect(mutationAt(6).mutate).toHaveBeenCalledWith({
       blocker: "task-3",
       blocked: task.id,
     });
@@ -206,7 +210,7 @@ describe("TaskInspector", () => {
     );
     expect(onPreview).toHaveBeenCalledWith(markdown);
     fireEvent.click(screen.getByRole("button", { name: "Delete Runbook" }));
-    expect(mutationAt(7).mutate).toHaveBeenCalledWith("document-url");
+    expect(mutationAt(9).mutate).toHaveBeenCalledWith("document-url");
 
     const referenceValue = screen.getByPlaceholderText(
       "https://… or docs/plan.md",
@@ -223,7 +227,7 @@ describe("TaskInspector", () => {
       target: { value: String(DocumentKind.MARKDOWN_PATH) },
     });
     fireEvent.click(screen.getByRole("button", { name: "Add reference" }));
-    expect(mutationAt(6).mutate).toHaveBeenCalledWith({
+    expect(mutationAt(8).mutate).toHaveBeenCalledWith({
       taskId: task.id,
       kind: DocumentKind.MARKDOWN_PATH,
       title: "New plan",
@@ -237,7 +241,7 @@ describe("TaskInspector", () => {
     await waitFor(() => {
       expect(onClose).toHaveBeenCalledOnce();
     });
-    expect(mutationAt(1).mutateAsync).toHaveBeenCalledWith(task.id);
+    expect(mutationAt(0).mutateAsync).toHaveBeenCalledWith(task.id);
   });
 
   it("attaches a pull request when none is linked and closes explicitly", () => {
@@ -266,14 +270,14 @@ describe("TaskInspector", () => {
       url: "https://github.com/acme/prx/pull/99",
     });
     expect(
-      screen.queryByRole("option", { name: "Completed" }),
-    ).not.toBeInTheDocument();
+      screen.getByRole("option", { name: "Completed" }),
+    ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close inspector" }));
   });
 
   it("does not close when task deletion fails", async () => {
     const onClose = vi.fn();
-    mutationAt(1).mutateAsync.mockRejectedValueOnce(new Error("delete failed"));
+    mutationAt(0).mutateAsync.mockRejectedValueOnce(new Error("delete failed"));
     render(
       <TaskInspector
         task={makeTask()}
@@ -291,7 +295,7 @@ describe("TaskInspector", () => {
       screen.getByRole("button", { name: "Delete task and references" }),
     );
     await waitFor(() => {
-      expect(mutationAt(1).mutateAsync).toHaveBeenCalledOnce();
+      expect(mutationAt(0).mutateAsync).toHaveBeenCalledOnce();
     });
     expect(onClose).not.toHaveBeenCalled();
   });

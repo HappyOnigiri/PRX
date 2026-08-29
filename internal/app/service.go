@@ -16,7 +16,10 @@ import (
 
 var slugPattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
-const maxMarkdownPreviewBytes = 1 << 20
+const (
+	maxMarkdownPreviewBytes    = 1 << 20
+	maxImplementationPlanBytes = 1 << 20
+)
 
 // Repository is the persistence boundary used by the application service.
 // Keeping this interface in the app package lets the service be tested without
@@ -38,6 +41,10 @@ type Repository interface {
 	GetTask(ctx context.Context, id string) (domain.Task, error)
 	UpdateTask(ctx context.Context, task domain.Task) (domain.Task, error)
 	DeleteTask(ctx context.Context, id string, cascade bool) error
+
+	GetImplementationPlan(ctx context.Context, taskID string) (domain.ImplementationPlan, error)
+	UpsertImplementationPlan(ctx context.Context, taskID, content string) (domain.ImplementationPlan, error)
+	DeleteImplementationPlan(ctx context.Context, taskID string) error
 
 	AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error)
 	RemoveDependency(ctx context.Context, blocker, blocked string) error
@@ -196,27 +203,55 @@ func (s *Service) UpdateTask(
 	}
 	if !oneOf(
 		task.Status,
-		domain.TaskStatusPlanned,
+		domain.TaskStatusAuto,
+		domain.TaskStatusNotStarted,
 		domain.TaskStatusInProgress,
 		domain.TaskStatusCompleted,
-		domain.TaskStatusCancelled,
+		domain.TaskStatusClosed,
 	) {
 		return domain.Task{}, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid task status")
-	}
-	// PR tasks derive completion from a merged PR. Accepting completed here would
-	// drop the task out of the ready queue while its dependents stay blocked,
-	// since dependency satisfaction still requires a fresh merged PR.
-	if task.Kind == domain.TaskKindPR && task.Status == domain.TaskStatusCompleted {
-		return domain.Task{}, domain.NewError(
-			domain.DomainErrorCodePRTaskCompletesOnMerge,
-			"a PR task completes when its pull request is merged",
-		)
 	}
 	return s.repository.UpdateTask(ctx, task)
 }
 
 func (s *Service) DeleteTask(ctx context.Context, id string, cascade bool) error {
 	return s.repository.DeleteTask(ctx, id, cascade)
+}
+
+func (s *Service) GetImplementationPlan(ctx context.Context, taskID string) (domain.ImplementationPlan, error) {
+	if _, err := s.repository.GetTask(ctx, taskID); err != nil {
+		return domain.ImplementationPlan{}, err
+	}
+	return s.repository.GetImplementationPlan(ctx, taskID)
+}
+
+func (s *Service) UpsertImplementationPlan(
+	ctx context.Context,
+	taskID, content string,
+) (domain.ImplementationPlan, error) {
+	if _, err := s.repository.GetTask(ctx, taskID); err != nil {
+		return domain.ImplementationPlan{}, err
+	}
+	if strings.TrimSpace(content) == "" {
+		return domain.ImplementationPlan{}, domain.NewError(
+			domain.DomainErrorCodeInvalidImplementationPlan,
+			"implementation plan content is required",
+		)
+	}
+	if len([]byte(content)) > maxImplementationPlanBytes {
+		return domain.ImplementationPlan{}, domain.NewError(
+			domain.DomainErrorCodeImplementationPlanTooLarge,
+			"implementation plan is limited to 1 MiB",
+		)
+	}
+	return s.repository.UpsertImplementationPlan(ctx, taskID, content)
+}
+
+func (s *Service) DeleteImplementationPlan(ctx context.Context, taskID string) error {
+	if _, err := s.repository.GetTask(ctx, taskID); err != nil {
+		return err
+	}
+	return s.repository.DeleteImplementationPlan(ctx, taskID)
 }
 
 func (s *Service) AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error) {
@@ -423,17 +458,23 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 		}
 		updated, fetchErr := s.provider.Fetch(ctx, pr)
 		if fetchErr != nil {
+			if updated.TaskID == "" {
+				updated = pr
+			}
 			now := time.Now().UTC()
-			pr.LastSyncedAt = &now
-			pr.SyncError = fetchErr.Error()
-			pr.Stale = true
-			if _, persistErr := s.repository.UpsertPullRequest(ctx, pr); persistErr != nil {
+			updated.TaskID = pr.TaskID
+			updated.LastSyncedAt = &now
+			updated.SyncError = fetchErr.Error()
+			updated.Stale = true
+			if _, persistErr := s.repository.UpsertPullRequest(ctx, updated); persistErr != nil {
 				return succeeded, failed, persistErr
 			}
 			failed++
 			continue
 		}
 		updated.TaskID = pr.TaskID
+		updated.SyncError = ""
+		updated.Stale = false
 		if _, err := s.repository.UpsertPullRequest(ctx, updated); err != nil {
 			return succeeded, failed, err
 		}

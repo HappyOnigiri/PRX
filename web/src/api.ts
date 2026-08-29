@@ -9,8 +9,10 @@ import {
   CreateTaskRequestSchema,
   DeleteDocumentRequestSchema,
   DeleteFeatureRequestSchema,
+  DeleteImplementationPlanRequestSchema,
   DeleteTaskRequestSchema,
   DetachPullRequestRequestSchema,
+  GetImplementationPlanRequestSchema,
   GetSnapshotRequestSchema,
   PRXService,
   ReadMarkdownDocumentRequestSchema,
@@ -18,6 +20,7 @@ import {
   SyncRequestSchema,
   UpdateFeatureRequestSchema,
   UpdateTaskRequestSchema,
+  UpsertImplementationPlanRequestSchema,
   type DocumentKind,
   type FeatureStatus,
   type Snapshot,
@@ -67,6 +70,18 @@ export const mutations = {
     status?: TaskStatus;
     assignee?: string;
   }) => client.updateTask(create(UpdateTaskRequestSchema, input)),
+  getImplementationPlan: (taskId: string) =>
+    client.getImplementationPlan(
+      create(GetImplementationPlanRequestSchema, { taskId }),
+    ),
+  upsertImplementationPlan: (input: { taskId: string; content: string }) =>
+    client.upsertImplementationPlan(
+      create(UpsertImplementationPlanRequestSchema, input),
+    ),
+  deleteImplementationPlan: (taskId: string) =>
+    client.deleteImplementationPlan(
+      create(DeleteImplementationPlanRequestSchema, { taskId }),
+    ),
   deleteTask: (id: string) =>
     client.deleteTask(create(DeleteTaskRequestSchema, { id, cascade: true })),
   addDependency: (blockerTaskId: string, blockedTaskId: string) =>

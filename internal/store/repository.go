@@ -70,7 +70,7 @@ func (s *Store) CreateTask(
 		Title:     title,
 		Scope:     scope,
 		Kind:      string(kind),
-		Status:    string(domain.TaskStatusPlanned),
+		Status:    string(domain.TaskStatusAuto),
 		Assignee:  assignee,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -100,6 +100,39 @@ func (s *Store) UpdateTask(ctx context.Context, task domain.Task) (domain.Task, 
 	value, err := db.New(s.db).
 		UpdateTask(ctx, params)
 	return domainTask(value), mapNotFound(err, "task", task.ID)
+}
+
+func (s *Store) GetImplementationPlan(ctx context.Context, taskID string) (domain.ImplementationPlan, error) {
+	value, err := db.New(s.db).GetImplementationPlan(ctx, taskID)
+	return domainImplementationPlan(value), mapNotFound(err, "implementation plan for task", taskID)
+}
+
+func (s *Store) UpsertImplementationPlan(
+	ctx context.Context,
+	taskID, content string,
+) (domain.ImplementationPlan, error) {
+	now := timestamp(s.now())
+	value, err := db.New(s.db).UpsertImplementationPlan(ctx, db.UpsertImplementationPlanParams{
+		TaskID:    taskID,
+		Content:   content,
+		CreatedAt: now,
+		UpdatedAt: now,
+	})
+	if err != nil {
+		return domain.ImplementationPlan{}, err
+	}
+	return domainImplementationPlan(value), nil
+}
+
+func (s *Store) DeleteImplementationPlan(ctx context.Context, taskID string) error {
+	affected, err := db.New(s.db).DeleteImplementationPlan(ctx, taskID)
+	if err != nil {
+		return err
+	}
+	if affected == 0 {
+		return domain.NewError(domain.DomainErrorCodeNotFound, "implementation plan for task %q was not found", taskID)
+	}
+	return nil
 }
 
 func (s *Store) AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error) {
@@ -190,15 +223,16 @@ func (s *Store) DeleteTask(ctx context.Context, id string, cascade bool) error {
 	if !cascade {
 		var references int
 		query := `SELECT (SELECT COUNT(*) FROM dependencies WHERE blocker_task_id=? OR blocked_task_id=?) + ` +
-			`(SELECT COUNT(*) FROM pull_requests WHERE task_id=?) + (SELECT COUNT(*) FROM documents WHERE task_id=?)`
-		if err := tx.QueryRowContext(ctx, query, id, id, id, id).
+			`(SELECT COUNT(*) FROM pull_requests WHERE task_id=?) + (SELECT COUNT(*) FROM documents WHERE task_id=?) + ` +
+			`(SELECT COUNT(*) FROM implementation_plans WHERE task_id=?)`
+		if err := tx.QueryRowContext(ctx, query, id, id, id, id, id).
 			Scan(&references); err != nil {
 			return err
 		}
 		if references > 0 {
 			return domain.NewError(
 				domain.DomainErrorCodeReferencesExist,
-				"task has dependencies, a pull request, or documents; pass --cascade",
+				"task has dependencies, a pull request, an implementation plan, or documents; pass --cascade",
 			)
 		}
 	} else {
@@ -213,6 +247,9 @@ func (s *Store) DeleteTask(ctx context.Context, id string, cascade bool) error {
 			return err
 		}
 		if err := q.DeleteDocumentsForTask(ctx, sql.NullString{String: id, Valid: true}); err != nil {
+			return err
+		}
+		if err := q.DeleteImplementationPlansForTask(ctx, id); err != nil {
 			return err
 		}
 	}
@@ -247,6 +284,9 @@ func (s *Store) DeleteFeature(ctx context.Context, id string, cascade bool) erro
 			return err
 		}
 		if err := q.DeleteDocumentsForFeature(ctx, sql.NullString{String: id, Valid: true}); err != nil {
+			return err
+		}
+		if err := q.DeleteImplementationPlansForFeature(ctx, id); err != nil {
 			return err
 		}
 		if err := q.DeleteTasksForFeature(ctx, id); err != nil {
@@ -366,6 +406,10 @@ func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 	if err != nil {
 		return domain.Snapshot{}, err
 	}
+	planTaskIDs, err := q.ListImplementationPlanTaskIDs(ctx)
+	if err != nil {
+		return domain.Snapshot{}, err
+	}
 	docs, err := q.ListDocuments(ctx)
 	if err != nil {
 		return domain.Snapshot{}, err
@@ -382,6 +426,13 @@ func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 	}
 	for i, row := range tasks {
 		result.Tasks[i] = domainTask(row)
+	}
+	planTasks := make(map[string]struct{}, len(planTaskIDs))
+	for _, taskID := range planTaskIDs {
+		planTasks[taskID] = struct{}{}
+	}
+	for i := range result.Tasks {
+		_, result.Tasks[i].HasImplementationPlan = planTasks[result.Tasks[i].ID]
 	}
 	for i, row := range deps {
 		result.Dependencies[i] = domainDependency(row)

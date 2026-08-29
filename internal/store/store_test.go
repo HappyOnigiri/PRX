@@ -36,7 +36,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 1 {
+		migrations != 3 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -68,6 +68,208 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	err = database.DB().QueryRowContext(ctx, `SELECT name FROM sqlite_master WHERE name='should_rollback'`).Scan(&name)
 	if !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("failed migration left a table: name=%q err=%v", name, err)
+	}
+}
+
+func TestLegacyTaskStatusMigrationPreservesRelatedRows(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "legacy.db")
+	legacy, err := sql.Open("sqlite", path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacy.SetMaxOpenConns(1)
+	legacySchema := []string{
+		`CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)`,
+		`CREATE TABLE features (
+      id TEXT PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE CHECK(length(trim(slug)) > 0),
+      title TEXT NOT NULL CHECK(length(trim(title)) > 0),
+      description TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','paused','completed','cancelled')),
+      archived INTEGER NOT NULL DEFAULT 0 CHECK(archived IN (0,1)),
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+		`CREATE TABLE tasks (
+      id TEXT PRIMARY KEY,
+      feature_id TEXT NOT NULL REFERENCES features(id) ON DELETE RESTRICT,
+      title TEXT NOT NULL CHECK(length(trim(title)) > 0),
+      scope TEXT NOT NULL DEFAULT '',
+      kind TEXT NOT NULL CHECK(kind IN ('pr','manual')),
+      status TEXT NOT NULL DEFAULT 'planned' CHECK(status IN ('planned','in_progress','completed','cancelled')),
+      assignee TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+		`CREATE TABLE dependencies (
+      blocker_task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE RESTRICT,
+      blocked_task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE RESTRICT,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY(blocker_task_id, blocked_task_id),
+      CHECK(blocker_task_id <> blocked_task_id)
+    )`,
+		`CREATE TABLE pull_requests (
+      task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE RESTRICT,
+      owner TEXT NOT NULL COLLATE NOCASE,
+      repository TEXT NOT NULL COLLATE NOCASE,
+      number INTEGER NOT NULL CHECK(number > 0),
+      url TEXT NOT NULL,
+      node_id TEXT NOT NULL DEFAULT '',
+      author TEXT NOT NULL DEFAULT '',
+      assignees_json TEXT NOT NULL DEFAULT '[]',
+      state TEXT NOT NULL DEFAULT 'unknown' CHECK(state IN ('open','closed','merged','unknown')),
+      draft INTEGER NOT NULL DEFAULT 0 CHECK(draft IN (0,1)),
+      review_state TEXT NOT NULL DEFAULT 'unknown' CHECK(
+        review_state IN ('none','required','approved','changes_requested','unknown')),
+      mergeability TEXT NOT NULL DEFAULT 'unknown' CHECK(mergeability IN ('mergeable','conflicting','unknown')),
+      github_updated_at TEXT,
+      last_synced_at TEXT,
+      sync_error TEXT NOT NULL DEFAULT '',
+      stale INTEGER NOT NULL DEFAULT 1 CHECK(stale IN (0,1)),
+      UNIQUE(owner, repository, number)
+    )`,
+		`CREATE TABLE documents (
+      id TEXT PRIMARY KEY,
+      feature_id TEXT REFERENCES features(id) ON DELETE RESTRICT,
+      task_id TEXT REFERENCES tasks(id) ON DELETE RESTRICT,
+      kind TEXT NOT NULL CHECK(kind IN ('url','markdown_path')),
+      title TEXT NOT NULL DEFAULT '',
+      value TEXT NOT NULL CHECK(length(trim(value)) > 0),
+      created_at TEXT NOT NULL,
+      CHECK((feature_id IS NOT NULL AND task_id IS NULL) OR (feature_id IS NULL AND task_id IS NOT NULL))
+    )`,
+	}
+	for _, statement := range legacySchema {
+		if _, err := legacy.ExecContext(ctx, statement); err != nil {
+			_ = legacy.Close()
+			t.Fatal(err)
+		}
+	}
+	const timestamp = "2026-08-30T00:00:00Z"
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO schema_migrations(version, applied_at) VALUES(1, ?)`,
+		timestamp,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO features(id, slug, title, created_at, updated_at) VALUES('feature', 'legacy', 'Legacy', ?, ?)`,
+		timestamp,
+		timestamp,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
+	legacyStatuses := []struct {
+		id, kind, status string
+	}{
+		{id: "manual-planned", kind: "manual", status: "planned"},
+		{id: "manual-progress", kind: "manual", status: "in_progress"},
+		{id: "manual-completed", kind: "manual", status: "completed"},
+		{id: "manual-cancelled", kind: "manual", status: "cancelled"},
+		{id: "pr-planned", kind: "pr", status: "planned"},
+		{id: "pr-progress", kind: "pr", status: "in_progress"},
+		{id: "pr-completed", kind: "pr", status: "completed"},
+		{id: "pr-cancelled", kind: "pr", status: "cancelled"},
+	}
+	for _, legacyTask := range legacyStatuses {
+		if _, err := legacy.ExecContext(
+			ctx,
+			`INSERT INTO tasks(id, feature_id, title, kind, status, created_at, updated_at) VALUES(?, 'feature', ?, ?, ?, ?, ?)`,
+			legacyTask.id,
+			legacyTask.id,
+			legacyTask.kind,
+			legacyTask.status,
+			timestamp,
+			timestamp,
+		); err != nil {
+			_ = legacy.Close()
+			t.Fatal(err)
+		}
+	}
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO dependencies(blocker_task_id, blocked_task_id, created_at) VALUES('manual-planned', 'pr-planned', ?)`,
+		timestamp,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO pull_requests(task_id, owner, repository, number, url)
+      VALUES('pr-planned', 'acme', 'api', 7, 'https://github.com/acme/api/pull/7')`,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO documents(id, task_id, kind, value, created_at)
+      VALUES('document', 'pr-planned', 'url', 'https://example.com', ?)`,
+		timestamp,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
+	if err := legacy.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	database, err := store.Open(ctx, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+	rows, err := database.DB().QueryContext(ctx, `SELECT id, status FROM tasks ORDER BY id`)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() {
+		if err := rows.Close(); err != nil {
+			t.Error(err)
+		}
+	})
+	wantStatuses := map[string]string{
+		"manual-cancelled": "closed", "manual-completed": "completed", "manual-planned": "auto",
+		"manual-progress": "in_progress", "pr-cancelled": "closed", "pr-completed": "completed",
+		"pr-planned": "auto", "pr-progress": "auto",
+	}
+	for rows.Next() {
+		var id, status string
+		if err := rows.Scan(&id, &status); err != nil {
+			t.Fatal(err)
+		}
+		if status != wantStatuses[id] {
+			t.Fatalf("task %s status=%q, want %q", id, status, wantStatuses[id])
+		}
+		delete(wantStatuses, id)
+	}
+	if err := rows.Err(); err != nil {
+		t.Fatal(err)
+	}
+	if len(wantStatuses) != 0 {
+		t.Fatalf("migration omitted tasks: %v", wantStatuses)
+	}
+	var dependencies, pullRequests, documents int
+	if err := database.DB().QueryRowContext(ctx, `SELECT COUNT(*) FROM dependencies`).Scan(&dependencies); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.DB().QueryRowContext(ctx, `SELECT COUNT(*) FROM pull_requests`).Scan(&pullRequests); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.DB().QueryRowContext(ctx, `SELECT COUNT(*) FROM documents`).Scan(&documents); err != nil {
+		t.Fatal(err)
+	}
+	if dependencies != 1 || pullRequests != 1 || documents != 1 {
+		t.Fatalf("related rows=(%d, %d, %d), want (1, 1, 1)", dependencies, pullRequests, documents)
+	}
+	if errorsFound := database.Validate(ctx); len(errorsFound) > 0 {
+		t.Fatalf("migrated database validation errors: %v", errorsFound)
 	}
 }
 
@@ -398,7 +600,7 @@ func TestSnapshotSurvivesOrphanedTask(t *testing.T) {
 	}
 }
 
-func TestPRTaskCannotBeCompletedManually(t *testing.T) {
+func TestTaskStatusOverridesAndAutomaticPRState(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
 	feature, err := service.CreateFeature(ctx, "completion", "Completion", "")
@@ -409,18 +611,17 @@ func TestPRTaskCannotBeCompletedManually(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	completed := domain.TaskCompleted
-	if _, err := service.UpdateTask(
+	completed := domain.TaskStatusCompleted
+	updated, err := service.UpdateTask(
 		ctx,
 		prTask.ID,
 		nil,
 		nil,
 		&completed,
 		nil,
-	); domain.ErrorCode(
-		err,
-	) != domain.DomainErrorCodePRTaskCompletesOnMerge {
-		t.Fatalf("PR task completion code=%s err=%v", domain.ErrorCode(err), err)
+	)
+	if err != nil || updated.Status != domain.TaskStatusCompleted {
+		t.Fatalf("PR task completion override: task=%+v err=%v", updated, err)
 	}
 	manual, err := service.CreateTask(ctx, feature.ID, "Sign off", "", domain.TaskKindManual, "")
 	if err != nil {
@@ -430,7 +631,10 @@ func TestPRTaskCannotBeCompletedManually(t *testing.T) {
 		t.Fatalf("manual task completion: %v", err)
 	}
 
-	// A PR task completes only through a merged pull request.
+	auto := domain.TaskStatusAuto
+	if _, err := service.UpdateTask(ctx, prTask.ID, nil, nil, &auto, nil); err != nil {
+		t.Fatalf("clear PR task override: %v", err)
+	}
 	if _, err := service.AttachPullRequest(ctx, prTask.ID, "https://github.com/acme/api/pull/3"); err != nil {
 		t.Fatal(err)
 	}
@@ -450,6 +654,156 @@ func TestPRTaskCannotBeCompletedManually(t *testing.T) {
 		}
 	}
 }
+
+func TestImplementationPlanLifecycleAndCascade(t *testing.T) {
+	database, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "implementation-plans", "Implementation plans", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := service.CreateTask(ctx, feature.ID, "Design API", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.Tasks[0].HasImplementationPlan || snapshot.Tasks[0].DisplayState != domain.TaskDisplayStateNotStarted {
+		t.Fatalf("initial task=%+v", snapshot.Tasks[0])
+	}
+	const content = "# API design\n\nDocument the boundary.\n"
+	plan, err := service.UpsertImplementationPlan(ctx, task.ID, content)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plan.TaskID != task.ID || plan.Content != content || plan.CreatedAt.IsZero() || plan.UpdatedAt.IsZero() {
+		t.Fatalf("stored plan=%+v", plan)
+	}
+	read, err := service.GetImplementationPlan(ctx, task.ID)
+	if err != nil || read.Content != content || !read.CreatedAt.Equal(plan.CreatedAt) {
+		t.Fatalf("read plan=%+v err=%v", read, err)
+	}
+	snapshot, err = service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !snapshot.Tasks[0].HasImplementationPlan || snapshot.Tasks[0].DisplayState != domain.TaskDisplayStateDesigned ||
+		!snapshot.Tasks[0].Ready {
+		t.Fatalf("planned task=%+v", snapshot.Tasks[0])
+	}
+	if err := service.DeleteTask(ctx, task.ID, false); domain.ErrorCode(err) != domain.DomainErrorCodeReferencesExist {
+		t.Fatalf("delete with plan code=%s err=%v", domain.ErrorCode(err), err)
+	}
+	if err := service.DeleteImplementationPlan(ctx, task.ID); err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err = service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if snapshot.Tasks[0].HasImplementationPlan || snapshot.Tasks[0].DisplayState != domain.TaskDisplayStateNotStarted {
+		t.Fatalf("task after plan deletion=%+v", snapshot.Tasks[0])
+	}
+	if err := service.DeleteImplementationPlan(ctx, task.ID); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		t.Fatalf("second plan deletion code=%s err=%v", domain.ErrorCode(err), err)
+	}
+	second, err := service.CreateTask(ctx, feature.ID, "Delete feature", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.UpsertImplementationPlan(ctx, second.ID, "# Keep this plan"); err != nil {
+		t.Fatal(err)
+	}
+	if err := service.DeleteFeature(ctx, feature.ID, true); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.GetImplementationPlan(
+		ctx,
+		second.ID,
+	); domain.ErrorCode(
+		err,
+	) != domain.DomainErrorCodeNotFound {
+		t.Fatalf("feature cascade plan code=%s err=%v", domain.ErrorCode(err), err)
+	}
+}
+
+type scriptedProvider struct {
+	value domain.PullRequest
+	err   error
+}
+
+func (p *scriptedProvider) Fetch(context.Context, domain.PullRequest) (domain.PullRequest, error) {
+	return p.value, p.err
+}
+
+func TestSyncKeepsPartialCoreStateAndUsesItForDependencies(t *testing.T) {
+	database, _ := openTestService(t)
+	ctx := context.Background()
+	provider := &scriptedProvider{}
+	service := app.New(database, provider)
+	feature, err := service.CreateFeature(ctx, "partial-sync", "Partial sync", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	blocker, err := service.CreateTask(ctx, feature.ID, "Open PR", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	blocked, err := service.CreateTask(ctx, feature.ID, "Dependent task", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.AddDependency(ctx, blocker.ID, blocked.ID); err != nil {
+		t.Fatal(err)
+	}
+	attached, err := service.AttachPullRequest(ctx, blocker.ID, "https://github.com/acme/api/pull/7")
+	if err != nil {
+		t.Fatal(err)
+	}
+	partial := attached
+	partial.State = domain.PullRequestStateOpen
+	partial.NodeID = "core-node"
+	partial.GitHubUpdatedAt = timePtr(time.Date(2026, 8, 30, 1, 2, 3, 0, time.UTC))
+	provider.value = partial
+	provider.err = errors.New("review endpoint unavailable")
+	if succeeded, failed, err := service.Sync(ctx, feature.ID, ""); succeeded != 0 || failed != 1 || err != nil {
+		t.Fatalf("partial sync result=(%d, %d, %v)", succeeded, failed, err)
+	}
+	stored, err := database.GetPullRequest(ctx, blocker.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.State != domain.PullRequestStateOpen || stored.NodeID != "core-node" ||
+		stored.SyncError != "review endpoint unavailable" || !stored.Stale {
+		t.Fatalf("partial pull request=%+v", stored)
+	}
+	snapshot, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, task := range snapshot.Tasks {
+		if task.ID == blocked.ID && !task.Ready {
+			t.Fatalf("known open PR should satisfy dependency after partial sync: %+v", task)
+		}
+	}
+	provider.value = stored
+	provider.value.State = domain.PullRequestStateMerged
+	provider.err = nil
+	if succeeded, failed, err := service.Sync(ctx, feature.ID, ""); succeeded != 1 || failed != 0 || err != nil {
+		t.Fatalf("successful sync result=(%d, %d, %v)", succeeded, failed, err)
+	}
+	stored, err = database.GetPullRequest(ctx, blocker.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.State != domain.PullRequestStateMerged || stored.SyncError != "" || stored.Stale {
+		t.Fatalf("recovered pull request=%+v", stored)
+	}
+}
+
+func timePtr(value time.Time) *time.Time { return &value }
 
 func TestInMemoryDatabaseIsSharedAcrossConcurrentCallers(t *testing.T) {
 	ctx := context.Background()
