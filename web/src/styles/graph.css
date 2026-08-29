@@ -113,9 +113,9 @@
   opacity: 0.83;
 }
 
-.task-node.state-review_waiting,
+.task-node.state-review-waiting,
 .task-node.state-approved,
-.task-node.state-changes_requested {
+.task-node.state-changes-requested {
   border-left-color: var(--status-review);
 }
 
@@ -150,6 +150,12 @@
   background: var(--status-none);
 }
 
+.node-asset i {
+  color: var(--text-3);
+  font-style: normal;
+  text-align: right;
+}
+
 .is-ready .node-state {
   color: var(--status-ready);
 }
@@ -174,15 +180,15 @@
   background: var(--status-merged);
 }
 
-.state-review_waiting .node-state,
+.state-review-waiting .node-state,
 .state-approved .node-state,
-.state-changes_requested .node-state {
+.state-changes-requested .node-state {
   color: var(--status-review);
 }
 
-.state-review_waiting .node-state i,
+.state-review-waiting .node-state i,
 .state-approved .node-state i,
-.state-changes_requested .node-state i {
+.state-changes-requested .node-state i {
   background: var(--status-review);
 }
 
@@ -262,12 +268,6 @@
   white-space: nowrap;
 }
 
-.node-asset i {
-  color: var(--text-3);
-  font-style: normal;
-  text-align: right;
-}
-
 .task-node footer {
   min-height: 24px;
   display: flex;
@@ -333,7 +333,7 @@
   background: var(--surface-2);
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
   .graph-legend {
     gap: 10px;
     padding-inline: 12px;
