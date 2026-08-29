@@ -8,6 +8,7 @@ GO_COVERAGE_PACKAGES := ./internal/domain ./internal/github ./internal/rpc ./int
 
 generate: web-install
 	$(GO) tool sqlc generate
+	$(GO) tool buf format -w proto
 	$(GO) tool buf lint
 	$(GO) tool buf generate
 
@@ -22,6 +23,7 @@ fmt: web-install
 	$(PNPM) --dir web format
 
 lint: web-install
+	$(GO) tool buf format -d --exit-code proto
 	$(GO) vet ./...
 	golangci-lint run ./...
 	$(PNPM) --dir web lint
