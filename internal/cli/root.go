@@ -23,11 +23,6 @@ type state struct {
 	service Service
 }
 
-func NewRoot(out, errOut io.Writer) *cobra.Command {
-	root, _ := newRootWithState(out, errOut)
-	return root
-}
-
 func newRootWithState(out, errOut io.Writer) (*cobra.Command, *state) {
 	s := &state{out: out, errOut: errOut}
 	root := &cobra.Command{

@@ -178,8 +178,9 @@ func TestBlackBoxServerAndCLIShareDatabase(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(snapshot.Msg.Snapshot.Features) != 1 || snapshot.Msg.Snapshot.Features[0].Slug != "live-write" {
-		t.Fatalf("server did not observe CLI write: %+v", snapshot.Msg.Snapshot.Features)
+	features := snapshot.Msg.GetSnapshot().GetFeatures()
+	if len(features) != 1 || features[0].GetSlug() != "live-write" {
+		t.Fatalf("server did not observe CLI write: %+v", features)
 	}
 	cancel()
 	_ = server.Wait()

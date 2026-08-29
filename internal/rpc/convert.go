@@ -150,6 +150,8 @@ func domainFeatureStatus(value *prxv1.FeatureStatus) (*domain.FeatureStatus, err
 		result = domain.FeatureStatusCompleted
 	case prxv1.FeatureStatus_FEATURE_STATUS_CANCELLED:
 		result = domain.FeatureStatusCancelled
+	case prxv1.FeatureStatus_FEATURE_STATUS_UNSPECIFIED:
+		return nil, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid feature status")
 	default:
 		return nil, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid feature status")
 	}
@@ -213,6 +215,8 @@ func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 		result = domain.TaskStatusCompleted
 	case prxv1.TaskStatus_TASK_STATUS_CANCELLED:
 		result = domain.TaskStatusCancelled
+	case prxv1.TaskStatus_TASK_STATUS_UNSPECIFIED:
+		return nil, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid task status")
 	default:
 		return nil, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid task status")
 	}
@@ -326,6 +330,8 @@ func domainDocumentKind(value prxv1.DocumentKind) domain.DocumentKind {
 		return domain.DocumentKindURL
 	case prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH:
 		return domain.DocumentKindMarkdownPath
+	case prxv1.DocumentKind_DOCUMENT_KIND_UNSPECIFIED:
+		return ""
 	default:
 		return ""
 	}
@@ -393,6 +399,8 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK
 	case domain.DomainErrorCodeReferencesExist:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST
+	case domain.DomainErrorCodeInternal:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
 	default:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
 	}

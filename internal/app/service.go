@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -522,8 +521,4 @@ func oneOf[T comparable](value T, values ...T) bool {
 		}
 	}
 	return false
-}
-
-func SortTasks(tasks []domain.Task) {
-	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Title < tasks[j].Title })
 }

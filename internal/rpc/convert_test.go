@@ -262,7 +262,7 @@ func TestProtoBlockedReasonMapsEveryKnownValue(t *testing.T) {
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := protoBlockedReason(domain.Task{BlockedCode: test.value, BlockerTaskID: "blocker"})
-			if got == nil || got.Code != test.want || got.BlockerTaskId != "blocker" {
+			if got == nil || got.GetCode() != test.want || got.GetBlockerTaskId() != "blocker" {
 				t.Fatalf("protoBlockedReason(%q)=%+v, want code %s", test.value, got, test.want)
 			}
 		})
@@ -372,7 +372,7 @@ func errorDetailCode(t *testing.T, err error) prxv1.DomainErrorCode {
 			t.Fatal(detailErr)
 		}
 		if errorDetail, ok := value.(*prxv1.ErrorDetail); ok {
-			return errorDetail.Code
+			return errorDetail.GetCode()
 		}
 	}
 	return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED

@@ -10,6 +10,7 @@ linters:
     - durationcheck
     - errchkjson
     - errorlint
+    - exhaustive
     - lll
     - misspell
     - nilerr
@@ -17,14 +18,19 @@ linters:
     - nolintlint
     - nosprintfhostport
     - predeclared
+    - protogetter
     - rowserrcheck
     - sqlclosecheck
     - thelper
     - unconvert
     - usestdlibvars
     - wastedassign
-
   settings:
+    exhaustive:
+      default-signifies-exhaustive: false
+      check:
+        - switch
+        - map
     lll:
       line-length: 120
     nolintlint:
