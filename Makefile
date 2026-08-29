@@ -1,10 +1,8 @@
-.PHONY: generate generated-check mod-tidy-check fmt lint check-web-quality test go-coverage-check test-race test-cli web-install web-test web-build dev e2e build install ci clean
+.PHONY: generate generated-check mod-tidy-check fmt lint check-web-quality test go-coverage-check go-coverage-update test-race test-cli web-install web-test web-build dev e2e build install ci clean
 
 GO ?= go
 PNPM ?= corepack pnpm@11.24.0
 INSTALL_DIR ?= $(HOME)/.local/bin
-GO_COVERAGE_MIN ?= 68.8
-GO_COVERAGE_PACKAGES := ./internal/domain ./internal/github ./internal/rpc ./internal/store
 
 generate: web-install
 	$(GO) tool sqlc generate
@@ -35,15 +33,10 @@ test: web-install
 	$(PNPM) --dir web test
 
 go-coverage-check:
-	@profile="$$(mktemp)" || exit $$?; \
-	trap 'rm -f "$$profile"' EXIT; \
-	$(GO) test -coverprofile="$$profile" $(GO_COVERAGE_PACKAGES) || exit $$?; \
-	coverage="$$( $(GO) tool cover -func="$$profile" | awk '/^total:/ { gsub(/%/, "", $$3); print $$3 }' )" || exit $$?; \
-	printf 'Go coverage: %s%% (minimum: %s%%)\n' "$$coverage" "$(GO_COVERAGE_MIN)"; \
-	awk -v actual="$$coverage" -v minimum="$(GO_COVERAGE_MIN)" 'BEGIN { \
-		if (actual !~ /^[0-9]+([.][0-9]+)?$$/ || minimum !~ /^[0-9]+([.][0-9]+)?$$/) exit 2; \
-		if (actual + 0 < minimum + 0) exit 1; \
-	}'
+	$(GO) run ./tools/covercheck
+
+go-coverage-update:
+	$(GO) run ./tools/covercheck -update
 
 test-race:
 	$(GO) test -race ./...

@@ -116,12 +116,15 @@ make generated-check  # regeneration must produce no diff
 make mod-tidy-check   # go.mod and go.sum must be tidy
 make lint              # go vet, golangci-lint, ESLint, strict TypeScript
 make test              # Go, Vitest, and component coverage
-make go-coverage-check # handwritten Go packages must stay at or above the coverage baseline
+make go-coverage-check # handwritten Go packages must meet package-specific coverage minimums
+make go-coverage-update # update package-specific minimums to measured coverage
 make test-race         # Go race detector
 make e2e               # real Go server, SQLite, ConnectRPC, Chromium
 make ci                # install web dependencies, run all required checks, and build production assets
 ```
 
-`GO_COVERAGE_MIN` records the current coverage baseline for the handwritten Go packages. Raise it when their coverage improves so later changes cannot reduce it.
+Go coverage minimums are stored per package in `tools/covercheck/minimums.txt`. If measured coverage exceeds a package minimum by more than 1.0 percentage point, the check fails; run `make go-coverage-update` to raise the minimums. `internal/cli` is excluded because its black-box tests exercise an externally built process and do not reflect package coverage.
+
+Vitest keeps the four WebUI coverage thresholds in `web/vite.config.ts` with `autoUpdate: true`. When coverage exceeds a threshold, `make test` writes the measured value back to that file, so the updated value must be committed. CI checks that `make ci` is read-only, so an uncommitted write-back fails verification.
 
 Playwright covers browser CRUD, language selection persistence, cycle rejection, pull-request and Markdown attachment, deterministic sync, dependency removal, persistence after reload, console/network failures, 320-pixel reflow, and 8/50/100-node layouts. Graph screenshots are written to `test-results/screenshots/` and uploaded by GitHub Actions.
