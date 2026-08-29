@@ -11,6 +11,7 @@ linters:
     - errchkjson
     - errorlint
     - exhaustive
+    - lll
     - misspell
     - nilerr
     - noctx
@@ -30,11 +31,28 @@ linters:
       check:
         - switch
         - map
+    lll:
+      line-length: 120
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
 
 formatters:
   enable:
-    - gofmt
-    - goimports
+    - gofumpt
+    - gci
+    - golines
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+    golines:
+      max-len: 120
+      tab-len: 4
+      reformat-tags: true
 
 issues:
   max-issues-per-linter: 0

@@ -5,8 +5,9 @@ import (
 	"errors"
 	"io"
 
-	"github.com/HappyOnigiri/PRX/internal/domain"
 	"github.com/spf13/cobra"
+
+	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 type envelope struct {
