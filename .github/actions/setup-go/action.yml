@@ -38,10 +38,11 @@ runs:
           aarch64) arch=arm64 ;;
           *) echo "unsupported architecture: $(uname -m)" >&2; exit 1 ;;
         esac
+        # go.dev/dl redirects archives here; its .sha256 URLs redirect to the download page instead.
         archive="go${version}.linux-${arch}.tar.gz"
         cd "$RUNNER_TEMP"
-        curl -fsSLO "https://go.dev/dl/${archive}"
-        echo "$(curl -fsSL "https://go.dev/dl/${archive}.sha256")  ${archive}" | sha256sum -c -
+        curl -fsSLO "https://dl.google.com/go/${archive}"
+        echo "$(curl -fsSL "https://dl.google.com/go/${archive}.sha256")  ${archive}" | sha256sum -c -
         tar -xzf "$archive"
         echo "$RUNNER_TEMP/go/bin" >>"$GITHUB_PATH"
         echo "GOTOOLCHAIN=local" >>"$GITHUB_ENV"
