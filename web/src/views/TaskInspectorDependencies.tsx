@@ -1,15 +1,15 @@
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import { formValue } from "../form";
 import type { Dependency, Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
-import { formValue } from "../form";
 import { MutationError } from "./MutationError";
 
-type DependencySectionProps = {
+interface DependencySectionProps {
   taskId: string;
   tasks: Task[];
   dependencies: Dependency[];
-};
+}
 
 export function DependencySection({
   taskId,
@@ -39,12 +39,12 @@ export function DependencySection({
           </span>
           <button
             aria-label={t("inspector.removeDependency")}
-            onClick={() =>
+            onClick={() => {
               removeDependency.mutate({
                 blocker: dependency.blockerTaskId,
                 blocked: taskId,
-              })
-            }
+              });
+            }}
           >
             ×
           </button>

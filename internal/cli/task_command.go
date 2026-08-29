@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"github.com/HappyOnigiri/PRX/internal/domain"
 	"github.com/spf13/cobra"
+
+	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 func (s *state) taskCommand() *cobra.Command {
@@ -51,25 +52,33 @@ func (s *state) taskCommand() *cobra.Command {
 		}
 		return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", args[0])
 	}}
-	update := &cobra.Command{Use: "update ID", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
-		value, err := s.service.UpdateTask(cmd.Context(), args[0],
-			changedFlag(cmd, "title", &title), changedFlag(cmd, "scope", &scope),
-			changedStringType[domain.TaskStatus](cmd, "status", &status), changedFlag(cmd, "assignee", &assignee))
-		if err != nil {
-			return err
-		}
-		return s.write(value)
-	}}
+	update := &cobra.Command{
+		Use:  "update ID",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			value, err := s.service.UpdateTask(cmd.Context(), args[0],
+				changedFlag(cmd, "title", &title), changedFlag(cmd, "scope", &scope),
+				changedStringType[domain.TaskStatus](cmd, "status", &status), changedFlag(cmd, "assignee", &assignee))
+			if err != nil {
+				return err
+			}
+			return s.write(value)
+		},
+	}
 	update.Flags().StringVar(&title, "title", "", "new title")
 	update.Flags().StringVar(&scope, "scope", "", "new scope")
 	update.Flags().StringVar(&status, "status", "", "planned, in_progress, completed, or cancelled")
 	update.Flags().StringVar(&assignee, "assignee", "", "new assignee")
-	deleteCmd := &cobra.Command{Use: "delete ID", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
-		if err := s.service.DeleteTask(cmd.Context(), args[0], cascade); err != nil {
-			return err
-		}
-		return s.write(map[string]string{"deleted": args[0]})
-	}}
+	deleteCmd := &cobra.Command{
+		Use:  "delete ID",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := s.service.DeleteTask(cmd.Context(), args[0], cascade); err != nil {
+				return err
+			}
+			return s.write(map[string]string{"deleted": args[0]})
+		},
+	}
 	deleteCmd.Flags().BoolVar(&cascade, "cascade", false, "delete dependencies and references")
 	command.AddCommand(create, list, get, update, deleteCmd)
 	return command

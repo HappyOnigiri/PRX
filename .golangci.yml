@@ -11,20 +11,34 @@ linters:
     - durationcheck
     - errchkjson
     - errorlint
+    - exhaustive
+    - lll
     - misspell
     - nilerr
     - noctx
     - nolintlint
     - nosprintfhostport
     - predeclared
+    - protogetter
     - rowserrcheck
     - sqlclosecheck
     - thelper
     - unconvert
     - usestdlibvars
     - wastedassign
-
   settings:
+    exhaustive:
+      default-signifies-exhaustive: false
+      check:
+        - switch
+        - map
+    lll:
+      line-length: 120
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+
     depguard:
       rules:
         domain-is-a-leaf:
@@ -86,8 +100,19 @@ linters:
 
 formatters:
   enable:
-    - gofmt
-    - goimports
+    - gofumpt
+    - gci
+    - golines
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+    golines:
+      max-len: 120
+      tab-len: 4
+      reformat-tags: true
 
 issues:
   max-issues-per-linter: 0

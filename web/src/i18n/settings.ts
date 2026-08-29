@@ -10,11 +10,11 @@ const defaultGraphZoom = 1;
 export const minGraphZoom = 0.08;
 export const maxGraphZoom = 1.7;
 
-type WebUISettings = {
+interface WebUISettings {
   language?: SupportedLanguage;
   graphZoom?: number;
   theme?: ThemePreference;
-};
+}
 
 function isSupportedLanguage(value: unknown): value is SupportedLanguage {
   return supportedLanguages.includes(value as SupportedLanguage);
@@ -112,7 +112,7 @@ export function writeThemePreference(theme: ThemePreference) {
 export function detectDisplayLanguage(): SupportedLanguage {
   const saved = readWebUISettings().language;
   if (saved) return saved;
-  const candidates = navigator.languages?.length
+  const candidates = navigator.languages.length
     ? navigator.languages
     : [navigator.language];
   for (const candidate of candidates) {

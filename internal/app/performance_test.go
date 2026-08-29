@@ -22,13 +22,25 @@ func BenchmarkSnapshot5000Tasks(b *testing.B) {
 	provider, _ := githubprovider.NewFixtureProvider("demo")
 	service := app.New(database, provider)
 	for featureIndex := 0; featureIndex < 100; featureIndex++ {
-		feature, err := service.CreateFeature(ctx, fmt.Sprintf("feature-%03d", featureIndex), fmt.Sprintf("Feature %03d", featureIndex), "")
+		feature, err := service.CreateFeature(
+			ctx,
+			fmt.Sprintf("feature-%03d", featureIndex),
+			fmt.Sprintf("Feature %03d", featureIndex),
+			"",
+		)
 		if err != nil {
 			b.Fatal(err)
 		}
 		var previous string
 		for taskIndex := 0; taskIndex < 50; taskIndex++ {
-			task, err := service.CreateTask(ctx, feature.ID, fmt.Sprintf("Task %03d/%02d", featureIndex, taskIndex), "", domain.TaskKindManual, "")
+			task, err := service.CreateTask(
+				ctx,
+				feature.ID,
+				fmt.Sprintf("Task %03d/%02d", featureIndex, taskIndex),
+				"",
+				domain.TaskKindManual,
+				"",
+			)
 			if err != nil {
 				b.Fatal(err)
 			}

@@ -45,12 +45,16 @@ func TestRootOpensAndClosesCommandResources(t *testing.T) {
 	closer := &recordingCloser{}
 	var gotDBPath, gotFixture string
 	var gotLive bool
-	root, state := newRootWithState(io.Discard, io.Discard, func(_ context.Context, dbPath, fixturePath string, live bool) (Service, io.Closer, error) {
-		gotDBPath = dbPath
-		gotFixture = fixturePath
-		gotLive = live
-		return nil, closer, nil
-	})
+	root, state := newRootWithState(
+		io.Discard,
+		io.Discard,
+		func(_ context.Context, dbPath, fixturePath string, live bool) (Service, io.Closer, error) {
+			gotDBPath = dbPath
+			gotFixture = fixturePath
+			gotLive = live
+			return nil, closer, nil
+		},
+	)
 	state.dbPath = "test.db"
 	state.fixture = "demo"
 

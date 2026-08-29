@@ -48,6 +48,9 @@ importers:
       '@bufbuild/protoc-gen-es':
         specifier: ^2.9.0
         version: 2.14.0(@bufbuild/protobuf@2.14.0)(supports-color@7.2.0)
+      '@eslint-community/eslint-plugin-eslint-comments':
+        specifier: ^4.7.2
+        version: 4.7.2(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))
       '@eslint/js':
         specifier: ^10.0.1
         version: 10.0.1(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))
@@ -105,6 +108,9 @@ importers:
       prettier:
         specifier: ^3.6.2
         version: 3.9.6
+      prettier-plugin-organize-imports:
+        specifier: ^4.3.0
+        version: 4.3.0(prettier@3.9.6)(typescript@5.9.3)
       typescript:
         specifier: ^5.9.2
         version: 5.9.3
@@ -453,6 +459,12 @@ packages:
     engines: {node: '>=18'}
     cpu: [x64]
     os: [win32]
+
+  '@eslint-community/eslint-plugin-eslint-comments@4.7.2':
+    resolution: {integrity: sha512-LF03qURSwEWm2dz5wtdDCzNk+7Opl0X7q6I3undsaIuNsEiNvRV3BCtqu14Q/6Pzg1tBj44LcxpW2EpSLZStZw==}
+    engines: {node: ^12.22.0 || ^14.17.0 || >=16.0.0}
+    peerDependencies:
+      eslint: ^6.0.0 || ^7.0.0 || ^8.0.0 || ^9.0.0 || ^10.0.0
 
   '@eslint-community/eslint-utils@4.10.1':
     resolution: {integrity: sha512-cuadcxVFE8sDK6iWJbs8Sn0av2Nrh2QSGQhVlBW9AaAHqHwjWsZHT8LJ4hFGPh7ASBV2deFdM7H/DPjulmh8rg==}
@@ -2286,6 +2298,16 @@ packages:
     resolution: {integrity: sha512-vkcDPrRZo1QZLbn5RLGPpg/WmIQ65qoWWhcGKf/b5eplkkarX0m9z8ppCat4mlOqUsWpyNuYgO3VRyrYHSzX5g==}
     engines: {node: '>= 0.8.0'}
 
+  prettier-plugin-organize-imports@4.3.0:
+    resolution: {integrity: sha512-FxFz0qFhyBsGdIsb697f/EkvHzi5SZOhWAjxcx2dLt+Q532bAlhswcXGYB1yzjZ69kW8UoadFBw7TyNwlq96Iw==}
+    peerDependencies:
+      prettier: '>=2.0'
+      typescript: '>=2.9'
+      vue-tsc: ^2.1.0 || 3
+    peerDependenciesMeta:
+      vue-tsc:
+        optional: true
+
   prettier@3.9.6:
     resolution: {integrity: sha512-OpN0zzVdiaiAhxpuuj5efpIS4sY9j7bY6uR5mnj5yPzGkdkjNKSJeUThPb60Jw29QuAZgA4o+/iB49kFiaBX6g==}
     engines: {node: '>=14'}
@@ -3146,6 +3168,12 @@ snapshots:
 
   '@esbuild/win32-x64@0.28.2':
     optional: true
+
+  '@eslint-community/eslint-plugin-eslint-comments@4.7.2(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))':
+    dependencies:
+      escape-string-regexp: 4.0.0
+      eslint: 10.9.1(jiti@2.7.0)(supports-color@7.2.0)
+      ignore: 7.0.6
 
   '@eslint-community/eslint-utils@4.10.1(eslint@10.9.1(jiti@2.7.0)(supports-color@7.2.0))':
     dependencies:
@@ -5180,6 +5208,11 @@ snapshots:
       source-map-js: 1.2.1
 
   prelude-ls@1.2.1: {}
+
+  prettier-plugin-organize-imports@4.3.0(prettier@3.9.6)(typescript@5.9.3):
+    dependencies:
+      prettier: 3.9.6
+      typescript: 5.9.3
 
   prettier@3.9.6: {}
 

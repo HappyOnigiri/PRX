@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+
 	prxv1 "github.com/HappyOnigiri/PRX/gen/prx/v1"
 	"github.com/HappyOnigiri/PRX/gen/prx/v1/prxv1connect"
 )
@@ -177,8 +178,9 @@ func TestBlackBoxServerAndCLIShareDatabase(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(snapshot.Msg.Snapshot.Features) != 1 || snapshot.Msg.Snapshot.Features[0].Slug != "live-write" {
-		t.Fatalf("server did not observe CLI write: %+v", snapshot.Msg.Snapshot.Features)
+	features := snapshot.Msg.GetSnapshot().GetFeatures()
+	if len(features) != 1 || features[0].GetSlug() != "live-write" {
+		t.Fatalf("server did not observe CLI write: %+v", features)
 	}
 	cancel()
 	_ = server.Wait()
@@ -189,7 +191,16 @@ func TestBlackBoxJSONFlagFormsAgree(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "flagforms.db")
 	for _, flag := range []string{"--json", "--json=true"} {
 		t.Run(flag, func(t *testing.T) {
-			command := exec.CommandContext(context.Background(), binary, "--db", dbPath, flag, "task", "get", "missing-task")
+			command := exec.CommandContext(
+				context.Background(),
+				binary,
+				"--db",
+				dbPath,
+				flag,
+				"task",
+				"get",
+				"missing-task",
+			)
 			var stdout, stderr bytes.Buffer
 			command.Stdout = &stdout
 			command.Stderr = &stderr

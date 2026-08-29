@@ -13,15 +13,21 @@ export const file_prx_v1_prx: GenFile = /*@__PURE__*/
   fileDesc("ChBwcngvdjEvcHJ4LnByb3RvEgZwcngudjEiUQoNQmxvY2tlZFJlYXNvbhInCgRjb2RlGAEgASgOMhkucHJ4LnYxLkJsb2NrZWRSZWFzb25Db2RlEhcKD2Jsb2NrZXJfdGFza19pZBgCIAEoCSJCCgtFcnJvckRldGFpbBIlCgRjb2RlGAEgASgOMhcucHJ4LnYxLkRvbWFpbkVycm9yQ29kZRIMCgRwYXRoGAIgAygJIp0CCgdGZWF0dXJlEgoKAmlkGAEgASgJEgwKBHNsdWcYAiABKAkSDQoFdGl0bGUYAyABKAkSEwoLZGVzY3JpcHRpb24YBCABKAkSJQoGc3RhdHVzGAUgASgOMhUucHJ4LnYxLkZlYXR1cmVTdGF0dXMSEAoIYXJjaGl2ZWQYBiABKAgSEgoKY3JlYXRlZF9hdBgHIAEoCRISCgp1cGRhdGVkX2F0GAggASgJEhIKCnRhc2tfY291bnQYCSABKAUSEwoLcmVhZHlfY291bnQYCiABKAUSHAoUcmV2aWV3X3dhaXRpbmdfY291bnQYCyABKAUSFgoOY29uZmxpY3RfY291bnQYDCABKAUSFAoMbWVyZ2VkX2NvdW50GA0gASgFIrECCgRUYXNrEgoKAmlkGAEgASgJEhIKCmZlYXR1cmVfaWQYAiABKAkSDQoFdGl0bGUYAyABKAkSDQoFc2NvcGUYBCABKAkSHgoEa2luZBgFIAEoDjIQLnByeC52MS5UYXNrS2luZBIiCgZzdGF0dXMYBiABKA4yEi5wcngudjEuVGFza1N0YXR1cxIQCghhc3NpZ25lZRgHIAEoCRISCgpjcmVhdGVkX2F0GAggASgJEhIKCnVwZGF0ZWRfYXQYCSABKAkSDQoFcmVhZHkYCiABKAgSLwoNZGlzcGxheV9zdGF0ZRgLIAEoDjIYLnByeC52MS5UYXNrRGlzcGxheVN0YXRlEi0KDmJsb2NrZWRfcmVhc29uGAwgASgLMhUucHJ4LnYxLkJsb2NrZWRSZWFzb24iUgoKRGVwZW5kZW5jeRIXCg9ibG9ja2VyX3Rhc2tfaWQYASABKAkSFwoPYmxvY2tlZF90YXNrX2lkGAIgASgJEhIKCmNyZWF0ZWRfYXQYAyABKAkirwMKC1B1bGxSZXF1ZXN0Eg8KB3Rhc2tfaWQYASABKAkSDQoFb3duZXIYAiABKAkSEgoKcmVwb3NpdG9yeRgDIAEoCRIOCgZudW1iZXIYBCABKAMSCwoDdXJsGAUgASgJEg8KB25vZGVfaWQYBiABKAkSDgoGYXV0aG9yGAcgASgJEhEKCWFzc2lnbmVlcxgIIAMoCRInCgVzdGF0ZRgJIAEoDjIYLnByeC52MS5QdWxsUmVxdWVzdFN0YXRlEg0KBWRyYWZ0GAogASgIEikKDHJldmlld19zdGF0ZRgLIAEoDjITLnByeC52MS5SZXZpZXdTdGF0ZRIqCgxtZXJnZWFiaWxpdHkYDCABKA4yFC5wcngudjEuTWVyZ2VhYmlsaXR5EhkKEWdpdGh1Yl91cGRhdGVkX2F0GA0gASgJEhYKDmxhc3Rfc3luY2VkX2F0GA4gASgJEhIKCnN5bmNfZXJyb3IYDyABKAkSDQoFc3RhbGUYECABKAgSNgoNZGlzcGxheV9zdGF0ZRgRIAEoDjIfLnByeC52MS5QdWxsUmVxdWVzdERpc3BsYXlTdGF0ZSKRAQoIRG9jdW1lbnQSCgoCaWQYASABKAkSEgoKZmVhdHVyZV9pZBgCIAEoCRIPCgd0YXNrX2lkGAMgASgJEiIKBGtpbmQYBCABKA4yFC5wcngudjEuRG9jdW1lbnRLaW5kEg0KBXRpdGxlGAUgASgJEg0KBXZhbHVlGAYgASgJEhIKCmNyZWF0ZWRfYXQYByABKAki3QIKCFNuYXBzaG90EiEKCGZlYXR1cmVzGAEgAygLMg8ucHJ4LnYxLkZlYXR1cmUSGwoFdGFza3MYAiADKAsyDC5wcngudjEuVGFzaxIoCgxkZXBlbmRlbmNpZXMYAyADKAsyEi5wcngudjEuRGVwZW5kZW5jeRIqCg1wdWxsX3JlcXVlc3RzGAQgAygLMhMucHJ4LnYxLlB1bGxSZXF1ZXN0EiMKCWRvY3VtZW50cxgFIAMoCzIQLnByeC52MS5Eb2N1bWVudBIhCgtyZWFkeV90YXNrcxgGIAMoCzIMLnByeC52MS5UYXNrEioKFHJldmlld193YWl0aW5nX3Rhc2tzGAcgAygLMgwucHJ4LnYxLlRhc2sSJAoOY29uZmxpY3RfdGFza3MYCCADKAsyDC5wcngudjEuVGFzaxIhCgtzdGFsZV90YXNrcxgJIAMoCzIMLnByeC52MS5UYXNrIhQKEkdldFNuYXBzaG90UmVxdWVzdCI5ChNHZXRTbmFwc2hvdFJlc3BvbnNlEiIKCHNuYXBzaG90GAEgASgLMhAucHJ4LnYxLlNuYXBzaG90IkgKFENyZWF0ZUZlYXR1cmVSZXF1ZXN0EgwKBHNsdWcYASABKAkSDQoFdGl0bGUYAiABKAkSEwoLZGVzY3JpcHRpb24YAyABKAkiOQoVQ3JlYXRlRmVhdHVyZVJlc3BvbnNlEiAKB2ZlYXR1cmUYASABKAsyDy5wcngudjEuRmVhdHVyZSLhAQoUVXBkYXRlRmVhdHVyZVJlcXVlc3QSCgoCaWQYASABKAkSEQoEc2x1ZxgCIAEoCUgAiAEBEhIKBXRpdGxlGAMgASgJSAGIAQESGAoLZGVzY3JpcHRpb24YBCABKAlIAogBARIqCgZzdGF0dXMYBSABKA4yFS5wcngudjEuRmVhdHVyZVN0YXR1c0gDiAEBEhUKCGFyY2hpdmVkGAYgASgISASIAQFCBwoFX3NsdWdCCAoGX3RpdGxlQg4KDF9kZXNjcmlwdGlvbkIJCgdfc3RhdHVzQgsKCV9hcmNoaXZlZCI5ChVVcGRhdGVGZWF0dXJlUmVzcG9uc2USIAoHZmVhdHVyZRgBIAEoCzIPLnByeC52MS5GZWF0dXJlIjMKFERlbGV0ZUZlYXR1cmVSZXF1ZXN0EgoKAmlkGAEgASgJEg8KB2Nhc2NhZGUYAiABKAgiFwoVRGVsZXRlRmVhdHVyZVJlc3BvbnNlIncKEUNyZWF0ZVRhc2tSZXF1ZXN0EhIKCmZlYXR1cmVfaWQYASABKAkSDQoFdGl0bGUYAiABKAkSDQoFc2NvcGUYAyABKAkSHgoEa2luZBgEIAEoDjIQLnByeC52MS5UYXNrS2luZBIQCghhc3NpZ25lZRgFIAEoCSIwChJDcmVhdGVUYXNrUmVzcG9uc2USGgoEdGFzaxgBIAEoCzIMLnByeC52MS5UYXNrIrMBChFVcGRhdGVUYXNrUmVxdWVzdBIKCgJpZBgBIAEoCRISCgV0aXRsZRgCIAEoCUgAiAEBEhIKBXNjb3BlGAMgASgJSAGIAQESJwoGc3RhdHVzGAQgASgOMhIucHJ4LnYxLlRhc2tTdGF0dXNIAogBARIVCghhc3NpZ25lZRgFIAEoCUgDiAEBQggKBl90aXRsZUIICgZfc2NvcGVCCQoHX3N0YXR1c0ILCglfYXNzaWduZWUiMAoSVXBkYXRlVGFza1Jlc3BvbnNlEhoKBHRhc2sYASABKAsyDC5wcngudjEuVGFzayIwChFEZWxldGVUYXNrUmVxdWVzdBIKCgJpZBgBIAEoCRIPCgdjYXNjYWRlGAIgASgIIhQKEkRlbGV0ZVRhc2tSZXNwb25zZSJIChRBZGREZXBlbmRlbmN5UmVxdWVzdBIXCg9ibG9ja2VyX3Rhc2tfaWQYASABKAkSFwoPYmxvY2tlZF90YXNrX2lkGAIgASgJIj8KFUFkZERlcGVuZGVuY3lSZXNwb25zZRImCgpkZXBlbmRlbmN5GAEgASgLMhIucHJ4LnYxLkRlcGVuZGVuY3kiSwoXUmVtb3ZlRGVwZW5kZW5jeVJlcXVlc3QSFwoPYmxvY2tlcl90YXNrX2lkGAEgASgJEhcKD2Jsb2NrZWRfdGFza19pZBgCIAEoCSIaChhSZW1vdmVEZXBlbmRlbmN5UmVzcG9uc2UiOAoYQXR0YWNoUHVsbFJlcXVlc3RSZXF1ZXN0Eg8KB3Rhc2tfaWQYASABKAkSCwoDdXJsGAIgASgJIkYKGUF0dGFjaFB1bGxSZXF1ZXN0UmVzcG9uc2USKQoMcHVsbF9yZXF1ZXN0GAEgASgLMhMucHJ4LnYxLlB1bGxSZXF1ZXN0IisKGERldGFjaFB1bGxSZXF1ZXN0UmVxdWVzdBIPCgd0YXNrX2lkGAEgASgJIhsKGURldGFjaFB1bGxSZXF1ZXN0UmVzcG9uc2UiewoSQWRkRG9jdW1lbnRSZXF1ZXN0EhIKCmZlYXR1cmVfaWQYASABKAkSDwoHdGFza19pZBgCIAEoCRIiCgRraW5kGAMgASgOMhQucHJ4LnYxLkRvY3VtZW50S2luZBINCgV0aXRsZRgEIAEoCRINCgV2YWx1ZRgFIAEoCSI5ChNBZGREb2N1bWVudFJlc3BvbnNlEiIKCGRvY3VtZW50GAEgASgLMhAucHJ4LnYxLkRvY3VtZW50IiMKFURlbGV0ZURvY3VtZW50UmVxdWVzdBIKCgJpZBgBIAEoCSIYChZEZWxldGVEb2N1bWVudFJlc3BvbnNlIikKG1JlYWRNYXJrZG93bkRvY3VtZW50UmVxdWVzdBIKCgJpZBgBIAEoCSIvChxSZWFkTWFya2Rvd25Eb2N1bWVudFJlc3BvbnNlEg8KB2NvbnRlbnQYASABKAkiMgoLU3luY1JlcXVlc3QSEgoKZmVhdHVyZV9pZBgBIAEoCRIPCgd0YXNrX2lkGAIgASgJIjEKDFN5bmNSZXNwb25zZRIRCglzdWNjZWVkZWQYASABKAUSDgoGZmFpbGVkGAIgASgFIhEKD1ZhbGlkYXRlUmVxdWVzdCIxChBWYWxpZGF0ZVJlc3BvbnNlEg0KBXZhbGlkGAEgASgIEg4KBmVycm9ycxgCIAMoCSqhAQoNRmVhdHVyZVN0YXR1cxIeChpGRUFUVVJFX1NUQVRVU19VTlNQRUNJRklFRBAAEhkKFUZFQVRVUkVfU1RBVFVTX0FDVElWRRABEhkKFUZFQVRVUkVfU1RBVFVTX1BBVVNFRBACEhwKGEZFQVRVUkVfU1RBVFVTX0NPTVBMRVRFRBADEhwKGEZFQVRVUkVfU1RBVFVTX0NBTkNFTExFRBAEKlcKCFRhc2tLaW5kEhkKFVRBU0tfS0lORF9VTlNQRUNJRklFRBAAEhoKFlRBU0tfS0lORF9QVUxMX1JFUVVFU1QQARIUChBUQVNLX0tJTkRfTUFOVUFMEAIqlQEKClRhc2tTdGF0dXMSGwoXVEFTS19TVEFUVVNfVU5TUEVDSUZJRUQQABIXChNUQVNLX1NUQVRVU19QTEFOTkVEEAESGwoXVEFTS19TVEFUVVNfSU5fUFJPR1JFU1MQAhIZChVUQVNLX1NUQVRVU19DT01QTEVURUQQAxIZChVUQVNLX1NUQVRVU19DQU5DRUxMRUQQBCqLBAoQVGFza0Rpc3BsYXlTdGF0ZRIiCh5UQVNLX0RJU1BMQVlfU1RBVEVfVU5TUEVDSUZJRUQQABIeChpUQVNLX0RJU1BMQVlfU1RBVEVfUExBTk5FRBABEiIKHlRBU0tfRElTUExBWV9TVEFURV9JTl9QUk9HUkVTUxACEiAKHFRBU0tfRElTUExBWV9TVEFURV9DT01QTEVURUQQAxIgChxUQVNLX0RJU1BMQVlfU1RBVEVfQ0FOQ0VMTEVEEAQSHwobVEFTS19ESVNQTEFZX1NUQVRFX1VOTElOS0VEEAUSHQoZVEFTS19ESVNQTEFZX1NUQVRFX01FUkdFRBAGEh0KGVRBU0tfRElTUExBWV9TVEFURV9DTE9TRUQQBxIcChhUQVNLX0RJU1BMQVlfU1RBVEVfRFJBRlQQCBIfChtUQVNLX0RJU1BMQVlfU1RBVEVfQ09ORkxJQ1QQCRIoCiRUQVNLX0RJU1BMQVlfU1RBVEVfQ0hBTkdFU19SRVFVRVNURUQQChIfChtUQVNLX0RJU1BMQVlfU1RBVEVfQVBQUk9WRUQQCxIlCiFUQVNLX0RJU1BMQVlfU1RBVEVfUkVWSUVXX1dBSVRJTkcQDBIbChdUQVNLX0RJU1BMQVlfU1RBVEVfT1BFThANEh4KGlRBU0tfRElTUExBWV9TVEFURV9VTktOT1dOEA4qsQEKEFB1bGxSZXF1ZXN0U3RhdGUSIgoeUFVMTF9SRVFVRVNUX1NUQVRFX1VOU1BFQ0lGSUVEEAASGwoXUFVMTF9SRVFVRVNUX1NUQVRFX09QRU4QARIdChlQVUxMX1JFUVVFU1RfU1RBVEVfQ0xPU0VEEAISHQoZUFVMTF9SRVFVRVNUX1NUQVRFX01FUkdFRBADEh4KGlBVTExfUkVRVUVTVF9TVEFURV9VTktOT1dOEAQqtgEKC1Jldmlld1N0YXRlEhwKGFJFVklFV19TVEFURV9VTlNQRUNJRklFRBAAEhUKEVJFVklFV19TVEFURV9OT05FEAESGQoVUkVWSUVXX1NUQVRFX1JFUVVJUkVEEAISGQoVUkVWSUVXX1NUQVRFX0FQUFJPVkVEEAMSIgoeUkVWSUVXX1NUQVRFX0NIQU5HRVNfUkVRVUVTVEVEEAQSGAoUUkVWSUVXX1NUQVRFX1VOS05PV04QBSqAAQoMTWVyZ2VhYmlsaXR5EhwKGE1FUkdFQUJJTElUWV9VTlNQRUNJRklFRBAAEhoKFk1FUkdFQUJJTElUWV9NRVJHRUFCTEUQARIcChhNRVJHRUFCSUxJVFlfQ09ORkxJQ1RJTkcQAhIYChRNRVJHRUFCSUxJVFlfVU5LTk9XThADKrkDChdQdWxsUmVxdWVzdERpc3BsYXlTdGF0ZRIqCiZQVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9VTlNQRUNJRklFRBAAEiUKIVBVTExfUkVRVUVTVF9ESVNQTEFZX1NUQVRFX01FUkdFRBABEiUKIVBVTExfUkVRVUVTVF9ESVNQTEFZX1NUQVRFX0NMT1NFRBACEiQKIFBVTExfUkVRVUVTVF9ESVNQTEFZX1NUQVRFX0RSQUZUEAMSJwojUFVMTF9SRVFVRVNUX0RJU1BMQVlfU1RBVEVfQ09ORkxJQ1QQBBIwCixQVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9DSEFOR0VTX1JFUVVFU1RFRBAFEicKI1BVTExfUkVRVUVTVF9ESVNQTEFZX1NUQVRFX0FQUFJPVkVEEAYSLQopUFVMTF9SRVFVRVNUX0RJU1BMQVlfU1RBVEVfUkVWSUVXX1dBSVRJTkcQBxIjCh9QVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9PUEVOEAgSJgoiUFVMTF9SRVFVRVNUX0RJU1BMQVlfU1RBVEVfVU5LTk9XThAJKmUKDERvY3VtZW50S2luZBIdChlET0NVTUVOVF9LSU5EX1VOU1BFQ0lGSUVEEAASFQoRRE9DVU1FTlRfS0lORF9VUkwQARIfChtET0NVTUVOVF9LSU5EX01BUktET1dOX1BBVEgQAirAAQoRQmxvY2tlZFJlYXNvbkNvZGUSIwofQkxPQ0tFRF9SRUFTT05fQ09ERV9VTlNQRUNJRklFRBAAEjIKLkJMT0NLRURfUkVBU09OX0NPREVfREVQRU5ERU5DWV9EQVRBX0lOQ09NUExFVEUQARIlCiFCTE9DS0VEX1JFQVNPTl9DT0RFX0JMT0NLRVJfU1RBTEUQAhIrCidCTE9DS0VEX1JFQVNPTl9DT0RFX1dBSVRJTkdfRk9SX0JMT0NLRVIQAyq4BwoPRG9tYWluRXJyb3JDb2RlEiEKHURPTUFJTl9FUlJPUl9DT0RFX1VOU1BFQ0lGSUVEEAASLgoqRE9NQUlOX0VSUk9SX0NPREVfQ1JPU1NfRkVBVFVSRV9ERVBFTkRFTkNZEAISGwoXRE9NQUlOX0VSUk9SX0NPREVfQ1lDTEUQAxIqCiZET01BSU5fRVJST1JfQ09ERV9EVVBMSUNBVEVfREVQRU5ERU5DWRAEEiwKKERPTUFJTl9FUlJPUl9DT0RFX0RVUExJQ0FURV9QVUxMX1JFUVVFU1QQBRIhCh1ET01BSU5fRVJST1JfQ09ERV9HSVRIVUJfQVVUSBAGEiYKIkRPTUFJTl9FUlJPUl9DT0RFX0lOVkFMSURfREFUQUJBU0UQBxImCiJET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX0RPQ1VNRU5UEAgSKwonRE9NQUlOX0VSUk9SX0NPREVfSU5WQUxJRF9ET0NVTUVOVF9LSU5EEAkSIgoeRE9NQUlOX0VSUk9SX0NPREVfSU5WQUxJRF9LSU5EEAoSJAogRE9NQUlOX0VSUk9SX0NPREVfSU5WQUxJRF9QQVJFTlQQCxIuCipET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX1BVTExfUkVRVUVTVF9VUkwQDBIiCh5ET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX1NFRUQQDRIiCh5ET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX1NMVUcQDhIkCiBET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX1NUQVRVUxAPEiMKH0RPTUFJTl9FUlJPUl9DT0RFX0lOVkFMSURfVElUTEUQEBIfChtET01BSU5fRVJST1JfQ09ERV9OT1RfRk9VTkQQERImCiJET01BSU5fRVJST1JfQ09ERV9SRUZFUkVOQ0VTX0VYSVNUEBISMQotRE9NQUlOX0VSUk9SX0NPREVfUFVMTF9SRVFVRVNUX09OX01BTlVBTF9UQVNLEBMSMAosRE9NQUlOX0VSUk9SX0NPREVfUFJfVEFTS19DT01QTEVURVNfT05fTUVSR0UQFBIqCiZET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX0RPQ1VNRU5UX1VSTBAVEioKJkRPTUFJTl9FUlJPUl9DT0RFX0RPQ1VNRU5UX1JFQURfRkFJTEVEEBYSKAokRE9NQUlOX0VSUk9SX0NPREVfRE9DVU1FTlRfVE9PX0xBUkdFEBcy1AkKClBSWFNlcnZpY2USRgoLR2V0U25hcHNob3QSGi5wcngudjEuR2V0U25hcHNob3RSZXF1ZXN0GhsucHJ4LnYxLkdldFNuYXBzaG90UmVzcG9uc2USTAoNQ3JlYXRlRmVhdHVyZRIcLnByeC52MS5DcmVhdGVGZWF0dXJlUmVxdWVzdBodLnByeC52MS5DcmVhdGVGZWF0dXJlUmVzcG9uc2USTAoNVXBkYXRlRmVhdHVyZRIcLnByeC52MS5VcGRhdGVGZWF0dXJlUmVxdWVzdBodLnByeC52MS5VcGRhdGVGZWF0dXJlUmVzcG9uc2USTAoNRGVsZXRlRmVhdHVyZRIcLnByeC52MS5EZWxldGVGZWF0dXJlUmVxdWVzdBodLnByeC52MS5EZWxldGVGZWF0dXJlUmVzcG9uc2USQwoKQ3JlYXRlVGFzaxIZLnByeC52MS5DcmVhdGVUYXNrUmVxdWVzdBoaLnByeC52MS5DcmVhdGVUYXNrUmVzcG9uc2USQwoKVXBkYXRlVGFzaxIZLnByeC52MS5VcGRhdGVUYXNrUmVxdWVzdBoaLnByeC52MS5VcGRhdGVUYXNrUmVzcG9uc2USQwoKRGVsZXRlVGFzaxIZLnByeC52MS5EZWxldGVUYXNrUmVxdWVzdBoaLnByeC52MS5EZWxldGVUYXNrUmVzcG9uc2USTAoNQWRkRGVwZW5kZW5jeRIcLnByeC52MS5BZGREZXBlbmRlbmN5UmVxdWVzdBodLnByeC52MS5BZGREZXBlbmRlbmN5UmVzcG9uc2USVQoQUmVtb3ZlRGVwZW5kZW5jeRIfLnByeC52MS5SZW1vdmVEZXBlbmRlbmN5UmVxdWVzdBogLnByeC52MS5SZW1vdmVEZXBlbmRlbmN5UmVzcG9uc2USWAoRQXR0YWNoUHVsbFJlcXVlc3QSIC5wcngudjEuQXR0YWNoUHVsbFJlcXVlc3RSZXF1ZXN0GiEucHJ4LnYxLkF0dGFjaFB1bGxSZXF1ZXN0UmVzcG9uc2USWAoRRGV0YWNoUHVsbFJlcXVlc3QSIC5wcngudjEuRGV0YWNoUHVsbFJlcXVlc3RSZXF1ZXN0GiEucHJ4LnYxLkRldGFjaFB1bGxSZXF1ZXN0UmVzcG9uc2USRgoLQWRkRG9jdW1lbnQSGi5wcngudjEuQWRkRG9jdW1lbnRSZXF1ZXN0GhsucHJ4LnYxLkFkZERvY3VtZW50UmVzcG9uc2USTwoORGVsZXRlRG9jdW1lbnQSHS5wcngudjEuRGVsZXRlRG9jdW1lbnRSZXF1ZXN0Gh4ucHJ4LnYxLkRlbGV0ZURvY3VtZW50UmVzcG9uc2USYQoUUmVhZE1hcmtkb3duRG9jdW1lbnQSIy5wcngudjEuUmVhZE1hcmtkb3duRG9jdW1lbnRSZXF1ZXN0GiQucHJ4LnYxLlJlYWRNYXJrZG93bkRvY3VtZW50UmVzcG9uc2USMQoEU3luYxITLnByeC52MS5TeW5jUmVxdWVzdBoULnByeC52MS5TeW5jUmVzcG9uc2USPQoIVmFsaWRhdGUSFy5wcngudjEuVmFsaWRhdGVSZXF1ZXN0GhgucHJ4LnYxLlZhbGlkYXRlUmVzcG9uc2VCLlosZ2l0aHViLmNvbS9IYXBweU9uaWdpcmkvUFJYL2dlbi9wcngvdjE7cHJ4djFiBnByb3RvMw");
 
 /**
+ * BlockedReason is the structured reason a planned task is not ready.
+ *
  * @generated from message prx.v1.BlockedReason
  */
 export type BlockedReason = Message<"prx.v1.BlockedReason"> & {
   /**
+   * code identifies the dependency condition preventing readiness.
+   *
    * @generated from field: prx.v1.BlockedReasonCode code = 1;
    */
   code: BlockedReasonCode;
 
   /**
+   * blocker_task_id identifies the specific blocking task when one is known.
+   *
    * @generated from field: string blocker_task_id = 2;
    */
   blockerTaskId: string;
@@ -35,15 +41,21 @@ export const BlockedReasonSchema: GenMessage<BlockedReason> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 0);
 
 /**
+ * ErrorDetail carries a stable domain error code and optional dependency context.
+ *
  * @generated from message prx.v1.ErrorDetail
  */
 export type ErrorDetail = Message<"prx.v1.ErrorDetail"> & {
   /**
+   * code identifies the domain error reported by the server.
+   *
    * @generated from field: prx.v1.DomainErrorCode code = 1;
    */
   code: DomainErrorCode;
 
   /**
+   * path contains the task IDs along a detected dependency cycle, with the starting task repeated at the end.
+   *
    * @generated from field: repeated string path = 2;
    */
   path: string[];
@@ -57,70 +69,98 @@ export const ErrorDetailSchema: GenMessage<ErrorDetail> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 1);
 
 /**
+ * Feature is a roadmap unit that owns tasks and dependency graphs.
+ *
  * @generated from message prx.v1.Feature
  */
 export type Feature = Message<"prx.v1.Feature"> & {
   /**
+   * id is the stable identifier of the feature.
+   *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
+   * slug is the lowercase, hyphenated identifier used by CLI commands.
+   *
    * @generated from field: string slug = 2;
    */
   slug: string;
 
   /**
+   * title is the human-readable feature name.
+   *
    * @generated from field: string title = 3;
    */
   title: string;
 
   /**
+   * description explains the feature's scope or goal.
+   *
    * @generated from field: string description = 4;
    */
   description: string;
 
   /**
+   * status is the feature's lifecycle state.
+   *
    * @generated from field: prx.v1.FeatureStatus status = 5;
    */
   status: FeatureStatus;
 
   /**
+   * archived indicates whether the feature is hidden from the active sidebar.
+   *
    * @generated from field: bool archived = 6;
    */
   archived: boolean;
 
   /**
+   * created_at is the creation time in RFC 3339 format.
+   *
    * @generated from field: string created_at = 7;
    */
   createdAt: string;
 
   /**
+   * updated_at is the last update time in RFC 3339 format.
+   *
    * @generated from field: string updated_at = 8;
    */
   updatedAt: string;
 
   /**
+   * task_count is the number of tasks belonging to the feature.
+   *
    * @generated from field: int32 task_count = 9;
    */
   taskCount: number;
 
   /**
+   * ready_count is the number of tasks currently ready to work on.
+   *
    * @generated from field: int32 ready_count = 10;
    */
   readyCount: number;
 
   /**
+   * review_waiting_count is the number of tasks whose pull requests are waiting for review.
+   *
    * @generated from field: int32 review_waiting_count = 11;
    */
   reviewWaitingCount: number;
 
   /**
+   * conflict_count is the number of tasks whose pull requests have conflicts.
+   *
    * @generated from field: int32 conflict_count = 12;
    */
   conflictCount: number;
 
   /**
+   * merged_count is the number of tasks whose pull requests are merged.
+   *
    * @generated from field: int32 merged_count = 13;
    */
   mergedCount: number;
@@ -134,65 +174,91 @@ export const FeatureSchema: GenMessage<Feature> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 2);
 
 /**
+ * Task is a unit of work belonging to a feature.
+ *
  * @generated from message prx.v1.Task
  */
 export type Task = Message<"prx.v1.Task"> & {
   /**
+   * id is the stable identifier of the task.
+   *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
+   * feature_id identifies the feature that owns the task.
+   *
    * @generated from field: string feature_id = 2;
    */
   featureId: string;
 
   /**
+   * title is the human-readable task name.
+   *
    * @generated from field: string title = 3;
    */
   title: string;
 
   /**
+   * scope describes the work covered by the task.
+   *
    * @generated from field: string scope = 4;
    */
   scope: string;
 
   /**
+   * kind determines whether completion is driven by a pull request or manual status.
+   *
    * @generated from field: prx.v1.TaskKind kind = 5;
    */
   kind: TaskKind;
 
   /**
+   * status is the stored workflow state; pull-request completion is derived from merge state.
+   *
    * @generated from field: prx.v1.TaskStatus status = 6;
    */
   status: TaskStatus;
 
   /**
+   * assignee is the person responsible for the task, when assigned.
+   *
    * @generated from field: string assignee = 7;
    */
   assignee: string;
 
   /**
+   * created_at is the creation time in RFC 3339 format.
+   *
    * @generated from field: string created_at = 8;
    */
   createdAt: string;
 
   /**
+   * updated_at is the last update time in RFC 3339 format.
+   *
    * @generated from field: string updated_at = 9;
    */
   updatedAt: string;
 
   /**
+   * ready indicates that the planned task has no unsatisfied blockers.
+   *
    * @generated from field: bool ready = 10;
    */
   ready: boolean;
 
   /**
+   * display_state is the derived state intended for task presentation.
+   *
    * @generated from field: prx.v1.TaskDisplayState display_state = 11;
    */
   displayState: TaskDisplayState;
 
   /**
+   * blocked_reason explains why a planned task is not ready, when applicable.
+   *
    * @generated from field: prx.v1.BlockedReason blocked_reason = 12;
    */
   blockedReason?: BlockedReason | undefined;
@@ -206,20 +272,28 @@ export const TaskSchema: GenMessage<Task> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 3);
 
 /**
+ * Dependency is a directed edge from a blocker task to a blocked task in one feature.
+ *
  * @generated from message prx.v1.Dependency
  */
 export type Dependency = Message<"prx.v1.Dependency"> & {
   /**
+   * blocker_task_id identifies the task that must be satisfied first.
+   *
    * @generated from field: string blocker_task_id = 1;
    */
   blockerTaskId: string;
 
   /**
+   * blocked_task_id identifies the task that depends on the blocker.
+   *
    * @generated from field: string blocked_task_id = 2;
    */
   blockedTaskId: string;
 
   /**
+   * created_at is the time the dependency was added in RFC 3339 format.
+   *
    * @generated from field: string created_at = 3;
    */
   createdAt: string;
@@ -233,90 +307,126 @@ export const DependencySchema: GenMessage<Dependency> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 4);
 
 /**
+ * PullRequest is the GitHub record attached to a pull-request task.
+ *
  * @generated from message prx.v1.PullRequest
  */
 export type PullRequest = Message<"prx.v1.PullRequest"> & {
   /**
+   * task_id identifies the task linked to the pull request.
+   *
    * @generated from field: string task_id = 1;
    */
   taskId: string;
 
   /**
+   * owner is the GitHub account or organization that owns the repository.
+   *
    * @generated from field: string owner = 2;
    */
   owner: string;
 
   /**
+   * repository is the GitHub repository name.
+   *
    * @generated from field: string repository = 3;
    */
   repository: string;
 
   /**
+   * number is the pull request number within the repository.
+   *
    * @generated from field: int64 number = 4;
    */
   number: bigint;
 
   /**
+   * url is the canonical pull request URL.
+   *
    * @generated from field: string url = 5;
    */
   url: string;
 
   /**
+   * node_id is GitHub's stable node identifier for the pull request.
+   *
    * @generated from field: string node_id = 6;
    */
   nodeId: string;
 
   /**
+   * author is the GitHub login of the pull request author.
+   *
    * @generated from field: string author = 7;
    */
   author: string;
 
   /**
+   * assignees contains the GitHub logins assigned to the pull request.
+   *
    * @generated from field: repeated string assignees = 8;
    */
   assignees: string[];
 
   /**
+   * state is the raw lifecycle state reported by GitHub.
+   *
    * @generated from field: prx.v1.PullRequestState state = 9;
    */
   state: PullRequestState;
 
   /**
+   * draft indicates whether the pull request is a draft.
+   *
    * @generated from field: bool draft = 10;
    */
   draft: boolean;
 
   /**
+   * review_state summarizes current review decisions and requested reviewers.
+   *
    * @generated from field: prx.v1.ReviewState review_state = 11;
    */
   reviewState: ReviewState;
 
   /**
+   * mergeability is the current mergeability reported by GitHub.
+   *
    * @generated from field: prx.v1.Mergeability mergeability = 12;
    */
   mergeability: Mergeability;
 
   /**
+   * github_updated_at is the last update time reported by GitHub in RFC 3339 format.
+   *
    * @generated from field: string github_updated_at = 13;
    */
   githubUpdatedAt: string;
 
   /**
+   * last_synced_at is the last time PR data was fetched in RFC 3339 format.
+   *
    * @generated from field: string last_synced_at = 14;
    */
   lastSyncedAt: string;
 
   /**
+   * sync_error contains the most recent refresh error, when one occurred.
+   *
    * @generated from field: string sync_error = 15;
    */
   syncError: string;
 
   /**
+   * stale indicates that the pull request data may not represent the current GitHub state.
+   *
    * @generated from field: bool stale = 16;
    */
   stale: boolean;
 
   /**
+   * display_state is the derived presentation state using the documented priority order.
+   *
    * @generated from field: prx.v1.PullRequestDisplayState display_state = 17;
    */
   displayState: PullRequestDisplayState;
@@ -330,40 +440,56 @@ export const PullRequestSchema: GenMessage<PullRequest> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 5);
 
 /**
+ * Document is a reference attached to exactly one feature or task.
+ *
  * @generated from message prx.v1.Document
  */
 export type Document = Message<"prx.v1.Document"> & {
   /**
+   * id is the stable identifier of the document reference.
+   *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
+   * feature_id identifies the parent feature when the document is feature-scoped.
+   *
    * @generated from field: string feature_id = 2;
    */
   featureId: string;
 
   /**
+   * task_id identifies the parent task when the document is task-scoped.
+   *
    * @generated from field: string task_id = 3;
    */
   taskId: string;
 
   /**
+   * kind identifies whether value is a URL or a registered Markdown path.
+   *
    * @generated from field: prx.v1.DocumentKind kind = 4;
    */
   kind: DocumentKind;
 
   /**
+   * title is the human-readable document label.
+   *
    * @generated from field: string title = 5;
    */
   title: string;
 
   /**
+   * value is the URL or registered Markdown file path.
+   *
    * @generated from field: string value = 6;
    */
   value: string;
 
   /**
+   * created_at is the creation time in RFC 3339 format.
+   *
    * @generated from field: string created_at = 7;
    */
   createdAt: string;
@@ -377,50 +503,70 @@ export const DocumentSchema: GenMessage<Document> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 6);
 
 /**
+ * Snapshot is the complete normalized dataset plus derived task queues.
+ *
  * @generated from message prx.v1.Snapshot
  */
 export type Snapshot = Message<"prx.v1.Snapshot"> & {
   /**
+   * features contains all stored features.
+   *
    * @generated from field: repeated prx.v1.Feature features = 1;
    */
   features: Feature[];
 
   /**
+   * tasks contains all stored tasks with derived readiness and display state.
+   *
    * @generated from field: repeated prx.v1.Task tasks = 2;
    */
   tasks: Task[];
 
   /**
+   * dependencies contains all directed task dependencies.
+   *
    * @generated from field: repeated prx.v1.Dependency dependencies = 3;
    */
   dependencies: Dependency[];
 
   /**
+   * pull_requests contains all attached pull requests and their latest known data.
+   *
    * @generated from field: repeated prx.v1.PullRequest pull_requests = 4;
    */
   pullRequests: PullRequest[];
 
   /**
+   * documents contains all registered document references without file contents.
+   *
    * @generated from field: repeated prx.v1.Document documents = 5;
    */
   documents: Document[];
 
   /**
+   * ready_tasks contains planned tasks whose blockers are satisfied.
+   *
    * @generated from field: repeated prx.v1.Task ready_tasks = 6;
    */
   readyTasks: Task[];
 
   /**
+   * review_waiting_tasks contains tasks whose pull requests are waiting for review.
+   *
    * @generated from field: repeated prx.v1.Task review_waiting_tasks = 7;
    */
   reviewWaitingTasks: Task[];
 
   /**
+   * conflict_tasks contains tasks whose pull requests have merge conflicts.
+   *
    * @generated from field: repeated prx.v1.Task conflict_tasks = 8;
    */
   conflictTasks: Task[];
 
   /**
+   * stale_tasks contains tasks whose pull request data is stale or has a sync error.
+   *
    * @generated from field: repeated prx.v1.Task stale_tasks = 9;
    */
   staleTasks: Task[];
@@ -434,6 +580,8 @@ export const SnapshotSchema: GenMessage<Snapshot> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 7);
 
 /**
+ * GetSnapshotRequest requests the current normalized dataset and derived queues.
+ *
  * @generated from message prx.v1.GetSnapshotRequest
  */
 export type GetSnapshotRequest = Message<"prx.v1.GetSnapshotRequest"> & {
@@ -447,10 +595,14 @@ export const GetSnapshotRequestSchema: GenMessage<GetSnapshotRequest> = /*@__PUR
   messageDesc(file_prx_v1_prx, 8);
 
 /**
+ * GetSnapshotResponse returns the requested application snapshot.
+ *
  * @generated from message prx.v1.GetSnapshotResponse
  */
 export type GetSnapshotResponse = Message<"prx.v1.GetSnapshotResponse"> & {
   /**
+   * snapshot contains normalized records and derived task queues.
+   *
    * @generated from field: prx.v1.Snapshot snapshot = 1;
    */
   snapshot?: Snapshot | undefined;
@@ -464,20 +616,28 @@ export const GetSnapshotResponseSchema: GenMessage<GetSnapshotResponse> = /*@__P
   messageDesc(file_prx_v1_prx, 9);
 
 /**
+ * CreateFeatureRequest contains the required and descriptive values for a feature.
+ *
  * @generated from message prx.v1.CreateFeatureRequest
  */
 export type CreateFeatureRequest = Message<"prx.v1.CreateFeatureRequest"> & {
   /**
+   * slug is the lowercase, hyphenated feature identifier.
+   *
    * @generated from field: string slug = 1;
    */
   slug: string;
 
   /**
+   * title is the required human-readable feature name.
+   *
    * @generated from field: string title = 2;
    */
   title: string;
 
   /**
+   * description is optional explanatory text for the feature.
+   *
    * @generated from field: string description = 3;
    */
   description: string;
@@ -491,10 +651,14 @@ export const CreateFeatureRequestSchema: GenMessage<CreateFeatureRequest> = /*@_
   messageDesc(file_prx_v1_prx, 10);
 
 /**
+ * CreateFeatureResponse returns the newly created feature.
+ *
  * @generated from message prx.v1.CreateFeatureResponse
  */
 export type CreateFeatureResponse = Message<"prx.v1.CreateFeatureResponse"> & {
   /**
+   * feature is the created feature with its generated identifier and timestamps.
+   *
    * @generated from field: prx.v1.Feature feature = 1;
    */
   feature?: Feature | undefined;
@@ -508,35 +672,50 @@ export const CreateFeatureResponseSchema: GenMessage<CreateFeatureResponse> = /*
   messageDesc(file_prx_v1_prx, 11);
 
 /**
+ * UpdateFeatureRequest updates only the supplied feature fields.
+ * An unset optional field is unchanged, while an empty string requests clearing a string field.
+ *
  * @generated from message prx.v1.UpdateFeatureRequest
  */
 export type UpdateFeatureRequest = Message<"prx.v1.UpdateFeatureRequest"> & {
   /**
+   * id identifies the feature to update.
+   *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
+   * slug is unchanged when unset; an empty string requests clearing it.
+   *
    * @generated from field: optional string slug = 2;
    */
   slug?: string | undefined;
 
   /**
+   * title is unchanged when unset; an empty string requests clearing it.
+   *
    * @generated from field: optional string title = 3;
    */
   title?: string | undefined;
 
   /**
+   * description is unchanged when unset; an empty string clears it.
+   *
    * @generated from field: optional string description = 4;
    */
   description?: string | undefined;
 
   /**
+   * status is unchanged when unset; a supplied value replaces it.
+   *
    * @generated from field: optional prx.v1.FeatureStatus status = 5;
    */
   status?: FeatureStatus | undefined;
 
   /**
+   * archived is unchanged when unset; a supplied value explicitly sets it.
+   *
    * @generated from field: optional bool archived = 6;
    */
   archived?: boolean | undefined;
@@ -550,10 +729,14 @@ export const UpdateFeatureRequestSchema: GenMessage<UpdateFeatureRequest> = /*@_
   messageDesc(file_prx_v1_prx, 12);
 
 /**
+ * UpdateFeatureResponse returns the updated feature.
+ *
  * @generated from message prx.v1.UpdateFeatureResponse
  */
 export type UpdateFeatureResponse = Message<"prx.v1.UpdateFeatureResponse"> & {
   /**
+   * feature is the feature after applying the requested updates.
+   *
    * @generated from field: prx.v1.Feature feature = 1;
    */
   feature?: Feature | undefined;
@@ -567,15 +750,21 @@ export const UpdateFeatureResponseSchema: GenMessage<UpdateFeatureResponse> = /*
   messageDesc(file_prx_v1_prx, 13);
 
 /**
+ * DeleteFeatureRequest requests deletion of a feature and optionally its references.
+ *
  * @generated from message prx.v1.DeleteFeatureRequest
  */
 export type DeleteFeatureRequest = Message<"prx.v1.DeleteFeatureRequest"> & {
   /**
+   * id identifies the feature to delete.
+   *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
+   * cascade permits deletion of the feature's dependent tasks and records.
+   *
    * @generated from field: bool cascade = 2;
    */
   cascade: boolean;
@@ -589,6 +778,8 @@ export const DeleteFeatureRequestSchema: GenMessage<DeleteFeatureRequest> = /*@_
   messageDesc(file_prx_v1_prx, 14);
 
 /**
+ * DeleteFeatureResponse confirms that the feature was deleted.
+ *
  * @generated from message prx.v1.DeleteFeatureResponse
  */
 export type DeleteFeatureResponse = Message<"prx.v1.DeleteFeatureResponse"> & {
@@ -602,30 +793,42 @@ export const DeleteFeatureResponseSchema: GenMessage<DeleteFeatureResponse> = /*
   messageDesc(file_prx_v1_prx, 15);
 
 /**
+ * CreateTaskRequest contains the values for a task within a feature.
+ *
  * @generated from message prx.v1.CreateTaskRequest
  */
 export type CreateTaskRequest = Message<"prx.v1.CreateTaskRequest"> & {
   /**
+   * feature_id identifies the feature that owns the task.
+   *
    * @generated from field: string feature_id = 1;
    */
   featureId: string;
 
   /**
+   * title is the required human-readable task name.
+   *
    * @generated from field: string title = 2;
    */
   title: string;
 
   /**
+   * scope describes the work covered by the task.
+   *
    * @generated from field: string scope = 3;
    */
   scope: string;
 
   /**
+   * kind selects pull-request completion or manual completion; unspecified defaults to pull-request.
+   *
    * @generated from field: prx.v1.TaskKind kind = 4;
    */
   kind: TaskKind;
 
   /**
+   * assignee is the optional person responsible for the task.
+   *
    * @generated from field: string assignee = 5;
    */
   assignee: string;
@@ -639,10 +842,14 @@ export const CreateTaskRequestSchema: GenMessage<CreateTaskRequest> = /*@__PURE_
   messageDesc(file_prx_v1_prx, 16);
 
 /**
+ * CreateTaskResponse returns the newly created task.
+ *
  * @generated from message prx.v1.CreateTaskResponse
  */
 export type CreateTaskResponse = Message<"prx.v1.CreateTaskResponse"> & {
   /**
+   * task is the created task with its generated identifier and timestamps.
+   *
    * @generated from field: prx.v1.Task task = 1;
    */
   task?: Task | undefined;
@@ -656,30 +863,43 @@ export const CreateTaskResponseSchema: GenMessage<CreateTaskResponse> = /*@__PUR
   messageDesc(file_prx_v1_prx, 17);
 
 /**
+ * UpdateTaskRequest updates only the supplied task fields.
+ * An unset optional field is unchanged, while an empty string requests clearing a string field.
+ *
  * @generated from message prx.v1.UpdateTaskRequest
  */
 export type UpdateTaskRequest = Message<"prx.v1.UpdateTaskRequest"> & {
   /**
+   * id identifies the task to update.
+   *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
+   * title is unchanged when unset; an empty string requests clearing it.
+   *
    * @generated from field: optional string title = 2;
    */
   title?: string | undefined;
 
   /**
+   * scope is unchanged when unset; an empty string clears it.
+   *
    * @generated from field: optional string scope = 3;
    */
   scope?: string | undefined;
 
   /**
+   * status is unchanged when unset; a supplied value replaces it.
+   *
    * @generated from field: optional prx.v1.TaskStatus status = 4;
    */
   status?: TaskStatus | undefined;
 
   /**
+   * assignee is unchanged when unset; an empty string clears it.
+   *
    * @generated from field: optional string assignee = 5;
    */
   assignee?: string | undefined;
@@ -693,10 +913,14 @@ export const UpdateTaskRequestSchema: GenMessage<UpdateTaskRequest> = /*@__PURE_
   messageDesc(file_prx_v1_prx, 18);
 
 /**
+ * UpdateTaskResponse returns the updated task.
+ *
  * @generated from message prx.v1.UpdateTaskResponse
  */
 export type UpdateTaskResponse = Message<"prx.v1.UpdateTaskResponse"> & {
   /**
+   * task is the task after applying the requested updates.
+   *
    * @generated from field: prx.v1.Task task = 1;
    */
   task?: Task | undefined;
@@ -710,15 +934,21 @@ export const UpdateTaskResponseSchema: GenMessage<UpdateTaskResponse> = /*@__PUR
   messageDesc(file_prx_v1_prx, 19);
 
 /**
+ * DeleteTaskRequest requests deletion of a task and optionally its references.
+ *
  * @generated from message prx.v1.DeleteTaskRequest
  */
 export type DeleteTaskRequest = Message<"prx.v1.DeleteTaskRequest"> & {
   /**
+   * id identifies the task to delete.
+   *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
+   * cascade permits deletion of the task's dependencies, pull request, and documents.
+   *
    * @generated from field: bool cascade = 2;
    */
   cascade: boolean;
@@ -732,6 +962,8 @@ export const DeleteTaskRequestSchema: GenMessage<DeleteTaskRequest> = /*@__PURE_
   messageDesc(file_prx_v1_prx, 20);
 
 /**
+ * DeleteTaskResponse confirms that the task was deleted.
+ *
  * @generated from message prx.v1.DeleteTaskResponse
  */
 export type DeleteTaskResponse = Message<"prx.v1.DeleteTaskResponse"> & {
@@ -745,15 +977,21 @@ export const DeleteTaskResponseSchema: GenMessage<DeleteTaskResponse> = /*@__PUR
   messageDesc(file_prx_v1_prx, 21);
 
 /**
+ * AddDependencyRequest creates a same-feature dependency edge.
+ *
  * @generated from message prx.v1.AddDependencyRequest
  */
 export type AddDependencyRequest = Message<"prx.v1.AddDependencyRequest"> & {
   /**
+   * blocker_task_id identifies the task that must be satisfied first.
+   *
    * @generated from field: string blocker_task_id = 1;
    */
   blockerTaskId: string;
 
   /**
+   * blocked_task_id identifies the task that will wait for the blocker.
+   *
    * @generated from field: string blocked_task_id = 2;
    */
   blockedTaskId: string;
@@ -767,10 +1005,14 @@ export const AddDependencyRequestSchema: GenMessage<AddDependencyRequest> = /*@_
   messageDesc(file_prx_v1_prx, 22);
 
 /**
+ * AddDependencyResponse returns the newly created dependency.
+ *
  * @generated from message prx.v1.AddDependencyResponse
  */
 export type AddDependencyResponse = Message<"prx.v1.AddDependencyResponse"> & {
   /**
+   * dependency is the persisted directed edge.
+   *
    * @generated from field: prx.v1.Dependency dependency = 1;
    */
   dependency?: Dependency | undefined;
@@ -784,15 +1026,21 @@ export const AddDependencyResponseSchema: GenMessage<AddDependencyResponse> = /*
   messageDesc(file_prx_v1_prx, 23);
 
 /**
+ * RemoveDependencyRequest identifies a dependency edge to remove.
+ *
  * @generated from message prx.v1.RemoveDependencyRequest
  */
 export type RemoveDependencyRequest = Message<"prx.v1.RemoveDependencyRequest"> & {
   /**
+   * blocker_task_id identifies the dependency's blocker.
+   *
    * @generated from field: string blocker_task_id = 1;
    */
   blockerTaskId: string;
 
   /**
+   * blocked_task_id identifies the dependency's blocked task.
+   *
    * @generated from field: string blocked_task_id = 2;
    */
   blockedTaskId: string;
@@ -806,6 +1054,8 @@ export const RemoveDependencyRequestSchema: GenMessage<RemoveDependencyRequest> 
   messageDesc(file_prx_v1_prx, 24);
 
 /**
+ * RemoveDependencyResponse confirms that the dependency was removed.
+ *
  * @generated from message prx.v1.RemoveDependencyResponse
  */
 export type RemoveDependencyResponse = Message<"prx.v1.RemoveDependencyResponse"> & {
@@ -819,15 +1069,21 @@ export const RemoveDependencyResponseSchema: GenMessage<RemoveDependencyResponse
   messageDesc(file_prx_v1_prx, 25);
 
 /**
+ * AttachPullRequestRequest links a GitHub pull request to a pull-request task.
+ *
  * @generated from message prx.v1.AttachPullRequestRequest
  */
 export type AttachPullRequestRequest = Message<"prx.v1.AttachPullRequestRequest"> & {
   /**
+   * task_id identifies the pull-request task.
+   *
    * @generated from field: string task_id = 1;
    */
   taskId: string;
 
   /**
+   * url is the GitHub pull request URL to attach.
+   *
    * @generated from field: string url = 2;
    */
   url: string;
@@ -841,10 +1097,14 @@ export const AttachPullRequestRequestSchema: GenMessage<AttachPullRequestRequest
   messageDesc(file_prx_v1_prx, 26);
 
 /**
+ * AttachPullRequestResponse returns the attached pull request.
+ *
  * @generated from message prx.v1.AttachPullRequestResponse
  */
 export type AttachPullRequestResponse = Message<"prx.v1.AttachPullRequestResponse"> & {
   /**
+   * pull_request is the newly attached record with unknown initial GitHub state.
+   *
    * @generated from field: prx.v1.PullRequest pull_request = 1;
    */
   pullRequest?: PullRequest | undefined;
@@ -858,10 +1118,14 @@ export const AttachPullRequestResponseSchema: GenMessage<AttachPullRequestRespon
   messageDesc(file_prx_v1_prx, 27);
 
 /**
+ * DetachPullRequestRequest identifies the task whose pull request should be detached.
+ *
  * @generated from message prx.v1.DetachPullRequestRequest
  */
 export type DetachPullRequestRequest = Message<"prx.v1.DetachPullRequestRequest"> & {
   /**
+   * task_id identifies the task whose pull request is removed.
+   *
    * @generated from field: string task_id = 1;
    */
   taskId: string;
@@ -875,6 +1139,8 @@ export const DetachPullRequestRequestSchema: GenMessage<DetachPullRequestRequest
   messageDesc(file_prx_v1_prx, 28);
 
 /**
+ * DetachPullRequestResponse confirms that the pull request was detached.
+ *
  * @generated from message prx.v1.DetachPullRequestResponse
  */
 export type DetachPullRequestResponse = Message<"prx.v1.DetachPullRequestResponse"> & {
@@ -888,30 +1154,42 @@ export const DetachPullRequestResponseSchema: GenMessage<DetachPullRequestRespon
   messageDesc(file_prx_v1_prx, 29);
 
 /**
+ * AddDocumentRequest registers a URL or Markdown path under exactly one parent.
+ *
  * @generated from message prx.v1.AddDocumentRequest
  */
 export type AddDocumentRequest = Message<"prx.v1.AddDocumentRequest"> & {
   /**
+   * feature_id identifies the parent feature when task_id is empty.
+   *
    * @generated from field: string feature_id = 1;
    */
   featureId: string;
 
   /**
+   * task_id identifies the parent task when feature_id is empty.
+   *
    * @generated from field: string task_id = 2;
    */
   taskId: string;
 
   /**
+   * kind identifies whether value is a URL or a Markdown path.
+   *
    * @generated from field: prx.v1.DocumentKind kind = 3;
    */
   kind: DocumentKind;
 
   /**
+   * title is the human-readable document label.
+   *
    * @generated from field: string title = 4;
    */
   title: string;
 
   /**
+   * value is the URL or file path to register.
+   *
    * @generated from field: string value = 5;
    */
   value: string;
@@ -925,10 +1203,14 @@ export const AddDocumentRequestSchema: GenMessage<AddDocumentRequest> = /*@__PUR
   messageDesc(file_prx_v1_prx, 30);
 
 /**
+ * AddDocumentResponse returns the newly registered document.
+ *
  * @generated from message prx.v1.AddDocumentResponse
  */
 export type AddDocumentResponse = Message<"prx.v1.AddDocumentResponse"> & {
   /**
+   * document is the persisted document reference.
+   *
    * @generated from field: prx.v1.Document document = 1;
    */
   document?: Document | undefined;
@@ -942,10 +1224,14 @@ export const AddDocumentResponseSchema: GenMessage<AddDocumentResponse> = /*@__P
   messageDesc(file_prx_v1_prx, 31);
 
 /**
+ * DeleteDocumentRequest identifies a document reference to delete.
+ *
  * @generated from message prx.v1.DeleteDocumentRequest
  */
 export type DeleteDocumentRequest = Message<"prx.v1.DeleteDocumentRequest"> & {
   /**
+   * id identifies the document to delete.
+   *
    * @generated from field: string id = 1;
    */
   id: string;
@@ -959,6 +1245,8 @@ export const DeleteDocumentRequestSchema: GenMessage<DeleteDocumentRequest> = /*
   messageDesc(file_prx_v1_prx, 32);
 
 /**
+ * DeleteDocumentResponse confirms that the document was deleted.
+ *
  * @generated from message prx.v1.DeleteDocumentResponse
  */
 export type DeleteDocumentResponse = Message<"prx.v1.DeleteDocumentResponse"> & {
@@ -972,10 +1260,14 @@ export const DeleteDocumentResponseSchema: GenMessage<DeleteDocumentResponse> = 
   messageDesc(file_prx_v1_prx, 33);
 
 /**
+ * ReadMarkdownDocumentRequest identifies a registered Markdown path to read.
+ *
  * @generated from message prx.v1.ReadMarkdownDocumentRequest
  */
 export type ReadMarkdownDocumentRequest = Message<"prx.v1.ReadMarkdownDocumentRequest"> & {
   /**
+   * id identifies the Markdown document reference.
+   *
    * @generated from field: string id = 1;
    */
   id: string;
@@ -989,10 +1281,14 @@ export const ReadMarkdownDocumentRequestSchema: GenMessage<ReadMarkdownDocumentR
   messageDesc(file_prx_v1_prx, 34);
 
 /**
+ * ReadMarkdownDocumentResponse returns Markdown content for a registered path.
+ *
  * @generated from message prx.v1.ReadMarkdownDocumentResponse
  */
 export type ReadMarkdownDocumentResponse = Message<"prx.v1.ReadMarkdownDocumentResponse"> & {
   /**
+   * content contains the file contents and is limited to 1 MiB.
+   *
    * @generated from field: string content = 1;
    */
   content: string;
@@ -1006,15 +1302,22 @@ export const ReadMarkdownDocumentResponseSchema: GenMessage<ReadMarkdownDocument
   messageDesc(file_prx_v1_prx, 35);
 
 /**
+ * SyncRequest selects pull requests to refresh from GitHub.
+ * Empty selectors refresh all pull requests; setting both selectors applies both filters.
+ *
  * @generated from message prx.v1.SyncRequest
  */
 export type SyncRequest = Message<"prx.v1.SyncRequest"> & {
   /**
+   * feature_id selects pull requests belonging to the feature identified by ID or slug.
+   *
    * @generated from field: string feature_id = 1;
    */
   featureId: string;
 
   /**
+   * task_id selects the pull request attached to this task.
+   *
    * @generated from field: string task_id = 2;
    */
   taskId: string;
@@ -1028,15 +1331,21 @@ export const SyncRequestSchema: GenMessage<SyncRequest> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 36);
 
 /**
+ * SyncResponse reports the results of a pull request refresh.
+ *
  * @generated from message prx.v1.SyncResponse
  */
 export type SyncResponse = Message<"prx.v1.SyncResponse"> & {
   /**
+   * succeeded is the number of pull requests refreshed successfully.
+   *
    * @generated from field: int32 succeeded = 1;
    */
   succeeded: number;
 
   /**
+   * failed is the number of pull requests that retained stale data after a refresh error.
+   *
    * @generated from field: int32 failed = 2;
    */
   failed: number;
@@ -1050,6 +1359,8 @@ export const SyncResponseSchema: GenMessage<SyncResponse> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 37);
 
 /**
+ * ValidateRequest requests database integrity validation.
+ *
  * @generated from message prx.v1.ValidateRequest
  */
 export type ValidateRequest = Message<"prx.v1.ValidateRequest"> & {
@@ -1063,15 +1374,21 @@ export const ValidateRequestSchema: GenMessage<ValidateRequest> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 38);
 
 /**
+ * ValidateResponse reports whether database integrity checks passed.
+ *
  * @generated from message prx.v1.ValidateResponse
  */
 export type ValidateResponse = Message<"prx.v1.ValidateResponse"> & {
   /**
+   * valid is true when no integrity errors were found.
+   *
    * @generated from field: bool valid = 1;
    */
   valid: boolean;
 
   /**
+   * errors contains human-readable integrity errors when valid is false.
+   *
    * @generated from field: repeated string errors = 2;
    */
   errors: string[];
@@ -1085,30 +1402,42 @@ export const ValidateResponseSchema: GenMessage<ValidateResponse> = /*@__PURE__*
   messageDesc(file_prx_v1_prx, 39);
 
 /**
+ * FeatureStatus is the lifecycle state of a feature.
+ *
  * @generated from enum prx.v1.FeatureStatus
  */
 export enum FeatureStatus {
   /**
+   * FEATURE_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
+   *
    * @generated from enum value: FEATURE_STATUS_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * FEATURE_STATUS_ACTIVE means the feature is currently being worked on.
+   *
    * @generated from enum value: FEATURE_STATUS_ACTIVE = 1;
    */
   ACTIVE = 1,
 
   /**
+   * FEATURE_STATUS_PAUSED means work on the feature is temporarily paused.
+   *
    * @generated from enum value: FEATURE_STATUS_PAUSED = 2;
    */
   PAUSED = 2,
 
   /**
+   * FEATURE_STATUS_COMPLETED means the feature has been completed.
+   *
    * @generated from enum value: FEATURE_STATUS_COMPLETED = 3;
    */
   COMPLETED = 3,
 
   /**
+   * FEATURE_STATUS_CANCELLED means the feature will not be completed.
+   *
    * @generated from enum value: FEATURE_STATUS_CANCELLED = 4;
    */
   CANCELLED = 4,
@@ -1121,20 +1450,28 @@ export const FeatureStatusSchema: GenEnum<FeatureStatus> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 0);
 
 /**
+ * TaskKind identifies whether a task is completed by merging a pull request or manually.
+ *
  * @generated from enum prx.v1.TaskKind
  */
 export enum TaskKind {
   /**
+   * TASK_KIND_UNSPECIFIED is never returned by the server; in create requests it defaults to a pull-request task.
+   *
    * @generated from enum value: TASK_KIND_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * TASK_KIND_PULL_REQUEST identifies a task completed by merging its pull request.
+   *
    * @generated from enum value: TASK_KIND_PULL_REQUEST = 1;
    */
   PULL_REQUEST = 1,
 
   /**
+   * TASK_KIND_MANUAL identifies a task completed by setting its status to completed.
+   *
    * @generated from enum value: TASK_KIND_MANUAL = 2;
    */
   MANUAL = 2,
@@ -1147,30 +1484,42 @@ export const TaskKindSchema: GenEnum<TaskKind> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 1);
 
 /**
+ * TaskStatus is the stored workflow state of a task.
+ *
  * @generated from enum prx.v1.TaskStatus
  */
 export enum TaskStatus {
   /**
+   * TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
+   *
    * @generated from enum value: TASK_STATUS_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * TASK_STATUS_PLANNED means work has not started.
+   *
    * @generated from enum value: TASK_STATUS_PLANNED = 1;
    */
   PLANNED = 1,
 
   /**
+   * TASK_STATUS_IN_PROGRESS means work is underway.
+   *
    * @generated from enum value: TASK_STATUS_IN_PROGRESS = 2;
    */
   IN_PROGRESS = 2,
 
   /**
+   * TASK_STATUS_COMPLETED means a manual task is complete; pull-request tasks complete on merge.
+   *
    * @generated from enum value: TASK_STATUS_COMPLETED = 3;
    */
   COMPLETED = 3,
 
   /**
+   * TASK_STATUS_CANCELLED means the task is cancelled and does not satisfy dependencies.
+   *
    * @generated from enum value: TASK_STATUS_CANCELLED = 4;
    */
   CANCELLED = 4,
@@ -1183,80 +1532,114 @@ export const TaskStatusSchema: GenEnum<TaskStatus> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 2);
 
 /**
+ * TaskDisplayState is the derived state presented for a task.
+ * For pull-request tasks, priority is merged, closed, draft, conflict, changes requested, approved,
+ * review waiting, open, then unknown.
+ *
  * @generated from enum prx.v1.TaskDisplayState
  */
 export enum TaskDisplayState {
   /**
+   * TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * TASK_DISPLAY_STATE_PLANNED mirrors a planned manual task.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_PLANNED = 1;
    */
   PLANNED = 1,
 
   /**
+   * TASK_DISPLAY_STATE_IN_PROGRESS mirrors an in-progress manual task.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_IN_PROGRESS = 2;
    */
   IN_PROGRESS = 2,
 
   /**
+   * TASK_DISPLAY_STATE_COMPLETED mirrors a completed manual task.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_COMPLETED = 3;
    */
   COMPLETED = 3,
 
   /**
+   * TASK_DISPLAY_STATE_CANCELLED mirrors a cancelled task.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_CANCELLED = 4;
    */
   CANCELLED = 4,
 
   /**
+   * TASK_DISPLAY_STATE_UNLINKED means a pull-request task has no attached pull request.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_UNLINKED = 5;
    */
   UNLINKED = 5,
 
   /**
+   * TASK_DISPLAY_STATE_MERGED means the attached pull request is merged.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_MERGED = 6;
    */
   MERGED = 6,
 
   /**
+   * TASK_DISPLAY_STATE_CLOSED means the attached pull request is closed without being merged.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_CLOSED = 7;
    */
   CLOSED = 7,
 
   /**
+   * TASK_DISPLAY_STATE_DRAFT means the attached pull request is a draft.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_DRAFT = 8;
    */
   DRAFT = 8,
 
   /**
+   * TASK_DISPLAY_STATE_CONFLICT means the attached pull request has a merge conflict.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_CONFLICT = 9;
    */
   CONFLICT = 9,
 
   /**
+   * TASK_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_CHANGES_REQUESTED = 10;
    */
   CHANGES_REQUESTED = 10,
 
   /**
+   * TASK_DISPLAY_STATE_APPROVED means the attached pull request has an approval.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_APPROVED = 11;
    */
   APPROVED = 11,
 
   /**
+   * TASK_DISPLAY_STATE_REVIEW_WAITING means the attached open pull request is waiting for review.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_REVIEW_WAITING = 12;
    */
   REVIEW_WAITING = 12,
 
   /**
+   * TASK_DISPLAY_STATE_OPEN means the attached pull request is open without a higher-priority state.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_OPEN = 13;
    */
   OPEN = 13,
 
   /**
+   * TASK_DISPLAY_STATE_UNKNOWN means the attached pull request state or relevant data is unknown.
+   *
    * @generated from enum value: TASK_DISPLAY_STATE_UNKNOWN = 14;
    */
   UNKNOWN = 14,
@@ -1269,30 +1652,42 @@ export const TaskDisplayStateSchema: GenEnum<TaskDisplayState> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 3);
 
 /**
+ * PullRequestState is the raw lifecycle state reported for a GitHub pull request.
+ *
  * @generated from enum prx.v1.PullRequestState
  */
 export enum PullRequestState {
   /**
+   * PULL_REQUEST_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+   *
    * @generated from enum value: PULL_REQUEST_STATE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * PULL_REQUEST_STATE_OPEN means GitHub reports the pull request as open.
+   *
    * @generated from enum value: PULL_REQUEST_STATE_OPEN = 1;
    */
   OPEN = 1,
 
   /**
+   * PULL_REQUEST_STATE_CLOSED means GitHub reports the pull request as closed without merge.
+   *
    * @generated from enum value: PULL_REQUEST_STATE_CLOSED = 2;
    */
   CLOSED = 2,
 
   /**
+   * PULL_REQUEST_STATE_MERGED means GitHub reports the pull request as merged.
+   *
    * @generated from enum value: PULL_REQUEST_STATE_MERGED = 3;
    */
   MERGED = 3,
 
   /**
+   * PULL_REQUEST_STATE_UNKNOWN means the pull request state could not be determined.
+   *
    * @generated from enum value: PULL_REQUEST_STATE_UNKNOWN = 4;
    */
   UNKNOWN = 4,
@@ -1305,35 +1700,49 @@ export const PullRequestStateSchema: GenEnum<PullRequestState> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 4);
 
 /**
+ * ReviewState summarizes the current review decision and requested reviewers.
+ *
  * @generated from enum prx.v1.ReviewState
  */
 export enum ReviewState {
   /**
+   * REVIEW_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+   *
    * @generated from enum value: REVIEW_STATE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * REVIEW_STATE_NONE means no approval or change request is currently active.
+   *
    * @generated from enum value: REVIEW_STATE_NONE = 1;
    */
   NONE = 1,
 
   /**
+   * REVIEW_STATE_REQUIRED means the pull request has requested reviewers.
+   *
    * @generated from enum value: REVIEW_STATE_REQUIRED = 2;
    */
   REQUIRED = 2,
 
   /**
+   * REVIEW_STATE_APPROVED means at least one current review approves the pull request.
+   *
    * @generated from enum value: REVIEW_STATE_APPROVED = 3;
    */
   APPROVED = 3,
 
   /**
+   * REVIEW_STATE_CHANGES_REQUESTED means at least one current review requests changes.
+   *
    * @generated from enum value: REVIEW_STATE_CHANGES_REQUESTED = 4;
    */
   CHANGES_REQUESTED = 4,
 
   /**
+   * REVIEW_STATE_UNKNOWN means review information could not be determined.
+   *
    * @generated from enum value: REVIEW_STATE_UNKNOWN = 5;
    */
   UNKNOWN = 5,
@@ -1346,25 +1755,35 @@ export const ReviewStateSchema: GenEnum<ReviewState> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 5);
 
 /**
+ * Mergeability is the current mergeability reported for a GitHub pull request.
+ *
  * @generated from enum prx.v1.Mergeability
  */
 export enum Mergeability {
   /**
+   * MERGEABILITY_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+   *
    * @generated from enum value: MERGEABILITY_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * MERGEABILITY_MERGEABLE means GitHub reports no merge conflict.
+   *
    * @generated from enum value: MERGEABILITY_MERGEABLE = 1;
    */
   MERGEABLE = 1,
 
   /**
+   * MERGEABILITY_CONFLICTING means GitHub reports a merge conflict.
+   *
    * @generated from enum value: MERGEABILITY_CONFLICTING = 2;
    */
   CONFLICTING = 2,
 
   /**
+   * MERGEABILITY_UNKNOWN means mergeability could not be determined.
+   *
    * @generated from enum value: MERGEABILITY_UNKNOWN = 3;
    */
   UNKNOWN = 3,
@@ -1377,55 +1796,78 @@ export const MergeabilitySchema: GenEnum<Mergeability> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 6);
 
 /**
+ * PullRequestDisplayState is the derived presentation state of a pull request.
+ * Its priority is merged, closed, draft, conflict, changes requested, approved, review waiting, open, then unknown.
+ *
  * @generated from enum prx.v1.PullRequestDisplayState
  */
 export enum PullRequestDisplayState {
   /**
+   * PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+   *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * PULL_REQUEST_DISPLAY_STATE_MERGED means the pull request is merged.
+   *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_MERGED = 1;
    */
   MERGED = 1,
 
   /**
+   * PULL_REQUEST_DISPLAY_STATE_CLOSED means the pull request is closed without being merged.
+   *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_CLOSED = 2;
    */
   CLOSED = 2,
 
   /**
+   * PULL_REQUEST_DISPLAY_STATE_DRAFT means the pull request is a draft.
+   *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_DRAFT = 3;
    */
   DRAFT = 3,
 
   /**
+   * PULL_REQUEST_DISPLAY_STATE_CONFLICT means the pull request has a merge conflict.
+   *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_CONFLICT = 4;
    */
   CONFLICT = 4,
 
   /**
+   * PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
+   *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED = 5;
    */
   CHANGES_REQUESTED = 5,
 
   /**
+   * PULL_REQUEST_DISPLAY_STATE_APPROVED means the pull request has an approval.
+   *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_APPROVED = 6;
    */
   APPROVED = 6,
 
   /**
+   * PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING means the open, non-draft pull request needs review.
+   *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING = 7;
    */
   REVIEW_WAITING = 7,
 
   /**
+   * PULL_REQUEST_DISPLAY_STATE_OPEN means the pull request is open without a higher-priority state.
+   *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_OPEN = 8;
    */
   OPEN = 8,
 
   /**
+   * PULL_REQUEST_DISPLAY_STATE_UNKNOWN means the pull request state or relevant data is unknown.
+   *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_UNKNOWN = 9;
    */
   UNKNOWN = 9,
@@ -1438,20 +1880,28 @@ export const PullRequestDisplayStateSchema: GenEnum<PullRequestDisplayState> = /
   enumDesc(file_prx_v1_prx, 7);
 
 /**
+ * DocumentKind identifies the type of reference stored in a document.
+ *
  * @generated from enum prx.v1.DocumentKind
  */
 export enum DocumentKind {
   /**
+   * DOCUMENT_KIND_UNSPECIFIED is never returned by the server and is rejected in requests.
+   *
    * @generated from enum value: DOCUMENT_KIND_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * DOCUMENT_KIND_URL stores an HTTP or HTTPS URL.
+   *
    * @generated from enum value: DOCUMENT_KIND_URL = 1;
    */
   URL = 1,
 
   /**
+   * DOCUMENT_KIND_MARKDOWN_PATH stores a path to a registered Markdown file.
+   *
    * @generated from enum value: DOCUMENT_KIND_MARKDOWN_PATH = 2;
    */
   MARKDOWN_PATH = 2,
@@ -1464,25 +1914,35 @@ export const DocumentKindSchema: GenEnum<DocumentKind> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 8);
 
 /**
+ * BlockedReasonCode explains why a planned task is not ready.
+ *
  * @generated from enum prx.v1.BlockedReasonCode
  */
 export enum BlockedReasonCode {
   /**
+   * BLOCKED_REASON_CODE_UNSPECIFIED is never returned; no BlockedReason is sent when there is no structured reason.
+   *
    * @generated from enum value: BLOCKED_REASON_CODE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE means a referenced blocker is missing.
+   *
    * @generated from enum value: BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE = 1;
    */
   DEPENDENCY_DATA_INCOMPLETE = 1,
 
   /**
+   * BLOCKED_REASON_CODE_BLOCKER_STALE means a blocker has stale GitHub data.
+   *
    * @generated from enum value: BLOCKED_REASON_CODE_BLOCKER_STALE = 2;
    */
   BLOCKER_STALE = 2,
 
   /**
+   * BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER means a dependency has not been satisfied.
+   *
    * @generated from enum value: BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER = 3;
    */
   WAITING_FOR_BLOCKER = 3,
@@ -1495,120 +1955,168 @@ export const BlockedReasonCodeSchema: GenEnum<BlockedReasonCode> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 9);
 
 /**
+ * DomainErrorCode identifies a known validation, state, storage, or GitHub error exposed over RPC.
+ *
  * @generated from enum prx.v1.DomainErrorCode
  */
 export enum DomainErrorCode {
   /**
+   * DOMAIN_ERROR_CODE_UNSPECIFIED is never returned for a recognized domain error; it is the unmapped fallback.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
+   * DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY means a dependency crosses feature boundaries.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY = 2;
    */
   CROSS_FEATURE_DEPENDENCY = 2,
 
   /**
+   * DOMAIN_ERROR_CODE_CYCLE means adding a dependency would create a cycle.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_CYCLE = 3;
    */
   CYCLE = 3,
 
   /**
+   * DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY means the dependency already exists.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY = 4;
    */
   DUPLICATE_DEPENDENCY = 4,
 
   /**
+   * DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST means the pull request is already attached to another task.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST = 5;
    */
   DUPLICATE_PULL_REQUEST = 5,
 
   /**
+   * DOMAIN_ERROR_CODE_GITHUB_AUTH means GitHub credentials or a provider are unavailable.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_GITHUB_AUTH = 6;
    */
   GITHUB_AUTH = 6,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_DATABASE means database validation failed.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DATABASE = 7;
    */
   INVALID_DATABASE = 7,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_DOCUMENT means a document value is missing or invalid.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DOCUMENT = 8;
    */
   INVALID_DOCUMENT = 8,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND means the document kind is unsupported.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND = 9;
    */
   INVALID_DOCUMENT_KIND = 9,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_KIND means the task kind is unsupported.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_KIND = 10;
    */
   INVALID_KIND = 10,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_PARENT means a document does not have exactly one valid parent.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_PARENT = 11;
    */
   INVALID_PARENT = 11,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL means the pull request URL cannot be parsed.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL = 12;
    */
   INVALID_PULL_REQUEST_URL = 12,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_SEED means seed parameters are invalid.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_SEED = 13;
    */
   INVALID_SEED = 13,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_SLUG means a feature slug does not meet its format rules.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_SLUG = 14;
    */
   INVALID_SLUG = 14,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_STATUS means a feature or task status is unsupported.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_STATUS = 15;
    */
   INVALID_STATUS = 15,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_TITLE means a required feature or task title is empty.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_TITLE = 16;
    */
   INVALID_TITLE = 16,
 
   /**
+   * DOMAIN_ERROR_CODE_NOT_FOUND means the requested record does not exist.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_NOT_FOUND = 17;
    */
   NOT_FOUND = 17,
 
   /**
+   * DOMAIN_ERROR_CODE_REFERENCES_EXIST means deletion is blocked by referencing records.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_REFERENCES_EXIST = 18;
    */
   REFERENCES_EXIST = 18,
 
   /**
+   * DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK means a pull request cannot attach to a manual task.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK = 19;
    */
   PULL_REQUEST_ON_MANUAL_TASK = 19,
 
   /**
+   * DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE means a pull-request task cannot be manually completed.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE = 20;
    */
   PR_TASK_COMPLETES_ON_MERGE = 20,
 
   /**
+   * DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL means a document URL is not HTTP or HTTPS.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL = 21;
    */
   INVALID_DOCUMENT_URL = 21,
 
   /**
+   * DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED means a registered Markdown file could not be read.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED = 22;
    */
   DOCUMENT_READ_FAILED = 22,
 
   /**
+   * DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE means a Markdown preview exceeds the 1 MiB limit.
+   *
    * @generated from enum value: DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE = 23;
    */
   DOCUMENT_TOO_LARGE = 23,
@@ -1621,10 +2129,14 @@ export const DomainErrorCodeSchema: GenEnum<DomainErrorCode> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 10);
 
 /**
+ * PRXService exposes feature, task, dependency, GitHub, document, and validation operations.
+ *
  * @generated from service prx.v1.PRXService
  */
 export const PRXService: GenService<{
   /**
+   * GetSnapshot returns the current normalized dataset and derived queues.
+   *
    * @generated from rpc prx.v1.PRXService.GetSnapshot
    */
   getSnapshot: {
@@ -1633,6 +2145,8 @@ export const PRXService: GenService<{
     output: typeof GetSnapshotResponseSchema;
   },
   /**
+   * CreateFeature creates a new feature.
+   *
    * @generated from rpc prx.v1.PRXService.CreateFeature
    */
   createFeature: {
@@ -1641,6 +2155,8 @@ export const PRXService: GenService<{
     output: typeof CreateFeatureResponseSchema;
   },
   /**
+   * UpdateFeature applies the fields present in the request to an existing feature.
+   *
    * @generated from rpc prx.v1.PRXService.UpdateFeature
    */
   updateFeature: {
@@ -1649,6 +2165,8 @@ export const PRXService: GenService<{
     output: typeof UpdateFeatureResponseSchema;
   },
   /**
+   * DeleteFeature deletes a feature, subject to the cascade option.
+   *
    * @generated from rpc prx.v1.PRXService.DeleteFeature
    */
   deleteFeature: {
@@ -1657,6 +2175,8 @@ export const PRXService: GenService<{
     output: typeof DeleteFeatureResponseSchema;
   },
   /**
+   * CreateTask creates a task within an existing feature.
+   *
    * @generated from rpc prx.v1.PRXService.CreateTask
    */
   createTask: {
@@ -1665,6 +2185,8 @@ export const PRXService: GenService<{
     output: typeof CreateTaskResponseSchema;
   },
   /**
+   * UpdateTask applies the fields present in the request to an existing task.
+   *
    * @generated from rpc prx.v1.PRXService.UpdateTask
    */
   updateTask: {
@@ -1673,6 +2195,8 @@ export const PRXService: GenService<{
     output: typeof UpdateTaskResponseSchema;
   },
   /**
+   * DeleteTask deletes a task, subject to the cascade option.
+   *
    * @generated from rpc prx.v1.PRXService.DeleteTask
    */
   deleteTask: {
@@ -1681,6 +2205,8 @@ export const PRXService: GenService<{
     output: typeof DeleteTaskResponseSchema;
   },
   /**
+   * AddDependency adds a same-feature dependency when it does not create a cycle.
+   *
    * @generated from rpc prx.v1.PRXService.AddDependency
    */
   addDependency: {
@@ -1689,6 +2215,8 @@ export const PRXService: GenService<{
     output: typeof AddDependencyResponseSchema;
   },
   /**
+   * RemoveDependency removes an existing dependency edge.
+   *
    * @generated from rpc prx.v1.PRXService.RemoveDependency
    */
   removeDependency: {
@@ -1697,6 +2225,8 @@ export const PRXService: GenService<{
     output: typeof RemoveDependencyResponseSchema;
   },
   /**
+   * AttachPullRequest attaches a GitHub pull request to a pull-request task.
+   *
    * @generated from rpc prx.v1.PRXService.AttachPullRequest
    */
   attachPullRequest: {
@@ -1705,6 +2235,8 @@ export const PRXService: GenService<{
     output: typeof AttachPullRequestResponseSchema;
   },
   /**
+   * DetachPullRequest removes the pull request attached to a task.
+   *
    * @generated from rpc prx.v1.PRXService.DetachPullRequest
    */
   detachPullRequest: {
@@ -1713,6 +2245,8 @@ export const PRXService: GenService<{
     output: typeof DetachPullRequestResponseSchema;
   },
   /**
+   * AddDocument registers a URL or Markdown path under a feature or task.
+   *
    * @generated from rpc prx.v1.PRXService.AddDocument
    */
   addDocument: {
@@ -1721,6 +2255,8 @@ export const PRXService: GenService<{
     output: typeof AddDocumentResponseSchema;
   },
   /**
+   * DeleteDocument removes a registered document reference.
+   *
    * @generated from rpc prx.v1.PRXService.DeleteDocument
    */
   deleteDocument: {
@@ -1729,6 +2265,8 @@ export const PRXService: GenService<{
     output: typeof DeleteDocumentResponseSchema;
   },
   /**
+   * ReadMarkdownDocument reads a registered Markdown path for preview.
+   *
    * @generated from rpc prx.v1.PRXService.ReadMarkdownDocument
    */
   readMarkdownDocument: {
@@ -1737,6 +2275,8 @@ export const PRXService: GenService<{
     output: typeof ReadMarkdownDocumentResponseSchema;
   },
   /**
+   * Sync refreshes selected pull requests from GitHub and records successes and failures independently.
+   *
    * @generated from rpc prx.v1.PRXService.Sync
    */
   sync: {
@@ -1745,6 +2285,8 @@ export const PRXService: GenService<{
     output: typeof SyncResponseSchema;
   },
   /**
+   * Validate checks database integrity and returns any detected errors.
+   *
    * @generated from rpc prx.v1.PRXService.Validate
    */
   validate: {

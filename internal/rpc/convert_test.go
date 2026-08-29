@@ -5,6 +5,7 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
+
 	prxv1 "github.com/HappyOnigiri/PRX/gen/prx/v1"
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
@@ -82,9 +83,17 @@ func TestProtoTaskDisplayStateMapsEveryKnownValue(t *testing.T) {
 		{"closed", domain.TaskDisplayStateClosed, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED},
 		{"draft", domain.TaskDisplayStateDraft, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DRAFT},
 		{"conflict", domain.TaskDisplayStateConflict, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CONFLICT},
-		{"changes requested", domain.TaskDisplayStateChangesRequested, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CHANGES_REQUESTED},
+		{
+			"changes requested",
+			domain.TaskDisplayStateChangesRequested,
+			prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CHANGES_REQUESTED,
+		},
 		{"approved", domain.TaskDisplayStateApproved, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_APPROVED},
-		{"review waiting", domain.TaskDisplayStateReviewWaiting, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_REVIEW_WAITING},
+		{
+			"review waiting",
+			domain.TaskDisplayStateReviewWaiting,
+			prxv1.TaskDisplayState_TASK_DISPLAY_STATE_REVIEW_WAITING,
+		},
 		{"open", domain.TaskDisplayStateOpen, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_OPEN},
 		{"unknown", domain.TaskDisplayStateUnknown, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNKNOWN},
 	}
@@ -163,15 +172,43 @@ func TestProtoPullRequestDisplayStateMapsEveryKnownValue(t *testing.T) {
 		value domain.PullRequestDisplayState
 		want  prxv1.PullRequestDisplayState
 	}{
-		{"merged", domain.PullRequestDisplayStateMerged, prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_MERGED},
-		{"closed", domain.PullRequestDisplayStateClosed, prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CLOSED},
+		{
+			"merged",
+			domain.PullRequestDisplayStateMerged,
+			prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_MERGED,
+		},
+		{
+			"closed",
+			domain.PullRequestDisplayStateClosed,
+			prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CLOSED,
+		},
 		{"draft", domain.PullRequestDisplayStateDraft, prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_DRAFT},
-		{"conflict", domain.PullRequestDisplayStateConflict, prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CONFLICT},
-		{"changes requested", domain.PullRequestDisplayStateChangesRequested, prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED},
-		{"approved", domain.PullRequestDisplayStateApproved, prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_APPROVED},
-		{"review waiting", domain.PullRequestDisplayStateReviewWaiting, prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING},
+		{
+			"conflict",
+			domain.PullRequestDisplayStateConflict,
+			prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CONFLICT,
+		},
+		{
+			"changes requested",
+			domain.PullRequestDisplayStateChangesRequested,
+			prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED,
+		},
+		{
+			"approved",
+			domain.PullRequestDisplayStateApproved,
+			prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_APPROVED,
+		},
+		{
+			"review waiting",
+			domain.PullRequestDisplayStateReviewWaiting,
+			prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING,
+		},
 		{"open", domain.PullRequestDisplayStateOpen, prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_OPEN},
-		{"unknown", domain.PullRequestDisplayStateUnknown, prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNKNOWN},
+		{
+			"unknown",
+			domain.PullRequestDisplayStateUnknown,
+			prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNKNOWN,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -206,14 +243,26 @@ func TestProtoBlockedReasonMapsEveryKnownValue(t *testing.T) {
 		value domain.BlockedReasonCode
 		want  prxv1.BlockedReasonCode
 	}{
-		{"dependency data incomplete", domain.BlockedReasonCodeDependencyDataIncomplete, prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE},
-		{"blocker stale", domain.BlockedReasonCodeBlockerStale, prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_BLOCKER_STALE},
-		{"waiting for blocker", domain.BlockedReasonCodeWaitingForBlocker, prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER},
+		{
+			"dependency data incomplete",
+			domain.BlockedReasonCodeDependencyDataIncomplete,
+			prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE,
+		},
+		{
+			"blocker stale",
+			domain.BlockedReasonCodeBlockerStale,
+			prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_BLOCKER_STALE,
+		},
+		{
+			"waiting for blocker",
+			domain.BlockedReasonCodeWaitingForBlocker,
+			prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
 			got := protoBlockedReason(domain.Task{BlockedCode: test.value, BlockerTaskID: "blocker"})
-			if got == nil || got.Code != test.want || got.BlockerTaskId != "blocker" {
+			if got == nil || got.GetCode() != test.want || got.GetBlockerTaskId() != "blocker" {
 				t.Fatalf("protoBlockedReason(%q)=%+v, want code %s", test.value, got, test.want)
 			}
 		})
@@ -226,28 +275,80 @@ func TestRPCErrorDetailsMapEveryKnownDomainErrorCode(t *testing.T) {
 		value domain.DomainErrorCode
 		want  prxv1.DomainErrorCode
 	}{
-		{"cross feature dependency", domain.DomainErrorCodeCrossFeatureDependency, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY},
+		{
+			"cross feature dependency",
+			domain.DomainErrorCodeCrossFeatureDependency,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY,
+		},
 		{"cycle", domain.DomainErrorCodeCycle, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE},
-		{"duplicate dependency", domain.DomainErrorCodeDuplicateDependency, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY},
-		{"duplicate pull request", domain.DomainErrorCodeDuplicatePullRequest, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST},
+		{
+			"duplicate dependency",
+			domain.DomainErrorCodeDuplicateDependency,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY,
+		},
+		{
+			"duplicate pull request",
+			domain.DomainErrorCodeDuplicatePullRequest,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST,
+		},
 		{"GitHub auth", domain.DomainErrorCodeGitHubAuth, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH},
-		{"invalid database", domain.DomainErrorCodeInvalidDatabase, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE},
-		{"invalid document", domain.DomainErrorCodeInvalidDocument, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT},
-		{"invalid document kind", domain.DomainErrorCodeInvalidDocumentKind, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND},
+		{
+			"invalid database",
+			domain.DomainErrorCodeInvalidDatabase,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE,
+		},
+		{
+			"invalid document",
+			domain.DomainErrorCodeInvalidDocument,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT,
+		},
+		{
+			"invalid document kind",
+			domain.DomainErrorCodeInvalidDocumentKind,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND,
+		},
 		{"invalid kind", domain.DomainErrorCodeInvalidKind, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND},
 		{"invalid parent", domain.DomainErrorCodeInvalidParent, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT},
-		{"invalid pull request URL", domain.DomainErrorCodeInvalidPullRequestURL, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL},
+		{
+			"invalid pull request URL",
+			domain.DomainErrorCodeInvalidPullRequestURL,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL,
+		},
 		{"invalid seed", domain.DomainErrorCodeInvalidSeed, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SEED},
 		{"invalid slug", domain.DomainErrorCodeInvalidSlug, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG},
 		{"invalid status", domain.DomainErrorCodeInvalidStatus, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS},
 		{"invalid title", domain.DomainErrorCodeInvalidTitle, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE},
 		{"not found", domain.DomainErrorCodeNotFound, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND},
-		{"references exist", domain.DomainErrorCodeReferencesExist, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST},
-		{"pull request on manual task", domain.DomainErrorCodePullRequestOnManualTask, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK},
-		{"PR task completes on merge", domain.DomainErrorCodePRTaskCompletesOnMerge, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE},
-		{"invalid document URL", domain.DomainErrorCodeInvalidDocumentURL, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL},
-		{"document read failed", domain.DomainErrorCodeDocumentReadFailed, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED},
-		{"document too large", domain.DomainErrorCodeDocumentTooLarge, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE},
+		{
+			"references exist",
+			domain.DomainErrorCodeReferencesExist,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST,
+		},
+		{
+			"pull request on manual task",
+			domain.DomainErrorCodePullRequestOnManualTask,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK,
+		},
+		{
+			"PR task completes on merge",
+			domain.DomainErrorCodePRTaskCompletesOnMerge,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE,
+		},
+		{
+			"invalid document URL",
+			domain.DomainErrorCodeInvalidDocumentURL,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL,
+		},
+		{
+			"document read failed",
+			domain.DomainErrorCodeDocumentReadFailed,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED,
+		},
+		{
+			"document too large",
+			domain.DomainErrorCodeDocumentTooLarge,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -271,7 +372,7 @@ func errorDetailCode(t *testing.T, err error) prxv1.DomainErrorCode {
 			t.Fatal(detailErr)
 		}
 		if errorDetail, ok := value.(*prxv1.ErrorDetail); ok {
-			return errorDetail.Code
+			return errorDetail.GetCode()
 		}
 	}
 	return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED

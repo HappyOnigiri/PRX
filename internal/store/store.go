@@ -14,9 +14,10 @@ import (
 	"strings"
 	"time"
 
+	_ "modernc.org/sqlite"
+
 	"github.com/HappyOnigiri/PRX/internal/db"
 	"github.com/HappyOnigiri/PRX/internal/domain"
-	_ "modernc.org/sqlite"
 )
 
 //go:embed migrations/*.sql
@@ -82,7 +83,10 @@ func (s *Store) Close() error { return s.db.Close() }
 func (s *Store) DB() *sql.DB  { return s.db }
 
 func (s *Store) migrate(ctx context.Context) error {
-	if _, err := s.db.ExecContext(ctx, `CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)`); err != nil {
+	if _, err := s.db.ExecContext(
+		ctx,
+		`CREATE TABLE IF NOT EXISTS schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)`,
+	); err != nil {
 		return fmt.Errorf("create migration metadata: %w", err)
 	}
 	entries, err := fs.ReadDir(migrations, "migrations")
@@ -100,7 +104,8 @@ func (s *Store) migrate(ctx context.Context) error {
 			return fmt.Errorf("invalid migration name %q", entry.Name())
 		}
 		var exists int
-		if err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations WHERE version=?`, version).Scan(&exists); err != nil {
+		if err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations WHERE version=?`, version).
+			Scan(&exists); err != nil {
 			return err
 		}
 		if exists > 0 {
@@ -115,7 +120,12 @@ func (s *Store) migrate(ctx context.Context) error {
 			return err
 		}
 		if _, err = tx.ExecContext(ctx, string(body)); err == nil {
-			_, err = tx.ExecContext(ctx, `INSERT INTO schema_migrations(version,applied_at) VALUES(?,?)`, version, s.now().Format(time.RFC3339Nano))
+			_, err = tx.ExecContext(
+				ctx,
+				`INSERT INTO schema_migrations(version,applied_at) VALUES(?,?)`,
+				version,
+				s.now().Format(time.RFC3339Nano),
+			)
 		}
 		if err != nil {
 			_ = tx.Rollback()
@@ -144,23 +154,70 @@ func nullableTime(value sql.NullString) *time.Time {
 }
 
 func domainFeature(value db.Feature) domain.Feature {
-	return domain.Feature{ID: value.ID, Slug: value.Slug, Title: value.Title, Description: value.Description, Status: domain.FeatureStatus(value.Status), Archived: value.Archived != 0, CreatedAt: parseTime(value.CreatedAt), UpdatedAt: parseTime(value.UpdatedAt)}
+	return domain.Feature{
+		ID:          value.ID,
+		Slug:        value.Slug,
+		Title:       value.Title,
+		Description: value.Description,
+		Status:      domain.FeatureStatus(value.Status),
+		Archived:    value.Archived != 0,
+		CreatedAt:   parseTime(value.CreatedAt),
+		UpdatedAt:   parseTime(value.UpdatedAt),
+	}
 }
 
 func domainTask(value db.Task) domain.Task {
-	return domain.Task{ID: value.ID, FeatureID: value.FeatureID, Title: value.Title, Scope: value.Scope, Kind: domain.TaskKind(value.Kind), Status: domain.TaskStatus(value.Status), Assignee: value.Assignee, CreatedAt: parseTime(value.CreatedAt), UpdatedAt: parseTime(value.UpdatedAt)}
+	return domain.Task{
+		ID:        value.ID,
+		FeatureID: value.FeatureID,
+		Title:     value.Title,
+		Scope:     value.Scope,
+		Kind:      domain.TaskKind(value.Kind),
+		Status:    domain.TaskStatus(value.Status),
+		Assignee:  value.Assignee,
+		CreatedAt: parseTime(value.CreatedAt),
+		UpdatedAt: parseTime(value.UpdatedAt),
+	}
 }
 
 func domainDependency(value db.Dependency) domain.Dependency {
-	return domain.Dependency{BlockerTaskID: value.BlockerTaskID, BlockedTaskID: value.BlockedTaskID, CreatedAt: parseTime(value.CreatedAt)}
+	return domain.Dependency{
+		BlockerTaskID: value.BlockerTaskID,
+		BlockedTaskID: value.BlockedTaskID,
+		CreatedAt:     parseTime(value.CreatedAt),
+	}
 }
 
 func domainDocument(value db.Document) domain.Document {
-	return domain.Document{ID: value.ID, FeatureID: value.FeatureID.String, TaskID: value.TaskID.String, Kind: domain.DocumentKind(value.Kind), Title: value.Title, Value: value.Value, CreatedAt: parseTime(value.CreatedAt)}
+	return domain.Document{
+		ID:        value.ID,
+		FeatureID: value.FeatureID.String,
+		TaskID:    value.TaskID.String,
+		Kind:      domain.DocumentKind(value.Kind),
+		Title:     value.Title,
+		Value:     value.Value,
+		CreatedAt: parseTime(value.CreatedAt),
+	}
 }
 
 func domainPullRequest(value db.PullRequest) domain.PullRequest {
-	result := domain.PullRequest{TaskID: value.TaskID, Owner: value.Owner, Repository: value.Repository, Number: value.Number, URL: value.Url, NodeID: value.NodeID, Author: value.Author, State: domain.PullRequestState(value.State), Draft: value.Draft != 0, ReviewState: domain.ReviewState(value.ReviewState), Mergeability: domain.Mergeability(value.Mergeability), GitHubUpdatedAt: nullableTime(value.GithubUpdatedAt), LastSyncedAt: nullableTime(value.LastSyncedAt), SyncError: value.SyncError, Stale: value.Stale != 0}
+	result := domain.PullRequest{
+		TaskID:          value.TaskID,
+		Owner:           value.Owner,
+		Repository:      value.Repository,
+		Number:          value.Number,
+		URL:             value.Url,
+		NodeID:          value.NodeID,
+		Author:          value.Author,
+		State:           domain.PullRequestState(value.State),
+		Draft:           value.Draft != 0,
+		ReviewState:     domain.ReviewState(value.ReviewState),
+		Mergeability:    domain.Mergeability(value.Mergeability),
+		GitHubUpdatedAt: nullableTime(value.GithubUpdatedAt),
+		LastSyncedAt:    nullableTime(value.LastSyncedAt),
+		SyncError:       value.SyncError,
+		Stale:           value.Stale != 0,
+	}
 	if err := jsonUnmarshal([]byte(value.AssigneesJson), &result.Assignees); err != nil {
 		result.Assignees = []string{}
 	}
