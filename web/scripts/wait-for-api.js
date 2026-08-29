@@ -2,7 +2,7 @@ import { createConnection } from "node:net";
 import { setTimeout } from "node:timers";
 
 const host = "127.0.0.1";
-const port = 7331;
+const port = 7332;
 const retryDelayMs = 100;
 
 await new Promise((resolve) => {

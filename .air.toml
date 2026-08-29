@@ -3,7 +3,7 @@ tmp_dir = "tmp"
 
 [build]
 cmd = "go build -trimpath -o ./tmp/prx ./cmd/prx"
-entrypoint = ["./tmp/prx", "--github-fixture", "demo", "serve"]
+entrypoint = ["./tmp/prx", "--github-fixture", "demo", "serve", "--addr", "127.0.0.1:7332"]
 include_dir = ["cmd", "gen", "internal"]
 include_ext = ["go"]
 include_file = ["go.mod", "go.sum"]

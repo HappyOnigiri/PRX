@@ -29,11 +29,11 @@ For development, start the Go API reloader and the Vite development server toget
 make dev
 ```
 
-Open <http://127.0.0.1:5173>. Vite applies WebUI changes with hot module
-replacement and proxies RPC requests to the Go server on port 7331. Air rebuilds
-and restarts the Go server when Go source files change. Stop any existing
-`prx serve` process that is using port 7331 before starting the development
-servers.
+Open <http://127.0.0.1:7331>, the same URL used by the production server. Vite
+applies WebUI changes with hot module replacement and proxies RPC requests to
+the development Go server on port 7332. Air rebuilds and restarts the Go server
+when Go source files change. Stop any existing `prx serve` process that is using
+port 7331 before starting the development servers.
 
 ## CLI
 

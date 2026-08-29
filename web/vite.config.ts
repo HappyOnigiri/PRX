@@ -2,17 +2,17 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 
-const apiOrigin = "http://127.0.0.1:7331";
+const apiOrigin = "http://127.0.0.1:7332";
 const devOrigins = new Set([
-  "http://127.0.0.1:5173",
-  "http://localhost:5173",
-  "http://[::1]:5173",
+  "http://127.0.0.1:7331",
+  "http://localhost:7331",
+  "http://[::1]:7331",
 ]);
 
 export default defineConfig({
   plugins: [react()],
   server: {
-    port: 5173,
+    port: 7331,
     strictPort: true,
     proxy: {
       "/prx.v1": {
