@@ -1,0 +1,22 @@
+name: Set up web toolchain
+description: >-
+  Installs the pnpm and Node.js versions pinned in package.json and .tool-versions, restores the
+  pnpm store, and installs the web dependencies.
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v6
+      with:
+        # The standalone binary is a single download; the default installs pnpm through npm and
+        # then switches versions, which took about ten seconds per job.
+        standalone: true
+
+    - uses: actions/setup-node@v7
+      with:
+        node-version-file: .tool-versions
+        cache: pnpm
+        cache-dependency-path: pnpm-lock.yaml
+
+    - shell: bash
+      run: make web-install

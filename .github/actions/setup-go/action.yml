@@ -1,0 +1,60 @@
+name: Set up Go
+description: >-
+  Installs the Go toolchain pinned in go.mod and restores the module and build caches that one job
+  produced earlier. Each job gets its own cache namespace so it downloads only what it needs.
+
+inputs:
+  cache-name:
+    description: Cache namespace, usually the make target the job runs.
+    required: true
+  extra-cache-paths:
+    description: Newline-separated paths to cache together with the Go module and build caches.
+    required: false
+    default: ""
+
+outputs:
+  cache-key:
+    description: Primary cache key. Pass it to actions/cache/save to publish the caches of this job.
+    value: ${{ steps.cache-key.outputs.key }}
+  cache-path:
+    description: Newline-separated cached paths for actions/cache/save.
+    value: ${{ steps.cache-key.outputs.path }}
+  cache-matched-key:
+    description: Key of the restored cache, or empty when no cache could be restored.
+    value: ${{ steps.restore.outputs.cache-matched-key }}
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-go@v7
+      with:
+        go-version-file: go.mod
+        # The built-in cache shares one ~1 GB archive between every job; the per-job caches below
+        # restore in a fraction of the time.
+        cache: false
+
+    - id: cache-key
+      shell: bash
+      env:
+        CACHE_NAME: ${{ inputs.cache-name }}
+        EXTRA_PATHS: ${{ inputs.extra-cache-paths }}
+        GO_SUM_HASH: ${{ hashFiles('go.sum') }}
+      run: |
+        {
+          echo "key=go-${CACHE_NAME}-${RUNNER_OS}-${GO_SUM_HASH}-${GITHUB_SHA}"
+          echo "path<<EOF"
+          go env GOMODCACHE GOCACHE
+          if [ -n "$EXTRA_PATHS" ]; then printf '%s\n' "$EXTRA_PATHS"; fi
+          echo "EOF"
+        } >>"$GITHUB_OUTPUT"
+
+    # The key ends with the commit SHA, so it never matches exactly and the newest cache saved from
+    # main (or, for a new dependency set, the newest cache of this job) is restored instead.
+    - id: restore
+      uses: actions/cache/restore@v6
+      with:
+        path: ${{ steps.cache-key.outputs.path }}
+        key: ${{ steps.cache-key.outputs.key }}
+        restore-keys: |
+          go-${{ inputs.cache-name }}-${{ runner.os }}-${{ hashFiles('go.sum') }}-
+          go-${{ inputs.cache-name }}-${{ runner.os }}-
