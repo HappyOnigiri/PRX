@@ -14,6 +14,7 @@ import {
   type ThemePreference,
 } from "./i18n/settings";
 import { setDisplayTheme } from "./theme";
+import { appVersion } from "./version";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, i18n } = useTranslation();
@@ -24,10 +25,13 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="app-shell">
       <aside className="rail">
         <Link to="/" className="brand" aria-label={t("nav.dashboard")}>
-          <span className="brand-mark">
-            P<span>R</span>X
+          <span className="brand-line">
+            <span className="brand-mark">
+              P<span>R</span>X
+            </span>
+            <span className="app-version">v{appVersion()}</span>
           </span>
-          <small>{t("nav.dependencyControl")}</small>
+          <small className="brand-tagline">{t("nav.dependencyControl")}</small>
         </Link>
         <nav aria-label={t("nav.features")}>
           <Link to="/" className="nav-link">

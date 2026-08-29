@@ -1,6 +1,8 @@
 GO ?= go
 PNPM ?= corepack pnpm
 INSTALL_DIR ?= $(HOME)/.local/bin
+VERSION := $(shell node -p "require('./package.json').version")
+VERSION_LDFLAGS := -X github.com/HappyOnigiri/PRX.releaseVersion=$(VERSION)
 GO_COVERAGE_MIN ?= 68.8
 GO_COVERAGE_PACKAGES := ./internal/domain ./internal/github ./internal/rpc ./internal/store
 GO_COVERAGE_ZERO_PACKAGES := ./internal/app $(GO_COVERAGE_PACKAGES)
@@ -115,7 +117,7 @@ e2e: build
 
 build: web-build
 	mkdir -p bin
-	$(GO) build -trimpath -o bin/prx ./cmd/prx
+	$(GO) build -trimpath -ldflags "$(VERSION_LDFLAGS)" -o bin/prx ./cmd/prx
 
 install: build
 	install -d "$(INSTALL_DIR)"

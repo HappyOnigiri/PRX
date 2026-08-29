@@ -1,8 +1,21 @@
 import react from "@vitejs/plugin-react";
+import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { defineConfig } from "vitest/config";
 
 const apiOrigin = "http://127.0.0.1:7332";
+const packageManifest: unknown = JSON.parse(
+  readFileSync(resolve(__dirname, "../package.json"), "utf8"),
+);
+if (
+  typeof packageManifest !== "object" ||
+  packageManifest === null ||
+  !("version" in packageManifest) ||
+  typeof packageManifest.version !== "string"
+) {
+  throw new Error("root package.json has no version");
+}
+const developmentVersion = `${packageManifest.version}-dev`;
 const devOrigins = new Set([
   "http://127.0.0.1:7331",
   "http://localhost:7331",
@@ -11,6 +24,9 @@ const devOrigins = new Set([
 
 export default defineConfig({
   plugins: [react()],
+  define: {
+    "import.meta.env.APP_VERSION": JSON.stringify(developmentVersion),
+  },
   server: {
     port: 7331,
     strictPort: true,
