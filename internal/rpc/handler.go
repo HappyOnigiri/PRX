@@ -156,6 +156,14 @@ func (h *Handler) DeleteDocument(ctx context.Context, req *connect.Request[prxv1
 	return connect.NewResponse(&prxv1.DeleteDocumentResponse{}), nil
 }
 
+func (h *Handler) ReadMarkdownDocument(ctx context.Context, req *connect.Request[prxv1.ReadMarkdownDocumentRequest]) (*connect.Response[prxv1.ReadMarkdownDocumentResponse], error) {
+	content, err := h.service.ReadMarkdownDocument(ctx, req.Msg.Id)
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.ReadMarkdownDocumentResponse{Content: content}), nil
+}
+
 func (h *Handler) Sync(ctx context.Context, req *connect.Request[prxv1.SyncRequest]) (*connect.Response[prxv1.SyncResponse], error) {
 	succeeded, failed, err := h.service.Sync(ctx, req.Msg.FeatureId, req.Msg.TaskId)
 	if err != nil {

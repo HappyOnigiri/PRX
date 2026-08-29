@@ -67,6 +67,9 @@ const (
 	// PRXServiceDeleteDocumentProcedure is the fully-qualified name of the PRXService's DeleteDocument
 	// RPC.
 	PRXServiceDeleteDocumentProcedure = "/prx.v1.PRXService/DeleteDocument"
+	// PRXServiceReadMarkdownDocumentProcedure is the fully-qualified name of the PRXService's
+	// ReadMarkdownDocument RPC.
+	PRXServiceReadMarkdownDocumentProcedure = "/prx.v1.PRXService/ReadMarkdownDocument"
 	// PRXServiceSyncProcedure is the fully-qualified name of the PRXService's Sync RPC.
 	PRXServiceSyncProcedure = "/prx.v1.PRXService/Sync"
 	// PRXServiceValidateProcedure is the fully-qualified name of the PRXService's Validate RPC.
@@ -88,6 +91,7 @@ type PRXServiceClient interface {
 	DetachPullRequest(context.Context, *connect.Request[v1.DetachPullRequestRequest]) (*connect.Response[v1.DetachPullRequestResponse], error)
 	AddDocument(context.Context, *connect.Request[v1.AddDocumentRequest]) (*connect.Response[v1.AddDocumentResponse], error)
 	DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error)
+	ReadMarkdownDocument(context.Context, *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error)
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
 }
@@ -181,6 +185,12 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(pRXServiceMethods.ByName("DeleteDocument")),
 			connect.WithClientOptions(opts...),
 		),
+		readMarkdownDocument: connect.NewClient[v1.ReadMarkdownDocumentRequest, v1.ReadMarkdownDocumentResponse](
+			httpClient,
+			baseURL+PRXServiceReadMarkdownDocumentProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("ReadMarkdownDocument")),
+			connect.WithClientOptions(opts...),
+		),
 		sync: connect.NewClient[v1.SyncRequest, v1.SyncResponse](
 			httpClient,
 			baseURL+PRXServiceSyncProcedure,
@@ -198,21 +208,22 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 
 // pRXServiceClient implements PRXServiceClient.
 type pRXServiceClient struct {
-	getSnapshot       *connect.Client[v1.GetSnapshotRequest, v1.GetSnapshotResponse]
-	createFeature     *connect.Client[v1.CreateFeatureRequest, v1.CreateFeatureResponse]
-	updateFeature     *connect.Client[v1.UpdateFeatureRequest, v1.UpdateFeatureResponse]
-	deleteFeature     *connect.Client[v1.DeleteFeatureRequest, v1.DeleteFeatureResponse]
-	createTask        *connect.Client[v1.CreateTaskRequest, v1.CreateTaskResponse]
-	updateTask        *connect.Client[v1.UpdateTaskRequest, v1.UpdateTaskResponse]
-	deleteTask        *connect.Client[v1.DeleteTaskRequest, v1.DeleteTaskResponse]
-	addDependency     *connect.Client[v1.AddDependencyRequest, v1.AddDependencyResponse]
-	removeDependency  *connect.Client[v1.RemoveDependencyRequest, v1.RemoveDependencyResponse]
-	attachPullRequest *connect.Client[v1.AttachPullRequestRequest, v1.AttachPullRequestResponse]
-	detachPullRequest *connect.Client[v1.DetachPullRequestRequest, v1.DetachPullRequestResponse]
-	addDocument       *connect.Client[v1.AddDocumentRequest, v1.AddDocumentResponse]
-	deleteDocument    *connect.Client[v1.DeleteDocumentRequest, v1.DeleteDocumentResponse]
-	sync              *connect.Client[v1.SyncRequest, v1.SyncResponse]
-	validate          *connect.Client[v1.ValidateRequest, v1.ValidateResponse]
+	getSnapshot          *connect.Client[v1.GetSnapshotRequest, v1.GetSnapshotResponse]
+	createFeature        *connect.Client[v1.CreateFeatureRequest, v1.CreateFeatureResponse]
+	updateFeature        *connect.Client[v1.UpdateFeatureRequest, v1.UpdateFeatureResponse]
+	deleteFeature        *connect.Client[v1.DeleteFeatureRequest, v1.DeleteFeatureResponse]
+	createTask           *connect.Client[v1.CreateTaskRequest, v1.CreateTaskResponse]
+	updateTask           *connect.Client[v1.UpdateTaskRequest, v1.UpdateTaskResponse]
+	deleteTask           *connect.Client[v1.DeleteTaskRequest, v1.DeleteTaskResponse]
+	addDependency        *connect.Client[v1.AddDependencyRequest, v1.AddDependencyResponse]
+	removeDependency     *connect.Client[v1.RemoveDependencyRequest, v1.RemoveDependencyResponse]
+	attachPullRequest    *connect.Client[v1.AttachPullRequestRequest, v1.AttachPullRequestResponse]
+	detachPullRequest    *connect.Client[v1.DetachPullRequestRequest, v1.DetachPullRequestResponse]
+	addDocument          *connect.Client[v1.AddDocumentRequest, v1.AddDocumentResponse]
+	deleteDocument       *connect.Client[v1.DeleteDocumentRequest, v1.DeleteDocumentResponse]
+	readMarkdownDocument *connect.Client[v1.ReadMarkdownDocumentRequest, v1.ReadMarkdownDocumentResponse]
+	sync                 *connect.Client[v1.SyncRequest, v1.SyncResponse]
+	validate             *connect.Client[v1.ValidateRequest, v1.ValidateResponse]
 }
 
 // GetSnapshot calls prx.v1.PRXService.GetSnapshot.
@@ -280,6 +291,11 @@ func (c *pRXServiceClient) DeleteDocument(ctx context.Context, req *connect.Requ
 	return c.deleteDocument.CallUnary(ctx, req)
 }
 
+// ReadMarkdownDocument calls prx.v1.PRXService.ReadMarkdownDocument.
+func (c *pRXServiceClient) ReadMarkdownDocument(ctx context.Context, req *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error) {
+	return c.readMarkdownDocument.CallUnary(ctx, req)
+}
+
 // Sync calls prx.v1.PRXService.Sync.
 func (c *pRXServiceClient) Sync(ctx context.Context, req *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error) {
 	return c.sync.CallUnary(ctx, req)
@@ -305,6 +321,7 @@ type PRXServiceHandler interface {
 	DetachPullRequest(context.Context, *connect.Request[v1.DetachPullRequestRequest]) (*connect.Response[v1.DetachPullRequestResponse], error)
 	AddDocument(context.Context, *connect.Request[v1.AddDocumentRequest]) (*connect.Response[v1.AddDocumentResponse], error)
 	DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error)
+	ReadMarkdownDocument(context.Context, *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error)
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
 }
@@ -394,6 +411,12 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(pRXServiceMethods.ByName("DeleteDocument")),
 		connect.WithHandlerOptions(opts...),
 	)
+	pRXServiceReadMarkdownDocumentHandler := connect.NewUnaryHandler(
+		PRXServiceReadMarkdownDocumentProcedure,
+		svc.ReadMarkdownDocument,
+		connect.WithSchema(pRXServiceMethods.ByName("ReadMarkdownDocument")),
+		connect.WithHandlerOptions(opts...),
+	)
 	pRXServiceSyncHandler := connect.NewUnaryHandler(
 		PRXServiceSyncProcedure,
 		svc.Sync,
@@ -434,6 +457,8 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceAddDocumentHandler.ServeHTTP(w, r)
 		case PRXServiceDeleteDocumentProcedure:
 			pRXServiceDeleteDocumentHandler.ServeHTTP(w, r)
+		case PRXServiceReadMarkdownDocumentProcedure:
+			pRXServiceReadMarkdownDocumentHandler.ServeHTTP(w, r)
 		case PRXServiceSyncProcedure:
 			pRXServiceSyncHandler.ServeHTTP(w, r)
 		case PRXServiceValidateProcedure:
@@ -497,6 +522,10 @@ func (UnimplementedPRXServiceHandler) AddDocument(context.Context, *connect.Requ
 
 func (UnimplementedPRXServiceHandler) DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.DeleteDocument is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) ReadMarkdownDocument(context.Context, *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.ReadMarkdownDocument is not implemented"))
 }
 
 func (UnimplementedPRXServiceHandler) Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error) {

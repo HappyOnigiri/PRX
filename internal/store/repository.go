@@ -230,6 +230,11 @@ func (s *Store) CreateDocument(ctx context.Context, featureID, taskID, kind, tit
 	return domainDocument(row), nil
 }
 
+func (s *Store) GetDocument(ctx context.Context, id string) (domain.Document, error) {
+	row, err := db.New(s.db).GetDocument(ctx, id)
+	return domainDocument(row), mapNotFound(err, "document", id)
+}
+
 func (s *Store) DeleteDocument(ctx context.Context, id string) error {
 	affected, err := db.New(s.db).DeleteDocument(ctx, id)
 	if err != nil {

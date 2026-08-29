@@ -119,6 +119,8 @@ export function blockedReasonLabel(
 
 const errorKeys = {
   [DomainErrorCode.CROSS_FEATURE_DEPENDENCY]: "error.crossFeatureDependency",
+  [DomainErrorCode.DOCUMENT_READ_FAILED]: "error.documentReadFailed",
+  [DomainErrorCode.DOCUMENT_TOO_LARGE]: "error.documentTooLarge",
   [DomainErrorCode.DUPLICATE_DEPENDENCY]: "error.duplicateDependency",
   [DomainErrorCode.DUPLICATE_PULL_REQUEST]: "error.duplicatePullRequest",
   [DomainErrorCode.GITHUB_AUTH]: "error.githubAuth",

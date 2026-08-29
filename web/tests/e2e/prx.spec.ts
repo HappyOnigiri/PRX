@@ -58,7 +58,11 @@ async function addTask(page: Page, title: string) {
 }
 
 async function openTask(page: Page, title: string) {
-  await page.locator(".task-node").filter({ hasText: title }).click();
+  await page
+    .locator(".task-node")
+    .filter({ hasText: title })
+    .getByRole("button", { name: `Edit ${title}` })
+    .click();
   await expect(
     page.getByRole("complementary", { name: "Task inspector" }),
   ).toContainText(title);
@@ -84,7 +88,9 @@ async function graphZoom(page: Page) {
 
 test("creates and edits a feature DAG while preserving state", async ({
   page,
+  context,
 }) => {
+  await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   // The server keeps one database for the whole run, so a fixed slug would make
   // every retry fail on the unique constraint instead of absorbing a flake.
   const slug = `e2e-rollout-${crypto.randomUUID()}`;
@@ -161,7 +167,7 @@ test("creates and edits a feature DAG while preserving state", async ({
   await reference.getByPlaceholder("Design notes").fill("Delivery plan");
   await reference
     .getByPlaceholder("https://… or docs/plan.md")
-    .fill("docs/delivery.md");
+    .fill("README.md");
   await reference.getByRole("button", { name: "Add reference" }).click();
   await expect(reference.locator(".document-chip")).toHaveCount(1);
   await reference.locator("select[name=kind]").selectOption({ label: "URL" });
@@ -171,16 +177,35 @@ test("creates and edits a feature DAG while preserving state", async ({
     .fill("https://example.com/runbook");
   await reference.getByRole("button", { name: "Add reference" }).click();
   await expect(reference.locator(".document-chip")).toHaveCount(2);
-  await reference
-    .getByRole("button", { name: "Delete Release runbook" })
-    .click();
-  await expect(reference.locator(".document-chip")).toHaveCount(1);
   await inspector
     .locator("select[name=status]")
     .selectOption({ label: "In progress" });
   await inspector.locator("input[name=assignee]").fill("");
   await inspector.getByRole("button", { name: "Save task" }).click();
   await page.getByRole("button", { name: "Close inspector" }).click();
+  const apiCard = page.locator(".task-node").filter({ hasText: "E2E API" });
+  await expect(
+    apiCard.getByRole("link", {
+      name: new RegExp(`HappyOnigiri/PRX #${prNumber}`),
+    }),
+  ).toHaveAttribute("target", "_blank");
+  await expect(
+    apiCard.getByRole("link", { name: /Release runbook/ }),
+  ).toHaveAttribute("target", "_blank");
+  await apiCard.getByRole("heading", { name: "E2E API" }).click();
+  await expect(
+    page.getByRole("complementary", { name: "Task inspector" }),
+  ).toHaveCount(0);
+  await apiCard.getByRole("button", { name: /Delivery plan/ }).click();
+  const preview = page.getByRole("dialog", { name: "Delivery plan" });
+  await expect(
+    preview.getByRole("heading", { name: "PRX", level: 1 }),
+  ).toBeVisible();
+  await preview.getByRole("button", { name: "Copy full text" }).click();
+  await expect(preview).toContainText("Full text copied.");
+  await preview.getByRole("button", { name: "Copy file path" }).click();
+  await expect(preview).toContainText("File path copied.");
+  await preview.getByRole("button", { name: "Close Markdown preview" }).click();
   await page.reload();
   await openTask(page, "E2E API");
   await expect(inspector.locator("input[name=assignee]")).toHaveValue("");
@@ -285,7 +310,7 @@ for (const size of [8, 50, 100]) {
       const stage = document
         .querySelector("[data-testid=feature-graph]")!
         .getBoundingClientRect();
-      return [...document.querySelectorAll(".task-node")]
+      return [...document.querySelectorAll(".task-node .node-edit")]
         .map((item) => item.getBoundingClientRect())
         .map((rect) => ({
           x: rect.left + rect.width / 2,

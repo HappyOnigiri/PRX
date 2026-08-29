@@ -3,7 +3,9 @@ package app
 import (
 	"context"
 	"fmt"
+	"io"
 	"net/url"
+	"os"
 	"regexp"
 	"sort"
 	"strings"
@@ -15,6 +17,8 @@ import (
 )
 
 var slugPattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
+
+const maxMarkdownPreviewBytes = 1 << 20
 
 type Service struct {
 	store    *store.Store
@@ -201,6 +205,32 @@ func (s *Service) AddDocument(ctx context.Context, featureID, taskID, kind, titl
 
 func (s *Service) DeleteDocument(ctx context.Context, id string) error {
 	return s.store.DeleteDocument(ctx, id)
+}
+
+// ReadMarkdownDocument only reads paths that were explicitly registered as a
+// Markdown document. The size limit keeps a preview request from consuming an
+// unbounded amount of memory in the server or browser.
+func (s *Service) ReadMarkdownDocument(ctx context.Context, id string) (string, error) {
+	document, err := s.store.GetDocument(ctx, id)
+	if err != nil {
+		return "", err
+	}
+	if document.Kind != "markdown_path" {
+		return "", domain.NewError("invalid_document_kind", "document is not a Markdown path")
+	}
+	file, err := os.Open(document.Value)
+	if err != nil {
+		return "", domain.NewError("document_read_failed", "could not read the Markdown file")
+	}
+	defer func() { _ = file.Close() }()
+	content, err := io.ReadAll(io.LimitReader(file, maxMarkdownPreviewBytes+1))
+	if err != nil {
+		return "", domain.NewError("document_read_failed", "could not read the Markdown file")
+	}
+	if len(content) > maxMarkdownPreviewBytes {
+		return "", domain.NewError("document_too_large", "Markdown preview is limited to 1 MiB")
+	}
+	return string(content), nil
 }
 
 func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {

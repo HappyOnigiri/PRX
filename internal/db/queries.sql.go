@@ -250,6 +250,25 @@ func (q *Queries) DeleteTasksForFeature(ctx context.Context, featureID string) e
 	return err
 }
 
+const getDocument = `-- name: GetDocument :one
+SELECT id, feature_id, task_id, kind, title, value, created_at FROM documents WHERE id=?
+`
+
+func (q *Queries) GetDocument(ctx context.Context, id string) (Document, error) {
+	row := q.db.QueryRowContext(ctx, getDocument, id)
+	var i Document
+	err := row.Scan(
+		&i.ID,
+		&i.FeatureID,
+		&i.TaskID,
+		&i.Kind,
+		&i.Title,
+		&i.Value,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getFeature = `-- name: GetFeature :one
 SELECT id, slug, title, description, status, archived, created_at, updated_at FROM features WHERE id = ?
 `

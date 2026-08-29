@@ -5,6 +5,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"testing"
 
@@ -16,6 +17,66 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/rpc"
 	"github.com/HappyOnigiri/PRX/internal/store"
 )
+
+func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
+	ctx := context.Background()
+	client := newTestClient(t)
+	feature, err := client.CreateFeature(ctx, connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "markdown-preview", Title: "Markdown preview"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "Documented task", Kind: prxv1.TaskKind_TASK_KIND_MANUAL}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	path := filepath.Join(t.TempDir(), "plan.md")
+	const content = "# Plan\n\nShip safely.\n"
+	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	document, err := client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: task.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH, Title: "Plan", Value: path}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	preview, err := client.ReadMarkdownDocument(ctx, connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: document.Msg.Document.Id}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if preview.Msg.Content != content {
+		t.Fatalf("content=%q", preview.Msg.Content)
+	}
+
+	urlDocument, err := client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: task.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_URL, Title: "Runbook", Value: "https://example.com/runbook"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.ReadMarkdownDocument(ctx, connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: urlDocument.Msg.Document.Id}))
+	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND {
+		t.Fatalf("URL preview code=%s err=%v", got, err)
+	}
+
+	missingDocument, err := client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: task.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH, Title: "Missing", Value: filepath.Join(t.TempDir(), "missing.md")}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.ReadMarkdownDocument(ctx, connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: missingDocument.Msg.Document.Id}))
+	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED {
+		t.Fatalf("missing preview code=%s err=%v", got, err)
+	}
+
+	largePath := filepath.Join(t.TempDir(), "large.md")
+	if err := os.WriteFile(largePath, make([]byte, (1<<20)+1), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	largeDocument, err := client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: task.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH, Title: "Large", Value: largePath}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.ReadMarkdownDocument(ctx, connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: largeDocument.Msg.Document.Id}))
+	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE {
+		t.Fatalf("large preview code=%s err=%v", got, err)
+	}
+}
 
 func TestRPCSharesDomainValidation(t *testing.T) {
 	ctx := context.Background()

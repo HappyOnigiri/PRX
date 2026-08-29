@@ -82,6 +82,9 @@ INSERT INTO documents (id, feature_id, task_id, kind, title, value, created_at) 
 -- name: ListDocuments :many
 SELECT * FROM documents ORDER BY created_at, id;
 
+-- name: GetDocument :one
+SELECT * FROM documents WHERE id=?;
+
 -- name: DeleteDocument :execrows
 DELETE FROM documents WHERE id=?;
 

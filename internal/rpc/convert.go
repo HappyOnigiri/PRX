@@ -294,6 +294,8 @@ func protoDomainErrorCode(value string) prxv1.DomainErrorCode {
 		"cycle":                       prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE,
 		"duplicate_dependency":        prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY,
 		"duplicate_pull_request":      prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST,
+		"document_read_failed":        prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED,
+		"document_too_large":          prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE,
 		"github_auth":                 prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH,
 		"invalid_database":            prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE,
 		"invalid_document":            prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT,

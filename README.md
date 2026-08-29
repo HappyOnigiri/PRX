@@ -93,9 +93,9 @@ ConnectRPC represents fixed domain states, blocked reasons, and known errors wit
 
 - Migrations are embedded and applied transactionally with a schema version table.
 - SQLite enables foreign keys, WAL, a five-second busy timeout, and bounded connection pooling.
-- The browser only receives typed ConnectRPC responses and cannot invoke the CLI or read arbitrary local files.
+- The browser only receives typed ConnectRPC responses and cannot invoke the CLI. Markdown preview can read only files whose paths were explicitly registered as `markdown_path` documents; each preview is limited to 1 MiB.
 - `prx serve` rejects requests whose `Host` or `Origin` header does not match the listen address, and the RPC handler requires the Connect protocol header, so a rebound DNS name cannot drive the local database.
-- Markdown documents are stored as path references; their contents are not served.
+- Markdown documents are stored as path references. The WebUI reads registered paths relative to the server's working directory (or as absolute paths), renders them in a read-only preview, and never includes their contents in the general snapshot response.
 - Tokens are never written to SQLite or application logs.
 - Production responses set a restrictive content security policy and related browser headers.
 

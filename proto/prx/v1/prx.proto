@@ -116,6 +116,8 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK = 19;
   DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE = 20;
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL = 21;
+  DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED = 22;
+  DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE = 23;
 }
 
 message BlockedReason {
@@ -233,6 +235,8 @@ message AddDocumentRequest { string feature_id = 1; string task_id = 2; Document
 message AddDocumentResponse { Document document = 1; }
 message DeleteDocumentRequest { string id = 1; }
 message DeleteDocumentResponse {}
+message ReadMarkdownDocumentRequest { string id = 1; }
+message ReadMarkdownDocumentResponse { string content = 1; }
 message SyncRequest { string feature_id = 1; string task_id = 2; }
 message SyncResponse { int32 succeeded = 1; int32 failed = 2; }
 message ValidateRequest {}
@@ -252,6 +256,7 @@ service PRXService {
   rpc DetachPullRequest(DetachPullRequestRequest) returns (DetachPullRequestResponse);
   rpc AddDocument(AddDocumentRequest) returns (AddDocumentResponse);
   rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
+  rpc ReadMarkdownDocument(ReadMarkdownDocumentRequest) returns (ReadMarkdownDocumentResponse);
   rpc Sync(SyncRequest) returns (SyncResponse);
   rpc Validate(ValidateRequest) returns (ValidateResponse);
 }

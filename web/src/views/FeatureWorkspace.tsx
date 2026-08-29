@@ -34,7 +34,8 @@ import {
   taskKindLabel,
   taskStatusLabel,
 } from "../i18n/domain";
-import { TaskNode, type TaskFlowNode } from "./TaskNode";
+import { TaskNode, type TaskFlowNode, type TaskNodeDocument } from "./TaskNode";
+import { MarkdownPreview } from "./MarkdownPreview";
 import { formValue } from "../form";
 import {
   maxGraphZoom,
@@ -57,6 +58,7 @@ export function FeatureWorkspace() {
   const graphZoom = useRef(initialGraphZoom);
   const [showTask, setShowTask] = useState(false);
   const [showFeatureEdit, setShowFeatureEdit] = useState(false);
+  const [previewDocument, setPreviewDocument] = useState<TaskNodeDocument>();
   // The raw message is kept untranslated so that changing the display language
   // does not re-run the layout effect and reset the viewport.
   const [layoutError, setLayoutError] = useState<{ message?: string }>();
@@ -77,6 +79,16 @@ export function FeatureWorkspace() {
     () => new Map(data?.pullRequests.map((pr) => [pr.taskId, pr]) ?? []),
     [data],
   );
+  const documentsByTask = useMemo(() => {
+    const result = new Map<string, TaskNodeDocument[]>();
+    for (const document of data?.documents ?? []) {
+      if (!document.taskId) continue;
+      const documents = result.get(document.taskId) ?? [];
+      documents.push(document);
+      result.set(document.taskId, documents);
+    }
+    return result;
+  }, [data]);
   const edges: Edge[] = useMemo(
     () =>
       dependencies.map((dep) => ({
@@ -108,17 +120,27 @@ export function FeatureWorkspace() {
     let current = true;
     const raw = tasks.map((task) => {
       const pr = prs.get(task.id);
+      const documents = documentsByTask.get(task.id) ?? [];
+      const assetCount = documents.length + (pr ? 1 : 0);
       return {
         id: task.id,
-        width: 244,
-        height: 126,
+        width: 284,
+        height: 140 + Math.min(assetCount, 4) * 32,
         data: {
           title: task.title,
-          repository: pr ? `${pr.owner}/${pr.repository} #${pr.number}` : "",
           assignee: task.assignee,
           state: task.displayState,
           ready: task.ready,
           stale: pr?.stale ?? false,
+          pullRequest: pr
+            ? {
+                label: `${pr.owner}/${pr.repository} #${String(pr.number)}`,
+                url: pr.url,
+              }
+            : undefined,
+          documents,
+          onEdit: () => setSelected(task.id),
+          onPreview: setPreviewDocument,
         },
       };
     });
@@ -166,7 +188,7 @@ export function FeatureWorkspace() {
       current = false;
       elk.terminateWorker();
     };
-  }, [tasks, dependencies, prs, layoutAttempt]);
+  }, [tasks, dependencies, prs, documentsByTask, layoutAttempt]);
   useEffect(() => {
     if (nodes.length && flow) {
       const bounds = flow.getNodesBounds(nodes);
@@ -341,7 +363,6 @@ export function FeatureWorkspace() {
             graphZoom.current = viewport.zoom;
             writeGraphZoom(viewport.zoom);
           }}
-          onNodeClick={(_, node) => setSelected(node.id)}
           minZoom={minGraphZoom}
           maxZoom={maxGraphZoom}
           nodesDraggable={false}
@@ -386,7 +407,15 @@ export function FeatureWorkspace() {
           documents={data.documents.filter(
             (document) => document.taskId === selectedTask.id,
           )}
+          onPreview={setPreviewDocument}
           onClose={() => setSelected(undefined)}
+        />
+      )}
+      {previewDocument && (
+        <MarkdownPreview
+          key={previewDocument.id}
+          document={previewDocument}
+          onClose={() => setPreviewDocument(undefined)}
         />
       )}
       {showTask && (
@@ -540,6 +569,7 @@ type InspectorProps = {
     title: string;
     value: string;
   }>;
+  onPreview: (document: TaskNodeDocument) => void;
   onClose: () => void;
 };
 function MutationError({
@@ -564,6 +594,7 @@ function TaskInspector({
   dependencies,
   pr,
   documents,
+  onPreview,
   onClose,
 }: InspectorProps) {
   const { t } = useTranslation();
@@ -763,10 +794,20 @@ function TaskInspector({
         <h3>{t("inspector.references")}</h3>
         {documents.map((document) => (
           <div className="document-chip" key={document.id}>
-            <span>
-              <b>{document.title || documentKindLabel(document.kind, t)}</b>
-              <small>{document.value}</small>
-            </span>
+            {document.kind === DocumentKind.URL ? (
+              <a href={document.value} target="_blank" rel="noreferrer">
+                <b>{document.title || documentKindLabel(document.kind, t)}</b>
+                <small>{document.value}</small>
+              </a>
+            ) : (
+              <button
+                className="document-preview"
+                onClick={() => onPreview(document)}
+              >
+                <b>{document.title || documentKindLabel(document.kind, t)}</b>
+                <small>{document.value}</small>
+              </button>
+            )}
             <button
               aria-label={t("inspector.deleteReference", {
                 title: document.title || t("inspector.referenceFallback"),
