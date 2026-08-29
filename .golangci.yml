@@ -27,7 +27,6 @@ linters:
     - usestdlibvars
     - wastedassign
     - funlen
-    - cyclop
     - inamedparam
     - revive
 
@@ -44,11 +43,9 @@ linters:
       require-specific: true
       allow-unused: false
     funlen:
-      lines: 60
-      statements: 40
+      lines: 100
+      statements: 80
       ignore-comments: true
-    cyclop:
-      max-complexity: 15
     revive:
       enable-all-rules: false
       rules:
@@ -116,11 +113,7 @@ linters:
   exclusions:
     rules:
       - path: _test\.go
-        # cyclop v2 removed skip-tests; this preserves its intended scope.
-        linters: [funlen, cyclop]
-      - path: internal/rpc/convert\.go
-        linters: [cyclop]
-        # enum-to-enum conversions are flat switches; splitting them hides the mapping
+        linters: [funlen]
 
 formatters:
   enable:

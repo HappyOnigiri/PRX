@@ -353,37 +353,57 @@ func protoBlockedReason(task domain.Task) *prxv1.BlockedReason {
 	return &prxv1.BlockedReason{Code: code, BlockerTaskId: task.BlockerTaskID}
 }
 
-var protoDomainErrorCodes = map[domain.DomainErrorCode]prxv1.DomainErrorCode{
-	domain.DomainErrorCodeCrossFeatureDependency:  prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY,
-	domain.DomainErrorCodeCycle:                   prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE,
-	domain.DomainErrorCodeDuplicateDependency:     prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY,
-	domain.DomainErrorCodeDuplicatePullRequest:    prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST,
-	domain.DomainErrorCodeDocumentReadFailed:      prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED,
-	domain.DomainErrorCodeDocumentTooLarge:        prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE,
-	domain.DomainErrorCodeGitHubAuth:              prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH,
-	domain.DomainErrorCodeInvalidDatabase:         prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE,
-	domain.DomainErrorCodeInvalidDocument:         prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT,
-	domain.DomainErrorCodeInvalidDocumentKind:     prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND,
-	domain.DomainErrorCodeInvalidDocumentURL:      prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL,
-	domain.DomainErrorCodeInvalidKind:             prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND,
-	domain.DomainErrorCodeInvalidParent:           prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT,
-	domain.DomainErrorCodeInvalidPullRequestURL:   prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL,
-	domain.DomainErrorCodeInvalidSeed:             prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SEED,
-	domain.DomainErrorCodeInvalidSlug:             prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG,
-	domain.DomainErrorCodeInvalidStatus:           prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS,
-	domain.DomainErrorCodeInvalidTitle:            prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE,
-	domain.DomainErrorCodeNotFound:                prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND,
-	domain.DomainErrorCodePRTaskCompletesOnMerge:  prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE,
-	domain.DomainErrorCodePullRequestOnManualTask: prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK,
-	domain.DomainErrorCodeReferencesExist:         prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST,
-	domain.DomainErrorCodeInternal:                prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED,
-}
-
 func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
-	if code, ok := protoDomainErrorCodes[value]; ok {
-		return code
+	switch value {
+	case domain.DomainErrorCodeCrossFeatureDependency:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY
+	case domain.DomainErrorCodeCycle:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE
+	case domain.DomainErrorCodeDuplicateDependency:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY
+	case domain.DomainErrorCodeDuplicatePullRequest:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST
+	case domain.DomainErrorCodeDocumentReadFailed:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED
+	case domain.DomainErrorCodeDocumentTooLarge:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE
+	case domain.DomainErrorCodeGitHubAuth:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH
+	case domain.DomainErrorCodeInvalidDatabase:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE
+	case domain.DomainErrorCodeInvalidDocument:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT
+	case domain.DomainErrorCodeInvalidDocumentKind:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND
+	case domain.DomainErrorCodeInvalidDocumentURL:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL
+	case domain.DomainErrorCodeInvalidKind:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND
+	case domain.DomainErrorCodeInvalidParent:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT
+	case domain.DomainErrorCodeInvalidPullRequestURL:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL
+	case domain.DomainErrorCodeInvalidSeed:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SEED
+	case domain.DomainErrorCodeInvalidSlug:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG
+	case domain.DomainErrorCodeInvalidStatus:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS
+	case domain.DomainErrorCodeInvalidTitle:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE
+	case domain.DomainErrorCodeNotFound:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND
+	case domain.DomainErrorCodePRTaskCompletesOnMerge:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE
+	case domain.DomainErrorCodePullRequestOnManualTask:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK
+	case domain.DomainErrorCodeReferencesExist:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST
+	case domain.DomainErrorCodeInternal:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
+	default:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
 	}
-	return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
 }
 
 const timeFormat = "2006-01-02T15:04:05.999999999Z07:00"

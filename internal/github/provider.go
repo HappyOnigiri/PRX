@@ -52,34 +52,7 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	if err != nil {
 		return current, fmt.Errorf("fetch pull request: %w", err)
 	}
-	reviews, err := p.fetchReviews(ctx, current)
-	if err != nil {
-		return current, fmt.Errorf("fetch reviews: %w", err)
-	}
-	requested, err := p.fetchRequestedReviewers(ctx, current)
-	if err != nil {
-		return current, fmt.Errorf("fetch requested reviewers: %w", err)
-	}
-	reviewState := deriveReviewState(reviews, requested)
-	state, mergeability := derivePullRequestState(value)
-	now := time.Now().UTC()
-	updated := value.GetUpdatedAt().UTC()
-	current.NodeID = value.GetNodeID()
-	current.Author = value.GetUser().GetLogin()
-	current.Assignees = pullRequestAssignees(value)
-	current.State = state
-	current.Draft = value.GetDraft()
-	current.ReviewState = reviewState
-	current.Mergeability = mergeability
-	current.GitHubUpdatedAt = &updated
-	current.LastSyncedAt = &now
-	current.SyncError = ""
-	current.Stale = false
-	return current, nil
-}
-
-func (p *LiveProvider) fetchReviews(ctx context.Context, current domain.PullRequest) ([]*gh.PullRequestReview, error) {
-	return allPages(
+	reviews, err := allPages(
 		ctx,
 		func(ctx context.Context, options *gh.ListOptions) ([]*gh.PullRequestReview, *gh.Response, error) {
 			return p.client.PullRequests.ListReviews(
@@ -91,10 +64,10 @@ func (p *LiveProvider) fetchReviews(ctx context.Context, current domain.PullRequ
 			)
 		},
 	)
-}
-
-func (p *LiveProvider) fetchRequestedReviewers(ctx context.Context, current domain.PullRequest) (*gh.Reviewers, error) {
-	pages, err := allPages(
+	if err != nil {
+		return current, fmt.Errorf("fetch reviews: %w", err)
+	}
+	requestedPages, err := allPages(
 		ctx,
 		func(ctx context.Context, options *gh.ListOptions) ([]*gh.Reviewers, *gh.Response, error) {
 			value, response, err := p.client.PullRequests.ListReviewers(
@@ -111,17 +84,13 @@ func (p *LiveProvider) fetchRequestedReviewers(ctx context.Context, current doma
 		},
 	)
 	if err != nil {
-		return nil, err
+		return current, fmt.Errorf("fetch requested reviewers: %w", err)
 	}
 	requested := &gh.Reviewers{}
-	for _, page := range pages {
+	for _, page := range requestedPages {
 		requested.Users = append(requested.Users, page.Users...)
 		requested.Teams = append(requested.Teams, page.Teams...)
 	}
-	return requested, nil
-}
-
-func deriveReviewState(reviews []*gh.PullRequestReview, requested *gh.Reviewers) domain.ReviewState {
 	reviewState := domain.ReviewStateNone
 	latest := map[string]string{}
 	for _, review := range reviews {
@@ -133,19 +102,16 @@ func deriveReviewState(reviews []*gh.PullRequestReview, requested *gh.Reviewers)
 	}
 	for _, state := range latest {
 		if state == "CHANGES_REQUESTED" {
-			return domain.ReviewStateChangesRequested
+			reviewState = domain.ReviewStateChangesRequested
+			break
 		}
 		if state == "APPROVED" {
 			reviewState = domain.ReviewStateApproved
 		}
 	}
 	if reviewState == domain.ReviewStateNone && (len(requested.Users) > 0 || len(requested.Teams) > 0) {
-		return domain.ReviewStateRequired
+		reviewState = domain.ReviewStateRequired
 	}
-	return reviewState
-}
-
-func derivePullRequestState(value *gh.PullRequest) (domain.PullRequestState, domain.Mergeability) {
 	state := domain.PullRequestState(value.GetState())
 	if value.GetMerged() {
 		state = domain.PullRequestStateMerged
@@ -158,15 +124,24 @@ func derivePullRequestState(value *gh.PullRequest) (domain.PullRequestState, dom
 			mergeability = domain.MergeabilityConflicting
 		}
 	}
-	return state, mergeability
-}
-
-func pullRequestAssignees(value *gh.PullRequest) []string {
 	assignees := make([]string, 0, len(value.Assignees))
 	for _, assignee := range value.Assignees {
 		assignees = append(assignees, assignee.GetLogin())
 	}
-	return assignees
+	now := time.Now().UTC()
+	updated := value.GetUpdatedAt().UTC()
+	current.NodeID = value.GetNodeID()
+	current.Author = value.GetUser().GetLogin()
+	current.Assignees = assignees
+	current.State = state
+	current.Draft = value.GetDraft()
+	current.ReviewState = reviewState
+	current.Mergeability = mergeability
+	current.GitHubUpdatedAt = &updated
+	current.LastSyncedAt = &now
+	current.SyncError = ""
+	current.Stale = false
+	return current, nil
 }
 
 // allPages walks every page of a GitHub list endpoint. Stopping at the first

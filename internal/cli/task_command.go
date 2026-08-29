@@ -8,19 +8,9 @@ import (
 
 func (s *state) taskCommand() *cobra.Command {
 	command := &cobra.Command{Use: "task", Short: "Manage implementation and manual tasks"}
-	command.AddCommand(
-		s.taskCreateCommand(),
-		s.taskListCommand(),
-		s.taskGetCommand(),
-		s.taskUpdateCommand(),
-		s.taskDeleteCommand(),
-	)
-	return command
-}
-
-func (s *state) taskCreateCommand() *cobra.Command {
-	var feature, title, scope, kind, assignee string
-	command := &cobra.Command{
+	var feature, title, scope, kind, assignee, status string
+	var cascade bool
+	create := &cobra.Command{
 		Use:     "create",
 		Short:   "Create an implementation or manual task",
 		Example: "prx task create --feature checkout --title \"Add payment intent API\" --assignee Mika --json",
@@ -33,19 +23,14 @@ func (s *state) taskCreateCommand() *cobra.Command {
 			return s.write(value)
 		},
 	}
-	command.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
-	command.Flags().StringVar(&title, "title", "", "task title")
-	command.Flags().StringVar(&scope, "scope", "", "scope description")
-	command.Flags().StringVar(&kind, "kind", "pr", "pr or manual")
-	command.Flags().StringVar(&assignee, "assignee", "", "assignee")
-	_ = command.MarkFlagRequired("feature")
-	_ = command.MarkFlagRequired("title")
-	return command
-}
-
-func (s *state) taskListCommand() *cobra.Command {
-	var feature string
-	command := &cobra.Command{
+	create.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
+	create.Flags().StringVar(&title, "title", "", "task title")
+	create.Flags().StringVar(&scope, "scope", "", "scope description")
+	create.Flags().StringVar(&kind, "kind", "pr", "pr or manual")
+	create.Flags().StringVar(&assignee, "assignee", "", "assignee")
+	_ = create.MarkFlagRequired("feature")
+	_ = create.MarkFlagRequired("title")
+	list := &cobra.Command{
 		Use:     "list",
 		Short:   "List tasks, optionally filtered by feature",
 		Example: "prx task list --feature checkout --json",
@@ -66,12 +51,8 @@ func (s *state) taskListCommand() *cobra.Command {
 			return s.write(tasks)
 		},
 	}
-	command.Flags().StringVar(&feature, "feature", "", "filter by feature")
-	return command
-}
-
-func (s *state) taskGetCommand() *cobra.Command {
-	return &cobra.Command{
+	list.Flags().StringVar(&feature, "feature", "", "filter by feature")
+	get := &cobra.Command{
 		Use:     "get TASK_ID",
 		Short:   "Show a task by ID",
 		Example: "prx task get TASK_ID --json",
@@ -89,11 +70,7 @@ func (s *state) taskGetCommand() *cobra.Command {
 			return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", args[0])
 		},
 	}
-}
-
-func (s *state) taskUpdateCommand() *cobra.Command {
-	var title, scope, status, assignee string
-	command := &cobra.Command{
+	update := &cobra.Command{
 		Use:     "update TASK_ID",
 		Short:   "Update a task by ID",
 		Example: "prx task update TASK_ID --status completed --json",
@@ -108,16 +85,11 @@ func (s *state) taskUpdateCommand() *cobra.Command {
 			return s.write(value)
 		},
 	}
-	command.Flags().StringVar(&title, "title", "", "new title")
-	command.Flags().StringVar(&scope, "scope", "", "new scope")
-	command.Flags().StringVar(&status, "status", "", "planned, in_progress, completed, or cancelled")
-	command.Flags().StringVar(&assignee, "assignee", "", "new assignee")
-	return command
-}
-
-func (s *state) taskDeleteCommand() *cobra.Command {
-	var cascade bool
-	command := &cobra.Command{
+	update.Flags().StringVar(&title, "title", "", "new title")
+	update.Flags().StringVar(&scope, "scope", "", "new scope")
+	update.Flags().StringVar(&status, "status", "", "planned, in_progress, completed, or cancelled")
+	update.Flags().StringVar(&assignee, "assignee", "", "new assignee")
+	deleteCmd := &cobra.Command{
 		Use:     "delete TASK_ID",
 		Short:   "Delete a task and optionally its dependencies and references",
 		Example: "prx task delete TASK_ID --cascade --json",
@@ -129,6 +101,7 @@ func (s *state) taskDeleteCommand() *cobra.Command {
 			return s.write(map[string]string{"deleted": args[0]})
 		},
 	}
-	command.Flags().BoolVar(&cascade, "cascade", false, "delete dependencies and references")
+	deleteCmd.Flags().BoolVar(&cascade, "cascade", false, "delete dependencies and references")
+	command.AddCommand(create, list, get, update, deleteCmd)
 	return command
 }
