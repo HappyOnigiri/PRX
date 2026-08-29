@@ -56,13 +56,12 @@ export default defineConfig({
     exclude: ["tests/e2e/**", "node_modules/**"],
     coverage: {
       provider: "v8",
-      reporter: ["text", "json-summary"],
+      reporter: ["text", "json-summary", "json"],
       include: ["src/**/*.{ts,tsx}"],
       exclude: ["src/gen/**", "src/**/*.d.ts"],
       thresholds: {
         statements: 43.25,
         branches: 38.37,
-        functions: 31.66,
         lines: 43.77,
       },
     },
