@@ -1,4 +1,4 @@
-import { FormEvent, type ReactNode, useState } from "react";
+import { type ReactNode, type SyntheticEvent, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
@@ -22,7 +22,7 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [showCreate, setShowCreate] = useState(false);
   const [theme, setTheme] = useState(readThemePreference);
   const createFeature = useDomainMutation(mutations.createFeature);
-  async function submit(event: FormEvent<HTMLFormElement>) {
+  async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const response = await createFeature.mutateAsync({
@@ -78,7 +78,12 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
         </nav>
-        <button className="rail-action" onClick={() => setShowCreate(true)}>
+        <button
+          className="rail-action"
+          onClick={() => {
+            setShowCreate(true);
+          }}
+        >
           {t("nav.newFeature")}
         </button>
         <div className="rail-settings">
@@ -168,7 +173,9 @@ export function AppShell({ children }: { children: ReactNode }) {
               <button
                 type="button"
                 className="secondary"
-                onClick={() => setShowCreate(false)}
+                onClick={() => {
+                  setShowCreate(false);
+                }}
               >
                 {t("common.cancel")}
               </button>

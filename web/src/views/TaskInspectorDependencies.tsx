@@ -5,11 +5,11 @@ import { useDomainMutation } from "../hooks";
 import { formValue } from "../form";
 import { MutationError } from "./MutationError";
 
-type DependencySectionProps = {
+interface DependencySectionProps {
   taskId: string;
   tasks: Task[];
   dependencies: Dependency[];
-};
+}
 
 export function DependencySection({
   taskId,
@@ -39,12 +39,12 @@ export function DependencySection({
           </span>
           <button
             aria-label={t("inspector.removeDependency")}
-            onClick={() =>
+            onClick={() => {
               removeDependency.mutate({
                 blocker: dependency.blockerTaskId,
                 blocked: taskId,
-              })
-            }
+              });
+            }}
           >
             ×
           </button>

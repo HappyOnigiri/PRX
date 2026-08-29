@@ -45,6 +45,7 @@ export default defineConfig({
             id.includes("/node_modules/react-dom/")
           )
             return "react";
+          return undefined;
         },
       },
     },

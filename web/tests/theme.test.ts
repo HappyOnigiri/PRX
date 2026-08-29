@@ -5,7 +5,7 @@ import { setDisplayTheme } from "../src/theme";
 describe("display theme", () => {
   beforeEach(() => {
     localStorage.clear();
-    delete document.documentElement.dataset.theme;
+    delete document.documentElement.dataset["theme"];
     document.head.innerHTML = '<meta name="theme-color" content="#f5f6f8">';
     vi.unstubAllGlobals();
   });
@@ -13,12 +13,15 @@ describe("display theme", () => {
   it("applies and stores an explicit theme", () => {
     setDisplayTheme("dark");
 
-    expect(document.documentElement.dataset.theme).toBe("dark");
+    expect(document.documentElement.dataset["theme"]).toBe("dark");
     expect(document.querySelector('meta[name="theme-color"]')).toHaveAttribute(
       "content",
       "#191b1f",
     );
-    expect(JSON.parse(localStorage.getItem(webUISettingsKey)!)).toEqual({
+    const storedSettings = localStorage.getItem(webUISettingsKey);
+    if (storedSettings === null)
+      throw new Error("The theme preference was not stored.");
+    expect(JSON.parse(storedSettings)).toEqual({
       theme: "dark",
     });
   });
