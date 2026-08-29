@@ -6,9 +6,11 @@
   "scripts": {
     "dev": "vite",
     "dev:full": "concurrently --kill-others --names api,web --prefix-colors blue,magenta \"cd .. && go tool air -c .air.toml\" \"node scripts/wait-for-api.js && vite\"",
-    "build": "tsc -b && vite build",
+    "build": "vite build",
+    "typecheck": "tsc -b --pretty false",
     "test": "vitest run --coverage",
-    "lint": "pnpm run format:check && eslint . --max-warnings=0 && tsc -b --pretty false && pnpm run check:dead-code && pnpm run lint:css",
+    "lint": "concurrently --group --names prettier,eslint,tsc,knip,stylelint \"pnpm run format:check\" \"pnpm run lint:js\" \"pnpm run typecheck\" \"pnpm run check:dead-code\" \"pnpm run lint:css\"",
+    "lint:js": "eslint . --max-warnings=0",
     "lint:css": "stylelint \"src/**/*.css\"",
     "check:dead-code": "knip --no-progress",
     "check:duplicates": "jscpd --min-lines 20 --min-tokens 60 --reporters console --exit-code 1 --no-colors --no-tips --format typescript,tsx --ignore 'src/gen/**' src",
