@@ -6,7 +6,7 @@
   "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "vite",
-    "dev:full": "concurrently --kill-others --names api,web --prefix-colors blue,magenta \"cd .. && go tool air -c .air.toml\" \"vite\"",
+    "dev:full": "concurrently --kill-others --names api,web --prefix-colors blue,magenta \"cd .. && go tool air -c .air.toml\" \"node scripts/wait-for-api.js && vite\"",
     "build": "tsc -b && vite build",
     "test": "vitest run --coverage",
     "lint": "pnpm run format:check && eslint . --max-warnings=0 && tsc -b --pretty false && pnpm run check:dead-code",
