@@ -39,23 +39,15 @@ port 7331 before starting the development servers.
 
 ## CLI
 
+The complete command reference, including options and examples, is available in [docs/cli/prx.md](docs/cli/prx.md) and is generated from the Cobra command definitions by `make generate`.
 Every mutation is non-interactive. Add `--json` for a versioned envelope whose stdout contains JSON only; warnings and server logs go to stderr.
+
+Representative commands:
 
 ```sh
 prx feature create --slug checkout --title "Checkout rollout" --json
-prx task create --feature checkout --title "Add payment intent API" --assignee Mika --json
 prx dependency add BLOCKER_TASK_ID BLOCKED_TASK_ID --json
-prx pr attach --task TASK_ID --url https://github.com/acme/payments/pull/42 --json
-prx document add --task TASK_ID --kind markdown_path --value docs/checkout.md --json
-prx sync --feature checkout --json
-prx graph checkout --json
 prx ready --json
-prx reviews --json
-prx conflicts --json
-prx stale --json
-prx snapshot --json
-prx validate --json
-prx serve
 ```
 
 `prx feature archive SLUG` hides a feature from the sidebar and `prx feature unarchive SLUG` brings it back; `prx feature update SLUG --archived=false` does the same.
@@ -115,7 +107,7 @@ See [docs/design.md](docs/design.md) for package boundaries, status decisions, t
 ## Verification
 
 ```sh
-make generate          # sqlc, Buf format/lint, Go/TypeScript protobuf generation
+make generate          # sqlc, Buf format/lint, Go/TypeScript protobuf, and CLI reference generation
 make generated-check  # regeneration must produce no diff
 make mod-tidy-check   # go.mod and go.sum must be tidy
 make lint              # go vet, auto-installed golangci-lint (gofumpt / gci / golines), deadcode, ESLint, strict TypeScript
