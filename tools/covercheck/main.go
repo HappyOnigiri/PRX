@@ -85,6 +85,8 @@ func run(update bool) error {
 	for _, result := range results {
 		fmt.Printf("%s: measured %.1f%%; minimum %.1f%%\n", result.Package, result.Actual, result.Minimum)
 		switch coverageIssueFor(result.Actual, result.Minimum) {
+		case coverageOK:
+			// The measured coverage satisfies the configured minimum.
 		case coverageBelowMinimum:
 			fmt.Printf("  %s: measured %.1f%% is below minimum %.1f%%\n", result.Package, result.Actual, result.Minimum)
 			failed = true
