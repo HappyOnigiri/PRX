@@ -31,6 +31,8 @@ make dev
 
 Open <http://127.0.0.1:7331>, the same URL used by the production server. Vite applies WebUI changes with hot module replacement and proxies RPC requests to the development Go server on port 7332. Air rebuilds and restarts the Go server when Go source files change. Stop any existing `prx serve` process that is using port 7331 before starting the development servers.
 
+The development server uses the same live GitHub authentication as `prx serve`; use `GITHUB_TOKEN`, `GH_TOKEN`, or an authenticated `gh` CLI before starting `make dev`.
+
 Run `make ci` before handing off a change.
 
 ## Documentation
