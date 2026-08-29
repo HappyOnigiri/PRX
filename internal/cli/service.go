@@ -10,12 +10,29 @@ import (
 // exposed by the serve command.
 type Service interface {
 	CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error)
-	UpdateFeature(ctx context.Context, id string, slug, title, description *string, status *domain.FeatureStatus, archived *bool) (domain.Feature, error)
+	UpdateFeature(
+		ctx context.Context,
+		id string,
+		slug, title, description *string,
+		status *domain.FeatureStatus,
+		archived *bool,
+	) (domain.Feature, error)
 	ResolveFeature(ctx context.Context, idOrSlug string) (domain.Feature, error)
 	DeleteFeature(ctx context.Context, id string, cascade bool) error
 
-	CreateTask(ctx context.Context, featureID, title, scope string, kind domain.TaskKind, assignee string) (domain.Task, error)
-	UpdateTask(ctx context.Context, id string, title, scope *string, status *domain.TaskStatus, assignee *string) (domain.Task, error)
+	CreateTask(
+		ctx context.Context,
+		featureID, title, scope string,
+		kind domain.TaskKind,
+		assignee string,
+	) (domain.Task, error)
+	UpdateTask(
+		ctx context.Context,
+		id string,
+		title, scope *string,
+		status *domain.TaskStatus,
+		assignee *string,
+	) (domain.Task, error)
 	DeleteTask(ctx context.Context, id string, cascade bool) error
 
 	AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error)
@@ -24,7 +41,12 @@ type Service interface {
 	AttachPullRequest(ctx context.Context, taskID, rawURL string) (domain.PullRequest, error)
 	DetachPullRequest(ctx context.Context, taskID string) error
 
-	AddDocument(ctx context.Context, featureID, taskID string, kind domain.DocumentKind, title, value string) (domain.Document, error)
+	AddDocument(
+		ctx context.Context,
+		featureID, taskID string,
+		kind domain.DocumentKind,
+		title, value string,
+	) (domain.Document, error)
 	DeleteDocument(ctx context.Context, id string) error
 	ReadMarkdownDocument(ctx context.Context, id string) (string, error)
 

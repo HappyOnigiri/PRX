@@ -32,12 +32,18 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	database, _ := openTestService(t)
 	ctx := context.Background()
 	var migrations int
-	if err := database.DB().QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).Scan(&migrations); err != nil || migrations != 1 {
+	if err := database.DB().
+		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
+		Scan(&migrations); err != nil ||
+		migrations != 1 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
 	var journal string
-	if err := database.DB().QueryRowContext(ctx, `PRAGMA foreign_keys`).Scan(&foreignKeys); err != nil || foreignKeys != 1 {
+	if err := database.DB().
+		QueryRowContext(ctx, `PRAGMA foreign_keys`).
+		Scan(&foreignKeys); err != nil ||
+		foreignKeys != 1 {
 		t.Fatalf("foreign_keys=%d err=%v", foreignKeys, err)
 	}
 	if err := database.DB().QueryRowContext(ctx, `PRAGMA journal_mode`).Scan(&journal); err != nil || journal != "wal" {
@@ -80,7 +86,13 @@ func TestCycleDuplicateAndSafeDeletion(t *testing.T) {
 	if _, err := service.AddDependency(ctx, b.ID, c.ID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := service.AddDependency(ctx, a.ID, b.ID); domain.ErrorCode(err) != domain.DomainErrorCodeDuplicateDependency {
+	if _, err := service.AddDependency(
+		ctx,
+		a.ID,
+		b.ID,
+	); domain.ErrorCode(
+		err,
+	) != domain.DomainErrorCodeDuplicateDependency {
 		t.Fatalf("duplicate code=%s err=%v", domain.ErrorCode(err), err)
 	}
 	if _, err := service.AddDependency(ctx, c.ID, a.ID); domain.ErrorCode(err) != domain.DomainErrorCodeCycle {
@@ -106,7 +118,13 @@ func TestDuplicatePullRequestAndConcurrentWriters(t *testing.T) {
 	if _, err := service.AttachPullRequest(ctx, a.ID, "https://github.com/acme/api/pull/42"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := service.AttachPullRequest(ctx, b.ID, "https://github.com/acme/api/pull/42"); domain.ErrorCode(err) != domain.DomainErrorCodeDuplicatePullRequest {
+	if _, err := service.AttachPullRequest(
+		ctx,
+		b.ID,
+		"https://github.com/acme/api/pull/42",
+	); domain.ErrorCode(
+		err,
+	) != domain.DomainErrorCodeDuplicatePullRequest {
 		t.Fatalf("duplicate PR code=%s err=%v", domain.ErrorCode(err), err)
 	}
 	const writers = 24
@@ -116,7 +134,14 @@ func TestDuplicatePullRequestAndConcurrentWriters(t *testing.T) {
 		wait.Add(1)
 		go func(index int) {
 			defer wait.Done()
-			_, err := service.CreateTask(ctx, feature.ID, fmt.Sprintf("task-%02d", index), "", domain.TaskKindManual, "")
+			_, err := service.CreateTask(
+				ctx,
+				feature.ID,
+				fmt.Sprintf("task-%02d", index),
+				"",
+				domain.TaskKindManual,
+				"",
+			)
 			errorsCh <- err
 		}(i)
 	}
@@ -150,7 +175,14 @@ func TestValidateReportsCorruption(t *testing.T) {
 		t.Fatal(err)
 	}
 	for i := 0; i < 200; i++ {
-		if _, err := service.CreateTask(ctx, feature.ID, fmt.Sprintf("task-%03d", i), strings.Repeat("x", 256), domain.TaskKindManual, ""); err != nil {
+		if _, err := service.CreateTask(
+			ctx,
+			feature.ID,
+			fmt.Sprintf("task-%03d", i),
+			strings.Repeat("x", 256),
+			domain.TaskKindManual,
+			"",
+		); err != nil {
 			t.Fatal(err)
 		}
 	}
@@ -345,7 +377,8 @@ func TestSnapshotSurvivesOrphanedTask(t *testing.T) {
 	if _, err := database.DB().ExecContext(ctx, `PRAGMA foreign_keys = OFF`); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := database.DB().ExecContext(ctx, `UPDATE tasks SET feature_id = 'missing-feature' WHERE id = ?`, orphan.ID); err != nil {
+	if _, err := database.DB().
+		ExecContext(ctx, `UPDATE tasks SET feature_id = 'missing-feature' WHERE id = ?`, orphan.ID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := database.DB().ExecContext(ctx, `PRAGMA foreign_keys = ON`); err != nil {
@@ -376,7 +409,16 @@ func TestPRTaskCannotBeCompletedManually(t *testing.T) {
 		t.Fatal(err)
 	}
 	completed := domain.TaskCompleted
-	if _, err := service.UpdateTask(ctx, prTask.ID, nil, nil, &completed, nil); domain.ErrorCode(err) != domain.DomainErrorCodePRTaskCompletesOnMerge {
+	if _, err := service.UpdateTask(
+		ctx,
+		prTask.ID,
+		nil,
+		nil,
+		&completed,
+		nil,
+	); domain.ErrorCode(
+		err,
+	) != domain.DomainErrorCodePRTaskCompletesOnMerge {
 		t.Fatalf("PR task completion code=%s err=%v", domain.ErrorCode(err), err)
 	}
 	manual, err := service.CreateTask(ctx, feature.ID, "Sign off", "", domain.TaskKindManual, "")
@@ -463,7 +505,13 @@ func TestPullRequestURLCasingIsNotADistinctPullRequest(t *testing.T) {
 	if _, err := service.AttachPullRequest(ctx, first.ID, "https://github.com/Acme/API/pull/42"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := service.AttachPullRequest(ctx, second.ID, "https://github.com/acme/api/pull/42"); domain.ErrorCode(err) != domain.DomainErrorCodeDuplicatePullRequest {
+	if _, err := service.AttachPullRequest(
+		ctx,
+		second.ID,
+		"https://github.com/acme/api/pull/42",
+	); domain.ErrorCode(
+		err,
+	) != domain.DomainErrorCodeDuplicatePullRequest {
 		t.Fatalf("case-only variant code=%s err=%v", domain.ErrorCode(err), err)
 	}
 }
@@ -479,7 +527,13 @@ func TestDeletingWhatIsNotThereReportsNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := service.RemoveDependency(ctx, task.ID, "missing-task"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+	if err := service.RemoveDependency(
+		ctx,
+		task.ID,
+		"missing-task",
+	); domain.ErrorCode(
+		err,
+	) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("remove dependency code=%s err=%v", domain.ErrorCode(err), err)
 	}
 	if err := service.DetachPullRequest(ctx, task.ID); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {

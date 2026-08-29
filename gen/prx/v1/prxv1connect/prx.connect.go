@@ -78,21 +78,37 @@ const (
 
 // PRXServiceClient is a client for the prx.v1.PRXService service.
 type PRXServiceClient interface {
+	// GetSnapshot returns the current normalized dataset and derived queues.
 	GetSnapshot(context.Context, *connect.Request[v1.GetSnapshotRequest]) (*connect.Response[v1.GetSnapshotResponse], error)
+	// CreateFeature creates a new feature.
 	CreateFeature(context.Context, *connect.Request[v1.CreateFeatureRequest]) (*connect.Response[v1.CreateFeatureResponse], error)
+	// UpdateFeature applies the fields present in the request to an existing feature.
 	UpdateFeature(context.Context, *connect.Request[v1.UpdateFeatureRequest]) (*connect.Response[v1.UpdateFeatureResponse], error)
+	// DeleteFeature deletes a feature, subject to the cascade option.
 	DeleteFeature(context.Context, *connect.Request[v1.DeleteFeatureRequest]) (*connect.Response[v1.DeleteFeatureResponse], error)
+	// CreateTask creates a task within an existing feature.
 	CreateTask(context.Context, *connect.Request[v1.CreateTaskRequest]) (*connect.Response[v1.CreateTaskResponse], error)
+	// UpdateTask applies the fields present in the request to an existing task.
 	UpdateTask(context.Context, *connect.Request[v1.UpdateTaskRequest]) (*connect.Response[v1.UpdateTaskResponse], error)
+	// DeleteTask deletes a task, subject to the cascade option.
 	DeleteTask(context.Context, *connect.Request[v1.DeleteTaskRequest]) (*connect.Response[v1.DeleteTaskResponse], error)
+	// AddDependency adds a same-feature dependency when it does not create a cycle.
 	AddDependency(context.Context, *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error)
+	// RemoveDependency removes an existing dependency edge.
 	RemoveDependency(context.Context, *connect.Request[v1.RemoveDependencyRequest]) (*connect.Response[v1.RemoveDependencyResponse], error)
+	// AttachPullRequest attaches a GitHub pull request to a pull-request task.
 	AttachPullRequest(context.Context, *connect.Request[v1.AttachPullRequestRequest]) (*connect.Response[v1.AttachPullRequestResponse], error)
+	// DetachPullRequest removes the pull request attached to a task.
 	DetachPullRequest(context.Context, *connect.Request[v1.DetachPullRequestRequest]) (*connect.Response[v1.DetachPullRequestResponse], error)
+	// AddDocument registers a URL or Markdown path under a feature or task.
 	AddDocument(context.Context, *connect.Request[v1.AddDocumentRequest]) (*connect.Response[v1.AddDocumentResponse], error)
+	// DeleteDocument removes a registered document reference.
 	DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error)
+	// ReadMarkdownDocument reads a registered Markdown path for preview.
 	ReadMarkdownDocument(context.Context, *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error)
+	// Sync refreshes selected pull requests from GitHub and records successes and failures independently.
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
+	// Validate checks database integrity and returns any detected errors.
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
 }
 
@@ -308,21 +324,37 @@ func (c *pRXServiceClient) Validate(ctx context.Context, req *connect.Request[v1
 
 // PRXServiceHandler is an implementation of the prx.v1.PRXService service.
 type PRXServiceHandler interface {
+	// GetSnapshot returns the current normalized dataset and derived queues.
 	GetSnapshot(context.Context, *connect.Request[v1.GetSnapshotRequest]) (*connect.Response[v1.GetSnapshotResponse], error)
+	// CreateFeature creates a new feature.
 	CreateFeature(context.Context, *connect.Request[v1.CreateFeatureRequest]) (*connect.Response[v1.CreateFeatureResponse], error)
+	// UpdateFeature applies the fields present in the request to an existing feature.
 	UpdateFeature(context.Context, *connect.Request[v1.UpdateFeatureRequest]) (*connect.Response[v1.UpdateFeatureResponse], error)
+	// DeleteFeature deletes a feature, subject to the cascade option.
 	DeleteFeature(context.Context, *connect.Request[v1.DeleteFeatureRequest]) (*connect.Response[v1.DeleteFeatureResponse], error)
+	// CreateTask creates a task within an existing feature.
 	CreateTask(context.Context, *connect.Request[v1.CreateTaskRequest]) (*connect.Response[v1.CreateTaskResponse], error)
+	// UpdateTask applies the fields present in the request to an existing task.
 	UpdateTask(context.Context, *connect.Request[v1.UpdateTaskRequest]) (*connect.Response[v1.UpdateTaskResponse], error)
+	// DeleteTask deletes a task, subject to the cascade option.
 	DeleteTask(context.Context, *connect.Request[v1.DeleteTaskRequest]) (*connect.Response[v1.DeleteTaskResponse], error)
+	// AddDependency adds a same-feature dependency when it does not create a cycle.
 	AddDependency(context.Context, *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error)
+	// RemoveDependency removes an existing dependency edge.
 	RemoveDependency(context.Context, *connect.Request[v1.RemoveDependencyRequest]) (*connect.Response[v1.RemoveDependencyResponse], error)
+	// AttachPullRequest attaches a GitHub pull request to a pull-request task.
 	AttachPullRequest(context.Context, *connect.Request[v1.AttachPullRequestRequest]) (*connect.Response[v1.AttachPullRequestResponse], error)
+	// DetachPullRequest removes the pull request attached to a task.
 	DetachPullRequest(context.Context, *connect.Request[v1.DetachPullRequestRequest]) (*connect.Response[v1.DetachPullRequestResponse], error)
+	// AddDocument registers a URL or Markdown path under a feature or task.
 	AddDocument(context.Context, *connect.Request[v1.AddDocumentRequest]) (*connect.Response[v1.AddDocumentResponse], error)
+	// DeleteDocument removes a registered document reference.
 	DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error)
+	// ReadMarkdownDocument reads a registered Markdown path for preview.
 	ReadMarkdownDocument(context.Context, *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error)
+	// Sync refreshes selected pull requests from GitHub and records successes and failures independently.
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
+	// Validate checks database integrity and returns any detected errors.
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
 }
 

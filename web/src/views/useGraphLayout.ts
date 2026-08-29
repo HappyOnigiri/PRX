@@ -1,17 +1,17 @@
-import { useEffect, useState } from "react";
 import ELK from "elkjs/lib/elk-api.js";
 import elkWorkerUrl from "elkjs/lib/elk-worker.min.js?url";
+import { useEffect, useState } from "react";
 import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
 import { type TaskFlowNode, type TaskNodeDocument } from "./TaskNode";
 
-type GraphLayoutOptions = {
+interface GraphLayoutOptions {
   tasks: Task[];
   dependencies: Dependency[];
   pullRequests: Map<string, PullRequest>;
   documentsByTask: Map<string, TaskNodeDocument[]>;
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
-};
+}
 
 export function useGraphLayout({
   tasks,
@@ -24,7 +24,9 @@ export function useGraphLayout({
   const [nodes, setNodes] = useState<TaskFlowNode[]>([]);
   // Keep the raw error so changing the display language does not re-run the
   // layout effect and reset the viewport.
-  const [layoutError, setLayoutError] = useState<{ message?: string }>();
+  const [layoutError, setLayoutError] = useState<
+    { message: string | undefined } | undefined
+  >();
   const [layoutAttempt, setLayoutAttempt] = useState(0);
 
   useEffect(() => {
@@ -50,7 +52,9 @@ export function useGraphLayout({
               }
             : undefined,
           documents,
-          onEdit: () => onEditTask(task.id),
+          onEdit: () => {
+            onEditTask(task.id);
+          },
           onPreview: onPreviewDocument,
         },
       };
