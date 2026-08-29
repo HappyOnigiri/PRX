@@ -23,12 +23,17 @@ prx serve
 
 The default database is stored under the operating system's user configuration directory. Use `--db /path/to/prx.db` or `PRX_DB` to select another database. The server binds only to `127.0.0.1:7331` unless `--addr` is explicitly supplied.
 
-For frontend development, run the API and Vite separately:
+For development, start the Go API reloader and the Vite development server together:
 
 ```sh
-go run ./cmd/prx --github-fixture demo serve
-pnpm --dir web dev
+make dev
 ```
+
+Open <http://127.0.0.1:5173>. Vite applies WebUI changes with hot module
+replacement and proxies RPC requests to the Go server on port 7331. Air rebuilds
+and restarts the Go server when Go source files change. Stop any existing
+`prx serve` process that is using port 7331 before starting the development
+servers.
 
 ## CLI
 
