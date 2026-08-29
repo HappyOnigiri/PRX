@@ -176,7 +176,7 @@
   min-height: 100vh;
 }
 
-@media (max-width: 900px) {
+@media (width <= 900px) {
   .app-shell {
     display: block;
   }
@@ -240,7 +240,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
   .rail {
     grid-template-columns: 96px minmax(0, 1fr) auto;
   }

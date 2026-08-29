@@ -178,7 +178,7 @@ describe("display state style tokens", () => {
   it("maps pull request enum names to CSS state tokens", () => {
     expect(
       pullRequestDisplayStateToken(PullRequestDisplayState.REVIEW_WAITING),
-    ).toBe("review_waiting");
+    ).toBe("review-waiting");
     expect(
       pullRequestDisplayStateToken(PullRequestDisplayState.UNSPECIFIED),
     ).toBe("unspecified");

@@ -58,7 +58,7 @@
   grid-template-rows: 36px minmax(0, 1fr);
 }
 
-@media (max-width: 900px) {
+@media (width <= 900px) {
   .workspace {
     height: calc(100vh - 60px);
   }
@@ -68,7 +68,7 @@
   }
 }
 
-@media (max-width: 600px) {
+@media (width <= 600px) {
   .workspace-head {
     gap: 10px;
     padding-inline: 12px;
