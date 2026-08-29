@@ -1,4 +1,4 @@
-import { Copy } from "lucide-react";
+import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 
@@ -28,6 +28,7 @@ export function CopyableIdentifier({
 
   const copyLabel = t("common.copyIdentifier", { label });
   const isCopied = status === "copied";
+  const Icon = isCopied ? Check : Copy;
   return (
     <span className="copyable-identifier">
       <span className="copyable-identifier-label">{label}</span>
@@ -41,7 +42,8 @@ export function CopyableIdentifier({
         title={copyLabel}
         onClick={() => void copyIdentifier()}
       >
-        <Copy
+        <Icon
+          data-icon={isCopied ? "check" : "copy"}
           aria-hidden="true"
           focusable="false"
           size={14}

@@ -31,7 +31,7 @@ describe("CopyableIdentifier", () => {
 
     expect(screen.getByText("task-123")).toBeInTheDocument();
     const copyButton = screen.getByRole("button", { name: "Copy Task ID" });
-    expect(copyButton.querySelector("svg")).toBeInTheDocument();
+    expect(copyButton.querySelector('[data-icon="copy"]')).toBeInTheDocument();
     fireEvent.click(copyButton);
     await act(async () => {
       await Promise.resolve();
@@ -39,12 +39,14 @@ describe("CopyableIdentifier", () => {
 
     expect(writeText).toHaveBeenCalledWith("task-123");
     expect(copyButton).toHaveClass("is-copied");
+    expect(copyButton.querySelector('[data-icon="check"]')).toBeInTheDocument();
     expect(copyButton).toHaveAccessibleName("Copied");
     expect(screen.queryByText("Copied")).not.toBeInTheDocument();
     act(() => {
       vi.advanceTimersByTime(1600);
     });
     expect(copyButton).not.toHaveClass("is-copied");
+    expect(copyButton.querySelector('[data-icon="copy"]')).toBeInTheDocument();
     expect(copyButton).toHaveAccessibleName("Copy Task ID");
   });
 
