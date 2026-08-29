@@ -9,27 +9,27 @@ import (
 // Service is the application boundary used by CLI commands and the RPC server
 // exposed by the serve command.
 type Service interface {
-	CreateFeature(context.Context, string, string, string) (domain.Feature, error)
-	UpdateFeature(context.Context, string, *string, *string, *string, *domain.FeatureStatus, *bool) (domain.Feature, error)
-	ResolveFeature(context.Context, string) (domain.Feature, error)
-	DeleteFeature(context.Context, string, bool) error
+	CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error)
+	UpdateFeature(ctx context.Context, id string, slug, title, description *string, status *domain.FeatureStatus, archived *bool) (domain.Feature, error)
+	ResolveFeature(ctx context.Context, idOrSlug string) (domain.Feature, error)
+	DeleteFeature(ctx context.Context, id string, cascade bool) error
 
-	CreateTask(context.Context, string, string, string, domain.TaskKind, string) (domain.Task, error)
-	UpdateTask(context.Context, string, *string, *string, *domain.TaskStatus, *string) (domain.Task, error)
-	DeleteTask(context.Context, string, bool) error
+	CreateTask(ctx context.Context, featureID, title, scope string, kind domain.TaskKind, assignee string) (domain.Task, error)
+	UpdateTask(ctx context.Context, id string, title, scope *string, status *domain.TaskStatus, assignee *string) (domain.Task, error)
+	DeleteTask(ctx context.Context, id string, cascade bool) error
 
-	AddDependency(context.Context, string, string) (domain.Dependency, error)
-	RemoveDependency(context.Context, string, string) error
+	AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error)
+	RemoveDependency(ctx context.Context, blocker, blocked string) error
 
-	AttachPullRequest(context.Context, string, string) (domain.PullRequest, error)
-	DetachPullRequest(context.Context, string) error
+	AttachPullRequest(ctx context.Context, taskID, rawURL string) (domain.PullRequest, error)
+	DetachPullRequest(ctx context.Context, taskID string) error
 
-	AddDocument(context.Context, string, string, domain.DocumentKind, string, string) (domain.Document, error)
-	DeleteDocument(context.Context, string) error
-	ReadMarkdownDocument(context.Context, string) (string, error)
+	AddDocument(ctx context.Context, featureID, taskID string, kind domain.DocumentKind, title, value string) (domain.Document, error)
+	DeleteDocument(ctx context.Context, id string) error
+	ReadMarkdownDocument(ctx context.Context, id string) (string, error)
 
-	Snapshot(context.Context) (domain.Snapshot, error)
-	Sync(context.Context, string, string) (int, int, error)
-	Validate(context.Context) []string
-	SeedDemo(context.Context, string, int) error
+	Snapshot(ctx context.Context) (domain.Snapshot, error)
+	Sync(ctx context.Context, featureID, taskID string) (int, int, error)
+	Validate(ctx context.Context) []string
+	SeedDemo(ctx context.Context, slug string, count int) error
 }

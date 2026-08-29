@@ -24,29 +24,29 @@ const maxMarkdownPreviewBytes = 1 << 20
 // opening SQLite and leaves alternative persistence implementations free to
 // satisfy the same use cases.
 type Repository interface {
-	CreateFeature(context.Context, string, string, string) (domain.Feature, error)
-	UpdateFeature(context.Context, domain.Feature) (domain.Feature, error)
-	GetFeature(context.Context, string) (domain.Feature, error)
-	GetFeatureBySlug(context.Context, string) (domain.Feature, error)
-	DeleteFeature(context.Context, string, bool) error
+	CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error)
+	UpdateFeature(ctx context.Context, feature domain.Feature) (domain.Feature, error)
+	GetFeature(ctx context.Context, id string) (domain.Feature, error)
+	GetFeatureBySlug(ctx context.Context, slug string) (domain.Feature, error)
+	DeleteFeature(ctx context.Context, id string, cascade bool) error
 
-	CreateTask(context.Context, string, string, string, domain.TaskKind, string) (domain.Task, error)
-	GetTask(context.Context, string) (domain.Task, error)
-	UpdateTask(context.Context, domain.Task) (domain.Task, error)
-	DeleteTask(context.Context, string, bool) error
+	CreateTask(ctx context.Context, featureID, title, scope string, kind domain.TaskKind, assignee string) (domain.Task, error)
+	GetTask(ctx context.Context, id string) (domain.Task, error)
+	UpdateTask(ctx context.Context, task domain.Task) (domain.Task, error)
+	DeleteTask(ctx context.Context, id string, cascade bool) error
 
-	AddDependency(context.Context, string, string) (domain.Dependency, error)
-	RemoveDependency(context.Context, string, string) error
+	AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error)
+	RemoveDependency(ctx context.Context, blocker, blocked string) error
 
-	UpsertPullRequest(context.Context, domain.PullRequest) (domain.PullRequest, error)
-	DeletePullRequest(context.Context, string) error
+	UpsertPullRequest(ctx context.Context, value domain.PullRequest) (domain.PullRequest, error)
+	DeletePullRequest(ctx context.Context, taskID string) error
 
-	CreateDocument(context.Context, string, string, domain.DocumentKind, string, string) (domain.Document, error)
-	GetDocument(context.Context, string) (domain.Document, error)
-	DeleteDocument(context.Context, string) error
+	CreateDocument(ctx context.Context, featureID, taskID string, kind domain.DocumentKind, title, value string) (domain.Document, error)
+	GetDocument(ctx context.Context, id string) (domain.Document, error)
+	DeleteDocument(ctx context.Context, id string) error
 
-	Snapshot(context.Context) (domain.Snapshot, error)
-	Validate(context.Context) []string
+	Snapshot(ctx context.Context) (domain.Snapshot, error)
+	Validate(ctx context.Context) []string
 }
 
 type Service struct {

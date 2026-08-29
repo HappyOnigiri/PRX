@@ -22,6 +22,14 @@ linters:
     - unconvert
     - usestdlibvars
     - wastedassign
+    - inamedparam
+    - revive
+
+  settings:
+    revive:
+      enable-all-rules: false
+      rules:
+        - name: package-comments
 
 formatters:
   enable:
