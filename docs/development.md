@@ -20,6 +20,14 @@ make ci                     # install web dependencies, run all required checks 
 
 `make ci` runs the checks concurrently with one job per CPU (`CI_JOBS` overrides the count) and keeps going after a failure so one run reports every problem. Each check reads the tree or writes only its own output, and `make ci` uses `test-race-coverage` in place of the three separate Go test runs. GNU make 4 groups each job's output; the GNU make 3.81 shipped with macOS interleaves it.
 
+## Versions and releases
+
+The root `package.json` owns the PRX version. Every current build path, including `make build`, `make install`, `go build`, `go run`, Air, and the Vite development setup, shows `0.1.0-dev` in both `prx --version` and the WebUI. This preserves the base release in diagnostic output without identifying locally built code as an official release. A future distribution pipeline will be the only path that stamps the stable version into release artifacts.
+
+Run the `Release` workflow manually with the next stable `X.Y.Z` version. It creates a `release/vX.Y.Z` branch, updates `package.json`, and opens a release pull request with the generated changelog. Merging that pull request creates the `vX.Y.Z` tag and GitHub Release, then removes the release branch. The workflow accepts stable SemVer versions only; prerelease identifiers such as `-rc.1` are not supported.
+
+The repository must provide a `GH_TOKEN` Actions secret with permission to write contents and pull requests. The release reminder uses the workflow `GITHUB_TOKEN` to report the pull requests merged since the latest release.
+
 ## Coverage contracts
 
 `GO_COVERAGE_MIN` records the current coverage baseline for the handwritten Go packages. Raise it when their coverage improves so later changes cannot reduce it.

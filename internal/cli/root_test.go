@@ -114,3 +114,24 @@ func TestRootHelpDoesNotOpenService(t *testing.T) {
 		t.Fatal("help should not open the database")
 	}
 }
+
+func TestRootVersionDoesNotOpenService(t *testing.T) {
+	var out bytes.Buffer
+	opened := false
+	err := Execute(context.Background(), []string{"--version"}, &out, io.Discard,
+		func(context.Context, string, string, bool) (Service, io.Closer, error) {
+			opened = true
+			return nil, nil, nil
+		},
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if opened {
+		t.Fatal("version should not open the database")
+	}
+	root := NewRoot(io.Discard, io.Discard, testOpenService)
+	if got, want := out.String(), "prx version "+root.Version+"\n"; got != want {
+		t.Fatalf("stdout = %q, want %q", got, want)
+	}
+}

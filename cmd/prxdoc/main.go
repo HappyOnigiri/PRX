@@ -41,6 +41,7 @@ func generate(dir string) error {
 	}
 
 	root := cli.NewRoot(io.Discard, io.Discard, nil)
+	root.InitDefaultVersionFlag()
 	root.DisableAutoGenTag = true
 	root.CompletionOptions.HiddenDefaultCmd = true
 	return doc.GenMarkdownTree(root, dir)
