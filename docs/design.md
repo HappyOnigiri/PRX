@@ -28,6 +28,10 @@ Package dependencies follow the same direction: `internal/domain` and `internal/
 - `internal/webui`: embedded Vite production assets.
 - `web`: React application, generated API types, tests, and Playwright scenarios.
 
+## CLI contract
+
+Every mutation is non-interactive so that people and coding agents drive the same surface. `--json` emits a versioned envelope; stdout then carries JSON only, and warnings and server logs go to stderr, so output can be piped without filtering. Operating on data that does not exist — removing a dependency, detaching a pull request, deleting a document — fails with `not_found` instead of reporting success, so a caller cannot mistake a typo for a completed change. Feature and task deletion refuses to remove referenced data unless `--cascade` is supplied.
+
 ## Domain decisions
 
 Feature states are `active`, `paused`, `completed`, and `cancelled`. Task states are `planned`, `in_progress`, `completed`, and `cancelled`; PR tasks derive completion from a merged PR, while manual tasks use `completed`. A stale or incomplete blocker fails closed even when its last successful display state is retained.
@@ -43,6 +47,14 @@ SQLite uses WAL, foreign keys, a 5-second busy timeout, and explicit transaction
 The CLI calls a `Service` interface. Its local implementation is used now; a future remote implementation can forward the same operations over Connect without changing command parsing.
 
 GitHub calls are direct HTTP requests. Authentication checks `GITHUB_TOKEN`, then `GH_TOKEN`, then invokes `gh auth token` only to obtain a credential; tokens are never persisted or logged.
+
+Synchronization fails safe rather than destructively. A failed refresh keeps the last successful fields and marks the record stale with a sync error, so a temporary outage never rewrites known state as unknown. A bulk refresh persists successes and failures independently, so one inaccessible repository does not discard the results for the others.
+
+## Local trust boundary
+
+`prx serve` is a local tool rather than an authenticated service, so its defenses assume a single trusted user and an untrusted network and browser. It binds to `127.0.0.1:7331` unless `--addr` is supplied explicitly, rejects requests whose `Host` or `Origin` header does not match the listen address, and requires the Connect protocol header on RPC calls; a page from another origin or a rebound DNS name therefore cannot drive the local database. Production responses set a restrictive content security policy and related browser headers.
+
+Markdown documents are stored as path references, resolved relative to the server's working directory or as absolute paths. Only paths explicitly registered as `markdown_path` documents can be read, which keeps the preview from turning the server into a general file reader.
 
 ## UI structure decision
 
