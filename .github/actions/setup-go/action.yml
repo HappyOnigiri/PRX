@@ -26,12 +26,25 @@ outputs:
 runs:
   using: composite
   steps:
-    - uses: actions/setup-go@v7
-      with:
-        go-version-file: go.mod
-        # The built-in cache shares one ~1 GB archive between every job; the per-job caches below
-        # restore in a fraction of the time.
-        cache: false
+    # actions/setup-go spends 6-11 s copying the extracted toolchain into the runner tool cache and
+    # restores one ~1 GB cache shared by every job. Extracting the official archive takes ~4 s, and
+    # the per-job caches below restore in a fraction of the time.
+    - name: Install the Go toolchain from go.mod
+      shell: bash
+      run: |
+        version="$(awk '$1 == "go" { print $2 }' go.mod)"
+        case "$(uname -m)" in
+          x86_64) arch=amd64 ;;
+          aarch64) arch=arm64 ;;
+          *) echo "unsupported architecture: $(uname -m)" >&2; exit 1 ;;
+        esac
+        archive="go${version}.linux-${arch}.tar.gz"
+        cd "$RUNNER_TEMP"
+        curl -fsSLO "https://go.dev/dl/${archive}"
+        echo "$(curl -fsSL "https://go.dev/dl/${archive}.sha256")  ${archive}" | sha256sum -c -
+        tar -xzf "$archive"
+        echo "$RUNNER_TEMP/go/bin" >>"$GITHUB_PATH"
+        echo "GOTOOLCHAIN=local" >>"$GITHUB_ENV"
 
     - id: cache-key
       shell: bash
@@ -40,6 +53,7 @@ runs:
         EXTRA_PATHS: ${{ inputs.extra-cache-paths }}
         GO_SUM_HASH: ${{ hashFiles('go.sum') }}
       run: |
+        go version
         {
           echo "key=go-${CACHE_NAME}-${RUNNER_OS}-${GO_SUM_HASH}-${GITHUB_SHA}"
           echo "path<<EOF"
