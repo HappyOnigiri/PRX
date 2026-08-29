@@ -1,0 +1,198 @@
+package app_test
+
+import (
+	"context"
+	"errors"
+	"testing"
+
+	"github.com/HappyOnigiri/PRX/internal/app"
+	"github.com/HappyOnigiri/PRX/internal/domain"
+)
+
+type repositoryStub struct{}
+
+func (repositoryStub) CreateFeature(context.Context, string, string, string) (domain.Feature, error) {
+	return domain.Feature{}, errors.New("unexpected CreateFeature call")
+}
+func (repositoryStub) UpdateFeature(context.Context, domain.Feature) (domain.Feature, error) {
+	return domain.Feature{}, errors.New("unexpected UpdateFeature call")
+}
+func (repositoryStub) GetFeature(context.Context, string) (domain.Feature, error) {
+	return domain.Feature{}, errors.New("unexpected GetFeature call")
+}
+func (repositoryStub) GetFeatureBySlug(context.Context, string) (domain.Feature, error) {
+	return domain.Feature{}, errors.New("unexpected GetFeatureBySlug call")
+}
+func (repositoryStub) DeleteFeature(context.Context, string, bool) error {
+	return errors.New("unexpected DeleteFeature call")
+}
+func (repositoryStub) CreateTask(context.Context, string, string, string, string, string) (domain.Task, error) {
+	return domain.Task{}, errors.New("unexpected CreateTask call")
+}
+func (repositoryStub) GetTask(context.Context, string) (domain.Task, error) {
+	return domain.Task{}, errors.New("unexpected GetTask call")
+}
+func (repositoryStub) UpdateTask(context.Context, domain.Task) (domain.Task, error) {
+	return domain.Task{}, errors.New("unexpected UpdateTask call")
+}
+func (repositoryStub) DeleteTask(context.Context, string, bool) error {
+	return errors.New("unexpected DeleteTask call")
+}
+func (repositoryStub) AddDependency(context.Context, string, string) (domain.Dependency, error) {
+	return domain.Dependency{}, errors.New("unexpected AddDependency call")
+}
+func (repositoryStub) RemoveDependency(context.Context, string, string) error {
+	return errors.New("unexpected RemoveDependency call")
+}
+func (repositoryStub) UpsertPullRequest(context.Context, domain.PullRequest) (domain.PullRequest, error) {
+	return domain.PullRequest{}, errors.New("unexpected UpsertPullRequest call")
+}
+func (repositoryStub) DeletePullRequest(context.Context, string) error {
+	return errors.New("unexpected DeletePullRequest call")
+}
+func (repositoryStub) CreateDocument(context.Context, string, string, string, string, string) (domain.Document, error) {
+	return domain.Document{}, errors.New("unexpected CreateDocument call")
+}
+func (repositoryStub) GetDocument(context.Context, string) (domain.Document, error) {
+	return domain.Document{}, errors.New("unexpected GetDocument call")
+}
+func (repositoryStub) DeleteDocument(context.Context, string) error {
+	return errors.New("unexpected DeleteDocument call")
+}
+func (repositoryStub) Snapshot(context.Context) (domain.Snapshot, error) {
+	return domain.Snapshot{}, errors.New("unexpected Snapshot call")
+}
+func (repositoryStub) Validate(context.Context) []string { return []string{"unexpected Validate call"} }
+
+type featureRepository struct {
+	repositoryStub
+	feature domain.Feature
+}
+
+func (r *featureRepository) GetFeature(context.Context, string) (domain.Feature, error) {
+	return r.feature, nil
+}
+
+type taskRepository struct {
+	repositoryStub
+	task domain.Task
+}
+
+func (r *taskRepository) GetTask(context.Context, string) (domain.Task, error) {
+	return r.task, nil
+}
+
+type createFeatureRepository struct {
+	repositoryStub
+	gotSlug        string
+	gotTitle       string
+	gotDescription string
+}
+
+func (r *createFeatureRepository) CreateFeature(_ context.Context, slug, title, description string) (domain.Feature, error) {
+	r.gotSlug = slug
+	r.gotTitle = title
+	r.gotDescription = description
+	return domain.Feature{Slug: slug, Title: title, Description: description}, nil
+}
+
+func TestCreateFeatureValidatesBeforeRepository(t *testing.T) {
+	for _, test := range []struct {
+		name  string
+		slug  string
+		title string
+		code  string
+	}{
+		{name: "invalid slug", slug: "not a slug", title: "Feature", code: "invalid_slug"},
+		{name: "missing title", slug: "feature", title: "  ", code: "invalid_title"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			service := app.New(repositoryStub{}, nil)
+			_, err := service.CreateFeature(context.Background(), test.slug, test.title, "")
+			if got := errorCode(t, err); got != test.code {
+				t.Fatalf("error code=%q, want %q", got, test.code)
+			}
+		})
+	}
+}
+
+func TestCreateFeatureNormalizesBeforeRepository(t *testing.T) {
+	repository := &createFeatureRepository{}
+	service := app.New(repository, nil)
+
+	_, err := service.CreateFeature(context.Background(), "  Release-API  ", "  Release API  ", "  Description  ")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if repository.gotSlug != "release-api" || repository.gotTitle != "Release API" || repository.gotDescription != "Description" {
+		t.Fatalf("repository received slug=%q title=%q description=%q", repository.gotSlug, repository.gotTitle, repository.gotDescription)
+	}
+}
+
+func TestCreateTaskRejectsUnknownKind(t *testing.T) {
+	repository := &featureRepository{feature: domain.Feature{ID: "feature-id"}}
+	service := app.New(repository, nil)
+
+	_, err := service.CreateTask(context.Background(), "feature-id", "Task", "", "unknown", "")
+	if got := errorCode(t, err); got != "invalid_kind" {
+		t.Fatalf("error code=%q, want invalid_kind", got)
+	}
+}
+
+func TestUpdateTaskRejectsManualCompletionForPRTask(t *testing.T) {
+	repository := &taskRepository{task: domain.Task{ID: "task-id", Title: "Ship", Kind: domain.TaskKindPR, Status: domain.TaskInProgress}}
+	service := app.New(repository, nil)
+	completed := domain.TaskCompleted
+
+	_, err := service.UpdateTask(context.Background(), "task-id", nil, nil, &completed, nil)
+	if got := errorCode(t, err); got != "pr_task_completes_on_merge" {
+		t.Fatalf("error code=%q, want pr_task_completes_on_merge", got)
+	}
+}
+
+func TestAddDocumentValidatesWithoutRepository(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		featureID string
+		taskID    string
+		kind      string
+		value     string
+		code      string
+	}{
+		{name: "missing parent", kind: "url", value: "https://example.com", code: "invalid_parent"},
+		{name: "two parents", featureID: "feature-id", taskID: "task-id", kind: "url", value: "https://example.com", code: "invalid_parent"},
+		{name: "unknown kind", taskID: "task-id", kind: "file", value: "docs/plan.md", code: "invalid_document_kind"},
+		{name: "missing value", taskID: "task-id", kind: "url", value: "  ", code: "invalid_document"},
+		{name: "invalid URL", taskID: "task-id", kind: "url", value: "ftp://example.com", code: "invalid_document_url"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			service := app.New(repositoryStub{}, nil)
+			_, err := service.AddDocument(context.Background(), test.featureID, test.taskID, test.kind, "Document", test.value)
+			if got := errorCode(t, err); got != test.code {
+				t.Fatalf("error code=%q, want %q", got, test.code)
+			}
+		})
+	}
+}
+
+func TestAttachPullRequestRejectsManualTask(t *testing.T) {
+	repository := &taskRepository{task: domain.Task{ID: "task-id", Kind: domain.TaskKindManual}}
+	service := app.New(repository, nil)
+
+	_, err := service.AttachPullRequest(context.Background(), "task-id", "https://github.com/acme/api/pull/42")
+	if got := errorCode(t, err); got != "pull_request_on_manual_task" {
+		t.Fatalf("error code=%q, want pull_request_on_manual_task", got)
+	}
+}
+
+func errorCode(t *testing.T, err error) string {
+	t.Helper()
+	if err == nil {
+		t.Fatal("expected error")
+	}
+	var domainErr *domain.Error
+	if !errors.As(err, &domainErr) {
+		t.Fatalf("error type=%T value=%v", err, err)
+	}
+	return domainErr.Code
+}

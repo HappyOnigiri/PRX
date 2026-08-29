@@ -19,7 +19,7 @@ type state struct {
 	out     io.Writer
 	errOut  io.Writer
 	store   *store.Store
-	service *app.Service
+	service Service
 }
 
 func NewRoot(out, errOut io.Writer) *cobra.Command {

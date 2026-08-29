@@ -8,16 +8,15 @@ import (
 	"connectrpc.com/connect"
 	prxv1 "github.com/HappyOnigiri/PRX/gen/prx/v1"
 	"github.com/HappyOnigiri/PRX/gen/prx/v1/prxv1connect"
-	"github.com/HappyOnigiri/PRX/internal/app"
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 type Handler struct {
 	prxv1connect.UnimplementedPRXServiceHandler
-	service *app.Service
+	service Service
 }
 
-func New(service *app.Service) (string, http.Handler) {
+func New(service Service) (string, http.Handler) {
 	// Requiring the Connect protocol header keeps the RPCs out of reach of
 	// simple cross-origin requests, which browsers send without a preflight.
 	return prxv1connect.NewPRXServiceHandler(&Handler{service: service}, connect.WithRequireConnectProtocolHeader())
