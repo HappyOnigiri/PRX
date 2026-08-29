@@ -45,6 +45,38 @@ test("switches the display language and restores it from Local Storage", async (
   ).toBeVisible();
 });
 
+test("follows the system theme unless the user selects an override", async ({
+  page,
+}) => {
+  const root = page.locator("html");
+  const background = () =>
+    page
+      .locator("body")
+      .evaluate((element) => getComputedStyle(element).backgroundColor);
+
+  await page.emulateMedia({ colorScheme: "no-preference" });
+  await page.goto("/");
+  await expect(page.getByLabel("Display theme")).toHaveValue("system");
+  await expect(root).not.toHaveAttribute("data-theme");
+  await expect.poll(background).toBe("rgb(245, 246, 248)");
+
+  await page.emulateMedia({ colorScheme: "dark" });
+  await expect.poll(background).toBe("rgb(25, 27, 31)");
+
+  await page.getByLabel("Display theme").selectOption("light");
+  await expect(root).toHaveAttribute("data-theme", "light");
+  await expect.poll(background).toBe("rgb(245, 246, 248)");
+  await page.reload();
+  await expect(page.getByLabel("Display theme")).toHaveValue("light");
+  await expect.poll(background).toBe("rgb(245, 246, 248)");
+
+  await page.getByLabel("Display theme").selectOption("system");
+  await expect(root).not.toHaveAttribute("data-theme");
+  await expect.poll(background).toBe("rgb(25, 27, 31)");
+  await page.emulateMedia({ colorScheme: "light" });
+  await expect.poll(background).toBe("rgb(245, 246, 248)");
+});
+
 async function addTask(page: Page, title: string) {
   await page.getByRole("button", { name: "Add task" }).first().click();
   const dialog = page.getByRole("form", { name: "Create task" });
