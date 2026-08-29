@@ -2,7 +2,8 @@
 
 PRX is a local-first tool for coordinating dependency graphs of tasks and GitHub pull requests, delivered as a Go CLI/server with an embedded React UI and SQLite storage.
 
-- Treat the CLI, JSON, and state behavior documented in `README.md` as public contracts; update implementation, tests, and documentation together when they change.
+- Treat the CLI, JSON, and state behavior documented under `docs/` as public contracts; update implementation, tests, and documentation together when they change.
+- `README.md` stays minimal so that parallel branches rarely touch it: it holds only what someone needs to build, start, and develop PRX, plus links to the documentation. Behavior and its rationale go to `docs/design.md`, verification and tooling detail to `docs/development.md`, and the CLI surface to the generated `docs/cli/`. Edit `README.md` only when a change makes something it already states wrong.
 - RPC schemas and behavior may change without backward compatibility. Apply each RPC change across the Protocol Buffer source, server, in-repository clients, tests, and documentation in the same change.
 - Read `docs/design.md` before changing dependency or status semantics, persistence, GitHub synchronization, RPC boundaries, or the UI structure.
 - Edit Protocol Buffer, migration, and SQL query sources, then run `make generate`; do not hand-edit generated files under `gen/`, `internal/db/`, or `web/src/gen/`.
