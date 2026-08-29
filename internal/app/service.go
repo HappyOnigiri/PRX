@@ -268,7 +268,14 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 		return domain.Snapshot{}, err
 	}
 	snapshot.Tasks = domain.Derive(snapshot.Tasks, snapshot.Dependencies, snapshot.PullRequests)
-	taskIndex := map[string]int{}
+	taskIndex := indexTasksAndQueues(&snapshot)
+	appendStaleTasks(&snapshot, taskIndex)
+	updateFeatureCounts(&snapshot)
+	return snapshot, nil
+}
+
+func indexTasksAndQueues(snapshot *domain.Snapshot) map[string]int {
+	taskIndex := make(map[string]int, len(snapshot.Tasks))
 	for i, task := range snapshot.Tasks {
 		taskIndex[task.ID] = i
 		if task.Ready {
@@ -281,14 +288,23 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 			snapshot.ConflictTasks = append(snapshot.ConflictTasks, task)
 		}
 	}
+	return taskIndex
+}
+
+func appendStaleTasks(snapshot *domain.Snapshot, taskIndex map[string]int) {
 	for _, pr := range snapshot.PullRequests {
-		if pr.Stale || pr.SyncError != "" {
-			if i, ok := taskIndex[pr.TaskID]; ok {
-				snapshot.StaleTasks = append(snapshot.StaleTasks, snapshot.Tasks[i])
-			}
+		if !pr.Stale && pr.SyncError == "" {
+			continue
+		}
+		i, ok := taskIndex[pr.TaskID]
+		if ok {
+			snapshot.StaleTasks = append(snapshot.StaleTasks, snapshot.Tasks[i])
 		}
 	}
-	featureIndex := map[string]int{}
+}
+
+func updateFeatureCounts(snapshot *domain.Snapshot) {
+	featureIndex := make(map[string]int, len(snapshot.Features))
 	for i := range snapshot.Features {
 		featureIndex[snapshot.Features[i].ID] = i
 	}
@@ -315,7 +331,6 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 			feature.MergedCount++
 		}
 	}
-	return snapshot, nil
 }
 
 func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded, failed int, err error) {
@@ -369,67 +384,106 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 func (s *Service) Validate(ctx context.Context) []string { return s.repository.Validate(ctx) }
 
 func (s *Service) SeedDemo(ctx context.Context, slug string, count int) error {
+	slug, count = seedDemoDefaults(slug, count)
+	feature, err := s.seedDemoFeature(ctx, slug, count)
+	if err != nil {
+		return err
+	}
+	// Seeding is idempotent: rerunning it reuses whatever already exists so the
+	// command in the README can be repeated without leaving partial data behind.
+	snapshot, err := s.repository.Snapshot(ctx)
+	if err != nil {
+		return err
+	}
+	indexes := buildSeedDemoIndexes(snapshot, feature.ID)
+	tasks, err := s.seedDemoTasks(ctx, slug, feature.ID, count, indexes)
+	if err != nil {
+		return err
+	}
+	if err := s.seedDemoDependencies(ctx, tasks, indexes.existingDependencies); err != nil {
+		return err
+	}
+	_, _, err = s.Sync(ctx, feature.ID, "")
+	return err
+}
+
+func seedDemoDefaults(slug string, count int) (string, int) {
 	if slug == "" {
 		slug = "demo-roadmap"
 	}
 	if count < 1 {
 		count = 8
 	}
-	// Seeding is idempotent: rerunning it reuses whatever already exists so the
-	// command in the README can be repeated without leaving partial data behind.
+	return slug, count
+}
+
+func (s *Service) seedDemoFeature(ctx context.Context, slug string, count int) (domain.Feature, error) {
 	feature, err := s.repository.GetFeatureBySlug(ctx, slug)
-	if err != nil {
-		feature, err = s.CreateFeature(ctx, slug, fmt.Sprintf("Cross-repository launch · %d nodes", count), "A representative branching and merging delivery graph.")
-		if err != nil {
-			return err
-		}
+	if err == nil {
+		return feature, nil
 	}
-	snapshot, err := s.repository.Snapshot(ctx)
-	if err != nil {
-		return err
+	return s.CreateFeature(ctx, slug, fmt.Sprintf("Cross-repository launch · %d nodes", count), "A representative branching and merging delivery graph.")
+}
+
+type seedDemoIndexes struct {
+	existingTasks        map[string]domain.Task
+	linkedTasks          map[string]bool
+	existingDependencies map[string]bool
+}
+
+func buildSeedDemoIndexes(snapshot domain.Snapshot, featureID string) seedDemoIndexes {
+	indexes := seedDemoIndexes{
+		existingTasks:        map[string]domain.Task{},
+		linkedTasks:          map[string]bool{},
+		existingDependencies: map[string]bool{},
 	}
-	existingTasks := map[string]domain.Task{}
 	for _, task := range snapshot.Tasks {
-		if task.FeatureID == feature.ID {
-			existingTasks[task.Title] = task
+		if task.FeatureID == featureID {
+			indexes.existingTasks[task.Title] = task
 		}
 	}
-	linkedTasks := map[string]bool{}
 	for _, pr := range snapshot.PullRequests {
-		linkedTasks[pr.TaskID] = true
+		indexes.linkedTasks[pr.TaskID] = true
 	}
-	existingDeps := map[string]bool{}
 	for _, dep := range snapshot.Dependencies {
-		existingDeps[dep.BlockerTaskID+"→"+dep.BlockedTaskID] = true
+		indexes.existingDependencies[dep.BlockerTaskID+"→"+dep.BlockedTaskID] = true
 	}
+	return indexes
+}
+
+func (s *Service) seedDemoTasks(ctx context.Context, slug, featureID string, count int, indexes seedDemoIndexes) ([]domain.Task, error) {
 	tasks := make([]domain.Task, count)
 	for i := 0; i < count; i++ {
 		title := fmt.Sprintf("Delivery slice %02d", i+1)
-		task, ok := existingTasks[title]
+		task, ok := indexes.existingTasks[title]
 		if !ok {
-			task, err = s.CreateTask(ctx, feature.ID, title, "Implement and verify repository boundary", domain.TaskKindPR, []string{"Ari", "Mika", "Ren"}[i%3])
+			var err error
+			task, err = s.CreateTask(ctx, featureID, title, "Implement and verify repository boundary", domain.TaskKindPR, []string{"Ari", "Mika", "Ren"}[i%3])
 			if err != nil {
-				return err
+				return nil, err
 			}
 		}
 		tasks[i] = task
-		if !linkedTasks[task.ID] {
+		if !indexes.linkedTasks[task.ID] {
 			if _, err := s.AttachPullRequest(ctx, task.ID, fmt.Sprintf("https://github.com/HappyOnigiri/%s/pull/%d", slug, i+1)); err != nil {
-				return err
+				return nil, err
 			}
 		}
 	}
-	for i := 1; i < count; i++ {
+	return tasks, nil
+}
+
+func (s *Service) seedDemoDependencies(ctx context.Context, tasks []domain.Task, existingDependencies map[string]bool) error {
+	for i := 1; i < len(tasks); i++ {
 		blocker := (i - 1) / 2
-		if existingDeps[tasks[blocker].ID+"→"+tasks[i].ID] {
+		if existingDependencies[tasks[blocker].ID+"→"+tasks[i].ID] {
 			continue
 		}
 		if _, err := s.AddDependency(ctx, tasks[blocker].ID, tasks[i].ID); err != nil {
 			return err
 		}
 	}
-	_, _, err = s.Sync(ctx, feature.ID, "")
-	return err
+	return nil
 }
 
 func oneOf[T comparable](value T, values ...T) bool {

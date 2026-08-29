@@ -7,14 +7,20 @@ import {
 
 const darkSchemeQuery = "(prefers-color-scheme: dark)";
 const themeColors = { light: "#f5f6f8", dark: "#191b1f" } as const;
+interface ThemeWindow {
+  matchMedia?: Window["matchMedia"];
+}
+
+const themeWindow = window as ThemeWindow;
 
 function prefersDark() {
-  return window.matchMedia?.(darkSchemeQuery).matches === true;
+  const mediaQuery = themeWindow.matchMedia;
+  return mediaQuery ? mediaQuery(darkSchemeQuery).matches : false;
 }
 
 function applyThemePreference(theme: ThemePreference) {
-  if (theme === "system") delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = theme;
+  if (theme === "system") delete document.documentElement.dataset["theme"];
+  else document.documentElement.dataset["theme"] = theme;
 
   const resolved = resolveThemePreference(theme, prefersDark());
   document
@@ -29,6 +35,6 @@ export function setDisplayTheme(theme: ThemePreference) {
 
 applyThemePreference(readThemePreference());
 
-window.matchMedia?.(darkSchemeQuery).addEventListener("change", () => {
+themeWindow.matchMedia?.(darkSchemeQuery).addEventListener("change", () => {
   if (readThemePreference() === "system") applyThemePreference("system");
 });

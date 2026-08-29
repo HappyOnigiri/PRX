@@ -22,6 +22,25 @@ linters:
     - unconvert
     - usestdlibvars
     - wastedassign
+    - funlen
+    - cyclop
+
+  settings:
+    funlen:
+      lines: 60
+      statements: 40
+      ignore-comments: true
+    cyclop:
+      max-complexity: 15
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        # cyclop v2 removed skip-tests; this preserves its intended scope.
+        linters: [funlen, cyclop]
+      - path: internal/rpc/convert\.go
+        linters: [cyclop]
+        # enum-to-enum conversions are flat switches; splitting them hides the mapping
 
 formatters:
   enable:

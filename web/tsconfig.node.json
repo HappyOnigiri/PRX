@@ -2,9 +2,19 @@
   "compilerOptions": {
     "composite": true,
     "skipLibCheck": true,
+    "strict": true,
     "module": "ESNext",
     "moduleResolution": "Bundler",
     "allowImportingTsExtensions": true,
+    "noUncheckedIndexedAccess": true,
+    "exactOptionalPropertyTypes": true,
+    "noPropertyAccessFromIndexSignature": true,
+    "verbatimModuleSyntax": true,
+    "noImplicitOverride": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
     "noEmit": true
   },
   "include": ["vite.config.ts", "playwright.config.ts", "eslint.config.js"]

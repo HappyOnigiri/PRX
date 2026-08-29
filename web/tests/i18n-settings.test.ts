@@ -12,7 +12,9 @@ import {
 } from "../src/i18n/settings";
 
 describe("WebUI settings", () => {
-  beforeEach(() => localStorage.clear());
+  beforeEach(() => {
+    localStorage.clear();
+  });
 
   it("prefers a saved language over the browser language", () => {
     vi.spyOn(window.navigator, "languages", "get").mockReturnValue(["ja-JP"]);
