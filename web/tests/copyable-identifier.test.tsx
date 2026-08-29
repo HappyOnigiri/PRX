@@ -38,11 +38,14 @@ describe("CopyableIdentifier", () => {
     });
 
     expect(writeText).toHaveBeenCalledWith("task-123");
-    expect(screen.getByText("Copied")).toBeInTheDocument();
+    expect(copyButton).toHaveClass("is-copied");
+    expect(copyButton).toHaveAccessibleName("Copied");
+    expect(screen.queryByText("Copied")).not.toBeInTheDocument();
     act(() => {
       vi.advanceTimersByTime(1600);
     });
-    expect(screen.queryByText("Copied")).not.toBeInTheDocument();
+    expect(copyButton).not.toHaveClass("is-copied");
+    expect(copyButton).toHaveAccessibleName("Copy Task ID");
   });
 
   it("reports clipboard failures and clears the status", async () => {

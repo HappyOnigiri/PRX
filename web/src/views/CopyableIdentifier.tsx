@@ -27,6 +27,7 @@ export function CopyableIdentifier({
   }
 
   const copyLabel = t("common.copyIdentifier", { label });
+  const isCopied = status === "copied";
   return (
     <span className="copyable-identifier">
       <span className="copyable-identifier-label">{label}</span>
@@ -35,8 +36,8 @@ export function CopyableIdentifier({
       </code>
       <button
         type="button"
-        className="copyable-identifier-button"
-        aria-label={copyLabel}
+        className={`copyable-identifier-button${isCopied ? " is-copied" : ""}`}
+        aria-label={isCopied ? t("common.copied") : copyLabel}
         title={copyLabel}
         onClick={() => void copyIdentifier()}
       >
@@ -48,7 +49,6 @@ export function CopyableIdentifier({
         />
       </button>
       <span className="copyable-identifier-status" aria-live="polite">
-        {status === "copied" && t("common.copied")}
         {status === "failed" && t("common.copyFailed")}
       </span>
     </span>

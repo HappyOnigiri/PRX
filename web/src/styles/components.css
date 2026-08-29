@@ -71,6 +71,11 @@
   color: var(--text);
 }
 
+.copyable-identifier-button.is-copied,
+.copyable-identifier-button.is-copied:hover {
+  color: var(--status-ready);
+}
+
 .copyable-identifier-status {
   flex: 0 1 auto;
   overflow: hidden;
