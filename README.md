@@ -5,7 +5,9 @@ PRX is a local-first dependency control room for initiatives that span many GitH
 ## Requirements
 
 - Go 1.26 or newer
-- Node.js 24 and pnpm 11.24
+- The Node.js version is defined in `.tool-versions`, and the pnpm version is defined in the root `package.json` `packageManager`
+- `golangci-lint` is installed into `bin/` at the version in `.tool-versions` by `make lint`
+- Python is not required
 - A Chromium browser for Playwright development checks
 - `GITHUB_TOKEN`, `GH_TOKEN`, or an authenticated `gh` CLI for live GitHub synchronization
 
@@ -49,6 +51,8 @@ prx ready --json
 ```
 
 `prx feature archive SLUG` hides a feature from the sidebar and `prx feature unarchive SLUG` brings it back; `prx feature update SLUG --archived=false` does the same.
+
+`--github-fixture` supplies a deterministic provider for the command. Without a fixture, only `prx serve` attempts live GitHub authentication; other commands, including `sync`, run without a provider and report `GitHub provider is not configured` when synchronization is requested.
 
 Removing a dependency, detaching a pull request, or deleting a document that does not exist fails with `not_found` rather than reporting success.
 
@@ -106,7 +110,7 @@ See [docs/design.md](docs/design.md) for package boundaries, status decisions, t
 make generate          # sqlc, Buf format/lint, Go/TypeScript protobuf, and CLI reference generation
 make generated-check  # regeneration must produce no diff
 make mod-tidy-check   # go.mod and go.sum must be tidy
-make lint              # go vet, golangci-lint (gofumpt / gci / golines), deadcode, ESLint, strict TypeScript, and function size/complexity limits
+make lint              # go vet, auto-installed golangci-lint (gofumpt / gci / golines), deadcode, ESLint, strict TypeScript, and function size/complexity limits
 make test              # Go, Vitest, and component coverage
 make go-coverage-check # handwritten Go packages must stay at or above the coverage baseline
 make test-race         # Go race detector

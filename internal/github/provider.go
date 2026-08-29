@@ -20,7 +20,7 @@ import (
 )
 
 type Provider interface {
-	Fetch(context.Context, domain.PullRequest) (domain.PullRequest, error)
+	Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error)
 }
 
 type LiveProvider struct{ client *gh.Client }
@@ -276,7 +276,7 @@ func NewFixtureProvider(path string) (*FixtureProvider, error) {
 	return &FixtureProvider{values: values}, nil
 }
 
-func (p *FixtureProvider) Fetch(_ context.Context, current domain.PullRequest) (domain.PullRequest, error) {
+func (p *FixtureProvider) Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error) {
 	value, ok := p.values[current.URL]
 	if !ok {
 		states := []fixture{

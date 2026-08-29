@@ -1,15 +1,12 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 
-	"github.com/HappyOnigiri/PRX/internal/app"
 	"github.com/HappyOnigiri/PRX/internal/domain"
-	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 )
 
 func (s *state) snapshotCommand() *cobra.Command {
@@ -93,18 +90,6 @@ func (s *state) queueCommand(name string) *cobra.Command {
 	}
 }
 
-func (s *state) ensureLiveProvider(ctx context.Context) error {
-	if s.fixture != "" {
-		return nil
-	}
-	provider, err := githubprovider.NewLiveProvider(ctx)
-	if err != nil {
-		return &domain.Error{Code: "github_auth", Message: err.Error()}
-	}
-	s.service = app.New(s.store, provider)
-	return nil
-}
-
 func (s *state) syncCommand() *cobra.Command {
 	var feature, task string
 	command := &cobra.Command{
@@ -113,9 +98,6 @@ func (s *state) syncCommand() *cobra.Command {
 		Example: "prx sync --feature checkout --json",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
-			if err := s.ensureLiveProvider(cmd.Context()); err != nil {
-				return err
-			}
 			succeeded, failed, err := s.service.Sync(cmd.Context(), feature, task)
 			if err != nil {
 				return err
@@ -156,10 +138,6 @@ func (s *state) seedCommand() *cobra.Command {
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if features < 1 {
 				return domain.NewError("invalid_seed", "features must be at least 1")
-			}
-			if s.fixture == "" {
-				provider, _ := githubprovider.NewFixtureProvider("demo")
-				s.service = app.New(s.store, provider)
 			}
 			for index := 0; index < features; index++ {
 				featureSlug := slug
