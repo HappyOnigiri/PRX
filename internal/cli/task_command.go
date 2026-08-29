@@ -55,7 +55,7 @@ func (s *state) taskCommand() *cobra.Command {
 	get := &cobra.Command{
 		Use:     "get TASK_ID",
 		Short:   "Show a task by ID",
-		Example: "prx task get TASK_ID --json",
+		Example: "prx task get T-1 --json",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			snapshot, err := s.service.Snapshot(cmd.Context())

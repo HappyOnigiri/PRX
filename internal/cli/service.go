@@ -23,6 +23,7 @@ type Service interface {
 		archived *bool,
 	) (domain.Feature, error)
 	ResolveFeature(ctx context.Context, idOrSlug string) (domain.Feature, error)
+	GetNode(ctx context.Context, id string) (any, error)
 	DeleteFeature(ctx context.Context, id string, cascade bool) error
 
 	CreateTask(

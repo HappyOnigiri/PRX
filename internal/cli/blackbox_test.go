@@ -84,21 +84,62 @@ func TestBlackBoxJSONCRUDAndCycle(t *testing.T) {
 	var featureData struct {
 		ID string `json:"id"`
 	}
-	_ = json.Unmarshal(feature.Data, &featureData)
+	if err := json.Unmarshal(feature.Data, &featureData); err != nil {
+		t.Fatal(err)
+	}
+	if featureData.ID != "F-1" {
+		t.Fatalf("feature ID=%q, want F-1", featureData.ID)
+	}
 	byID, _, exit := runCLI(t, binary, dbPath, "feature", "get", featureData.ID)
 	if exit != 0 || !byID.OK {
 		t.Fatalf("feature get by ID: %+v exit=%d", byID, exit)
+	}
+	nodeFeature, _, exit := runCLI(t, binary, dbPath, "node", "get", featureData.ID)
+	if exit != 0 || !nodeFeature.OK {
+		t.Fatalf("node get feature: %+v exit=%d", nodeFeature, exit)
+	}
+	var nodeFeatureData struct {
+		ID   string `json:"id"`
+		Slug string `json:"slug"`
+	}
+	if err := json.Unmarshal(nodeFeature.Data, &nodeFeatureData); err != nil {
+		t.Fatal(err)
+	}
+	if nodeFeatureData.ID != featureData.ID || nodeFeatureData.Slug != "release" {
+		t.Fatalf("node feature=%+v", nodeFeatureData)
 	}
 	a, _, _ := runCLI(t, binary, dbPath, "task", "create", "--feature", featureData.ID, "--title", "A")
 	b, _, _ := runCLI(t, binary, dbPath, "task", "create", "--feature", featureData.ID, "--title", "B")
 	var at, bt struct {
 		ID string `json:"id"`
 	}
-	_ = json.Unmarshal(a.Data, &at)
-	_ = json.Unmarshal(b.Data, &bt)
+	if err := json.Unmarshal(a.Data, &at); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(b.Data, &bt); err != nil {
+		t.Fatal(err)
+	}
+	if at.ID != "T-1" || bt.ID != "T-2" {
+		t.Fatalf("task IDs=%q,%q, want T-1,T-2", at.ID, bt.ID)
+	}
 	byTaskID, _, exit := runCLI(t, binary, dbPath, "task", "get", at.ID)
 	if exit != 0 || !byTaskID.OK {
 		t.Fatalf("task get by ID: %+v exit=%d", byTaskID, exit)
+	}
+	nodeTask, _, exit := runCLI(t, binary, dbPath, "node", "get", at.ID)
+	if exit != 0 || !nodeTask.OK {
+		t.Fatalf("node get task: %+v exit=%d", nodeTask, exit)
+	}
+	var nodeTaskData struct {
+		ID        string `json:"id"`
+		FeatureID string `json:"feature_id"`
+		Kind      string `json:"kind"`
+	}
+	if err := json.Unmarshal(nodeTask.Data, &nodeTaskData); err != nil {
+		t.Fatal(err)
+	}
+	if nodeTaskData.ID != at.ID || nodeTaskData.FeatureID != featureData.ID || nodeTaskData.Kind != "pr" {
+		t.Fatalf("node task=%+v", nodeTaskData)
 	}
 	if value, _, exit := runCLI(t, binary, dbPath, "dependency", "add", at.ID, bt.ID); exit != 0 || !value.OK {
 		t.Fatalf("add dependency: %+v", value)

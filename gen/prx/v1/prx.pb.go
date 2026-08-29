@@ -920,7 +920,8 @@ func (x *ErrorDetail) GetPath() []string {
 // Feature is a roadmap unit that owns tasks and dependency graphs.
 type Feature struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id is the stable identifier of the feature.
+	// id is the public stable identifier of the feature in the form F-<number>.
+	// The storage UUID is internal and is never exposed through this API.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// slug is the lowercase, hyphenated identifier used by CLI commands.
 	Slug string `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
@@ -1074,9 +1075,10 @@ func (x *Feature) GetMergedCount() int32 {
 // Task is a unit of work belonging to a feature.
 type Task struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id is the stable identifier of the task.
+	// id is the public stable identifier of the task in the form T-<number>.
+	// The storage UUID is internal and is never exposed through this API.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// feature_id identifies the feature that owns the task.
+	// feature_id identifies the owning feature by its public F-<number> ID.
 	FeatureId string `protobuf:"bytes,2,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
 	// title is the human-readable task name.
 	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
@@ -1219,9 +1221,9 @@ func (x *Task) GetBlockedReason() *BlockedReason {
 // Dependency is a directed edge from a blocker task to a blocked task in one feature.
 type Dependency struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// blocker_task_id identifies the task that must be satisfied first.
+	// blocker_task_id identifies the task by its public T-<number> ID.
 	BlockerTaskId string `protobuf:"bytes,1,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
-	// blocked_task_id identifies the task that depends on the blocker.
+	// blocked_task_id identifies the task by its public T-<number> ID.
 	BlockedTaskId string `protobuf:"bytes,2,opt,name=blocked_task_id,json=blockedTaskId,proto3" json:"blocked_task_id,omitempty"`
 	// created_at is the time the dependency was added in RFC 3339 format.
 	CreatedAt     string `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
@@ -1283,7 +1285,7 @@ func (x *Dependency) GetCreatedAt() string {
 // PullRequest is the GitHub record attached to a pull-request task.
 type PullRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// task_id identifies the task linked to the pull request.
+	// task_id identifies the linked task by its public T-<number> ID.
 	TaskId string `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	// owner is the GitHub account or organization that owns the repository.
 	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
@@ -1475,9 +1477,9 @@ type Document struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// id is the stable identifier of the document reference.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// feature_id identifies the parent feature when the document is feature-scoped.
+	// feature_id identifies the parent feature by its public F-<number> ID when the document is feature-scoped.
 	FeatureId string `protobuf:"bytes,2,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	// task_id identifies the parent task when the document is task-scoped.
+	// task_id identifies the parent task by its public T-<number> ID when the document is task-scoped.
 	TaskId string `protobuf:"bytes,3,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	// kind identifies whether value is a URL or a registered Markdown path.
 	Kind DocumentKind `protobuf:"varint,4,opt,name=kind,proto3,enum=prx.v1.DocumentKind" json:"kind,omitempty"`
@@ -3144,9 +3146,9 @@ func (x *ReadMarkdownDocumentResponse) GetContent() string {
 // Empty selectors refresh all pull requests; setting both selectors applies both filters.
 type SyncRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// feature_id selects pull requests belonging to the feature identified by ID or slug.
+	// feature_id selects pull requests belonging to the feature identified by public ID or slug.
 	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	// task_id selects the pull request attached to this task.
+	// task_id selects the pull request attached to this task's public ID.
 	TaskId        string `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

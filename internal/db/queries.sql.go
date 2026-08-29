@@ -65,12 +65,13 @@ func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) 
 }
 
 const createFeature = `-- name: CreateFeature :one
-INSERT INTO features (id, slug, title, description, status, archived, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, slug, title, description, status, archived, created_at, updated_at
+INSERT INTO features (id, public_id, slug, title, description, status, archived, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, slug, title, description, status, archived, created_at, updated_at, public_id
 `
 
 type CreateFeatureParams struct {
 	ID          string `json:"id"`
+	PublicID    string `json:"public_id"`
 	Slug        string `json:"slug"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
@@ -83,6 +84,7 @@ type CreateFeatureParams struct {
 func (q *Queries) CreateFeature(ctx context.Context, arg CreateFeatureParams) (Feature, error) {
 	row := q.db.QueryRowContext(ctx, createFeature,
 		arg.ID,
+		arg.PublicID,
 		arg.Slug,
 		arg.Title,
 		arg.Description,
@@ -101,17 +103,19 @@ func (q *Queries) CreateFeature(ctx context.Context, arg CreateFeatureParams) (F
 		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PublicID,
 	)
 	return i, err
 }
 
 const createTask = `-- name: CreateTask :one
-INSERT INTO tasks (id, feature_id, title, scope, kind, status, assignee, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, feature_id, title, scope, kind, status, assignee, created_at, updated_at
+INSERT INTO tasks (id, public_id, feature_id, title, scope, kind, status, assignee, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, feature_id, title, scope, kind, status, assignee, created_at, updated_at, public_id
 `
 
 type CreateTaskParams struct {
 	ID        string `json:"id"`
+	PublicID  string `json:"public_id"`
 	FeatureID string `json:"feature_id"`
 	Title     string `json:"title"`
 	Scope     string `json:"scope"`
@@ -125,6 +129,7 @@ type CreateTaskParams struct {
 func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, error) {
 	row := q.db.QueryRowContext(ctx, createTask,
 		arg.ID,
+		arg.PublicID,
 		arg.FeatureID,
 		arg.Title,
 		arg.Scope,
@@ -145,6 +150,7 @@ func (q *Queries) CreateTask(ctx context.Context, arg CreateTaskParams) (Task, e
 		&i.Assignee,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PublicID,
 	)
 	return i, err
 }
@@ -270,7 +276,7 @@ func (q *Queries) GetDocument(ctx context.Context, id string) (Document, error) 
 }
 
 const getFeature = `-- name: GetFeature :one
-SELECT id, slug, title, description, status, archived, created_at, updated_at FROM features WHERE id = ?
+SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id FROM features WHERE id = ?
 `
 
 func (q *Queries) GetFeature(ctx context.Context, id string) (Feature, error) {
@@ -285,12 +291,34 @@ func (q *Queries) GetFeature(ctx context.Context, id string) (Feature, error) {
 		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PublicID,
+	)
+	return i, err
+}
+
+const getFeatureByPublicID = `-- name: GetFeatureByPublicID :one
+SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id FROM features WHERE public_id = ?
+`
+
+func (q *Queries) GetFeatureByPublicID(ctx context.Context, publicID string) (Feature, error) {
+	row := q.db.QueryRowContext(ctx, getFeatureByPublicID, publicID)
+	var i Feature
+	err := row.Scan(
+		&i.ID,
+		&i.Slug,
+		&i.Title,
+		&i.Description,
+		&i.Status,
+		&i.Archived,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PublicID,
 	)
 	return i, err
 }
 
 const getFeatureBySlug = `-- name: GetFeatureBySlug :one
-SELECT id, slug, title, description, status, archived, created_at, updated_at FROM features WHERE slug = ?
+SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id FROM features WHERE slug = ?
 `
 
 func (q *Queries) GetFeatureBySlug(ctx context.Context, slug string) (Feature, error) {
@@ -305,6 +333,7 @@ func (q *Queries) GetFeatureBySlug(ctx context.Context, slug string) (Feature, e
 		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PublicID,
 	)
 	return i, err
 }
@@ -338,7 +367,7 @@ func (q *Queries) GetPullRequestByTask(ctx context.Context, taskID string) (Pull
 }
 
 const getTask = `-- name: GetTask :one
-SELECT id, feature_id, title, scope, kind, status, assignee, created_at, updated_at FROM tasks WHERE id=?
+SELECT id, feature_id, title, scope, kind, status, assignee, created_at, updated_at, public_id FROM tasks WHERE id=?
 `
 
 func (q *Queries) GetTask(ctx context.Context, id string) (Task, error) {
@@ -354,8 +383,42 @@ func (q *Queries) GetTask(ctx context.Context, id string) (Task, error) {
 		&i.Assignee,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PublicID,
 	)
 	return i, err
+}
+
+const getTaskByPublicID = `-- name: GetTaskByPublicID :one
+SELECT id, feature_id, title, scope, kind, status, assignee, created_at, updated_at, public_id FROM tasks WHERE public_id=?
+`
+
+func (q *Queries) GetTaskByPublicID(ctx context.Context, publicID string) (Task, error) {
+	row := q.db.QueryRowContext(ctx, getTaskByPublicID, publicID)
+	var i Task
+	err := row.Scan(
+		&i.ID,
+		&i.FeatureID,
+		&i.Title,
+		&i.Scope,
+		&i.Kind,
+		&i.Status,
+		&i.Assignee,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.PublicID,
+	)
+	return i, err
+}
+
+const incrementIDSequence = `-- name: IncrementIDSequence :one
+UPDATE id_sequences SET next_value = next_value + 1 WHERE entity = ? RETURNING next_value
+`
+
+func (q *Queries) IncrementIDSequence(ctx context.Context, entity string) (int64, error) {
+	row := q.db.QueryRowContext(ctx, incrementIDSequence, entity)
+	var next_value int64
+	err := row.Scan(&next_value)
+	return next_value, err
 }
 
 const listDependencies = `-- name: ListDependencies :many
@@ -449,7 +512,7 @@ func (q *Queries) ListDocuments(ctx context.Context) ([]Document, error) {
 }
 
 const listFeatures = `-- name: ListFeatures :many
-SELECT id, slug, title, description, status, archived, created_at, updated_at FROM features ORDER BY archived, updated_at DESC, slug
+SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id FROM features ORDER BY archived, updated_at DESC, slug
 `
 
 func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
@@ -470,6 +533,7 @@ func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
 			&i.Archived,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.PublicID,
 		); err != nil {
 			return nil, err
 		}
@@ -529,7 +593,7 @@ func (q *Queries) ListPullRequests(ctx context.Context) ([]PullRequest, error) {
 }
 
 const listTasks = `-- name: ListTasks :many
-SELECT id, feature_id, title, scope, kind, status, assignee, created_at, updated_at FROM tasks ORDER BY created_at, id
+SELECT id, feature_id, title, scope, kind, status, assignee, created_at, updated_at, public_id FROM tasks ORDER BY created_at, id
 `
 
 func (q *Queries) ListTasks(ctx context.Context) ([]Task, error) {
@@ -551,6 +615,7 @@ func (q *Queries) ListTasks(ctx context.Context) ([]Task, error) {
 			&i.Assignee,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.PublicID,
 		); err != nil {
 			return nil, err
 		}
@@ -566,7 +631,7 @@ func (q *Queries) ListTasks(ctx context.Context) ([]Task, error) {
 }
 
 const listTasksByFeature = `-- name: ListTasksByFeature :many
-SELECT id, feature_id, title, scope, kind, status, assignee, created_at, updated_at FROM tasks WHERE feature_id=? ORDER BY created_at, id
+SELECT id, feature_id, title, scope, kind, status, assignee, created_at, updated_at, public_id FROM tasks WHERE feature_id=? ORDER BY created_at, id
 `
 
 func (q *Queries) ListTasksByFeature(ctx context.Context, featureID string) ([]Task, error) {
@@ -588,6 +653,7 @@ func (q *Queries) ListTasksByFeature(ctx context.Context, featureID string) ([]T
 			&i.Assignee,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.PublicID,
 		); err != nil {
 			return nil, err
 		}
@@ -620,7 +686,7 @@ func (q *Queries) RemoveDependency(ctx context.Context, arg RemoveDependencyPara
 }
 
 const updateFeature = `-- name: UpdateFeature :one
-UPDATE features SET slug=?, title=?, description=?, status=?, archived=?, updated_at=? WHERE id=? RETURNING id, slug, title, description, status, archived, created_at, updated_at
+UPDATE features SET slug=?, title=?, description=?, status=?, archived=?, updated_at=? WHERE id=? RETURNING id, slug, title, description, status, archived, created_at, updated_at, public_id
 `
 
 type UpdateFeatureParams struct {
@@ -653,12 +719,13 @@ func (q *Queries) UpdateFeature(ctx context.Context, arg UpdateFeatureParams) (F
 		&i.Archived,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PublicID,
 	)
 	return i, err
 }
 
 const updateTask = `-- name: UpdateTask :one
-UPDATE tasks SET title=?, scope=?, status=?, assignee=?, updated_at=? WHERE id=? RETURNING id, feature_id, title, scope, kind, status, assignee, created_at, updated_at
+UPDATE tasks SET title=?, scope=?, status=?, assignee=?, updated_at=? WHERE id=? RETURNING id, feature_id, title, scope, kind, status, assignee, created_at, updated_at, public_id
 `
 
 type UpdateTaskParams struct {
@@ -690,6 +757,7 @@ func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (Task, e
 		&i.Assignee,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PublicID,
 	)
 	return i, err
 }

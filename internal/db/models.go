@@ -33,6 +33,12 @@ type Feature struct {
 	Archived    int64  `json:"archived"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
+	PublicID    string `json:"public_id"`
+}
+
+type IDSequence struct {
+	Entity    string `json:"entity"`
+	NextValue int64  `json:"next_value"`
 }
 
 type PullRequest struct {
@@ -64,4 +70,5 @@ type Task struct {
 	Assignee  string `json:"assignee"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
+	PublicID  string `json:"public_id"`
 }

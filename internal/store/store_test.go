@@ -36,7 +36,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 1 {
+		migrations != 2 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -68,6 +68,61 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	err = database.DB().QueryRowContext(ctx, `SELECT name FROM sqlite_master WHERE name='should_rollback'`).Scan(&name)
 	if !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("failed migration left a table: name=%q err=%v", name, err)
+	}
+}
+
+func TestPublicIDsAreTypedAndStorageIDsStayInternal(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "public-ids", "Public IDs", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondFeature, err := service.CreateFeature(ctx, "public-ids-2", "Public IDs 2", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	firstTask, err := service.CreateTask(ctx, feature.ID, "First", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondTask, err := service.CreateTask(ctx, feature.ID, "Second", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if feature.ID != "F-1" || secondFeature.ID != "F-2" {
+		t.Fatalf("feature IDs=%q,%q, want F-1,F-2", feature.ID, secondFeature.ID)
+	}
+	if firstTask.ID != "T-1" || secondTask.ID != "T-2" {
+		t.Fatalf("task IDs=%q,%q, want T-1,T-2", firstTask.ID, secondTask.ID)
+	}
+	if feature.StorageID == "" || feature.StorageID == feature.ID ||
+		firstTask.StorageID == "" || firstTask.StorageID == firstTask.ID {
+		t.Fatalf("storage IDs were not kept separate: feature=%+v task=%+v", feature, firstTask)
+	}
+	if firstTask.FeatureID != feature.ID || firstTask.StorageFeatureID != feature.StorageID {
+		t.Fatalf(
+			"task parent IDs=%q,%q, want public=%q storage=%q",
+			firstTask.FeatureID,
+			firstTask.StorageFeatureID,
+			feature.ID,
+			feature.StorageID,
+		)
+	}
+	snapshot, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.Features) != 2 || len(snapshot.Tasks) != 2 {
+		t.Fatalf("snapshot counts features=%d tasks=%d", len(snapshot.Features), len(snapshot.Tasks))
+	}
+	for _, task := range snapshot.Tasks {
+		if task.ID != firstTask.ID && task.ID != secondTask.ID {
+			t.Fatalf("snapshot exposed unexpected task ID %q", task.ID)
+		}
+		if task.FeatureID != feature.ID {
+			t.Fatalf("snapshot exposed unexpected feature ID %q", task.FeatureID)
+		}
 	}
 }
 
@@ -379,7 +434,7 @@ func TestSnapshotSurvivesOrphanedTask(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := database.DB().
-		ExecContext(ctx, `UPDATE tasks SET feature_id = 'missing-feature' WHERE id = ?`, orphan.ID); err != nil {
+		ExecContext(ctx, `UPDATE tasks SET feature_id = 'missing-feature' WHERE id = ?`, orphan.StorageID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := database.DB().ExecContext(ctx, `PRAGMA foreign_keys = ON`); err != nil {

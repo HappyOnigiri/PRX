@@ -61,6 +61,7 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	root.AddCommand(
 		s.featureCommand(),
 		s.taskCommand(),
+		s.nodeCommand(),
 		s.dependencyCommand(),
 		s.pullRequestCommand(),
 		s.documentCommand(),

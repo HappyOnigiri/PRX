@@ -235,7 +235,8 @@ message ErrorDetail {
 
 // Feature is a roadmap unit that owns tasks and dependency graphs.
 message Feature {
-  // id is the stable identifier of the feature.
+  // id is the public stable identifier of the feature in the form F-<number>.
+  // The storage UUID is internal and is never exposed through this API.
   string id = 1;
   // slug is the lowercase, hyphenated identifier used by CLI commands.
   string slug = 2;
@@ -265,9 +266,10 @@ message Feature {
 
 // Task is a unit of work belonging to a feature.
 message Task {
-  // id is the stable identifier of the task.
+  // id is the public stable identifier of the task in the form T-<number>.
+  // The storage UUID is internal and is never exposed through this API.
   string id = 1;
-  // feature_id identifies the feature that owns the task.
+  // feature_id identifies the owning feature by its public F-<number> ID.
   string feature_id = 2;
   // title is the human-readable task name.
   string title = 3;
@@ -293,9 +295,9 @@ message Task {
 
 // Dependency is a directed edge from a blocker task to a blocked task in one feature.
 message Dependency {
-  // blocker_task_id identifies the task that must be satisfied first.
+  // blocker_task_id identifies the task by its public T-<number> ID.
   string blocker_task_id = 1;
-  // blocked_task_id identifies the task that depends on the blocker.
+  // blocked_task_id identifies the task by its public T-<number> ID.
   string blocked_task_id = 2;
   // created_at is the time the dependency was added in RFC 3339 format.
   string created_at = 3;
@@ -303,7 +305,7 @@ message Dependency {
 
 // PullRequest is the GitHub record attached to a pull-request task.
 message PullRequest {
-  // task_id identifies the task linked to the pull request.
+  // task_id identifies the linked task by its public T-<number> ID.
   string task_id = 1;
   // owner is the GitHub account or organization that owns the repository.
   string owner = 2;
@@ -343,9 +345,9 @@ message PullRequest {
 message Document {
   // id is the stable identifier of the document reference.
   string id = 1;
-  // feature_id identifies the parent feature when the document is feature-scoped.
+  // feature_id identifies the parent feature by its public F-<number> ID when the document is feature-scoped.
   string feature_id = 2;
-  // task_id identifies the parent task when the document is task-scoped.
+  // task_id identifies the parent task by its public T-<number> ID when the document is task-scoped.
   string task_id = 3;
   // kind identifies whether value is a URL or a registered Markdown path.
   DocumentKind kind = 4;
@@ -582,9 +584,9 @@ message ReadMarkdownDocumentResponse {
 // SyncRequest selects pull requests to refresh from GitHub.
 // Empty selectors refresh all pull requests; setting both selectors applies both filters.
 message SyncRequest {
-  // feature_id selects pull requests belonging to the feature identified by ID or slug.
+  // feature_id selects pull requests belonging to the feature identified by public ID or slug.
   string feature_id = 1;
-  // task_id selects the pull request attached to this task.
+  // task_id selects the pull request attached to this task's public ID.
   string task_id = 2;
 }
 

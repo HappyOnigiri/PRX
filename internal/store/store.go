@@ -155,7 +155,8 @@ func nullableTime(value sql.NullString) *time.Time {
 
 func domainFeature(value db.Feature) domain.Feature {
 	return domain.Feature{
-		ID:          value.ID,
+		ID:          value.PublicID,
+		StorageID:   value.ID,
 		Slug:        value.Slug,
 		Title:       value.Title,
 		Description: value.Description,
@@ -166,33 +167,54 @@ func domainFeature(value db.Feature) domain.Feature {
 	}
 }
 
-func domainTask(value db.Task) domain.Task {
+func publicFeatureIDs(values []db.Feature) map[string]string {
+	result := make(map[string]string, len(values))
+	for _, value := range values {
+		result[value.ID] = value.PublicID
+	}
+	return result
+}
+
+func publicTaskIDs(values []db.Task) map[string]string {
+	result := make(map[string]string, len(values))
+	for _, value := range values {
+		result[value.ID] = value.PublicID
+	}
+	return result
+}
+
+func domainTask(value db.Task, featureID string) domain.Task {
 	return domain.Task{
-		ID:        value.ID,
-		FeatureID: value.FeatureID,
-		Title:     value.Title,
-		Scope:     value.Scope,
-		Kind:      domain.TaskKind(value.Kind),
-		Status:    domain.TaskStatus(value.Status),
-		Assignee:  value.Assignee,
-		CreatedAt: parseTime(value.CreatedAt),
-		UpdatedAt: parseTime(value.UpdatedAt),
+		ID:               value.PublicID,
+		StorageID:        value.ID,
+		FeatureID:        featureID,
+		StorageFeatureID: value.FeatureID,
+		Title:            value.Title,
+		Scope:            value.Scope,
+		Kind:             domain.TaskKind(value.Kind),
+		Status:           domain.TaskStatus(value.Status),
+		Assignee:         value.Assignee,
+		CreatedAt:        parseTime(value.CreatedAt),
+		UpdatedAt:        parseTime(value.UpdatedAt),
 	}
 }
 
-func domainDependency(value db.Dependency) domain.Dependency {
+func domainDependency(value db.Dependency, taskIDs map[string]string) domain.Dependency {
 	return domain.Dependency{
-		BlockerTaskID: value.BlockerTaskID,
-		BlockedTaskID: value.BlockedTaskID,
+		BlockerTaskID: taskIDs[value.BlockerTaskID],
+		BlockedTaskID: taskIDs[value.BlockedTaskID],
 		CreatedAt:     parseTime(value.CreatedAt),
 	}
 }
 
-func domainDocument(value db.Document) domain.Document {
+func domainDocument(
+	value db.Document,
+	featureIDs, taskIDs map[string]string,
+) domain.Document {
 	return domain.Document{
 		ID:        value.ID,
-		FeatureID: value.FeatureID.String,
-		TaskID:    value.TaskID.String,
+		FeatureID: featureIDs[value.FeatureID.String],
+		TaskID:    taskIDs[value.TaskID.String],
 		Kind:      domain.DocumentKind(value.Kind),
 		Title:     value.Title,
 		Value:     value.Value,
@@ -200,9 +222,9 @@ func domainDocument(value db.Document) domain.Document {
 	}
 }
 
-func domainPullRequest(value db.PullRequest) domain.PullRequest {
+func domainPullRequest(value db.PullRequest, taskIDs map[string]string) domain.PullRequest {
 	result := domain.PullRequest{
-		TaskID:          value.TaskID,
+		TaskID:          taskIDs[value.TaskID],
 		Owner:           value.Owner,
 		Repository:      value.Repository,
 		Number:          value.Number,

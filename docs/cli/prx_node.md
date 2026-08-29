@@ -1,21 +1,11 @@
-## prx feature get
+## prx node
 
-Show a feature by ID or slug
-
-```
-prx feature get FEATURE_ID_OR_SLUG [flags]
-```
-
-### Examples
-
-```
-prx feature get F-1 --json
-```
+Inspect feature and task nodes
 
 ### Options
 
 ```
-  -h, --help   help for get
+  -h, --help   help for node
 ```
 
 ### Options inherited from parent commands
@@ -28,5 +18,6 @@ prx feature get F-1 --json
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - Manage features
+* [prx](prx.md)	 - Manage pull-request dependency roadmaps
+* [prx node get](prx_node_get.md)	 - Show a feature or task by its public ID
 

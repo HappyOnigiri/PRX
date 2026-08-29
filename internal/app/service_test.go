@@ -112,6 +112,34 @@ func (r *taskRepository) GetTask(context.Context, string) (domain.Task, error) {
 	return r.task, nil
 }
 
+func TestGetNodeResolvesTypedPublicIDs(t *testing.T) {
+	feature := domain.Feature{ID: "F-1", Slug: "checkout"}
+	featureValue, err := app.New(&featureRepository{feature: feature}, nil).GetNode(context.Background(), feature.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := featureValue.(domain.Feature); !ok || got.ID != feature.ID || got.Slug != feature.Slug {
+		t.Fatalf("feature node=%#v", featureValue)
+	}
+
+	task := domain.Task{ID: "T-1", FeatureID: feature.ID, Title: "Implement"}
+	taskValue, err := app.New(&taskRepository{task: task}, nil).GetNode(context.Background(), task.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := taskValue.(domain.Task); !ok || got.ID != task.ID || got.FeatureID != task.FeatureID {
+		t.Fatalf("task node=%#v", taskValue)
+	}
+
+	if _, err := app.New(repositoryStub{}, nil).
+		GetNode(context.Background(), "unknown"); errorCode(
+		t,
+		err,
+	) != domain.DomainErrorCodeNotFound {
+		t.Fatalf("unknown node error=%v", err)
+	}
+}
+
 type createFeatureRepository struct {
 	repositoryStub
 	gotSlug        string

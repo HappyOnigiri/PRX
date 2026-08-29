@@ -118,6 +118,7 @@ const (
 
 type Feature struct {
 	ID                 string        `json:"id"`
+	StorageID          string        `json:"-"`
 	Slug               string        `json:"slug"`
 	Title              string        `json:"title"`
 	Description        string        `json:"description"`
@@ -133,20 +134,22 @@ type Feature struct {
 }
 
 type Task struct {
-	ID            string            `json:"id"`
-	FeatureID     string            `json:"feature_id"`
-	Title         string            `json:"title"`
-	Scope         string            `json:"scope"`
-	Kind          TaskKind          `json:"kind"`
-	Status        TaskStatus        `json:"status"`
-	Assignee      string            `json:"assignee"`
-	CreatedAt     time.Time         `json:"created_at"`
-	UpdatedAt     time.Time         `json:"updated_at"`
-	Ready         bool              `json:"ready"`
-	DisplayState  TaskDisplayState  `json:"display_state"`
-	BlockedReason string            `json:"blocked_reason,omitempty"`
-	BlockedCode   BlockedReasonCode `json:"-"`
-	BlockerTaskID string            `json:"-"`
+	ID               string            `json:"id"`
+	StorageID        string            `json:"-"`
+	FeatureID        string            `json:"feature_id"`
+	StorageFeatureID string            `json:"-"`
+	Title            string            `json:"title"`
+	Scope            string            `json:"scope"`
+	Kind             TaskKind          `json:"kind"`
+	Status           TaskStatus        `json:"status"`
+	Assignee         string            `json:"assignee"`
+	CreatedAt        time.Time         `json:"created_at"`
+	UpdatedAt        time.Time         `json:"updated_at"`
+	Ready            bool              `json:"ready"`
+	DisplayState     TaskDisplayState  `json:"display_state"`
+	BlockedReason    string            `json:"blocked_reason,omitempty"`
+	BlockedCode      BlockedReasonCode `json:"-"`
+	BlockerTaskID    string            `json:"-"`
 }
 
 type Dependency struct {
