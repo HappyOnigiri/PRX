@@ -40,11 +40,11 @@ export function Dashboard() {
         detail={t("dashboard.loadingDetail")}
       />
     );
-  if (error || !data)
+  if (error)
     return (
       <StateMessage
         title={t("dashboard.errorTitle")}
-        detail={error ? formatError(error, t) : t("dashboard.noData")}
+        detail={formatError(error, t)}
         action={() => void refetch()}
       />
     );

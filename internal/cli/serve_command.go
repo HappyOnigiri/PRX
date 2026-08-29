@@ -10,11 +10,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/HappyOnigiri/PRX/internal/app"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/rpc"
 	"github.com/HappyOnigiri/PRX/internal/webui"
-	"github.com/spf13/cobra"
 )
 
 func (s *state) serveCommand() *cobra.Command {
@@ -35,7 +36,11 @@ func (s *state) serveCommand() *cobra.Command {
 		if err != nil {
 			return err
 		}
-		server := &http.Server{Addr: address, Handler: localOnly(listener.Addr(), mux), ReadHeaderTimeout: 5 * time.Second}
+		server := &http.Server{
+			Addr:              address,
+			Handler:           localOnly(listener.Addr(), mux),
+			ReadHeaderTimeout: 5 * time.Second,
+		}
 		_, _ = fmt.Fprintf(s.errOut, "PRX listening on http://%s\n", listener.Addr())
 		go func() {
 			<-cmd.Context().Done()

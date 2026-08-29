@@ -1,5 +1,4 @@
-import { ConnectError } from "@connectrpc/connect";
-import { Code } from "@connectrpc/connect";
+import { Code, ConnectError } from "@connectrpc/connect";
 import { describe, expect, it } from "vitest";
 import {
   BlockedReasonCode,
@@ -13,11 +12,6 @@ import {
   TaskStatus,
 } from "../src/gen/prx/v1/prx_pb";
 import i18n from "../src/i18n";
-import { resources } from "../src/i18n/resources";
-import {
-  supportedLanguages,
-  type SupportedLanguage,
-} from "../src/i18n/settings";
 import {
   blockedReasonKeys,
   displayStateKeys,
@@ -25,11 +19,16 @@ import {
   errorKeys,
   featureStatusKeys,
   formatError,
-  pullRequestDisplayStateToken,
   pullRequestDisplayStateKeys,
+  pullRequestDisplayStateToken,
   taskKindKeys,
   taskStatusKeys,
 } from "../src/i18n/domain";
+import { resources } from "../src/i18n/resources";
+import {
+  supportedLanguages,
+  type SupportedLanguage,
+} from "../src/i18n/settings";
 
 function enumValues(value: object): number[] {
   return Object.values(value).filter(

@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
 const browserErrors: string[] = [];
-const e2ePort = process.env.PRX_E2E_PORT;
+const e2ePort = process.env["PRX_E2E_PORT"];
 if (!e2ePort) throw new Error("Playwright did not capture the E2E server port");
 
 test.use({
@@ -25,9 +25,9 @@ test.beforeEach(({ page }) => {
   );
 });
 
-test.afterEach(() =>
-  expect(browserErrors, browserErrors.join("\n")).toEqual([]),
-);
+test.afterEach(() => {
+  expect(browserErrors, browserErrors.join("\n")).toEqual([]);
+});
 
 test("switches the display language and restores it from Local Storage", async ({
   page,
@@ -317,10 +317,9 @@ for (const size of [8, 50, 100]) {
         };
       }),
     );
-    for (let i = 0; i < visibleBoxes.length; i++)
-      for (let j = i + 1; j < visibleBoxes.length; j++) {
-        const a = visibleBoxes[i],
-          b = visibleBoxes[j];
+    for (const [i, a] of visibleBoxes.entries())
+      for (const [offset, b] of visibleBoxes.slice(i + 1).entries()) {
+        const j = i + offset + 1;
         const overlap =
           Math.min(a.right, b.right) - Math.max(a.left, b.left) > 2 &&
           Math.min(a.bottom, b.bottom) - Math.max(a.top, b.top) > 2;
@@ -340,10 +339,12 @@ for (const size of [8, 50, 100]) {
       fullPage: true,
     });
     const clickPoint = await page.evaluate(() => {
-      const stage = document
-        .querySelector("[data-testid=feature-graph]")!
-        .getBoundingClientRect();
-      return [...document.querySelectorAll(".task-node .node-edit")]
+      const stageElement = document.querySelector(
+        "[data-testid=feature-graph]",
+      );
+      if (!stageElement) throw new Error("The feature graph stage is missing.");
+      const stage = stageElement.getBoundingClientRect();
+      const point = [...document.querySelectorAll(".task-node .node-edit")]
         .map((item) => item.getBoundingClientRect())
         .map((rect) => ({
           x: rect.left + rect.width / 2,
@@ -356,9 +357,10 @@ for (const size of [8, 50, 100]) {
             point.y > stage.top + 20 &&
             point.y < stage.bottom - 20,
         );
+      if (!point) throw new Error("No task edit button is visible.");
+      return point;
     });
-    expect(clickPoint).toBeTruthy();
-    await page.mouse.click(clickPoint!.x, clickPoint!.y);
+    await page.mouse.click(clickPoint.x, clickPoint.y);
     await expect(
       page.getByRole("complementary", { name: "Task inspector" }),
     ).toBeVisible();

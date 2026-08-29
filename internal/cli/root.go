@@ -6,10 +6,11 @@ import (
 	"io"
 	"os"
 
+	"github.com/spf13/cobra"
+
 	"github.com/HappyOnigiri/PRX/internal/app"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/store"
-	"github.com/spf13/cobra"
 )
 
 type state struct {
@@ -57,8 +58,25 @@ func newRootWithState(out, errOut io.Writer) (*cobra.Command, *state) {
 	root.PersistentFlags().StringVar(&s.dbPath, "db", os.Getenv("PRX_DB"), "SQLite database path (env: PRX_DB)")
 	root.PersistentFlags().BoolVar(&s.json, "json", false, "emit a stable JSON envelope")
 	root.PersistentFlags().StringVar(&s.fixture, "github-fixture", "", "GitHub fixture JSON path, or demo")
-	root.AddCommand(s.featureCommand(), s.taskCommand(), s.dependencyCommand(), s.pullRequestCommand(), s.documentCommand())
-	root.AddCommand(s.snapshotCommand(), s.graphCommand(), s.queueCommand("ready"), s.queueCommand("reviews"), s.queueCommand("conflicts"), s.queueCommand("stale"), s.syncCommand(), s.validateCommand(), s.seedCommand(), s.serveCommand())
+	root.AddCommand(
+		s.featureCommand(),
+		s.taskCommand(),
+		s.dependencyCommand(),
+		s.pullRequestCommand(),
+		s.documentCommand(),
+	)
+	root.AddCommand(
+		s.snapshotCommand(),
+		s.graphCommand(),
+		s.queueCommand("ready"),
+		s.queueCommand("reviews"),
+		s.queueCommand("conflicts"),
+		s.queueCommand("stale"),
+		s.syncCommand(),
+		s.validateCommand(),
+		s.seedCommand(),
+		s.serveCommand(),
+	)
 	return root, s
 }
 

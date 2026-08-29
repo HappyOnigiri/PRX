@@ -21,14 +21,20 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
+// FeatureStatus is the lifecycle state of a feature.
 type FeatureStatus int32
 
 const (
+	// FEATURE_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
 	FeatureStatus_FEATURE_STATUS_UNSPECIFIED FeatureStatus = 0
-	FeatureStatus_FEATURE_STATUS_ACTIVE      FeatureStatus = 1
-	FeatureStatus_FEATURE_STATUS_PAUSED      FeatureStatus = 2
-	FeatureStatus_FEATURE_STATUS_COMPLETED   FeatureStatus = 3
-	FeatureStatus_FEATURE_STATUS_CANCELLED   FeatureStatus = 4
+	// FEATURE_STATUS_ACTIVE means the feature is currently being worked on.
+	FeatureStatus_FEATURE_STATUS_ACTIVE FeatureStatus = 1
+	// FEATURE_STATUS_PAUSED means work on the feature is temporarily paused.
+	FeatureStatus_FEATURE_STATUS_PAUSED FeatureStatus = 2
+	// FEATURE_STATUS_COMPLETED means the feature has been completed.
+	FeatureStatus_FEATURE_STATUS_COMPLETED FeatureStatus = 3
+	// FEATURE_STATUS_CANCELLED means the feature will not be completed.
+	FeatureStatus_FEATURE_STATUS_CANCELLED FeatureStatus = 4
 )
 
 // Enum value maps for FeatureStatus.
@@ -76,12 +82,16 @@ func (FeatureStatus) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{0}
 }
 
+// TaskKind identifies whether a task is completed by merging a pull request or manually.
 type TaskKind int32
 
 const (
-	TaskKind_TASK_KIND_UNSPECIFIED  TaskKind = 0
+	// TASK_KIND_UNSPECIFIED is never returned by the server; in create requests it defaults to a pull-request task.
+	TaskKind_TASK_KIND_UNSPECIFIED TaskKind = 0
+	// TASK_KIND_PULL_REQUEST identifies a task completed by merging its pull request.
 	TaskKind_TASK_KIND_PULL_REQUEST TaskKind = 1
-	TaskKind_TASK_KIND_MANUAL       TaskKind = 2
+	// TASK_KIND_MANUAL identifies a task completed by setting its status to completed.
+	TaskKind_TASK_KIND_MANUAL TaskKind = 2
 )
 
 // Enum value maps for TaskKind.
@@ -125,14 +135,20 @@ func (TaskKind) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{1}
 }
 
+// TaskStatus is the stored workflow state of a task.
 type TaskStatus int32
 
 const (
+	// TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
 	TaskStatus_TASK_STATUS_UNSPECIFIED TaskStatus = 0
-	TaskStatus_TASK_STATUS_PLANNED     TaskStatus = 1
+	// TASK_STATUS_PLANNED means work has not started.
+	TaskStatus_TASK_STATUS_PLANNED TaskStatus = 1
+	// TASK_STATUS_IN_PROGRESS means work is underway.
 	TaskStatus_TASK_STATUS_IN_PROGRESS TaskStatus = 2
-	TaskStatus_TASK_STATUS_COMPLETED   TaskStatus = 3
-	TaskStatus_TASK_STATUS_CANCELLED   TaskStatus = 4
+	// TASK_STATUS_COMPLETED means a manual task is complete; pull-request tasks complete on merge.
+	TaskStatus_TASK_STATUS_COMPLETED TaskStatus = 3
+	// TASK_STATUS_CANCELLED means the task is cancelled and does not satisfy dependencies.
+	TaskStatus_TASK_STATUS_CANCELLED TaskStatus = 4
 )
 
 // Enum value maps for TaskStatus.
@@ -180,24 +196,42 @@ func (TaskStatus) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{2}
 }
 
+// TaskDisplayState is the derived state presented for a task.
+// For pull-request tasks, priority is merged, closed, draft, conflict, changes requested, approved,
+// review waiting, open, then unknown.
 type TaskDisplayState int32
 
 const (
-	TaskDisplayState_TASK_DISPLAY_STATE_UNSPECIFIED       TaskDisplayState = 0
-	TaskDisplayState_TASK_DISPLAY_STATE_PLANNED           TaskDisplayState = 1
-	TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS       TaskDisplayState = 2
-	TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED         TaskDisplayState = 3
-	TaskDisplayState_TASK_DISPLAY_STATE_CANCELLED         TaskDisplayState = 4
-	TaskDisplayState_TASK_DISPLAY_STATE_UNLINKED          TaskDisplayState = 5
-	TaskDisplayState_TASK_DISPLAY_STATE_MERGED            TaskDisplayState = 6
-	TaskDisplayState_TASK_DISPLAY_STATE_CLOSED            TaskDisplayState = 7
-	TaskDisplayState_TASK_DISPLAY_STATE_DRAFT             TaskDisplayState = 8
-	TaskDisplayState_TASK_DISPLAY_STATE_CONFLICT          TaskDisplayState = 9
+	// TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
+	TaskDisplayState_TASK_DISPLAY_STATE_UNSPECIFIED TaskDisplayState = 0
+	// TASK_DISPLAY_STATE_PLANNED mirrors a planned manual task.
+	TaskDisplayState_TASK_DISPLAY_STATE_PLANNED TaskDisplayState = 1
+	// TASK_DISPLAY_STATE_IN_PROGRESS mirrors an in-progress manual task.
+	TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS TaskDisplayState = 2
+	// TASK_DISPLAY_STATE_COMPLETED mirrors a completed manual task.
+	TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED TaskDisplayState = 3
+	// TASK_DISPLAY_STATE_CANCELLED mirrors a cancelled task.
+	TaskDisplayState_TASK_DISPLAY_STATE_CANCELLED TaskDisplayState = 4
+	// TASK_DISPLAY_STATE_UNLINKED means a pull-request task has no attached pull request.
+	TaskDisplayState_TASK_DISPLAY_STATE_UNLINKED TaskDisplayState = 5
+	// TASK_DISPLAY_STATE_MERGED means the attached pull request is merged.
+	TaskDisplayState_TASK_DISPLAY_STATE_MERGED TaskDisplayState = 6
+	// TASK_DISPLAY_STATE_CLOSED means the attached pull request is closed without being merged.
+	TaskDisplayState_TASK_DISPLAY_STATE_CLOSED TaskDisplayState = 7
+	// TASK_DISPLAY_STATE_DRAFT means the attached pull request is a draft.
+	TaskDisplayState_TASK_DISPLAY_STATE_DRAFT TaskDisplayState = 8
+	// TASK_DISPLAY_STATE_CONFLICT means the attached pull request has a merge conflict.
+	TaskDisplayState_TASK_DISPLAY_STATE_CONFLICT TaskDisplayState = 9
+	// TASK_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
 	TaskDisplayState_TASK_DISPLAY_STATE_CHANGES_REQUESTED TaskDisplayState = 10
-	TaskDisplayState_TASK_DISPLAY_STATE_APPROVED          TaskDisplayState = 11
-	TaskDisplayState_TASK_DISPLAY_STATE_REVIEW_WAITING    TaskDisplayState = 12
-	TaskDisplayState_TASK_DISPLAY_STATE_OPEN              TaskDisplayState = 13
-	TaskDisplayState_TASK_DISPLAY_STATE_UNKNOWN           TaskDisplayState = 14
+	// TASK_DISPLAY_STATE_APPROVED means the attached pull request has an approval.
+	TaskDisplayState_TASK_DISPLAY_STATE_APPROVED TaskDisplayState = 11
+	// TASK_DISPLAY_STATE_REVIEW_WAITING means the attached open pull request is waiting for review.
+	TaskDisplayState_TASK_DISPLAY_STATE_REVIEW_WAITING TaskDisplayState = 12
+	// TASK_DISPLAY_STATE_OPEN means the attached pull request is open without a higher-priority state.
+	TaskDisplayState_TASK_DISPLAY_STATE_OPEN TaskDisplayState = 13
+	// TASK_DISPLAY_STATE_UNKNOWN means the attached pull request state or relevant data is unknown.
+	TaskDisplayState_TASK_DISPLAY_STATE_UNKNOWN TaskDisplayState = 14
 )
 
 // Enum value maps for TaskDisplayState.
@@ -265,14 +299,20 @@ func (TaskDisplayState) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{3}
 }
 
+// PullRequestState is the raw lifecycle state reported for a GitHub pull request.
 type PullRequestState int32
 
 const (
+	// PULL_REQUEST_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
 	PullRequestState_PULL_REQUEST_STATE_UNSPECIFIED PullRequestState = 0
-	PullRequestState_PULL_REQUEST_STATE_OPEN        PullRequestState = 1
-	PullRequestState_PULL_REQUEST_STATE_CLOSED      PullRequestState = 2
-	PullRequestState_PULL_REQUEST_STATE_MERGED      PullRequestState = 3
-	PullRequestState_PULL_REQUEST_STATE_UNKNOWN     PullRequestState = 4
+	// PULL_REQUEST_STATE_OPEN means GitHub reports the pull request as open.
+	PullRequestState_PULL_REQUEST_STATE_OPEN PullRequestState = 1
+	// PULL_REQUEST_STATE_CLOSED means GitHub reports the pull request as closed without merge.
+	PullRequestState_PULL_REQUEST_STATE_CLOSED PullRequestState = 2
+	// PULL_REQUEST_STATE_MERGED means GitHub reports the pull request as merged.
+	PullRequestState_PULL_REQUEST_STATE_MERGED PullRequestState = 3
+	// PULL_REQUEST_STATE_UNKNOWN means the pull request state could not be determined.
+	PullRequestState_PULL_REQUEST_STATE_UNKNOWN PullRequestState = 4
 )
 
 // Enum value maps for PullRequestState.
@@ -320,15 +360,22 @@ func (PullRequestState) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{4}
 }
 
+// ReviewState summarizes the current review decision and requested reviewers.
 type ReviewState int32
 
 const (
-	ReviewState_REVIEW_STATE_UNSPECIFIED       ReviewState = 0
-	ReviewState_REVIEW_STATE_NONE              ReviewState = 1
-	ReviewState_REVIEW_STATE_REQUIRED          ReviewState = 2
-	ReviewState_REVIEW_STATE_APPROVED          ReviewState = 3
+	// REVIEW_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+	ReviewState_REVIEW_STATE_UNSPECIFIED ReviewState = 0
+	// REVIEW_STATE_NONE means no approval or change request is currently active.
+	ReviewState_REVIEW_STATE_NONE ReviewState = 1
+	// REVIEW_STATE_REQUIRED means the pull request has requested reviewers.
+	ReviewState_REVIEW_STATE_REQUIRED ReviewState = 2
+	// REVIEW_STATE_APPROVED means at least one current review approves the pull request.
+	ReviewState_REVIEW_STATE_APPROVED ReviewState = 3
+	// REVIEW_STATE_CHANGES_REQUESTED means at least one current review requests changes.
 	ReviewState_REVIEW_STATE_CHANGES_REQUESTED ReviewState = 4
-	ReviewState_REVIEW_STATE_UNKNOWN           ReviewState = 5
+	// REVIEW_STATE_UNKNOWN means review information could not be determined.
+	ReviewState_REVIEW_STATE_UNKNOWN ReviewState = 5
 )
 
 // Enum value maps for ReviewState.
@@ -378,13 +425,18 @@ func (ReviewState) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{5}
 }
 
+// Mergeability is the current mergeability reported for a GitHub pull request.
 type Mergeability int32
 
 const (
+	// MERGEABILITY_UNSPECIFIED is never returned for a valid pull request and is not a request field.
 	Mergeability_MERGEABILITY_UNSPECIFIED Mergeability = 0
-	Mergeability_MERGEABILITY_MERGEABLE   Mergeability = 1
+	// MERGEABILITY_MERGEABLE means GitHub reports no merge conflict.
+	Mergeability_MERGEABILITY_MERGEABLE Mergeability = 1
+	// MERGEABILITY_CONFLICTING means GitHub reports a merge conflict.
 	Mergeability_MERGEABILITY_CONFLICTING Mergeability = 2
-	Mergeability_MERGEABILITY_UNKNOWN     Mergeability = 3
+	// MERGEABILITY_UNKNOWN means mergeability could not be determined.
+	Mergeability_MERGEABILITY_UNKNOWN Mergeability = 3
 )
 
 // Enum value maps for Mergeability.
@@ -430,19 +482,31 @@ func (Mergeability) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{6}
 }
 
+// PullRequestDisplayState is the derived presentation state of a pull request.
+// Its priority is merged, closed, draft, conflict, changes requested, approved, review waiting, open, then unknown.
 type PullRequestDisplayState int32
 
 const (
-	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED       PullRequestDisplayState = 0
-	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_MERGED            PullRequestDisplayState = 1
-	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CLOSED            PullRequestDisplayState = 2
-	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_DRAFT             PullRequestDisplayState = 3
-	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CONFLICT          PullRequestDisplayState = 4
+	// PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED PullRequestDisplayState = 0
+	// PULL_REQUEST_DISPLAY_STATE_MERGED means the pull request is merged.
+	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_MERGED PullRequestDisplayState = 1
+	// PULL_REQUEST_DISPLAY_STATE_CLOSED means the pull request is closed without being merged.
+	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CLOSED PullRequestDisplayState = 2
+	// PULL_REQUEST_DISPLAY_STATE_DRAFT means the pull request is a draft.
+	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_DRAFT PullRequestDisplayState = 3
+	// PULL_REQUEST_DISPLAY_STATE_CONFLICT means the pull request has a merge conflict.
+	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CONFLICT PullRequestDisplayState = 4
+	// PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED PullRequestDisplayState = 5
-	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_APPROVED          PullRequestDisplayState = 6
-	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING    PullRequestDisplayState = 7
-	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_OPEN              PullRequestDisplayState = 8
-	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNKNOWN           PullRequestDisplayState = 9
+	// PULL_REQUEST_DISPLAY_STATE_APPROVED means the pull request has an approval.
+	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_APPROVED PullRequestDisplayState = 6
+	// PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING means the open, non-draft pull request needs review.
+	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING PullRequestDisplayState = 7
+	// PULL_REQUEST_DISPLAY_STATE_OPEN means the pull request is open without a higher-priority state.
+	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_OPEN PullRequestDisplayState = 8
+	// PULL_REQUEST_DISPLAY_STATE_UNKNOWN means the pull request state or relevant data is unknown.
+	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNKNOWN PullRequestDisplayState = 9
 )
 
 // Enum value maps for PullRequestDisplayState.
@@ -500,11 +564,15 @@ func (PullRequestDisplayState) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{7}
 }
 
+// DocumentKind identifies the type of reference stored in a document.
 type DocumentKind int32
 
 const (
-	DocumentKind_DOCUMENT_KIND_UNSPECIFIED   DocumentKind = 0
-	DocumentKind_DOCUMENT_KIND_URL           DocumentKind = 1
+	// DOCUMENT_KIND_UNSPECIFIED is never returned by the server and is rejected in requests.
+	DocumentKind_DOCUMENT_KIND_UNSPECIFIED DocumentKind = 0
+	// DOCUMENT_KIND_URL stores an HTTP or HTTPS URL.
+	DocumentKind_DOCUMENT_KIND_URL DocumentKind = 1
+	// DOCUMENT_KIND_MARKDOWN_PATH stores a path to a registered Markdown file.
 	DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH DocumentKind = 2
 )
 
@@ -549,13 +617,18 @@ func (DocumentKind) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{8}
 }
 
+// BlockedReasonCode explains why a planned task is not ready.
 type BlockedReasonCode int32
 
 const (
-	BlockedReasonCode_BLOCKED_REASON_CODE_UNSPECIFIED                BlockedReasonCode = 0
+	// BLOCKED_REASON_CODE_UNSPECIFIED is never returned; no BlockedReason is sent when there is no structured reason.
+	BlockedReasonCode_BLOCKED_REASON_CODE_UNSPECIFIED BlockedReasonCode = 0
+	// BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE means a referenced blocker is missing.
 	BlockedReasonCode_BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE BlockedReasonCode = 1
-	BlockedReasonCode_BLOCKED_REASON_CODE_BLOCKER_STALE              BlockedReasonCode = 2
-	BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER        BlockedReasonCode = 3
+	// BLOCKED_REASON_CODE_BLOCKER_STALE means a blocker has stale GitHub data.
+	BlockedReasonCode_BLOCKED_REASON_CODE_BLOCKER_STALE BlockedReasonCode = 2
+	// BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER means a dependency has not been satisfied.
+	BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER BlockedReasonCode = 3
 )
 
 // Enum value maps for BlockedReasonCode.
@@ -601,32 +674,56 @@ func (BlockedReasonCode) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{9}
 }
 
+// DomainErrorCode identifies a known validation, state, storage, or GitHub error exposed over RPC.
 type DomainErrorCode int32
 
 const (
-	DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED                 DomainErrorCode = 0
-	DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY    DomainErrorCode = 2
-	DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE                       DomainErrorCode = 3
-	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY        DomainErrorCode = 4
-	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST      DomainErrorCode = 5
-	DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH                 DomainErrorCode = 6
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE            DomainErrorCode = 7
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT            DomainErrorCode = 8
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND       DomainErrorCode = 9
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND                DomainErrorCode = 10
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT              DomainErrorCode = 11
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL    DomainErrorCode = 12
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SEED                DomainErrorCode = 13
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG                DomainErrorCode = 14
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS              DomainErrorCode = 15
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE               DomainErrorCode = 16
-	DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND                   DomainErrorCode = 17
-	DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST            DomainErrorCode = 18
+	// DOMAIN_ERROR_CODE_UNSPECIFIED is never returned for a recognized domain error; it is the unmapped fallback.
+	DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED DomainErrorCode = 0
+	// DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY means a dependency crosses feature boundaries.
+	DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY DomainErrorCode = 2
+	// DOMAIN_ERROR_CODE_CYCLE means adding a dependency would create a cycle.
+	DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE DomainErrorCode = 3
+	// DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY means the dependency already exists.
+	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY DomainErrorCode = 4
+	// DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST means the pull request is already attached to another task.
+	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST DomainErrorCode = 5
+	// DOMAIN_ERROR_CODE_GITHUB_AUTH means GitHub credentials or a provider are unavailable.
+	DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH DomainErrorCode = 6
+	// DOMAIN_ERROR_CODE_INVALID_DATABASE means database validation failed.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE DomainErrorCode = 7
+	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT means a document value is missing or invalid.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT DomainErrorCode = 8
+	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND means the document kind is unsupported.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND DomainErrorCode = 9
+	// DOMAIN_ERROR_CODE_INVALID_KIND means the task kind is unsupported.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND DomainErrorCode = 10
+	// DOMAIN_ERROR_CODE_INVALID_PARENT means a document does not have exactly one valid parent.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT DomainErrorCode = 11
+	// DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL means the pull request URL cannot be parsed.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL DomainErrorCode = 12
+	// DOMAIN_ERROR_CODE_INVALID_SEED means seed parameters are invalid.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SEED DomainErrorCode = 13
+	// DOMAIN_ERROR_CODE_INVALID_SLUG means a feature slug does not meet its format rules.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG DomainErrorCode = 14
+	// DOMAIN_ERROR_CODE_INVALID_STATUS means a feature or task status is unsupported.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS DomainErrorCode = 15
+	// DOMAIN_ERROR_CODE_INVALID_TITLE means a required feature or task title is empty.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE DomainErrorCode = 16
+	// DOMAIN_ERROR_CODE_NOT_FOUND means the requested record does not exist.
+	DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND DomainErrorCode = 17
+	// DOMAIN_ERROR_CODE_REFERENCES_EXIST means deletion is blocked by referencing records.
+	DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST DomainErrorCode = 18
+	// DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK means a pull request cannot attach to a manual task.
 	DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK DomainErrorCode = 19
-	DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE  DomainErrorCode = 20
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL        DomainErrorCode = 21
-	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED        DomainErrorCode = 22
-	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE          DomainErrorCode = 23
+	// DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE means a pull-request task cannot be manually completed.
+	DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE DomainErrorCode = 20
+	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL means a document URL is not HTTP or HTTPS.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL DomainErrorCode = 21
+	// DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED means a registered Markdown file could not be read.
+	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED DomainErrorCode = 22
+	// DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE means a Markdown preview exceeds the 1 MiB limit.
+	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE DomainErrorCode = 23
 )
 
 // Enum value maps for DomainErrorCode.
@@ -710,10 +807,13 @@ func (DomainErrorCode) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{10}
 }
 
+// BlockedReason is the structured reason a planned task is not ready.
 type BlockedReason struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          BlockedReasonCode      `protobuf:"varint,1,opt,name=code,proto3,enum=prx.v1.BlockedReasonCode" json:"code,omitempty"`
-	BlockerTaskId string                 `protobuf:"bytes,2,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// code identifies the dependency condition preventing readiness.
+	Code BlockedReasonCode `protobuf:"varint,1,opt,name=code,proto3,enum=prx.v1.BlockedReasonCode" json:"code,omitempty"`
+	// blocker_task_id identifies the specific blocking task when one is known.
+	BlockerTaskId string `protobuf:"bytes,2,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -762,10 +862,13 @@ func (x *BlockedReason) GetBlockerTaskId() string {
 	return ""
 }
 
+// ErrorDetail carries a stable domain error code and optional dependency context.
 type ErrorDetail struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Code          DomainErrorCode        `protobuf:"varint,1,opt,name=code,proto3,enum=prx.v1.DomainErrorCode" json:"code,omitempty"`
-	Path          []string               `protobuf:"bytes,2,rep,name=path,proto3" json:"path,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// code identifies the domain error reported by the server.
+	Code DomainErrorCode `protobuf:"varint,1,opt,name=code,proto3,enum=prx.v1.DomainErrorCode" json:"code,omitempty"`
+	// path contains the task IDs along a detected dependency cycle, with the starting task repeated at the end.
+	Path          []string `protobuf:"bytes,2,rep,name=path,proto3" json:"path,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -814,23 +917,37 @@ func (x *ErrorDetail) GetPath() []string {
 	return nil
 }
 
+// Feature is a roadmap unit that owns tasks and dependency graphs.
 type Feature struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	Id                 string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Slug               string                 `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
-	Title              string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	Description        string                 `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	Status             FeatureStatus          `protobuf:"varint,5,opt,name=status,proto3,enum=prx.v1.FeatureStatus" json:"status,omitempty"`
-	Archived           bool                   `protobuf:"varint,6,opt,name=archived,proto3" json:"archived,omitempty"`
-	CreatedAt          string                 `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt          string                 `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	TaskCount          int32                  `protobuf:"varint,9,opt,name=task_count,json=taskCount,proto3" json:"task_count,omitempty"`
-	ReadyCount         int32                  `protobuf:"varint,10,opt,name=ready_count,json=readyCount,proto3" json:"ready_count,omitempty"`
-	ReviewWaitingCount int32                  `protobuf:"varint,11,opt,name=review_waiting_count,json=reviewWaitingCount,proto3" json:"review_waiting_count,omitempty"`
-	ConflictCount      int32                  `protobuf:"varint,12,opt,name=conflict_count,json=conflictCount,proto3" json:"conflict_count,omitempty"`
-	MergedCount        int32                  `protobuf:"varint,13,opt,name=merged_count,json=mergedCount,proto3" json:"merged_count,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id is the stable identifier of the feature.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// slug is the lowercase, hyphenated identifier used by CLI commands.
+	Slug string `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
+	// title is the human-readable feature name.
+	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	// description explains the feature's scope or goal.
+	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	// status is the feature's lifecycle state.
+	Status FeatureStatus `protobuf:"varint,5,opt,name=status,proto3,enum=prx.v1.FeatureStatus" json:"status,omitempty"`
+	// archived indicates whether the feature is hidden from the active sidebar.
+	Archived bool `protobuf:"varint,6,opt,name=archived,proto3" json:"archived,omitempty"`
+	// created_at is the creation time in RFC 3339 format.
+	CreatedAt string `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// updated_at is the last update time in RFC 3339 format.
+	UpdatedAt string `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// task_count is the number of tasks belonging to the feature.
+	TaskCount int32 `protobuf:"varint,9,opt,name=task_count,json=taskCount,proto3" json:"task_count,omitempty"`
+	// ready_count is the number of tasks currently ready to work on.
+	ReadyCount int32 `protobuf:"varint,10,opt,name=ready_count,json=readyCount,proto3" json:"ready_count,omitempty"`
+	// review_waiting_count is the number of tasks whose pull requests are waiting for review.
+	ReviewWaitingCount int32 `protobuf:"varint,11,opt,name=review_waiting_count,json=reviewWaitingCount,proto3" json:"review_waiting_count,omitempty"`
+	// conflict_count is the number of tasks whose pull requests have conflicts.
+	ConflictCount int32 `protobuf:"varint,12,opt,name=conflict_count,json=conflictCount,proto3" json:"conflict_count,omitempty"`
+	// merged_count is the number of tasks whose pull requests are merged.
+	MergedCount   int32 `protobuf:"varint,13,opt,name=merged_count,json=mergedCount,proto3" json:"merged_count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Feature) Reset() {
@@ -954,20 +1071,33 @@ func (x *Feature) GetMergedCount() int32 {
 	return 0
 }
 
+// Task is a unit of work belonging to a feature.
 type Task struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FeatureId     string                 `protobuf:"bytes,2,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	Title         string                 `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	Scope         string                 `protobuf:"bytes,4,opt,name=scope,proto3" json:"scope,omitempty"`
-	Kind          TaskKind               `protobuf:"varint,5,opt,name=kind,proto3,enum=prx.v1.TaskKind" json:"kind,omitempty"`
-	Status        TaskStatus             `protobuf:"varint,6,opt,name=status,proto3,enum=prx.v1.TaskStatus" json:"status,omitempty"`
-	Assignee      string                 `protobuf:"bytes,7,opt,name=assignee,proto3" json:"assignee,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	UpdatedAt     string                 `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	Ready         bool                   `protobuf:"varint,10,opt,name=ready,proto3" json:"ready,omitempty"`
-	DisplayState  TaskDisplayState       `protobuf:"varint,11,opt,name=display_state,json=displayState,proto3,enum=prx.v1.TaskDisplayState" json:"display_state,omitempty"`
-	BlockedReason *BlockedReason         `protobuf:"bytes,12,opt,name=blocked_reason,json=blockedReason,proto3" json:"blocked_reason,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id is the stable identifier of the task.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// feature_id identifies the feature that owns the task.
+	FeatureId string `protobuf:"bytes,2,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
+	// title is the human-readable task name.
+	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	// scope describes the work covered by the task.
+	Scope string `protobuf:"bytes,4,opt,name=scope,proto3" json:"scope,omitempty"`
+	// kind determines whether completion is driven by a pull request or manual status.
+	Kind TaskKind `protobuf:"varint,5,opt,name=kind,proto3,enum=prx.v1.TaskKind" json:"kind,omitempty"`
+	// status is the stored workflow state; pull-request completion is derived from merge state.
+	Status TaskStatus `protobuf:"varint,6,opt,name=status,proto3,enum=prx.v1.TaskStatus" json:"status,omitempty"`
+	// assignee is the person responsible for the task, when assigned.
+	Assignee string `protobuf:"bytes,7,opt,name=assignee,proto3" json:"assignee,omitempty"`
+	// created_at is the creation time in RFC 3339 format.
+	CreatedAt string `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// updated_at is the last update time in RFC 3339 format.
+	UpdatedAt string `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// ready indicates that the planned task has no unsatisfied blockers.
+	Ready bool `protobuf:"varint,10,opt,name=ready,proto3" json:"ready,omitempty"`
+	// display_state is the derived state intended for task presentation.
+	DisplayState TaskDisplayState `protobuf:"varint,11,opt,name=display_state,json=displayState,proto3,enum=prx.v1.TaskDisplayState" json:"display_state,omitempty"`
+	// blocked_reason explains why a planned task is not ready, when applicable.
+	BlockedReason *BlockedReason `protobuf:"bytes,12,opt,name=blocked_reason,json=blockedReason,proto3" json:"blocked_reason,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1086,11 +1216,15 @@ func (x *Task) GetBlockedReason() *BlockedReason {
 	return nil
 }
 
+// Dependency is a directed edge from a blocker task to a blocked task in one feature.
 type Dependency struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BlockerTaskId string                 `protobuf:"bytes,1,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
-	BlockedTaskId string                 `protobuf:"bytes,2,opt,name=blocked_task_id,json=blockedTaskId,proto3" json:"blocked_task_id,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// blocker_task_id identifies the task that must be satisfied first.
+	BlockerTaskId string `protobuf:"bytes,1,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
+	// blocked_task_id identifies the task that depends on the blocker.
+	BlockedTaskId string `protobuf:"bytes,2,opt,name=blocked_task_id,json=blockedTaskId,proto3" json:"blocked_task_id,omitempty"`
+	// created_at is the time the dependency was added in RFC 3339 format.
+	CreatedAt     string `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1146,27 +1280,45 @@ func (x *Dependency) GetCreatedAt() string {
 	return ""
 }
 
+// PullRequest is the GitHub record attached to a pull-request task.
 type PullRequest struct {
-	state           protoimpl.MessageState  `protogen:"open.v1"`
-	TaskId          string                  `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	Owner           string                  `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
-	Repository      string                  `protobuf:"bytes,3,opt,name=repository,proto3" json:"repository,omitempty"`
-	Number          int64                   `protobuf:"varint,4,opt,name=number,proto3" json:"number,omitempty"`
-	Url             string                  `protobuf:"bytes,5,opt,name=url,proto3" json:"url,omitempty"`
-	NodeId          string                  `protobuf:"bytes,6,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
-	Author          string                  `protobuf:"bytes,7,opt,name=author,proto3" json:"author,omitempty"`
-	Assignees       []string                `protobuf:"bytes,8,rep,name=assignees,proto3" json:"assignees,omitempty"`
-	State           PullRequestState        `protobuf:"varint,9,opt,name=state,proto3,enum=prx.v1.PullRequestState" json:"state,omitempty"`
-	Draft           bool                    `protobuf:"varint,10,opt,name=draft,proto3" json:"draft,omitempty"`
-	ReviewState     ReviewState             `protobuf:"varint,11,opt,name=review_state,json=reviewState,proto3,enum=prx.v1.ReviewState" json:"review_state,omitempty"`
-	Mergeability    Mergeability            `protobuf:"varint,12,opt,name=mergeability,proto3,enum=prx.v1.Mergeability" json:"mergeability,omitempty"`
-	GithubUpdatedAt string                  `protobuf:"bytes,13,opt,name=github_updated_at,json=githubUpdatedAt,proto3" json:"github_updated_at,omitempty"`
-	LastSyncedAt    string                  `protobuf:"bytes,14,opt,name=last_synced_at,json=lastSyncedAt,proto3" json:"last_synced_at,omitempty"`
-	SyncError       string                  `protobuf:"bytes,15,opt,name=sync_error,json=syncError,proto3" json:"sync_error,omitempty"`
-	Stale           bool                    `protobuf:"varint,16,opt,name=stale,proto3" json:"stale,omitempty"`
-	DisplayState    PullRequestDisplayState `protobuf:"varint,17,opt,name=display_state,json=displayState,proto3,enum=prx.v1.PullRequestDisplayState" json:"display_state,omitempty"`
-	unknownFields   protoimpl.UnknownFields
-	sizeCache       protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// task_id identifies the task linked to the pull request.
+	TaskId string `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	// owner is the GitHub account or organization that owns the repository.
+	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+	// repository is the GitHub repository name.
+	Repository string `protobuf:"bytes,3,opt,name=repository,proto3" json:"repository,omitempty"`
+	// number is the pull request number within the repository.
+	Number int64 `protobuf:"varint,4,opt,name=number,proto3" json:"number,omitempty"`
+	// url is the canonical pull request URL.
+	Url string `protobuf:"bytes,5,opt,name=url,proto3" json:"url,omitempty"`
+	// node_id is GitHub's stable node identifier for the pull request.
+	NodeId string `protobuf:"bytes,6,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
+	// author is the GitHub login of the pull request author.
+	Author string `protobuf:"bytes,7,opt,name=author,proto3" json:"author,omitempty"`
+	// assignees contains the GitHub logins assigned to the pull request.
+	Assignees []string `protobuf:"bytes,8,rep,name=assignees,proto3" json:"assignees,omitempty"`
+	// state is the raw lifecycle state reported by GitHub.
+	State PullRequestState `protobuf:"varint,9,opt,name=state,proto3,enum=prx.v1.PullRequestState" json:"state,omitempty"`
+	// draft indicates whether the pull request is a draft.
+	Draft bool `protobuf:"varint,10,opt,name=draft,proto3" json:"draft,omitempty"`
+	// review_state summarizes current review decisions and requested reviewers.
+	ReviewState ReviewState `protobuf:"varint,11,opt,name=review_state,json=reviewState,proto3,enum=prx.v1.ReviewState" json:"review_state,omitempty"`
+	// mergeability is the current mergeability reported by GitHub.
+	Mergeability Mergeability `protobuf:"varint,12,opt,name=mergeability,proto3,enum=prx.v1.Mergeability" json:"mergeability,omitempty"`
+	// github_updated_at is the last update time reported by GitHub in RFC 3339 format.
+	GithubUpdatedAt string `protobuf:"bytes,13,opt,name=github_updated_at,json=githubUpdatedAt,proto3" json:"github_updated_at,omitempty"`
+	// last_synced_at is the last time PR data was fetched in RFC 3339 format.
+	LastSyncedAt string `protobuf:"bytes,14,opt,name=last_synced_at,json=lastSyncedAt,proto3" json:"last_synced_at,omitempty"`
+	// sync_error contains the most recent refresh error, when one occurred.
+	SyncError string `protobuf:"bytes,15,opt,name=sync_error,json=syncError,proto3" json:"sync_error,omitempty"`
+	// stale indicates that the pull request data may not represent the current GitHub state.
+	Stale bool `protobuf:"varint,16,opt,name=stale,proto3" json:"stale,omitempty"`
+	// display_state is the derived presentation state using the documented priority order.
+	DisplayState  PullRequestDisplayState `protobuf:"varint,17,opt,name=display_state,json=displayState,proto3,enum=prx.v1.PullRequestDisplayState" json:"display_state,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PullRequest) Reset() {
@@ -1318,15 +1470,23 @@ func (x *PullRequest) GetDisplayState() PullRequestDisplayState {
 	return PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED
 }
 
+// Document is a reference attached to exactly one feature or task.
 type Document struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	FeatureId     string                 `protobuf:"bytes,2,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	TaskId        string                 `protobuf:"bytes,3,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	Kind          DocumentKind           `protobuf:"varint,4,opt,name=kind,proto3,enum=prx.v1.DocumentKind" json:"kind,omitempty"`
-	Title         string                 `protobuf:"bytes,5,opt,name=title,proto3" json:"title,omitempty"`
-	Value         string                 `protobuf:"bytes,6,opt,name=value,proto3" json:"value,omitempty"`
-	CreatedAt     string                 `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id is the stable identifier of the document reference.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// feature_id identifies the parent feature when the document is feature-scoped.
+	FeatureId string `protobuf:"bytes,2,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
+	// task_id identifies the parent task when the document is task-scoped.
+	TaskId string `protobuf:"bytes,3,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	// kind identifies whether value is a URL or a registered Markdown path.
+	Kind DocumentKind `protobuf:"varint,4,opt,name=kind,proto3,enum=prx.v1.DocumentKind" json:"kind,omitempty"`
+	// title is the human-readable document label.
+	Title string `protobuf:"bytes,5,opt,name=title,proto3" json:"title,omitempty"`
+	// value is the URL or registered Markdown file path.
+	Value string `protobuf:"bytes,6,opt,name=value,proto3" json:"value,omitempty"`
+	// created_at is the creation time in RFC 3339 format.
+	CreatedAt     string `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1410,19 +1570,29 @@ func (x *Document) GetCreatedAt() string {
 	return ""
 }
 
+// Snapshot is the complete normalized dataset plus derived task queues.
 type Snapshot struct {
-	state              protoimpl.MessageState `protogen:"open.v1"`
-	Features           []*Feature             `protobuf:"bytes,1,rep,name=features,proto3" json:"features,omitempty"`
-	Tasks              []*Task                `protobuf:"bytes,2,rep,name=tasks,proto3" json:"tasks,omitempty"`
-	Dependencies       []*Dependency          `protobuf:"bytes,3,rep,name=dependencies,proto3" json:"dependencies,omitempty"`
-	PullRequests       []*PullRequest         `protobuf:"bytes,4,rep,name=pull_requests,json=pullRequests,proto3" json:"pull_requests,omitempty"`
-	Documents          []*Document            `protobuf:"bytes,5,rep,name=documents,proto3" json:"documents,omitempty"`
-	ReadyTasks         []*Task                `protobuf:"bytes,6,rep,name=ready_tasks,json=readyTasks,proto3" json:"ready_tasks,omitempty"`
-	ReviewWaitingTasks []*Task                `protobuf:"bytes,7,rep,name=review_waiting_tasks,json=reviewWaitingTasks,proto3" json:"review_waiting_tasks,omitempty"`
-	ConflictTasks      []*Task                `protobuf:"bytes,8,rep,name=conflict_tasks,json=conflictTasks,proto3" json:"conflict_tasks,omitempty"`
-	StaleTasks         []*Task                `protobuf:"bytes,9,rep,name=stale_tasks,json=staleTasks,proto3" json:"stale_tasks,omitempty"`
-	unknownFields      protoimpl.UnknownFields
-	sizeCache          protoimpl.SizeCache
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// features contains all stored features.
+	Features []*Feature `protobuf:"bytes,1,rep,name=features,proto3" json:"features,omitempty"`
+	// tasks contains all stored tasks with derived readiness and display state.
+	Tasks []*Task `protobuf:"bytes,2,rep,name=tasks,proto3" json:"tasks,omitempty"`
+	// dependencies contains all directed task dependencies.
+	Dependencies []*Dependency `protobuf:"bytes,3,rep,name=dependencies,proto3" json:"dependencies,omitempty"`
+	// pull_requests contains all attached pull requests and their latest known data.
+	PullRequests []*PullRequest `protobuf:"bytes,4,rep,name=pull_requests,json=pullRequests,proto3" json:"pull_requests,omitempty"`
+	// documents contains all registered document references without file contents.
+	Documents []*Document `protobuf:"bytes,5,rep,name=documents,proto3" json:"documents,omitempty"`
+	// ready_tasks contains planned tasks whose blockers are satisfied.
+	ReadyTasks []*Task `protobuf:"bytes,6,rep,name=ready_tasks,json=readyTasks,proto3" json:"ready_tasks,omitempty"`
+	// review_waiting_tasks contains tasks whose pull requests are waiting for review.
+	ReviewWaitingTasks []*Task `protobuf:"bytes,7,rep,name=review_waiting_tasks,json=reviewWaitingTasks,proto3" json:"review_waiting_tasks,omitempty"`
+	// conflict_tasks contains tasks whose pull requests have merge conflicts.
+	ConflictTasks []*Task `protobuf:"bytes,8,rep,name=conflict_tasks,json=conflictTasks,proto3" json:"conflict_tasks,omitempty"`
+	// stale_tasks contains tasks whose pull request data is stale or has a sync error.
+	StaleTasks    []*Task `protobuf:"bytes,9,rep,name=stale_tasks,json=staleTasks,proto3" json:"stale_tasks,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Snapshot) Reset() {
@@ -1518,6 +1688,7 @@ func (x *Snapshot) GetStaleTasks() []*Task {
 	return nil
 }
 
+// GetSnapshotRequest requests the current normalized dataset and derived queues.
 type GetSnapshotRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -1554,9 +1725,11 @@ func (*GetSnapshotRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{8}
 }
 
+// GetSnapshotResponse returns the requested application snapshot.
 type GetSnapshotResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Snapshot      *Snapshot              `protobuf:"bytes,1,opt,name=snapshot,proto3" json:"snapshot,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// snapshot contains normalized records and derived task queues.
+	Snapshot      *Snapshot `protobuf:"bytes,1,opt,name=snapshot,proto3" json:"snapshot,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1598,11 +1771,15 @@ func (x *GetSnapshotResponse) GetSnapshot() *Snapshot {
 	return nil
 }
 
+// CreateFeatureRequest contains the required and descriptive values for a feature.
 type CreateFeatureRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Slug          string                 `protobuf:"bytes,1,opt,name=slug,proto3" json:"slug,omitempty"`
-	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Description   string                 `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// slug is the lowercase, hyphenated feature identifier.
+	Slug string `protobuf:"bytes,1,opt,name=slug,proto3" json:"slug,omitempty"`
+	// title is the required human-readable feature name.
+	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	// description is optional explanatory text for the feature.
+	Description   string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1658,9 +1835,11 @@ func (x *CreateFeatureRequest) GetDescription() string {
 	return ""
 }
 
+// CreateFeatureResponse returns the newly created feature.
 type CreateFeatureResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Feature       *Feature               `protobuf:"bytes,1,opt,name=feature,proto3" json:"feature,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// feature is the created feature with its generated identifier and timestamps.
+	Feature       *Feature `protobuf:"bytes,1,opt,name=feature,proto3" json:"feature,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1702,14 +1881,22 @@ func (x *CreateFeatureResponse) GetFeature() *Feature {
 	return nil
 }
 
+// UpdateFeatureRequest updates only the supplied feature fields.
+// An unset optional field is unchanged, while an empty string requests clearing a string field.
 type UpdateFeatureRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Slug          *string                `protobuf:"bytes,2,opt,name=slug,proto3,oneof" json:"slug,omitempty"`
-	Title         *string                `protobuf:"bytes,3,opt,name=title,proto3,oneof" json:"title,omitempty"`
-	Description   *string                `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
-	Status        *FeatureStatus         `protobuf:"varint,5,opt,name=status,proto3,enum=prx.v1.FeatureStatus,oneof" json:"status,omitempty"`
-	Archived      *bool                  `protobuf:"varint,6,opt,name=archived,proto3,oneof" json:"archived,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the feature to update.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// slug is unchanged when unset; an empty string requests clearing it.
+	Slug *string `protobuf:"bytes,2,opt,name=slug,proto3,oneof" json:"slug,omitempty"`
+	// title is unchanged when unset; an empty string requests clearing it.
+	Title *string `protobuf:"bytes,3,opt,name=title,proto3,oneof" json:"title,omitempty"`
+	// description is unchanged when unset; an empty string clears it.
+	Description *string `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	// status is unchanged when unset; a supplied value replaces it.
+	Status *FeatureStatus `protobuf:"varint,5,opt,name=status,proto3,enum=prx.v1.FeatureStatus,oneof" json:"status,omitempty"`
+	// archived is unchanged when unset; a supplied value explicitly sets it.
+	Archived      *bool `protobuf:"varint,6,opt,name=archived,proto3,oneof" json:"archived,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1786,9 +1973,11 @@ func (x *UpdateFeatureRequest) GetArchived() bool {
 	return false
 }
 
+// UpdateFeatureResponse returns the updated feature.
 type UpdateFeatureResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Feature       *Feature               `protobuf:"bytes,1,opt,name=feature,proto3" json:"feature,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// feature is the feature after applying the requested updates.
+	Feature       *Feature `protobuf:"bytes,1,opt,name=feature,proto3" json:"feature,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1830,10 +2019,13 @@ func (x *UpdateFeatureResponse) GetFeature() *Feature {
 	return nil
 }
 
+// DeleteFeatureRequest requests deletion of a feature and optionally its references.
 type DeleteFeatureRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Cascade       bool                   `protobuf:"varint,2,opt,name=cascade,proto3" json:"cascade,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the feature to delete.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// cascade permits deletion of the feature's dependent tasks and records.
+	Cascade       bool `protobuf:"varint,2,opt,name=cascade,proto3" json:"cascade,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1882,6 +2074,7 @@ func (x *DeleteFeatureRequest) GetCascade() bool {
 	return false
 }
 
+// DeleteFeatureResponse confirms that the feature was deleted.
 type DeleteFeatureResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -1918,13 +2111,19 @@ func (*DeleteFeatureResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{15}
 }
 
+// CreateTaskRequest contains the values for a task within a feature.
 type CreateTaskRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	FeatureId     string                 `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	Title         string                 `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	Scope         string                 `protobuf:"bytes,3,opt,name=scope,proto3" json:"scope,omitempty"`
-	Kind          TaskKind               `protobuf:"varint,4,opt,name=kind,proto3,enum=prx.v1.TaskKind" json:"kind,omitempty"`
-	Assignee      string                 `protobuf:"bytes,5,opt,name=assignee,proto3" json:"assignee,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// feature_id identifies the feature that owns the task.
+	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
+	// title is the required human-readable task name.
+	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	// scope describes the work covered by the task.
+	Scope string `protobuf:"bytes,3,opt,name=scope,proto3" json:"scope,omitempty"`
+	// kind selects pull-request completion or manual completion; unspecified defaults to pull-request.
+	Kind TaskKind `protobuf:"varint,4,opt,name=kind,proto3,enum=prx.v1.TaskKind" json:"kind,omitempty"`
+	// assignee is the optional person responsible for the task.
+	Assignee      string `protobuf:"bytes,5,opt,name=assignee,proto3" json:"assignee,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1994,9 +2193,11 @@ func (x *CreateTaskRequest) GetAssignee() string {
 	return ""
 }
 
+// CreateTaskResponse returns the newly created task.
 type CreateTaskResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Task          *Task                  `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// task is the created task with its generated identifier and timestamps.
+	Task          *Task `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2038,13 +2239,20 @@ func (x *CreateTaskResponse) GetTask() *Task {
 	return nil
 }
 
+// UpdateTaskRequest updates only the supplied task fields.
+// An unset optional field is unchanged, while an empty string requests clearing a string field.
 type UpdateTaskRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Title         *string                `protobuf:"bytes,2,opt,name=title,proto3,oneof" json:"title,omitempty"`
-	Scope         *string                `protobuf:"bytes,3,opt,name=scope,proto3,oneof" json:"scope,omitempty"`
-	Status        *TaskStatus            `protobuf:"varint,4,opt,name=status,proto3,enum=prx.v1.TaskStatus,oneof" json:"status,omitempty"`
-	Assignee      *string                `protobuf:"bytes,5,opt,name=assignee,proto3,oneof" json:"assignee,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the task to update.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// title is unchanged when unset; an empty string requests clearing it.
+	Title *string `protobuf:"bytes,2,opt,name=title,proto3,oneof" json:"title,omitempty"`
+	// scope is unchanged when unset; an empty string clears it.
+	Scope *string `protobuf:"bytes,3,opt,name=scope,proto3,oneof" json:"scope,omitempty"`
+	// status is unchanged when unset; a supplied value replaces it.
+	Status *TaskStatus `protobuf:"varint,4,opt,name=status,proto3,enum=prx.v1.TaskStatus,oneof" json:"status,omitempty"`
+	// assignee is unchanged when unset; an empty string clears it.
+	Assignee      *string `protobuf:"bytes,5,opt,name=assignee,proto3,oneof" json:"assignee,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2114,9 +2322,11 @@ func (x *UpdateTaskRequest) GetAssignee() string {
 	return ""
 }
 
+// UpdateTaskResponse returns the updated task.
 type UpdateTaskResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Task          *Task                  `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// task is the task after applying the requested updates.
+	Task          *Task `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2158,10 +2368,13 @@ func (x *UpdateTaskResponse) GetTask() *Task {
 	return nil
 }
 
+// DeleteTaskRequest requests deletion of a task and optionally its references.
 type DeleteTaskRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Cascade       bool                   `protobuf:"varint,2,opt,name=cascade,proto3" json:"cascade,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the task to delete.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// cascade permits deletion of the task's dependencies, pull request, and documents.
+	Cascade       bool `protobuf:"varint,2,opt,name=cascade,proto3" json:"cascade,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2210,6 +2423,7 @@ func (x *DeleteTaskRequest) GetCascade() bool {
 	return false
 }
 
+// DeleteTaskResponse confirms that the task was deleted.
 type DeleteTaskResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -2246,10 +2460,13 @@ func (*DeleteTaskResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{21}
 }
 
+// AddDependencyRequest creates a same-feature dependency edge.
 type AddDependencyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BlockerTaskId string                 `protobuf:"bytes,1,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
-	BlockedTaskId string                 `protobuf:"bytes,2,opt,name=blocked_task_id,json=blockedTaskId,proto3" json:"blocked_task_id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// blocker_task_id identifies the task that must be satisfied first.
+	BlockerTaskId string `protobuf:"bytes,1,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
+	// blocked_task_id identifies the task that will wait for the blocker.
+	BlockedTaskId string `protobuf:"bytes,2,opt,name=blocked_task_id,json=blockedTaskId,proto3" json:"blocked_task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2298,9 +2515,11 @@ func (x *AddDependencyRequest) GetBlockedTaskId() string {
 	return ""
 }
 
+// AddDependencyResponse returns the newly created dependency.
 type AddDependencyResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Dependency    *Dependency            `protobuf:"bytes,1,opt,name=dependency,proto3" json:"dependency,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// dependency is the persisted directed edge.
+	Dependency    *Dependency `protobuf:"bytes,1,opt,name=dependency,proto3" json:"dependency,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2342,10 +2561,13 @@ func (x *AddDependencyResponse) GetDependency() *Dependency {
 	return nil
 }
 
+// RemoveDependencyRequest identifies a dependency edge to remove.
 type RemoveDependencyRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	BlockerTaskId string                 `protobuf:"bytes,1,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
-	BlockedTaskId string                 `protobuf:"bytes,2,opt,name=blocked_task_id,json=blockedTaskId,proto3" json:"blocked_task_id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// blocker_task_id identifies the dependency's blocker.
+	BlockerTaskId string `protobuf:"bytes,1,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
+	// blocked_task_id identifies the dependency's blocked task.
+	BlockedTaskId string `protobuf:"bytes,2,opt,name=blocked_task_id,json=blockedTaskId,proto3" json:"blocked_task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2394,6 +2616,7 @@ func (x *RemoveDependencyRequest) GetBlockedTaskId() string {
 	return ""
 }
 
+// RemoveDependencyResponse confirms that the dependency was removed.
 type RemoveDependencyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -2430,10 +2653,13 @@ func (*RemoveDependencyResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{25}
 }
 
+// AttachPullRequestRequest links a GitHub pull request to a pull-request task.
 type AttachPullRequestRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	Url           string                 `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// task_id identifies the pull-request task.
+	TaskId string `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	// url is the GitHub pull request URL to attach.
+	Url           string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2482,9 +2708,11 @@ func (x *AttachPullRequestRequest) GetUrl() string {
 	return ""
 }
 
+// AttachPullRequestResponse returns the attached pull request.
 type AttachPullRequestResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	PullRequest   *PullRequest           `protobuf:"bytes,1,opt,name=pull_request,json=pullRequest,proto3" json:"pull_request,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// pull_request is the newly attached record with unknown initial GitHub state.
+	PullRequest   *PullRequest `protobuf:"bytes,1,opt,name=pull_request,json=pullRequest,proto3" json:"pull_request,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2526,9 +2754,11 @@ func (x *AttachPullRequestResponse) GetPullRequest() *PullRequest {
 	return nil
 }
 
+// DetachPullRequestRequest identifies the task whose pull request should be detached.
 type DetachPullRequestRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	TaskId        string                 `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// task_id identifies the task whose pull request is removed.
+	TaskId        string `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2570,6 +2800,7 @@ func (x *DetachPullRequestRequest) GetTaskId() string {
 	return ""
 }
 
+// DetachPullRequestResponse confirms that the pull request was detached.
 type DetachPullRequestResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -2606,13 +2837,19 @@ func (*DetachPullRequestResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{29}
 }
 
+// AddDocumentRequest registers a URL or Markdown path under exactly one parent.
 type AddDocumentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	FeatureId     string                 `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	TaskId        string                 `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	Kind          DocumentKind           `protobuf:"varint,3,opt,name=kind,proto3,enum=prx.v1.DocumentKind" json:"kind,omitempty"`
-	Title         string                 `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
-	Value         string                 `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// feature_id identifies the parent feature when task_id is empty.
+	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
+	// task_id identifies the parent task when feature_id is empty.
+	TaskId string `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	// kind identifies whether value is a URL or a Markdown path.
+	Kind DocumentKind `protobuf:"varint,3,opt,name=kind,proto3,enum=prx.v1.DocumentKind" json:"kind,omitempty"`
+	// title is the human-readable document label.
+	Title string `protobuf:"bytes,4,opt,name=title,proto3" json:"title,omitempty"`
+	// value is the URL or file path to register.
+	Value         string `protobuf:"bytes,5,opt,name=value,proto3" json:"value,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2682,9 +2919,11 @@ func (x *AddDocumentRequest) GetValue() string {
 	return ""
 }
 
+// AddDocumentResponse returns the newly registered document.
 type AddDocumentResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Document      *Document              `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// document is the persisted document reference.
+	Document      *Document `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2726,9 +2965,11 @@ func (x *AddDocumentResponse) GetDocument() *Document {
 	return nil
 }
 
+// DeleteDocumentRequest identifies a document reference to delete.
 type DeleteDocumentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the document to delete.
+	Id            string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2770,6 +3011,7 @@ func (x *DeleteDocumentRequest) GetId() string {
 	return ""
 }
 
+// DeleteDocumentResponse confirms that the document was deleted.
 type DeleteDocumentResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -2806,9 +3048,11 @@ func (*DeleteDocumentResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{33}
 }
 
+// ReadMarkdownDocumentRequest identifies a registered Markdown path to read.
 type ReadMarkdownDocumentRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the Markdown document reference.
+	Id            string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2850,9 +3094,11 @@ func (x *ReadMarkdownDocumentRequest) GetId() string {
 	return ""
 }
 
+// ReadMarkdownDocumentResponse returns Markdown content for a registered path.
 type ReadMarkdownDocumentResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Content       string                 `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// content contains the file contents and is limited to 1 MiB.
+	Content       string `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2894,10 +3140,14 @@ func (x *ReadMarkdownDocumentResponse) GetContent() string {
 	return ""
 }
 
+// SyncRequest selects pull requests to refresh from GitHub.
+// Empty selectors refresh all pull requests; setting both selectors applies both filters.
 type SyncRequest struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	FeatureId     string                 `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	TaskId        string                 `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// feature_id selects pull requests belonging to the feature identified by ID or slug.
+	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
+	// task_id selects the pull request attached to this task.
+	TaskId        string `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2946,10 +3196,13 @@ func (x *SyncRequest) GetTaskId() string {
 	return ""
 }
 
+// SyncResponse reports the results of a pull request refresh.
 type SyncResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Succeeded     int32                  `protobuf:"varint,1,opt,name=succeeded,proto3" json:"succeeded,omitempty"`
-	Failed        int32                  `protobuf:"varint,2,opt,name=failed,proto3" json:"failed,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// succeeded is the number of pull requests refreshed successfully.
+	Succeeded int32 `protobuf:"varint,1,opt,name=succeeded,proto3" json:"succeeded,omitempty"`
+	// failed is the number of pull requests that retained stale data after a refresh error.
+	Failed        int32 `protobuf:"varint,2,opt,name=failed,proto3" json:"failed,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -2998,6 +3251,7 @@ func (x *SyncResponse) GetFailed() int32 {
 	return 0
 }
 
+// ValidateRequest requests database integrity validation.
 type ValidateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -3034,10 +3288,13 @@ func (*ValidateRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{38}
 }
 
+// ValidateResponse reports whether database integrity checks passed.
 type ValidateResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Valid         bool                   `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
-	Errors        []string               `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// valid is true when no integrity errors were found.
+	Valid bool `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
+	// errors contains human-readable integrity errors when valid is false.
+	Errors        []string `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
