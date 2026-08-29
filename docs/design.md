@@ -15,6 +15,8 @@
 
 The browser uses generated Protocol Buffer descriptors through ConnectRPC. It never opens SQLite or invokes the CLI. Fixed states and known reasons cross the RPC boundary as enums or structured details, while unexpected server and GitHub error messages may remain English. The production build is emitted into `internal/webui/dist` and embedded in the Go binary.
 
+Package dependencies follow the same direction: `internal/domain` and `internal/github` are leaves; `internal/store` may import only `internal/domain` and `internal/db`; `internal/app` may import `internal/domain` and `internal/github` and depends on its `Repository` interface; `internal/rpc` and `internal/cli` use a `Service` interface; and `cmd/prx` assembles all concrete pieces.
+
 ## Packages
 
 - `internal/domain`: entities, status derivation, DAG validation, ready calculation.

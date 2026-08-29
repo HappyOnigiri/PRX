@@ -58,6 +58,8 @@ prx serve
 
 `prx feature archive SLUG` hides a feature from the sidebar and `prx feature unarchive SLUG` brings it back; `prx feature update SLUG --archived=false` does the same.
 
+`--github-fixture` supplies a deterministic provider for the command. Without a fixture, only `prx serve` attempts live GitHub authentication; other commands, including `sync`, run without a provider and report `GitHub provider is not configured` when synchronization is requested.
+
 Removing a dependency, detaching a pull request, or deleting a document that does not exist fails with `not_found` rather than reporting success.
 
 Feature and Task deletion refuses to remove referenced data unless `--cascade` is supplied. Adding a dependency performs same-feature validation and cycle detection in the write transaction; cycle errors include the discovered path.
