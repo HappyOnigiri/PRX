@@ -29,12 +29,31 @@ func rpcError(err error) error {
 	}
 	code := connect.CodeInvalidArgument
 	switch domainErr.Code {
+	case domain.DomainErrorCodeCrossFeatureDependency,
+		domain.DomainErrorCodeInvalidDatabase,
+		domain.DomainErrorCodeInvalidDocument,
+		domain.DomainErrorCodeInvalidDocumentKind,
+		domain.DomainErrorCodeInvalidKind,
+		domain.DomainErrorCodeInvalidParent,
+		domain.DomainErrorCodeInvalidPullRequestURL,
+		domain.DomainErrorCodeInvalidSeed,
+		domain.DomainErrorCodeInvalidSlug,
+		domain.DomainErrorCodeInvalidStatus,
+		domain.DomainErrorCodeInvalidTitle,
+		domain.DomainErrorCodePullRequestOnManualTask,
+		domain.DomainErrorCodePRTaskCompletesOnMerge,
+		domain.DomainErrorCodeInvalidDocumentURL,
+		domain.DomainErrorCodeDocumentReadFailed,
+		domain.DomainErrorCodeDocumentTooLarge:
+		code = connect.CodeInvalidArgument
 	case domain.DomainErrorCodeNotFound:
 		code = connect.CodeNotFound
 	case domain.DomainErrorCodeDuplicateDependency, domain.DomainErrorCodeDuplicatePullRequest, domain.DomainErrorCodeReferencesExist, domain.DomainErrorCodeCycle:
 		code = connect.CodeFailedPrecondition
 	case domain.DomainErrorCodeGitHubAuth:
 		code = connect.CodeUnauthenticated
+	case domain.DomainErrorCodeInternal:
+		code = connect.CodeInternal
 	}
 	connectErr := connect.NewError(code, err)
 	detail, detailErr := connect.NewErrorDetail(&prxv1.ErrorDetail{Code: protoDomainErrorCode(domainErr.Code), Path: domainErr.Path})

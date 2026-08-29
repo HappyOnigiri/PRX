@@ -13,6 +13,7 @@ import (
 	prxv1 "github.com/HappyOnigiri/PRX/gen/prx/v1"
 	"github.com/HappyOnigiri/PRX/gen/prx/v1/prxv1connect"
 	"github.com/HappyOnigiri/PRX/internal/app"
+	"github.com/HappyOnigiri/PRX/internal/domain"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/rpc"
 	"github.com/HappyOnigiri/PRX/internal/store"
@@ -224,6 +225,28 @@ func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT {
 		t.Fatalf("missing document value code=%s err=%v", got, err)
 	}
+}
+
+func TestRPCMapsInternalDomainErrorToInternal(t *testing.T) {
+	path, handler := rpc.New(internalErrorService{})
+	mux := http.NewServeMux()
+	mux.Handle(path, handler)
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := prxv1connect.NewPRXServiceClient(server.Client(), server.URL)
+
+	_, err := client.GetSnapshot(context.Background(), connect.NewRequest(&prxv1.GetSnapshotRequest{}))
+	if connect.CodeOf(err) != connect.CodeInternal {
+		t.Fatalf("internal RPC code=%s err=%v", connect.CodeOf(err), err)
+	}
+}
+
+type internalErrorService struct {
+	rpc.Service
+}
+
+func (internalErrorService) Snapshot(context.Context) (domain.Snapshot, error) {
+	return domain.Snapshot{}, domain.NewError(domain.DomainErrorCodeInternal, "internal error")
 }
 
 func newTestClient(t *testing.T) prxv1connect.PRXServiceClient {
