@@ -1331,27 +1331,27 @@ a {
 }
 .markdown-preview-body {
   overflow: auto;
-  background: #0c1728;
-  color: #cbd7e5;
-  scrollbar-color: #49617f #0c1728;
+  background: #050607;
+  color: #d1d7df;
+  scrollbar-color: #46505e #050607;
 }
 .markdown-preview-body::-webkit-scrollbar {
   width: 10px;
 }
 .markdown-preview-body::-webkit-scrollbar-track {
-  background: #0c1728;
+  background: #050607;
 }
 .markdown-preview-body::-webkit-scrollbar-thumb {
-  border: 2px solid #0c1728;
-  background: #49617f;
+  border: 2px solid #050607;
+  background: #46505e;
 }
 .markdown-content {
   max-width: 820px;
   min-height: 100%;
   margin: 0 auto;
   padding: clamp(24px, 5vw, 64px);
-  border-inline: 1px solid var(--grid);
-  background: #111f33;
+  border-inline: 1px solid #222a35;
+  background: #0a0d11;
   font-size: 15px;
   line-height: 1.7;
 }
@@ -1363,7 +1363,7 @@ a {
 }
 .markdown-content h1,
 .markdown-content h2 {
-  border-bottom: 1px solid var(--line);
+  border-bottom: 1px solid #303843;
   padding-bottom: 0.3em;
 }
 .markdown-content a {
@@ -1376,7 +1376,7 @@ a {
 }
 .markdown-content hr {
   border: 0;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid #303843;
 }
 .markdown-content pre,
 .markdown-content code {
@@ -1385,13 +1385,13 @@ a {
 .markdown-content pre {
   overflow: auto;
   padding: 15px;
-  border: 1px solid var(--grid);
-  background: #091423;
+  border: 1px solid #242c36;
+  background: #020304;
   color: #eef5fa;
 }
 .markdown-content :not(pre) > code {
-  border: 1px solid #324765;
-  background: var(--panel2);
+  border: 1px solid #303946;
+  background: #151a21;
   color: #e5edf5;
   padding: 0.15em 0.35em;
 }
@@ -1411,11 +1411,11 @@ a {
 .markdown-content th,
 .markdown-content td {
   padding: 7px 9px;
-  border: 1px solid var(--line);
+  border: 1px solid #303843;
   text-align: left;
 }
 .markdown-content th {
-  background: var(--panel2);
+  background: #141920;
   color: var(--fog);
 }
 .preview-state {
