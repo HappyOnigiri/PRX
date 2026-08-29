@@ -107,17 +107,20 @@ See [docs/design.md](docs/design.md) for package boundaries, status decisions, t
 ## Verification
 
 ```sh
-make generate          # sqlc, Buf format/lint, Go/TypeScript protobuf, and CLI reference generation
-make generated-check  # regeneration must produce no diff
-make mod-tidy-check   # go.mod and go.sum must be tidy
-make lint              # go vet, auto-installed golangci-lint (gofumpt / gci / golines), deadcode, ESLint, strict TypeScript, stylelint
-make test              # Go, Vitest, and component coverage
-make go-coverage-check # handwritten Go packages must stay at or above the coverage baseline
+make generate               # sqlc, Buf format/lint, Go/TypeScript protobuf, and CLI reference generation
+make generated-check        # regeneration into a temporary directory must match the tracked files
+make mod-tidy-check         # go.mod and go.sum must be tidy
+make lint                   # auto-installed golangci-lint (govet / gofumpt / gci / golines), deadcode, Prettier, ESLint, strict TypeScript, knip, stylelint
+make test                   # Go, Vitest, and component coverage
+make go-coverage-check      # handwritten Go packages must stay at or above the coverage baseline
 make go-coverage-zero-check # every function in the core Go packages must be executed by tests
-make test-race         # Go race detector
-make e2e               # real Go server, SQLite, ConnectRPC, Chromium
-make ci                # install web dependencies, run all required checks, and build production assets
+make test-race              # Go race detector
+make test-race-coverage     # one race-enabled Go test run that also enforces the coverage baseline
+make e2e                    # real Go server, SQLite, ConnectRPC, Chromium
+make ci                     # install web dependencies, run all required checks in parallel, and build production assets
 ```
+
+`make ci` runs the checks concurrently with one job per CPU (`CI_JOBS` overrides the count) and keeps going after a failure so one run reports every problem. Each check reads the tree or writes only its own output, and `make ci` uses `test-race-coverage` in place of the three separate Go test runs. GNU make 4 groups each job's output; the GNU make 3.81 shipped with macOS interleaves it.
 
 `GO_COVERAGE_MIN` records the current coverage baseline for the handwritten Go packages. Raise it when their coverage improves so later changes cannot reduce it.
 
