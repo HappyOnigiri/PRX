@@ -39,7 +39,7 @@ func generate(dir string) error {
 		}
 	}
 
-	root := cli.NewRoot(io.Discard, io.Discard)
+	root := cli.NewRoot(io.Discard, io.Discard, nil)
 	root.DisableAutoGenTag = true
 	root.CompletionOptions.HiddenDefaultCmd = true
 	return doc.GenMarkdownTree(root, dir)
