@@ -29,12 +29,31 @@ func rpcError(err error) error {
 	}
 	code := connect.CodeInvalidArgument
 	switch domainErr.Code {
+	case domain.DomainErrorCodeCrossFeatureDependency,
+		domain.DomainErrorCodeInvalidDatabase,
+		domain.DomainErrorCodeInvalidDocument,
+		domain.DomainErrorCodeInvalidDocumentKind,
+		domain.DomainErrorCodeInvalidKind,
+		domain.DomainErrorCodeInvalidParent,
+		domain.DomainErrorCodeInvalidPullRequestURL,
+		domain.DomainErrorCodeInvalidSeed,
+		domain.DomainErrorCodeInvalidSlug,
+		domain.DomainErrorCodeInvalidStatus,
+		domain.DomainErrorCodeInvalidTitle,
+		domain.DomainErrorCodePullRequestOnManualTask,
+		domain.DomainErrorCodePRTaskCompletesOnMerge,
+		domain.DomainErrorCodeInvalidDocumentURL,
+		domain.DomainErrorCodeDocumentReadFailed,
+		domain.DomainErrorCodeDocumentTooLarge:
+		code = connect.CodeInvalidArgument
 	case domain.DomainErrorCodeNotFound:
 		code = connect.CodeNotFound
 	case domain.DomainErrorCodeDuplicateDependency, domain.DomainErrorCodeDuplicatePullRequest, domain.DomainErrorCodeReferencesExist, domain.DomainErrorCodeCycle:
 		code = connect.CodeFailedPrecondition
 	case domain.DomainErrorCodeGitHubAuth:
 		code = connect.CodeUnauthenticated
+	case domain.DomainErrorCodeInternal:
+		code = connect.CodeInternal
 	}
 	connectErr := connect.NewError(code, err)
 	detail, detailErr := connect.NewErrorDetail(&prxv1.ErrorDetail{Code: protoDomainErrorCode(domainErr.Code), Path: domainErr.Path})
@@ -53,7 +72,7 @@ func (h *Handler) GetSnapshot(ctx context.Context, _ *connect.Request[prxv1.GetS
 }
 
 func (h *Handler) CreateFeature(ctx context.Context, req *connect.Request[prxv1.CreateFeatureRequest]) (*connect.Response[prxv1.CreateFeatureResponse], error) {
-	value, err := h.service.CreateFeature(ctx, req.Msg.Slug, req.Msg.Title, req.Msg.Description)
+	value, err := h.service.CreateFeature(ctx, req.Msg.GetSlug(), req.Msg.GetTitle(), req.Msg.GetDescription())
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -61,11 +80,36 @@ func (h *Handler) CreateFeature(ctx context.Context, req *connect.Request[prxv1.
 }
 
 func (h *Handler) UpdateFeature(ctx context.Context, req *connect.Request[prxv1.UpdateFeatureRequest]) (*connect.Response[prxv1.UpdateFeatureResponse], error) {
-	status, err := domainFeatureStatus(req.Msg.Status)
+	statusValue := req.Msg.GetStatus()
+	var statusPointer *prxv1.FeatureStatus
+	if req.Msg.Status != nil {
+		statusPointer = &statusValue
+	}
+	status, err := domainFeatureStatus(statusPointer)
 	if err != nil {
 		return nil, rpcError(err)
 	}
-	value, err := h.service.UpdateFeature(ctx, req.Msg.Id, req.Msg.Slug, req.Msg.Title, req.Msg.Description, status, req.Msg.Archived)
+	slugValue := req.Msg.GetSlug()
+	var slugPointer *string
+	if req.Msg.Slug != nil {
+		slugPointer = &slugValue
+	}
+	titleValue := req.Msg.GetTitle()
+	var titlePointer *string
+	if req.Msg.Title != nil {
+		titlePointer = &titleValue
+	}
+	descriptionValue := req.Msg.GetDescription()
+	var descriptionPointer *string
+	if req.Msg.Description != nil {
+		descriptionPointer = &descriptionValue
+	}
+	archivedValue := req.Msg.GetArchived()
+	var archivedPointer *bool
+	if req.Msg.Archived != nil {
+		archivedPointer = &archivedValue
+	}
+	value, err := h.service.UpdateFeature(ctx, req.Msg.GetId(), slugPointer, titlePointer, descriptionPointer, status, archivedPointer)
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -73,18 +117,18 @@ func (h *Handler) UpdateFeature(ctx context.Context, req *connect.Request[prxv1.
 }
 
 func (h *Handler) DeleteFeature(ctx context.Context, req *connect.Request[prxv1.DeleteFeatureRequest]) (*connect.Response[prxv1.DeleteFeatureResponse], error) {
-	if err := h.service.DeleteFeature(ctx, req.Msg.Id, req.Msg.Cascade); err != nil {
+	if err := h.service.DeleteFeature(ctx, req.Msg.GetId(), req.Msg.GetCascade()); err != nil {
 		return nil, rpcError(err)
 	}
 	return connect.NewResponse(&prxv1.DeleteFeatureResponse{}), nil
 }
 
 func (h *Handler) CreateTask(ctx context.Context, req *connect.Request[prxv1.CreateTaskRequest]) (*connect.Response[prxv1.CreateTaskResponse], error) {
-	kind, err := domainTaskKind(req.Msg.Kind)
+	kind, err := domainTaskKind(req.Msg.GetKind())
 	if err != nil {
 		return nil, rpcError(err)
 	}
-	value, err := h.service.CreateTask(ctx, req.Msg.FeatureId, req.Msg.Title, req.Msg.Scope, kind, req.Msg.Assignee)
+	value, err := h.service.CreateTask(ctx, req.Msg.GetFeatureId(), req.Msg.GetTitle(), req.Msg.GetScope(), kind, req.Msg.GetAssignee())
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -92,11 +136,31 @@ func (h *Handler) CreateTask(ctx context.Context, req *connect.Request[prxv1.Cre
 }
 
 func (h *Handler) UpdateTask(ctx context.Context, req *connect.Request[prxv1.UpdateTaskRequest]) (*connect.Response[prxv1.UpdateTaskResponse], error) {
-	status, err := domainTaskStatus(req.Msg.Status)
+	statusValue := req.Msg.GetStatus()
+	var statusPointer *prxv1.TaskStatus
+	if req.Msg.Status != nil {
+		statusPointer = &statusValue
+	}
+	status, err := domainTaskStatus(statusPointer)
 	if err != nil {
 		return nil, rpcError(err)
 	}
-	value, err := h.service.UpdateTask(ctx, req.Msg.Id, req.Msg.Title, req.Msg.Scope, status, req.Msg.Assignee)
+	titleValue := req.Msg.GetTitle()
+	var titlePointer *string
+	if req.Msg.Title != nil {
+		titlePointer = &titleValue
+	}
+	scopeValue := req.Msg.GetScope()
+	var scopePointer *string
+	if req.Msg.Scope != nil {
+		scopePointer = &scopeValue
+	}
+	assigneeValue := req.Msg.GetAssignee()
+	var assigneePointer *string
+	if req.Msg.Assignee != nil {
+		assigneePointer = &assigneeValue
+	}
+	value, err := h.service.UpdateTask(ctx, req.Msg.GetId(), titlePointer, scopePointer, status, assigneePointer)
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -104,14 +168,14 @@ func (h *Handler) UpdateTask(ctx context.Context, req *connect.Request[prxv1.Upd
 }
 
 func (h *Handler) DeleteTask(ctx context.Context, req *connect.Request[prxv1.DeleteTaskRequest]) (*connect.Response[prxv1.DeleteTaskResponse], error) {
-	if err := h.service.DeleteTask(ctx, req.Msg.Id, req.Msg.Cascade); err != nil {
+	if err := h.service.DeleteTask(ctx, req.Msg.GetId(), req.Msg.GetCascade()); err != nil {
 		return nil, rpcError(err)
 	}
 	return connect.NewResponse(&prxv1.DeleteTaskResponse{}), nil
 }
 
 func (h *Handler) AddDependency(ctx context.Context, req *connect.Request[prxv1.AddDependencyRequest]) (*connect.Response[prxv1.AddDependencyResponse], error) {
-	value, err := h.service.AddDependency(ctx, req.Msg.BlockerTaskId, req.Msg.BlockedTaskId)
+	value, err := h.service.AddDependency(ctx, req.Msg.GetBlockerTaskId(), req.Msg.GetBlockedTaskId())
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -119,14 +183,14 @@ func (h *Handler) AddDependency(ctx context.Context, req *connect.Request[prxv1.
 }
 
 func (h *Handler) RemoveDependency(ctx context.Context, req *connect.Request[prxv1.RemoveDependencyRequest]) (*connect.Response[prxv1.RemoveDependencyResponse], error) {
-	if err := h.service.RemoveDependency(ctx, req.Msg.BlockerTaskId, req.Msg.BlockedTaskId); err != nil {
+	if err := h.service.RemoveDependency(ctx, req.Msg.GetBlockerTaskId(), req.Msg.GetBlockedTaskId()); err != nil {
 		return nil, rpcError(err)
 	}
 	return connect.NewResponse(&prxv1.RemoveDependencyResponse{}), nil
 }
 
 func (h *Handler) AttachPullRequest(ctx context.Context, req *connect.Request[prxv1.AttachPullRequestRequest]) (*connect.Response[prxv1.AttachPullRequestResponse], error) {
-	value, err := h.service.AttachPullRequest(ctx, req.Msg.TaskId, req.Msg.Url)
+	value, err := h.service.AttachPullRequest(ctx, req.Msg.GetTaskId(), req.Msg.GetUrl())
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -134,14 +198,14 @@ func (h *Handler) AttachPullRequest(ctx context.Context, req *connect.Request[pr
 }
 
 func (h *Handler) DetachPullRequest(ctx context.Context, req *connect.Request[prxv1.DetachPullRequestRequest]) (*connect.Response[prxv1.DetachPullRequestResponse], error) {
-	if err := h.service.DetachPullRequest(ctx, req.Msg.TaskId); err != nil {
+	if err := h.service.DetachPullRequest(ctx, req.Msg.GetTaskId()); err != nil {
 		return nil, rpcError(err)
 	}
 	return connect.NewResponse(&prxv1.DetachPullRequestResponse{}), nil
 }
 
 func (h *Handler) AddDocument(ctx context.Context, req *connect.Request[prxv1.AddDocumentRequest]) (*connect.Response[prxv1.AddDocumentResponse], error) {
-	value, err := h.service.AddDocument(ctx, req.Msg.FeatureId, req.Msg.TaskId, domainDocumentKind(req.Msg.Kind), req.Msg.Title, req.Msg.Value)
+	value, err := h.service.AddDocument(ctx, req.Msg.GetFeatureId(), req.Msg.GetTaskId(), domainDocumentKind(req.Msg.GetKind()), req.Msg.GetTitle(), req.Msg.GetValue())
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -149,14 +213,14 @@ func (h *Handler) AddDocument(ctx context.Context, req *connect.Request[prxv1.Ad
 }
 
 func (h *Handler) DeleteDocument(ctx context.Context, req *connect.Request[prxv1.DeleteDocumentRequest]) (*connect.Response[prxv1.DeleteDocumentResponse], error) {
-	if err := h.service.DeleteDocument(ctx, req.Msg.Id); err != nil {
+	if err := h.service.DeleteDocument(ctx, req.Msg.GetId()); err != nil {
 		return nil, rpcError(err)
 	}
 	return connect.NewResponse(&prxv1.DeleteDocumentResponse{}), nil
 }
 
 func (h *Handler) ReadMarkdownDocument(ctx context.Context, req *connect.Request[prxv1.ReadMarkdownDocumentRequest]) (*connect.Response[prxv1.ReadMarkdownDocumentResponse], error) {
-	content, err := h.service.ReadMarkdownDocument(ctx, req.Msg.Id)
+	content, err := h.service.ReadMarkdownDocument(ctx, req.Msg.GetId())
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -164,7 +228,7 @@ func (h *Handler) ReadMarkdownDocument(ctx context.Context, req *connect.Request
 }
 
 func (h *Handler) Sync(ctx context.Context, req *connect.Request[prxv1.SyncRequest]) (*connect.Response[prxv1.SyncResponse], error) {
-	succeeded, failed, err := h.service.Sync(ctx, req.Msg.FeatureId, req.Msg.TaskId)
+	succeeded, failed, err := h.service.Sync(ctx, req.Msg.GetFeatureId(), req.Msg.GetTaskId())
 	if err != nil {
 		return nil, rpcError(err)
 	}

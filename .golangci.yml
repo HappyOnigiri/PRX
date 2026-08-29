@@ -10,18 +10,26 @@ linters:
     - durationcheck
     - errchkjson
     - errorlint
+    - exhaustive
     - misspell
     - nilerr
     - noctx
     - nolintlint
     - nosprintfhostport
     - predeclared
+    - protogetter
     - rowserrcheck
     - sqlclosecheck
     - thelper
     - unconvert
     - usestdlibvars
     - wastedassign
+  settings:
+    exhaustive:
+      default-signifies-exhaustive: false
+      check:
+        - switch
+        - map
 
 formatters:
   enable:
