@@ -9,7 +9,7 @@ func (s *state) taskCommand() *cobra.Command {
 	command := &cobra.Command{Use: "task", Short: "Manage implementation and manual tasks"}
 	var feature, title, scope, kind, assignee, status string
 	var cascade bool
-	create := &cobra.Command{Use: "create", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+	create := &cobra.Command{Use: "create", Short: "Create an implementation or manual task", Example: "prx task create --feature checkout --title \"Add payment intent API\" --assignee Mika --json", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		value, err := s.service.CreateTask(cmd.Context(), feature, title, scope, domain.TaskKind(kind), assignee)
 		if err != nil {
 			return err
@@ -23,7 +23,7 @@ func (s *state) taskCommand() *cobra.Command {
 	create.Flags().StringVar(&assignee, "assignee", "", "assignee")
 	_ = create.MarkFlagRequired("feature")
 	_ = create.MarkFlagRequired("title")
-	list := &cobra.Command{Use: "list", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+	list := &cobra.Command{Use: "list", Short: "List tasks, optionally filtered by feature", Example: "prx task list --feature checkout --json", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		snapshot, err := s.service.Snapshot(cmd.Context())
 		if err != nil {
 			return err
@@ -39,7 +39,7 @@ func (s *state) taskCommand() *cobra.Command {
 		return s.write(tasks)
 	}}
 	list.Flags().StringVar(&feature, "feature", "", "filter by feature")
-	get := &cobra.Command{Use: "get ID", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
+	get := &cobra.Command{Use: "get TASK_ID", Short: "Show a task by ID", Example: "prx task get TASK_ID --json", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		snapshot, err := s.service.Snapshot(cmd.Context())
 		if err != nil {
 			return err
@@ -51,7 +51,7 @@ func (s *state) taskCommand() *cobra.Command {
 		}
 		return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", args[0])
 	}}
-	update := &cobra.Command{Use: "update ID", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
+	update := &cobra.Command{Use: "update TASK_ID", Short: "Update a task by ID", Example: "prx task update TASK_ID --status completed --json", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		value, err := s.service.UpdateTask(cmd.Context(), args[0],
 			changedFlag(cmd, "title", &title), changedFlag(cmd, "scope", &scope),
 			changedStringType[domain.TaskStatus](cmd, "status", &status), changedFlag(cmd, "assignee", &assignee))
@@ -64,7 +64,7 @@ func (s *state) taskCommand() *cobra.Command {
 	update.Flags().StringVar(&scope, "scope", "", "new scope")
 	update.Flags().StringVar(&status, "status", "", "planned, in_progress, completed, or cancelled")
 	update.Flags().StringVar(&assignee, "assignee", "", "new assignee")
-	deleteCmd := &cobra.Command{Use: "delete ID", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
+	deleteCmd := &cobra.Command{Use: "delete TASK_ID", Short: "Delete a task and optionally its dependencies and references", Example: "prx task delete TASK_ID --cascade --json", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		if err := s.service.DeleteTask(cmd.Context(), args[0], cascade); err != nil {
 			return err
 		}

@@ -19,7 +19,7 @@ import (
 
 func (s *state) serveCommand() *cobra.Command {
 	var address string
-	command := &cobra.Command{Use: "serve", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
+	command := &cobra.Command{Use: "serve", Short: "Start the local WebUI and ConnectRPC server", Example: "prx serve --addr 127.0.0.1:7331", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		if s.fixture == "" {
 			if provider, err := githubprovider.NewLiveProvider(cmd.Context()); err == nil {
 				s.service = app.New(s.store, provider)

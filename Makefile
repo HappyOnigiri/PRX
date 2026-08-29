@@ -10,9 +10,10 @@ generate: web-install
 	$(GO) tool sqlc generate
 	$(GO) tool buf lint
 	$(GO) tool buf generate
+	$(GO) run ./cmd/prxdoc docs/cli
 
 generated-check: generate
-	git diff --exit-code -- internal/db gen web/src/gen
+	git diff --exit-code -- internal/db gen web/src/gen docs/cli
 
 mod-tidy-check:
 	$(GO) mod tidy -diff
