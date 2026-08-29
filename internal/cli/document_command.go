@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"github.com/HappyOnigiri/PRX/internal/domain"
 	"github.com/spf13/cobra"
+
+	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 func (s *state) documentCommand() *cobra.Command {
@@ -21,12 +22,16 @@ func (s *state) documentCommand() *cobra.Command {
 	add.Flags().StringVar(&title, "title", "", "document title")
 	add.Flags().StringVar(&value, "value", "", "URL or Markdown path")
 	_ = add.MarkFlagRequired("value")
-	deleteCmd := &cobra.Command{Use: "delete ID", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
-		if err := s.service.DeleteDocument(cmd.Context(), args[0]); err != nil {
-			return err
-		}
-		return s.write(map[string]string{"deleted": args[0]})
-	}}
+	deleteCmd := &cobra.Command{
+		Use:  "delete ID",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if err := s.service.DeleteDocument(cmd.Context(), args[0]); err != nil {
+				return err
+			}
+			return s.write(map[string]string{"deleted": args[0]})
+		},
+	}
 	list := &cobra.Command{Use: "list", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		snapshot, err := s.service.Snapshot(cmd.Context())
 		if err != nil {

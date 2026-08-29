@@ -13,13 +13,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HappyOnigiri/PRX/internal/domain"
 	gh "github.com/google/go-github/v80/github"
 	"golang.org/x/oauth2"
+
+	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 type Provider interface {
-	Fetch(context.Context, domain.PullRequest) (domain.PullRequest, error)
+	Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error)
 }
 
 type LiveProvider struct{ client *gh.Client }
@@ -51,19 +52,37 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	if err != nil {
 		return current, fmt.Errorf("fetch pull request: %w", err)
 	}
-	reviews, err := allPages(ctx, func(ctx context.Context, options *gh.ListOptions) ([]*gh.PullRequestReview, *gh.Response, error) {
-		return p.client.PullRequests.ListReviews(ctx, current.Owner, current.Repository, int(current.Number), options)
-	})
+	reviews, err := allPages(
+		ctx,
+		func(ctx context.Context, options *gh.ListOptions) ([]*gh.PullRequestReview, *gh.Response, error) {
+			return p.client.PullRequests.ListReviews(
+				ctx,
+				current.Owner,
+				current.Repository,
+				int(current.Number),
+				options,
+			)
+		},
+	)
 	if err != nil {
 		return current, fmt.Errorf("fetch reviews: %w", err)
 	}
-	requestedPages, err := allPages(ctx, func(ctx context.Context, options *gh.ListOptions) ([]*gh.Reviewers, *gh.Response, error) {
-		value, response, err := p.client.PullRequests.ListReviewers(ctx, current.Owner, current.Repository, int(current.Number), options)
-		if err != nil {
-			return nil, response, err
-		}
-		return []*gh.Reviewers{value}, response, nil
-	})
+	requestedPages, err := allPages(
+		ctx,
+		func(ctx context.Context, options *gh.ListOptions) ([]*gh.Reviewers, *gh.Response, error) {
+			value, response, err := p.client.PullRequests.ListReviewers(
+				ctx,
+				current.Owner,
+				current.Repository,
+				int(current.Number),
+				options,
+			)
+			if err != nil {
+				return nil, response, err
+			}
+			return []*gh.Reviewers{value}, response, nil
+		},
+	)
 	if err != nil {
 		return current, fmt.Errorf("fetch requested reviewers: %w", err)
 	}
@@ -128,7 +147,10 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 // allPages walks every page of a GitHub list endpoint. Stopping at the first
 // page silently truncates long-lived pull requests, and the resulting review
 // state is stored as if it were fresh.
-func allPages[T any](ctx context.Context, fetch func(context.Context, *gh.ListOptions) ([]T, *gh.Response, error)) ([]T, error) {
+func allPages[T any](
+	ctx context.Context,
+	fetch func(context.Context, *gh.ListOptions) ([]T, *gh.Response, error),
+) ([]T, error) {
 	options := &gh.ListOptions{PerPage: 100}
 	var all []T
 	for {
@@ -164,9 +186,36 @@ var fixtureFields = []struct {
 	value   func(fixture) string
 	allowed []string
 }{
-	{"state", func(f fixture) string { return string(f.State) }, []string{string(domain.PullRequestStateOpen), string(domain.PullRequestStateClosed), string(domain.PullRequestStateMerged), string(domain.PullRequestStateUnknown)}},
-	{"review_state", func(f fixture) string { return string(f.ReviewState) }, []string{string(domain.ReviewStateNone), string(domain.ReviewStateRequired), string(domain.ReviewStateApproved), string(domain.ReviewStateChangesRequested), string(domain.ReviewStateUnknown)}},
-	{"mergeability", func(f fixture) string { return string(f.Mergeability) }, []string{string(domain.MergeabilityMergeable), string(domain.MergeabilityConflicting), string(domain.MergeabilityUnknown)}},
+	{
+		"state",
+		func(f fixture) string { return string(f.State) },
+		[]string{
+			string(domain.PullRequestStateOpen),
+			string(domain.PullRequestStateClosed),
+			string(domain.PullRequestStateMerged),
+			string(domain.PullRequestStateUnknown),
+		},
+	},
+	{
+		"review_state",
+		func(f fixture) string { return string(f.ReviewState) },
+		[]string{
+			string(domain.ReviewStateNone),
+			string(domain.ReviewStateRequired),
+			string(domain.ReviewStateApproved),
+			string(domain.ReviewStateChangesRequested),
+			string(domain.ReviewStateUnknown),
+		},
+	},
+	{
+		"mergeability",
+		func(f fixture) string { return string(f.Mergeability) },
+		[]string{
+			string(domain.MergeabilityMergeable),
+			string(domain.MergeabilityConflicting),
+			string(domain.MergeabilityUnknown),
+		},
+	},
 }
 
 func NewFixtureProvider(path string) (*FixtureProvider, error) {
@@ -202,14 +251,34 @@ func NewFixtureProvider(path string) (*FixtureProvider, error) {
 	return &FixtureProvider{values: values}, nil
 }
 
-func (p *FixtureProvider) Fetch(_ context.Context, current domain.PullRequest) (domain.PullRequest, error) {
+func (p *FixtureProvider) Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error) {
 	value, ok := p.values[current.URL]
 	if !ok {
 		states := []fixture{
-			{State: domain.PullRequestStateOpen, ReviewState: domain.ReviewStateRequired, Mergeability: domain.MergeabilityMergeable, Author: "octocat"},
-			{State: domain.PullRequestStateOpen, ReviewState: domain.ReviewStateApproved, Mergeability: domain.MergeabilityMergeable, Author: "hubot"},
-			{State: domain.PullRequestStateOpen, ReviewState: domain.ReviewStateChangesRequested, Mergeability: domain.MergeabilityConflicting, Author: "monalisa"},
-			{State: domain.PullRequestStateMerged, ReviewState: domain.ReviewStateApproved, Mergeability: domain.MergeabilityMergeable, Author: "octocat"},
+			{
+				State:        domain.PullRequestStateOpen,
+				ReviewState:  domain.ReviewStateRequired,
+				Mergeability: domain.MergeabilityMergeable,
+				Author:       "octocat",
+			},
+			{
+				State:        domain.PullRequestStateOpen,
+				ReviewState:  domain.ReviewStateApproved,
+				Mergeability: domain.MergeabilityMergeable,
+				Author:       "hubot",
+			},
+			{
+				State:        domain.PullRequestStateOpen,
+				ReviewState:  domain.ReviewStateChangesRequested,
+				Mergeability: domain.MergeabilityConflicting,
+				Author:       "monalisa",
+			},
+			{
+				State:        domain.PullRequestStateMerged,
+				ReviewState:  domain.ReviewStateApproved,
+				Mergeability: domain.MergeabilityMergeable,
+				Author:       "octocat",
+			},
 		}
 		value = states[int(current.Number)%len(states)]
 	}

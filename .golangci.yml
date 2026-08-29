@@ -7,26 +7,119 @@ linters:
     - asciicheck
     - bidichk
     - bodyclose
+    - depguard
     - durationcheck
     - errchkjson
     - errorlint
+    - exhaustive
+    - lll
     - misspell
     - nilerr
     - noctx
     - nolintlint
     - nosprintfhostport
     - predeclared
+    - protogetter
     - rowserrcheck
     - sqlclosecheck
     - thelper
     - unconvert
     - usestdlibvars
     - wastedassign
+    - inamedparam
+    - revive
+
+  settings:
+    exhaustive:
+      default-signifies-exhaustive: false
+      check:
+        - switch
+        - map
+    lll:
+      line-length: 120
+    nolintlint:
+      require-explanation: true
+      require-specific: true
+      allow-unused: false
+    revive:
+      enable-all-rules: false
+      rules:
+        - name: package-comments
+
+    depguard:
+      rules:
+        domain-is-a-leaf:
+          files: ["**/internal/domain/**", "!$test"]
+          deny:
+            - pkg: github.com/HappyOnigiri/PRX/internal
+              desc: domain must not import other internal packages
+            - pkg: github.com/HappyOnigiri/PRX/gen
+              desc: domain must not depend on generated RPC types
+        github-is-a-leaf:
+          files: ["**/internal/github/**", "!$test"]
+          deny:
+            - pkg: github.com/HappyOnigiri/PRX/internal/app
+              desc: github must not import app
+            - pkg: github.com/HappyOnigiri/PRX/internal/store
+              desc: github must not import store
+            - pkg: github.com/HappyOnigiri/PRX/internal/rpc
+              desc: github must not import rpc
+            - pkg: github.com/HappyOnigiri/PRX/internal/cli
+              desc: github must not import cli
+        store-owns-persistence-only:
+          files: ["**/internal/store/**", "!$test"]
+          deny:
+            - pkg: github.com/HappyOnigiri/PRX/internal/app
+              desc: store must not import app
+            - pkg: github.com/HappyOnigiri/PRX/internal/github
+              desc: store must not import github
+            - pkg: github.com/HappyOnigiri/PRX/internal/rpc
+              desc: store must not import rpc
+            - pkg: github.com/HappyOnigiri/PRX/internal/cli
+              desc: store must not import cli
+        app-does-not-know-adapters:
+          files: ["**/internal/app/**", "!$test"]
+          deny:
+            - pkg: github.com/HappyOnigiri/PRX/internal/store
+              desc: app depends on the Repository interface, not on SQLite
+            - pkg: github.com/HappyOnigiri/PRX/internal/rpc
+              desc: app must not import rpc
+            - pkg: github.com/HappyOnigiri/PRX/internal/cli
+              desc: app must not import cli
+        rpc-is-translation-only:
+          files: ["**/internal/rpc/**", "!$test"]
+          deny:
+            - pkg: github.com/HappyOnigiri/PRX/internal/store
+              desc: rpc must go through the Service interface
+            - pkg: github.com/HappyOnigiri/PRX/internal/github
+              desc: rpc must not import github
+            - pkg: github.com/HappyOnigiri/PRX/internal/cli
+              desc: rpc must not import cli
+        cli-uses-the-service-interface:
+          files: ["**/internal/cli/**", "!$test"]
+          deny:
+            - pkg: github.com/HappyOnigiri/PRX/internal/store
+              desc: cmd/prx wires the store; cli talks to Service
+            - pkg: github.com/HappyOnigiri/PRX/internal/app
+              desc: cli must not import app
+            - pkg: github.com/HappyOnigiri/PRX/internal/github
+              desc: cli must not import github
 
 formatters:
   enable:
-    - gofmt
-    - goimports
+    - gofumpt
+    - gci
+    - golines
+  settings:
+    gci:
+      sections:
+        - standard
+        - default
+        - localmodule
+    golines:
+      max-len: 120
+      tab-len: 4
+      reformat-tags: true
 
 issues:
   max-issues-per-linter: 0

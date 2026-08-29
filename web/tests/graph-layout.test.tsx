@@ -1,14 +1,20 @@
-import { render, screen } from "@testing-library/react";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
+import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "../src/router";
 import { makeSnapshot } from "./factories";
 
 // React Flow measures its container, which jsdom does not implement.
 class ResizeObserverStub {
-  observe() {}
-  unobserve() {}
-  disconnect() {}
+  observe() {
+    return undefined;
+  }
+  unobserve() {
+    return undefined;
+  }
+  disconnect() {
+    return undefined;
+  }
 }
 globalThis.ResizeObserver = ResizeObserverStub;
 
@@ -35,7 +41,9 @@ vi.mock("elkjs/lib/elk-api.js", () => ({
     layout() {
       return Promise.reject(new Error("worker unavailable"));
     }
-    terminateWorker() {}
+    terminateWorker() {
+      return undefined;
+    }
   },
 }));
 

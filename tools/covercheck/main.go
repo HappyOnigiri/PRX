@@ -1,3 +1,4 @@
+// Package main checks Go package coverage against ratcheted minimums.
 package main
 
 import (
@@ -22,7 +23,9 @@ const (
 	coverageCommandTimeout = 5 * time.Minute
 )
 
-var coveragePattern = regexp.MustCompile(`coverage:[[:space:]]+([0-9]+([.][0-9]+)?)%[[:space:]]+of[[:space:]]+statements`)
+var coveragePattern = regexp.MustCompile(
+	`coverage:[[:space:]]+([0-9]+([.][0-9]+)?)%[[:space:]]+of[[:space:]]+statements`,
+)
 
 type minimum struct {
 	Package string
@@ -92,7 +95,13 @@ func run(update bool) error {
 			failed = true
 		case coverageDrift:
 			difference := result.Actual - result.Minimum
-			fmt.Printf("  %s: measured %.1f%% exceeds minimum %.1f%% by %.1fpt; run `go run ./tools/covercheck -update` to raise it\n", result.Package, result.Actual, result.Minimum, difference)
+			fmt.Printf(
+				"  %s: measured %.1f%% exceeds minimum %.1f%% by %.1fpt; run `go run ./tools/covercheck -update` to raise it\n",
+				result.Package,
+				result.Actual,
+				result.Minimum,
+				difference,
+			)
 			failed = true
 		}
 	}

@@ -7,8 +7,8 @@ import {
   AttachPullRequestRequestSchema,
   CreateFeatureRequestSchema,
   CreateTaskRequestSchema,
-  DeleteFeatureRequestSchema,
   DeleteDocumentRequestSchema,
+  DeleteFeatureRequestSchema,
   DeleteTaskRequestSchema,
   DetachPullRequestRequestSchema,
   GetSnapshotRequestSchema,
@@ -18,11 +18,11 @@ import {
   SyncRequestSchema,
   UpdateFeatureRequestSchema,
   UpdateTaskRequestSchema,
+  type DocumentKind,
+  type FeatureStatus,
   type Snapshot,
-  DocumentKind,
-  FeatureStatus,
-  TaskKind,
-  TaskStatus,
+  type TaskKind,
+  type TaskStatus,
 } from "./gen/prx/v1/prx_pb";
 
 const transport = createConnectTransport({ baseUrl: window.location.origin });
@@ -94,8 +94,12 @@ export const mutations = {
   }) => client.addDocument(create(AddDocumentRequestSchema, input)),
   deleteDocument: (id: string) =>
     client.deleteDocument(create(DeleteDocumentRequestSchema, { id })),
-  sync: (featureId?: string, taskId?: string) =>
-    client.sync(create(SyncRequestSchema, { featureId, taskId })),
+  sync: (featureId?: string, taskId?: string) => {
+    const input: { featureId?: string; taskId?: string } = {};
+    if (featureId !== undefined) input.featureId = featureId;
+    if (taskId !== undefined) input.taskId = taskId;
+    return client.sync(create(SyncRequestSchema, input));
+  },
 };
 
 export async function readMarkdownDocument(id: string): Promise<string> {

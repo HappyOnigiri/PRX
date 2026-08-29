@@ -1,14 +1,12 @@
 package cli
 
 import (
-	"context"
 	"fmt"
 	"strings"
 
-	"github.com/HappyOnigiri/PRX/internal/app"
-	"github.com/HappyOnigiri/PRX/internal/domain"
-	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/spf13/cobra"
+
+	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 func (s *state) snapshotCommand() *cobra.Command {
@@ -22,28 +20,32 @@ func (s *state) snapshotCommand() *cobra.Command {
 }
 
 func (s *state) graphCommand() *cobra.Command {
-	return &cobra.Command{Use: "graph FEATURE", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
-		feature, err := s.service.ResolveFeature(cmd.Context(), args[0])
-		if err != nil {
-			return err
-		}
-		snapshot, err := s.service.Snapshot(cmd.Context())
-		if err != nil {
-			return err
-		}
-		tasks := filterTasks(snapshot.Tasks, func(task domain.Task) bool { return task.FeatureID == feature.ID })
-		ids := map[string]bool{}
-		for _, task := range tasks {
-			ids[task.ID] = true
-		}
-		deps := make([]domain.Dependency, 0)
-		for _, dep := range snapshot.Dependencies {
-			if ids[dep.BlockerTaskID] {
-				deps = append(deps, dep)
+	return &cobra.Command{
+		Use:  "graph FEATURE",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			feature, err := s.service.ResolveFeature(cmd.Context(), args[0])
+			if err != nil {
+				return err
 			}
-		}
-		return s.write(map[string]any{"feature": feature, "tasks": tasks, "dependencies": deps})
-	}}
+			snapshot, err := s.service.Snapshot(cmd.Context())
+			if err != nil {
+				return err
+			}
+			tasks := filterTasks(snapshot.Tasks, func(task domain.Task) bool { return task.FeatureID == feature.ID })
+			ids := map[string]bool{}
+			for _, task := range tasks {
+				ids[task.ID] = true
+			}
+			deps := make([]domain.Dependency, 0)
+			for _, dep := range snapshot.Dependencies {
+				if ids[dep.BlockerTaskID] {
+					deps = append(deps, dep)
+				}
+			}
+			return s.write(map[string]any{"feature": feature, "tasks": tasks, "dependencies": deps})
+		},
+	}
 }
 
 func (s *state) queueCommand(name string) *cobra.Command {
@@ -67,24 +69,9 @@ func (s *state) queueCommand(name string) *cobra.Command {
 	}}
 }
 
-func (s *state) ensureLiveProvider(ctx context.Context) error {
-	if s.fixture != "" {
-		return nil
-	}
-	provider, err := githubprovider.NewLiveProvider(ctx)
-	if err != nil {
-		return &domain.Error{Code: "github_auth", Message: err.Error()}
-	}
-	s.service = app.New(s.store, provider)
-	return nil
-}
-
 func (s *state) syncCommand() *cobra.Command {
 	var feature, task string
 	command := &cobra.Command{Use: "sync", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		if err := s.ensureLiveProvider(cmd.Context()); err != nil {
-			return err
-		}
 		succeeded, failed, err := s.service.Sync(cmd.Context(), feature, task)
 		if err != nil {
 			return err
@@ -113,10 +100,6 @@ func (s *state) seedCommand() *cobra.Command {
 	command := &cobra.Command{Use: "seed", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		if features < 1 {
 			return domain.NewError("invalid_seed", "features must be at least 1")
-		}
-		if s.fixture == "" {
-			provider, _ := githubprovider.NewFixtureProvider("demo")
-			s.service = app.New(s.store, provider)
 		}
 		for index := 0; index < features; index++ {
 			featureSlug := slug
