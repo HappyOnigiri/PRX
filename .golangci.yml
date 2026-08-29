@@ -16,6 +16,7 @@ linters:
     - nolintlint
     - nosprintfhostport
     - predeclared
+    - protogetter
     - rowserrcheck
     - sqlclosecheck
     - thelper
