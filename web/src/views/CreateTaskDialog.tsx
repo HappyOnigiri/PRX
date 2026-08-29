@@ -44,7 +44,6 @@ export function CreateTaskDialog({
         aria-label={t("taskCreate.formLabel")}
       >
         <header>
-          <p>{t("taskCreate.eyebrow")}</p>
           <h2>{t("taskCreate.title")}</h2>
         </header>
         <label>

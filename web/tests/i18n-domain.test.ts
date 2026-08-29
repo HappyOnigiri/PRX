@@ -25,6 +25,7 @@ import {
   errorKeys,
   featureStatusKeys,
   formatError,
+  pullRequestDisplayStateToken,
   pullRequestDisplayStateKeys,
   taskKindKeys,
   taskStatusKeys,
@@ -171,5 +172,16 @@ describe("localized RPC errors", () => {
     expect(formatError(new Error("unexpected backend failure"), t)).toBe(
       "unexpected backend failure",
     );
+  });
+});
+
+describe("display state style tokens", () => {
+  it("maps pull request enum names to CSS state tokens", () => {
+    expect(
+      pullRequestDisplayStateToken(PullRequestDisplayState.REVIEW_WAITING),
+    ).toBe("review_waiting");
+    expect(
+      pullRequestDisplayStateToken(PullRequestDisplayState.UNSPECIFIED),
+    ).toBe("unspecified");
   });
 });

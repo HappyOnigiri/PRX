@@ -2,7 +2,6 @@ export const inspector = {
   en: {
     inspector: {
       label: "Task inspector",
-      eyebrow: "Node inspector",
       close: "Close inspector",
       saveTask: "Save task",
       pullRequest: "Pull request",
@@ -27,7 +26,6 @@ export const inspector = {
   ja: {
     inspector: {
       label: "タスクインスペクター",
-      eyebrow: "ノードインスペクター",
       close: "インスペクターを閉じる",
       saveTask: "タスクを保存",
       pullRequest: "プルリクエスト",

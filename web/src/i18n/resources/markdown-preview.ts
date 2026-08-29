@@ -1,7 +1,6 @@
 export const markdownPreview = {
   en: {
     markdownPreview: {
-      eyebrow: "Markdown preview",
       untitled: "Markdown document",
       loading: "Reading Markdown file…",
       copyContent: "Copy full text",
@@ -14,7 +13,6 @@ export const markdownPreview = {
   },
   ja: {
     markdownPreview: {
-      eyebrow: "Markdown プレビュー",
       untitled: "Markdown ドキュメント",
       loading: "Markdown ファイルを読み込んでいます…",
       copyContent: "全文をコピー",

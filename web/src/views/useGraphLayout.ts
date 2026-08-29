@@ -36,7 +36,7 @@ export function useGraphLayout({
       return {
         id: task.id,
         width: 284,
-        height: 140 + Math.min(assetCount, 4) * 32,
+        height: 148 + Math.min(assetCount, 4) * 34,
         data: {
           title: task.title,
           assignee: task.assignee,

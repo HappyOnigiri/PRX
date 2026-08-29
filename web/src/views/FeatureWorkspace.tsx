@@ -97,12 +97,14 @@ export function FeatureWorkspace() {
   return (
     <div className="workspace">
       <header className="workspace-head">
-        <div>
+        <div
+          className="workspace-title"
+          title={feature.description || t("workspace.noDescription")}
+        >
+          <h1>{feature.title}</h1>
           <p className="eyebrow">
             {t("workspace.eyebrow", { slug: feature.slug })}
           </p>
-          <h1>{feature.title}</h1>
-          <p>{feature.description || t("workspace.noDescription")}</p>
         </div>
         <div className="workspace-actions">
           <button
@@ -148,26 +150,28 @@ export function FeatureWorkspace() {
         </div>
       </header>
       <MutationError error={deleteFeature.error} />
-      <FeatureGraph
-        tasks={tasks}
-        dependencies={dependencies}
-        pullRequests={pullRequests}
-        documentsByTask={documentsByTask}
-        onEditTask={editTask}
-        onPreviewDocument={handlePreviewDocument}
-        onCreateTask={openTaskDialog}
-      />
-      {selectedTask && (
-        <TaskInspector
-          task={selectedTask}
+      <div className="workspace-body">
+        <FeatureGraph
           tasks={tasks}
           dependencies={dependencies}
-          pullRequest={pullRequests.get(selectedTask.id)}
-          documents={documentsByTask.get(selectedTask.id) ?? []}
-          onPreview={handlePreviewDocument}
-          onClose={() => setSelected(undefined)}
+          pullRequests={pullRequests}
+          documentsByTask={documentsByTask}
+          onEditTask={editTask}
+          onPreviewDocument={handlePreviewDocument}
+          onCreateTask={openTaskDialog}
         />
-      )}
+        {selectedTask && (
+          <TaskInspector
+            task={selectedTask}
+            tasks={tasks}
+            dependencies={dependencies}
+            pullRequest={pullRequests.get(selectedTask.id)}
+            documents={documentsByTask.get(selectedTask.id) ?? []}
+            onPreview={handlePreviewDocument}
+            onClose={() => setSelected(undefined)}
+          />
+        )}
+      </div>
       {previewDocument && (
         <MarkdownPreview
           key={previewDocument.id}

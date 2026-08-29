@@ -70,7 +70,6 @@ export function MarkdownPreview({
       >
         <header>
           <div>
-            <p>{t("markdownPreview.eyebrow")}</p>
             <h2 id="markdown-preview-title">
               {document.title || t("markdownPreview.untitled")}
             </h2>

@@ -14,7 +14,6 @@ export const shell = {
     },
     featureCreate: {
       formLabel: "Create feature",
-      eyebrow: "New circuit",
       title: "Create feature",
       slugPlaceholder: "payments-rollout",
       titlePlaceholder: "Payments rollout",
@@ -37,7 +36,6 @@ export const shell = {
     },
     featureCreate: {
       formLabel: "フィーチャーを作成",
-      eyebrow: "新しいフィーチャー",
       title: "フィーチャーを作成",
       slugPlaceholder: "payments-rollout",
       titlePlaceholder: "決済機能の展開",

@@ -140,7 +140,12 @@ export function FeatureGraph({
           defaultEdgeOptions={{ animated: false }}
           ariaLabelConfig={ariaLabelConfig}
         >
-          <Background variant={BackgroundVariant.Dots} gap={22} size={1} />
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={24}
+            size={1}
+            color="var(--border)"
+          />
           <Controls showInteractive={false} />
         </ReactFlow>
         {tasks.length === 0 && !layoutError && (
