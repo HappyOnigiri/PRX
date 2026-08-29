@@ -4,11 +4,11 @@ import ReactMarkdown from "react-markdown";
 import { readMarkdownDocument } from "../api";
 import { formatError } from "../i18n/domain";
 
-type MarkdownDocument = {
+interface MarkdownDocument {
   id: string;
   title: string;
   value: string;
-};
+}
 
 export function MarkdownPreview({
   document,
@@ -27,7 +27,9 @@ export function MarkdownPreview({
   useEffect(() => {
     let current = true;
     readMarkdownDocument(document.id).then(
-      (value) => current && setContent(value),
+      (value) => {
+        if (current) setContent(value);
+      },
       (reason: unknown) => {
         if (current)
           setError(
@@ -47,7 +49,9 @@ export function MarkdownPreview({
       if (event.key === "Escape") onClose();
     }
     window.addEventListener("keydown", closeOnEscape);
-    return () => window.removeEventListener("keydown", closeOnEscape);
+    return () => {
+      window.removeEventListener("keydown", closeOnEscape);
+    };
   }, [onClose]);
 
   async function copy(value: string, kind: "content" | "path") {
@@ -57,7 +61,9 @@ export function MarkdownPreview({
     } catch {
       setCopyStatus("failed");
     }
-    window.setTimeout(() => setCopyStatus(undefined), 1600);
+    window.setTimeout(() => {
+      setCopyStatus(undefined);
+    }, 1600);
   }
 
   return (

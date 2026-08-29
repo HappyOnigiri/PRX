@@ -1,4 +1,4 @@
-import { FormEvent } from "react";
+import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";
@@ -7,10 +7,10 @@ import { useDomainMutation } from "../hooks";
 import { featureStatusLabel } from "../i18n/domain";
 import { MutationError } from "./MutationError";
 
-type EditFeatureDialogProps = {
+interface EditFeatureDialogProps {
   feature: Feature;
   onClose: () => void;
-};
+}
 
 export function EditFeatureDialog({
   feature,
@@ -19,7 +19,7 @@ export function EditFeatureDialog({
   const { t } = useTranslation();
   const updateFeature = useDomainMutation(mutations.updateFeature);
 
-  async function submitFeature(event: FormEvent<HTMLFormElement>) {
+  async function submitFeature(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
     try {

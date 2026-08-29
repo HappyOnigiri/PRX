@@ -7,11 +7,11 @@ import { documentKindLabel } from "../i18n/domain";
 import { MutationError } from "./MutationError";
 import { type TaskNodeDocument } from "./TaskNode";
 
-type ReferencesSectionProps = {
+interface ReferencesSectionProps {
   taskId: string;
   documents: TaskNodeDocument[];
   onPreview: (document: TaskNodeDocument) => void;
-};
+}
 
 export function ReferencesSection({
   taskId,
@@ -35,7 +35,9 @@ export function ReferencesSection({
           ) : (
             <button
               className="document-preview"
-              onClick={() => onPreview(document)}
+              onClick={() => {
+                onPreview(document);
+              }}
             >
               <b>{document.title || documentKindLabel(document.kind, t)}</b>
               <small>{document.value}</small>
@@ -45,7 +47,9 @@ export function ReferencesSection({
             aria-label={t("inspector.deleteReference", {
               title: document.title || t("inspector.referenceFallback"),
             })}
-            onClick={() => deleteDocument.mutate(document.id)}
+            onClick={() => {
+              deleteDocument.mutate(document.id);
+            }}
           >
             ×
           </button>

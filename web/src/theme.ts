@@ -8,13 +8,18 @@ import {
 const darkSchemeQuery = "(prefers-color-scheme: dark)";
 const themeColors = { light: "#f5f6f8", dark: "#191b1f" } as const;
 
+function darkScheme() {
+  if (typeof window.matchMedia !== "function") return undefined;
+  return window.matchMedia(darkSchemeQuery);
+}
+
 function prefersDark() {
-  return window.matchMedia?.(darkSchemeQuery).matches === true;
+  return darkScheme()?.matches ?? false;
 }
 
 function applyThemePreference(theme: ThemePreference) {
-  if (theme === "system") delete document.documentElement.dataset.theme;
-  else document.documentElement.dataset.theme = theme;
+  if (theme === "system") delete document.documentElement.dataset["theme"];
+  else document.documentElement.dataset["theme"] = theme;
 
   const resolved = resolveThemePreference(theme, prefersDark());
   document
@@ -29,6 +34,6 @@ export function setDisplayTheme(theme: ThemePreference) {
 
 applyThemePreference(readThemePreference());
 
-window.matchMedia?.(darkSchemeQuery).addEventListener("change", () => {
+darkScheme()?.addEventListener("change", () => {
   if (readThemePreference() === "system") applyThemePreference("system");
 });
