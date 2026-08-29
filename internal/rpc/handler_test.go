@@ -10,6 +10,7 @@ import (
 	"testing"
 
 	"connectrpc.com/connect"
+
 	prxv1 "github.com/HappyOnigiri/PRX/gen/prx/v1"
 	"github.com/HappyOnigiri/PRX/gen/prx/v1/prxv1connect"
 	"github.com/HappyOnigiri/PRX/internal/app"
@@ -21,11 +22,23 @@ import (
 func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 	ctx := context.Background()
 	client := newTestClient(t)
-	feature, err := client.CreateFeature(ctx, connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "markdown-preview", Title: "Markdown preview"}))
+	feature, err := client.CreateFeature(
+		ctx,
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "markdown-preview", Title: "Markdown preview"}),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	task, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "Documented task", Kind: prxv1.TaskKind_TASK_KIND_MANUAL}))
+	task, err := client.CreateTask(
+		ctx,
+		connect.NewRequest(
+			&prxv1.CreateTaskRequest{
+				FeatureId: feature.Msg.Feature.Id,
+				Title:     "Documented task",
+				Kind:      prxv1.TaskKind_TASK_KIND_MANUAL,
+			},
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -34,11 +47,24 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 	if err := os.WriteFile(path, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	document, err := client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: task.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH, Title: "Plan", Value: path}))
+	document, err := client.AddDocument(
+		ctx,
+		connect.NewRequest(
+			&prxv1.AddDocumentRequest{
+				TaskId: task.Msg.Task.Id,
+				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH,
+				Title:  "Plan",
+				Value:  path,
+			},
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	preview, err := client.ReadMarkdownDocument(ctx, connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: document.Msg.Document.Id}))
+	preview, err := client.ReadMarkdownDocument(
+		ctx,
+		connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: document.Msg.Document.Id}),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -46,20 +72,46 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 		t.Fatalf("content=%q", preview.Msg.Content)
 	}
 
-	urlDocument, err := client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: task.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_URL, Title: "Runbook", Value: "https://example.com/runbook"}))
+	urlDocument, err := client.AddDocument(
+		ctx,
+		connect.NewRequest(
+			&prxv1.AddDocumentRequest{
+				TaskId: task.Msg.Task.Id,
+				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_URL,
+				Title:  "Runbook",
+				Value:  "https://example.com/runbook",
+			},
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.ReadMarkdownDocument(ctx, connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: urlDocument.Msg.Document.Id}))
+	_, err = client.ReadMarkdownDocument(
+		ctx,
+		connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: urlDocument.Msg.Document.Id}),
+	)
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND {
 		t.Fatalf("URL preview code=%s err=%v", got, err)
 	}
 
-	missingDocument, err := client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: task.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH, Title: "Missing", Value: filepath.Join(t.TempDir(), "missing.md")}))
+	missingDocument, err := client.AddDocument(
+		ctx,
+		connect.NewRequest(
+			&prxv1.AddDocumentRequest{
+				TaskId: task.Msg.Task.Id,
+				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH,
+				Title:  "Missing",
+				Value:  filepath.Join(t.TempDir(), "missing.md"),
+			},
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.ReadMarkdownDocument(ctx, connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: missingDocument.Msg.Document.Id}))
+	_, err = client.ReadMarkdownDocument(
+		ctx,
+		connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: missingDocument.Msg.Document.Id}),
+	)
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED {
 		t.Fatalf("missing preview code=%s err=%v", got, err)
 	}
@@ -68,11 +120,24 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 	if err := os.WriteFile(largePath, make([]byte, (1<<20)+1), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	largeDocument, err := client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: task.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH, Title: "Large", Value: largePath}))
+	largeDocument, err := client.AddDocument(
+		ctx,
+		connect.NewRequest(
+			&prxv1.AddDocumentRequest{
+				TaskId: task.Msg.Task.Id,
+				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH,
+				Title:  "Large",
+				Value:  largePath,
+			},
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.ReadMarkdownDocument(ctx, connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: largeDocument.Msg.Document.Id}))
+	_, err = client.ReadMarkdownDocument(
+		ctx,
+		connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: largeDocument.Msg.Document.Id}),
+	)
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE {
 		t.Fatalf("large preview code=%s err=%v", got, err)
 	}
@@ -93,25 +158,52 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	client := prxv1connect.NewPRXServiceClient(server.Client(), server.URL)
-	feature, err := client.CreateFeature(ctx, connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "rpc-feature", Title: "RPC feature"}))
+	feature, err := client.CreateFeature(
+		ctx,
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "rpc-feature", Title: "RPC feature"}),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 	if feature.Msg.Feature.Status != prxv1.FeatureStatus_FEATURE_STATUS_ACTIVE {
 		t.Fatalf("feature status=%s", feature.Msg.Feature.Status)
 	}
-	a, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "A", Kind: prxv1.TaskKind_TASK_KIND_PULL_REQUEST}))
+	a, err := client.CreateTask(
+		ctx,
+		connect.NewRequest(
+			&prxv1.CreateTaskRequest{
+				FeatureId: feature.Msg.Feature.Id,
+				Title:     "A",
+				Kind:      prxv1.TaskKind_TASK_KIND_PULL_REQUEST,
+			},
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	b, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "B", Kind: prxv1.TaskKind_TASK_KIND_PULL_REQUEST}))
+	b, err := client.CreateTask(
+		ctx,
+		connect.NewRequest(
+			&prxv1.CreateTaskRequest{
+				FeatureId: feature.Msg.Feature.Id,
+				Title:     "B",
+				Kind:      prxv1.TaskKind_TASK_KIND_PULL_REQUEST,
+			},
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err = client.AddDependency(ctx, connect.NewRequest(&prxv1.AddDependencyRequest{BlockerTaskId: a.Msg.Task.Id, BlockedTaskId: b.Msg.Task.Id})); err != nil {
+	if _, err = client.AddDependency(
+		ctx,
+		connect.NewRequest(&prxv1.AddDependencyRequest{BlockerTaskId: a.Msg.Task.Id, BlockedTaskId: b.Msg.Task.Id}),
+	); err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.AddDependency(ctx, connect.NewRequest(&prxv1.AddDependencyRequest{BlockerTaskId: b.Msg.Task.Id, BlockedTaskId: a.Msg.Task.Id}))
+	_, err = client.AddDependency(
+		ctx,
+		connect.NewRequest(&prxv1.AddDependencyRequest{BlockerTaskId: b.Msg.Task.Id, BlockedTaskId: a.Msg.Task.Id}),
+	)
 	if connect.CodeOf(err) != connect.CodeFailedPrecondition {
 		t.Fatalf("cycle RPC code=%s err=%v", connect.CodeOf(err), err)
 	}
@@ -129,7 +221,8 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 		if !ok {
 			continue
 		}
-		foundCycleDetail = errorDetail.Code == prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE && len(errorDetail.Path) >= 3
+		foundCycleDetail = errorDetail.Code == prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE &&
+			len(errorDetail.Path) >= 3
 	}
 	if !foundCycleDetail {
 		t.Fatalf("cycle RPC error missing structured detail: %v", connectErr.Details())
@@ -141,7 +234,8 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	if len(snapshot.Msg.Snapshot.Tasks) != 2 || len(snapshot.Msg.Snapshot.Dependencies) != 1 {
 		t.Fatalf("unexpected snapshot: %+v", snapshot.Msg.Snapshot)
 	}
-	if snapshot.Msg.Snapshot.Tasks[1].Kind != prxv1.TaskKind_TASK_KIND_PULL_REQUEST || snapshot.Msg.Snapshot.Tasks[1].BlockedReason == nil {
+	if snapshot.Msg.Snapshot.Tasks[1].Kind != prxv1.TaskKind_TASK_KIND_PULL_REQUEST ||
+		snapshot.Msg.Snapshot.Tasks[1].BlockedReason == nil {
 		t.Fatalf("unexpected structured task state: %+v", snapshot.Msg.Snapshot.Tasks[1])
 	}
 	if snapshot.Msg.Snapshot.Tasks[1].BlockedReason.Code != prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER {
@@ -152,27 +246,57 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 	ctx := context.Background()
 	client := newTestClient(t)
-	feature, err := client.CreateFeature(ctx, connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "enum-feature", Title: "Enum feature"}))
+	feature, err := client.CreateFeature(
+		ctx,
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "enum-feature", Title: "Enum feature"}),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	task, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "A", Kind: prxv1.TaskKind_TASK_KIND_MANUAL}))
+	task, err := client.CreateTask(
+		ctx,
+		connect.NewRequest(
+			&prxv1.CreateTaskRequest{
+				FeatureId: feature.Msg.Feature.Id,
+				Title:     "A",
+				Kind:      prxv1.TaskKind_TASK_KIND_MANUAL,
+			},
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
 	unknownKind := prxv1.TaskKind(999)
-	if _, err = client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "B", Kind: unknownKind})); errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND {
+	if _, err = client.CreateTask(
+		ctx,
+		connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "B", Kind: unknownKind}),
+	); errorDetailCode(
+		t,
+		err,
+	) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND {
 		t.Fatalf("unknown task kind err=%v", err)
 	}
 
 	unknownTaskStatus := prxv1.TaskStatus(999)
-	if _, err = client.UpdateTask(ctx, connect.NewRequest(&prxv1.UpdateTaskRequest{Id: task.Msg.Task.Id, Status: &unknownTaskStatus})); errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS {
+	if _, err = client.UpdateTask(
+		ctx,
+		connect.NewRequest(&prxv1.UpdateTaskRequest{Id: task.Msg.Task.Id, Status: &unknownTaskStatus}),
+	); errorDetailCode(
+		t,
+		err,
+	) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS {
 		t.Fatalf("unknown task status err=%v", err)
 	}
 
 	unknownFeatureStatus := prxv1.FeatureStatus(999)
-	if _, err = client.UpdateFeature(ctx, connect.NewRequest(&prxv1.UpdateFeatureRequest{Id: feature.Msg.Feature.Id, Status: &unknownFeatureStatus})); errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS {
+	if _, err = client.UpdateFeature(
+		ctx,
+		connect.NewRequest(&prxv1.UpdateFeatureRequest{Id: feature.Msg.Feature.Id, Status: &unknownFeatureStatus}),
+	); errorDetailCode(
+		t,
+		err,
+	) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS {
 		t.Fatalf("unknown feature status err=%v", err)
 	}
 
@@ -191,36 +315,85 @@ func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
 	ctx := context.Background()
 	client := newTestClient(t)
-	feature, err := client.CreateFeature(ctx, connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "cause-feature", Title: "Cause feature"}))
+	feature, err := client.CreateFeature(
+		ctx,
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "cause-feature", Title: "Cause feature"}),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	manual, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "Sign off", Kind: prxv1.TaskKind_TASK_KIND_MANUAL}))
+	manual, err := client.CreateTask(
+		ctx,
+		connect.NewRequest(
+			&prxv1.CreateTaskRequest{
+				FeatureId: feature.Msg.Feature.Id,
+				Title:     "Sign off",
+				Kind:      prxv1.TaskKind_TASK_KIND_MANUAL,
+			},
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	prTask, err := client.CreateTask(ctx, connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: feature.Msg.Feature.Id, Title: "Ship API", Kind: prxv1.TaskKind_TASK_KIND_PULL_REQUEST}))
+	prTask, err := client.CreateTask(
+		ctx,
+		connect.NewRequest(
+			&prxv1.CreateTaskRequest{
+				FeatureId: feature.Msg.Feature.Id,
+				Title:     "Ship API",
+				Kind:      prxv1.TaskKind_TASK_KIND_PULL_REQUEST,
+			},
+		),
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
 
-	_, err = client.AttachPullRequest(ctx, connect.NewRequest(&prxv1.AttachPullRequestRequest{TaskId: manual.Msg.Task.Id, Url: "https://github.com/org/repo/pull/42"}))
+	_, err = client.AttachPullRequest(
+		ctx,
+		connect.NewRequest(
+			&prxv1.AttachPullRequestRequest{TaskId: manual.Msg.Task.Id, Url: "https://github.com/org/repo/pull/42"},
+		),
+	)
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK {
 		t.Fatalf("pull request on manual task code=%s err=%v", got, err)
 	}
 
 	completed := prxv1.TaskStatus_TASK_STATUS_COMPLETED
-	_, err = client.UpdateTask(ctx, connect.NewRequest(&prxv1.UpdateTaskRequest{Id: prTask.Msg.Task.Id, Status: &completed}))
+	_, err = client.UpdateTask(
+		ctx,
+		connect.NewRequest(&prxv1.UpdateTaskRequest{Id: prTask.Msg.Task.Id, Status: &completed}),
+	)
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE {
 		t.Fatalf("PR task completion code=%s err=%v", got, err)
 	}
 
-	_, err = client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: manual.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_URL, Title: "Spec", Value: "ftp://example.com/spec"}))
+	_, err = client.AddDocument(
+		ctx,
+		connect.NewRequest(
+			&prxv1.AddDocumentRequest{
+				TaskId: manual.Msg.Task.Id,
+				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_URL,
+				Title:  "Spec",
+				Value:  "ftp://example.com/spec",
+			},
+		),
+	)
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL {
 		t.Fatalf("document URL scheme code=%s err=%v", got, err)
 	}
 
-	_, err = client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{TaskId: manual.Msg.Task.Id, Kind: prxv1.DocumentKind_DOCUMENT_KIND_URL, Title: "Spec", Value: "  "}))
+	_, err = client.AddDocument(
+		ctx,
+		connect.NewRequest(
+			&prxv1.AddDocumentRequest{
+				TaskId: manual.Msg.Task.Id,
+				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_URL,
+				Title:  "Spec",
+				Value:  "  ",
+			},
+		),
+	)
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT {
 		t.Fatalf("missing document value code=%s err=%v", got, err)
 	}

@@ -12,7 +12,15 @@ type Service interface {
 	Snapshot(context.Context) (domain.Snapshot, error)
 
 	CreateFeature(context.Context, string, string, string) (domain.Feature, error)
-	UpdateFeature(context.Context, string, *string, *string, *string, *domain.FeatureStatus, *bool) (domain.Feature, error)
+	UpdateFeature(
+		context.Context,
+		string,
+		*string,
+		*string,
+		*string,
+		*domain.FeatureStatus,
+		*bool,
+	) (domain.Feature, error)
 	DeleteFeature(context.Context, string, bool) error
 
 	CreateTask(context.Context, string, string, string, domain.TaskKind, string) (domain.Task, error)

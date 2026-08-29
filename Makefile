@@ -18,7 +18,7 @@ mod-tidy-check:
 	$(GO) mod tidy -diff
 
 fmt: web-install
-	gofmt -w $$(find cmd internal gen -name '*.go' -type f)
+	golangci-lint fmt ./...
 	$(PNPM) --dir web format
 
 lint: web-install
