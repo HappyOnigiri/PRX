@@ -32,7 +32,10 @@ func main() {
 func run(repositoryRoot string, output io.Writer) int {
 	paths, err := findTypeScriptFiles(repositoryRoot)
 	if err != nil {
-		if writeErr := writeOutput(output, []string{fmt.Sprintf("failed to list Web TypeScript files: %v", err)}); writeErr != nil {
+		if writeErr := writeOutput(
+			output,
+			[]string{fmt.Sprintf("failed to list Web TypeScript files: %v", err)},
+		); writeErr != nil {
 			return 1
 		}
 		return 1
@@ -52,7 +55,10 @@ func run(repositoryRoot string, output io.Writer) int {
 		case lineCount > hardLineLimit:
 			fileErrors = append(fileErrors, fmt.Sprintf("%s: %d lines (maximum is %d)", path, lineCount, hardLineLimit))
 		case lineCount > warningLineLimit:
-			warnings = append(warnings, fmt.Sprintf("%s: %d lines (warning above %d)", path, lineCount, warningLineLimit))
+			warnings = append(
+				warnings,
+				fmt.Sprintf("%s: %d lines (warning above %d)", path, lineCount, warningLineLimit),
+			)
 		}
 	}
 

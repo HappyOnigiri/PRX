@@ -2,5 +2,7 @@ package store
 
 import "encoding/json"
 
-var jsonMarshal = json.Marshal
-var jsonUnmarshal = json.Unmarshal
+var (
+	jsonMarshal   = json.Marshal
+	jsonUnmarshal = json.Unmarshal
+)

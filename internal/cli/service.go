@@ -10,7 +10,15 @@ import (
 // exposed by the serve command.
 type Service interface {
 	CreateFeature(context.Context, string, string, string) (domain.Feature, error)
-	UpdateFeature(context.Context, string, *string, *string, *string, *domain.FeatureStatus, *bool) (domain.Feature, error)
+	UpdateFeature(
+		context.Context,
+		string,
+		*string,
+		*string,
+		*string,
+		*domain.FeatureStatus,
+		*bool,
+	) (domain.Feature, error)
 	ResolveFeature(context.Context, string) (domain.Feature, error)
 	DeleteFeature(context.Context, string, bool) error
 

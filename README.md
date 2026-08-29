@@ -116,7 +116,7 @@ See [docs/design.md](docs/design.md) for package boundaries, status decisions, t
 make generate          # sqlc, Buf format/lint, Go/TypeScript protobuf generation
 make generated-check  # regeneration must produce no diff
 make mod-tidy-check   # go.mod and go.sum must be tidy
-make lint              # go vet, auto-installed golangci-lint, deadcode, ESLint, strict TypeScript
+make lint              # go vet, auto-installed golangci-lint (gofumpt / gci / golines), deadcode, ESLint, strict TypeScript
 make test              # Go, Vitest, and component coverage
 make go-coverage-check # handwritten Go packages must stay at or above the coverage baseline
 make test-race         # Go race detector

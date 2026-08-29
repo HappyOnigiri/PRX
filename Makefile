@@ -20,8 +20,8 @@ generated-check: generate
 mod-tidy-check:
 	$(GO) mod tidy -diff
 
-fmt: web-install
-	gofmt -w $$(find cmd internal gen tools -name '*.go' -type f)
+fmt: web-install $(GOLANGCI_LINT)
+	$(GOLANGCI_LINT) fmt ./...
 	$(PNPM) --dir web format
 
 lint: web-install $(GOLANGCI_LINT)

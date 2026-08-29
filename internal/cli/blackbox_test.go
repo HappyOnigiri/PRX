@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"connectrpc.com/connect"
+
 	prxv1 "github.com/HappyOnigiri/PRX/gen/prx/v1"
 	"github.com/HappyOnigiri/PRX/gen/prx/v1/prxv1connect"
 )
@@ -190,7 +191,16 @@ func TestBlackBoxJSONFlagFormsAgree(t *testing.T) {
 	dbPath := filepath.Join(t.TempDir(), "flagforms.db")
 	for _, flag := range []string{"--json", "--json=true"} {
 		t.Run(flag, func(t *testing.T) {
-			command := exec.CommandContext(context.Background(), binary, "--db", dbPath, flag, "task", "get", "missing-task")
+			command := exec.CommandContext(
+				context.Background(),
+				binary,
+				"--db",
+				dbPath,
+				flag,
+				"task",
+				"get",
+				"missing-task",
+			)
 			var stdout, stderr bytes.Buffer
 			command.Stdout = &stdout
 			command.Stderr = &stderr

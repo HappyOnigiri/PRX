@@ -6,19 +6,66 @@ import (
 )
 
 func protoFeature(v domain.Feature) *prxv1.Feature {
-	return &prxv1.Feature{Id: v.ID, Slug: v.Slug, Title: v.Title, Description: v.Description, Status: protoFeatureStatus(v.Status), Archived: v.Archived, CreatedAt: v.CreatedAt.Format(timeFormat), UpdatedAt: v.UpdatedAt.Format(timeFormat), TaskCount: int32(v.TaskCount), ReadyCount: int32(v.ReadyCount), ReviewWaitingCount: int32(v.ReviewWaitingCount), ConflictCount: int32(v.ConflictCount), MergedCount: int32(v.MergedCount)}
+	return &prxv1.Feature{
+		Id:                 v.ID,
+		Slug:               v.Slug,
+		Title:              v.Title,
+		Description:        v.Description,
+		Status:             protoFeatureStatus(v.Status),
+		Archived:           v.Archived,
+		CreatedAt:          v.CreatedAt.Format(timeFormat),
+		UpdatedAt:          v.UpdatedAt.Format(timeFormat),
+		TaskCount:          int32(v.TaskCount),
+		ReadyCount:         int32(v.ReadyCount),
+		ReviewWaitingCount: int32(v.ReviewWaitingCount),
+		ConflictCount:      int32(v.ConflictCount),
+		MergedCount:        int32(v.MergedCount),
+	}
 }
 
 func protoTask(v domain.Task) *prxv1.Task {
-	return &prxv1.Task{Id: v.ID, FeatureId: v.FeatureID, Title: v.Title, Scope: v.Scope, Kind: protoTaskKind(v.Kind), Status: protoTaskStatus(v.Status), Assignee: v.Assignee, CreatedAt: v.CreatedAt.Format(timeFormat), UpdatedAt: v.UpdatedAt.Format(timeFormat), Ready: v.Ready, DisplayState: protoTaskDisplayState(v.DisplayState), BlockedReason: protoBlockedReason(v)}
+	return &prxv1.Task{
+		Id:            v.ID,
+		FeatureId:     v.FeatureID,
+		Title:         v.Title,
+		Scope:         v.Scope,
+		Kind:          protoTaskKind(v.Kind),
+		Status:        protoTaskStatus(v.Status),
+		Assignee:      v.Assignee,
+		CreatedAt:     v.CreatedAt.Format(timeFormat),
+		UpdatedAt:     v.UpdatedAt.Format(timeFormat),
+		Ready:         v.Ready,
+		DisplayState:  protoTaskDisplayState(v.DisplayState),
+		BlockedReason: protoBlockedReason(v),
+	}
 }
 
 func protoDependency(v domain.Dependency) *prxv1.Dependency {
-	return &prxv1.Dependency{BlockerTaskId: v.BlockerTaskID, BlockedTaskId: v.BlockedTaskID, CreatedAt: v.CreatedAt.Format(timeFormat)}
+	return &prxv1.Dependency{
+		BlockerTaskId: v.BlockerTaskID,
+		BlockedTaskId: v.BlockedTaskID,
+		CreatedAt:     v.CreatedAt.Format(timeFormat),
+	}
 }
 
 func protoPullRequest(v domain.PullRequest) *prxv1.PullRequest {
-	result := &prxv1.PullRequest{TaskId: v.TaskID, Owner: v.Owner, Repository: v.Repository, Number: v.Number, Url: v.URL, NodeId: v.NodeID, Author: v.Author, Assignees: v.Assignees, State: protoPullRequestState(v.State), Draft: v.Draft, ReviewState: protoReviewState(v.ReviewState), Mergeability: protoMergeability(v.Mergeability), SyncError: v.SyncError, Stale: v.Stale, DisplayState: protoPullRequestDisplayState(v.DisplayState)}
+	result := &prxv1.PullRequest{
+		TaskId:       v.TaskID,
+		Owner:        v.Owner,
+		Repository:   v.Repository,
+		Number:       v.Number,
+		Url:          v.URL,
+		NodeId:       v.NodeID,
+		Author:       v.Author,
+		Assignees:    v.Assignees,
+		State:        protoPullRequestState(v.State),
+		Draft:        v.Draft,
+		ReviewState:  protoReviewState(v.ReviewState),
+		Mergeability: protoMergeability(v.Mergeability),
+		SyncError:    v.SyncError,
+		Stale:        v.Stale,
+		DisplayState: protoPullRequestDisplayState(v.DisplayState),
+	}
 	if v.GitHubUpdatedAt != nil {
 		result.GithubUpdatedAt = v.GitHubUpdatedAt.Format(timeFormat)
 	}
@@ -29,7 +76,15 @@ func protoPullRequest(v domain.PullRequest) *prxv1.PullRequest {
 }
 
 func protoDocument(v domain.Document) *prxv1.Document {
-	return &prxv1.Document{Id: v.ID, FeatureId: v.FeatureID, TaskId: v.TaskID, Kind: protoDocumentKind(v.Kind), Title: v.Title, Value: v.Value, CreatedAt: v.CreatedAt.Format(timeFormat)}
+	return &prxv1.Document{
+		Id:        v.ID,
+		FeatureId: v.FeatureID,
+		TaskId:    v.TaskID,
+		Kind:      protoDocumentKind(v.Kind),
+		Title:     v.Title,
+		Value:     v.Value,
+		CreatedAt: v.CreatedAt.Format(timeFormat),
+	}
 }
 
 func protoSnapshot(v domain.Snapshot) *prxv1.Snapshot {
@@ -237,14 +292,18 @@ func protoMergeability(value domain.Mergeability) prxv1.Mergeability {
 }
 
 func protoPullRequestDisplayState(value domain.PullRequestDisplayState) prxv1.PullRequestDisplayState {
+	const (
+		changesRequestedState = prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED
+		reviewWaitingState    = prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING
+	)
 	states := map[domain.PullRequestDisplayState]prxv1.PullRequestDisplayState{
 		domain.PullRequestDisplayStateMerged:           prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_MERGED,
 		domain.PullRequestDisplayStateClosed:           prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CLOSED,
 		domain.PullRequestDisplayStateDraft:            prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_DRAFT,
 		domain.PullRequestDisplayStateConflict:         prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CONFLICT,
-		domain.PullRequestDisplayStateChangesRequested: prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED,
+		domain.PullRequestDisplayStateChangesRequested: changesRequestedState,
 		domain.PullRequestDisplayStateApproved:         prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_APPROVED,
-		domain.PullRequestDisplayStateReviewWaiting:    prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING,
+		domain.PullRequestDisplayStateReviewWaiting:    reviewWaitingState,
 		domain.PullRequestDisplayStateOpen:             prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_OPEN,
 		domain.PullRequestDisplayStateUnknown:          prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNKNOWN,
 	}

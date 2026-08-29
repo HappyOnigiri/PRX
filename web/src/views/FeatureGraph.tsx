@@ -1,4 +1,3 @@
-import { useEffect, useMemo, useRef, useState } from "react";
 import {
   Background,
   BackgroundVariant,
@@ -8,6 +7,7 @@ import {
   type Edge,
   type ReactFlowInstance,
 } from "@xyflow/react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
 import {
