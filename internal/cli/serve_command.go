@@ -12,6 +12,7 @@ import (
 
 	"github.com/spf13/cobra"
 
+	prx "github.com/HappyOnigiri/PRX"
 	"github.com/HappyOnigiri/PRX/internal/rpc"
 	"github.com/HappyOnigiri/PRX/internal/webui"
 )
@@ -27,7 +28,7 @@ func (s *state) serveCommand() *cobra.Command {
 			rpcPath, rpcHandler := rpc.New(s.service)
 			mux := http.NewServeMux()
 			mux.Handle(rpcPath, rpcHandler)
-			mux.Handle("/", webui.Handler())
+			mux.Handle("/", webui.Handler(prx.Version()))
 			listener, err := (&net.ListenConfig{}).Listen(cmd.Context(), "tcp", address)
 			if err != nil {
 				return err

@@ -9,6 +9,7 @@ Manage pull-request dependency roadmaps
       --github-fixture string   GitHub fixture JSON path, or demo
   -h, --help                    help for prx
       --json                    emit a stable JSON envelope
+  -v, --version                 version for prx
 ```
 
 ### SEE ALSO
