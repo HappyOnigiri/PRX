@@ -1,0 +1,18 @@
+root = "."
+tmp_dir = "tmp"
+
+[build]
+cmd = "go build -trimpath -o ./tmp/prx ./cmd/prx"
+entrypoint = ["./tmp/prx", "--github-fixture", "demo", "serve"]
+include_dir = ["cmd", "gen", "internal"]
+include_ext = ["go"]
+include_file = ["go.mod", "go.sum"]
+exclude_dir = ["internal/webui/dist", "tmp", "web"]
+exclude_regex = ["_test\\.go"]
+delay = 300
+stop_on_error = true
+send_interrupt = true
+kill_delay = "6s"
+
+[misc]
+clean_on_exit = true

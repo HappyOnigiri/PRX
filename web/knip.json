@@ -3,5 +3,6 @@
   "entry": ["tests/**/*.test.{ts,tsx}", "tests/e2e/**/*.spec.ts"],
   "project": ["src/**/*.{ts,tsx}", "tests/**/*.{ts,tsx}", "*.config.ts"],
   "ignore": ["src/gen/**"],
+  "ignoreBinaries": ["go"],
   "ignoreDependencies": ["@bufbuild/protoc-gen-es"]
 }

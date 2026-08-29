@@ -1,4 +1,4 @@
-.PHONY: generate generated-check mod-tidy-check fmt lint check-web-quality test go-coverage-check test-race test-cli web-install web-test web-build e2e build install ci clean
+.PHONY: generate generated-check mod-tidy-check fmt lint check-web-quality test go-coverage-check test-race test-cli web-install web-test web-build dev e2e build install ci clean
 
 GO ?= go
 PNPM ?= corepack pnpm@11.24.0
@@ -59,6 +59,9 @@ web-test: web-install
 
 web-build: web-install
 	$(PNPM) --dir web build
+
+dev: web-install
+	$(PNPM) --dir web dev:full
 
 e2e: web-build
 	$(PNPM) --dir web e2e
