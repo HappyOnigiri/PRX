@@ -1,3 +1,4 @@
+// Package main generates the PRX CLI reference documentation.
 package main
 
 import (
