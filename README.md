@@ -111,7 +111,7 @@ See [docs/design.md](docs/design.md) for package boundaries, status decisions, t
 ## Verification
 
 ```sh
-make generate          # sqlc, Buf lint, Go/TypeScript protobuf generation
+make generate          # sqlc, Buf format/lint, Go/TypeScript protobuf generation
 make generated-check  # regeneration must produce no diff
 make mod-tidy-check   # go.mod and go.sum must be tidy
 make lint              # go vet, golangci-lint, deadcode, ESLint, strict TypeScript
