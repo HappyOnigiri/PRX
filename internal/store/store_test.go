@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync"
 	"testing"
+	"time"
 
 	"github.com/HappyOnigiri/PRX/internal/app"
 	"github.com/HappyOnigiri/PRX/internal/domain"
@@ -541,5 +542,76 @@ func TestDeletingWhatIsNotThereReportsNotFound(t *testing.T) {
 	}
 	if err := service.DeleteDocument(ctx, "missing-document"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("delete document code=%s err=%v", domain.ErrorCode(err), err)
+	}
+}
+
+func TestGetPullRequestRoundTripAndNotFound(t *testing.T) {
+	database, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "pull-request-read", "Pull request read", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := service.CreateTask(ctx, feature.ID, "Read pull request", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	githubUpdatedAt := time.Date(2026, 8, 29, 1, 2, 3, 456000000, time.UTC)
+	lastSyncedAt := time.Date(2026, 8, 29, 2, 3, 4, 567000000, time.UTC)
+	want := domain.PullRequest{
+		TaskID:          task.ID,
+		Owner:           "Acme",
+		Repository:      "API",
+		Number:          42,
+		URL:             "https://github.com/Acme/API/pull/42",
+		NodeID:          "node-42",
+		Author:          "octocat",
+		Assignees:       []string{"alice", "bob"},
+		State:           domain.PullRequestStateMerged,
+		ReviewState:     domain.ReviewStateApproved,
+		Mergeability:    domain.MergeabilityMergeable,
+		GitHubUpdatedAt: &githubUpdatedAt,
+		LastSyncedAt:    &lastSyncedAt,
+		Stale:           false,
+	}
+	if _, err := database.UpsertPullRequest(ctx, want); err != nil {
+		t.Fatal(err)
+	}
+	got, err := database.GetPullRequest(ctx, task.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.TaskID != want.TaskID || got.Owner != want.Owner || got.Repository != want.Repository ||
+		got.Number != want.Number || got.URL != want.URL || got.NodeID != want.NodeID || got.Author != want.Author ||
+		got.State != want.State || got.ReviewState != want.ReviewState || got.Mergeability != want.Mergeability ||
+		got.Stale != want.Stale || got.DisplayState != domain.PullRequestDisplayStateMerged {
+		t.Fatalf("pull request=%+v, want fields from %+v", got, want)
+	}
+	if len(got.Assignees) != 2 || got.Assignees[0] != "alice" || got.Assignees[1] != "bob" {
+		t.Fatalf("assignees=%v, want [alice bob]", got.Assignees)
+	}
+	if got.GitHubUpdatedAt == nil || !got.GitHubUpdatedAt.Equal(githubUpdatedAt) {
+		t.Fatalf("github updated at=%v, want %v", got.GitHubUpdatedAt, githubUpdatedAt)
+	}
+	if got.LastSyncedAt == nil || !got.LastSyncedAt.Equal(lastSyncedAt) {
+		t.Fatalf("last synced at=%v, want %v", got.LastSyncedAt, lastSyncedAt)
+	}
+	if _, err := database.GetPullRequest(ctx, "missing-task"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		t.Fatalf("missing pull request code=%s err=%v", domain.ErrorCode(err), err)
+	}
+}
+
+func TestDefaultPathUsesUserConfigDirectory(t *testing.T) {
+	configDir, err := os.UserConfigDir()
+	if err != nil {
+		t.Fatal(err)
+	}
+	got, err := store.DefaultPath()
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := filepath.Join(configDir, "prx", "prx.db")
+	if got != want {
+		t.Fatalf("DefaultPath()=%q, want %q", got, want)
 	}
 }
