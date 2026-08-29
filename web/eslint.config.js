@@ -1,9 +1,9 @@
+import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 import js from "@eslint/js";
-import tseslint from "typescript-eslint";
+import jsxA11y from "eslint-plugin-jsx-a11y";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
-import jsxA11y from "eslint-plugin-jsx-a11y";
-import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
+import tseslint from "typescript-eslint";
 
 export default tseslint.config(
   { ignores: ["dist", "coverage", "src/gen"] },
@@ -66,6 +66,21 @@ export default tseslint.config(
         "error",
         { checksVoidReturn: { attributes: false } },
       ],
+      "max-lines-per-function": [
+        "error",
+        {
+          max: 120,
+          skipBlankLines: true,
+          skipComments: true,
+          IIFEs: true,
+        },
+      ],
+    },
+  },
+  {
+    files: ["tests/**/*.{ts,tsx}"],
+    rules: {
+      "max-lines-per-function": "off",
     },
   },
 );

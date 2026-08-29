@@ -26,6 +26,7 @@ linters:
     - unconvert
     - usestdlibvars
     - wastedassign
+    - funlen
     - inamedparam
     - revive
 
@@ -41,6 +42,10 @@ linters:
       require-explanation: true
       require-specific: true
       allow-unused: false
+    funlen:
+      lines: 100
+      statements: 80
+      ignore-comments: true
     revive:
       enable-all-rules: false
       rules:
@@ -104,6 +109,11 @@ linters:
               desc: cli must not import app
             - pkg: github.com/HappyOnigiri/PRX/internal/github
               desc: cli must not import github
+
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters: [funlen]
 
 formatters:
   enable:

@@ -99,30 +99,10 @@ export function FeatureGraph({
 
   return (
     <>
-      <div className="graph-legend">
-        <span>
-          <i className="ready" />
-          {t("workspace.legend.ready")}
-        </span>
-        <span>
-          <i className="review" />
-          {t("workspace.legend.review")}
-        </span>
-        <span>
-          <i className="conflict" />
-          {t("workspace.legend.conflict")}
-        </span>
-        <span>
-          <i className="merged" />
-          {t("workspace.legend.merged")}
-        </span>
-        <b>
-          {t("workspace.graphSummary", {
-            nodes: tasks.length,
-            links: dependencies.length,
-          })}
-        </b>
-      </div>
+      <GraphLegend
+        taskCount={tasks.length}
+        dependencyCount={dependencies.length}
+      />
       <div className="graph-stage" data-testid="feature-graph">
         <ReactFlow
           nodes={nodes}
@@ -168,5 +148,41 @@ export function FeatureGraph({
         )}
       </div>
     </>
+  );
+}
+
+function GraphLegend({
+  taskCount,
+  dependencyCount,
+}: {
+  taskCount: number;
+  dependencyCount: number;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="graph-legend">
+      <span>
+        <i className="ready" />
+        {t("workspace.legend.ready")}
+      </span>
+      <span>
+        <i className="review" />
+        {t("workspace.legend.review")}
+      </span>
+      <span>
+        <i className="conflict" />
+        {t("workspace.legend.conflict")}
+      </span>
+      <span>
+        <i className="merged" />
+        {t("workspace.legend.merged")}
+      </span>
+      <b>
+        {t("workspace.graphSummary", {
+          nodes: taskCount,
+          links: dependencyCount,
+        })}
+      </b>
+    </div>
   );
 }

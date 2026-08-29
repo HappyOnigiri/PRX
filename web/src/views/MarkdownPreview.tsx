@@ -66,6 +66,12 @@ export function MarkdownPreview({
     }, 1600);
   }
 
+  function retry() {
+    setContent(undefined);
+    setError(undefined);
+    setAttempt((value) => value + 1);
+  }
+
   return (
     <div className="scrim markdown-scrim">
       <section
@@ -105,49 +111,56 @@ export function MarkdownPreview({
             </button>
           </div>
         </header>
-        <div className="markdown-preview-body">
-          {content === undefined && !error && (
-            <div className="preview-state" role="status">
-              <div className="spinner" />
-              <p>{t("markdownPreview.loading")}</p>
-            </div>
-          )}
-          {error && (
-            <div className="preview-state" role="alert">
-              <p>{formatError(error, t)}</p>
-              <button
-                onClick={() => {
-                  setContent(undefined);
-                  setError(undefined);
-                  setAttempt((value) => value + 1);
-                }}
-              >
-                {t("common.retry")}
-              </button>
-            </div>
-          )}
-          {content !== undefined && (
-            <article className="markdown-content">
-              <ReactMarkdown
-                components={{
-                  a: ({ children, ...props }) => (
-                    <a {...props} target="_blank" rel="noreferrer">
-                      {children}
-                    </a>
-                  ),
-                }}
-              >
-                {content}
-              </ReactMarkdown>
-            </article>
-          )}
-        </div>
+        <MarkdownBody content={content} error={error} onRetry={retry} />
         <p className="copy-status" aria-live="polite">
           {copyStatus === "content" && t("markdownPreview.contentCopied")}
           {copyStatus === "path" && t("markdownPreview.pathCopied")}
           {copyStatus === "failed" && t("markdownPreview.copyFailed")}
         </p>
       </section>
+    </div>
+  );
+}
+
+function MarkdownBody({
+  content,
+  error,
+  onRetry,
+}: {
+  content: string | undefined;
+  error: Error | undefined;
+  onRetry: () => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <div className="markdown-preview-body">
+      {content === undefined && !error && (
+        <div className="preview-state" role="status">
+          <div className="spinner" />
+          <p>{t("markdownPreview.loading")}</p>
+        </div>
+      )}
+      {error && (
+        <div className="preview-state" role="alert">
+          <p>{formatError(error, t)}</p>
+          <button onClick={onRetry}>{t("common.retry")}</button>
+        </div>
+      )}
+      {content !== undefined && (
+        <article className="markdown-content">
+          <ReactMarkdown
+            components={{
+              a: ({ children, ...props }) => (
+                <a {...props} target="_blank" rel="noreferrer">
+                  {children}
+                </a>
+              ),
+            }}
+          >
+            {content}
+          </ReactMarkdown>
+        </article>
+      )}
     </div>
   );
 }

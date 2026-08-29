@@ -8,9 +8,21 @@ import (
 
 func (s *state) featureCommand() *cobra.Command {
 	command := &cobra.Command{Use: "feature", Short: "Manage features"}
-	var slug, title, description, status string
-	var archived, cascade bool
-	create := &cobra.Command{
+	command.AddCommand(
+		s.featureCreateCommand(),
+		s.featureListCommand(),
+		s.featureGetCommand(),
+		s.featureUpdateCommand(),
+		s.featureArchiveCommand(true),
+		s.featureArchiveCommand(false),
+		s.featureDeleteCommand(),
+	)
+	return command
+}
+
+func (s *state) featureCreateCommand() *cobra.Command {
+	var slug, title, description string
+	command := &cobra.Command{
 		Use:     "create",
 		Short:   "Create a feature",
 		Example: "prx feature create --slug checkout --title \"Checkout rollout\" --json",
@@ -23,12 +35,16 @@ func (s *state) featureCommand() *cobra.Command {
 			return s.write(value)
 		},
 	}
-	create.Flags().StringVar(&slug, "slug", "", "stable feature slug")
-	create.Flags().StringVar(&title, "title", "", "feature title")
-	create.Flags().StringVar(&description, "description", "", "feature description")
-	_ = create.MarkFlagRequired("slug")
-	_ = create.MarkFlagRequired("title")
-	list := &cobra.Command{
+	command.Flags().StringVar(&slug, "slug", "", "stable feature slug")
+	command.Flags().StringVar(&title, "title", "", "feature title")
+	command.Flags().StringVar(&description, "description", "", "feature description")
+	_ = command.MarkFlagRequired("slug")
+	_ = command.MarkFlagRequired("title")
+	return command
+}
+
+func (s *state) featureListCommand() *cobra.Command {
+	return &cobra.Command{
 		Use:     "list",
 		Short:   "List features",
 		Example: "prx feature list --json",
@@ -41,7 +57,10 @@ func (s *state) featureCommand() *cobra.Command {
 			return s.write(value.Features)
 		},
 	}
-	get := &cobra.Command{
+}
+
+func (s *state) featureGetCommand() *cobra.Command {
+	return &cobra.Command{
 		Use:     "get FEATURE_ID_OR_SLUG",
 		Short:   "Show a feature by ID or slug",
 		Example: "prx feature get checkout --json",
@@ -54,7 +73,12 @@ func (s *state) featureCommand() *cobra.Command {
 			return s.write(value)
 		},
 	}
-	update := &cobra.Command{
+}
+
+func (s *state) featureUpdateCommand() *cobra.Command {
+	var slug, title, description, status string
+	var archived bool
+	command := &cobra.Command{
 		Use:     "update FEATURE_ID_OR_SLUG",
 		Short:   "Update a feature by ID or slug",
 		Example: "prx feature update checkout --archived=false --json",
@@ -79,40 +103,39 @@ func (s *state) featureCommand() *cobra.Command {
 			return s.write(value)
 		},
 	}
-	update.Flags().StringVar(&slug, "slug", "", "new slug")
-	update.Flags().StringVar(&title, "title", "", "new title")
-	update.Flags().StringVar(&description, "description", "", "new description")
-	update.Flags().StringVar(&status, "status", "", "active, paused, completed, or cancelled")
-	update.Flags().BoolVar(&archived, "archived", false, "archive (true) or unarchive (false) the feature")
-	archive := &cobra.Command{
-		Use:     "archive FEATURE_ID_OR_SLUG",
-		Short:   "Archive a feature by ID or slug",
-		Example: "prx feature archive checkout --json",
+	command.Flags().StringVar(&slug, "slug", "", "new slug")
+	command.Flags().StringVar(&title, "title", "", "new title")
+	command.Flags().StringVar(&description, "description", "", "new description")
+	command.Flags().StringVar(&status, "status", "", "active, paused, completed, or cancelled")
+	command.Flags().BoolVar(&archived, "archived", false, "archive (true) or unarchive (false) the feature")
+	return command
+}
+
+func (s *state) featureArchiveCommand(archived bool) *cobra.Command {
+	verb := "archive"
+	short := "Archive a feature by ID or slug"
+	if !archived {
+		verb = "unarchive"
+		short = "Unarchive a feature by ID or slug"
+	}
+	return &cobra.Command{
+		Use:     verb + " FEATURE_ID_OR_SLUG",
+		Short:   short,
+		Example: "prx feature " + verb + " checkout --json",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			archive := true
-			value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, &archive)
+			value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, &archived)
 			if err != nil {
 				return err
 			}
 			return s.write(value)
 		},
 	}
-	unarchive := &cobra.Command{
-		Use:     "unarchive FEATURE_ID_OR_SLUG",
-		Short:   "Unarchive a feature by ID or slug",
-		Example: "prx feature unarchive checkout --json",
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			archive := false
-			value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, &archive)
-			if err != nil {
-				return err
-			}
-			return s.write(value)
-		},
-	}
-	deleteCmd := &cobra.Command{
+}
+
+func (s *state) featureDeleteCommand() *cobra.Command {
+	var cascade bool
+	command := &cobra.Command{
 		Use:     "delete FEATURE_ID_OR_SLUG",
 		Short:   "Delete a feature and optionally its contained data",
 		Example: "prx feature delete checkout --cascade --json",
@@ -124,7 +147,6 @@ func (s *state) featureCommand() *cobra.Command {
 			return s.write(map[string]string{"deleted": args[0]})
 		},
 	}
-	deleteCmd.Flags().BoolVar(&cascade, "cascade", false, "delete contained tasks and references")
-	command.AddCommand(create, list, get, update, archive, unarchive, deleteCmd)
+	command.Flags().BoolVar(&cascade, "cascade", false, "delete contained tasks and references")
 	return command
 }

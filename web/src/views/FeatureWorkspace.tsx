@@ -2,6 +2,12 @@ import { useNavigate, useParams } from "@tanstack/react-router";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import type {
+  Dependency,
+  Feature,
+  PullRequest,
+  Task,
+} from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { EditFeatureDialog } from "./EditFeatureDialog";
@@ -48,12 +54,6 @@ export function FeatureWorkspace() {
     }
     return result;
   }, [data]);
-  const editTask = useCallback((taskId: string) => {
-    setSelected(taskId);
-  }, []);
-  const handlePreviewDocument = useCallback((document: TaskNodeDocument) => {
-    setPreviewDocument(document);
-  }, []);
   const openTaskDialog = useCallback(() => {
     setShowTask(true);
   }, []);
@@ -95,112 +95,166 @@ export function FeatureWorkspace() {
 
   const selectedTask = tasks.find((task) => task.id === selected);
   return (
+    <WorkspaceContent
+      feature={feature}
+      featureId={featureId}
+      tasks={tasks}
+      dependencies={dependencies}
+      pullRequests={pullRequests}
+      documentsByTask={documentsByTask}
+      selectedTask={selectedTask}
+      previewDocument={previewDocument}
+      showTask={showTask}
+      showFeatureEdit={showFeatureEdit}
+      syncPending={sync.isPending}
+      deleteError={deleteFeature.error}
+      onSync={() => {
+        sync.mutate(featureId);
+      }}
+      onCreateTask={openTaskDialog}
+      onEditTask={setSelected}
+      onPreviewDocument={setPreviewDocument}
+      onEditFeature={() => {
+        setShowFeatureEdit(true);
+      }}
+      onToggleArchive={() => {
+        updateFeature.mutate({ id: featureId, archived: !feature.archived });
+      }}
+      onDeleteFeature={removeFeature}
+      onCloseInspector={() => {
+        setSelected(undefined);
+      }}
+      onClosePreview={() => {
+        setPreviewDocument(undefined);
+      }}
+      onCloseTask={() => {
+        setShowTask(false);
+      }}
+      onCloseFeatureEdit={() => {
+        setShowFeatureEdit(false);
+      }}
+    />
+  );
+}
+
+interface WorkspaceContentProps {
+  feature: Feature;
+  featureId: string;
+  tasks: Task[];
+  dependencies: Dependency[];
+  pullRequests: Map<string, PullRequest>;
+  documentsByTask: Map<string, TaskNodeDocument[]>;
+  selectedTask: Task | undefined;
+  previewDocument: TaskNodeDocument | undefined;
+  showTask: boolean;
+  showFeatureEdit: boolean;
+  syncPending: boolean;
+  deleteError: Error | null;
+  onSync: () => void;
+  onCreateTask: () => void;
+  onEditTask: (taskId: string) => void;
+  onPreviewDocument: (document: TaskNodeDocument) => void;
+  onEditFeature: () => void;
+  onToggleArchive: () => void;
+  onDeleteFeature: () => void;
+  onCloseInspector: () => void;
+  onClosePreview: () => void;
+  onCloseTask: () => void;
+  onCloseFeatureEdit: () => void;
+}
+
+function WorkspaceContent(props: WorkspaceContentProps) {
+  const { t } = useTranslation();
+  return (
     <div className="workspace">
       <header className="workspace-head">
         <div
           className="workspace-title"
-          title={feature.description || t("workspace.noDescription")}
+          title={props.feature.description || t("workspace.noDescription")}
         >
-          <h1>{feature.title}</h1>
+          <h1>{props.feature.title}</h1>
           <p className="eyebrow">
-            {t("workspace.eyebrow", { slug: feature.slug })}
+            {t("workspace.eyebrow", { slug: props.feature.slug })}
           </p>
         </div>
         <div className="workspace-actions">
           <button
             className="secondary"
-            onClick={() => {
-              sync.mutate(featureId);
-            }}
-            disabled={sync.isPending}
+            onClick={props.onSync}
+            disabled={props.syncPending}
           >
-            {sync.isPending
+            {props.syncPending
               ? t("workspace.syncing")
               : t("workspace.syncGithub")}
           </button>
-          <button onClick={openTaskDialog}>{t("workspace.addTask")}</button>
+          <button onClick={props.onCreateTask}>{t("workspace.addTask")}</button>
           <button
             className="icon-button"
             aria-label={t("workspace.editFeature")}
-            onClick={() => {
-              setShowFeatureEdit(true);
-            }}
+            onClick={props.onEditFeature}
           >
             ✎
           </button>
           <button
             className="icon-button"
             aria-label={
-              feature.archived
+              props.feature.archived
                 ? t("workspace.unarchiveFeature")
                 : t("workspace.archiveFeature")
             }
-            onClick={() => {
-              updateFeature.mutate({
-                id: featureId,
-                archived: !feature.archived,
-              });
-            }}
+            onClick={props.onToggleArchive}
           >
             ⌁
           </button>
           <button
             className="icon-button danger"
             aria-label={t("workspace.deleteFeature")}
-            onClick={removeFeature}
+            onClick={props.onDeleteFeature}
           >
             ×
           </button>
         </div>
       </header>
-      <MutationError error={deleteFeature.error} />
+      <MutationError error={props.deleteError} />
       <div className="workspace-body">
         <FeatureGraph
-          tasks={tasks}
-          dependencies={dependencies}
-          pullRequests={pullRequests}
-          documentsByTask={documentsByTask}
-          onEditTask={editTask}
-          onPreviewDocument={handlePreviewDocument}
-          onCreateTask={openTaskDialog}
+          tasks={props.tasks}
+          dependencies={props.dependencies}
+          pullRequests={props.pullRequests}
+          documentsByTask={props.documentsByTask}
+          onEditTask={props.onEditTask}
+          onPreviewDocument={props.onPreviewDocument}
+          onCreateTask={props.onCreateTask}
         />
-        {selectedTask && (
+        {props.selectedTask && (
           <TaskInspector
-            task={selectedTask}
-            tasks={tasks}
-            dependencies={dependencies}
-            pullRequest={pullRequests.get(selectedTask.id)}
-            documents={documentsByTask.get(selectedTask.id) ?? []}
-            onPreview={handlePreviewDocument}
-            onClose={() => {
-              setSelected(undefined);
-            }}
+            task={props.selectedTask}
+            tasks={props.tasks}
+            dependencies={props.dependencies}
+            pullRequest={props.pullRequests.get(props.selectedTask.id)}
+            documents={props.documentsByTask.get(props.selectedTask.id) ?? []}
+            onPreview={props.onPreviewDocument}
+            onClose={props.onCloseInspector}
           />
         )}
       </div>
-      {previewDocument && (
+      {props.previewDocument && (
         <MarkdownPreview
-          key={previewDocument.id}
-          document={previewDocument}
-          onClose={() => {
-            setPreviewDocument(undefined);
-          }}
+          key={props.previewDocument.id}
+          document={props.previewDocument}
+          onClose={props.onClosePreview}
         />
       )}
-      {showTask && (
+      {props.showTask && (
         <CreateTaskDialog
-          featureId={featureId}
-          onClose={() => {
-            setShowTask(false);
-          }}
+          featureId={props.featureId}
+          onClose={props.onCloseTask}
         />
       )}
-      {showFeatureEdit && (
+      {props.showFeatureEdit && (
         <EditFeatureDialog
-          feature={feature}
-          onClose={() => {
-            setShowFeatureEdit(false);
-          }}
+          feature={props.feature}
+          onClose={props.onCloseFeatureEdit}
         />
       )}
     </div>
