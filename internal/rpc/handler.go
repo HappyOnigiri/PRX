@@ -30,11 +30,11 @@ func rpcError(err error) error {
 	}
 	code := connect.CodeInvalidArgument
 	switch domainErr.Code {
-	case "not_found":
+	case domain.DomainErrorCodeNotFound:
 		code = connect.CodeNotFound
-	case "duplicate_dependency", "duplicate_pull_request", "references_exist", "cycle":
+	case domain.DomainErrorCodeDuplicateDependency, domain.DomainErrorCodeDuplicatePullRequest, domain.DomainErrorCodeReferencesExist, domain.DomainErrorCodeCycle:
 		code = connect.CodeFailedPrecondition
-	case "github_auth":
+	case domain.DomainErrorCodeGitHubAuth:
 		code = connect.CodeUnauthenticated
 	}
 	connectErr := connect.NewError(code, err)

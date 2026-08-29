@@ -98,13 +98,13 @@ func TopologicalOrder(tasks []Task, deps []Dependency) ([]string, error) {
 // BlockedReasonText renders the CLI-facing wording from the structured reason,
 // so the JSON output and the code carried over RPC always describe the same
 // blocker.
-func BlockedReasonText(code, blockerTitle string) string {
+func BlockedReasonText(code BlockedReasonCode, blockerTitle string) string {
 	switch code {
-	case BlockedDependencyDataIncomplete:
+	case BlockedReasonCodeDependencyDataIncomplete:
 		return "dependency data is incomplete"
-	case BlockedByStaleData:
+	case BlockedReasonCodeBlockerStale:
 		return "a blocker has stale GitHub data"
-	case BlockedWaitingForBlocker:
+	case BlockedReasonCodeWaitingForBlocker:
 		return "waiting for " + blockerTitle
 	default:
 		return ""
@@ -127,7 +127,7 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 	result := make([]Task, len(tasks))
 	for i, task := range tasks {
 		pr := prByTask[task.ID]
-		task.DisplayState = task.Status
+		task.DisplayState = TaskDisplayState(task.Status)
 		if task.Kind == TaskKindPR {
 			task.DisplayState = PRDisplayState(pr)
 		}
@@ -140,19 +140,19 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 			blocker, ok := taskByID[blockerID]
 			if !ok {
 				task.Ready = false
-				task.BlockedCode = BlockedDependencyDataIncomplete
+				task.BlockedCode = BlockedReasonCodeDependencyDataIncomplete
 				break
 			}
 			blockerPR := prByTask[blockerID]
 			if blockerPR != nil && blockerPR.Stale {
 				task.Ready = false
-				task.BlockedCode = BlockedByStaleData
+				task.BlockedCode = BlockedReasonCodeBlockerStale
 				task.BlockerTaskID = blockerID
 				break
 			}
 			if !IsSatisfied(blocker, blockerPR) {
 				task.Ready = false
-				task.BlockedCode = BlockedWaitingForBlocker
+				task.BlockedCode = BlockedReasonCodeWaitingForBlocker
 				task.BlockerTaskID = blockerID
 				break
 			}

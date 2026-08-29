@@ -1,9 +1,110 @@
 import { ConnectError } from "@connectrpc/connect";
 import { Code } from "@connectrpc/connect";
 import { describe, expect, it } from "vitest";
-import { DomainErrorCode, ErrorDetailSchema } from "../src/gen/prx/v1/prx_pb";
+import {
+  BlockedReasonCode,
+  DocumentKind,
+  DomainErrorCode,
+  ErrorDetailSchema,
+  FeatureStatus,
+  PullRequestDisplayState,
+  TaskDisplayState,
+  TaskKind,
+  TaskStatus,
+} from "../src/gen/prx/v1/prx_pb";
 import i18n from "../src/i18n";
-import { formatError } from "../src/i18n/domain";
+import { resources } from "../src/i18n/resources";
+import {
+  supportedLanguages,
+  type SupportedLanguage,
+} from "../src/i18n/settings";
+import {
+  blockedReasonKeys,
+  displayStateKeys,
+  documentKindKeys,
+  errorKeys,
+  featureStatusKeys,
+  formatError,
+  pullRequestDisplayStateKeys,
+  taskKindKeys,
+  taskStatusKeys,
+} from "../src/i18n/domain";
+
+function enumValues(value: object): number[] {
+  return Object.values(value).filter(
+    (entry): entry is number => typeof entry === "number",
+  );
+}
+
+function translationValue(language: SupportedLanguage, key: string): unknown {
+  let value: unknown = resources[language].translation;
+  for (const part of key.split(".")) {
+    if (!value || typeof value !== "object") return undefined;
+    value = (value as Record<string, unknown>)[part];
+  }
+  return value;
+}
+
+const translationTables = [
+  {
+    name: "feature statuses",
+    values: enumValues(FeatureStatus),
+    keys: featureStatusKeys as unknown as Record<number, string>,
+  },
+  {
+    name: "task statuses",
+    values: enumValues(TaskStatus),
+    keys: taskStatusKeys as unknown as Record<number, string>,
+  },
+  {
+    name: "task kinds",
+    values: enumValues(TaskKind),
+    keys: taskKindKeys as unknown as Record<number, string>,
+  },
+  {
+    name: "document kinds",
+    values: enumValues(DocumentKind),
+    keys: documentKindKeys as unknown as Record<number, string>,
+  },
+  {
+    name: "task display states",
+    values: enumValues(TaskDisplayState),
+    keys: displayStateKeys as unknown as Record<number, string>,
+  },
+  {
+    name: "pull request display states",
+    values: enumValues(PullRequestDisplayState),
+    keys: pullRequestDisplayStateKeys as unknown as Record<number, string>,
+  },
+  {
+    name: "blocked reason codes",
+    values: enumValues(BlockedReasonCode),
+    keys: blockedReasonKeys as unknown as Record<number, string>,
+  },
+  {
+    name: "domain error codes",
+    values: enumValues(DomainErrorCode),
+    keys: errorKeys as unknown as Record<number, string>,
+  },
+];
+
+describe("domain translation mappings", () => {
+  it.each(translationTables)(
+    "$name has a label in every supported language for every enum value",
+    ({ values, keys }) => {
+      for (const value of values) {
+        const key = keys[value];
+        expect(key, `missing mapping for enum value ${value}`).toBeDefined();
+        if (key === undefined) continue;
+        for (const language of supportedLanguages) {
+          const label = translationValue(language, key);
+          expect(label, `${language} ${key}`).toEqual(expect.any(String));
+          expect(label, `${language} ${key}`).not.toBe(key);
+        }
+      }
+    },
+  );
+});
 
 describe("localized RPC errors", () => {
   const t = i18n.getFixedT("ja");

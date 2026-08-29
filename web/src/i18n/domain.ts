@@ -14,41 +14,50 @@ import {
 } from "../gen/prx/v1/prx_pb";
 
 export function featureStatusLabel(value: FeatureStatus, t: TFunction): string {
-  const keys = {
-    [FeatureStatus.ACTIVE]: "featureStatus.active",
-    [FeatureStatus.PAUSED]: "featureStatus.paused",
-    [FeatureStatus.COMPLETED]: "featureStatus.completed",
-    [FeatureStatus.CANCELLED]: "featureStatus.cancelled",
-    [FeatureStatus.UNSPECIFIED]: "featureStatus.unknown",
-  } as const;
-  return t(keys[value] ?? "featureStatus.unknown");
+  return t(featureStatusKeys[value] ?? "featureStatus.unknown");
 }
 
 export function taskStatusLabel(value: TaskStatus, t: TFunction): string {
-  const keys = {
-    [TaskStatus.PLANNED]: "taskStatus.planned",
-    [TaskStatus.IN_PROGRESS]: "taskStatus.inProgress",
-    [TaskStatus.COMPLETED]: "taskStatus.completed",
-    [TaskStatus.CANCELLED]: "taskStatus.cancelled",
-    [TaskStatus.UNSPECIFIED]: "taskStatus.unknown",
-  } as const;
-  return t(keys[value] ?? "taskStatus.unknown");
+  return t(taskStatusKeys[value] ?? "taskStatus.unknown");
 }
+
+export const featureStatusKeys = {
+  [FeatureStatus.ACTIVE]: "featureStatus.active",
+  [FeatureStatus.PAUSED]: "featureStatus.paused",
+  [FeatureStatus.COMPLETED]: "featureStatus.completed",
+  [FeatureStatus.CANCELLED]: "featureStatus.cancelled",
+  [FeatureStatus.UNSPECIFIED]: "featureStatus.unknown",
+} as const satisfies Record<FeatureStatus, string>;
+
+export const taskStatusKeys = {
+  [TaskStatus.PLANNED]: "taskStatus.planned",
+  [TaskStatus.IN_PROGRESS]: "taskStatus.inProgress",
+  [TaskStatus.COMPLETED]: "taskStatus.completed",
+  [TaskStatus.CANCELLED]: "taskStatus.cancelled",
+  [TaskStatus.UNSPECIFIED]: "taskStatus.unknown",
+} as const satisfies Record<TaskStatus, string>;
+
+export const taskKindKeys = {
+  [TaskKind.UNSPECIFIED]: "kind.unknown",
+  [TaskKind.PULL_REQUEST]: "kind.pullRequest",
+  [TaskKind.MANUAL]: "kind.manual",
+} as const satisfies Record<TaskKind, string>;
 
 export function taskKindLabel(value: TaskKind, t: TFunction): string {
-  if (value === TaskKind.PULL_REQUEST) return t("kind.pullRequest");
-  if (value === TaskKind.MANUAL) return t("kind.manual");
-  return t("kind.unknown");
+  return t(taskKindKeys[value] ?? "kind.unknown");
 }
+
+export const documentKindKeys = {
+  [DocumentKind.UNSPECIFIED]: "documentKind.unknown",
+  [DocumentKind.URL]: "documentKind.url",
+  [DocumentKind.MARKDOWN_PATH]: "documentKind.markdownPath",
+} as const satisfies Record<DocumentKind, string>;
 
 export function documentKindLabel(value: DocumentKind, t: TFunction): string {
-  if (value === DocumentKind.URL) return t("documentKind.url");
-  if (value === DocumentKind.MARKDOWN_PATH)
-    return t("documentKind.markdownPath");
-  return t("documentKind.unknown");
+  return t(documentKindKeys[value] ?? "documentKind.unknown");
 }
 
-const displayStateKeys = {
+export const displayStateKeys = {
   [TaskDisplayState.UNSPECIFIED]: "displayState.unknown",
   [TaskDisplayState.PLANNED]: "displayState.planned",
   [TaskDisplayState.IN_PROGRESS]: "displayState.inProgress",
@@ -64,7 +73,7 @@ const displayStateKeys = {
   [TaskDisplayState.REVIEW_WAITING]: "displayState.reviewWaiting",
   [TaskDisplayState.OPEN]: "displayState.open",
   [TaskDisplayState.UNKNOWN]: "displayState.unknown",
-} as const;
+} as const satisfies Record<TaskDisplayState, string>;
 
 export function taskDisplayStateLabel(
   value: TaskDisplayState,
@@ -81,21 +90,29 @@ export function pullRequestDisplayStateLabel(
   value: PullRequestDisplayState,
   t: TFunction,
 ): string {
-  const keys = {
-    [PullRequestDisplayState.UNSPECIFIED]: "displayState.unknown",
-    [PullRequestDisplayState.MERGED]: "displayState.merged",
-    [PullRequestDisplayState.CLOSED]: "displayState.closed",
-    [PullRequestDisplayState.DRAFT]: "displayState.draft",
-    [PullRequestDisplayState.CONFLICT]: "displayState.conflict",
-    [PullRequestDisplayState.CHANGES_REQUESTED]:
-      "displayState.changesRequested",
-    [PullRequestDisplayState.APPROVED]: "displayState.approved",
-    [PullRequestDisplayState.REVIEW_WAITING]: "displayState.reviewWaiting",
-    [PullRequestDisplayState.OPEN]: "displayState.open",
-    [PullRequestDisplayState.UNKNOWN]: "displayState.unknown",
-  } as const;
-  return t(keys[value] ?? "displayState.unknown");
+  return t(pullRequestDisplayStateKeys[value] ?? "displayState.unknown");
 }
+
+export const pullRequestDisplayStateKeys = {
+  [PullRequestDisplayState.UNSPECIFIED]: "displayState.unknown",
+  [PullRequestDisplayState.MERGED]: "displayState.merged",
+  [PullRequestDisplayState.CLOSED]: "displayState.closed",
+  [PullRequestDisplayState.DRAFT]: "displayState.draft",
+  [PullRequestDisplayState.CONFLICT]: "displayState.conflict",
+  [PullRequestDisplayState.CHANGES_REQUESTED]: "displayState.changesRequested",
+  [PullRequestDisplayState.APPROVED]: "displayState.approved",
+  [PullRequestDisplayState.REVIEW_WAITING]: "displayState.reviewWaiting",
+  [PullRequestDisplayState.OPEN]: "displayState.open",
+  [PullRequestDisplayState.UNKNOWN]: "displayState.unknown",
+} as const satisfies Record<PullRequestDisplayState, string>;
+
+export const blockedReasonKeys = {
+  [BlockedReasonCode.UNSPECIFIED]: "blockedReason.unknown",
+  [BlockedReasonCode.DEPENDENCY_DATA_INCOMPLETE]:
+    "blockedReason.dependencyDataIncomplete",
+  [BlockedReasonCode.BLOCKER_STALE]: "blockedReason.blockerStale",
+  [BlockedReasonCode.WAITING_FOR_BLOCKER]: "blockedReason.waitingForBlocker",
+} as const satisfies Record<BlockedReasonCode, string>;
 
 export function blockedReasonLabel(
   reason: BlockedReason | undefined,
@@ -105,20 +122,19 @@ export function blockedReasonLabel(
   if (!reason) return "";
   const title =
     taskTitle(reason.blockerTaskId) ?? t("blockedReason.unknownBlocker");
-  switch (reason.code) {
-    case BlockedReasonCode.DEPENDENCY_DATA_INCOMPLETE:
-      return t("blockedReason.dependencyDataIncomplete");
-    case BlockedReasonCode.BLOCKER_STALE:
-      return t("blockedReason.blockerStale", { title });
-    case BlockedReasonCode.WAITING_FOR_BLOCKER:
-      return t("blockedReason.waitingForBlocker", { title });
-    default:
-      return "";
-  }
+  if (reason.code === BlockedReasonCode.BLOCKER_STALE)
+    return t(blockedReasonKeys[BlockedReasonCode.BLOCKER_STALE], { title });
+  if (reason.code === BlockedReasonCode.WAITING_FOR_BLOCKER)
+    return t(blockedReasonKeys[BlockedReasonCode.WAITING_FOR_BLOCKER], {
+      title,
+    });
+  return t(blockedReasonKeys[reason.code] ?? "blockedReason.unknown");
 }
 
-const errorKeys = {
+export const errorKeys = {
+  [DomainErrorCode.UNSPECIFIED]: "error.unknown",
   [DomainErrorCode.CROSS_FEATURE_DEPENDENCY]: "error.crossFeatureDependency",
+  [DomainErrorCode.CYCLE]: "error.cycle",
   [DomainErrorCode.DOCUMENT_READ_FAILED]: "error.documentReadFailed",
   [DomainErrorCode.DOCUMENT_TOO_LARGE]: "error.documentTooLarge",
   [DomainErrorCode.DUPLICATE_DEPENDENCY]: "error.duplicateDependency",
@@ -140,7 +156,7 @@ const errorKeys = {
   [DomainErrorCode.PULL_REQUEST_ON_MANUAL_TASK]:
     "error.pullRequestOnManualTask",
   [DomainErrorCode.REFERENCES_EXIST]: "error.referencesExist",
-} as const;
+} as const satisfies Record<DomainErrorCode, string>;
 
 // The cycle path arrives as task IDs, so callers that know the tasks on screen
 // pass a resolver to show titles instead of raw identifiers.

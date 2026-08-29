@@ -144,11 +144,11 @@ func nullableTime(value sql.NullString) *time.Time {
 }
 
 func domainFeature(value db.Feature) domain.Feature {
-	return domain.Feature{ID: value.ID, Slug: value.Slug, Title: value.Title, Description: value.Description, Status: value.Status, Archived: value.Archived != 0, CreatedAt: parseTime(value.CreatedAt), UpdatedAt: parseTime(value.UpdatedAt)}
+	return domain.Feature{ID: value.ID, Slug: value.Slug, Title: value.Title, Description: value.Description, Status: domain.FeatureStatus(value.Status), Archived: value.Archived != 0, CreatedAt: parseTime(value.CreatedAt), UpdatedAt: parseTime(value.UpdatedAt)}
 }
 
 func domainTask(value db.Task) domain.Task {
-	return domain.Task{ID: value.ID, FeatureID: value.FeatureID, Title: value.Title, Scope: value.Scope, Kind: value.Kind, Status: value.Status, Assignee: value.Assignee, CreatedAt: parseTime(value.CreatedAt), UpdatedAt: parseTime(value.UpdatedAt)}
+	return domain.Task{ID: value.ID, FeatureID: value.FeatureID, Title: value.Title, Scope: value.Scope, Kind: domain.TaskKind(value.Kind), Status: domain.TaskStatus(value.Status), Assignee: value.Assignee, CreatedAt: parseTime(value.CreatedAt), UpdatedAt: parseTime(value.UpdatedAt)}
 }
 
 func domainDependency(value db.Dependency) domain.Dependency {
@@ -156,21 +156,21 @@ func domainDependency(value db.Dependency) domain.Dependency {
 }
 
 func domainDocument(value db.Document) domain.Document {
-	return domain.Document{ID: value.ID, FeatureID: value.FeatureID.String, TaskID: value.TaskID.String, Kind: value.Kind, Title: value.Title, Value: value.Value, CreatedAt: parseTime(value.CreatedAt)}
+	return domain.Document{ID: value.ID, FeatureID: value.FeatureID.String, TaskID: value.TaskID.String, Kind: domain.DocumentKind(value.Kind), Title: value.Title, Value: value.Value, CreatedAt: parseTime(value.CreatedAt)}
 }
 
 func domainPullRequest(value db.PullRequest) domain.PullRequest {
-	result := domain.PullRequest{TaskID: value.TaskID, Owner: value.Owner, Repository: value.Repository, Number: value.Number, URL: value.Url, NodeID: value.NodeID, Author: value.Author, State: value.State, Draft: value.Draft != 0, ReviewState: value.ReviewState, Mergeability: value.Mergeability, GitHubUpdatedAt: nullableTime(value.GithubUpdatedAt), LastSyncedAt: nullableTime(value.LastSyncedAt), SyncError: value.SyncError, Stale: value.Stale != 0}
+	result := domain.PullRequest{TaskID: value.TaskID, Owner: value.Owner, Repository: value.Repository, Number: value.Number, URL: value.Url, NodeID: value.NodeID, Author: value.Author, State: domain.PullRequestState(value.State), Draft: value.Draft != 0, ReviewState: domain.ReviewState(value.ReviewState), Mergeability: domain.Mergeability(value.Mergeability), GitHubUpdatedAt: nullableTime(value.GithubUpdatedAt), LastSyncedAt: nullableTime(value.LastSyncedAt), SyncError: value.SyncError, Stale: value.Stale != 0}
 	if err := jsonUnmarshal([]byte(value.AssigneesJson), &result.Assignees); err != nil {
 		result.Assignees = []string{}
 	}
-	result.DisplayState = domain.PRDisplayState(&result)
+	result.DisplayState = domain.PullRequestDisplayState(domain.PRDisplayState(&result))
 	return result
 }
 
 func mapNotFound(err error, entity, id string) error {
 	if errors.Is(err, sql.ErrNoRows) {
-		return domain.NewError("not_found", "%s %q was not found", entity, id)
+		return domain.NewError(domain.DomainErrorCodeNotFound, "%s %q was not found", entity, id)
 	}
 	return err
 }

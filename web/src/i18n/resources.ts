@@ -203,8 +203,10 @@ export const resources = {
         blockerStale: "{{title}} has stale GitHub data",
         waitingForBlocker: "Waiting for {{title}}",
         unknownBlocker: "an upstream task",
+        unknown: "Unknown blocker reason",
       },
       error: {
+        unknown: "An unknown domain error occurred.",
         crossFeatureDependency:
           "Tasks in different features cannot be connected.",
         cycle: "This dependency would create a cycle: {{path}}",
@@ -445,8 +447,10 @@ export const resources = {
         blockerStale: "{{title}} の GitHub データが古くなっています",
         waitingForBlocker: "{{title}} の完了を待っています",
         unknownBlocker: "上流タスク",
+        unknown: "不明なブロッカー理由",
       },
       error: {
+        unknown: "不明なドメインエラーが発生しました。",
         crossFeatureDependency: "異なるフィーチャーのタスクは接続できません。",
         cycle: "この依存関係を追加すると循環します: {{path}}",
         duplicateDependency: "この依存関係はすでに存在します。",

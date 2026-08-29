@@ -127,7 +127,7 @@ func (s *state) ensureLiveProvider(ctx context.Context) error {
 	}
 	provider, err := githubprovider.NewLiveProvider(ctx)
 	if err != nil {
-		return &domain.Error{Code: "github_auth", Message: err.Error()}
+		return &domain.Error{Code: domain.DomainErrorCodeGitHubAuth, Message: err.Error()}
 	}
 	s.service = app.New(s.store, provider)
 	return nil
@@ -166,7 +166,7 @@ func (s *state) featureCommand() *cobra.Command {
 	update := &cobra.Command{Use: "update ID_OR_SLUG", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		value, err := s.service.UpdateFeature(cmd.Context(), args[0],
 			changedFlag(cmd, "slug", &slug), changedFlag(cmd, "title", &title),
-			changedFlag(cmd, "description", &description), changedFlag(cmd, "status", &status),
+			changedFlag(cmd, "description", &description), changedStringType[domain.FeatureStatus](cmd, "status", &status),
 			changedBoolFlag(cmd, "archived", &archived))
 		if err != nil {
 			return err
@@ -210,7 +210,7 @@ func (s *state) taskCommand() *cobra.Command {
 	var feature, title, scope, kind, assignee, status string
 	var cascade bool
 	create := &cobra.Command{Use: "create", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		value, err := s.service.CreateTask(cmd.Context(), feature, title, scope, kind, assignee)
+		value, err := s.service.CreateTask(cmd.Context(), feature, title, scope, domain.TaskKind(kind), assignee)
 		if err != nil {
 			return err
 		}
@@ -249,12 +249,12 @@ func (s *state) taskCommand() *cobra.Command {
 				return s.write(task)
 			}
 		}
-		return domain.NewError("not_found", "task %q was not found", args[0])
+		return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", args[0])
 	}}
 	update := &cobra.Command{Use: "update ID", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		value, err := s.service.UpdateTask(cmd.Context(), args[0],
 			changedFlag(cmd, "title", &title), changedFlag(cmd, "scope", &scope),
-			changedFlag(cmd, "status", &status), changedFlag(cmd, "assignee", &assignee))
+			changedStringType[domain.TaskStatus](cmd, "status", &status), changedFlag(cmd, "assignee", &assignee))
 		if err != nil {
 			return err
 		}
@@ -336,7 +336,7 @@ func (s *state) documentCommand() *cobra.Command {
 	command := &cobra.Command{Use: "document", Short: "Manage URL and local Markdown references"}
 	var feature, task, kind, title, value string
 	add := &cobra.Command{Use: "add", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		doc, err := s.service.AddDocument(cmd.Context(), feature, task, kind, title, value)
+		doc, err := s.service.AddDocument(cmd.Context(), feature, task, domain.DocumentKind(kind), title, value)
 		if err != nil {
 			return err
 		}
@@ -442,7 +442,7 @@ func (s *state) validateCommand() *cobra.Command {
 	return &cobra.Command{Use: "validate", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		items := s.service.Validate(cmd.Context())
 		if len(items) > 0 {
-			return domain.NewError("invalid_database", "database validation failed: %s", strings.Join(items, "; "))
+			return domain.NewError(domain.DomainErrorCodeInvalidDatabase, "database validation failed: %s", strings.Join(items, "; "))
 		}
 		return s.write(map[string]bool{"valid": true})
 	}}
@@ -454,7 +454,7 @@ func (s *state) seedCommand() *cobra.Command {
 	var features int
 	command := &cobra.Command{Use: "seed", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
 		if features < 1 {
-			return domain.NewError("invalid_seed", "features must be at least 1")
+			return domain.NewError(domain.DomainErrorCodeInvalidSeed, "features must be at least 1")
 		}
 		if s.fixture == "" {
 			provider, _ := githubprovider.NewFixtureProvider("demo")
@@ -555,6 +555,14 @@ func changedFlag(cmd *cobra.Command, name string, value *string) *string {
 		return nil
 	}
 	return value
+}
+
+func changedStringType[T ~string](cmd *cobra.Command, name string, value *string) *T {
+	if !cmd.Flags().Changed(name) {
+		return nil
+	}
+	typed := T(*value)
+	return &typed
 }
 
 func changedBoolFlag(cmd *cobra.Command, name string, value *bool) *bool {

@@ -14,7 +14,7 @@ import (
 
 func (s *Store) CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error) {
 	now := timestamp(s.now())
-	value, err := db.New(s.db).CreateFeature(ctx, db.CreateFeatureParams{ID: uuid.NewString(), Slug: slug, Title: title, Description: description, Status: "active", CreatedAt: now, UpdatedAt: now})
+	value, err := db.New(s.db).CreateFeature(ctx, db.CreateFeatureParams{ID: uuid.NewString(), Slug: slug, Title: title, Description: description, Status: string(domain.FeatureStatusActive), CreatedAt: now, UpdatedAt: now})
 	if err != nil {
 		return domain.Feature{}, fmt.Errorf("create feature: %w", err)
 	}
@@ -32,13 +32,13 @@ func (s *Store) GetFeatureBySlug(ctx context.Context, slug string) (domain.Featu
 }
 
 func (s *Store) UpdateFeature(ctx context.Context, feature domain.Feature) (domain.Feature, error) {
-	value, err := db.New(s.db).UpdateFeature(ctx, db.UpdateFeatureParams{Slug: feature.Slug, Title: feature.Title, Description: feature.Description, Status: feature.Status, Archived: boolInt(feature.Archived), UpdatedAt: timestamp(s.now()), ID: feature.ID})
+	value, err := db.New(s.db).UpdateFeature(ctx, db.UpdateFeatureParams{Slug: feature.Slug, Title: feature.Title, Description: feature.Description, Status: string(feature.Status), Archived: boolInt(feature.Archived), UpdatedAt: timestamp(s.now()), ID: feature.ID})
 	return domainFeature(value), mapNotFound(err, "feature", feature.ID)
 }
 
-func (s *Store) CreateTask(ctx context.Context, featureID, title, scope, kind, assignee string) (domain.Task, error) {
+func (s *Store) CreateTask(ctx context.Context, featureID, title, scope string, kind domain.TaskKind, assignee string) (domain.Task, error) {
 	now := timestamp(s.now())
-	value, err := db.New(s.db).CreateTask(ctx, db.CreateTaskParams{ID: uuid.NewString(), FeatureID: featureID, Title: title, Scope: scope, Kind: kind, Status: domain.TaskPlanned, Assignee: assignee, CreatedAt: now, UpdatedAt: now})
+	value, err := db.New(s.db).CreateTask(ctx, db.CreateTaskParams{ID: uuid.NewString(), FeatureID: featureID, Title: title, Scope: scope, Kind: string(kind), Status: string(domain.TaskStatusPlanned), Assignee: assignee, CreatedAt: now, UpdatedAt: now})
 	if err != nil {
 		return domain.Task{}, fmt.Errorf("create task: %w", err)
 	}
@@ -51,7 +51,7 @@ func (s *Store) GetTask(ctx context.Context, id string) (domain.Task, error) {
 }
 
 func (s *Store) UpdateTask(ctx context.Context, task domain.Task) (domain.Task, error) {
-	value, err := db.New(s.db).UpdateTask(ctx, db.UpdateTaskParams{Title: task.Title, Scope: task.Scope, Status: task.Status, Assignee: task.Assignee, UpdatedAt: timestamp(s.now()), ID: task.ID})
+	value, err := db.New(s.db).UpdateTask(ctx, db.UpdateTaskParams{Title: task.Title, Scope: task.Scope, Status: string(task.Status), Assignee: task.Assignee, UpdatedAt: timestamp(s.now()), ID: task.ID})
 	return domainTask(value), mapNotFound(err, "task", task.ID)
 }
 
@@ -71,7 +71,7 @@ func (s *Store) AddDependency(ctx context.Context, blocker, blocked string) (dom
 		return domain.Dependency{}, mapNotFound(err, "task", blocked)
 	}
 	if blockerTask.FeatureID != blockedTask.FeatureID {
-		return domain.Dependency{}, domain.NewError("cross_feature_dependency", "dependencies must remain within one feature")
+		return domain.Dependency{}, domain.NewError(domain.DomainErrorCodeCrossFeatureDependency, "dependencies must remain within one feature")
 	}
 	taskRows, err := q.ListTasksByFeature(ctx, blockerTask.FeatureID)
 	if err != nil {
@@ -89,11 +89,11 @@ func (s *Store) AddDependency(ctx context.Context, blocker, blocked string) (dom
 	for i, row := range depRows {
 		deps[i] = domainDependency(row)
 		if row.BlockerTaskID == blocker && row.BlockedTaskID == blocked {
-			return domain.Dependency{}, domain.NewError("duplicate_dependency", "dependency already exists")
+			return domain.Dependency{}, domain.NewError(domain.DomainErrorCodeDuplicateDependency, "dependency already exists")
 		}
 	}
 	if path := domain.CyclePath(tasks, deps, blocker, blocked); len(path) > 0 {
-		return domain.Dependency{}, &domain.Error{Code: "cycle", Message: "dependency would create a cycle", Path: path}
+		return domain.Dependency{}, &domain.Error{Code: domain.DomainErrorCodeCycle, Message: "dependency would create a cycle", Path: path}
 	}
 	value, err := q.AddDependency(ctx, db.AddDependencyParams{BlockerTaskID: blocker, BlockedTaskID: blocked, CreatedAt: timestamp(s.now())})
 	if err != nil {
@@ -111,7 +111,7 @@ func (s *Store) RemoveDependency(ctx context.Context, blocker, blocked string) e
 		return err
 	}
 	if affected == 0 {
-		return domain.NewError("not_found", "dependency %q → %q was not found", blocker, blocked)
+		return domain.NewError(domain.DomainErrorCodeNotFound, "dependency %q → %q was not found", blocker, blocked)
 	}
 	return nil
 }
@@ -132,7 +132,7 @@ func (s *Store) DeleteTask(ctx context.Context, id string, cascade bool) error {
 			return err
 		}
 		if references > 0 {
-			return domain.NewError("references_exist", "task has dependencies, a pull request, or documents; pass --cascade")
+			return domain.NewError(domain.DomainErrorCodeReferencesExist, "task has dependencies, a pull request, or documents; pass --cascade")
 		}
 	} else {
 		if err := q.DeleteDependenciesForTask(ctx, db.DeleteDependenciesForTaskParams{BlockerTaskID: id, BlockedTaskID: id}); err != nil {
@@ -167,7 +167,7 @@ func (s *Store) DeleteFeature(ctx context.Context, id string, cascade bool) erro
 		return err
 	}
 	if len(tasks) > 0 && !cascade {
-		return domain.NewError("references_exist", "feature has tasks; pass --cascade")
+		return domain.NewError(domain.DomainErrorCodeReferencesExist, "feature has tasks; pass --cascade")
 	}
 	if cascade {
 		if err := q.DeleteDependenciesForFeature(ctx, id); err != nil {
@@ -193,13 +193,13 @@ func (s *Store) UpsertPullRequest(ctx context.Context, value domain.PullRequest)
 	assignees, _ := jsonMarshal(value.Assignees)
 	row, err := db.New(s.db).UpsertPullRequest(ctx, db.UpsertPullRequestParams{
 		TaskID: value.TaskID, Owner: value.Owner, Repository: value.Repository, Number: value.Number, Url: value.URL,
-		NodeID: value.NodeID, Author: value.Author, AssigneesJson: string(assignees), State: value.State,
-		Draft: boolInt(value.Draft), ReviewState: value.ReviewState, Mergeability: value.Mergeability,
+		NodeID: value.NodeID, Author: value.Author, AssigneesJson: string(assignees), State: string(value.State),
+		Draft: boolInt(value.Draft), ReviewState: string(value.ReviewState), Mergeability: string(value.Mergeability),
 		GithubUpdatedAt: nullTime(value.GitHubUpdatedAt), LastSyncedAt: nullTime(value.LastSyncedAt), SyncError: value.SyncError, Stale: boolInt(value.Stale),
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
-			return domain.PullRequest{}, domain.NewError("duplicate_pull_request", "pull request is already attached to another task")
+			return domain.PullRequest{}, domain.NewError(domain.DomainErrorCodeDuplicatePullRequest, "pull request is already attached to another task")
 		}
 		return domain.PullRequest{}, err
 	}
@@ -217,13 +217,13 @@ func (s *Store) DeletePullRequest(ctx context.Context, taskID string) error {
 		return err
 	}
 	if affected == 0 {
-		return domain.NewError("not_found", "pull request for task %q was not found", taskID)
+		return domain.NewError(domain.DomainErrorCodeNotFound, "pull request for task %q was not found", taskID)
 	}
 	return nil
 }
 
-func (s *Store) CreateDocument(ctx context.Context, featureID, taskID, kind, title, value string) (domain.Document, error) {
-	row, err := db.New(s.db).CreateDocument(ctx, db.CreateDocumentParams{ID: uuid.NewString(), FeatureID: nullString(featureID), TaskID: nullString(taskID), Kind: kind, Title: title, Value: value, CreatedAt: timestamp(s.now())})
+func (s *Store) CreateDocument(ctx context.Context, featureID, taskID string, kind domain.DocumentKind, title, value string) (domain.Document, error) {
+	row, err := db.New(s.db).CreateDocument(ctx, db.CreateDocumentParams{ID: uuid.NewString(), FeatureID: nullString(featureID), TaskID: nullString(taskID), Kind: string(kind), Title: title, Value: value, CreatedAt: timestamp(s.now())})
 	if err != nil {
 		return domain.Document{}, err
 	}
@@ -241,7 +241,7 @@ func (s *Store) DeleteDocument(ctx context.Context, id string) error {
 		return err
 	}
 	if affected == 0 {
-		return domain.NewError("not_found", "document %q was not found", id)
+		return domain.NewError(domain.DomainErrorCodeNotFound, "document %q was not found", id)
 	}
 	return nil
 }
