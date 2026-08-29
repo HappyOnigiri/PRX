@@ -10,6 +10,7 @@ linters:
     - durationcheck
     - errchkjson
     - errorlint
+    - exhaustive
     - misspell
     - nilerr
     - noctx
@@ -22,6 +23,12 @@ linters:
     - unconvert
     - usestdlibvars
     - wastedassign
+  settings:
+    exhaustive:
+      default-signifies-exhaustive: false
+      check:
+        - switch
+        - map
 
 formatters:
   enable:
