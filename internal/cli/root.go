@@ -9,10 +9,12 @@ import (
 	"github.com/spf13/cobra"
 
 	prx "github.com/HappyOnigiri/PRX"
+	"github.com/HappyOnigiri/PRX/internal/config"
 )
 
 type state struct {
 	dbPath      string
+	configPath  string
 	json        bool
 	fixture     string
 	out         io.Writer
@@ -36,10 +38,16 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			if cmd.Name() == "help" {
+			if cmd.Name() == "help" || isConfigCommand(cmd) {
 				return nil
 			}
-			service, closer, err := s.openService(cmd.Context(), s.dbPath, s.fixture, cmd.Name() == "serve")
+			baseContext := cmd.Context()
+			if baseContext == nil {
+				baseContext = context.Background()
+			}
+			openContext := config.WithPath(baseContext, s.configPath)
+			live := cmd.Name() == "serve" || cmd.Name() == "sync"
+			service, closer, err := s.openService(openContext, s.dbPath, s.fixture, live)
 			if err != nil {
 				return err
 			}
@@ -56,6 +64,8 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	root.SetOut(out)
 	root.SetErr(errOut)
 	root.PersistentFlags().StringVar(&s.dbPath, "db", os.Getenv("PRX_DB"), "SQLite database path (env: PRX_DB)")
+	root.PersistentFlags().
+		StringVar(&s.configPath, "config", os.Getenv("PRX_CONFIG"), "YAML configuration path (env: PRX_CONFIG)")
 	root.PersistentFlags().BoolVar(&s.json, "json", false, "emit a stable JSON envelope")
 	root.PersistentFlags().StringVar(&s.fixture, "github-fixture", "", "GitHub fixture JSON path, or demo")
 	root.AddCommand(
@@ -64,6 +74,7 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		s.dependencyCommand(),
 		s.pullRequestCommand(),
 		s.documentCommand(),
+		s.configCommand(),
 	)
 	root.AddCommand(
 		s.snapshotCommand(),
@@ -78,6 +89,15 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		s.serveCommand(),
 	)
 	return root, s
+}
+
+func isConfigCommand(command *cobra.Command) bool {
+	for current := command; current != nil; current = current.Parent() {
+		if current.Name() == "config" {
+			return true
+		}
+	}
+	return false
 }
 
 // Execute runs the CLI and formats any error according to the parsed --json

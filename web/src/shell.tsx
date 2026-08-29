@@ -15,11 +15,13 @@ import {
 } from "./i18n/settings";
 import { setDisplayTheme } from "./theme";
 import { appVersion } from "./version";
+import { ServerSettingsDialog } from "./views/ServerSettingsDialog";
 
 export function AppShell({ children }: { children: ReactNode }) {
-  const { t, i18n } = useTranslation();
+  const { t } = useTranslation();
   const snapshot = useSnapshot();
   const [showCreate, setShowCreate] = useState(false);
+  const [showServerSettings, setShowServerSettings] = useState(false);
   const [theme, setTheme] = useState(readThemePreference);
   return (
     <div className="app-shell">
@@ -73,42 +75,16 @@ export function AppShell({ children }: { children: ReactNode }) {
         >
           {t("nav.newFeature")}
         </button>
-        <div className="rail-settings">
-          <label className="language-setting">
-            <span>{t("language.label")}</span>
-            <select
-              aria-label={t("language.label")}
-              value={i18n.resolvedLanguage ?? "en"}
-              onChange={(event) =>
-                void setDisplayLanguage(event.target.value as SupportedLanguage)
-              }
-            >
-              {supportedLanguages.map((language) => (
-                <option value={language} key={language}>
-                  {t(`language.${language}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-          <label className="theme-setting">
-            <span>{t("theme.label")}</span>
-            <select
-              aria-label={t("theme.label")}
-              value={theme}
-              onChange={(event) => {
-                const preference = event.target.value as ThemePreference;
-                setTheme(preference);
-                setDisplayTheme(preference);
-              }}
-            >
-              {themePreferences.map((preference) => (
-                <option value={preference} key={preference}>
-                  {t(`theme.${preference}`)}
-                </option>
-              ))}
-            </select>
-          </label>
-        </div>
+        <RailSettings
+          theme={theme}
+          onThemeChange={(preference) => {
+            setTheme(preference);
+            setDisplayTheme(preference);
+          }}
+          onOpenServerSettings={() => {
+            setShowServerSettings(true);
+          }}
+        />
         <div className="rail-foot">
           <span className={snapshot.isError ? "health bad" : "health"} />
           {snapshot.isError
@@ -124,6 +100,67 @@ export function AppShell({ children }: { children: ReactNode }) {
           }}
         />
       )}
+      {showServerSettings && (
+        <ServerSettingsDialog
+          onClose={() => {
+            setShowServerSettings(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function RailSettings({
+  theme,
+  onThemeChange,
+  onOpenServerSettings,
+}: {
+  theme: ThemePreference;
+  onThemeChange: (preference: ThemePreference) => void;
+  onOpenServerSettings: () => void;
+}) {
+  const { t, i18n } = useTranslation();
+  return (
+    <div className="rail-settings">
+      <label className="language-setting">
+        <span>{t("language.label")}</span>
+        <select
+          aria-label={t("language.label")}
+          value={i18n.resolvedLanguage ?? "en"}
+          onChange={(event) => {
+            void setDisplayLanguage(event.target.value as SupportedLanguage);
+          }}
+        >
+          {supportedLanguages.map((language) => (
+            <option value={language} key={language}>
+              {t(`language.${language}`)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <label className="theme-setting">
+        <span>{t("theme.label")}</span>
+        <select
+          aria-label={t("theme.label")}
+          value={theme}
+          onChange={(event) => {
+            onThemeChange(event.target.value as ThemePreference);
+          }}
+        >
+          {themePreferences.map((preference) => (
+            <option value={preference} key={preference}>
+              {t(`theme.${preference}`)}
+            </option>
+          ))}
+        </select>
+      </label>
+      <button
+        className="secondary settings-trigger"
+        onClick={onOpenServerSettings}
+      >
+        {t("serverSettings.open")}
+      </button>
     </div>
   );
 }

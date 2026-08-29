@@ -36,7 +36,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 1 {
+		migrations != 2 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -68,6 +68,137 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	err = database.DB().QueryRowContext(ctx, `SELECT name FROM sqlite_master WHERE name='should_rollback'`).Scan(&name)
 	if !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("failed migration left a table: name=%q err=%v", name, err)
+	}
+}
+
+func TestMigrationAddsGitHubHostAndHostScopedUniqueness(t *testing.T) {
+	ctx := context.Background()
+	databasePath := filepath.Join(t.TempDir(), "legacy.db")
+	database, err := store.Open(ctx, databasePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	feature, err := database.CreateFeature(ctx, "legacy", "Legacy", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	firstTask, err := database.CreateTask(ctx, feature.ID, "GitHub.com PR", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondTask, err := database.CreateTask(ctx, feature.ID, "GHE PR", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacyTable := `CREATE TABLE pull_requests (
+  task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE RESTRICT,
+  owner TEXT NOT NULL COLLATE NOCASE,
+  repository TEXT NOT NULL COLLATE NOCASE,
+  number INTEGER NOT NULL CHECK(number > 0),
+  url TEXT NOT NULL,
+  node_id TEXT NOT NULL DEFAULT '',
+  author TEXT NOT NULL DEFAULT '',
+  assignees_json TEXT NOT NULL DEFAULT '[]',
+  state TEXT NOT NULL DEFAULT 'unknown' CHECK(state IN ('open','closed','merged','unknown')),
+  draft INTEGER NOT NULL DEFAULT 0 CHECK(draft IN (0,1)),
+	 review_state TEXT NOT NULL DEFAULT 'unknown' CHECK(review_state IN (
+	   'none','required','approved','changes_requested','unknown')),
+  mergeability TEXT NOT NULL DEFAULT 'unknown' CHECK(mergeability IN ('mergeable','conflicting','unknown')),
+  github_updated_at TEXT,
+  last_synced_at TEXT,
+  sync_error TEXT NOT NULL DEFAULT '',
+  stale INTEGER NOT NULL DEFAULT 1 CHECK(stale IN (0,1)),
+  UNIQUE(owner, repository, number)
+)`
+	if _, err := database.DB().ExecContext(ctx, `DROP TABLE github_repository_auth_cache`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.DB().ExecContext(ctx, `DROP TABLE pull_requests`); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.DB().ExecContext(ctx, legacyTable); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.DB().ExecContext(
+		ctx,
+		`CREATE INDEX pull_requests_state_idx ON pull_requests(state, review_state, mergeability, stale)`,
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.DB().ExecContext(
+		ctx,
+		`INSERT INTO pull_requests (task_id, owner, repository, number, url,
+			state, review_state, mergeability, stale)
+			VALUES (?, ?, ?, ?, ?, 'open', 'none', 'unknown', 1)`,
+		firstTask.ID,
+		"Acme",
+		"API",
+		42,
+		"https://github.com/Acme/API/pull/42",
+	); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.DB().ExecContext(ctx, `DELETE FROM schema_migrations WHERE version=2`); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	database, err = store.Open(ctx, databasePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = database.Close() }()
+	legacy, err := database.GetPullRequest(ctx, firstTask.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if legacy.Host != "github.com" {
+		t.Fatalf("migrated host=%q, want github.com", legacy.Host)
+	}
+	if _, err := database.UpsertPullRequest(ctx, domain.PullRequest{
+		TaskID: secondTask.ID, Host: "ghe.example.com", Owner: "Acme", Repository: "API", Number: 42,
+		URL: "https://ghe.example.com/Acme/API/pull/42", State: domain.PullRequestStateUnknown,
+		ReviewState: domain.ReviewStateUnknown, Mergeability: domain.MergeabilityUnknown, Stale: true,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	var count int
+	if err := database.DB().
+		QueryRowContext(ctx, `SELECT COUNT(*) FROM pull_requests WHERE owner='Acme' AND repository='API' AND number=42`).
+		Scan(&count); err != nil ||
+		count != 2 {
+		t.Fatalf("host-scoped PR count=%d err=%v", count, err)
+	}
+}
+
+func TestGitHubRepositoryAuthCacheRoundTrip(t *testing.T) {
+	database, _ := openTestService(t)
+	ctx := context.Background()
+	if _, found, err := database.GetGitHubRepositoryAuthCache(ctx, "github.com", "acme", "api"); err != nil || found {
+		t.Fatalf("missing cache found=%v err=%v", found, err)
+	}
+	if err := database.UpsertGitHubRepositoryAuthCache(ctx, "github.com", "Acme", "API", "first"); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.UpsertGitHubRepositoryAuthCache(ctx, "github.com", "acme", "api", "second"); err != nil {
+		t.Fatal(err)
+	}
+	if method, found, err := database.GetGitHubRepositoryAuthCache(
+		ctx,
+		"GITHUB.COM",
+		"ACME",
+		"api",
+	); err != nil || !found ||
+		method != "second" {
+		t.Fatalf("cache method=%q found=%v err=%v", method, found, err)
+	}
+	if err := database.DeleteGitHubRepositoryAuthCache(ctx, "github.com", "acme", "api"); err != nil {
+		t.Fatal(err)
+	}
+	if _, found, err := database.GetGitHubRepositoryAuthCache(ctx, "github.com", "acme", "api"); err != nil || found {
+		t.Fatalf("deleted cache found=%v err=%v", found, err)
 	}
 }
 
@@ -560,6 +691,7 @@ func TestGetPullRequestRoundTripAndNotFound(t *testing.T) {
 	lastSyncedAt := time.Date(2026, 8, 29, 2, 3, 4, 567000000, time.UTC)
 	want := domain.PullRequest{
 		TaskID:          task.ID,
+		Host:            "github.com",
 		Owner:           "Acme",
 		Repository:      "API",
 		Number:          42,
@@ -581,10 +713,13 @@ func TestGetPullRequestRoundTripAndNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.TaskID != want.TaskID || got.Owner != want.Owner || got.Repository != want.Repository ||
+	if got.TaskID != want.TaskID || got.Host != want.Host ||
+		got.Owner != want.Owner || got.Repository != want.Repository ||
 		got.Number != want.Number || got.URL != want.URL || got.NodeID != want.NodeID || got.Author != want.Author ||
-		got.State != want.State || got.ReviewState != want.ReviewState || got.Mergeability != want.Mergeability ||
-		got.Stale != want.Stale || got.DisplayState != domain.PullRequestDisplayStateMerged {
+		got.State != want.State || got.ReviewState != want.ReviewState ||
+		got.Mergeability != want.Mergeability ||
+		got.Stale != want.Stale ||
+		got.DisplayState != domain.PullRequestDisplayStateMerged {
 		t.Fatalf("pull request=%+v, want fields from %+v", got, want)
 	}
 	if len(got.Assignees) != 2 || got.Assignees[0] != "alice" || got.Assignees[1] != "bob" {

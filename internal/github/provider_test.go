@@ -172,8 +172,7 @@ func TestFixtureRejectsValuesOutsideTheSchema(t *testing.T) {
 }
 
 func TestLiveProviderBoundsRequestsAndKeepsSyncing(t *testing.T) {
-	t.Setenv("GITHUB_TOKEN", "test-token")
-	provider, err := NewLiveProvider(context.Background())
+	provider, err := NewLiveProvider(context.Background(), LiveProviderOptions{Token: "test-token"})
 	if err != nil {
 		t.Fatal(err)
 	}

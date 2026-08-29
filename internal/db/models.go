@@ -35,8 +35,17 @@ type Feature struct {
 	UpdatedAt   string `json:"updated_at"`
 }
 
+type GithubRepositoryAuthCache struct {
+	Host            string `json:"host"`
+	Owner           string `json:"owner"`
+	Repository      string `json:"repository"`
+	AuthMethodID    string `json:"auth_method_id"`
+	LastSucceededAt string `json:"last_succeeded_at"`
+}
+
 type PullRequest struct {
 	TaskID          string         `json:"task_id"`
+	Host            string         `json:"host"`
 	Owner           string         `json:"owner"`
 	Repository      string         `json:"repository"`
 	Number          int64          `json:"number"`

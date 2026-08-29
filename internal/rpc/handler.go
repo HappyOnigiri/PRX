@@ -9,18 +9,32 @@ import (
 
 	prxv1 "github.com/HappyOnigiri/PRX/gen/prx/v1"
 	"github.com/HappyOnigiri/PRX/gen/prx/v1/prxv1connect"
+	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 type Handler struct {
 	prxv1connect.UnimplementedPRXServiceHandler
-	service Service
+	service     Service
+	configStore *config.Store
 }
 
-func New(service Service) (string, http.Handler) {
+func New(service Service, stores ...*config.Store) (string, http.Handler) {
+	var configStore *config.Store
+	if len(stores) > 0 {
+		configStore = stores[0]
+	}
+	if configStore == nil {
+		if provider, ok := service.(interface{ ConfigStore() *config.Store }); ok {
+			configStore = provider.ConfigStore()
+		}
+	}
 	// Requiring the Connect protocol header keeps the RPCs out of reach of
 	// simple cross-origin requests, which browsers send without a preflight.
-	return prxv1connect.NewPRXServiceHandler(&Handler{service: service}, connect.WithRequireConnectProtocolHeader())
+	return prxv1connect.NewPRXServiceHandler(
+		&Handler{service: service, configStore: configStore},
+		connect.WithRequireConnectProtocolHeader(),
+	)
 }
 
 func rpcError(err error) error {
@@ -45,7 +59,8 @@ func rpcError(err error) error {
 		domain.DomainErrorCodePRTaskCompletesOnMerge,
 		domain.DomainErrorCodeInvalidDocumentURL,
 		domain.DomainErrorCodeDocumentReadFailed,
-		domain.DomainErrorCodeDocumentTooLarge:
+		domain.DomainErrorCodeDocumentTooLarge,
+		domain.DomainErrorCodeInvalidConfig:
 		code = connect.CodeInvalidArgument
 	case domain.DomainErrorCodeNotFound:
 		code = connect.CodeNotFound
