@@ -32,7 +32,7 @@ Package dependencies follow the same direction: `internal/domain` and `internal/
 
 Every mutation is non-interactive so that people and coding agents drive the same surface. `--json` emits a versioned envelope; stdout then carries JSON only, and warnings and server logs go to stderr, so output can be piped without filtering. Operating on data that does not exist — removing a dependency, detaching a pull request, deleting a document — fails with `not_found` instead of reporting success, so a caller cannot mistake a typo for a completed change. Feature and task deletion refuses to remove referenced data unless `--cascade` is supplied.
 
-The root `package.json` is the single source of the product version. Supported production builds stamp that value into the Go binary, while an unstamped build appends `-dev` so it identifies the release on which development is based without claiming to be that release. `prx --version` and the WebUI read the same value from the running binary; the server injects it into the embedded index rather than maintaining a separate frontend version.
+The root `package.json` is the single source of the product version. Every current build and install path appends `-dev` so it identifies the release on which development is based without claiming to be that release. A future distribution pipeline will stamp the stable version only into its release artifacts. `prx --version` and the WebUI read the same value from the running binary; the server injects it into the embedded index rather than maintaining a separate frontend version.
 
 ## Domain decisions
 

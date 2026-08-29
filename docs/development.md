@@ -22,7 +22,7 @@ make ci                     # install web dependencies, run all required checks 
 
 ## Versions and releases
 
-The root `package.json` owns the PRX version. `make build` and `make install` stamp that version into the binary, so `prx --version` and the embedded WebUI both show, for example, `0.1.0`. Unstamped builds created by `go build`, `go run`, Air, or the Vite development setup show `0.1.0-dev`, preserving the base release in diagnostic output.
+The root `package.json` owns the PRX version. Every current build path, including `make build`, `make install`, `go build`, `go run`, Air, and the Vite development setup, shows `0.1.0-dev` in both `prx --version` and the WebUI. This preserves the base release in diagnostic output without identifying locally built code as an official release. A future distribution pipeline will be the only path that stamps the stable version into release artifacts.
 
 Run the `Release` workflow manually with the next stable `X.Y.Z` version. It creates a `release/vX.Y.Z` branch, updates `package.json`, and opens a release pull request with the generated changelog. Merging that pull request creates the `vX.Y.Z` tag and GitHub Release, then removes the release branch. The workflow accepts stable SemVer versions only; prerelease identifiers such as `-rc.1` are not supported.
 

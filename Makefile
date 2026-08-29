@@ -2,7 +2,6 @@ GO ?= go
 PNPM ?= corepack pnpm
 INSTALL_DIR ?= $(HOME)/.local/bin
 VERSION := $(shell node -p "require('./package.json').version")
-VERSION_LDFLAGS := -X github.com/HappyOnigiri/PRX.releaseVersion=$(VERSION)
 GO_COVERAGE_MIN ?= 68.8
 GO_COVERAGE_PACKAGES := ./internal/domain ./internal/github ./internal/rpc ./internal/store
 GO_COVERAGE_ZERO_PACKAGES := ./internal/app $(GO_COVERAGE_PACKAGES)
@@ -15,7 +14,7 @@ CI_MAKEFLAGS := -j$(CI_JOBS) --keep-going $(if $(filter output-sync,$(.FEATURES)
 
 .PHONY: generate generated-check mod-tidy-check fmt lint go-lint go-deadcode web-lint check-web-quality \
     test go-test web-test go-coverage-check go-coverage-zero-check test-race test-race-coverage test-cli \
-    web-install web-build dev e2e build install ci ci-checks clean $(GOLANGCI_LINT)
+    web-install web-build dev e2e build version-check install ci ci-checks clean $(GOLANGCI_LINT)
 
 generate: web-install
 	$(GO) tool sqlc generate
@@ -117,7 +116,10 @@ e2e: build
 
 build: web-build
 	mkdir -p bin
-	$(GO) build -trimpath -ldflags "$(VERSION_LDFLAGS)" -o bin/prx ./cmd/prx
+	$(GO) build -trimpath -o bin/prx ./cmd/prx
+
+version-check: build
+	@test "$$($(CURDIR)/bin/prx --version)" = "prx version $(VERSION)-dev"
 
 install: build
 	install -d "$(INSTALL_DIR)"
@@ -129,7 +131,7 @@ ci:
 # Every check is read-only or writes only to its own output (coverage/, test-results/, bin/prx,
 # internal/webui/dist), so they are safe to run concurrently. Dependencies serialize the writers.
 # The longest chain (web-build -> build -> e2e) comes first so make schedules it before the rest.
-ci-checks: e2e build lint test-race-coverage go-coverage-zero-check web-test check-web-quality \
+ci-checks: e2e version-check build lint test-race-coverage go-coverage-zero-check web-test check-web-quality \
     generated-check mod-tidy-check
 
 clean:
