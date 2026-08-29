@@ -26,6 +26,9 @@ linters:
     - unconvert
     - usestdlibvars
     - wastedassign
+    - inamedparam
+    - revive
+
   settings:
     exhaustive:
       default-signifies-exhaustive: false
@@ -38,6 +41,10 @@ linters:
       require-explanation: true
       require-specific: true
       allow-unused: false
+    revive:
+      enable-all-rules: false
+      rules:
+        - name: package-comments
 
     depguard:
       rules:
