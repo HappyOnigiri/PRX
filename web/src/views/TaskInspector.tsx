@@ -4,10 +4,10 @@ import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { MutationError } from "./MutationError";
 import { DependencySection } from "./TaskInspectorDependencies";
-import { PullRequestSection } from "./TaskInspectorPullRequest";
-import { ReferencesSection } from "./TaskInspectorReferences";
 import { TaskInspectorForm } from "./TaskInspectorForm";
 import { TaskInspectorHeader } from "./TaskInspectorHeader";
+import { PullRequestSection } from "./TaskInspectorPullRequest";
+import { ReferencesSection } from "./TaskInspectorReferences";
 import type { TaskNodeDocument } from "./TaskNode";
 
 export interface TaskInspectorProps {

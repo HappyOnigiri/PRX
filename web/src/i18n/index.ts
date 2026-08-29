@@ -4,8 +4,8 @@ import { resources } from "./resources";
 import {
   detectDisplayLanguage,
   supportedLanguages,
-  type SupportedLanguage,
   writeDisplayLanguage,
+  type SupportedLanguage,
 } from "./settings";
 
 void i18n.use(initReactI18next).init({

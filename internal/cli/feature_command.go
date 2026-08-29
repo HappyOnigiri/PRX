@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"github.com/HappyOnigiri/PRX/internal/domain"
 	"github.com/spf13/cobra"
+
+	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 func (s *state) featureCommand() *cobra.Command {
@@ -83,10 +84,19 @@ func (s *state) featureUpdateCommand() *cobra.Command {
 		Example: "prx feature update checkout --archived=false --json",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := s.service.UpdateFeature(cmd.Context(), args[0],
-				changedFlag(cmd, "slug", &slug), changedFlag(cmd, "title", &title),
-				changedFlag(cmd, "description", &description), changedStringType[domain.FeatureStatus](cmd, "status", &status),
-				changedBoolFlag(cmd, "archived", &archived))
+			value, err := s.service.UpdateFeature(
+				cmd.Context(),
+				args[0],
+				changedFlag(cmd, "slug", &slug),
+				changedFlag(cmd, "title", &title),
+				changedFlag(
+					cmd,
+					"description",
+					&description,
+				),
+				changedStringType[domain.FeatureStatus](cmd, "status", &status),
+				changedBoolFlag(cmd, "archived", &archived),
+			)
 			if err != nil {
 				return err
 			}

@@ -1,8 +1,8 @@
 import type { Feature } from "../gen/prx/v1/prx_pb";
-import type { TaskNodeDocument } from "./TaskNode";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { EditFeatureDialog } from "./EditFeatureDialog";
 import { MarkdownPreview } from "./MarkdownPreview";
+import type { TaskNodeDocument } from "./TaskNode";
 
 interface WorkspaceOverlaysProps {
   feature: Feature;

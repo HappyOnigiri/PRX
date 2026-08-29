@@ -8,6 +8,19 @@ import eslintComments from "@eslint-community/eslint-plugin-eslint-comments";
 export default tseslint.config(
   { ignores: ["dist", "coverage", "src/gen"] },
   js.configs.recommended,
+  {
+    plugins: {
+      "@eslint-community/eslint-comments": eslintComments,
+    },
+    rules: {
+      "@eslint-community/eslint-comments/require-description": "error",
+      "@eslint-community/eslint-comments/no-unlimited-disable": "error",
+      "@eslint-community/eslint-comments/disable-enable-pair": "error",
+    },
+    linterOptions: {
+      reportUnusedDisableDirectives: "error",
+    },
+  },
   ...tseslint.configs.strictTypeChecked,
   ...tseslint.configs.stylisticTypeChecked,
   {
@@ -26,14 +39,10 @@ export default tseslint.config(
       "jsx-a11y": jsxA11y,
       "react-hooks": reactHooks,
       "react-refresh": reactRefresh,
-      "@eslint-community/eslint-comments": eslintComments,
     },
     rules: {
       ...jsxA11y.flatConfigs.recommended.rules,
       ...reactHooks.configs.recommended.rules,
-      "@eslint-community/eslint-comments/require-description": "error",
-      "@eslint-community/eslint-comments/no-unlimited-disable": "error",
-      "@eslint-community/eslint-comments/disable-enable-pair": "error",
       "react-refresh/only-export-components": [
         "warn",
         { allowConstantExport: true },
@@ -69,9 +78,6 @@ export default tseslint.config(
       complexity: ["error", 10],
       "max-depth": ["error", 3],
       "max-params": ["error", 4],
-    },
-    linterOptions: {
-      reportUnusedDisableDirectives: "error",
     },
   },
   {

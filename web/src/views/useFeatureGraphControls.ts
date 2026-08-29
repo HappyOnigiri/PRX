@@ -1,4 +1,3 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   MarkerType,
   type AriaLabelConfig,
@@ -6,14 +5,15 @@ import {
   type OnMoveEnd,
   type ReactFlowInstance,
 } from "@xyflow/react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { Dependency } from "../gen/prx/v1/prx_pb";
 import {
   maxGraphZoom,
   minGraphZoom,
   readGraphZoom,
   writeGraphZoom,
 } from "../i18n/settings";
-import type { Dependency } from "../gen/prx/v1/prx_pb";
 import type { TaskFlowNode } from "./TaskNode";
 
 interface FeatureGraphControlsOptions {

@@ -1,5 +1,5 @@
-import type { SyntheticEvent } from "react";
 import { useNavigate } from "@tanstack/react-router";
+import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";

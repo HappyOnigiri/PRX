@@ -103,10 +103,10 @@ See [docs/design.md](docs/design.md) for package boundaries, status decisions, t
 ## Verification
 
 ```sh
-make generate          # sqlc, Buf lint, Go/TypeScript protobuf, and CLI reference generation
+make generate          # sqlc, Buf format/lint, Go/TypeScript protobuf, and CLI reference generation
 make generated-check  # regeneration must produce no diff
 make mod-tidy-check   # go.mod and go.sum must be tidy
-make lint              # go vet, golangci-lint, ESLint, strict TypeScript, and function size/complexity limits
+make lint              # go vet, golangci-lint (gofumpt / gci / golines), deadcode, ESLint, strict TypeScript, and function size/complexity limits
 make test              # Go, Vitest, and component coverage
 make go-coverage-check # handwritten Go packages must stay at or above the coverage baseline
 make test-race         # Go race detector

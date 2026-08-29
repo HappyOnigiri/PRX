@@ -13,9 +13,13 @@ interface ThemeWindow {
 
 const themeWindow = window as ThemeWindow;
 
+function darkScheme() {
+  if (typeof themeWindow.matchMedia !== "function") return undefined;
+  return themeWindow.matchMedia(darkSchemeQuery);
+}
+
 function prefersDark() {
-  const mediaQuery = themeWindow.matchMedia;
-  return mediaQuery ? mediaQuery(darkSchemeQuery).matches : false;
+  return darkScheme()?.matches ?? false;
 }
 
 function applyThemePreference(theme: ThemePreference) {
@@ -35,6 +39,6 @@ export function setDisplayTheme(theme: ThemePreference) {
 
 applyThemePreference(readThemePreference());
 
-themeWindow.matchMedia?.(darkSchemeQuery).addEventListener("change", () => {
+darkScheme()?.addEventListener("change", () => {
   if (readThemePreference() === "system") applyThemePreference("system");
 });

@@ -4,259 +4,641 @@ package prx.v1;
 
 option go_package = "github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1";
 
+// FeatureStatus is the lifecycle state of a feature.
 enum FeatureStatus {
+  // FEATURE_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
   FEATURE_STATUS_UNSPECIFIED = 0;
+  // FEATURE_STATUS_ACTIVE means the feature is currently being worked on.
   FEATURE_STATUS_ACTIVE = 1;
+  // FEATURE_STATUS_PAUSED means work on the feature is temporarily paused.
   FEATURE_STATUS_PAUSED = 2;
+  // FEATURE_STATUS_COMPLETED means the feature has been completed.
   FEATURE_STATUS_COMPLETED = 3;
+  // FEATURE_STATUS_CANCELLED means the feature will not be completed.
   FEATURE_STATUS_CANCELLED = 4;
 }
 
+// TaskKind identifies whether a task is completed by merging a pull request or manually.
 enum TaskKind {
+  // TASK_KIND_UNSPECIFIED is never returned by the server; in create requests it defaults to a pull-request task.
   TASK_KIND_UNSPECIFIED = 0;
+  // TASK_KIND_PULL_REQUEST identifies a task completed by merging its pull request.
   TASK_KIND_PULL_REQUEST = 1;
+  // TASK_KIND_MANUAL identifies a task completed by setting its status to completed.
   TASK_KIND_MANUAL = 2;
 }
 
+// TaskStatus is the stored workflow state of a task.
 enum TaskStatus {
+  // TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
   TASK_STATUS_UNSPECIFIED = 0;
+  // TASK_STATUS_PLANNED means work has not started.
   TASK_STATUS_PLANNED = 1;
+  // TASK_STATUS_IN_PROGRESS means work is underway.
   TASK_STATUS_IN_PROGRESS = 2;
+  // TASK_STATUS_COMPLETED means a manual task is complete; pull-request tasks complete on merge.
   TASK_STATUS_COMPLETED = 3;
+  // TASK_STATUS_CANCELLED means the task is cancelled and does not satisfy dependencies.
   TASK_STATUS_CANCELLED = 4;
 }
 
+// TaskDisplayState is the derived state presented for a task.
+// For pull-request tasks, priority is merged, closed, draft, conflict, changes requested, approved,
+// review waiting, open, then unknown.
 enum TaskDisplayState {
+  // TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
   TASK_DISPLAY_STATE_UNSPECIFIED = 0;
+  // TASK_DISPLAY_STATE_PLANNED mirrors a planned manual task.
   TASK_DISPLAY_STATE_PLANNED = 1;
+  // TASK_DISPLAY_STATE_IN_PROGRESS mirrors an in-progress manual task.
   TASK_DISPLAY_STATE_IN_PROGRESS = 2;
+  // TASK_DISPLAY_STATE_COMPLETED mirrors a completed manual task.
   TASK_DISPLAY_STATE_COMPLETED = 3;
+  // TASK_DISPLAY_STATE_CANCELLED mirrors a cancelled task.
   TASK_DISPLAY_STATE_CANCELLED = 4;
+  // TASK_DISPLAY_STATE_UNLINKED means a pull-request task has no attached pull request.
   TASK_DISPLAY_STATE_UNLINKED = 5;
+  // TASK_DISPLAY_STATE_MERGED means the attached pull request is merged.
   TASK_DISPLAY_STATE_MERGED = 6;
+  // TASK_DISPLAY_STATE_CLOSED means the attached pull request is closed without being merged.
   TASK_DISPLAY_STATE_CLOSED = 7;
+  // TASK_DISPLAY_STATE_DRAFT means the attached pull request is a draft.
   TASK_DISPLAY_STATE_DRAFT = 8;
+  // TASK_DISPLAY_STATE_CONFLICT means the attached pull request has a merge conflict.
   TASK_DISPLAY_STATE_CONFLICT = 9;
+  // TASK_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
   TASK_DISPLAY_STATE_CHANGES_REQUESTED = 10;
+  // TASK_DISPLAY_STATE_APPROVED means the attached pull request has an approval.
   TASK_DISPLAY_STATE_APPROVED = 11;
+  // TASK_DISPLAY_STATE_REVIEW_WAITING means the attached open pull request is waiting for review.
   TASK_DISPLAY_STATE_REVIEW_WAITING = 12;
+  // TASK_DISPLAY_STATE_OPEN means the attached pull request is open without a higher-priority state.
   TASK_DISPLAY_STATE_OPEN = 13;
+  // TASK_DISPLAY_STATE_UNKNOWN means the attached pull request state or relevant data is unknown.
   TASK_DISPLAY_STATE_UNKNOWN = 14;
 }
 
+// PullRequestState is the raw lifecycle state reported for a GitHub pull request.
 enum PullRequestState {
+  // PULL_REQUEST_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
   PULL_REQUEST_STATE_UNSPECIFIED = 0;
+  // PULL_REQUEST_STATE_OPEN means GitHub reports the pull request as open.
   PULL_REQUEST_STATE_OPEN = 1;
+  // PULL_REQUEST_STATE_CLOSED means GitHub reports the pull request as closed without merge.
   PULL_REQUEST_STATE_CLOSED = 2;
+  // PULL_REQUEST_STATE_MERGED means GitHub reports the pull request as merged.
   PULL_REQUEST_STATE_MERGED = 3;
+  // PULL_REQUEST_STATE_UNKNOWN means the pull request state could not be determined.
   PULL_REQUEST_STATE_UNKNOWN = 4;
 }
 
+// ReviewState summarizes the current review decision and requested reviewers.
 enum ReviewState {
+  // REVIEW_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
   REVIEW_STATE_UNSPECIFIED = 0;
+  // REVIEW_STATE_NONE means no approval or change request is currently active.
   REVIEW_STATE_NONE = 1;
+  // REVIEW_STATE_REQUIRED means the pull request has requested reviewers.
   REVIEW_STATE_REQUIRED = 2;
+  // REVIEW_STATE_APPROVED means at least one current review approves the pull request.
   REVIEW_STATE_APPROVED = 3;
+  // REVIEW_STATE_CHANGES_REQUESTED means at least one current review requests changes.
   REVIEW_STATE_CHANGES_REQUESTED = 4;
+  // REVIEW_STATE_UNKNOWN means review information could not be determined.
   REVIEW_STATE_UNKNOWN = 5;
 }
 
+// Mergeability is the current mergeability reported for a GitHub pull request.
 enum Mergeability {
+  // MERGEABILITY_UNSPECIFIED is never returned for a valid pull request and is not a request field.
   MERGEABILITY_UNSPECIFIED = 0;
+  // MERGEABILITY_MERGEABLE means GitHub reports no merge conflict.
   MERGEABILITY_MERGEABLE = 1;
+  // MERGEABILITY_CONFLICTING means GitHub reports a merge conflict.
   MERGEABILITY_CONFLICTING = 2;
+  // MERGEABILITY_UNKNOWN means mergeability could not be determined.
   MERGEABILITY_UNKNOWN = 3;
 }
 
+// PullRequestDisplayState is the derived presentation state of a pull request.
+// Its priority is merged, closed, draft, conflict, changes requested, approved, review waiting, open, then unknown.
 enum PullRequestDisplayState {
+  // PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
   PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED = 0;
+  // PULL_REQUEST_DISPLAY_STATE_MERGED means the pull request is merged.
   PULL_REQUEST_DISPLAY_STATE_MERGED = 1;
+  // PULL_REQUEST_DISPLAY_STATE_CLOSED means the pull request is closed without being merged.
   PULL_REQUEST_DISPLAY_STATE_CLOSED = 2;
+  // PULL_REQUEST_DISPLAY_STATE_DRAFT means the pull request is a draft.
   PULL_REQUEST_DISPLAY_STATE_DRAFT = 3;
+  // PULL_REQUEST_DISPLAY_STATE_CONFLICT means the pull request has a merge conflict.
   PULL_REQUEST_DISPLAY_STATE_CONFLICT = 4;
+  // PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
   PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED = 5;
+  // PULL_REQUEST_DISPLAY_STATE_APPROVED means the pull request has an approval.
   PULL_REQUEST_DISPLAY_STATE_APPROVED = 6;
+  // PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING means the open, non-draft pull request needs review.
   PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING = 7;
+  // PULL_REQUEST_DISPLAY_STATE_OPEN means the pull request is open without a higher-priority state.
   PULL_REQUEST_DISPLAY_STATE_OPEN = 8;
+  // PULL_REQUEST_DISPLAY_STATE_UNKNOWN means the pull request state or relevant data is unknown.
   PULL_REQUEST_DISPLAY_STATE_UNKNOWN = 9;
 }
 
+// DocumentKind identifies the type of reference stored in a document.
 enum DocumentKind {
+  // DOCUMENT_KIND_UNSPECIFIED is never returned by the server and is rejected in requests.
   DOCUMENT_KIND_UNSPECIFIED = 0;
+  // DOCUMENT_KIND_URL stores an HTTP or HTTPS URL.
   DOCUMENT_KIND_URL = 1;
+  // DOCUMENT_KIND_MARKDOWN_PATH stores a path to a registered Markdown file.
   DOCUMENT_KIND_MARKDOWN_PATH = 2;
 }
 
+// BlockedReasonCode explains why a planned task is not ready.
 enum BlockedReasonCode {
+  // BLOCKED_REASON_CODE_UNSPECIFIED is never returned; no BlockedReason is sent when there is no structured reason.
   BLOCKED_REASON_CODE_UNSPECIFIED = 0;
+  // BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE means a referenced blocker is missing.
   BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE = 1;
+  // BLOCKED_REASON_CODE_BLOCKER_STALE means a blocker has stale GitHub data.
   BLOCKED_REASON_CODE_BLOCKER_STALE = 2;
+  // BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER means a dependency has not been satisfied.
   BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER = 3;
 }
 
+// DomainErrorCode identifies a known validation, state, storage, or GitHub error exposed over RPC.
 enum DomainErrorCode {
+  // DOMAIN_ERROR_CODE_UNSPECIFIED is never returned for a recognized domain error; it is the unmapped fallback.
   DOMAIN_ERROR_CODE_UNSPECIFIED = 0;
+  // DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY means a dependency crosses feature boundaries.
   DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY = 2;
+  // DOMAIN_ERROR_CODE_CYCLE means adding a dependency would create a cycle.
   DOMAIN_ERROR_CODE_CYCLE = 3;
+  // DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY means the dependency already exists.
   DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY = 4;
+  // DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST means the pull request is already attached to another task.
   DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST = 5;
+  // DOMAIN_ERROR_CODE_GITHUB_AUTH means GitHub credentials or a provider are unavailable.
   DOMAIN_ERROR_CODE_GITHUB_AUTH = 6;
+  // DOMAIN_ERROR_CODE_INVALID_DATABASE means database validation failed.
   DOMAIN_ERROR_CODE_INVALID_DATABASE = 7;
+  // DOMAIN_ERROR_CODE_INVALID_DOCUMENT means a document value is missing or invalid.
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT = 8;
+  // DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND means the document kind is unsupported.
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND = 9;
+  // DOMAIN_ERROR_CODE_INVALID_KIND means the task kind is unsupported.
   DOMAIN_ERROR_CODE_INVALID_KIND = 10;
+  // DOMAIN_ERROR_CODE_INVALID_PARENT means a document does not have exactly one valid parent.
   DOMAIN_ERROR_CODE_INVALID_PARENT = 11;
+  // DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL means the pull request URL cannot be parsed.
   DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL = 12;
+  // DOMAIN_ERROR_CODE_INVALID_SEED means seed parameters are invalid.
   DOMAIN_ERROR_CODE_INVALID_SEED = 13;
+  // DOMAIN_ERROR_CODE_INVALID_SLUG means a feature slug does not meet its format rules.
   DOMAIN_ERROR_CODE_INVALID_SLUG = 14;
+  // DOMAIN_ERROR_CODE_INVALID_STATUS means a feature or task status is unsupported.
   DOMAIN_ERROR_CODE_INVALID_STATUS = 15;
+  // DOMAIN_ERROR_CODE_INVALID_TITLE means a required feature or task title is empty.
   DOMAIN_ERROR_CODE_INVALID_TITLE = 16;
+  // DOMAIN_ERROR_CODE_NOT_FOUND means the requested record does not exist.
   DOMAIN_ERROR_CODE_NOT_FOUND = 17;
+  // DOMAIN_ERROR_CODE_REFERENCES_EXIST means deletion is blocked by referencing records.
   DOMAIN_ERROR_CODE_REFERENCES_EXIST = 18;
+  // DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK means a pull request cannot attach to a manual task.
   DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK = 19;
+  // DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE means a pull-request task cannot be manually completed.
   DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE = 20;
+  // DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL means a document URL is not HTTP or HTTPS.
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL = 21;
+  // DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED means a registered Markdown file could not be read.
   DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED = 22;
+  // DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE means a Markdown preview exceeds the 1 MiB limit.
   DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE = 23;
 }
 
+// BlockedReason is the structured reason a planned task is not ready.
 message BlockedReason {
+  // code identifies the dependency condition preventing readiness.
   BlockedReasonCode code = 1;
+  // blocker_task_id identifies the specific blocking task when one is known.
   string blocker_task_id = 2;
 }
 
+// ErrorDetail carries a stable domain error code and optional dependency context.
 message ErrorDetail {
+  // code identifies the domain error reported by the server.
   DomainErrorCode code = 1;
+  // path contains the task IDs along a detected dependency cycle, with the starting task repeated at the end.
   repeated string path = 2;
 }
 
+// Feature is a roadmap unit that owns tasks and dependency graphs.
 message Feature {
+  // id is the stable identifier of the feature.
   string id = 1;
+  // slug is the lowercase, hyphenated identifier used by CLI commands.
   string slug = 2;
+  // title is the human-readable feature name.
   string title = 3;
+  // description explains the feature's scope or goal.
   string description = 4;
+  // status is the feature's lifecycle state.
   FeatureStatus status = 5;
+  // archived indicates whether the feature is hidden from the active sidebar.
   bool archived = 6;
+  // created_at is the creation time in RFC 3339 format.
   string created_at = 7;
+  // updated_at is the last update time in RFC 3339 format.
   string updated_at = 8;
+  // task_count is the number of tasks belonging to the feature.
   int32 task_count = 9;
+  // ready_count is the number of tasks currently ready to work on.
   int32 ready_count = 10;
+  // review_waiting_count is the number of tasks whose pull requests are waiting for review.
   int32 review_waiting_count = 11;
+  // conflict_count is the number of tasks whose pull requests have conflicts.
   int32 conflict_count = 12;
+  // merged_count is the number of tasks whose pull requests are merged.
   int32 merged_count = 13;
 }
 
+// Task is a unit of work belonging to a feature.
 message Task {
+  // id is the stable identifier of the task.
   string id = 1;
+  // feature_id identifies the feature that owns the task.
   string feature_id = 2;
+  // title is the human-readable task name.
   string title = 3;
+  // scope describes the work covered by the task.
   string scope = 4;
+  // kind determines whether completion is driven by a pull request or manual status.
   TaskKind kind = 5;
+  // status is the stored workflow state; pull-request completion is derived from merge state.
   TaskStatus status = 6;
+  // assignee is the person responsible for the task, when assigned.
   string assignee = 7;
+  // created_at is the creation time in RFC 3339 format.
   string created_at = 8;
+  // updated_at is the last update time in RFC 3339 format.
   string updated_at = 9;
+  // ready indicates that the planned task has no unsatisfied blockers.
   bool ready = 10;
+  // display_state is the derived state intended for task presentation.
   TaskDisplayState display_state = 11;
+  // blocked_reason explains why a planned task is not ready, when applicable.
   BlockedReason blocked_reason = 12;
 }
 
+// Dependency is a directed edge from a blocker task to a blocked task in one feature.
 message Dependency {
+  // blocker_task_id identifies the task that must be satisfied first.
   string blocker_task_id = 1;
+  // blocked_task_id identifies the task that depends on the blocker.
   string blocked_task_id = 2;
+  // created_at is the time the dependency was added in RFC 3339 format.
   string created_at = 3;
 }
 
+// PullRequest is the GitHub record attached to a pull-request task.
 message PullRequest {
+  // task_id identifies the task linked to the pull request.
   string task_id = 1;
+  // owner is the GitHub account or organization that owns the repository.
   string owner = 2;
+  // repository is the GitHub repository name.
   string repository = 3;
+  // number is the pull request number within the repository.
   int64 number = 4;
+  // url is the canonical pull request URL.
   string url = 5;
+  // node_id is GitHub's stable node identifier for the pull request.
   string node_id = 6;
+  // author is the GitHub login of the pull request author.
   string author = 7;
+  // assignees contains the GitHub logins assigned to the pull request.
   repeated string assignees = 8;
+  // state is the raw lifecycle state reported by GitHub.
   PullRequestState state = 9;
+  // draft indicates whether the pull request is a draft.
   bool draft = 10;
+  // review_state summarizes current review decisions and requested reviewers.
   ReviewState review_state = 11;
+  // mergeability is the current mergeability reported by GitHub.
   Mergeability mergeability = 12;
+  // github_updated_at is the last update time reported by GitHub in RFC 3339 format.
   string github_updated_at = 13;
+  // last_synced_at is the last time PR data was fetched in RFC 3339 format.
   string last_synced_at = 14;
+  // sync_error contains the most recent refresh error, when one occurred.
   string sync_error = 15;
+  // stale indicates that the pull request data may not represent the current GitHub state.
   bool stale = 16;
+  // display_state is the derived presentation state using the documented priority order.
   PullRequestDisplayState display_state = 17;
 }
 
+// Document is a reference attached to exactly one feature or task.
 message Document {
+  // id is the stable identifier of the document reference.
   string id = 1;
+  // feature_id identifies the parent feature when the document is feature-scoped.
   string feature_id = 2;
+  // task_id identifies the parent task when the document is task-scoped.
   string task_id = 3;
+  // kind identifies whether value is a URL or a registered Markdown path.
   DocumentKind kind = 4;
+  // title is the human-readable document label.
   string title = 5;
+  // value is the URL or registered Markdown file path.
   string value = 6;
+  // created_at is the creation time in RFC 3339 format.
   string created_at = 7;
 }
 
+// Snapshot is the complete normalized dataset plus derived task queues.
 message Snapshot {
+  // features contains all stored features.
   repeated Feature features = 1;
+  // tasks contains all stored tasks with derived readiness and display state.
   repeated Task tasks = 2;
+  // dependencies contains all directed task dependencies.
   repeated Dependency dependencies = 3;
+  // pull_requests contains all attached pull requests and their latest known data.
   repeated PullRequest pull_requests = 4;
+  // documents contains all registered document references without file contents.
   repeated Document documents = 5;
+  // ready_tasks contains planned tasks whose blockers are satisfied.
   repeated Task ready_tasks = 6;
+  // review_waiting_tasks contains tasks whose pull requests are waiting for review.
   repeated Task review_waiting_tasks = 7;
+  // conflict_tasks contains tasks whose pull requests have merge conflicts.
   repeated Task conflict_tasks = 8;
+  // stale_tasks contains tasks whose pull request data is stale or has a sync error.
   repeated Task stale_tasks = 9;
 }
 
+// GetSnapshotRequest requests the current normalized dataset and derived queues.
 message GetSnapshotRequest {}
-message GetSnapshotResponse { Snapshot snapshot = 1; }
-message CreateFeatureRequest { string slug = 1; string title = 2; string description = 3; }
-message CreateFeatureResponse { Feature feature = 1; }
-message UpdateFeatureRequest { string id = 1; optional string slug = 2; optional string title = 3; optional string description = 4; optional FeatureStatus status = 5; optional bool archived = 6; }
-message UpdateFeatureResponse { Feature feature = 1; }
-message DeleteFeatureRequest { string id = 1; bool cascade = 2; }
-message DeleteFeatureResponse {}
-message CreateTaskRequest { string feature_id = 1; string title = 2; string scope = 3; TaskKind kind = 4; string assignee = 5; }
-message CreateTaskResponse { Task task = 1; }
-message UpdateTaskRequest { string id = 1; optional string title = 2; optional string scope = 3; optional TaskStatus status = 4; optional string assignee = 5; }
-message UpdateTaskResponse { Task task = 1; }
-message DeleteTaskRequest { string id = 1; bool cascade = 2; }
-message DeleteTaskResponse {}
-message AddDependencyRequest { string blocker_task_id = 1; string blocked_task_id = 2; }
-message AddDependencyResponse { Dependency dependency = 1; }
-message RemoveDependencyRequest { string blocker_task_id = 1; string blocked_task_id = 2; }
-message RemoveDependencyResponse {}
-message AttachPullRequestRequest { string task_id = 1; string url = 2; }
-message AttachPullRequestResponse { PullRequest pull_request = 1; }
-message DetachPullRequestRequest { string task_id = 1; }
-message DetachPullRequestResponse {}
-message AddDocumentRequest { string feature_id = 1; string task_id = 2; DocumentKind kind = 3; string title = 4; string value = 5; }
-message AddDocumentResponse { Document document = 1; }
-message DeleteDocumentRequest { string id = 1; }
-message DeleteDocumentResponse {}
-message ReadMarkdownDocumentRequest { string id = 1; }
-message ReadMarkdownDocumentResponse { string content = 1; }
-message SyncRequest { string feature_id = 1; string task_id = 2; }
-message SyncResponse { int32 succeeded = 1; int32 failed = 2; }
-message ValidateRequest {}
-message ValidateResponse { bool valid = 1; repeated string errors = 2; }
 
+// GetSnapshotResponse returns the requested application snapshot.
+message GetSnapshotResponse {
+  // snapshot contains normalized records and derived task queues.
+  Snapshot snapshot = 1;
+}
+
+// CreateFeatureRequest contains the required and descriptive values for a feature.
+message CreateFeatureRequest {
+  // slug is the lowercase, hyphenated feature identifier.
+  string slug = 1;
+  // title is the required human-readable feature name.
+  string title = 2;
+  // description is optional explanatory text for the feature.
+  string description = 3;
+}
+
+// CreateFeatureResponse returns the newly created feature.
+message CreateFeatureResponse {
+  // feature is the created feature with its generated identifier and timestamps.
+  Feature feature = 1;
+}
+
+// UpdateFeatureRequest updates only the supplied feature fields.
+// An unset optional field is unchanged, while an empty string requests clearing a string field.
+message UpdateFeatureRequest {
+  // id identifies the feature to update.
+  string id = 1;
+  // slug is unchanged when unset; an empty string requests clearing it.
+  optional string slug = 2;
+  // title is unchanged when unset; an empty string requests clearing it.
+  optional string title = 3;
+  // description is unchanged when unset; an empty string clears it.
+  optional string description = 4;
+  // status is unchanged when unset; a supplied value replaces it.
+  optional FeatureStatus status = 5;
+  // archived is unchanged when unset; a supplied value explicitly sets it.
+  optional bool archived = 6;
+}
+
+// UpdateFeatureResponse returns the updated feature.
+message UpdateFeatureResponse {
+  // feature is the feature after applying the requested updates.
+  Feature feature = 1;
+}
+
+// DeleteFeatureRequest requests deletion of a feature and optionally its references.
+message DeleteFeatureRequest {
+  // id identifies the feature to delete.
+  string id = 1;
+  // cascade permits deletion of the feature's dependent tasks and records.
+  bool cascade = 2;
+}
+
+// DeleteFeatureResponse confirms that the feature was deleted.
+message DeleteFeatureResponse {}
+
+// CreateTaskRequest contains the values for a task within a feature.
+message CreateTaskRequest {
+  // feature_id identifies the feature that owns the task.
+  string feature_id = 1;
+  // title is the required human-readable task name.
+  string title = 2;
+  // scope describes the work covered by the task.
+  string scope = 3;
+  // kind selects pull-request completion or manual completion; unspecified defaults to pull-request.
+  TaskKind kind = 4;
+  // assignee is the optional person responsible for the task.
+  string assignee = 5;
+}
+
+// CreateTaskResponse returns the newly created task.
+message CreateTaskResponse {
+  // task is the created task with its generated identifier and timestamps.
+  Task task = 1;
+}
+
+// UpdateTaskRequest updates only the supplied task fields.
+// An unset optional field is unchanged, while an empty string requests clearing a string field.
+message UpdateTaskRequest {
+  // id identifies the task to update.
+  string id = 1;
+  // title is unchanged when unset; an empty string requests clearing it.
+  optional string title = 2;
+  // scope is unchanged when unset; an empty string clears it.
+  optional string scope = 3;
+  // status is unchanged when unset; a supplied value replaces it.
+  optional TaskStatus status = 4;
+  // assignee is unchanged when unset; an empty string clears it.
+  optional string assignee = 5;
+}
+
+// UpdateTaskResponse returns the updated task.
+message UpdateTaskResponse {
+  // task is the task after applying the requested updates.
+  Task task = 1;
+}
+
+// DeleteTaskRequest requests deletion of a task and optionally its references.
+message DeleteTaskRequest {
+  // id identifies the task to delete.
+  string id = 1;
+  // cascade permits deletion of the task's dependencies, pull request, and documents.
+  bool cascade = 2;
+}
+
+// DeleteTaskResponse confirms that the task was deleted.
+message DeleteTaskResponse {}
+
+// AddDependencyRequest creates a same-feature dependency edge.
+message AddDependencyRequest {
+  // blocker_task_id identifies the task that must be satisfied first.
+  string blocker_task_id = 1;
+  // blocked_task_id identifies the task that will wait for the blocker.
+  string blocked_task_id = 2;
+}
+
+// AddDependencyResponse returns the newly created dependency.
+message AddDependencyResponse {
+  // dependency is the persisted directed edge.
+  Dependency dependency = 1;
+}
+
+// RemoveDependencyRequest identifies a dependency edge to remove.
+message RemoveDependencyRequest {
+  // blocker_task_id identifies the dependency's blocker.
+  string blocker_task_id = 1;
+  // blocked_task_id identifies the dependency's blocked task.
+  string blocked_task_id = 2;
+}
+
+// RemoveDependencyResponse confirms that the dependency was removed.
+message RemoveDependencyResponse {}
+
+// AttachPullRequestRequest links a GitHub pull request to a pull-request task.
+message AttachPullRequestRequest {
+  // task_id identifies the pull-request task.
+  string task_id = 1;
+  // url is the GitHub pull request URL to attach.
+  string url = 2;
+}
+
+// AttachPullRequestResponse returns the attached pull request.
+message AttachPullRequestResponse {
+  // pull_request is the newly attached record with unknown initial GitHub state.
+  PullRequest pull_request = 1;
+}
+
+// DetachPullRequestRequest identifies the task whose pull request should be detached.
+message DetachPullRequestRequest {
+  // task_id identifies the task whose pull request is removed.
+  string task_id = 1;
+}
+
+// DetachPullRequestResponse confirms that the pull request was detached.
+message DetachPullRequestResponse {}
+
+// AddDocumentRequest registers a URL or Markdown path under exactly one parent.
+message AddDocumentRequest {
+  // feature_id identifies the parent feature when task_id is empty.
+  string feature_id = 1;
+  // task_id identifies the parent task when feature_id is empty.
+  string task_id = 2;
+  // kind identifies whether value is a URL or a Markdown path.
+  DocumentKind kind = 3;
+  // title is the human-readable document label.
+  string title = 4;
+  // value is the URL or file path to register.
+  string value = 5;
+}
+
+// AddDocumentResponse returns the newly registered document.
+message AddDocumentResponse {
+  // document is the persisted document reference.
+  Document document = 1;
+}
+
+// DeleteDocumentRequest identifies a document reference to delete.
+message DeleteDocumentRequest {
+  // id identifies the document to delete.
+  string id = 1;
+}
+
+// DeleteDocumentResponse confirms that the document was deleted.
+message DeleteDocumentResponse {}
+
+// ReadMarkdownDocumentRequest identifies a registered Markdown path to read.
+message ReadMarkdownDocumentRequest {
+  // id identifies the Markdown document reference.
+  string id = 1;
+}
+
+// ReadMarkdownDocumentResponse returns Markdown content for a registered path.
+message ReadMarkdownDocumentResponse {
+  // content contains the file contents and is limited to 1 MiB.
+  string content = 1;
+}
+
+// SyncRequest selects pull requests to refresh from GitHub.
+// Empty selectors refresh all pull requests; setting both selectors applies both filters.
+message SyncRequest {
+  // feature_id selects pull requests belonging to the feature identified by ID or slug.
+  string feature_id = 1;
+  // task_id selects the pull request attached to this task.
+  string task_id = 2;
+}
+
+// SyncResponse reports the results of a pull request refresh.
+message SyncResponse {
+  // succeeded is the number of pull requests refreshed successfully.
+  int32 succeeded = 1;
+  // failed is the number of pull requests that retained stale data after a refresh error.
+  int32 failed = 2;
+}
+
+// ValidateRequest requests database integrity validation.
+message ValidateRequest {}
+
+// ValidateResponse reports whether database integrity checks passed.
+message ValidateResponse {
+  // valid is true when no integrity errors were found.
+  bool valid = 1;
+  // errors contains human-readable integrity errors when valid is false.
+  repeated string errors = 2;
+}
+
+// PRXService exposes feature, task, dependency, GitHub, document, and validation operations.
 service PRXService {
+  // GetSnapshot returns the current normalized dataset and derived queues.
   rpc GetSnapshot(GetSnapshotRequest) returns (GetSnapshotResponse);
+  // CreateFeature creates a new feature.
   rpc CreateFeature(CreateFeatureRequest) returns (CreateFeatureResponse);
+  // UpdateFeature applies the fields present in the request to an existing feature.
   rpc UpdateFeature(UpdateFeatureRequest) returns (UpdateFeatureResponse);
+  // DeleteFeature deletes a feature, subject to the cascade option.
   rpc DeleteFeature(DeleteFeatureRequest) returns (DeleteFeatureResponse);
+  // CreateTask creates a task within an existing feature.
   rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
+  // UpdateTask applies the fields present in the request to an existing task.
   rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
+  // DeleteTask deletes a task, subject to the cascade option.
   rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
+  // AddDependency adds a same-feature dependency when it does not create a cycle.
   rpc AddDependency(AddDependencyRequest) returns (AddDependencyResponse);
+  // RemoveDependency removes an existing dependency edge.
   rpc RemoveDependency(RemoveDependencyRequest) returns (RemoveDependencyResponse);
+  // AttachPullRequest attaches a GitHub pull request to a pull-request task.
   rpc AttachPullRequest(AttachPullRequestRequest) returns (AttachPullRequestResponse);
+  // DetachPullRequest removes the pull request attached to a task.
   rpc DetachPullRequest(DetachPullRequestRequest) returns (DetachPullRequestResponse);
+  // AddDocument registers a URL or Markdown path under a feature or task.
   rpc AddDocument(AddDocumentRequest) returns (AddDocumentResponse);
+  // DeleteDocument removes a registered document reference.
   rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
+  // ReadMarkdownDocument reads a registered Markdown path for preview.
   rpc ReadMarkdownDocument(ReadMarkdownDocumentRequest) returns (ReadMarkdownDocumentResponse);
+  // Sync refreshes selected pull requests from GitHub and records successes and failures independently.
   rpc Sync(SyncRequest) returns (SyncResponse);
+  // Validate checks database integrity and returns any detected errors.
   rpc Validate(ValidateRequest) returns (ValidateResponse);
 }

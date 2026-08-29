@@ -1,5 +1,5 @@
-import { render, screen } from "@testing-library/react";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
+import { render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "../src/router";
 import { makeSnapshot } from "./factories";

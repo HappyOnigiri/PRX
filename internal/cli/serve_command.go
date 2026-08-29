@@ -10,45 +10,56 @@ import (
 	"strings"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/HappyOnigiri/PRX/internal/app"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/rpc"
 	"github.com/HappyOnigiri/PRX/internal/webui"
-	"github.com/spf13/cobra"
 )
 
 func (s *state) serveCommand() *cobra.Command {
 	var address string
-	command := &cobra.Command{Use: "serve", Short: "Start the local WebUI and ConnectRPC server", Example: "prx serve --addr 127.0.0.1:7331", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		if s.fixture == "" {
-			if provider, err := githubprovider.NewLiveProvider(cmd.Context()); err == nil {
-				s.service = app.New(s.store, provider)
-			} else {
-				_, _ = fmt.Fprintf(s.errOut, "warning: %v\n", err)
+	command := &cobra.Command{
+		Use:     "serve",
+		Short:   "Start the local WebUI and ConnectRPC server",
+		Example: "prx serve --addr 127.0.0.1:7331",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			if s.fixture == "" {
+				if provider, err := githubprovider.NewLiveProvider(cmd.Context()); err == nil {
+					s.service = app.New(s.store, provider)
+				} else {
+					_, _ = fmt.Fprintf(s.errOut, "warning: %v\n", err)
+				}
 			}
-		}
-		rpcPath, rpcHandler := rpc.New(s.service)
-		mux := http.NewServeMux()
-		mux.Handle(rpcPath, rpcHandler)
-		mux.Handle("/", webui.Handler())
-		listener, err := (&net.ListenConfig{}).Listen(cmd.Context(), "tcp", address)
-		if err != nil {
+			rpcPath, rpcHandler := rpc.New(s.service)
+			mux := http.NewServeMux()
+			mux.Handle(rpcPath, rpcHandler)
+			mux.Handle("/", webui.Handler())
+			listener, err := (&net.ListenConfig{}).Listen(cmd.Context(), "tcp", address)
+			if err != nil {
+				return err
+			}
+			server := &http.Server{
+				Addr:              address,
+				Handler:           localOnly(listener.Addr(), mux),
+				ReadHeaderTimeout: 5 * time.Second,
+			}
+			_, _ = fmt.Fprintf(s.errOut, "PRX listening on http://%s\n", listener.Addr())
+			go func() {
+				<-cmd.Context().Done()
+				ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+				defer cancel()
+				_ = server.Shutdown(ctx)
+			}()
+			err = server.Serve(listener)
+			if errors.Is(err, http.ErrServerClosed) {
+				return nil
+			}
 			return err
-		}
-		server := &http.Server{Addr: address, Handler: localOnly(listener.Addr(), mux), ReadHeaderTimeout: 5 * time.Second}
-		_, _ = fmt.Fprintf(s.errOut, "PRX listening on http://%s\n", listener.Addr())
-		go func() {
-			<-cmd.Context().Done()
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer cancel()
-			_ = server.Shutdown(ctx)
-		}()
-		err = server.Serve(listener)
-		if errors.Is(err, http.ErrServerClosed) {
-			return nil
-		}
-		return err
-	}}
+		},
+	}
 	command.Flags().StringVar(&address, "addr", "127.0.0.1:7331", "listen address")
 	return command
 }

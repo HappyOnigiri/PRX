@@ -5,9 +5,9 @@ import {
   ReactFlow,
 } from "@xyflow/react";
 import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
-import { TaskNode, type TaskFlowNode, type TaskNodeDocument } from "./TaskNode";
 import { FeatureGraphLegend } from "./FeatureGraphLegend";
 import { FeatureGraphState } from "./FeatureGraphState";
+import { TaskNode, type TaskFlowNode, type TaskNodeDocument } from "./TaskNode";
 import { useFeatureGraphControls } from "./useFeatureGraphControls";
 import { useGraphLayout } from "./useGraphLayout";
 

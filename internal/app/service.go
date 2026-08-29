@@ -7,7 +7,6 @@ import (
 	"net/url"
 	"os"
 	"regexp"
-	"sort"
 	"strings"
 	"time"
 
@@ -62,7 +61,10 @@ func (s *Service) CreateFeature(ctx context.Context, slug, title, description st
 	slug = strings.TrimSpace(strings.ToLower(slug))
 	title = strings.TrimSpace(title)
 	if !slugPattern.MatchString(slug) {
-		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidSlug, "slug must contain lowercase letters, numbers, and single hyphens")
+		return domain.Feature{}, domain.NewError(
+			domain.DomainErrorCodeInvalidSlug,
+			"slug must contain lowercase letters, numbers, and single hyphens",
+		)
 	}
 	if title == "" {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "feature title is required")
@@ -72,7 +74,13 @@ func (s *Service) CreateFeature(ctx context.Context, slug, title, description st
 
 // UpdateFeature applies every field the caller supplied. A nil pointer means the
 // field was omitted; an empty string is a request to clear it.
-func (s *Service) UpdateFeature(ctx context.Context, id string, slug, title, description *string, status *domain.FeatureStatus, archived *bool) (domain.Feature, error) {
+func (s *Service) UpdateFeature(
+	ctx context.Context,
+	id string,
+	slug, title, description *string,
+	status *domain.FeatureStatus,
+	archived *bool,
+) (domain.Feature, error) {
 	feature, err := s.ResolveFeature(ctx, id)
 	if err != nil {
 		return domain.Feature{}, err
@@ -95,7 +103,13 @@ func (s *Service) UpdateFeature(ctx context.Context, id string, slug, title, des
 	if !slugPattern.MatchString(feature.Slug) {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidSlug, "invalid feature slug")
 	}
-	if !oneOf(feature.Status, domain.FeatureStatusActive, domain.FeatureStatusPaused, domain.FeatureStatusCompleted, domain.FeatureStatusCancelled) {
+	if !oneOf(
+		feature.Status,
+		domain.FeatureStatusActive,
+		domain.FeatureStatusPaused,
+		domain.FeatureStatusCompleted,
+		domain.FeatureStatusCancelled,
+	) {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid feature status")
 	}
 	return s.repository.UpdateFeature(ctx, feature)
@@ -119,7 +133,12 @@ func (s *Service) DeleteFeature(ctx context.Context, id string, cascade bool) er
 	return s.repository.DeleteFeature(ctx, feature.ID, cascade)
 }
 
-func (s *Service) CreateTask(ctx context.Context, featureID, title, scope string, kind domain.TaskKind, assignee string) (domain.Task, error) {
+func (s *Service) CreateTask(
+	ctx context.Context,
+	featureID, title, scope string,
+	kind domain.TaskKind,
+	assignee string,
+) (domain.Task, error) {
 	feature, err := s.ResolveFeature(ctx, featureID)
 	if err != nil {
 		return domain.Task{}, err
@@ -139,7 +158,13 @@ func (s *Service) CreateTask(ctx context.Context, featureID, title, scope string
 
 // UpdateTask applies every field the caller supplied. A nil pointer means the
 // field was omitted; an empty string is a request to clear it.
-func (s *Service) UpdateTask(ctx context.Context, id string, title, scope *string, status *domain.TaskStatus, assignee *string) (domain.Task, error) {
+func (s *Service) UpdateTask(
+	ctx context.Context,
+	id string,
+	title, scope *string,
+	status *domain.TaskStatus,
+	assignee *string,
+) (domain.Task, error) {
 	task, err := s.repository.GetTask(ctx, id)
 	if err != nil {
 		return domain.Task{}, err
@@ -159,14 +184,23 @@ func (s *Service) UpdateTask(ctx context.Context, id string, title, scope *strin
 	if task.Title == "" {
 		return domain.Task{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "task title is required")
 	}
-	if !oneOf(task.Status, domain.TaskStatusPlanned, domain.TaskStatusInProgress, domain.TaskStatusCompleted, domain.TaskStatusCancelled) {
+	if !oneOf(
+		task.Status,
+		domain.TaskStatusPlanned,
+		domain.TaskStatusInProgress,
+		domain.TaskStatusCompleted,
+		domain.TaskStatusCancelled,
+	) {
 		return domain.Task{}, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid task status")
 	}
 	// PR tasks derive completion from a merged PR. Accepting completed here would
 	// drop the task out of the ready queue while its dependents stay blocked,
 	// since dependency satisfaction still requires a fresh merged PR.
 	if task.Kind == domain.TaskKindPR && task.Status == domain.TaskStatusCompleted {
-		return domain.Task{}, domain.NewError(domain.DomainErrorCodePRTaskCompletesOnMerge, "a PR task completes when its pull request is merged")
+		return domain.Task{}, domain.NewError(
+			domain.DomainErrorCodePRTaskCompletesOnMerge,
+			"a PR task completes when its pull request is merged",
+		)
 	}
 	return s.repository.UpdateTask(ctx, task)
 }
@@ -174,9 +208,11 @@ func (s *Service) UpdateTask(ctx context.Context, id string, title, scope *strin
 func (s *Service) DeleteTask(ctx context.Context, id string, cascade bool) error {
 	return s.repository.DeleteTask(ctx, id, cascade)
 }
+
 func (s *Service) AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error) {
 	return s.repository.AddDependency(ctx, blocker, blocked)
 }
+
 func (s *Service) RemoveDependency(ctx context.Context, blocker, blocked string) error {
 	return s.repository.RemoveDependency(ctx, blocker, blocked)
 }
@@ -187,25 +223,52 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 		return domain.PullRequest{}, err
 	}
 	if task.Kind != domain.TaskKindPR {
-		return domain.PullRequest{}, domain.NewError(domain.DomainErrorCodePullRequestOnManualTask, "manual tasks cannot have pull requests")
+		return domain.PullRequest{}, domain.NewError(
+			domain.DomainErrorCodePullRequestOnManualTask,
+			"manual tasks cannot have pull requests",
+		)
 	}
 	owner, repo, number, canonical, err := githubprovider.ParsePullRequestURL(rawURL)
 	if err != nil {
 		return domain.PullRequest{}, domain.NewError(domain.DomainErrorCodeInvalidPullRequestURL, "%s", err)
 	}
-	return s.repository.UpsertPullRequest(ctx, domain.PullRequest{TaskID: taskID, Owner: owner, Repository: repo, Number: number, URL: canonical, State: domain.PullRequestStateUnknown, ReviewState: domain.ReviewStateUnknown, Mergeability: domain.MergeabilityUnknown, Stale: true})
+	return s.repository.UpsertPullRequest(
+		ctx,
+		domain.PullRequest{
+			TaskID:       taskID,
+			Owner:        owner,
+			Repository:   repo,
+			Number:       number,
+			URL:          canonical,
+			State:        domain.PullRequestStateUnknown,
+			ReviewState:  domain.ReviewStateUnknown,
+			Mergeability: domain.MergeabilityUnknown,
+			Stale:        true,
+		},
+	)
 }
 
 func (s *Service) DetachPullRequest(ctx context.Context, taskID string) error {
 	return s.repository.DeletePullRequest(ctx, taskID)
 }
 
-func (s *Service) AddDocument(ctx context.Context, featureID, taskID string, kind domain.DocumentKind, title, value string) (domain.Document, error) {
+func (s *Service) AddDocument(
+	ctx context.Context,
+	featureID, taskID string,
+	kind domain.DocumentKind,
+	title, value string,
+) (domain.Document, error) {
 	if (featureID == "") == (taskID == "") {
-		return domain.Document{}, domain.NewError(domain.DomainErrorCodeInvalidParent, "set exactly one of feature_id or task_id")
+		return domain.Document{}, domain.NewError(
+			domain.DomainErrorCodeInvalidParent,
+			"set exactly one of feature_id or task_id",
+		)
 	}
 	if !oneOf(kind, domain.DocumentKindURL, domain.DocumentKindMarkdownPath) {
-		return domain.Document{}, domain.NewError(domain.DomainErrorCodeInvalidDocumentKind, "document kind must be url or markdown_path")
+		return domain.Document{}, domain.NewError(
+			domain.DomainErrorCodeInvalidDocumentKind,
+			"document kind must be url or markdown_path",
+		)
 	}
 	value = strings.TrimSpace(value)
 	if value == "" {
@@ -214,7 +277,10 @@ func (s *Service) AddDocument(ctx context.Context, featureID, taskID string, kin
 	if kind == domain.DocumentKindURL {
 		parsed, err := url.Parse(value)
 		if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") {
-			return domain.Document{}, domain.NewError(domain.DomainErrorCodeInvalidDocumentURL, "document URL must use http or https")
+			return domain.Document{}, domain.NewError(
+				domain.DomainErrorCodeInvalidDocumentURL,
+				"document URL must use http or https",
+			)
 		}
 	}
 	if featureID != "" {
@@ -422,7 +488,12 @@ func (s *Service) seedDemoFeature(ctx context.Context, slug string, count int) (
 	if err == nil {
 		return feature, nil
 	}
-	return s.CreateFeature(ctx, slug, fmt.Sprintf("Cross-repository launch · %d nodes", count), "A representative branching and merging delivery graph.")
+	return s.CreateFeature(
+		ctx,
+		slug,
+		fmt.Sprintf("Cross-repository launch · %d nodes", count),
+		"A representative branching and merging delivery graph.",
+	)
 }
 
 type seedDemoIndexes struct {
@@ -451,21 +522,37 @@ func buildSeedDemoIndexes(snapshot domain.Snapshot, featureID string) seedDemoIn
 	return indexes
 }
 
-func (s *Service) seedDemoTasks(ctx context.Context, slug, featureID string, count int, indexes seedDemoIndexes) ([]domain.Task, error) {
+func (s *Service) seedDemoTasks(
+	ctx context.Context,
+	slug, featureID string,
+	count int,
+	indexes seedDemoIndexes,
+) ([]domain.Task, error) {
 	tasks := make([]domain.Task, count)
 	for i := 0; i < count; i++ {
 		title := fmt.Sprintf("Delivery slice %02d", i+1)
 		task, ok := indexes.existingTasks[title]
 		if !ok {
 			var err error
-			task, err = s.CreateTask(ctx, featureID, title, "Implement and verify repository boundary", domain.TaskKindPR, []string{"Ari", "Mika", "Ren"}[i%3])
+			task, err = s.CreateTask(
+				ctx,
+				featureID,
+				title,
+				"Implement and verify repository boundary",
+				domain.TaskKindPR,
+				[]string{"Ari", "Mika", "Ren"}[i%3],
+			)
 			if err != nil {
 				return nil, err
 			}
 		}
 		tasks[i] = task
 		if !indexes.linkedTasks[task.ID] {
-			if _, err := s.AttachPullRequest(ctx, task.ID, fmt.Sprintf("https://github.com/HappyOnigiri/%s/pull/%d", slug, i+1)); err != nil {
+			if _, err := s.AttachPullRequest(
+				ctx,
+				task.ID,
+				fmt.Sprintf("https://github.com/HappyOnigiri/%s/pull/%d", slug, i+1),
+			); err != nil {
 				return nil, err
 			}
 		}
@@ -473,7 +560,11 @@ func (s *Service) seedDemoTasks(ctx context.Context, slug, featureID string, cou
 	return tasks, nil
 }
 
-func (s *Service) seedDemoDependencies(ctx context.Context, tasks []domain.Task, existingDependencies map[string]bool) error {
+func (s *Service) seedDemoDependencies(
+	ctx context.Context,
+	tasks []domain.Task,
+	existingDependencies map[string]bool,
+) error {
 	for i := 1; i < len(tasks); i++ {
 		blocker := (i - 1) / 2
 		if existingDependencies[tasks[blocker].ID+"→"+tasks[i].ID] {
@@ -493,8 +584,4 @@ func oneOf[T comparable](value T, values ...T) bool {
 		}
 	}
 	return false
-}
-
-func SortTasks(tasks []domain.Task) {
-	sort.Slice(tasks, func(i, j int) bool { return tasks[i].Title < tasks[j].Title })
 }

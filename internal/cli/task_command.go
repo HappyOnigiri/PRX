@@ -1,8 +1,9 @@
 package cli
 
 import (
-	"github.com/HappyOnigiri/PRX/internal/domain"
 	"github.com/spf13/cobra"
+
+	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 func (s *state) taskCommand() *cobra.Command {

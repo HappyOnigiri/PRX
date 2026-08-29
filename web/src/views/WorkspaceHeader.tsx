@@ -1,5 +1,5 @@
-import type { Feature } from "../gen/prx/v1/prx_pb";
 import { useTranslation } from "react-i18next";
+import type { Feature } from "../gen/prx/v1/prx_pb";
 
 interface WorkspaceHeaderProps {
   feature: Feature;
