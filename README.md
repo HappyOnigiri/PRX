@@ -19,7 +19,7 @@ prx seed --github-fixture demo
 prx serve
 ```
 
-`make install` installs the locked web dependencies, builds the production binary, and installs it to `~/.local/bin/prx`. Set `INSTALL_DIR` to install elsewhere. Ensure the installation directory is on `PATH`, then open <http://127.0.0.1:7331>. The production web build is embedded in the binary; no separate frontend process is needed.
+`make install` installs the locked web dependencies, builds a local binary identified as `<version>-dev`, and installs it to `~/.local/bin/prx`. Set `INSTALL_DIR` to install elsewhere. Ensure the installation directory is on `PATH`, then open <http://127.0.0.1:7331>. The production web build is embedded in the binary; no separate frontend process is needed.
 
 The default database is stored under the operating system's user configuration directory. Use `--db /path/to/prx.db` or `PRX_DB` to select another database. The server binds only to `127.0.0.1:7331` unless `--addr` is explicitly supplied.
 

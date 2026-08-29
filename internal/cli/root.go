@@ -7,6 +7,8 @@ import (
 	"os"
 
 	"github.com/spf13/cobra"
+
+	prx "github.com/HappyOnigiri/PRX"
 )
 
 type state struct {
@@ -28,7 +30,11 @@ func NewRoot(out, errOut io.Writer, openService OpenService) *cobra.Command {
 func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Command, *state) {
 	s := &state{out: out, errOut: errOut, openService: openService}
 	root := &cobra.Command{
-		Use: "prx", Short: "Manage pull-request dependency roadmaps", SilenceErrors: true, SilenceUsage: true,
+		Use:           "prx",
+		Short:         "Manage pull-request dependency roadmaps",
+		Version:       prx.Version(),
+		SilenceErrors: true,
+		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			if cmd.Name() == "help" {
 				return nil

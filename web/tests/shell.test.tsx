@@ -9,6 +9,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setDisplayLanguage } from "../src/i18n";
 import { AppShell } from "../src/shell";
+import { appVersion } from "../src/version";
 import { makeFeature, makeSnapshot } from "./factories";
 
 const shellMocks = vi.hoisted(() => ({
@@ -74,6 +75,7 @@ describe("AppShell", () => {
     expect(screen.getByText("Conflict feature")).toBeInTheDocument();
     expect(screen.queryByText("Archived feature")).not.toBeInTheDocument();
     expect(screen.getByText("Workspace")).toBeInTheDocument();
+    expect(screen.getByText(`v${appVersion()}`)).toBeInTheDocument();
 
     fireEvent.change(
       screen.getByRole("combobox", { name: "Display language" }),
