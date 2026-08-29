@@ -5,14 +5,22 @@ import { mutations } from "./api";
 import { useDomainMutation, useSnapshot } from "./hooks";
 import { formatError } from "./i18n/domain";
 import { setDisplayLanguage } from "./i18n";
-import { supportedLanguages, type SupportedLanguage } from "./i18n/settings";
+import {
+  readThemePreference,
+  supportedLanguages,
+  themePreferences,
+  type SupportedLanguage,
+  type ThemePreference,
+} from "./i18n/settings";
 import { formValue } from "./form";
+import { setDisplayTheme } from "./theme";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t, i18n } = useTranslation();
   const snapshot = useSnapshot();
   const navigate = useNavigate();
   const [showCreate, setShowCreate] = useState(false);
+  const [theme, setTheme] = useState(readThemePreference);
   const createFeature = useDomainMutation(mutations.createFeature);
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -73,22 +81,42 @@ export function AppShell({ children }: { children: ReactNode }) {
         <button className="rail-action" onClick={() => setShowCreate(true)}>
           {t("nav.newFeature")}
         </button>
-        <label className="language-setting">
-          <span>{t("language.label")}</span>
-          <select
-            aria-label={t("language.label")}
-            value={i18n.resolvedLanguage ?? "en"}
-            onChange={(event) =>
-              void setDisplayLanguage(event.target.value as SupportedLanguage)
-            }
-          >
-            {supportedLanguages.map((language) => (
-              <option value={language} key={language}>
-                {t(`language.${language}`)}
-              </option>
-            ))}
-          </select>
-        </label>
+        <div className="rail-settings">
+          <label className="language-setting">
+            <span>{t("language.label")}</span>
+            <select
+              aria-label={t("language.label")}
+              value={i18n.resolvedLanguage ?? "en"}
+              onChange={(event) =>
+                void setDisplayLanguage(event.target.value as SupportedLanguage)
+              }
+            >
+              {supportedLanguages.map((language) => (
+                <option value={language} key={language}>
+                  {t(`language.${language}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label className="theme-setting">
+            <span>{t("theme.label")}</span>
+            <select
+              aria-label={t("theme.label")}
+              value={theme}
+              onChange={(event) => {
+                const preference = event.target.value as ThemePreference;
+                setTheme(preference);
+                setDisplayTheme(preference);
+              }}
+            >
+              {themePreferences.map((preference) => (
+                <option value={preference} key={preference}>
+                  {t(`theme.${preference}`)}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
         <div className="rail-foot">
           <span className={snapshot.isError ? "health bad" : "health"} />
           {snapshot.isError

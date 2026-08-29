@@ -90,6 +90,8 @@ Failed GitHub refreshes preserve the last successful fields and mark the record 
 
 The WebUI supports English and Japanese. It uses a saved display-language preference first, then the browser's preferred languages, and falls back to English. The selector in the navigation rail stores the preference in browser Local Storage; it does not alter CLI behavior or server data.
 
+The WebUI theme follows the operating system or browser color-scheme preference by default. If the browser does not report a preference, the light theme is used. The navigation rail can explicitly select the light or dark theme; that choice is stored in browser Local Storage and takes precedence until the theme is set back to System.
+
 The dependency canvas also stores the user's zoom level in browser Local Storage. Every feature graph opens at that same zoom level and is centered without automatically fitting its size to the viewport.
 
 ConnectRPC represents fixed domain states, blocked reasons, and known errors with enums and structured details. The WebUI turns those values into localized text. Messages from unexpected server or GitHub failures are shown in their original form.

@@ -1,0 +1,34 @@
+import {
+  readThemePreference,
+  resolveThemePreference,
+  type ThemePreference,
+  writeThemePreference,
+} from "./i18n/settings";
+
+const darkSchemeQuery = "(prefers-color-scheme: dark)";
+const themeColors = { light: "#f5f6f8", dark: "#191b1f" } as const;
+
+function prefersDark() {
+  return window.matchMedia?.(darkSchemeQuery).matches === true;
+}
+
+function applyThemePreference(theme: ThemePreference) {
+  if (theme === "system") delete document.documentElement.dataset.theme;
+  else document.documentElement.dataset.theme = theme;
+
+  const resolved = resolveThemePreference(theme, prefersDark());
+  document
+    .querySelector('meta[name="theme-color"]')
+    ?.setAttribute("content", themeColors[resolved]);
+}
+
+export function setDisplayTheme(theme: ThemePreference) {
+  writeThemePreference(theme);
+  applyThemePreference(theme);
+}
+
+applyThemePreference(readThemePreference());
+
+window.matchMedia?.(darkSchemeQuery).addEventListener("change", () => {
+  if (readThemePreference() === "system") applyThemePreference("system");
+});

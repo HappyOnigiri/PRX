@@ -2,10 +2,13 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   detectDisplayLanguage,
   readGraphZoom,
+  readThemePreference,
   readWebUISettings,
+  resolveThemePreference,
   webUISettingsKey,
   writeDisplayLanguage,
   writeGraphZoom,
+  writeThemePreference,
 } from "../src/i18n/settings";
 
 describe("WebUI settings", () => {
@@ -38,13 +41,31 @@ describe("WebUI settings", () => {
   });
 
   it("preserves other WebUI settings when updating language or zoom", () => {
+    writeThemePreference("dark");
     writeGraphZoom(0.64);
     writeDisplayLanguage("ja");
-    expect(readWebUISettings()).toEqual({ language: "ja", graphZoom: 0.64 });
+    expect(readWebUISettings()).toEqual({
+      language: "ja",
+      graphZoom: 0.64,
+      theme: "dark",
+    });
   });
 
   it("uses the default graph zoom when the saved value is invalid", () => {
     localStorage.setItem(webUISettingsKey, JSON.stringify({ graphZoom: 20 }));
     expect(readGraphZoom()).toBe(1);
+  });
+
+  it("defaults to system theme and ignores an invalid saved theme", () => {
+    expect(readThemePreference()).toBe("system");
+    localStorage.setItem(webUISettingsKey, JSON.stringify({ theme: "sepia" }));
+    expect(readThemePreference()).toBe("system");
+  });
+
+  it("resolves system theme to light unless dark is explicitly preferred", () => {
+    expect(resolveThemePreference("system", false)).toBe("light");
+    expect(resolveThemePreference("system", true)).toBe("dark");
+    expect(resolveThemePreference("light", true)).toBe("light");
+    expect(resolveThemePreference("dark", false)).toBe("dark");
   });
 });

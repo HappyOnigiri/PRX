@@ -2,6 +2,12 @@ export const shell = {
   en: {
     app: { title: "PRX — Dependency control" },
     language: { label: "Display language", en: "English", ja: "日本語" },
+    theme: {
+      label: "Display theme",
+      system: "System",
+      light: "Light",
+      dark: "Dark",
+    },
     nav: {
       dashboard: "PRX dashboard",
       dependencyControl: "Dependency control",
@@ -24,6 +30,12 @@ export const shell = {
   ja: {
     app: { title: "PRX — 依存関係コントロール" },
     language: { label: "表示言語", en: "English", ja: "日本語" },
+    theme: {
+      label: "表示テーマ",
+      system: "システム",
+      light: "ライト",
+      dark: "ダーク",
+    },
     nav: {
       dashboard: "PRX ダッシュボード",
       dependencyControl: "依存関係コントロール",

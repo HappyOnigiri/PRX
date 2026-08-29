@@ -134,15 +134,22 @@
   font-size: var(--text-xs);
 }
 
-.language-setting {
+.rail-settings {
+  display: grid;
+  gap: 10px;
+  margin: 0 16px 12px;
+}
+
+.language-setting,
+.theme-setting {
   display: grid;
   gap: 6px;
-  margin: 0 16px 12px;
   color: var(--text-3);
   font-size: var(--text-xs);
 }
 
-.language-setting select {
+.language-setting select,
+.theme-setting select {
   width: 100%;
   min-height: 32px;
   border: 1px solid var(--border-strong);
@@ -211,16 +218,20 @@
     margin: 14px 10px;
   }
 
-  .language-setting {
+  .rail-settings {
     align-self: center;
+    display: flex;
+    gap: 6px;
     margin: 10px 12px 10px 0;
   }
 
-  .language-setting span {
+  .language-setting span,
+  .theme-setting span {
     display: none;
   }
 
-  .language-setting select {
+  .language-setting select,
+  .theme-setting select {
     width: 92px;
   }
 
@@ -246,5 +257,16 @@
 
   .nav-link {
     padding-inline: 8px;
+  }
+
+  .rail-settings {
+    gap: 4px;
+    margin-right: 8px;
+  }
+
+  .language-setting select,
+  .theme-setting select {
+    width: 72px;
+    padding-inline: 6px;
   }
 }
