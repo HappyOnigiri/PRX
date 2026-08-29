@@ -17,8 +17,11 @@ func Handler() http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")
-		w.Header().
-			Set("Content-Security-Policy", "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'")
+		w.Header().Set(
+			"Content-Security-Policy",
+			"default-src 'self'; style-src 'self' 'unsafe-inline'; "+
+				"img-src 'self' data:; connect-src 'self'",
+		)
 		if _, err := fs.Stat(root, "index.html"); err != nil {
 			http.Error(w, "web UI is not built; run make web-build", http.StatusServiceUnavailable)
 			return

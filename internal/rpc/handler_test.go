@@ -238,7 +238,8 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 		snapshot.Msg.Snapshot.Tasks[1].BlockedReason == nil {
 		t.Fatalf("unexpected structured task state: %+v", snapshot.Msg.Snapshot.Tasks[1])
 	}
-	if snapshot.Msg.Snapshot.Tasks[1].BlockedReason.Code != prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER {
+	if snapshot.Msg.Snapshot.Tasks[1].BlockedReason.Code !=
+		prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER {
 		t.Fatalf("blocked reason=%+v", snapshot.Msg.Snapshot.Tasks[1].BlockedReason)
 	}
 }

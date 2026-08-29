@@ -201,7 +201,14 @@ func TestAddDocumentValidatesWithoutRepository(t *testing.T) {
 		code      domain.DomainErrorCode
 	}{
 		{name: "missing parent", kind: "url", value: "https://example.com", code: "invalid_parent"},
-		{name: "two parents", featureID: "feature-id", taskID: "task-id", kind: "url", value: "https://example.com", code: "invalid_parent"},
+		{
+			name:      "two parents",
+			featureID: "feature-id",
+			taskID:    "task-id",
+			kind:      "url",
+			value:     "https://example.com",
+			code:      "invalid_parent",
+		},
 		{name: "unknown kind", taskID: "task-id", kind: "file", value: "docs/plan.md", code: "invalid_document_kind"},
 		{name: "missing value", taskID: "task-id", kind: "url", value: "  ", code: "invalid_document"},
 		{name: "invalid URL", taskID: "task-id", kind: "url", value: "ftp://example.com", code: "invalid_document_url"},

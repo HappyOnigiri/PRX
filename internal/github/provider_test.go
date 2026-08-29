@@ -32,7 +32,9 @@ func TestLiveProviderMapsStates(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(
 			[]byte(
-				`{"number":7,"state":"open","draft":false,"mergeable":false,"node_id":"PR_7","user":{"login":"octocat"},"assignees":[{"login":"mona"}],"updated_at":"2026-01-01T00:00:00Z"}`,
+				`{"number":7,"state":"open","draft":false,"mergeable":false,"node_id":"PR_7",` +
+					`"user":{"login":"octocat"},"assignees":[{"login":"mona"}],` +
+					`"updated_at":"2026-01-01T00:00:00Z"}`,
 			),
 		)
 	})
@@ -79,7 +81,8 @@ func newReviewServer(t *testing.T, reviewsJSON string) *LiveProvider {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(
 			[]byte(
-				`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},"updated_at":"2026-01-01T00:00:00Z"}`,
+				`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},` +
+					`"updated_at":"2026-01-01T00:00:00Z"}`,
 			),
 		)
 	})
@@ -146,14 +149,18 @@ func TestFixtureRejectsValuesOutsideTheSchema(t *testing.T) {
 		}
 		return path
 	}
-	valid := `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved","mergeability":"mergeable"}}`
+	valid := `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved",` +
+		`"mergeability":"mergeable"}}`
 	if _, err := NewFixtureProvider(write(valid)); err != nil {
 		t.Fatalf("valid fixture rejected: %v", err)
 	}
 	cases := map[string]string{
-		"missing state":        `{"https://github.com/acme/api/pull/42":{"review_state":"approved","mergeability":"mergeable"}}`,
-		"typo in review_state": `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"aproved","mergeability":"mergeable"}}`,
-		"typo in mergeability": `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved","mergeability":"merged"}}`,
+		"missing state": `{"https://github.com/acme/api/pull/42":{"review_state":"approved",` +
+			`"mergeability":"mergeable"}}`,
+		"typo in review_state": `{"https://github.com/acme/api/pull/42":{"state":"open",` +
+			`"review_state":"aproved","mergeability":"mergeable"}}`,
+		"typo in mergeability": `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved",` +
+			`"mergeability":"merged"}}`,
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -209,7 +216,8 @@ func TestLiveProviderFollowsReviewPagination(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write(
 			[]byte(
-				`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},"updated_at":"2026-01-01T00:00:00Z"}`,
+				`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},` +
+					`"updated_at":"2026-01-01T00:00:00Z"}`,
 			),
 		)
 	})

@@ -288,14 +288,18 @@ func protoMergeability(value domain.Mergeability) prxv1.Mergeability {
 }
 
 func protoPullRequestDisplayState(value domain.PullRequestDisplayState) prxv1.PullRequestDisplayState {
+	const (
+		changesRequestedState = prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED
+		reviewWaitingState    = prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING
+	)
 	states := map[domain.PullRequestDisplayState]prxv1.PullRequestDisplayState{
 		domain.PullRequestDisplayStateMerged:           prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_MERGED,
 		domain.PullRequestDisplayStateClosed:           prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CLOSED,
 		domain.PullRequestDisplayStateDraft:            prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_DRAFT,
 		domain.PullRequestDisplayStateConflict:         prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CONFLICT,
-		domain.PullRequestDisplayStateChangesRequested: prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED,
+		domain.PullRequestDisplayStateChangesRequested: changesRequestedState,
 		domain.PullRequestDisplayStateApproved:         prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_APPROVED,
-		domain.PullRequestDisplayStateReviewWaiting:    prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING,
+		domain.PullRequestDisplayStateReviewWaiting:    reviewWaitingState,
 		domain.PullRequestDisplayStateOpen:             prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_OPEN,
 		domain.PullRequestDisplayStateUnknown:          prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNKNOWN,
 	}

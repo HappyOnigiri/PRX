@@ -15,8 +15,17 @@ import (
 
 func (s *Store) CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error) {
 	now := timestamp(s.now())
+	params := db.CreateFeatureParams{
+		ID:          uuid.NewString(),
+		Slug:        slug,
+		Title:       title,
+		Description: description,
+		Status:      string(domain.FeatureStatusActive),
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	}
 	value, err := db.New(s.db).
-		CreateFeature(ctx, db.CreateFeatureParams{ID: uuid.NewString(), Slug: slug, Title: title, Description: description, Status: string(domain.FeatureStatusActive), CreatedAt: now, UpdatedAt: now})
+		CreateFeature(ctx, params)
 	if err != nil {
 		return domain.Feature{}, fmt.Errorf("create feature: %w", err)
 	}
@@ -34,8 +43,17 @@ func (s *Store) GetFeatureBySlug(ctx context.Context, slug string) (domain.Featu
 }
 
 func (s *Store) UpdateFeature(ctx context.Context, feature domain.Feature) (domain.Feature, error) {
+	params := db.UpdateFeatureParams{
+		Slug:        feature.Slug,
+		Title:       feature.Title,
+		Description: feature.Description,
+		Status:      string(feature.Status),
+		Archived:    boolInt(feature.Archived),
+		UpdatedAt:   timestamp(s.now()),
+		ID:          feature.ID,
+	}
 	value, err := db.New(s.db).
-		UpdateFeature(ctx, db.UpdateFeatureParams{Slug: feature.Slug, Title: feature.Title, Description: feature.Description, Status: string(feature.Status), Archived: boolInt(feature.Archived), UpdatedAt: timestamp(s.now()), ID: feature.ID})
+		UpdateFeature(ctx, params)
 	return domainFeature(value), mapNotFound(err, "feature", feature.ID)
 }
 
@@ -46,8 +64,19 @@ func (s *Store) CreateTask(
 	assignee string,
 ) (domain.Task, error) {
 	now := timestamp(s.now())
+	params := db.CreateTaskParams{
+		ID:        uuid.NewString(),
+		FeatureID: featureID,
+		Title:     title,
+		Scope:     scope,
+		Kind:      string(kind),
+		Status:    string(domain.TaskStatusPlanned),
+		Assignee:  assignee,
+		CreatedAt: now,
+		UpdatedAt: now,
+	}
 	value, err := db.New(s.db).
-		CreateTask(ctx, db.CreateTaskParams{ID: uuid.NewString(), FeatureID: featureID, Title: title, Scope: scope, Kind: string(kind), Status: string(domain.TaskStatusPlanned), Assignee: assignee, CreatedAt: now, UpdatedAt: now})
+		CreateTask(ctx, params)
 	if err != nil {
 		return domain.Task{}, fmt.Errorf("create task: %w", err)
 	}
@@ -60,8 +89,16 @@ func (s *Store) GetTask(ctx context.Context, id string) (domain.Task, error) {
 }
 
 func (s *Store) UpdateTask(ctx context.Context, task domain.Task) (domain.Task, error) {
+	params := db.UpdateTaskParams{
+		Title:     task.Title,
+		Scope:     task.Scope,
+		Status:    string(task.Status),
+		Assignee:  task.Assignee,
+		UpdatedAt: timestamp(s.now()),
+		ID:        task.ID,
+	}
 	value, err := db.New(s.db).
-		UpdateTask(ctx, db.UpdateTaskParams{Title: task.Title, Scope: task.Scope, Status: string(task.Status), Assignee: task.Assignee, UpdatedAt: timestamp(s.now()), ID: task.ID})
+		UpdateTask(ctx, params)
 	return domainTask(value), mapNotFound(err, "task", task.ID)
 }
 
@@ -152,7 +189,9 @@ func (s *Store) DeleteTask(ctx context.Context, id string, cascade bool) error {
 	}
 	if !cascade {
 		var references int
-		if err := tx.QueryRowContext(ctx, `SELECT (SELECT COUNT(*) FROM dependencies WHERE blocker_task_id=? OR blocked_task_id=?) + (SELECT COUNT(*) FROM pull_requests WHERE task_id=?) + (SELECT COUNT(*) FROM documents WHERE task_id=?)`, id, id, id, id).
+		query := `SELECT (SELECT COUNT(*) FROM dependencies WHERE blocker_task_id=? OR blocked_task_id=?) + ` +
+			`(SELECT COUNT(*) FROM pull_requests WHERE task_id=?) + (SELECT COUNT(*) FROM documents WHERE task_id=?)`
+		if err := tx.QueryRowContext(ctx, query, id, id, id, id).
 			Scan(&references); err != nil {
 			return err
 		}
@@ -276,8 +315,17 @@ func (s *Store) CreateDocument(
 	kind domain.DocumentKind,
 	title, value string,
 ) (domain.Document, error) {
+	params := db.CreateDocumentParams{
+		ID:        uuid.NewString(),
+		FeatureID: nullString(featureID),
+		TaskID:    nullString(taskID),
+		Kind:      string(kind),
+		Title:     title,
+		Value:     value,
+		CreatedAt: timestamp(s.now()),
+	}
 	row, err := db.New(s.db).
-		CreateDocument(ctx, db.CreateDocumentParams{ID: uuid.NewString(), FeatureID: nullString(featureID), TaskID: nullString(taskID), Kind: string(kind), Title: title, Value: value, CreatedAt: timestamp(s.now())})
+		CreateDocument(ctx, params)
 	if err != nil {
 		return domain.Document{}, err
 	}
