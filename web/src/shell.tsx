@@ -1,10 +1,11 @@
-import { FormEvent, type ReactNode, useState } from "react";
 import { Link, useNavigate } from "@tanstack/react-router";
+import { FormEvent, useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
+import { formValue } from "./form";
 import { useDomainMutation, useSnapshot } from "./hooks";
-import { formatError } from "./i18n/domain";
 import { setDisplayLanguage } from "./i18n";
+import { formatError } from "./i18n/domain";
 import {
   readThemePreference,
   supportedLanguages,
@@ -12,7 +13,6 @@ import {
   type SupportedLanguage,
   type ThemePreference,
 } from "./i18n/settings";
-import { formValue } from "./form";
 import { setDisplayTheme } from "./theme";
 
 export function AppShell({ children }: { children: ReactNode }) {

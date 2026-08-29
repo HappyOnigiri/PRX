@@ -1,5 +1,6 @@
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import { formValue } from "../form";
 import {
   TaskKind,
   TaskStatus,
@@ -8,18 +9,17 @@ import {
   type Task,
 } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
-import { formValue } from "../form";
 import {
   blockedReasonLabel,
   taskDisplayStateLabel,
   taskDisplayStateToken,
   taskStatusLabel,
 } from "../i18n/domain";
-import { type TaskNodeDocument } from "./TaskNode";
 import { MutationError } from "./MutationError";
 import { DependencySection } from "./TaskInspectorDependencies";
 import { PullRequestSection } from "./TaskInspectorPullRequest";
 import { ReferencesSection } from "./TaskInspectorReferences";
+import { type TaskNodeDocument } from "./TaskNode";
 
 export type TaskInspectorProps = {
   task: Task;

@@ -1,11 +1,11 @@
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import { formValue } from "../form";
 import { DocumentKind } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
-import { formValue } from "../form";
 import { documentKindLabel } from "../i18n/domain";
-import { type TaskNodeDocument } from "./TaskNode";
 import { MutationError } from "./MutationError";
+import { type TaskNodeDocument } from "./TaskNode";
 
 type ReferencesSectionProps = {
   taskId: string;

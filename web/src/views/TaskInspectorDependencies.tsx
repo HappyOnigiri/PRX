@@ -1,8 +1,8 @@
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import { formValue } from "../form";
 import type { Dependency, Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
-import { formValue } from "../form";
 import { MutationError } from "./MutationError";
 
 type DependencySectionProps = {
