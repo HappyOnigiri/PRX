@@ -29,7 +29,7 @@ type state struct {
 	out     io.Writer
 	errOut  io.Writer
 	store   *store.Store
-	service *app.Service
+	service Service
 }
 
 type envelope struct {

@@ -1,0 +1,48 @@
+export const shell = {
+  en: {
+    app: { title: "PRX — Dependency control" },
+    language: { label: "Display language", en: "English", ja: "日本語" },
+    nav: {
+      dashboard: "PRX dashboard",
+      dependencyControl: "Dependency control",
+      features: "Features",
+      overview: "Overview",
+      activeCircuits: "Active circuits",
+      newFeature: "＋ New feature",
+      serverUnavailable: "Server unavailable",
+      localDatabaseOnline: "Local database online",
+    },
+    featureCreate: {
+      formLabel: "Create feature",
+      eyebrow: "New circuit",
+      title: "Create feature",
+      slugPlaceholder: "payments-rollout",
+      titlePlaceholder: "Payments rollout",
+      descriptionPlaceholder: "What must this feature deliver?",
+      submit: "Create feature",
+    },
+  },
+  ja: {
+    app: { title: "PRX — 依存関係コントロール" },
+    language: { label: "表示言語", en: "English", ja: "日本語" },
+    nav: {
+      dashboard: "PRX ダッシュボード",
+      dependencyControl: "依存関係コントロール",
+      features: "フィーチャー",
+      overview: "概要",
+      activeCircuits: "進行中のフィーチャー",
+      newFeature: "＋ フィーチャーを作成",
+      serverUnavailable: "サーバーに接続できません",
+      localDatabaseOnline: "ローカルデータベース接続中",
+    },
+    featureCreate: {
+      formLabel: "フィーチャーを作成",
+      eyebrow: "新しいフィーチャー",
+      title: "フィーチャーを作成",
+      slugPlaceholder: "payments-rollout",
+      titlePlaceholder: "決済機能の展開",
+      descriptionPlaceholder: "このフィーチャーで実現すること",
+      submit: "フィーチャーを作成",
+    },
+  },
+} as const;

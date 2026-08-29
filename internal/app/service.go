@@ -13,20 +13,49 @@ import (
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
-	"github.com/HappyOnigiri/PRX/internal/store"
 )
 
 var slugPattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
 const maxMarkdownPreviewBytes = 1 << 20
 
-type Service struct {
-	store    *store.Store
-	provider githubprovider.Provider
+// Repository is the persistence boundary used by the application service.
+// Keeping this interface in the app package lets the service be tested without
+// opening SQLite and leaves alternative persistence implementations free to
+// satisfy the same use cases.
+type Repository interface {
+	CreateFeature(context.Context, string, string, string) (domain.Feature, error)
+	UpdateFeature(context.Context, domain.Feature) (domain.Feature, error)
+	GetFeature(context.Context, string) (domain.Feature, error)
+	GetFeatureBySlug(context.Context, string) (domain.Feature, error)
+	DeleteFeature(context.Context, string, bool) error
+
+	CreateTask(context.Context, string, string, string, domain.TaskKind, string) (domain.Task, error)
+	GetTask(context.Context, string) (domain.Task, error)
+	UpdateTask(context.Context, domain.Task) (domain.Task, error)
+	DeleteTask(context.Context, string, bool) error
+
+	AddDependency(context.Context, string, string) (domain.Dependency, error)
+	RemoveDependency(context.Context, string, string) error
+
+	UpsertPullRequest(context.Context, domain.PullRequest) (domain.PullRequest, error)
+	DeletePullRequest(context.Context, string) error
+
+	CreateDocument(context.Context, string, string, domain.DocumentKind, string, string) (domain.Document, error)
+	GetDocument(context.Context, string) (domain.Document, error)
+	DeleteDocument(context.Context, string) error
+
+	Snapshot(context.Context) (domain.Snapshot, error)
+	Validate(context.Context) []string
 }
 
-func New(database *store.Store, provider githubprovider.Provider) *Service {
-	return &Service{store: database, provider: provider}
+type Service struct {
+	repository Repository
+	provider   githubprovider.Provider
+}
+
+func New(repository Repository, provider githubprovider.Provider) *Service {
+	return &Service{repository: repository, provider: provider}
 }
 
 func (s *Service) CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error) {
@@ -38,7 +67,7 @@ func (s *Service) CreateFeature(ctx context.Context, slug, title, description st
 	if title == "" {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "feature title is required")
 	}
-	return s.store.CreateFeature(ctx, slug, title, strings.TrimSpace(description))
+	return s.repository.CreateFeature(ctx, slug, title, strings.TrimSpace(description))
 }
 
 // UpdateFeature applies every field the caller supplied. A nil pointer means the
@@ -69,14 +98,14 @@ func (s *Service) UpdateFeature(ctx context.Context, id string, slug, title, des
 	if !oneOf(feature.Status, domain.FeatureStatusActive, domain.FeatureStatusPaused, domain.FeatureStatusCompleted, domain.FeatureStatusCancelled) {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid feature status")
 	}
-	return s.store.UpdateFeature(ctx, feature)
+	return s.repository.UpdateFeature(ctx, feature)
 }
 
 func (s *Service) ResolveFeature(ctx context.Context, idOrSlug string) (domain.Feature, error) {
-	if feature, err := s.store.GetFeature(ctx, idOrSlug); err == nil {
+	if feature, err := s.repository.GetFeature(ctx, idOrSlug); err == nil {
 		return feature, nil
 	}
-	if feature, err := s.store.GetFeatureBySlug(ctx, idOrSlug); err == nil {
+	if feature, err := s.repository.GetFeatureBySlug(ctx, idOrSlug); err == nil {
 		return feature, nil
 	}
 	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", idOrSlug)
@@ -87,7 +116,7 @@ func (s *Service) DeleteFeature(ctx context.Context, id string, cascade bool) er
 	if err != nil {
 		return err
 	}
-	return s.store.DeleteFeature(ctx, feature.ID, cascade)
+	return s.repository.DeleteFeature(ctx, feature.ID, cascade)
 }
 
 func (s *Service) CreateTask(ctx context.Context, featureID, title, scope string, kind domain.TaskKind, assignee string) (domain.Task, error) {
@@ -105,13 +134,13 @@ func (s *Service) CreateTask(ctx context.Context, featureID, title, scope string
 	if !oneOf(kind, domain.TaskKindPR, domain.TaskKindManual) {
 		return domain.Task{}, domain.NewError(domain.DomainErrorCodeInvalidKind, "task kind must be pr or manual")
 	}
-	return s.store.CreateTask(ctx, feature.ID, title, strings.TrimSpace(scope), kind, strings.TrimSpace(assignee))
+	return s.repository.CreateTask(ctx, feature.ID, title, strings.TrimSpace(scope), kind, strings.TrimSpace(assignee))
 }
 
 // UpdateTask applies every field the caller supplied. A nil pointer means the
 // field was omitted; an empty string is a request to clear it.
 func (s *Service) UpdateTask(ctx context.Context, id string, title, scope *string, status *domain.TaskStatus, assignee *string) (domain.Task, error) {
-	task, err := s.store.GetTask(ctx, id)
+	task, err := s.repository.GetTask(ctx, id)
 	if err != nil {
 		return domain.Task{}, err
 	}
@@ -139,21 +168,21 @@ func (s *Service) UpdateTask(ctx context.Context, id string, title, scope *strin
 	if task.Kind == domain.TaskKindPR && task.Status == domain.TaskStatusCompleted {
 		return domain.Task{}, domain.NewError(domain.DomainErrorCodePRTaskCompletesOnMerge, "a PR task completes when its pull request is merged")
 	}
-	return s.store.UpdateTask(ctx, task)
+	return s.repository.UpdateTask(ctx, task)
 }
 
 func (s *Service) DeleteTask(ctx context.Context, id string, cascade bool) error {
-	return s.store.DeleteTask(ctx, id, cascade)
+	return s.repository.DeleteTask(ctx, id, cascade)
 }
 func (s *Service) AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error) {
-	return s.store.AddDependency(ctx, blocker, blocked)
+	return s.repository.AddDependency(ctx, blocker, blocked)
 }
 func (s *Service) RemoveDependency(ctx context.Context, blocker, blocked string) error {
-	return s.store.RemoveDependency(ctx, blocker, blocked)
+	return s.repository.RemoveDependency(ctx, blocker, blocked)
 }
 
 func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) (domain.PullRequest, error) {
-	task, err := s.store.GetTask(ctx, taskID)
+	task, err := s.repository.GetTask(ctx, taskID)
 	if err != nil {
 		return domain.PullRequest{}, err
 	}
@@ -164,11 +193,11 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 	if err != nil {
 		return domain.PullRequest{}, domain.NewError(domain.DomainErrorCodeInvalidPullRequestURL, "%s", err)
 	}
-	return s.store.UpsertPullRequest(ctx, domain.PullRequest{TaskID: taskID, Owner: owner, Repository: repo, Number: number, URL: canonical, State: domain.PullRequestStateUnknown, ReviewState: domain.ReviewStateUnknown, Mergeability: domain.MergeabilityUnknown, Stale: true})
+	return s.repository.UpsertPullRequest(ctx, domain.PullRequest{TaskID: taskID, Owner: owner, Repository: repo, Number: number, URL: canonical, State: domain.PullRequestStateUnknown, ReviewState: domain.ReviewStateUnknown, Mergeability: domain.MergeabilityUnknown, Stale: true})
 }
 
 func (s *Service) DetachPullRequest(ctx context.Context, taskID string) error {
-	return s.store.DeletePullRequest(ctx, taskID)
+	return s.repository.DeletePullRequest(ctx, taskID)
 }
 
 func (s *Service) AddDocument(ctx context.Context, featureID, taskID string, kind domain.DocumentKind, title, value string) (domain.Document, error) {
@@ -196,22 +225,22 @@ func (s *Service) AddDocument(ctx context.Context, featureID, taskID string, kin
 		featureID = feature.ID
 	}
 	if taskID != "" {
-		if _, err := s.store.GetTask(ctx, taskID); err != nil {
+		if _, err := s.repository.GetTask(ctx, taskID); err != nil {
 			return domain.Document{}, err
 		}
 	}
-	return s.store.CreateDocument(ctx, featureID, taskID, kind, strings.TrimSpace(title), value)
+	return s.repository.CreateDocument(ctx, featureID, taskID, kind, strings.TrimSpace(title), value)
 }
 
 func (s *Service) DeleteDocument(ctx context.Context, id string) error {
-	return s.store.DeleteDocument(ctx, id)
+	return s.repository.DeleteDocument(ctx, id)
 }
 
 // ReadMarkdownDocument only reads paths that were explicitly registered as a
 // Markdown document. The size limit keeps a preview request from consuming an
 // unbounded amount of memory in the server or browser.
 func (s *Service) ReadMarkdownDocument(ctx context.Context, id string) (string, error) {
-	document, err := s.store.GetDocument(ctx, id)
+	document, err := s.repository.GetDocument(ctx, id)
 	if err != nil {
 		return "", err
 	}
@@ -234,7 +263,7 @@ func (s *Service) ReadMarkdownDocument(ctx context.Context, id string) (string, 
 }
 
 func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
-	snapshot, err := s.store.Snapshot(ctx)
+	snapshot, err := s.repository.Snapshot(ctx)
 	if err != nil {
 		return domain.Snapshot{}, err
 	}
@@ -293,7 +322,7 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 	if s.provider == nil {
 		return 0, 0, domain.NewError(domain.DomainErrorCodeGitHubAuth, "GitHub provider is not configured")
 	}
-	snapshot, err := s.store.Snapshot(ctx)
+	snapshot, err := s.repository.Snapshot(ctx)
 	if err != nil {
 		return 0, 0, err
 	}
@@ -322,14 +351,14 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 			pr.LastSyncedAt = &now
 			pr.SyncError = fetchErr.Error()
 			pr.Stale = true
-			if _, persistErr := s.store.UpsertPullRequest(ctx, pr); persistErr != nil {
+			if _, persistErr := s.repository.UpsertPullRequest(ctx, pr); persistErr != nil {
 				return succeeded, failed, persistErr
 			}
 			failed++
 			continue
 		}
 		updated.TaskID = pr.TaskID
-		if _, err := s.store.UpsertPullRequest(ctx, updated); err != nil {
+		if _, err := s.repository.UpsertPullRequest(ctx, updated); err != nil {
 			return succeeded, failed, err
 		}
 		succeeded++
@@ -337,7 +366,7 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 	return succeeded, failed, nil
 }
 
-func (s *Service) Validate(ctx context.Context) []string { return s.store.Validate(ctx) }
+func (s *Service) Validate(ctx context.Context) []string { return s.repository.Validate(ctx) }
 
 func (s *Service) SeedDemo(ctx context.Context, slug string, count int) error {
 	if slug == "" {
@@ -348,14 +377,14 @@ func (s *Service) SeedDemo(ctx context.Context, slug string, count int) error {
 	}
 	// Seeding is idempotent: rerunning it reuses whatever already exists so the
 	// command in the README can be repeated without leaving partial data behind.
-	feature, err := s.store.GetFeatureBySlug(ctx, slug)
+	feature, err := s.repository.GetFeatureBySlug(ctx, slug)
 	if err != nil {
 		feature, err = s.CreateFeature(ctx, slug, fmt.Sprintf("Cross-repository launch · %d nodes", count), "A representative branching and merging delivery graph.")
 		if err != nil {
 			return err
 		}
 	}
-	snapshot, err := s.store.Snapshot(ctx)
+	snapshot, err := s.repository.Snapshot(ctx)
 	if err != nil {
 		return err
 	}
