@@ -9,6 +9,11 @@ PRX is a local-first tool for coordinating dependency graphs of tasks and GitHub
 - `internal/webui/dist/` is build output. Keep only `.gitkeep` tracked and produce assets through `make build` or `make web-build`.
 - Run `make ci` before handing off implementation changes.
 
+## Git workflow
+
+- User approval is not required before committing or pushing changes.
+- When updating an existing pull request, commit and push the changes.
+
 ## Settings storage
 
 - Store settings that affect CLI behavior in a config file accessible to the CLI. This config does not exist yet; introduce it when such settings are implemented.
