@@ -16,7 +16,7 @@
   --status-ready: light-dark(#0c715a, #4cc2a0);
   --status-review: light-dark(#7b5100, #d9a441);
   --status-conflict: light-dark(#a9322f, #ef6f66);
-  --status-merged: var(--text-3);
+  --status-merged: light-dark(#8250df, #ab7df8);
   --status-none: var(--border-strong);
   --scrim: light-dark(rgb(16 20 26 / 50%), rgb(0 0 0 / 60%));
 }
