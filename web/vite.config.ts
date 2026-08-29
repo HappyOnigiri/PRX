@@ -2,12 +2,33 @@ import { defineConfig } from "vitest/config";
 import react from "@vitejs/plugin-react";
 import { resolve } from "node:path";
 
+const apiOrigin = "http://127.0.0.1:7331";
+const devOrigins = new Set([
+  "http://127.0.0.1:5173",
+  "http://localhost:5173",
+  "http://[::1]:5173",
+]);
+
 export default defineConfig({
   plugins: [react()],
   server: {
     port: 5173,
     strictPort: true,
-    proxy: { "/prx.v1": "http://127.0.0.1:7331" },
+    proxy: {
+      "/prx.v1": {
+        target: apiOrigin,
+        changeOrigin: true,
+        configure(proxy) {
+          proxy.on("proxyReq", (proxyRequest, request) => {
+            const origin = request.headers.origin;
+            // Preserve the API's origin check for every caller except the
+            // known local Vite development origins.
+            if (origin && devOrigins.has(origin))
+              proxyRequest.setHeader("origin", apiOrigin);
+          });
+        },
+      },
+    },
   },
   build: {
     outDir: resolve(__dirname, "../internal/webui/dist"),
