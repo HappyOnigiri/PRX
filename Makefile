@@ -1,10 +1,12 @@
-.PHONY: generate generated-check mod-tidy-check fmt lint check-web-quality test go-coverage-check test-race test-cli web-install web-test web-build dev e2e build install ci clean
-
 GO ?= go
-PNPM ?= corepack pnpm@11.24.0
+PNPM ?= corepack pnpm
 INSTALL_DIR ?= $(HOME)/.local/bin
 GO_COVERAGE_MIN ?= 68.8
 GO_COVERAGE_PACKAGES := ./internal/domain ./internal/github ./internal/rpc ./internal/store
+GOLANGCI_LINT_VERSION := $(shell awk '$$1 == "golangci-lint" { print $$2 }' .tool-versions)
+GOLANGCI_LINT := bin/golangci-lint
+
+.PHONY: generate generated-check mod-tidy-check fmt lint check-web-quality test go-coverage-check test-race test-cli web-install web-test web-build dev e2e build install ci clean $(GOLANGCI_LINT)
 
 generate: web-install
 	$(GO) tool sqlc generate
@@ -18,21 +20,27 @@ generated-check: generate
 mod-tidy-check:
 	$(GO) mod tidy -diff
 
-fmt: web-install
-	golangci-lint fmt ./...
+fmt: web-install $(GOLANGCI_LINT)
+	$(GOLANGCI_LINT) fmt ./...
 	$(PNPM) --dir web format
 
-lint: web-install
+lint: web-install $(GOLANGCI_LINT)
 	$(GO) tool buf format -d --exit-code proto
 	$(GO) vet ./...
-	golangci-lint run ./...
+	$(GOLANGCI_LINT) run ./...
 	@output="$$($(GO) tool deadcode -test ./...)"; \
 	if [ -n "$$output" ]; then printf '%s\n' "$$output"; echo "deadcode: unreachable functions found"; exit 1; fi
 	$(PNPM) --dir web lint
 
 check-web-quality: web-install
-	python3 scripts/check_web_file_lines.py
+	$(GO) run ./tools/checkweblines
 	$(PNPM) --dir web check:duplicates
+
+$(GOLANGCI_LINT):
+	@if [ ! -x "$@" ] || ! "$@" version 2>/dev/null | grep -Fq "$(GOLANGCI_LINT_VERSION)"; then \
+		mkdir -p "$(dir $@)"; \
+		curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/HEAD/install.sh | sh -s -- -b bin v$(GOLANGCI_LINT_VERSION); \
+	fi
 
 test: web-install
 	$(GO) test ./...
