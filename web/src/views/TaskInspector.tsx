@@ -47,11 +47,12 @@ export function TaskInspector({
   return (
     <aside className="inspector" aria-label={t("inspector.label")}>
       <header>
-        <div>
-          <p>{t("inspector.eyebrow")}</p>
-          <h2>{task.title}</h2>
-        </div>
-        <button aria-label={t("inspector.close")} onClick={onClose}>
+        <h2>{task.title}</h2>
+        <button
+          className="icon-button"
+          aria-label={t("inspector.close")}
+          onClick={onClose}
+        >
           ×
         </button>
       </header>

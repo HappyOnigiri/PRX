@@ -105,7 +105,6 @@ export function AppShell({ children }: { children: ReactNode }) {
             aria-label={t("featureCreate.formLabel")}
           >
             <header>
-              <p>{t("featureCreate.eyebrow")}</p>
               <h2>{t("featureCreate.title")}</h2>
             </header>
             <label>

@@ -44,7 +44,6 @@ export function EditFeatureDialog({
         aria-label={t("featureEdit.formLabel")}
       >
         <header>
-          <p>{t("featureEdit.eyebrow")}</p>
           <h2>{t("featureEdit.title")}</h2>
         </header>
         <label>

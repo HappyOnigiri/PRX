@@ -93,6 +93,12 @@ export function pullRequestDisplayStateLabel(
   return t(pullRequestDisplayStateKeys[value] ?? "displayState.unknown");
 }
 
+export function pullRequestDisplayStateToken(
+  value: PullRequestDisplayState,
+): string {
+  return PullRequestDisplayState[value]?.toLowerCase() ?? "unknown";
+}
+
 export const pullRequestDisplayStateKeys = {
   [PullRequestDisplayState.UNSPECIFIED]: "displayState.unknown",
   [PullRequestDisplayState.MERGED]: "displayState.merged",

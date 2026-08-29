@@ -48,7 +48,6 @@ export function Dashboard() {
     <div className="dashboard">
       <header className="page-head">
         <div>
-          <p className="eyebrow">{t("dashboard.eyebrow")}</p>
           <h1>
             {t("dashboard.titleStart")}
             <em>{t("dashboard.titleEmphasis")}</em>
@@ -149,7 +148,15 @@ export function Dashboard() {
                   <span>
                     {feature.mergedCount}/{feature.taskCount}
                   </span>
-                  <strong>
+                  <strong
+                    className={
+                      feature.readyCount
+                        ? "status-ready"
+                        : feature.conflictCount
+                          ? "status-conflict"
+                          : "status-none"
+                    }
+                  >
                     {feature.readyCount
                       ? t("dashboard.featureReady", {
                           count: feature.readyCount,

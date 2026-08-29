@@ -3,7 +3,10 @@ import { mutations } from "../api";
 import type { PullRequest } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { formValue } from "../form";
-import { pullRequestDisplayStateLabel } from "../i18n/domain";
+import {
+  pullRequestDisplayStateLabel,
+  pullRequestDisplayStateToken,
+} from "../i18n/domain";
 import { MutationError } from "./MutationError";
 
 type PullRequestSectionProps = {
@@ -26,7 +29,9 @@ export function PullRequestSection({
     <section>
       <h3>{t("inspector.pullRequest")}</h3>
       {pullRequest ? (
-        <div className="linked-pr">
+        <div
+          className={`linked-pr state-${pullRequestDisplayStateToken(pullRequest.displayState)} ${pullRequest.stale ? "is-stale" : ""}`}
+        >
           <a href={pullRequest.url} target="_blank" rel="noreferrer">
             {pullRequest.owner}/{pullRequest.repository} #
             {String(pullRequest.number)}

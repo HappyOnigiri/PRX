@@ -5,7 +5,6 @@ export const dashboard = {
       loadingDetail: "Reading the local graph and latest GitHub state.",
       errorTitle: "The roadmap could not be loaded",
       noData: "No data returned.",
-      eyebrow: "Operations / all repositories",
       titleStart: "What can move ",
       titleEmphasis: "now?",
       description:
@@ -38,7 +37,6 @@ export const dashboard = {
       loadingDetail: "ローカルグラフと最新の GitHub 状態を確認しています。",
       errorTitle: "ロードマップを読み込めませんでした",
       noData: "データが返されませんでした。",
-      eyebrow: "オペレーション / 全リポジトリ",
       titleStart: "いま動かせるタスクは",
       titleEmphasis: "？",
       description:

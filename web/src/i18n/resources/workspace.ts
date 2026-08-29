@@ -4,7 +4,7 @@ export const workspace = {
       loading: "Tracing feature graph…",
       notFound: "Feature not found",
       returnOverview: "Return to overview",
-      eyebrow: "Feature circuit / {{slug}}",
+      eyebrow: "{{slug}}",
       noDescription: "No feature description yet.",
       syncing: "Syncing…",
       syncGithub: "↻ Sync GitHub",
@@ -42,7 +42,6 @@ export const workspace = {
     },
     taskCreate: {
       formLabel: "Create task",
-      eyebrow: "New graph node",
       title: "Add task",
       titlePlaceholder: "Implement checkout API",
       scopePlaceholder: "Repository and acceptance boundary",
@@ -52,7 +51,6 @@ export const workspace = {
     },
     featureEdit: {
       formLabel: "Edit feature",
-      eyebrow: "Feature settings",
       title: "Edit feature",
       submit: "Save feature",
     },
@@ -62,7 +60,7 @@ export const workspace = {
       loading: "フィーチャーグラフを描画しています…",
       notFound: "フィーチャーが見つかりません",
       returnOverview: "概要に戻る",
-      eyebrow: "フィーチャー / {{slug}}",
+      eyebrow: "{{slug}}",
       noDescription: "フィーチャーの説明はまだありません。",
       syncing: "同期しています…",
       syncGithub: "↻ GitHub と同期",
@@ -102,7 +100,6 @@ export const workspace = {
     },
     taskCreate: {
       formLabel: "タスクを作成",
-      eyebrow: "新しいグラフノード",
       title: "タスクを追加",
       titlePlaceholder: "決済 API を実装",
       scopePlaceholder: "対象リポジトリと受け入れ条件",
@@ -112,7 +109,6 @@ export const workspace = {
     },
     featureEdit: {
       formLabel: "フィーチャーを編集",
-      eyebrow: "フィーチャー設定",
       title: "フィーチャーを編集",
       submit: "フィーチャーを保存",
     },

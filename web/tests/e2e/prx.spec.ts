@@ -115,9 +115,10 @@ test("creates and edits a feature DAG while preserving state", async ({
     .getByLabel("Description")
     .fill("Browser-tested delivery circuit, updated");
   await editFeature.getByRole("button", { name: "Save feature" }).click();
-  await expect(
-    page.getByText("Browser-tested delivery circuit, updated"),
-  ).toBeVisible();
+  await expect(page.locator(".workspace-title")).toHaveAttribute(
+    "title",
+    "Browser-tested delivery circuit, updated",
+  );
 
   await addTask(page, "E2E API");
   await addTask(page, "E2E worker");
