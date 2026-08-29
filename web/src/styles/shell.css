@@ -1,0 +1,233 @@
+.app-shell {
+  min-height: 100vh;
+  display: grid;
+  grid-template-columns: 248px minmax(0, 1fr);
+}
+.rail {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 248px;
+  display: flex;
+  flex-direction: column;
+  border-right: 1px solid var(--line);
+  background: #0c1728;
+  z-index: 30;
+}
+.brand {
+  height: 116px;
+  padding: 25px 24px;
+  border-bottom: 1px solid var(--line);
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+.brand-mark {
+  font-family: "DIN Alternate", "Arial Narrow", sans-serif;
+  font-size: 34px;
+  font-stretch: condensed;
+  font-weight: 900;
+  letter-spacing: 0.13em;
+  line-height: 1;
+}
+.brand-mark span {
+  color: var(--link);
+}
+.brand small {
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  font:
+    600 9px ui-monospace,
+    SFMono-Regular,
+    monospace;
+  color: var(--muted);
+  margin-top: 9px;
+}
+.rail nav {
+  padding: 19px 14px;
+  overflow: auto;
+}
+.nav-link,
+.feature-link {
+  display: grid;
+  align-items: center;
+  min-height: 42px;
+  border-radius: 3px;
+  color: #b8c5d5;
+}
+.nav-link {
+  grid-template-columns: 1fr auto;
+  padding: 0 10px;
+  font-weight: 700;
+}
+.nav-link span {
+  font:
+    700 11px ui-monospace,
+    monospace;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  padding: 2px 7px;
+}
+.nav-caption {
+  text-transform: uppercase;
+  color: #63758e;
+  letter-spacing: 0.14em;
+  font:
+    700 9px ui-monospace,
+    monospace;
+  margin: 24px 10px 8px;
+}
+.feature-link {
+  grid-template-columns: 11px 1fr auto;
+  gap: 9px;
+  padding: 8px 10px;
+  font-size: 12px;
+}
+.feature-link span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.feature-link b {
+  font:
+    600 10px ui-monospace,
+    monospace;
+  color: #71829b;
+}
+.feature-link:hover,
+.feature-link[data-active] {
+  background: #172842;
+  color: #fff;
+}
+.pulse {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #5d6e84;
+  box-shadow: 0 0 0 3px #263650;
+}
+.pulse.ready {
+  background: var(--ready);
+  box-shadow: 0 0 0 3px #1b4e4f;
+}
+.pulse.conflict {
+  background: var(--conflict);
+  box-shadow: 0 0 0 3px #542e37;
+}
+.rail-action {
+  margin: auto 20px 18px;
+}
+.rail-foot {
+  border-top: 1px solid var(--line);
+  min-height: 58px;
+  padding: 0 22px;
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  color: #71829b;
+  font-size: 10px;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+.language-setting {
+  display: grid;
+  gap: 6px;
+  margin: 0 18px 14px;
+  color: var(--muted);
+  font-size: 11px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+.language-setting select {
+  width: 100%;
+  padding: 8px 10px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--panel);
+  color: var(--fog);
+  font: inherit;
+  letter-spacing: normal;
+  text-transform: none;
+}
+.health {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--merged);
+}
+.health.bad {
+  background: var(--conflict);
+}
+.main-stage {
+  grid-column: 2;
+  min-width: 0;
+  min-height: 100vh;
+}
+@media (max-width: 900px) {
+  .app-shell {
+    display: block;
+  }
+  .rail {
+    position: relative;
+    width: 100%;
+    height: auto;
+    min-height: 0;
+    display: grid;
+    grid-template-columns: 150px 1fr auto auto;
+  }
+  .brand {
+    height: 70px;
+    padding: 14px 18px;
+    border-bottom: 0;
+  }
+  .brand-mark {
+    font-size: 25px;
+  }
+  .rail nav {
+    display: flex;
+    padding: 14px;
+    gap: 5px;
+    overflow-x: auto;
+  }
+  .nav-caption,
+  .feature-link b,
+  .rail-foot {
+    display: none;
+  }
+  .nav-link,
+  .feature-link {
+    flex: 0 0 auto;
+  }
+  .rail-action {
+    margin: 14px;
+  }
+  .language-setting {
+    align-self: center;
+    margin: 10px 12px 10px 0;
+  }
+  .language-setting span {
+    display: none;
+  }
+  .language-setting select {
+    width: 94px;
+  }
+  .main-stage {
+    min-height: calc(100vh - 70px);
+  }
+}
+@media (max-width: 600px) {
+  .rail {
+    grid-template-columns: 120px 1fr auto;
+  }
+  .rail-action {
+    display: none;
+  }
+  .brand small {
+    display: none;
+  }
+  .rail nav {
+    padding: 10px;
+  }
+  .feature-link {
+    display: none;
+  }
+}
