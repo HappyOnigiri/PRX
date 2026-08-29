@@ -147,6 +147,9 @@ describe("TaskInspector", () => {
     );
 
     expect(
+      screen.getByRole("button", { name: "Copy Task ID" }),
+    ).toBeInTheDocument();
+    expect(
       screen.getByText("Blocker task has stale GitHub data"),
     ).toBeInTheDocument();
     expect(screen.getByText("GitHub data is old")).toBeInTheDocument();

@@ -16,6 +16,56 @@
   background: var(--surface-2);
 }
 
+.copyable-identifier {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  font-weight: 400;
+}
+
+.copyable-identifier-label {
+  flex: 0 0 auto;
+}
+
+.copyable-identifier-value {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copyable-identifier-button {
+  min-height: 24px;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-3);
+  padding: 0 4px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.copyable-identifier-button:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.copyable-identifier-status {
+  flex: 0 1 auto;
+  overflow: hidden;
+  color: var(--text-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 .icon-button.danger {
   border-color: var(--status-conflict);
   color: var(--status-conflict);

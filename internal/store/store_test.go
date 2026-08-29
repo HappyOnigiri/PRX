@@ -451,6 +451,55 @@ func TestPRTaskCannotBeCompletedManually(t *testing.T) {
 	}
 }
 
+func TestSyncByTaskID(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "targeted-sync", "Targeted sync", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	target, err := service.CreateTask(ctx, feature.ID, "Target", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	other, err := service.CreateTask(ctx, feature.ID, "Other", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for index, task := range []domain.Task{target, other} {
+		if _, err := service.AttachPullRequest(
+			ctx,
+			task.ID,
+			fmt.Sprintf("https://github.com/acme/api/pull/%d", index+1),
+		); err != nil {
+			t.Fatal(err)
+		}
+	}
+	succeeded, failed, err := service.Sync(ctx, "", target.ID)
+	if err != nil || succeeded != 1 || failed != 0 {
+		t.Fatalf("targeted sync succeeded=%d failed=%d err=%v", succeeded, failed, err)
+	}
+	snapshot, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, pullRequest := range snapshot.PullRequests {
+		switch pullRequest.TaskID {
+		case target.ID:
+			if pullRequest.Stale || pullRequest.LastSyncedAt == nil {
+				t.Fatalf("target pull request was not refreshed: %+v", pullRequest)
+			}
+		case other.ID:
+			if !pullRequest.Stale || pullRequest.LastSyncedAt != nil {
+				t.Fatalf("other pull request was unexpectedly refreshed: %+v", pullRequest)
+			}
+		}
+	}
+	if _, _, err := service.Sync(ctx, "", "missing-task"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		t.Fatalf("missing task sync code=%s err=%v", domain.ErrorCode(err), err)
+	}
+}
+
 func TestInMemoryDatabaseIsSharedAcrossConcurrentCallers(t *testing.T) {
 	ctx := context.Background()
 	database, err := store.Open(ctx, ":memory:")

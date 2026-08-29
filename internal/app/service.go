@@ -410,6 +410,11 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 		}
 		featureResolved = feature.ID
 	}
+	if taskID != "" {
+		if _, err := s.repository.GetTask(ctx, taskID); err != nil {
+			return 0, 0, err
+		}
+	}
 	taskFeature := map[string]string{}
 	for _, task := range snapshot.Tasks {
 		taskFeature[task.ID] = task.FeatureID

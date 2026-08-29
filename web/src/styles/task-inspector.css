@@ -42,6 +42,12 @@
   overflow-wrap: anywhere;
 }
 
+.inspector-heading {
+  min-width: 0;
+  display: grid;
+  gap: 4px;
+}
+
 .inspector > header button {
   width: 32px;
   min-width: 32px;
