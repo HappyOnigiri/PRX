@@ -53,8 +53,6 @@ CSS class names use kebab-case, and state tokens use `state-<kebab>`.
 
 WebUI copy uses semantic i18next keys with bundled English and Japanese resources. The initial language is selected from a saved Local Storage preference, then the browser's preferred languages, with English as the fallback. Changing the display language updates Local Storage, the document language, and the page title without changing CLI or server configuration. The theme follows the browser color-scheme preference by default and falls back to light when no preference is reported. An explicit light or dark selection is stored in Local Storage and takes precedence until the user selects System again. The dependency canvas stores one user-selected zoom level in Local Storage and applies it to every feature graph while centering each graph independently. The server remains responsible for deriving business state; the browser only translates and assembles display text from structured RPC values.
 
-Keep one component per file, and place reusable hooks in adjacent `use*.ts` files.
-
 Task cards expose pull requests and document references as explicit rows. External references open in a new browser tab, while a registered Markdown path is read on demand through a document-ID RPC and rendered in a read-only modal. Markdown contents remain outside the snapshot, and preview reads are limited to 1 MiB. The task inspector opens only from the card's edit button so reference activation and editing are distinct actions.
 
 ## Trade-offs

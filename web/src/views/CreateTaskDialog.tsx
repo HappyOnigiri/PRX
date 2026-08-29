@@ -2,9 +2,9 @@ import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";
+import { TaskKind } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
-import { formatError } from "../i18n/domain";
-import { CreateTaskFields } from "./CreateTaskFields";
+import { formatError, taskKindLabel } from "../i18n/domain";
 import { MutationError } from "./MutationError";
 
 interface CreateTaskDialogProps {
@@ -46,7 +46,41 @@ export function CreateTaskDialog({
         <header>
           <h2>{t("taskCreate.title")}</h2>
         </header>
-        <CreateTaskFields />
+        <label>
+          {t("common.title")}
+          <input
+            name="title"
+            required
+            placeholder={t("taskCreate.titlePlaceholder")}
+          />
+        </label>
+        <label>
+          {t("common.scope")}
+          <textarea
+            name="scope"
+            placeholder={t("taskCreate.scopePlaceholder")}
+          />
+        </label>
+        <div className="form-row">
+          <label>
+            {t("taskCreate.kind")}
+            <select name="kind">
+              <option value={TaskKind.PULL_REQUEST}>
+                {taskKindLabel(TaskKind.PULL_REQUEST, t)}
+              </option>
+              <option value={TaskKind.MANUAL}>
+                {taskKindLabel(TaskKind.MANUAL, t)}
+              </option>
+            </select>
+          </label>
+          <label>
+            {t("common.assignee")}
+            <input
+              name="assignee"
+              placeholder={t("taskCreate.assigneePlaceholder")}
+            />
+          </label>
+        </div>
         {createTask.error && (
           <p className="form-error">{formatError(createTask.error, t)}</p>
         )}

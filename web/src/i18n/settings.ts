@@ -24,44 +24,29 @@ function isThemePreference(value: unknown): value is ThemePreference {
   return themePreferences.includes(value as ThemePreference);
 }
 
-function isSettingsRecord(value: unknown): value is Record<string, unknown> {
-  return value !== null && typeof value === "object";
-}
-
-function readLanguage(value: unknown): Pick<WebUISettings, "language"> {
-  return isSupportedLanguage(value) ? { language: value } : {};
-}
-
-function readTheme(value: unknown): Pick<WebUISettings, "theme"> {
-  return isThemePreference(value) ? { theme: value } : {};
-}
-
-function readGraphZoomValue(value: unknown): Pick<WebUISettings, "graphZoom"> {
-  if (
-    typeof value === "number" &&
-    Number.isFinite(value) &&
-    value >= minGraphZoom &&
-    value <= maxGraphZoom
-  )
-    return { graphZoom: value };
-  return {};
-}
-
-function parseWebUISettings(value: string): WebUISettings {
-  const parsed: unknown = JSON.parse(value);
-  if (!isSettingsRecord(parsed)) return {};
-  return {
-    ...readLanguage(parsed["language"]),
-    ...readTheme(parsed["theme"]),
-    ...readGraphZoomValue(parsed["graphZoom"]),
-  };
-}
-
 export function readWebUISettings(): WebUISettings {
   try {
     const value = localStorage.getItem(webUISettingsKey);
     if (!value) return {};
-    return parseWebUISettings(value);
+    const parsed: unknown = JSON.parse(value);
+    if (!parsed || typeof parsed !== "object") return {};
+    const candidate = parsed as {
+      language?: unknown;
+      graphZoom?: unknown;
+      theme?: unknown;
+    };
+    const settings: WebUISettings = {};
+    if (isSupportedLanguage(candidate.language))
+      settings.language = candidate.language;
+    if (isThemePreference(candidate.theme)) settings.theme = candidate.theme;
+    if (
+      typeof candidate.graphZoom === "number" &&
+      Number.isFinite(candidate.graphZoom) &&
+      candidate.graphZoom >= minGraphZoom &&
+      candidate.graphZoom <= maxGraphZoom
+    )
+      settings.graphZoom = candidate.graphZoom;
+    return settings;
   } catch {
     return {};
   }

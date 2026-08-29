@@ -7,15 +7,10 @@ import {
 
 const darkSchemeQuery = "(prefers-color-scheme: dark)";
 const themeColors = { light: "#f5f6f8", dark: "#191b1f" } as const;
-interface ThemeWindow {
-  matchMedia?: Window["matchMedia"];
-}
-
-const themeWindow = window as ThemeWindow;
 
 function darkScheme() {
-  if (typeof themeWindow.matchMedia !== "function") return undefined;
-  return themeWindow.matchMedia(darkSchemeQuery);
+  if (typeof window.matchMedia !== "function") return undefined;
+  return window.matchMedia(darkSchemeQuery);
 }
 
 function prefersDark() {

@@ -28,6 +28,10 @@ func TestExecuteFallsBackWhenJSONErrorCannotBeWritten(t *testing.T) {
 	}
 }
 
+func testOpenService(context.Context, string, string, bool) (Service, io.Closer, error) {
+	return nil, nil, nil
+}
+
 func TestCommandsHaveDocumentation(t *testing.T) {
 	root := NewRoot(io.Discard, io.Discard, testOpenService)
 	var visit func(*cobra.Command, bool)
@@ -46,10 +50,6 @@ func TestCommandsHaveDocumentation(t *testing.T) {
 		}
 	}
 	visit(root, false)
-}
-
-func testOpenService(context.Context, string, string, bool) (Service, io.Closer, error) {
-	return nil, nil, nil
 }
 
 type recordingCloser struct {

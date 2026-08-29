@@ -2,7 +2,6 @@
 package main
 
 import (
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -41,12 +40,8 @@ func generate(dir string) error {
 		}
 	}
 
-	root := cli.NewRoot(io.Discard, io.Discard, noOpenService)
+	root := cli.NewRoot(io.Discard, io.Discard, nil)
 	root.DisableAutoGenTag = true
 	root.CompletionOptions.HiddenDefaultCmd = true
 	return doc.GenMarkdownTree(root, dir)
-}
-
-func noOpenService(context.Context, string, string, bool) (cli.Service, io.Closer, error) {
-	return nil, nil, nil
 }
