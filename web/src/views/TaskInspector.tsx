@@ -21,15 +21,15 @@ import { DependencySection } from "./TaskInspectorDependencies";
 import { PullRequestSection } from "./TaskInspectorPullRequest";
 import { ReferencesSection } from "./TaskInspectorReferences";
 
-export type TaskInspectorProps = {
+export interface TaskInspectorProps {
   task: Task;
   tasks: Task[];
   dependencies: Dependency[];
-  pullRequest?: PullRequest;
+  pullRequest: PullRequest | undefined;
   documents: TaskNodeDocument[];
   onPreview: (document: TaskNodeDocument) => void;
   onClose: () => void;
-};
+}
 
 export function TaskInspector({
   task,
@@ -143,7 +143,7 @@ export function TaskInspector({
             )
           )
             return;
-          deleteTask.mutateAsync(task.id).then(onClose, () => {});
+          void deleteTask.mutateAsync(task.id).then(onClose, () => undefined);
         }}
       >
         {t("inspector.deleteTask")}

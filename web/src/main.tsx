@@ -20,7 +20,10 @@ const queryClient = new QueryClient({
   defaultOptions: { queries: { staleTime: 5_000, retry: 1 } },
 });
 
-ReactDOM.createRoot(document.getElementById("root")!).render(
+const root = document.getElementById("root");
+if (!root) throw new Error("The application root element is missing.");
+
+ReactDOM.createRoot(root).render(
   <React.StrictMode>
     <QueryClientProvider client={queryClient}>
       <RouterProvider router={router} />

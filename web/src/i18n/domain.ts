@@ -14,11 +14,11 @@ import {
 } from "../gen/prx/v1/prx_pb";
 
 export function featureStatusLabel(value: FeatureStatus, t: TFunction): string {
-  return t(featureStatusKeys[value] ?? "featureStatus.unknown");
+  return t(featureStatusKeys[value]);
 }
 
 export function taskStatusLabel(value: TaskStatus, t: TFunction): string {
-  return t(taskStatusKeys[value] ?? "taskStatus.unknown");
+  return t(taskStatusKeys[value]);
 }
 
 export const featureStatusKeys = {
@@ -44,7 +44,7 @@ export const taskKindKeys = {
 } as const satisfies Record<TaskKind, string>;
 
 export function taskKindLabel(value: TaskKind, t: TFunction): string {
-  return t(taskKindKeys[value] ?? "kind.unknown");
+  return t(taskKindKeys[value]);
 }
 
 export const documentKindKeys = {
@@ -54,7 +54,7 @@ export const documentKindKeys = {
 } as const satisfies Record<DocumentKind, string>;
 
 export function documentKindLabel(value: DocumentKind, t: TFunction): string {
-  return t(documentKindKeys[value] ?? "documentKind.unknown");
+  return t(documentKindKeys[value]);
 }
 
 export const displayStateKeys = {
@@ -79,24 +79,24 @@ export function taskDisplayStateLabel(
   value: TaskDisplayState,
   t: TFunction,
 ): string {
-  return t(displayStateKeys[value] ?? "displayState.unknown");
+  return t(displayStateKeys[value]);
 }
 
 export function taskDisplayStateToken(value: TaskDisplayState): string {
-  return TaskDisplayState[value]?.toLowerCase() ?? "unknown";
+  return TaskDisplayState[value].toLowerCase();
 }
 
 export function pullRequestDisplayStateLabel(
   value: PullRequestDisplayState,
   t: TFunction,
 ): string {
-  return t(pullRequestDisplayStateKeys[value] ?? "displayState.unknown");
+  return t(pullRequestDisplayStateKeys[value]);
 }
 
 export function pullRequestDisplayStateToken(
   value: PullRequestDisplayState,
 ): string {
-  return PullRequestDisplayState[value]?.toLowerCase() ?? "unknown";
+  return PullRequestDisplayState[value].toLowerCase();
 }
 
 export const pullRequestDisplayStateKeys = {
@@ -134,7 +134,7 @@ export function blockedReasonLabel(
     return t(blockedReasonKeys[BlockedReasonCode.WAITING_FOR_BLOCKER], {
       title,
     });
-  return t(blockedReasonKeys[reason.code] ?? "blockedReason.unknown");
+  return t(blockedReasonKeys[reason.code]);
 }
 
 export const errorKeys = {
@@ -180,5 +180,5 @@ export function formatError(
       path: detail.path.map((id) => taskTitle?.(id) ?? id).join(" → "),
     });
   const key = errorKeys[detail.code];
-  return key ? t(key) : connectError.rawMessage;
+  return t(key);
 }
