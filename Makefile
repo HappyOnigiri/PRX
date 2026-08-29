@@ -24,6 +24,8 @@ fmt: web-install
 lint: web-install
 	$(GO) vet ./...
 	golangci-lint run ./...
+	@output="$$($(GO) tool deadcode -test ./...)"; \
+	if [ -n "$$output" ]; then printf '%s\n' "$$output"; echo "deadcode: unreachable functions found"; exit 1; fi
 	$(PNPM) --dir web lint
 
 check-web-quality: web-install
