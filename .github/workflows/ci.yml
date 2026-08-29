@@ -12,10 +12,6 @@ concurrency:
 permissions:
   contents: read
 
-env:
-  # setup-web puts pnpm on PATH, so the Makefile does not need `corepack pnpm` to download it again.
-  PNPM: pnpm
-
 # Every check runs as its own job so the wall-clock time is the slowest single check, not the sum.
 # Each job runs one Makefile target, keeping the Makefile the single definition of a check.
 #
@@ -110,7 +106,7 @@ jobs:
       # shared libraries Chromium needs; `--with-deps` only added fonts and ten seconds of apt.
       - name: Install Playwright browsers
         if: steps.browsers.outputs.cache-hit != 'true'
-        run: pnpm --dir web exec playwright install --only-shell chromium
+        run: corepack pnpm --dir web exec playwright install --only-shell chromium
       - name: Run browser tests
         run: make e2e E2E_FLAGS="--shard=${{ matrix.shard }}/${{ strategy.job-total }}"
       - name: Verify CI is read-only
