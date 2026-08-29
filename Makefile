@@ -106,9 +106,12 @@ web-build: web-install
 dev: web-install
 	$(PNPM) --dir web dev:full
 
+# Extra Playwright flags, e.g. `make e2e E2E_FLAGS=--shard=1/3` to run one shard of the suite.
+E2E_FLAGS ?=
+
 # scripts/run-e2e-server.sh also writes bin/prx, so e2e waits for build instead of running beside it.
 e2e: build
-	$(PNPM) --dir web e2e
+	$(PNPM) --dir web e2e $(E2E_FLAGS)
 
 build: web-build
 	mkdir -p bin

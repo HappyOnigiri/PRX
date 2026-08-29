@@ -12,48 +12,135 @@ concurrency:
 permissions:
   contents: read
 
+# Every check runs as its own job so the wall-clock time is the slowest single check, not the sum.
+# Each job runs one Makefile target, keeping the Makefile the single definition of a check.
+#
+# Go caches are namespaced per job and saved only from main (or when a job found nothing to
+# restore), so pull request runs restore the small, warm cache of main and never pay to upload.
 jobs:
-  test:
-    name: Go, web, and browser verification
+  check:
+    name: ${{ matrix.target }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - target: go-lint
+            go: true
+            go-cache-extra-paths: |
+              ~/.cache/golangci-lint
+              bin/golangci-lint
+          - target: go-deadcode
+            go: true
+          - target: mod-tidy-check
+            go: true
+          - target: test-race-coverage
+            go: true
+          - target: go-coverage-zero-check
+            go: true
+          - target: generated-check
+            go: true
+            web: true
+          - target: check-web-quality
+            go: true
+            web: true
+          - target: web-lint
+            web: true
+          - target: web-test
+            web: true
     steps:
       - uses: actions/checkout@v7
+      - name: Set up Go
+        if: matrix.go
+        id: go
+        uses: ./.github/actions/setup-go
         with:
-          fetch-depth: 0
-      - uses: actions/setup-go@v7
-        with:
-          go-version-file: go.mod
-          cache: true
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .tool-versions
-          cache: pnpm
-          cache-dependency-path: pnpm-lock.yaml
-      - name: Install browser tools
-        run: |
-          pnpm --dir web exec playwright install --with-deps chromium
-      - name: Run complete verification
-        run: make ci
+          cache-name: ${{ matrix.target }}
+          extra-cache-paths: ${{ matrix.go-cache-extra-paths }}
+      - name: Set up web toolchain
+        if: matrix.web
+        uses: ./.github/actions/setup-web
+      - run: make ${{ matrix.target }}
       - name: Verify CI is read-only
         run: |
           git diff --exit-code || {
-            echo "::error::make ci produced tracked file changes."
+            echo "::error::make ${{ matrix.target }} produced tracked file changes."
             git diff --stat
             exit 1
           }
+      - name: Save Go caches
+        if: ${{ !cancelled() && matrix.go && (github.ref == 'refs/heads/main' || steps.go.outputs.cache-matched-key == '') }}
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ steps.go.outputs.cache-path }}
+          key: ${{ steps.go.outputs.cache-key }}
+
+  # Each shard builds the server itself: a shared build job would add its own start-up and an
+  # artifact round trip to the critical path, while the build is a few seconds with a warm cache.
+  e2e:
+    name: e2e (${{ matrix.shard }}/3)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3]
+    steps:
+      - uses: actions/checkout@v7
+      - name: Set up Go
+        id: go
+        uses: ./.github/actions/setup-go
+        with:
+          cache-name: e2e
+      - name: Set up web toolchain
+        uses: ./.github/actions/setup-web
+      - name: Restore Playwright browsers
+        id: browsers
+        uses: actions/cache/restore@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: playwright-${{ runner.os }}-
+      # The tests run headless, so the headless shell is enough. ubuntu-latest already ships the
+      # shared libraries Chromium needs; `--with-deps` only added fonts and ten seconds of apt.
+      - name: Install Playwright browsers
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: corepack pnpm --dir web exec playwright install --only-shell chromium
+      - name: Run browser tests
+        run: make e2e E2E_FLAGS="--shard=${{ matrix.shard }}/${{ strategy.job-total }}"
+      - name: Verify CI is read-only
+        run: |
+          git diff --exit-code || {
+            echo "::error::make e2e produced tracked file changes."
+            git diff --stat
+            exit 1
+          }
+      # The shards produce identical caches; one saver avoids three jobs racing for the same key.
+      - name: Save Go caches
+        if: ${{ !cancelled() && matrix.shard == 1 && (github.ref == 'refs/heads/main' || steps.go.outputs.cache-matched-key == '') }}
+        uses: actions/cache/save@v6
+        with:
+          path: ${{ steps.go.outputs.cache-path }}
+          key: ${{ steps.go.outputs.cache-key }}
+      - name: Save Playwright browsers
+        if: ${{ !cancelled() && matrix.shard == 1 && steps.browsers.outputs.cache-hit != 'true' }}
+        uses: actions/cache/save@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ steps.browsers.outputs.cache-primary-key }}
+      # Only the shard that ran the graph tests has screenshots.
       - name: Upload graph screenshots
-        if: always()
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
-          name: graph-screenshots
+          name: graph-screenshots-${{ matrix.shard }}
           path: test-results/screenshots
-          if-no-files-found: warn
+          if-no-files-found: ignore
       - name: Upload Playwright report on failure
         if: failure()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.shard }}
           path: playwright-report
           if-no-files-found: ignore

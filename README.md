@@ -128,4 +128,6 @@ make ci                     # install web dependencies, run all required checks 
 
 `pnpm --dir web test` includes `web/src/**/*.{ts,tsx}` in the Vitest function-coverage check and fails if any included function has an execution count of exactly zero. Generated `src/gen/**` files and declaration files are excluded; coverage-rate thresholds remain separate from this zero-function check.
 
-Playwright covers browser CRUD, language selection persistence, cycle rejection, pull-request and Markdown attachment, deterministic sync, dependency removal, persistence after reload, console/network failures, 320-pixel reflow, and 8/50/100-node layouts. Graph screenshots are written to `test-results/screenshots/` and uploaded by GitHub Actions.
+Playwright covers browser CRUD, language selection persistence, cycle rejection, pull-request and Markdown attachment, deterministic sync, dependency removal, persistence after reload, console/network failures, 320-pixel reflow, and 8/50/100-node layouts. Graph screenshots are written to `test-results/screenshots/` and uploaded by GitHub Actions. `E2E_FLAGS` passes extra flags to Playwright, for example `make e2e E2E_FLAGS=--shard=1/3`.
+
+GitHub Actions runs the same checks as `make ci`, but as one job per Makefile target plus three Playwright shards, so a run takes as long as its slowest check. Each Go job restores its own module and build cache from the newest cache saved on `main`; pull request runs only save a cache when nothing could be restored.

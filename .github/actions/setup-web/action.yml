@@ -1,0 +1,31 @@
+name: Set up web toolchain
+description: >-
+  Installs the Node.js version pinned in .tool-versions, enables the corepack-managed pnpm pinned in
+  package.json, restores the pnpm caches, and installs the web dependencies.
+
+runs:
+  using: composite
+  steps:
+    - uses: actions/setup-node@v7
+      with:
+        node-version-file: .tool-versions
+
+    # Node.js ships corepack, which fetches the pnpm version from package.json on first use. This
+    # is how the Makefile and buf.gen.yaml invoke pnpm, and it avoids installing pnpm through npm.
+    - shell: bash
+      run: corepack enable
+
+    # ~/.cache/pnpm holds the package metadata and the lockfile verification log, so an unchanged
+    # lockfile skips the multi-second supply-chain check. ~/.local/share/pnpm/store holds the
+    # package files that `pnpm install` hard-links into node_modules.
+    - uses: actions/cache@v6
+      with:
+        path: |
+          ~/.cache/node/corepack
+          ~/.cache/pnpm
+          ~/.local/share/pnpm/store
+        key: pnpm-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml', 'package.json') }}
+        restore-keys: pnpm-${{ runner.os }}-
+
+    - shell: bash
+      run: make web-install
