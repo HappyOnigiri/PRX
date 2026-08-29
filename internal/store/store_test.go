@@ -80,13 +80,13 @@ func TestCycleDuplicateAndSafeDeletion(t *testing.T) {
 	if _, err := service.AddDependency(ctx, b.ID, c.ID); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := service.AddDependency(ctx, a.ID, b.ID); domain.ErrorCode(err) != "duplicate_dependency" {
+	if _, err := service.AddDependency(ctx, a.ID, b.ID); domain.ErrorCode(err) != domain.DomainErrorCodeDuplicateDependency {
 		t.Fatalf("duplicate code=%s err=%v", domain.ErrorCode(err), err)
 	}
-	if _, err := service.AddDependency(ctx, c.ID, a.ID); domain.ErrorCode(err) != "cycle" {
+	if _, err := service.AddDependency(ctx, c.ID, a.ID); domain.ErrorCode(err) != domain.DomainErrorCodeCycle {
 		t.Fatalf("cycle code=%s err=%v", domain.ErrorCode(err), err)
 	}
-	if err := service.DeleteTask(ctx, b.ID, false); domain.ErrorCode(err) != "references_exist" {
+	if err := service.DeleteTask(ctx, b.ID, false); domain.ErrorCode(err) != domain.DomainErrorCodeReferencesExist {
 		t.Fatalf("safe deletion code=%s err=%v", domain.ErrorCode(err), err)
 	}
 	if err := service.DeleteTask(ctx, b.ID, true); err != nil {
@@ -106,7 +106,7 @@ func TestDuplicatePullRequestAndConcurrentWriters(t *testing.T) {
 	if _, err := service.AttachPullRequest(ctx, a.ID, "https://github.com/acme/api/pull/42"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := service.AttachPullRequest(ctx, b.ID, "https://github.com/acme/api/pull/42"); domain.ErrorCode(err) != "duplicate_pull_request" {
+	if _, err := service.AttachPullRequest(ctx, b.ID, "https://github.com/acme/api/pull/42"); domain.ErrorCode(err) != domain.DomainErrorCodeDuplicatePullRequest {
 		t.Fatalf("duplicate PR code=%s err=%v", domain.ErrorCode(err), err)
 	}
 	const writers = 24
@@ -376,7 +376,7 @@ func TestPRTaskCannotBeCompletedManually(t *testing.T) {
 		t.Fatal(err)
 	}
 	completed := domain.TaskCompleted
-	if _, err := service.UpdateTask(ctx, prTask.ID, nil, nil, &completed, nil); domain.ErrorCode(err) != "pr_task_completes_on_merge" {
+	if _, err := service.UpdateTask(ctx, prTask.ID, nil, nil, &completed, nil); domain.ErrorCode(err) != domain.DomainErrorCodePRTaskCompletesOnMerge {
 		t.Fatalf("PR task completion code=%s err=%v", domain.ErrorCode(err), err)
 	}
 	manual, err := service.CreateTask(ctx, feature.ID, "Sign off", "", domain.TaskKindManual, "")
@@ -463,7 +463,7 @@ func TestPullRequestURLCasingIsNotADistinctPullRequest(t *testing.T) {
 	if _, err := service.AttachPullRequest(ctx, first.ID, "https://github.com/Acme/API/pull/42"); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := service.AttachPullRequest(ctx, second.ID, "https://github.com/acme/api/pull/42"); domain.ErrorCode(err) != "duplicate_pull_request" {
+	if _, err := service.AttachPullRequest(ctx, second.ID, "https://github.com/acme/api/pull/42"); domain.ErrorCode(err) != domain.DomainErrorCodeDuplicatePullRequest {
 		t.Fatalf("case-only variant code=%s err=%v", domain.ErrorCode(err), err)
 	}
 }
@@ -479,13 +479,13 @@ func TestDeletingWhatIsNotThereReportsNotFound(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := service.RemoveDependency(ctx, task.ID, "missing-task"); domain.ErrorCode(err) != "not_found" {
+	if err := service.RemoveDependency(ctx, task.ID, "missing-task"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("remove dependency code=%s err=%v", domain.ErrorCode(err), err)
 	}
-	if err := service.DetachPullRequest(ctx, task.ID); domain.ErrorCode(err) != "not_found" {
+	if err := service.DetachPullRequest(ctx, task.ID); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("detach pull request code=%s err=%v", domain.ErrorCode(err), err)
 	}
-	if err := service.DeleteDocument(ctx, "missing-document"); domain.ErrorCode(err) != "not_found" {
+	if err := service.DeleteDocument(ctx, "missing-document"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("delete document code=%s err=%v", domain.ErrorCode(err), err)
 	}
 }

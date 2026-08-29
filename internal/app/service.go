@@ -30,7 +30,7 @@ type Repository interface {
 	GetFeatureBySlug(context.Context, string) (domain.Feature, error)
 	DeleteFeature(context.Context, string, bool) error
 
-	CreateTask(context.Context, string, string, string, string, string) (domain.Task, error)
+	CreateTask(context.Context, string, string, string, domain.TaskKind, string) (domain.Task, error)
 	GetTask(context.Context, string) (domain.Task, error)
 	UpdateTask(context.Context, domain.Task) (domain.Task, error)
 	DeleteTask(context.Context, string, bool) error
@@ -41,7 +41,7 @@ type Repository interface {
 	UpsertPullRequest(context.Context, domain.PullRequest) (domain.PullRequest, error)
 	DeletePullRequest(context.Context, string) error
 
-	CreateDocument(context.Context, string, string, string, string, string) (domain.Document, error)
+	CreateDocument(context.Context, string, string, domain.DocumentKind, string, string) (domain.Document, error)
 	GetDocument(context.Context, string) (domain.Document, error)
 	DeleteDocument(context.Context, string) error
 
@@ -62,17 +62,17 @@ func (s *Service) CreateFeature(ctx context.Context, slug, title, description st
 	slug = strings.TrimSpace(strings.ToLower(slug))
 	title = strings.TrimSpace(title)
 	if !slugPattern.MatchString(slug) {
-		return domain.Feature{}, domain.NewError("invalid_slug", "slug must contain lowercase letters, numbers, and single hyphens")
+		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidSlug, "slug must contain lowercase letters, numbers, and single hyphens")
 	}
 	if title == "" {
-		return domain.Feature{}, domain.NewError("invalid_title", "feature title is required")
+		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "feature title is required")
 	}
 	return s.repository.CreateFeature(ctx, slug, title, strings.TrimSpace(description))
 }
 
 // UpdateFeature applies every field the caller supplied. A nil pointer means the
 // field was omitted; an empty string is a request to clear it.
-func (s *Service) UpdateFeature(ctx context.Context, id string, slug, title, description, status *string, archived *bool) (domain.Feature, error) {
+func (s *Service) UpdateFeature(ctx context.Context, id string, slug, title, description *string, status *domain.FeatureStatus, archived *bool) (domain.Feature, error) {
 	feature, err := s.ResolveFeature(ctx, id)
 	if err != nil {
 		return domain.Feature{}, err
@@ -93,10 +93,10 @@ func (s *Service) UpdateFeature(ctx context.Context, id string, slug, title, des
 		feature.Archived = *archived
 	}
 	if !slugPattern.MatchString(feature.Slug) {
-		return domain.Feature{}, domain.NewError("invalid_slug", "invalid feature slug")
+		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidSlug, "invalid feature slug")
 	}
-	if !oneOf(feature.Status, "active", "paused", "completed", "cancelled") {
-		return domain.Feature{}, domain.NewError("invalid_status", "invalid feature status")
+	if !oneOf(feature.Status, domain.FeatureStatusActive, domain.FeatureStatusPaused, domain.FeatureStatusCompleted, domain.FeatureStatusCancelled) {
+		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid feature status")
 	}
 	return s.repository.UpdateFeature(ctx, feature)
 }
@@ -108,7 +108,7 @@ func (s *Service) ResolveFeature(ctx context.Context, idOrSlug string) (domain.F
 	if feature, err := s.repository.GetFeatureBySlug(ctx, idOrSlug); err == nil {
 		return feature, nil
 	}
-	return domain.Feature{}, domain.NewError("not_found", "feature %q was not found", idOrSlug)
+	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", idOrSlug)
 }
 
 func (s *Service) DeleteFeature(ctx context.Context, id string, cascade bool) error {
@@ -119,27 +119,27 @@ func (s *Service) DeleteFeature(ctx context.Context, id string, cascade bool) er
 	return s.repository.DeleteFeature(ctx, feature.ID, cascade)
 }
 
-func (s *Service) CreateTask(ctx context.Context, featureID, title, scope, kind, assignee string) (domain.Task, error) {
+func (s *Service) CreateTask(ctx context.Context, featureID, title, scope string, kind domain.TaskKind, assignee string) (domain.Task, error) {
 	feature, err := s.ResolveFeature(ctx, featureID)
 	if err != nil {
 		return domain.Task{}, err
 	}
 	title = strings.TrimSpace(title)
 	if title == "" {
-		return domain.Task{}, domain.NewError("invalid_title", "task title is required")
+		return domain.Task{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "task title is required")
 	}
 	if kind == "" {
 		kind = domain.TaskKindPR
 	}
 	if !oneOf(kind, domain.TaskKindPR, domain.TaskKindManual) {
-		return domain.Task{}, domain.NewError("invalid_kind", "task kind must be pr or manual")
+		return domain.Task{}, domain.NewError(domain.DomainErrorCodeInvalidKind, "task kind must be pr or manual")
 	}
 	return s.repository.CreateTask(ctx, feature.ID, title, strings.TrimSpace(scope), kind, strings.TrimSpace(assignee))
 }
 
 // UpdateTask applies every field the caller supplied. A nil pointer means the
 // field was omitted; an empty string is a request to clear it.
-func (s *Service) UpdateTask(ctx context.Context, id string, title, scope, status, assignee *string) (domain.Task, error) {
+func (s *Service) UpdateTask(ctx context.Context, id string, title, scope *string, status *domain.TaskStatus, assignee *string) (domain.Task, error) {
 	task, err := s.repository.GetTask(ctx, id)
 	if err != nil {
 		return domain.Task{}, err
@@ -157,16 +157,16 @@ func (s *Service) UpdateTask(ctx context.Context, id string, title, scope, statu
 		task.Assignee = *assignee
 	}
 	if task.Title == "" {
-		return domain.Task{}, domain.NewError("invalid_title", "task title is required")
+		return domain.Task{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "task title is required")
 	}
-	if !oneOf(task.Status, domain.TaskPlanned, domain.TaskInProgress, domain.TaskCompleted, domain.TaskCancelled) {
-		return domain.Task{}, domain.NewError("invalid_status", "invalid task status")
+	if !oneOf(task.Status, domain.TaskStatusPlanned, domain.TaskStatusInProgress, domain.TaskStatusCompleted, domain.TaskStatusCancelled) {
+		return domain.Task{}, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid task status")
 	}
 	// PR tasks derive completion from a merged PR. Accepting completed here would
 	// drop the task out of the ready queue while its dependents stay blocked,
 	// since dependency satisfaction still requires a fresh merged PR.
-	if task.Kind == domain.TaskKindPR && task.Status == domain.TaskCompleted {
-		return domain.Task{}, domain.NewError("pr_task_completes_on_merge", "a PR task completes when its pull request is merged")
+	if task.Kind == domain.TaskKindPR && task.Status == domain.TaskStatusCompleted {
+		return domain.Task{}, domain.NewError(domain.DomainErrorCodePRTaskCompletesOnMerge, "a PR task completes when its pull request is merged")
 	}
 	return s.repository.UpdateTask(ctx, task)
 }
@@ -187,34 +187,34 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 		return domain.PullRequest{}, err
 	}
 	if task.Kind != domain.TaskKindPR {
-		return domain.PullRequest{}, domain.NewError("pull_request_on_manual_task", "manual tasks cannot have pull requests")
+		return domain.PullRequest{}, domain.NewError(domain.DomainErrorCodePullRequestOnManualTask, "manual tasks cannot have pull requests")
 	}
 	owner, repo, number, canonical, err := githubprovider.ParsePullRequestURL(rawURL)
 	if err != nil {
-		return domain.PullRequest{}, domain.NewError("invalid_pull_request_url", "%s", err)
+		return domain.PullRequest{}, domain.NewError(domain.DomainErrorCodeInvalidPullRequestURL, "%s", err)
 	}
-	return s.repository.UpsertPullRequest(ctx, domain.PullRequest{TaskID: taskID, Owner: owner, Repository: repo, Number: number, URL: canonical, State: "unknown", ReviewState: "unknown", Mergeability: "unknown", Stale: true})
+	return s.repository.UpsertPullRequest(ctx, domain.PullRequest{TaskID: taskID, Owner: owner, Repository: repo, Number: number, URL: canonical, State: domain.PullRequestStateUnknown, ReviewState: domain.ReviewStateUnknown, Mergeability: domain.MergeabilityUnknown, Stale: true})
 }
 
 func (s *Service) DetachPullRequest(ctx context.Context, taskID string) error {
 	return s.repository.DeletePullRequest(ctx, taskID)
 }
 
-func (s *Service) AddDocument(ctx context.Context, featureID, taskID, kind, title, value string) (domain.Document, error) {
+func (s *Service) AddDocument(ctx context.Context, featureID, taskID string, kind domain.DocumentKind, title, value string) (domain.Document, error) {
 	if (featureID == "") == (taskID == "") {
-		return domain.Document{}, domain.NewError("invalid_parent", "set exactly one of feature_id or task_id")
+		return domain.Document{}, domain.NewError(domain.DomainErrorCodeInvalidParent, "set exactly one of feature_id or task_id")
 	}
-	if !oneOf(kind, "url", "markdown_path") {
-		return domain.Document{}, domain.NewError("invalid_document_kind", "document kind must be url or markdown_path")
+	if !oneOf(kind, domain.DocumentKindURL, domain.DocumentKindMarkdownPath) {
+		return domain.Document{}, domain.NewError(domain.DomainErrorCodeInvalidDocumentKind, "document kind must be url or markdown_path")
 	}
 	value = strings.TrimSpace(value)
 	if value == "" {
-		return domain.Document{}, domain.NewError("invalid_document", "document value is required")
+		return domain.Document{}, domain.NewError(domain.DomainErrorCodeInvalidDocument, "document value is required")
 	}
-	if kind == "url" {
+	if kind == domain.DocumentKindURL {
 		parsed, err := url.Parse(value)
 		if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") {
-			return domain.Document{}, domain.NewError("invalid_document_url", "document URL must use http or https")
+			return domain.Document{}, domain.NewError(domain.DomainErrorCodeInvalidDocumentURL, "document URL must use http or https")
 		}
 	}
 	if featureID != "" {
@@ -244,20 +244,20 @@ func (s *Service) ReadMarkdownDocument(ctx context.Context, id string) (string, 
 	if err != nil {
 		return "", err
 	}
-	if document.Kind != "markdown_path" {
-		return "", domain.NewError("invalid_document_kind", "document is not a Markdown path")
+	if document.Kind != domain.DocumentKindMarkdownPath {
+		return "", domain.NewError(domain.DomainErrorCodeInvalidDocumentKind, "document is not a Markdown path")
 	}
 	file, err := os.Open(document.Value)
 	if err != nil {
-		return "", domain.NewError("document_read_failed", "could not read the Markdown file")
+		return "", domain.NewError(domain.DomainErrorCodeDocumentReadFailed, "could not read the Markdown file")
 	}
 	defer func() { _ = file.Close() }()
 	content, err := io.ReadAll(io.LimitReader(file, maxMarkdownPreviewBytes+1))
 	if err != nil {
-		return "", domain.NewError("document_read_failed", "could not read the Markdown file")
+		return "", domain.NewError(domain.DomainErrorCodeDocumentReadFailed, "could not read the Markdown file")
 	}
 	if len(content) > maxMarkdownPreviewBytes {
-		return "", domain.NewError("document_too_large", "Markdown preview is limited to 1 MiB")
+		return "", domain.NewError(domain.DomainErrorCodeDocumentTooLarge, "Markdown preview is limited to 1 MiB")
 	}
 	return string(content), nil
 }
@@ -274,10 +274,10 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 		if task.Ready {
 			snapshot.ReadyTasks = append(snapshot.ReadyTasks, task)
 		}
-		if task.DisplayState == "review_waiting" {
+		if task.DisplayState == domain.TaskDisplayStateReviewWaiting {
 			snapshot.ReviewWaitingTasks = append(snapshot.ReviewWaitingTasks, task)
 		}
-		if task.DisplayState == "conflict" {
+		if task.DisplayState == domain.TaskDisplayStateConflict {
 			snapshot.ConflictTasks = append(snapshot.ConflictTasks, task)
 		}
 	}
@@ -305,13 +305,13 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 		if task.Ready {
 			feature.ReadyCount++
 		}
-		if task.DisplayState == "review_waiting" {
+		if task.DisplayState == domain.TaskDisplayStateReviewWaiting {
 			feature.ReviewWaitingCount++
 		}
-		if task.DisplayState == "conflict" {
+		if task.DisplayState == domain.TaskDisplayStateConflict {
 			feature.ConflictCount++
 		}
-		if task.DisplayState == "merged" {
+		if task.DisplayState == domain.TaskDisplayStateMerged {
 			feature.MergedCount++
 		}
 	}
@@ -320,7 +320,7 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 
 func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded, failed int, err error) {
 	if s.provider == nil {
-		return 0, 0, domain.NewError("github_auth", "GitHub provider is not configured")
+		return 0, 0, domain.NewError(domain.DomainErrorCodeGitHubAuth, "GitHub provider is not configured")
 	}
 	snapshot, err := s.repository.Snapshot(ctx)
 	if err != nil {
@@ -432,7 +432,7 @@ func (s *Service) SeedDemo(ctx context.Context, slug string, count int) error {
 	return err
 }
 
-func oneOf(value string, values ...string) bool {
+func oneOf[T comparable](value T, values ...T) bool {
 	for _, candidate := range values {
 		if value == candidate {
 			return true

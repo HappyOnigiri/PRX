@@ -42,6 +42,14 @@ func changedFlag(cmd *cobra.Command, name string, value *string) *string {
 	return value
 }
 
+func changedStringType[T ~string](cmd *cobra.Command, name string, value *string) *T {
+	if !cmd.Flags().Changed(name) {
+		return nil
+	}
+	typed := T(*value)
+	return &typed
+}
+
 func changedBoolFlag(cmd *cobra.Command, name string, value *bool) *bool {
 	if !cmd.Flags().Changed(name) {
 		return nil

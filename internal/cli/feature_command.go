@@ -1,6 +1,9 @@
 package cli
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/HappyOnigiri/PRX/internal/domain"
+	"github.com/spf13/cobra"
+)
 
 func (s *state) featureCommand() *cobra.Command {
 	command := &cobra.Command{Use: "feature", Short: "Manage features"}
@@ -35,7 +38,7 @@ func (s *state) featureCommand() *cobra.Command {
 	update := &cobra.Command{Use: "update ID_OR_SLUG", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		value, err := s.service.UpdateFeature(cmd.Context(), args[0],
 			changedFlag(cmd, "slug", &slug), changedFlag(cmd, "title", &title),
-			changedFlag(cmd, "description", &description), changedFlag(cmd, "status", &status),
+			changedFlag(cmd, "description", &description), changedStringType[domain.FeatureStatus](cmd, "status", &status),
 			changedBoolFlag(cmd, "archived", &archived))
 		if err != nil {
 			return err

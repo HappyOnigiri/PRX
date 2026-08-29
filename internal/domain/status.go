@@ -1,49 +1,49 @@
 package domain
 
-func PRDisplayState(pr *PullRequest) string {
+func PRDisplayState(pr *PullRequest) TaskDisplayState {
 	if pr == nil {
-		return "unlinked"
+		return TaskDisplayStateUnlinked
 	}
-	if pr.State == "merged" {
-		return "merged"
+	if pr.State == PullRequestStateMerged {
+		return TaskDisplayStateMerged
 	}
-	if pr.State == "closed" {
-		return "closed"
+	if pr.State == PullRequestStateClosed {
+		return TaskDisplayStateClosed
 	}
 	if pr.Draft {
-		return "draft"
+		return TaskDisplayStateDraft
 	}
-	if pr.Mergeability == "conflicting" {
-		return "conflict"
+	if pr.Mergeability == MergeabilityConflicting {
+		return TaskDisplayStateConflict
 	}
-	if pr.ReviewState == "changes_requested" {
-		return "changes_requested"
+	if pr.ReviewState == ReviewStateChangesRequested {
+		return TaskDisplayStateChangesRequested
 	}
-	if pr.ReviewState == "approved" {
-		return "approved"
+	if pr.ReviewState == ReviewStateApproved {
+		return TaskDisplayStateApproved
 	}
-	if pr.ReviewState == "required" {
-		return "review_waiting"
+	if pr.ReviewState == ReviewStateRequired {
+		return TaskDisplayStateReviewWaiting
 	}
-	if pr.State == "open" {
-		return "open"
+	if pr.State == PullRequestStateOpen {
+		return TaskDisplayStateOpen
 	}
-	return "unknown"
+	return TaskDisplayStateUnknown
 }
 
 func IsSatisfied(task Task, pr *PullRequest) bool {
-	if task.Status == TaskCancelled {
+	if task.Status == TaskStatusCancelled {
 		return false
 	}
 	if task.Kind == TaskKindManual {
-		return task.Status == TaskCompleted
+		return task.Status == TaskStatusCompleted
 	}
-	return pr != nil && !pr.Stale && pr.State == "merged"
+	return pr != nil && !pr.Stale && pr.State == PullRequestStateMerged
 }
 
 func IsIncomplete(task Task, pr *PullRequest) bool {
-	if task.Status == TaskCancelled || task.Status == TaskCompleted {
+	if task.Status == TaskStatusCancelled || task.Status == TaskStatusCompleted {
 		return false
 	}
-	return task.Kind != TaskKindPR || pr == nil || pr.State != "merged"
+	return task.Kind != TaskKindPR || pr == nil || pr.State != PullRequestStateMerged
 }

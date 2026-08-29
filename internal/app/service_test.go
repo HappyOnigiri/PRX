@@ -26,7 +26,7 @@ func (repositoryStub) GetFeatureBySlug(context.Context, string) (domain.Feature,
 func (repositoryStub) DeleteFeature(context.Context, string, bool) error {
 	return errors.New("unexpected DeleteFeature call")
 }
-func (repositoryStub) CreateTask(context.Context, string, string, string, string, string) (domain.Task, error) {
+func (repositoryStub) CreateTask(context.Context, string, string, string, domain.TaskKind, string) (domain.Task, error) {
 	return domain.Task{}, errors.New("unexpected CreateTask call")
 }
 func (repositoryStub) GetTask(context.Context, string) (domain.Task, error) {
@@ -50,7 +50,7 @@ func (repositoryStub) UpsertPullRequest(context.Context, domain.PullRequest) (do
 func (repositoryStub) DeletePullRequest(context.Context, string) error {
 	return errors.New("unexpected DeletePullRequest call")
 }
-func (repositoryStub) CreateDocument(context.Context, string, string, string, string, string) (domain.Document, error) {
+func (repositoryStub) CreateDocument(context.Context, string, string, domain.DocumentKind, string, string) (domain.Document, error) {
 	return domain.Document{}, errors.New("unexpected CreateDocument call")
 }
 func (repositoryStub) GetDocument(context.Context, string) (domain.Document, error) {
@@ -101,7 +101,7 @@ func TestCreateFeatureValidatesBeforeRepository(t *testing.T) {
 		name  string
 		slug  string
 		title string
-		code  string
+		code  domain.DomainErrorCode
 	}{
 		{name: "invalid slug", slug: "not a slug", title: "Feature", code: "invalid_slug"},
 		{name: "missing title", slug: "feature", title: "  ", code: "invalid_title"},
@@ -133,7 +133,7 @@ func TestCreateTaskRejectsUnknownKind(t *testing.T) {
 	repository := &featureRepository{feature: domain.Feature{ID: "feature-id"}}
 	service := app.New(repository, nil)
 
-	_, err := service.CreateTask(context.Background(), "feature-id", "Task", "", "unknown", "")
+	_, err := service.CreateTask(context.Background(), "feature-id", "Task", "", domain.TaskKind("unknown"), "")
 	if got := errorCode(t, err); got != "invalid_kind" {
 		t.Fatalf("error code=%q, want invalid_kind", got)
 	}
@@ -155,9 +155,9 @@ func TestAddDocumentValidatesWithoutRepository(t *testing.T) {
 		name      string
 		featureID string
 		taskID    string
-		kind      string
+		kind      domain.DocumentKind
 		value     string
-		code      string
+		code      domain.DomainErrorCode
 	}{
 		{name: "missing parent", kind: "url", value: "https://example.com", code: "invalid_parent"},
 		{name: "two parents", featureID: "feature-id", taskID: "task-id", kind: "url", value: "https://example.com", code: "invalid_parent"},
@@ -185,7 +185,7 @@ func TestAttachPullRequestRejectsManualTask(t *testing.T) {
 	}
 }
 
-func errorCode(t *testing.T, err error) string {
+func errorCode(t *testing.T, err error) domain.DomainErrorCode {
 	t.Helper()
 	if err == nil {
 		t.Fatal("expected error")

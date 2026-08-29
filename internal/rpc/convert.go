@@ -64,15 +64,15 @@ func protoSnapshot(v domain.Snapshot) *prxv1.Snapshot {
 	return result
 }
 
-func protoFeatureStatus(value string) prxv1.FeatureStatus {
+func protoFeatureStatus(value domain.FeatureStatus) prxv1.FeatureStatus {
 	switch value {
-	case "active":
+	case domain.FeatureStatusActive:
 		return prxv1.FeatureStatus_FEATURE_STATUS_ACTIVE
-	case "paused":
+	case domain.FeatureStatusPaused:
 		return prxv1.FeatureStatus_FEATURE_STATUS_PAUSED
-	case "completed":
+	case domain.FeatureStatusCompleted:
 		return prxv1.FeatureStatus_FEATURE_STATUS_COMPLETED
-	case "cancelled":
+	case domain.FeatureStatusCancelled:
 		return prxv1.FeatureStatus_FEATURE_STATUS_CANCELLED
 	default:
 		return prxv1.FeatureStatus_FEATURE_STATUS_UNSPECIFIED
@@ -81,27 +81,27 @@ func protoFeatureStatus(value string) prxv1.FeatureStatus {
 
 // domainFeatureStatus rejects values the server cannot map instead of falling
 // back to the empty string, which the service layer reads as "field omitted".
-func domainFeatureStatus(value *prxv1.FeatureStatus) (*string, error) {
+func domainFeatureStatus(value *prxv1.FeatureStatus) (*domain.FeatureStatus, error) {
 	if value == nil {
 		return nil, nil
 	}
-	result := ""
+	var result domain.FeatureStatus
 	switch *value {
 	case prxv1.FeatureStatus_FEATURE_STATUS_ACTIVE:
-		result = "active"
+		result = domain.FeatureStatusActive
 	case prxv1.FeatureStatus_FEATURE_STATUS_PAUSED:
-		result = "paused"
+		result = domain.FeatureStatusPaused
 	case prxv1.FeatureStatus_FEATURE_STATUS_COMPLETED:
-		result = "completed"
+		result = domain.FeatureStatusCompleted
 	case prxv1.FeatureStatus_FEATURE_STATUS_CANCELLED:
-		result = "cancelled"
+		result = domain.FeatureStatusCancelled
 	default:
-		return nil, domain.NewError("invalid_status", "invalid feature status")
+		return nil, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid feature status")
 	}
 	return &result, nil
 }
 
-func protoTaskKind(value string) prxv1.TaskKind {
+func protoTaskKind(value domain.TaskKind) prxv1.TaskKind {
 	switch value {
 	case domain.TaskKindPR:
 		return prxv1.TaskKind_TASK_KIND_PULL_REQUEST
@@ -114,7 +114,7 @@ func protoTaskKind(value string) prxv1.TaskKind {
 
 // domainTaskKind maps the unspecified value to the empty string so the service
 // layer can apply its default, and rejects everything else it cannot map.
-func domainTaskKind(value prxv1.TaskKind) (string, error) {
+func domainTaskKind(value prxv1.TaskKind) (domain.TaskKind, error) {
 	switch value {
 	case prxv1.TaskKind_TASK_KIND_UNSPECIFIED:
 		return "", nil
@@ -123,19 +123,19 @@ func domainTaskKind(value prxv1.TaskKind) (string, error) {
 	case prxv1.TaskKind_TASK_KIND_MANUAL:
 		return domain.TaskKindManual, nil
 	default:
-		return "", domain.NewError("invalid_kind", "task kind must be pr or manual")
+		return "", domain.NewError(domain.DomainErrorCodeInvalidKind, "task kind must be pr or manual")
 	}
 }
 
-func protoTaskStatus(value string) prxv1.TaskStatus {
+func protoTaskStatus(value domain.TaskStatus) prxv1.TaskStatus {
 	switch value {
-	case domain.TaskPlanned:
+	case domain.TaskStatusPlanned:
 		return prxv1.TaskStatus_TASK_STATUS_PLANNED
-	case domain.TaskInProgress:
+	case domain.TaskStatusInProgress:
 		return prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS
-	case domain.TaskCompleted:
+	case domain.TaskStatusCompleted:
 		return prxv1.TaskStatus_TASK_STATUS_COMPLETED
-	case domain.TaskCancelled:
+	case domain.TaskStatusCancelled:
 		return prxv1.TaskStatus_TASK_STATUS_CANCELLED
 	default:
 		return prxv1.TaskStatus_TASK_STATUS_UNSPECIFIED
@@ -144,42 +144,42 @@ func protoTaskStatus(value string) prxv1.TaskStatus {
 
 // domainTaskStatus rejects values the server cannot map instead of falling back
 // to the empty string, which the service layer reads as "field omitted".
-func domainTaskStatus(value *prxv1.TaskStatus) (*string, error) {
+func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 	if value == nil {
 		return nil, nil
 	}
-	result := ""
+	var result domain.TaskStatus
 	switch *value {
 	case prxv1.TaskStatus_TASK_STATUS_PLANNED:
-		result = domain.TaskPlanned
+		result = domain.TaskStatusPlanned
 	case prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS:
-		result = domain.TaskInProgress
+		result = domain.TaskStatusInProgress
 	case prxv1.TaskStatus_TASK_STATUS_COMPLETED:
-		result = domain.TaskCompleted
+		result = domain.TaskStatusCompleted
 	case prxv1.TaskStatus_TASK_STATUS_CANCELLED:
-		result = domain.TaskCancelled
+		result = domain.TaskStatusCancelled
 	default:
-		return nil, domain.NewError("invalid_status", "invalid task status")
+		return nil, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid task status")
 	}
 	return &result, nil
 }
 
-func protoTaskDisplayState(value string) prxv1.TaskDisplayState {
-	states := map[string]prxv1.TaskDisplayState{
-		"planned":           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_PLANNED,
-		"in_progress":       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS,
-		"completed":         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED,
-		"cancelled":         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CANCELLED,
-		"unlinked":          prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNLINKED,
-		"merged":            prxv1.TaskDisplayState_TASK_DISPLAY_STATE_MERGED,
-		"closed":            prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED,
-		"draft":             prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DRAFT,
-		"conflict":          prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CONFLICT,
-		"changes_requested": prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CHANGES_REQUESTED,
-		"approved":          prxv1.TaskDisplayState_TASK_DISPLAY_STATE_APPROVED,
-		"review_waiting":    prxv1.TaskDisplayState_TASK_DISPLAY_STATE_REVIEW_WAITING,
-		"open":              prxv1.TaskDisplayState_TASK_DISPLAY_STATE_OPEN,
-		"unknown":           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNKNOWN,
+func protoTaskDisplayState(value domain.TaskDisplayState) prxv1.TaskDisplayState {
+	states := map[domain.TaskDisplayState]prxv1.TaskDisplayState{
+		domain.TaskDisplayStatePlanned:          prxv1.TaskDisplayState_TASK_DISPLAY_STATE_PLANNED,
+		domain.TaskDisplayStateInProgress:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS,
+		domain.TaskDisplayStateCompleted:        prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED,
+		domain.TaskDisplayStateCancelled:        prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CANCELLED,
+		domain.TaskDisplayStateUnlinked:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNLINKED,
+		domain.TaskDisplayStateMerged:           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_MERGED,
+		domain.TaskDisplayStateClosed:           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED,
+		domain.TaskDisplayStateDraft:            prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DRAFT,
+		domain.TaskDisplayStateConflict:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CONFLICT,
+		domain.TaskDisplayStateChangesRequested: prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CHANGES_REQUESTED,
+		domain.TaskDisplayStateApproved:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_APPROVED,
+		domain.TaskDisplayStateReviewWaiting:    prxv1.TaskDisplayState_TASK_DISPLAY_STATE_REVIEW_WAITING,
+		domain.TaskDisplayStateOpen:             prxv1.TaskDisplayState_TASK_DISPLAY_STATE_OPEN,
+		domain.TaskDisplayStateUnknown:          prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNKNOWN,
 	}
 	if state, ok := states[value]; ok {
 		return state
@@ -187,62 +187,62 @@ func protoTaskDisplayState(value string) prxv1.TaskDisplayState {
 	return prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNSPECIFIED
 }
 
-func protoPullRequestState(value string) prxv1.PullRequestState {
+func protoPullRequestState(value domain.PullRequestState) prxv1.PullRequestState {
 	switch value {
-	case "open":
+	case domain.PullRequestStateOpen:
 		return prxv1.PullRequestState_PULL_REQUEST_STATE_OPEN
-	case "closed":
+	case domain.PullRequestStateClosed:
 		return prxv1.PullRequestState_PULL_REQUEST_STATE_CLOSED
-	case "merged":
+	case domain.PullRequestStateMerged:
 		return prxv1.PullRequestState_PULL_REQUEST_STATE_MERGED
-	case "unknown":
+	case domain.PullRequestStateUnknown:
 		return prxv1.PullRequestState_PULL_REQUEST_STATE_UNKNOWN
 	default:
 		return prxv1.PullRequestState_PULL_REQUEST_STATE_UNSPECIFIED
 	}
 }
 
-func protoReviewState(value string) prxv1.ReviewState {
+func protoReviewState(value domain.ReviewState) prxv1.ReviewState {
 	switch value {
-	case "none":
+	case domain.ReviewStateNone:
 		return prxv1.ReviewState_REVIEW_STATE_NONE
-	case "required":
+	case domain.ReviewStateRequired:
 		return prxv1.ReviewState_REVIEW_STATE_REQUIRED
-	case "approved":
+	case domain.ReviewStateApproved:
 		return prxv1.ReviewState_REVIEW_STATE_APPROVED
-	case "changes_requested":
+	case domain.ReviewStateChangesRequested:
 		return prxv1.ReviewState_REVIEW_STATE_CHANGES_REQUESTED
-	case "unknown":
+	case domain.ReviewStateUnknown:
 		return prxv1.ReviewState_REVIEW_STATE_UNKNOWN
 	default:
 		return prxv1.ReviewState_REVIEW_STATE_UNSPECIFIED
 	}
 }
 
-func protoMergeability(value string) prxv1.Mergeability {
+func protoMergeability(value domain.Mergeability) prxv1.Mergeability {
 	switch value {
-	case "mergeable":
+	case domain.MergeabilityMergeable:
 		return prxv1.Mergeability_MERGEABILITY_MERGEABLE
-	case "conflicting":
+	case domain.MergeabilityConflicting:
 		return prxv1.Mergeability_MERGEABILITY_CONFLICTING
-	case "unknown":
+	case domain.MergeabilityUnknown:
 		return prxv1.Mergeability_MERGEABILITY_UNKNOWN
 	default:
 		return prxv1.Mergeability_MERGEABILITY_UNSPECIFIED
 	}
 }
 
-func protoPullRequestDisplayState(value string) prxv1.PullRequestDisplayState {
-	states := map[string]prxv1.PullRequestDisplayState{
-		"merged":            prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_MERGED,
-		"closed":            prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CLOSED,
-		"draft":             prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_DRAFT,
-		"conflict":          prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CONFLICT,
-		"changes_requested": prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED,
-		"approved":          prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_APPROVED,
-		"review_waiting":    prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING,
-		"open":              prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_OPEN,
-		"unknown":           prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNKNOWN,
+func protoPullRequestDisplayState(value domain.PullRequestDisplayState) prxv1.PullRequestDisplayState {
+	states := map[domain.PullRequestDisplayState]prxv1.PullRequestDisplayState{
+		domain.PullRequestDisplayStateMerged:           prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_MERGED,
+		domain.PullRequestDisplayStateClosed:           prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CLOSED,
+		domain.PullRequestDisplayStateDraft:            prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_DRAFT,
+		domain.PullRequestDisplayStateConflict:         prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CONFLICT,
+		domain.PullRequestDisplayStateChangesRequested: prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED,
+		domain.PullRequestDisplayStateApproved:         prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_APPROVED,
+		domain.PullRequestDisplayStateReviewWaiting:    prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING,
+		domain.PullRequestDisplayStateOpen:             prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_OPEN,
+		domain.PullRequestDisplayStateUnknown:          prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNKNOWN,
 	}
 	if state, ok := states[value]; ok {
 		return state
@@ -250,23 +250,23 @@ func protoPullRequestDisplayState(value string) prxv1.PullRequestDisplayState {
 	return prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED
 }
 
-func protoDocumentKind(value string) prxv1.DocumentKind {
+func protoDocumentKind(value domain.DocumentKind) prxv1.DocumentKind {
 	switch value {
-	case "url":
+	case domain.DocumentKindURL:
 		return prxv1.DocumentKind_DOCUMENT_KIND_URL
-	case "markdown_path":
+	case domain.DocumentKindMarkdownPath:
 		return prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH
 	default:
 		return prxv1.DocumentKind_DOCUMENT_KIND_UNSPECIFIED
 	}
 }
 
-func domainDocumentKind(value prxv1.DocumentKind) string {
+func domainDocumentKind(value prxv1.DocumentKind) domain.DocumentKind {
 	switch value {
 	case prxv1.DocumentKind_DOCUMENT_KIND_URL:
-		return "url"
+		return domain.DocumentKindURL
 	case prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH:
-		return "markdown_path"
+		return domain.DocumentKindMarkdownPath
 	default:
 		return ""
 	}
@@ -275,11 +275,11 @@ func domainDocumentKind(value prxv1.DocumentKind) string {
 func protoBlockedReason(task domain.Task) *prxv1.BlockedReason {
 	code := prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_UNSPECIFIED
 	switch task.BlockedCode {
-	case domain.BlockedDependencyDataIncomplete:
+	case domain.BlockedReasonCodeDependencyDataIncomplete:
 		code = prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE
-	case domain.BlockedByStaleData:
+	case domain.BlockedReasonCodeBlockerStale:
 		code = prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_BLOCKER_STALE
-	case domain.BlockedWaitingForBlocker:
+	case domain.BlockedReasonCodeWaitingForBlocker:
 		code = prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER
 	}
 	if code == prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_UNSPECIFIED {
@@ -288,35 +288,55 @@ func protoBlockedReason(task domain.Task) *prxv1.BlockedReason {
 	return &prxv1.BlockedReason{Code: code, BlockerTaskId: task.BlockerTaskID}
 }
 
-func protoDomainErrorCode(value string) prxv1.DomainErrorCode {
-	codes := map[string]prxv1.DomainErrorCode{
-		"cross_feature_dependency":    prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY,
-		"cycle":                       prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE,
-		"duplicate_dependency":        prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY,
-		"duplicate_pull_request":      prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST,
-		"document_read_failed":        prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED,
-		"document_too_large":          prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE,
-		"github_auth":                 prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH,
-		"invalid_database":            prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE,
-		"invalid_document":            prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT,
-		"invalid_document_kind":       prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND,
-		"invalid_document_url":        prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL,
-		"invalid_kind":                prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND,
-		"invalid_parent":              prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT,
-		"invalid_pull_request_url":    prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL,
-		"invalid_seed":                prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SEED,
-		"invalid_slug":                prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG,
-		"invalid_status":              prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS,
-		"invalid_title":               prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE,
-		"not_found":                   prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND,
-		"pr_task_completes_on_merge":  prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE,
-		"pull_request_on_manual_task": prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK,
-		"references_exist":            prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST,
+func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
+	switch value {
+	case domain.DomainErrorCodeCrossFeatureDependency:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY
+	case domain.DomainErrorCodeCycle:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE
+	case domain.DomainErrorCodeDuplicateDependency:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY
+	case domain.DomainErrorCodeDuplicatePullRequest:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST
+	case domain.DomainErrorCodeDocumentReadFailed:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED
+	case domain.DomainErrorCodeDocumentTooLarge:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE
+	case domain.DomainErrorCodeGitHubAuth:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH
+	case domain.DomainErrorCodeInvalidDatabase:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE
+	case domain.DomainErrorCodeInvalidDocument:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT
+	case domain.DomainErrorCodeInvalidDocumentKind:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND
+	case domain.DomainErrorCodeInvalidDocumentURL:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL
+	case domain.DomainErrorCodeInvalidKind:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND
+	case domain.DomainErrorCodeInvalidParent:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT
+	case domain.DomainErrorCodeInvalidPullRequestURL:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL
+	case domain.DomainErrorCodeInvalidSeed:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SEED
+	case domain.DomainErrorCodeInvalidSlug:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG
+	case domain.DomainErrorCodeInvalidStatus:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS
+	case domain.DomainErrorCodeInvalidTitle:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE
+	case domain.DomainErrorCodeNotFound:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND
+	case domain.DomainErrorCodePRTaskCompletesOnMerge:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE
+	case domain.DomainErrorCodePullRequestOnManualTask:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK
+	case domain.DomainErrorCodeReferencesExist:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST
+	default:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
 	}
-	if code, ok := codes[value]; ok {
-		return code
-	}
-	return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
 }
 
 const timeFormat = "2006-01-02T15:04:05.999999999Z07:00"

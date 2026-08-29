@@ -10,7 +10,7 @@ func (s *state) taskCommand() *cobra.Command {
 	var feature, title, scope, kind, assignee, status string
 	var cascade bool
 	create := &cobra.Command{Use: "create", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		value, err := s.service.CreateTask(cmd.Context(), feature, title, scope, kind, assignee)
+		value, err := s.service.CreateTask(cmd.Context(), feature, title, scope, domain.TaskKind(kind), assignee)
 		if err != nil {
 			return err
 		}
@@ -49,12 +49,12 @@ func (s *state) taskCommand() *cobra.Command {
 				return s.write(task)
 			}
 		}
-		return domain.NewError("not_found", "task %q was not found", args[0])
+		return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", args[0])
 	}}
 	update := &cobra.Command{Use: "update ID", Args: cobra.ExactArgs(1), RunE: func(cmd *cobra.Command, args []string) error {
 		value, err := s.service.UpdateTask(cmd.Context(), args[0],
 			changedFlag(cmd, "title", &title), changedFlag(cmd, "scope", &scope),
-			changedFlag(cmd, "status", &status), changedFlag(cmd, "assignee", &assignee))
+			changedStringType[domain.TaskStatus](cmd, "status", &status), changedFlag(cmd, "assignee", &assignee))
 		if err != nil {
 			return err
 		}

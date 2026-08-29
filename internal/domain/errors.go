@@ -5,22 +5,50 @@ import (
 	"fmt"
 )
 
+type DomainErrorCode string
+
+const (
+	DomainErrorCodeCrossFeatureDependency  DomainErrorCode = "cross_feature_dependency"
+	DomainErrorCodeCycle                   DomainErrorCode = "cycle"
+	DomainErrorCodeDuplicateDependency     DomainErrorCode = "duplicate_dependency"
+	DomainErrorCodeDuplicatePullRequest    DomainErrorCode = "duplicate_pull_request"
+	DomainErrorCodeGitHubAuth              DomainErrorCode = "github_auth"
+	DomainErrorCodeInvalidDatabase         DomainErrorCode = "invalid_database"
+	DomainErrorCodeInvalidDocument         DomainErrorCode = "invalid_document"
+	DomainErrorCodeInvalidDocumentKind     DomainErrorCode = "invalid_document_kind"
+	DomainErrorCodeInvalidKind             DomainErrorCode = "invalid_kind"
+	DomainErrorCodeInvalidParent           DomainErrorCode = "invalid_parent"
+	DomainErrorCodeInvalidPullRequestURL   DomainErrorCode = "invalid_pull_request_url"
+	DomainErrorCodeInvalidSeed             DomainErrorCode = "invalid_seed"
+	DomainErrorCodeInvalidSlug             DomainErrorCode = "invalid_slug"
+	DomainErrorCodeInvalidStatus           DomainErrorCode = "invalid_status"
+	DomainErrorCodeInvalidTitle            DomainErrorCode = "invalid_title"
+	DomainErrorCodeNotFound                DomainErrorCode = "not_found"
+	DomainErrorCodeReferencesExist         DomainErrorCode = "references_exist"
+	DomainErrorCodePullRequestOnManualTask DomainErrorCode = "pull_request_on_manual_task"
+	DomainErrorCodePRTaskCompletesOnMerge  DomainErrorCode = "pr_task_completes_on_merge"
+	DomainErrorCodeInvalidDocumentURL      DomainErrorCode = "invalid_document_url"
+	DomainErrorCodeDocumentReadFailed      DomainErrorCode = "document_read_failed"
+	DomainErrorCodeDocumentTooLarge        DomainErrorCode = "document_too_large"
+	DomainErrorCodeInternal                DomainErrorCode = "internal"
+)
+
 type Error struct {
-	Code    string   `json:"code"`
-	Message string   `json:"message"`
-	Path    []string `json:"path,omitempty"`
+	Code    DomainErrorCode `json:"code"`
+	Message string          `json:"message"`
+	Path    []string        `json:"path,omitempty"`
 }
 
 func (e *Error) Error() string { return e.Message }
 
-func NewError(code, format string, args ...any) *Error {
+func NewError(code DomainErrorCode, format string, args ...any) *Error {
 	return &Error{Code: code, Message: fmt.Sprintf(format, args...)}
 }
 
-func ErrorCode(err error) string {
+func ErrorCode(err error) DomainErrorCode {
 	var e *Error
 	if errors.As(err, &e) {
 		return e.Code
 	}
-	return "internal"
+	return DomainErrorCodeInternal
 }

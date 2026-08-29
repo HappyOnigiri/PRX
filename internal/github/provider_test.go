@@ -48,15 +48,15 @@ func TestLiveProviderMapsStates(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got.ReviewState != "changes_requested" || got.Mergeability != "conflicting" || got.Author != "octocat" || got.Stale {
+	if got.ReviewState != domain.ReviewStateChangesRequested || got.Mergeability != domain.MergeabilityConflicting || got.Author != "octocat" || got.Stale {
 		t.Fatalf("unexpected mapping: %+v", got)
 	}
 }
 
 func TestFixturePreservesError(t *testing.T) {
 	provider, _ := NewFixtureProvider("demo")
-	got, err := provider.Fetch(context.Background(), domain.PullRequest{Number: 3, State: "unknown", Stale: true})
-	if err != nil || got.State != "merged" || got.Stale {
+	got, err := provider.Fetch(context.Background(), domain.PullRequest{Number: 3, State: domain.PullRequestStateUnknown, Stale: true})
+	if err != nil || got.State != domain.PullRequestStateMerged || got.Stale {
 		t.Fatalf("fixture got=%+v err=%v", got, err)
 	}
 }
@@ -88,22 +88,22 @@ func TestLiveProviderIgnoresNonDecisionReviews(t *testing.T) {
 	cases := []struct {
 		name    string
 		reviews string
-		want    string
+		want    domain.ReviewState
 	}{
 		{
 			name:    "comment after approval keeps approved",
 			reviews: `[{"state":"APPROVED","user":{"login":"reviewer"}},{"state":"COMMENTED","user":{"login":"reviewer"}}]`,
-			want:    "approved",
+			want:    domain.ReviewStateApproved,
 		},
 		{
 			name:    "dismissed review does not request changes",
 			reviews: `[{"state":"DISMISSED","user":{"login":"reviewer"}}]`,
-			want:    "none",
+			want:    domain.ReviewStateNone,
 		},
 		{
 			name:    "pending review is ignored",
 			reviews: `[{"state":"APPROVED","user":{"login":"reviewer"}},{"state":"PENDING","user":{"login":"reviewer"}}]`,
-			want:    "approved",
+			want:    domain.ReviewStateApproved,
 		},
 	}
 	for _, tc := range cases {
@@ -217,7 +217,7 @@ func TestLiveProviderFollowsReviewPagination(t *testing.T) {
 	if reviewPages != 2 {
 		t.Fatalf("requested %d review pages, want 2", reviewPages)
 	}
-	if got.ReviewState != "changes_requested" {
+	if got.ReviewState != domain.ReviewStateChangesRequested {
 		t.Fatalf("review state = %q, want changes_requested from the second page", got.ReviewState)
 	}
 }

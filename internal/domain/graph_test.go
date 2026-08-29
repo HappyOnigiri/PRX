@@ -22,7 +22,7 @@ func TestCyclePathAndTopologicalOrder(t *testing.T) {
 func TestReadyFailsClosed(t *testing.T) {
 	tasks := []Task{{ID: "a", Title: "API", Kind: TaskKindPR, Status: TaskInProgress}, {ID: "b", Title: "UI", Kind: TaskKindPR, Status: TaskPlanned}}
 	deps := []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}
-	prs := []PullRequest{{TaskID: "a", State: "merged", Stale: true}}
+	prs := []PullRequest{{TaskID: "a", State: PullRequestStateMerged, Stale: true}}
 	got := Derive(tasks, deps, prs)
 	if got[1].Ready || got[1].BlockedReason == "" || got[1].BlockedCode != BlockedByStaleData || got[1].BlockerTaskID != "a" {
 		t.Fatalf("stale merged blocker must fail closed: %+v", got[1])
@@ -51,11 +51,11 @@ func TestBlockedReasonAndCodeAreSetTogether(t *testing.T) {
 		tasks []Task
 		deps  []Dependency
 		prs   []PullRequest
-		code  string
+		code  BlockedReasonCode
 	}{
-		{"dependency data incomplete", []Task{blocked}, []Dependency{{BlockerTaskID: "missing", BlockedTaskID: "b"}}, nil, BlockedDependencyDataIncomplete},
-		{"blocker stale", []Task{blocker, blocked}, []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}, []PullRequest{{TaskID: "a", State: "merged", Stale: true}}, BlockedByStaleData},
-		{"waiting for blocker", []Task{blocker, blocked}, []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}, nil, BlockedWaitingForBlocker},
+		{"dependency data incomplete", []Task{blocked}, []Dependency{{BlockerTaskID: "missing", BlockedTaskID: "b"}}, nil, BlockedReasonCodeDependencyDataIncomplete},
+		{"blocker stale", []Task{blocker, blocked}, []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}, []PullRequest{{TaskID: "a", State: PullRequestStateMerged, Stale: true}}, BlockedReasonCodeBlockerStale},
+		{"waiting for blocker", []Task{blocker, blocked}, []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}, nil, BlockedReasonCodeWaitingForBlocker},
 	}
 	for _, testCase := range cases {
 		t.Run(testCase.name, func(t *testing.T) {
@@ -80,11 +80,11 @@ func TestBlockedReasonAndCodeAreSetTogether(t *testing.T) {
 }
 
 func TestPRDisplayPriority(t *testing.T) {
-	pr := &PullRequest{State: "merged", Draft: true, Mergeability: "conflicting", ReviewState: "changes_requested"}
+	pr := &PullRequest{State: PullRequestStateMerged, Draft: true, Mergeability: MergeabilityConflicting, ReviewState: ReviewStateChangesRequested}
 	if got := PRDisplayState(pr); got != "merged" {
 		t.Fatalf("merged must win, got %q", got)
 	}
-	pr.State = "open"
+	pr.State = PullRequestStateOpen
 	if got := PRDisplayState(pr); got != "draft" {
 		t.Fatalf("draft must precede conflict, got %q", got)
 	}
@@ -99,9 +99,9 @@ func TestDependencySatisfactionMatrix(t *testing.T) {
 	}{
 		{name: "manual completed", task: Task{Kind: TaskKindManual, Status: TaskCompleted}, want: true},
 		{name: "manual cancelled", task: Task{Kind: TaskKindManual, Status: TaskCancelled}, want: false},
-		{name: "PR merged", task: Task{Kind: TaskKindPR, Status: TaskInProgress}, pr: &PullRequest{State: "merged"}, want: true},
-		{name: "PR merged but stale", task: Task{Kind: TaskKindPR, Status: TaskInProgress}, pr: &PullRequest{State: "merged", Stale: true}, want: false},
-		{name: "closed without merge", task: Task{Kind: TaskKindPR, Status: TaskInProgress}, pr: &PullRequest{State: "closed"}, want: false},
+		{name: "PR merged", task: Task{Kind: TaskKindPR, Status: TaskInProgress}, pr: &PullRequest{State: PullRequestStateMerged}, want: true},
+		{name: "PR merged but stale", task: Task{Kind: TaskKindPR, Status: TaskInProgress}, pr: &PullRequest{State: PullRequestStateMerged, Stale: true}, want: false},
+		{name: "closed without merge", task: Task{Kind: TaskKindPR, Status: TaskInProgress}, pr: &PullRequest{State: PullRequestStateClosed}, want: false},
 		{name: "missing PR", task: Task{Kind: TaskKindPR, Status: TaskPlanned}, want: false},
 	}
 	for _, test := range tests {

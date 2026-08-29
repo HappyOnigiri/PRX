@@ -45,6 +45,7 @@ export const domain = {
       blockerStale: "{{title}} has stale GitHub data",
       waitingForBlocker: "Waiting for {{title}}",
       unknownBlocker: "an upstream task",
+      unknown: "Unknown blocker reason",
     },
   },
   ja: {
@@ -93,6 +94,7 @@ export const domain = {
       blockerStale: "{{title}} の GitHub データが古くなっています",
       waitingForBlocker: "{{title}} の完了を待っています",
       unknownBlocker: "上流タスク",
+      unknown: "不明なブロッカー理由",
     },
   },
 } as const;

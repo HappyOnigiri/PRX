@@ -1,6 +1,7 @@
 export const errors = {
   en: {
     error: {
+      unknown: "An unknown domain error occurred.",
       crossFeatureDependency:
         "Tasks in different features cannot be connected.",
       cycle: "This dependency would create a cycle: {{path}}",
@@ -33,6 +34,7 @@ export const errors = {
   },
   ja: {
     error: {
+      unknown: "不明なドメインエラーが発生しました。",
       crossFeatureDependency: "異なるフィーチャーのタスクは接続できません。",
       cycle: "この依存関係を追加すると循環します: {{path}}",
       duplicateDependency: "この依存関係はすでに存在します。",

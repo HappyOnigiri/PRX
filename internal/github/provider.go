@@ -72,7 +72,7 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 		requested.Users = append(requested.Users, page.Users...)
 		requested.Teams = append(requested.Teams, page.Teams...)
 	}
-	reviewState := "none"
+	reviewState := domain.ReviewStateNone
 	latest := map[string]string{}
 	for _, review := range reviews {
 		state := strings.ToUpper(review.GetState())
@@ -83,26 +83,26 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	}
 	for _, state := range latest {
 		if state == "CHANGES_REQUESTED" {
-			reviewState = "changes_requested"
+			reviewState = domain.ReviewStateChangesRequested
 			break
 		}
 		if state == "APPROVED" {
-			reviewState = "approved"
+			reviewState = domain.ReviewStateApproved
 		}
 	}
-	if reviewState == "none" && (len(requested.Users) > 0 || len(requested.Teams) > 0) {
-		reviewState = "required"
+	if reviewState == domain.ReviewStateNone && (len(requested.Users) > 0 || len(requested.Teams) > 0) {
+		reviewState = domain.ReviewStateRequired
 	}
-	state := value.GetState()
+	state := domain.PullRequestState(value.GetState())
 	if value.GetMerged() {
-		state = "merged"
+		state = domain.PullRequestStateMerged
 	}
-	mergeability := "unknown"
+	mergeability := domain.MergeabilityUnknown
 	if value.Mergeable != nil {
 		if value.GetMergeable() {
-			mergeability = "mergeable"
+			mergeability = domain.MergeabilityMergeable
 		} else {
-			mergeability = "conflicting"
+			mergeability = domain.MergeabilityConflicting
 		}
 	}
 	assignees := make([]string, 0, len(value.Assignees))
@@ -147,13 +147,13 @@ func allPages[T any](ctx context.Context, fetch func(context.Context, *gh.ListOp
 type FixtureProvider struct{ values map[string]fixture }
 
 type fixture struct {
-	State        string   `json:"state"`
-	Draft        bool     `json:"draft"`
-	ReviewState  string   `json:"review_state"`
-	Mergeability string   `json:"mergeability"`
-	Author       string   `json:"author"`
-	Assignees    []string `json:"assignees"`
-	Error        string   `json:"error"`
+	State        domain.PullRequestState `json:"state"`
+	Draft        bool                    `json:"draft"`
+	ReviewState  domain.ReviewState      `json:"review_state"`
+	Mergeability domain.Mergeability     `json:"mergeability"`
+	Author       string                  `json:"author"`
+	Assignees    []string                `json:"assignees"`
+	Error        string                  `json:"error"`
 }
 
 // The persisted columns carry CHECK constraints, so a typo in a hand-written
@@ -164,9 +164,9 @@ var fixtureFields = []struct {
 	value   func(fixture) string
 	allowed []string
 }{
-	{"state", func(f fixture) string { return f.State }, []string{"open", "closed", "merged", "unknown"}},
-	{"review_state", func(f fixture) string { return f.ReviewState }, []string{"none", "required", "approved", "changes_requested", "unknown"}},
-	{"mergeability", func(f fixture) string { return f.Mergeability }, []string{"mergeable", "conflicting", "unknown"}},
+	{"state", func(f fixture) string { return string(f.State) }, []string{string(domain.PullRequestStateOpen), string(domain.PullRequestStateClosed), string(domain.PullRequestStateMerged), string(domain.PullRequestStateUnknown)}},
+	{"review_state", func(f fixture) string { return string(f.ReviewState) }, []string{string(domain.ReviewStateNone), string(domain.ReviewStateRequired), string(domain.ReviewStateApproved), string(domain.ReviewStateChangesRequested), string(domain.ReviewStateUnknown)}},
+	{"mergeability", func(f fixture) string { return string(f.Mergeability) }, []string{string(domain.MergeabilityMergeable), string(domain.MergeabilityConflicting), string(domain.MergeabilityUnknown)}},
 }
 
 func NewFixtureProvider(path string) (*FixtureProvider, error) {
@@ -206,10 +206,10 @@ func (p *FixtureProvider) Fetch(_ context.Context, current domain.PullRequest) (
 	value, ok := p.values[current.URL]
 	if !ok {
 		states := []fixture{
-			{State: "open", ReviewState: "required", Mergeability: "mergeable", Author: "octocat"},
-			{State: "open", ReviewState: "approved", Mergeability: "mergeable", Author: "hubot"},
-			{State: "open", ReviewState: "changes_requested", Mergeability: "conflicting", Author: "monalisa"},
-			{State: "merged", ReviewState: "approved", Mergeability: "mergeable", Author: "octocat"},
+			{State: domain.PullRequestStateOpen, ReviewState: domain.ReviewStateRequired, Mergeability: domain.MergeabilityMergeable, Author: "octocat"},
+			{State: domain.PullRequestStateOpen, ReviewState: domain.ReviewStateApproved, Mergeability: domain.MergeabilityMergeable, Author: "hubot"},
+			{State: domain.PullRequestStateOpen, ReviewState: domain.ReviewStateChangesRequested, Mergeability: domain.MergeabilityConflicting, Author: "monalisa"},
+			{State: domain.PullRequestStateMerged, ReviewState: domain.ReviewStateApproved, Mergeability: domain.MergeabilityMergeable, Author: "octocat"},
 		}
 		value = states[int(current.Number)%len(states)]
 	}

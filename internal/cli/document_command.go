@@ -1,12 +1,15 @@
 package cli
 
-import "github.com/spf13/cobra"
+import (
+	"github.com/HappyOnigiri/PRX/internal/domain"
+	"github.com/spf13/cobra"
+)
 
 func (s *state) documentCommand() *cobra.Command {
 	command := &cobra.Command{Use: "document", Short: "Manage URL and local Markdown references"}
 	var feature, task, kind, title, value string
 	add := &cobra.Command{Use: "add", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		doc, err := s.service.AddDocument(cmd.Context(), feature, task, kind, title, value)
+		doc, err := s.service.AddDocument(cmd.Context(), feature, task, domain.DocumentKind(kind), title, value)
 		if err != nil {
 			return err
 		}
