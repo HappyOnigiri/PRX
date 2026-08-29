@@ -4,7 +4,11 @@ import { resolve } from "node:path";
 
 export default defineConfig({
   plugins: [react()],
-  server: { port: 5173, proxy: { "/prx.v1": "http://127.0.0.1:7331" } },
+  server: {
+    port: 5173,
+    strictPort: true,
+    proxy: { "/prx.v1": "http://127.0.0.1:7331" },
+  },
   build: {
     outDir: resolve(__dirname, "../internal/webui/dist"),
     emptyOutDir: false,

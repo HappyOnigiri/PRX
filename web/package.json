@@ -6,6 +6,7 @@
   "packageManager": "pnpm@11.24.0",
   "scripts": {
     "dev": "vite",
+    "dev:full": "concurrently --kill-others --names api,web --prefix-colors blue,magenta \"cd .. && go tool air -c .air.toml\" \"vite\"",
     "build": "tsc -b && vite build",
     "test": "vitest run --coverage",
     "lint": "pnpm run format:check && eslint . --max-warnings=0 && tsc -b --pretty false && pnpm run check:dead-code",
@@ -42,6 +43,7 @@
     "@types/react-dom": "^19.1.9",
     "@vitejs/plugin-react": "^5.0.2",
     "@vitest/coverage-v8": "^4.1.11",
+    "concurrently": "10.0.5",
     "eslint": "^10.9.1",
     "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^7.1.1",
