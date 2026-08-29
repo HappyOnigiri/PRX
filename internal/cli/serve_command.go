@@ -10,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/HappyOnigiri/PRX/internal/app"
-	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/rpc"
 	"github.com/HappyOnigiri/PRX/internal/webui"
 	"github.com/spf13/cobra"
@@ -20,13 +18,6 @@ import (
 func (s *state) serveCommand() *cobra.Command {
 	var address string
 	command := &cobra.Command{Use: "serve", Args: cobra.NoArgs, RunE: func(cmd *cobra.Command, _ []string) error {
-		if s.fixture == "" {
-			if provider, err := githubprovider.NewLiveProvider(cmd.Context()); err == nil {
-				s.service = app.New(s.store, provider)
-			} else {
-				_, _ = fmt.Fprintf(s.errOut, "warning: %v\n", err)
-			}
-		}
 		rpcPath, rpcHandler := rpc.New(s.service)
 		mux := http.NewServeMux()
 		mux.Handle(rpcPath, rpcHandler)

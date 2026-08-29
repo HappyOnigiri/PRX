@@ -2,9 +2,14 @@ package cli
 
 import (
 	"context"
+	"io"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
+
+// OpenService constructs the application service and returns the resource that
+// must be closed after one CLI command finishes.
+type OpenService func(context.Context, string, string, bool) (Service, io.Closer, error)
 
 // Service is the application boundary used by CLI commands and the RPC server
 // exposed by the serve command.
