@@ -9,6 +9,8 @@ import "./styles/components.css";
 import "./styles/shell.css";
 import "./styles/dashboard.css";
 import "./styles/workspace.css";
+import "./styles/graph.css";
+import "./styles/task-inspector.css";
 import "./styles/markdown-preview.css";
 import { router } from "./router";
 
