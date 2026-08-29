@@ -2,12 +2,7 @@ import { render, screen } from "@testing-library/react";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "../src/router";
-import {
-  FeatureStatus,
-  TaskDisplayState,
-  TaskKind,
-  TaskStatus,
-} from "../src/gen/prx/v1/prx_pb";
+import { makeSnapshot } from "./factories";
 
 // React Flow measures its container, which jsdom does not implement.
 class ResizeObserverStub {
@@ -17,50 +12,7 @@ class ResizeObserverStub {
 }
 globalThis.ResizeObserver = ResizeObserverStub;
 
-const snapshot = {
-  features: [
-    {
-      id: "feature-1",
-      slug: "payments",
-      title: "Payments rollout",
-      description: "",
-      status: FeatureStatus.ACTIVE,
-      archived: false,
-      createdAt: "",
-      updatedAt: "",
-      taskCount: 1,
-      readyCount: 1,
-      reviewWaitingCount: 0,
-      conflictCount: 0,
-      mergedCount: 0,
-      $typeName: "prx.v1.Feature",
-    },
-  ],
-  tasks: [
-    {
-      id: "task-1",
-      featureId: "feature-1",
-      title: "Build API",
-      scope: "",
-      kind: TaskKind.PULL_REQUEST,
-      status: TaskStatus.PLANNED,
-      assignee: "Mika",
-      createdAt: "",
-      updatedAt: "",
-      ready: true,
-      displayState: TaskDisplayState.UNLINKED,
-      $typeName: "prx.v1.Task",
-    },
-  ],
-  dependencies: [],
-  pullRequests: [],
-  documents: [],
-  readyTasks: [],
-  reviewWaitingTasks: [],
-  conflictTasks: [],
-  staleTasks: [],
-  $typeName: "prx.v1.Snapshot",
-};
+const snapshot = makeSnapshot();
 
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => ({

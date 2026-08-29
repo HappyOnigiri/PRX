@@ -2,57 +2,22 @@ import { cleanup, render, screen } from "@testing-library/react";
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "../src/router";
-import {
-  FeatureStatus,
-  TaskDisplayState,
-  TaskKind,
-  TaskStatus,
-} from "../src/gen/prx/v1/prx_pb";
+import { makeFeature, makeSnapshot, makeTask } from "./factories";
 
-const snapshot = {
+const snapshot = makeSnapshot({
   features: [
-    {
-      id: "feature-1",
-      slug: "payments",
-      title: "Payments rollout",
-      description: "",
-      status: FeatureStatus.ACTIVE,
-      archived: false,
-      createdAt: "",
-      updatedAt: "",
+    makeFeature({
       taskCount: 3,
       readyCount: 1,
       reviewWaitingCount: 1,
       conflictCount: 1,
-      mergedCount: 0,
-      $typeName: "prx.v1.Feature",
-    },
+    }),
   ],
   tasks: [],
-  dependencies: [],
-  pullRequests: [],
-  documents: [],
-  readyTasks: [
-    {
-      id: "task-1",
-      featureId: "feature-1",
-      title: "Build API",
-      scope: "",
-      kind: TaskKind.PULL_REQUEST,
-      status: TaskStatus.PLANNED,
-      assignee: "Mika",
-      createdAt: "",
-      updatedAt: "",
-      ready: true,
-      displayState: TaskDisplayState.UNLINKED,
-      $typeName: "prx.v1.Task",
-    },
-  ],
-  reviewWaitingTasks: [{ id: "task-2" }],
-  conflictTasks: [{ id: "task-3" }],
-  staleTasks: [],
-  $typeName: "prx.v1.Snapshot",
-};
+  readyTasks: [makeTask()],
+  reviewWaitingTasks: [makeTask({ id: "task-2" })],
+  conflictTasks: [makeTask({ id: "task-3" })],
+});
 
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => ({
