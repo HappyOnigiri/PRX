@@ -1,13 +1,21 @@
 import { create, type MessageInitShape } from "@bufbuild/protobuf";
 import {
+  DependencySchema,
+  DocumentKind,
+  DocumentSchema,
   FeatureSchema,
   FeatureStatus,
+  PullRequestDisplayState,
+  PullRequestSchema,
   SnapshotSchema,
   TaskDisplayState,
   TaskKind,
   TaskSchema,
   TaskStatus,
+  type Dependency,
+  type Document,
   type Feature,
+  type PullRequest,
   type Snapshot,
   type Task,
 } from "../src/gen/prx/v1/prx_pb";
@@ -32,6 +40,28 @@ const taskDefaults = {
   displayState: TaskDisplayState.UNLINKED,
 } satisfies MessageInitShape<typeof TaskSchema>;
 
+const dependencyDefaults = {
+  blockerTaskId: "task-1",
+  blockedTaskId: "task-2",
+} satisfies MessageInitShape<typeof DependencySchema>;
+
+const pullRequestDefaults = {
+  taskId: "task-1",
+  owner: "acme",
+  repository: "prx",
+  number: 42n,
+  url: "https://github.com/acme/prx/pull/42",
+  displayState: PullRequestDisplayState.OPEN,
+} satisfies MessageInitShape<typeof PullRequestSchema>;
+
+const documentDefaults = {
+  id: "document-1",
+  taskId: "task-1",
+  kind: DocumentKind.URL,
+  title: "Runbook",
+  value: "https://example.com/runbook",
+} satisfies MessageInitShape<typeof DocumentSchema>;
+
 export function makeFeature(
   overrides: MessageInitShape<typeof FeatureSchema> = {},
 ): Feature {
@@ -42,6 +72,24 @@ export function makeTask(
   overrides: MessageInitShape<typeof TaskSchema> = {},
 ): Task {
   return create(TaskSchema, { ...taskDefaults, ...overrides });
+}
+
+export function makeDependency(
+  overrides: MessageInitShape<typeof DependencySchema> = {},
+): Dependency {
+  return create(DependencySchema, { ...dependencyDefaults, ...overrides });
+}
+
+export function makePullRequest(
+  overrides: MessageInitShape<typeof PullRequestSchema> = {},
+): PullRequest {
+  return create(PullRequestSchema, { ...pullRequestDefaults, ...overrides });
+}
+
+export function makeDocument(
+  overrides: MessageInitShape<typeof DocumentSchema> = {},
+): Document {
+  return create(DocumentSchema, { ...documentDefaults, ...overrides });
 }
 
 export function makeSnapshot(
