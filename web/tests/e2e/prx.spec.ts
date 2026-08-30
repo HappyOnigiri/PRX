@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
 const browserErrors: string[] = [];
@@ -100,6 +100,19 @@ async function openTask(page: Page, title: string) {
   ).toContainText(title);
 }
 
+async function handleCenterWithinNode(handle: Locator) {
+  return handle.evaluate((element) => {
+    const node = element.closest(".task-node");
+    if (!node) throw new Error("task node missing");
+    const handleBox = element.getBoundingClientRect();
+    const nodeBox = node.getBoundingClientRect();
+    return {
+      x: (handleBox.left + handleBox.width / 2 - nodeBox.left) / nodeBox.width,
+      y: (handleBox.top + handleBox.height / 2 - nodeBox.top) / nodeBox.height,
+    };
+  });
+}
+
 async function connectTasks(
   page: Page,
   blockerTitle: string,
@@ -112,18 +125,11 @@ async function connectTasks(
   const target = blocked.locator(".react-flow__handle.target");
   await expect(source).toBeVisible();
   await expect(target).toBeVisible();
-  const initialBox = await source.boundingBox();
+  const initialCenter = await handleCenterWithinNode(source);
   await source.hover();
-  const hoveredBox = await source.boundingBox();
-  if (!initialBox || !hoveredBox) throw new Error("connection handle missing");
-  expect(hoveredBox.x + hoveredBox.width / 2).toBeCloseTo(
-    initialBox.x + initialBox.width / 2,
-    1,
-  );
-  expect(hoveredBox.y + hoveredBox.height / 2).toBeCloseTo(
-    initialBox.y + initialBox.height / 2,
-    1,
-  );
+  const hoveredCenter = await handleCenterWithinNode(source);
+  expect(hoveredCenter.x).toBeCloseTo(initialCenter.x, 2);
+  expect(hoveredCenter.y).toBeCloseTo(initialCenter.y, 2);
   await page.mouse.down();
   await target.hover();
   await page.mouse.up();
