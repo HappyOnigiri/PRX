@@ -1,37 +1,125 @@
 package cli
 
 import (
+	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
+	"strings"
 
 	"github.com/spf13/cobra"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-type envelope struct {
-	SchemaVersion string        `json:"schema_version"`
-	OK            bool          `json:"ok"`
-	Data          any           `json:"data,omitempty"`
-	Error         *domain.Error `json:"error,omitempty"`
+const SchemaVersion = "1"
+
+type outputMode uint8
+
+const (
+	outputModeJSON outputMode = iota + 1
+	outputModeHuman
+)
+
+type humanRenderer func(io.Writer) error
+
+type errorEnvelope struct {
+	Error errorData `json:"error"`
+}
+
+type errorData struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 func PrintError(out io.Writer, err error) error {
-	value := &domain.Error{Code: domain.ErrorCode(err), Message: err.Error()}
-	var typed *domain.Error
-	if errors.As(err, &typed) {
-		value = typed
-	}
-	return json.NewEncoder(out).Encode(envelope{SchemaVersion: "1", OK: false, Error: value})
+	return writeJSONFailure(out, err)
 }
 
-func (s *state) write(value any) error {
-	encoder := json.NewEncoder(s.out)
-	if !s.json {
-		encoder.SetIndent("", "  ")
+func (s *state) write(value any, render humanRenderer) error {
+	if err := s.resolveOutputMode(); err != nil {
+		return err
 	}
-	return encoder.Encode(envelope{SchemaVersion: "1", OK: true, Data: value})
+	if s.mode == outputModeHuman {
+		if render == nil {
+			return errors.New("human output renderer is required")
+		}
+		return render(s.out)
+	}
+	data, err := marshalObject(value)
+	if err != nil {
+		return err
+	}
+	return encodeJSON(s.out, data)
+}
+
+func (s *state) writeError(err error) error {
+	if resolveErr := s.resolveOutputMode(); resolveErr != nil && err == nil {
+		err = resolveErr
+	}
+	if s.mode == outputModeHuman {
+		_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n", errorMessage(err))
+		return writeErr
+	}
+	return writeJSONFailure(s.errOut, err)
+}
+
+func (s *state) writeSchemaVersion() error {
+	return s.write(
+		struct {
+			SchemaVersion string `json:"schema_version"`
+		}{SchemaVersion: SchemaVersion},
+		func(out io.Writer) error {
+			_, err := fmt.Fprintf(out, "Schema version: %s\n", SchemaVersion)
+			return err
+		},
+	)
+}
+
+func writeJSONFailure(out io.Writer, err error) error {
+	return encodeJSON(out, errorEnvelope{Error: errorData{Code: commandErrorCode(err), Message: errorMessage(err)}})
+}
+
+func commandErrorCode(err error) string {
+	var usageErr *usageError
+	if errors.As(err, &usageErr) {
+		return "usage_error"
+	}
+	return string(domain.ErrorCode(err))
+}
+
+func encodeJSON(out io.Writer, value any) error {
+	return json.NewEncoder(out).Encode(value)
+}
+
+func marshalObject(value any) (json.RawMessage, error) {
+	data, err := json.Marshal(value)
+	if err != nil {
+		return nil, fmt.Errorf("encode response data: %w", err)
+	}
+	trimmed := bytes.TrimSpace(data)
+	if len(trimmed) == 0 || trimmed[0] != '{' {
+		return nil, errors.New("response data must be a JSON object")
+	}
+	return data, nil
+}
+
+func nonNilSlice[T any](values []T) []T {
+	if values == nil {
+		return []T{}
+	}
+	return values
+}
+
+func errorMessage(err error) string {
+	if err == nil {
+		return "command failed"
+	}
+	if message := err.Error(); strings.TrimSpace(message) != "" {
+		return message
+	}
+	return "command failed"
 }
 
 // changedFlag returns the flag value only when it was given on the command line,

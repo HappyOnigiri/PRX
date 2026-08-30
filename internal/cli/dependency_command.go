@@ -14,7 +14,7 @@ func (s *state) dependencyCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			return s.write(value, renderMessage("Added dependency %s -> %s.", value.BlockerTaskID, value.BlockedTaskID))
 		},
 	}
 	remove := &cobra.Command{
@@ -26,7 +26,8 @@ func (s *state) dependencyCommand() *cobra.Command {
 			if err := s.service.RemoveDependency(cmd.Context(), args[0], args[1]); err != nil {
 				return err
 			}
-			return s.write(map[string]string{"removed": args[0] + "->" + args[1]})
+			return s.write(map[string]string{"removed": args[0] + "->" + args[1]},
+				renderMessage("Removed dependency %s -> %s.", args[0], args[1]))
 		},
 	}
 	list := &cobra.Command{
@@ -39,7 +40,8 @@ func (s *state) dependencyCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(snapshot.Dependencies)
+			dependencies := nonNilSlice(snapshot.Dependencies)
+			return s.write(map[string]any{"dependencies": dependencies}, renderDependencyList(dependencies))
 		},
 	}
 	command.AddCommand(add, remove, list)

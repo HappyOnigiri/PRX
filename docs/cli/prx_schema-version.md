@@ -1,22 +1,22 @@
-## prx task delete
+## prx schema-version
 
-Delete a task and optionally its dependencies and references
+Show the CLI response schema version
 
 ```
-prx task delete TASK_ID [flags]
+prx schema-version [flags]
 ```
 
 ### Examples
 
 ```
-prx task delete TASK_ID --cascade --json
+prx schema-version
+prx schema-version --json
 ```
 
 ### Options
 
 ```
-      --cascade   delete dependencies and references
-  -h, --help      help for delete
+  -h, --help   help for schema-version
 ```
 
 ### Options inherited from parent commands
@@ -31,5 +31,5 @@ prx task delete TASK_ID --cascade --json
 
 ### SEE ALSO
 
-* [prx task](prx_task.md)	 - Manage implementation and manual tasks
+* [prx](prx.md)	 - Manage pull-request dependency roadmaps
 
