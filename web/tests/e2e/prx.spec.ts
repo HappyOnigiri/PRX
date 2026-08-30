@@ -100,15 +100,38 @@ async function openTask(page: Page, title: string) {
   ).toContainText(title);
 }
 
-async function addBlocker(page: Page, blockerTitle: string) {
-  const inspector = page.getByRole("complementary", { name: "Task inspector" });
-  const section = inspector
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: "Blocked by" }) });
-  await section
-    .getByLabel("Blocker task")
-    .selectOption({ label: blockerTitle });
-  await section.getByRole("button", { name: "Add" }).click();
+async function connectTasks(
+  page: Page,
+  blockerTitle: string,
+  blockedTitle: string,
+) {
+  await settleGraph(page);
+  const blocker = page.locator(".task-node").filter({ hasText: blockerTitle });
+  const blocked = page.locator(".task-node").filter({ hasText: blockedTitle });
+  const source = blocker.locator(".react-flow__handle.source");
+  const target = blocked.locator(".react-flow__handle.target");
+  await expect(source).toBeVisible();
+  await expect(target).toBeVisible();
+  await source.hover();
+  await page.mouse.down();
+  await target.hover();
+  await page.mouse.up();
+}
+
+async function settleGraph(page: Page) {
+  const viewport = page.locator(".react-flow__viewport");
+  let previousStyle: string | null = null;
+  await expect
+    .poll(
+      async () => {
+        const currentStyle = await viewport.getAttribute("style");
+        const stable = currentStyle === previousStyle;
+        previousStyle = currentStyle;
+        return stable;
+      },
+      { intervals: [100], timeout: 2000 },
+    )
+    .toBe(true);
 }
 
 async function graphZoom(page: Page) {
@@ -155,20 +178,25 @@ test("creates and edits a feature DAG while preserving state", async ({
   await addTask(page, "E2E API");
   await addTask(page, "E2E worker");
   await addTask(page, "E2E UI");
-  await openTask(page, "E2E worker");
-  await addBlocker(page, "E2E API");
-  await page.getByRole("button", { name: "Close inspector" }).click();
-  await openTask(page, "E2E UI");
-  await addBlocker(page, "E2E worker");
-  await page.getByRole("button", { name: "Close inspector" }).click();
-  await openTask(page, "E2E API");
-  await addBlocker(page, "E2E UI");
+  await connectTasks(page, "E2E API", "E2E worker");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    1,
+  );
+  await connectTasks(page, "E2E worker", "E2E UI");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    2,
+  );
+  await settleGraph(page);
+  await page.locator(".react-flow__controls-fitview").click();
+  await settleGraph(page);
+  await connectTasks(page, "E2E UI", "E2E API");
   await expect(page.getByRole("alert")).toContainText("cycle");
   expect(
     browserErrors.filter((item) => item.includes("400 (Bad Request)")),
   ).toHaveLength(1);
   browserErrors.splice(0, browserErrors.length);
 
+  await openTask(page, "E2E API");
   const inspector = page.getByRole("complementary", { name: "Task inspector" });
   const prSection = inspector
     .locator("section")

@@ -15,6 +15,26 @@
   gap: 6px;
 }
 
+.graph-connection-help {
+  flex: 0 1 420px;
+  min-width: 0;
+  overflow: hidden;
+  margin: 0;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.graph-connection-help.is-saving {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.graph-legend-states {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+}
+
 .graph-legend i {
   display: block;
   width: 8px;
@@ -74,6 +94,12 @@
 .dependency-edge {
   stroke: var(--border-strong);
   stroke-width: 1.5;
+}
+
+.react-flow__connection-path {
+  stroke: var(--accent);
+  stroke-width: 2;
+  stroke-dasharray: 6 4;
 }
 
 .react-flow__edge.selected .dependency-edge {
@@ -293,10 +319,82 @@
 }
 
 .react-flow__handle {
-  width: 8px;
-  height: 8px;
+  width: 14px;
+  height: 14px;
   border: 2px solid var(--surface);
   background: var(--border-strong);
+  box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.task-handle {
+  cursor: crosshair;
+  transition:
+    transform 0.15s,
+    background-color 0.15s,
+    box-shadow 0.15s;
+}
+
+.task-handle-source {
+  border-radius: 3px;
+}
+
+.task-handle-target {
+  border-radius: 50%;
+}
+
+.task-handle:hover,
+.task-handle:focus-visible {
+  z-index: 2;
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+  transform: scale(1.25);
+}
+
+.task-handle.connectingfrom,
+.task-handle.connectingto {
+  z-index: 2;
+  box-shadow:
+    0 0 0 2px var(--accent),
+    0 0 0 4px var(--surface);
+  transform: scale(1.15);
+}
+
+.task-handle.connectingto.valid {
+  background: var(--status-ready);
+}
+
+.task-handle.connectingto:not(.valid) {
+  border-style: dashed;
+  background: var(--surface);
+}
+
+.task-handle:not(.connectable) {
+  border-style: dashed;
+  background: var(--surface);
+  box-shadow: 0 0 0 1px var(--border);
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.graph-stage[aria-busy="true"] .task-handle {
+  border-style: dashed;
+}
+
+.graph-connection-error {
+  position: absolute;
+  z-index: 10;
+  right: 16px;
+  bottom: 16px;
+  left: 16px;
+  width: min(560px, calc(100% - 32px));
+  border: 1px solid var(--status-conflict);
+  border-radius: 4px;
+  background: var(--surface);
+  padding: 8px 10px;
+}
+
+.graph-connection-error .form-error {
+  margin: 0;
 }
 
 .graph-empty {
@@ -346,7 +444,7 @@
     padding-inline: 12px;
   }
 
-  .graph-legend span {
+  .graph-legend-states {
     display: none;
   }
 }

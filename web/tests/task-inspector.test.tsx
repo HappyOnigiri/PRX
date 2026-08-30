@@ -1,4 +1,3 @@
-import { Code, ConnectError } from "@connectrpc/connect";
 import {
   cleanup,
   fireEvent,
@@ -10,8 +9,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   BlockedReasonCode,
   DocumentKind,
-  DomainErrorCode,
-  ErrorDetailSchema,
   PullRequestDisplayState,
   TaskKind,
   TaskStatus,
@@ -33,7 +30,6 @@ const inspectorMocks = vi.hoisted(() => ({
     deleteImplementationPlan: vi.fn(),
     attachPR: vi.fn(),
     detachPR: vi.fn(),
-    addDependency: vi.fn(),
     removeDependency: vi.fn(),
     addDocument: vi.fn(),
     deleteDocument: vi.fn(),
@@ -98,7 +94,6 @@ describe("TaskInspector", () => {
       },
     });
     const blocker = makeTask({ id: "task-2", title: "Blocker task" });
-    const candidate = makeTask({ id: "task-3", title: "Candidate task" });
     const dependency = makeDependency({
       blockerTaskId: "task-2",
       blockedTaskId: task.id,
@@ -124,25 +119,10 @@ describe("TaskInspector", () => {
     });
     const onClose = vi.fn();
     const onPreview = vi.fn();
-    mutationAt(6).error = new ConnectError(
-      "cycle would be introduced",
-      Code.FailedPrecondition,
-      undefined,
-      [
-        {
-          desc: ErrorDetailSchema,
-          value: {
-            code: DomainErrorCode.CYCLE,
-            path: ["task-2", task.id],
-          },
-        },
-      ],
-    );
-
     render(
       <TaskInspector
         task={task}
-        tasks={[task, blocker, candidate]}
+        tasks={[task, blocker]}
         dependencies={[dependency]}
         pullRequest={pullRequest}
         documents={[markdown, url]}
@@ -165,7 +145,12 @@ describe("TaskInspector", () => {
     expect(
       screen.getByRole("button", { name: "Delete Runbook" }),
     ).toBeInTheDocument();
-    expect(screen.getByRole("alert")).toHaveTextContent("Blocker task");
+    expect(
+      screen.queryByRole("combobox", { name: "Blocker task" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /^Add$/ }),
+    ).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Title"), {
       target: { value: "Updated task" },
@@ -191,17 +176,8 @@ describe("TaskInspector", () => {
     fireEvent.click(screen.getByRole("button", { name: "Detach" }));
     expect(mutationAt(3).mutate).toHaveBeenCalledWith(task.id);
     fireEvent.click(screen.getByRole("button", { name: "Remove dependency" }));
-    expect(mutationAt(7).mutate).toHaveBeenCalledWith({
-      blocker: "task-2",
-      blocked: task.id,
-    });
-
-    fireEvent.change(screen.getByRole("combobox", { name: "Blocker task" }), {
-      target: { value: "task-3" },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Add" }));
     expect(mutationAt(6).mutate).toHaveBeenCalledWith({
-      blocker: "task-3",
+      blocker: "task-2",
       blocked: task.id,
     });
 
@@ -210,7 +186,7 @@ describe("TaskInspector", () => {
     );
     expect(onPreview).toHaveBeenCalledWith(markdown);
     fireEvent.click(screen.getByRole("button", { name: "Delete Runbook" }));
-    expect(mutationAt(9).mutate).toHaveBeenCalledWith("document-url");
+    expect(mutationAt(8).mutate).toHaveBeenCalledWith("document-url");
 
     const referenceValue = screen.getByPlaceholderText(
       "https://… or docs/plan.md",
@@ -227,7 +203,7 @@ describe("TaskInspector", () => {
       target: { value: String(DocumentKind.MARKDOWN_PATH) },
     });
     fireEvent.click(screen.getByRole("button", { name: "Add reference" }));
-    expect(mutationAt(8).mutate).toHaveBeenCalledWith({
+    expect(mutationAt(7).mutate).toHaveBeenCalledWith({
       taskId: task.id,
       kind: DocumentKind.MARKDOWN_PATH,
       title: "New plan",

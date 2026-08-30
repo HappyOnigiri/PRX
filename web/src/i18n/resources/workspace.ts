@@ -33,6 +33,11 @@ export const workspace = {
           "Use the links to open references, or the Edit button to edit this task.",
         keyboardDisabled: "Use the Edit button to open task details.",
         edgeDescription: "An edge connects a blocker to a blocked task.",
+        connectionInstruction:
+          "Drag from a blocker output to a blocked task input to add a dependency.",
+        connectionSaving: "Saving dependency…",
+        blockerHandle: "Blocker output (drag from here)",
+        blockedHandle: "Blocked task input (drop here)",
         controls: "Graph controls",
         zoomIn: "Zoom in",
         zoomOut: "Zoom out",
@@ -91,6 +96,11 @@ export const workspace = {
         keyboardDisabled: "編集ボタンからタスクの詳細を開きます。",
         edgeDescription:
           "エッジはブロッカーからブロック対象のタスクへ接続します。",
+        connectionInstruction:
+          "依存関係を追加するには、ブロッカーの送り口からブロック対象の受け口へドラッグします。",
+        connectionSaving: "依存関係を保存しています…",
+        blockerHandle: "ブロッカーの送り口（ここからドラッグ）",
+        blockedHandle: "ブロック対象の受け口（ここにドロップ）",
         controls: "グラフ操作",
         zoomIn: "拡大",
         zoomOut: "縮小",
