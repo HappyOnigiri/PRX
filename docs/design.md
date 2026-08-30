@@ -43,7 +43,7 @@ Only unexpected diagnostics may remain unstructured English.
 Behavior documented as a CLI, JSON, state, or dependency contract is public.
 Changes to those contracts require coordinated implementation, tests, generated references, and policy updates when the policy itself changes.
 
-Machine-readable CLI output must be deterministic, versioned, and free of presentation text.
+Machine-readable CLI output must be deterministic and versioned, and its success data must stay free of presentation text.
 Errors use stderr and leave stdout empty so automation cannot confuse a failed command with data.
 
 | Condition | Output policy |
@@ -58,7 +58,7 @@ Successful JSON commands emit their data object directly without a `schema_versi
 Empty collections are `[]`, never `null`.
 Failed JSON commands emit the versioned error object to stderr and leave stdout empty.
 The current CLI response schema version is `2`.
-Its error object contains `code`, `message`, and the failed command's complete help in `hint`.
+Its error object contains `code`, `message`, and the failed command's complete help in `hint`, the only machine-readable field that carries presentation text.
 Failures return a non-zero exit status.
 Human output does not vary with terminal width or ambient environment.
 The CLI implementation and black-box tests own current field names and presentation details.
