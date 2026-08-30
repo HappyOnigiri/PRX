@@ -79,6 +79,30 @@ func TestCommandTreeUsesCanonicalReadSyntax(t *testing.T) {
 	}
 }
 
+// The long description spells out the aliases that Cobra also lists on its own,
+// so nothing detects a stale description once an alias changes. Keep the two in
+// step until one of them owns the text.
+func TestCommandDescriptionsMentionTheirAliases(t *testing.T) {
+	root := NewRoot(io.Discard, io.Discard, testOpenService)
+	var visit func(*cobra.Command)
+	visit = func(command *cobra.Command) {
+		if len(command.Aliases) == 0 {
+			if strings.Contains(command.Long, "Alias:") {
+				t.Errorf("command %q describes an alias it no longer declares", command.CommandPath())
+			}
+		} else if want := "Alias: " + strings.Join(command.Aliases, ", ") + "."; !strings.Contains(
+			command.Long,
+			want,
+		) {
+			t.Errorf("command %q long description lacks %q", command.CommandPath(), want)
+		}
+		for _, child := range command.Commands() {
+			visit(child)
+		}
+	}
+	visit(root)
+}
+
 func TestPreScanOutputFlagsRespectsValuesAndBoundary(t *testing.T) {
 	for _, test := range []struct {
 		name      string
