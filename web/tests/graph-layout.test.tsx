@@ -28,6 +28,11 @@ vi.mock("../src/hooks", () => ({
     error: null,
     refetch: vi.fn(),
   }),
+  useAutoSync: () => ({
+    status: { data: undefined, isError: false },
+    checking: false,
+    error: null,
+  }),
   useDomainMutation: () => ({
     mutate: vi.fn(),
     mutateAsync: vi.fn(),

@@ -2,6 +2,7 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
+  useAutoSync,
   useConfig,
   useConfigMutation,
   useDomainMutation,
@@ -65,12 +66,13 @@ describe("domain query hooks", () => {
       },
     });
     const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
-    const { result, unmount } = renderHook(() => useSnapshot(true), {
-      wrapper: createWrapper(queryClient),
-    });
+    const { result, unmount } = renderHook(
+      () => ({ snapshot: useSnapshot(), autoSync: useAutoSync(true) }),
+      { wrapper: createWrapper(queryClient) },
+    );
     await waitFor(() => {
       expect(hookMocks.syncIfDue).toHaveBeenCalled();
-      expect(result.current.autoSync?.status.data).toBe(status);
+      expect(result.current.autoSync.status.data).toBe(status);
     });
     expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["snapshot"] });
     window.dispatchEvent(new Event("focus"));

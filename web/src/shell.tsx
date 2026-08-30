@@ -5,7 +5,7 @@ import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
 import { formValue } from "./form";
 import type { GitHubSyncStatus } from "./gen/prx/v1/prx_pb";
-import { useDomainMutation, useSnapshot } from "./hooks";
+import { useAutoSync, useDomainMutation, useSnapshot } from "./hooks";
 import { setDisplayLanguage } from "./i18n";
 import { formatError } from "./i18n/domain";
 import {
@@ -22,12 +22,8 @@ import { ServerSettingsDialog } from "./views/ServerSettingsDialog";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
-  const snapshot = useSnapshot(true);
-  const autoSync = snapshot.autoSync ?? {
-    status: { data: undefined, isError: false },
-    checking: false,
-    error: null,
-  };
+  const snapshot = useSnapshot();
+  const autoSync = useAutoSync(true);
   const [showCreate, setShowCreate] = useState(false);
   const [showServerSettings, setShowServerSettings] = useState(false);
   const [theme, setTheme] = useState(readThemePreference);

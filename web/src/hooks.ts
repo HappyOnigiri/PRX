@@ -6,19 +6,19 @@ const snapshotKey = ["snapshot"] as const;
 const configKey = ["github-config"] as const;
 const syncStatusKey = ["github-sync-status"] as const;
 
-export function useSnapshot(autoSyncEnabled = false) {
-  const snapshot = useQuery({ queryKey: snapshotKey, queryFn: getSnapshot });
-  const autoSync = useAutoSync(autoSyncEnabled);
-  return { ...snapshot, autoSync } as typeof snapshot & {
-    autoSync?: typeof autoSync;
-  };
+// Returning the query object itself keeps React Query's property tracking
+// intact. Spreading it would read every getter and make each consumer re-render
+// on unrelated changes such as isFetching, which the automatic refresh below
+// touches on every poll.
+export function useSnapshot() {
+  return useQuery({ queryKey: snapshotKey, queryFn: getSnapshot });
 }
 
 export function useConfig() {
   return useQuery({ queryKey: configKey, queryFn: getConfig });
 }
 
-function useAutoSync(enabled = true) {
+export function useAutoSync(enabled = true) {
   const queryClient = useQueryClient();
   const checking = useRef(false);
   const status = useQuery({
