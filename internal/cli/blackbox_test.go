@@ -792,6 +792,24 @@ func TestBlackBoxResolvedCommandErrorsIncludeCompleteHelp(t *testing.T) {
 	}
 }
 
+func TestBlackBoxShowReportsMissingTargetsWithCurrentVocabulary(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "show.db")
+	for _, identifier := range []string{"F-99", "checkout", "T-99"} {
+		result := executeCLI(t, binary, "", "--db", dbPath, "--json", "show", identifier)
+		if result.exit == 0 || result.stdout != "" {
+			t.Fatalf("%s: result=%+v", identifier, result)
+		}
+		failure := decodeFailure(t, []byte(result.stderr), result.stderr)
+		if strings.Contains(failure.Error, "node ") {
+			t.Fatalf("%s: error names the removed node command: %q", identifier, failure.Error)
+		}
+		if !strings.Contains(failure.Error, "was not found") {
+			t.Fatalf("%s: error=%q", identifier, failure.Error)
+		}
+	}
+}
+
 func TestBlackBoxConflictingOutputFlagsReuseTheRootHelp(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "conflict.db")

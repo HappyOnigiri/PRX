@@ -183,7 +183,7 @@ func (s *Service) GetNode(ctx context.Context, id string) (any, error) {
 	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		return nil, err
 	}
-	return nil, domain.NewError(domain.DomainErrorCodeNotFound, "node %q was not found", id)
+	return nil, domain.NewError(domain.DomainErrorCodeNotFound, "feature or task %q was not found", id)
 }
 
 func (s *Service) DeleteFeature(ctx context.Context, id string, cascade bool) error {
