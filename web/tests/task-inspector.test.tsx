@@ -198,14 +198,32 @@ describe("TaskInspector", () => {
     fireEvent.click(screen.getByRole("button", { name: "Delete Runbook" }));
     expect(mutationAt(6).mutate).toHaveBeenCalledWith("document-url");
 
-    inspectorMocks.api.getDocument.mockResolvedValueOnce({ content: "# Old" });
-    vi.spyOn(window, "prompt").mockReturnValueOnce("# New");
+    inspectorMocks.api.getDocument.mockResolvedValue({
+      content: "# Old\n\n- first\n- second",
+    });
     fireEvent.click(screen.getByRole("button", { name: "Edit Inline plan" }));
-    await waitFor(() => {
-      expect(mutationAt(7).mutate).toHaveBeenCalledWith({
-        id: "document-inline",
-        source: { case: "markdown", value: "# New" },
-      });
+    expect(
+      await screen.findByRole("textbox", { name: "Edit Inline plan" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel edit" }));
+    expect(
+      screen.queryByRole("textbox", { name: "Edit Inline plan" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit Inline plan" }));
+    const markdownEditor = await screen.findByRole("textbox", {
+      name: "Edit Inline plan",
+    });
+    expect(markdownEditor).toHaveValue("# Old\n\n- first\n- second");
+    fireEvent.change(markdownEditor, {
+      target: { value: "# New\n\n- first\n- second" },
+    });
+    const markdownEditForm = markdownEditor.closest("form");
+    if (!markdownEditForm) throw new Error("markdown edit form missing");
+    fireEvent.submit(markdownEditForm);
+    expect(inspectorMocks.api.updateDocument).toHaveBeenCalledWith({
+      id: "document-inline",
+      source: { case: "markdown", value: "# New\n\n- first\n- second" },
     });
 
     const referenceKind = screen.getAllByRole("combobox").at(-1);

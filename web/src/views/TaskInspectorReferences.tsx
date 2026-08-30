@@ -1,4 +1,4 @@
-import { Eye, Pencil, Plus, Trash2 } from "lucide-react";
+import { Check, Eye, Pencil, Plus, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
@@ -32,6 +32,10 @@ export function ReferencesSection({
   const deleteDocument = useDomainMutation(mutations.deleteDocument);
   const updateDocument = useDomainMutation(mutations.updateDocument);
   const [selectedKind, setSelectedKind] = useState(DocumentKind.URL);
+  const [editing, setEditing] = useState<{
+    id: string;
+    content: string;
+  } | null>(null);
   const ordered = [...documents].sort(
     (left, right) =>
       Number(right.isImplementationPlan) - Number(left.isImplementationPlan),
@@ -40,15 +44,7 @@ export function ReferencesSection({
   async function editMarkdown(document: TaskNodeDocument) {
     try {
       const response = await mutations.getDocument(document.id);
-      const content = window.prompt(
-        t("inspector.editReference", { title: document.title }),
-        response.content,
-      );
-      if (content === null) return;
-      updateDocument.mutate({
-        id: document.id,
-        source: { case: "markdown", value: content },
-      });
+      setEditing({ id: document.id, content: response.content });
     } catch {
       // MutationError renders update failures; read errors keep the document unchanged.
     }
@@ -59,20 +55,39 @@ export function ReferencesSection({
       className={compact ? "documents-section is-compact" : "documents-section"}
     >
       <h3>{t("inspector.references")}</h3>
-      {ordered.map((document) => (
-        <DocumentRow
-          key={document.id}
-          document={document}
-          onPreview={onPreview}
-          onDelete={(id) => {
-            deleteDocument.mutate(id);
-          }}
-          onEdit={(document) => {
-            void editMarkdown(document);
-          }}
-          readOnly={readOnly}
-        />
-      ))}
+      {ordered.map((document) =>
+        editing?.id === document.id ? (
+          <MarkdownEditForm
+            key={document.id}
+            document={document}
+            content={editing.content}
+            compact={compact}
+            onSubmit={(content) => {
+              updateDocument.mutate({
+                id: document.id,
+                source: { case: "markdown", value: content },
+              });
+              setEditing(null);
+            }}
+            onCancel={() => {
+              setEditing(null);
+            }}
+          />
+        ) : (
+          <DocumentRow
+            key={document.id}
+            document={document}
+            onPreview={onPreview}
+            onDelete={(id) => {
+              deleteDocument.mutate(id);
+            }}
+            onEdit={(document) => {
+              void editMarkdown(document);
+            }}
+            readOnly={readOnly}
+          />
+        ),
+      )}
       {documents.length === 0 && readOnly && (
         <p className="read-only-empty">{t("inspector.noReferences")}</p>
       )}
@@ -122,6 +137,54 @@ export function ReferencesSection({
         </>
       )}
     </section>
+  );
+}
+
+function MarkdownEditForm({
+  document,
+  content,
+  compact,
+  onSubmit,
+  onCancel,
+}: {
+  document: TaskNodeDocument;
+  content: string;
+  compact: boolean;
+  onSubmit: (content: string) => void;
+  onCancel: () => void;
+}) {
+  const { t } = useTranslation();
+  const title = document.title || documentKindLabel(document.kind, t);
+  return (
+    <form
+      className="stack-form"
+      onSubmit={(event) => {
+        event.preventDefault();
+        const form = new FormData(event.currentTarget);
+        onSubmit(formValue(form, "content"));
+      }}
+    >
+      <textarea
+        name="content"
+        aria-label={t("inspector.editReference", { title })}
+        defaultValue={content}
+        rows={compact ? 4 : 8}
+      />
+      <div className="form-row">
+        <IconButton
+          icon={Check}
+          label={t("inspector.saveReference")}
+          variant="primary"
+          type="submit"
+        />
+        <IconButton
+          icon={X}
+          label={t("inspector.cancelReferenceEdit")}
+          variant="secondary"
+          onClick={onCancel}
+        />
+      </div>
+    </form>
   );
 }
 
