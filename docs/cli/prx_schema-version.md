@@ -9,6 +9,7 @@ prx schema-version [flags]
 ### Examples
 
 ```
+prx schema-version
 prx schema-version --json
 ```
 

@@ -28,6 +28,12 @@ type resultEnvelope struct {
 	keys          map[string]json.RawMessage
 }
 
+type commandOutput struct {
+	stdout string
+	stderr string
+	exit   int
+}
+
 func buildCLI(t *testing.T) string {
 	t.Helper()
 	binary := filepath.Join(t.TempDir(), "prx")
@@ -41,7 +47,16 @@ func buildCLI(t *testing.T) string {
 func runCLI(t *testing.T, binary, dbPath string, args ...string) (resultEnvelope, string, int) {
 	t.Helper()
 	base := []string{"--db", dbPath, "--json"}
-	command := exec.CommandContext(context.Background(), binary, append(base, args...)...)
+	result := executeCLI(t, binary, "", append(base, args...)...)
+	return decodeEnvelope(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
+}
+
+func executeCLI(t *testing.T, binary, input string, args ...string) commandOutput {
+	t.Helper()
+	command := exec.CommandContext(context.Background(), binary, args...)
+	if input != "" {
+		command.Stdin = strings.NewReader(input)
+	}
 	var stdout, stderr bytes.Buffer
 	command.Stdout = &stdout
 	command.Stderr = &stderr
@@ -55,7 +70,7 @@ func runCLI(t *testing.T, binary, dbPath string, args ...string) (resultEnvelope
 			t.Fatal(err)
 		}
 	}
-	return decodeEnvelope(t, stdout.Bytes(), stdout.String()), stderr.String(), exit
+	return commandOutput{stdout: stdout.String(), stderr: stderr.String(), exit: exit}
 }
 
 func decodeEnvelope(t *testing.T, body []byte, output string) resultEnvelope {
@@ -68,6 +83,77 @@ func decodeEnvelope(t *testing.T, body []byte, output string) resultEnvelope {
 		t.Fatalf("stdout is not a JSON object: %v\n%s", decodeErr, output)
 	}
 	return envelope
+}
+
+func decodeObject(t *testing.T, body []byte, output string) map[string]json.RawMessage {
+	t.Helper()
+	var value map[string]json.RawMessage
+	if err := json.Unmarshal(body, &value); err != nil {
+		t.Fatalf("stdout is not a JSON object: %v\n%s", err, output)
+	}
+	return value
+}
+
+func assertDirectObjectKeys(t *testing.T, value map[string]json.RawMessage, expected ...string) {
+	t.Helper()
+	assertObjectKeys(t, value, expected...)
+	assertNoEnvelopeKeys(t, value)
+}
+
+func assertDirectObject(t *testing.T, value map[string]json.RawMessage, required ...string) {
+	t.Helper()
+	assertNoEnvelopeKeys(t, value)
+	for _, key := range required {
+		if _, ok := value[key]; !ok {
+			t.Fatalf("response keys=%v, want key %q", mapKeys(value), key)
+		}
+	}
+}
+
+func assertNoEnvelopeKeys(t *testing.T, value map[string]json.RawMessage) {
+	t.Helper()
+	for _, key := range []string{"schema_version", "ok", "data"} {
+		if _, ok := value[key]; ok {
+			t.Fatalf("normal response contains envelope key %q: %v", key, mapKeys(value))
+		}
+	}
+}
+
+func assertObjectKeys(t *testing.T, value map[string]json.RawMessage, expected ...string) {
+	t.Helper()
+	want := make(map[string]struct{}, len(expected))
+	for _, key := range expected {
+		want[key] = struct{}{}
+	}
+	if len(value) != len(want) {
+		t.Fatalf("response keys=%v, want %v", mapKeys(value), expected)
+	}
+	for key := range want {
+		if _, ok := value[key]; !ok {
+			t.Fatalf("response keys=%v, want %v", mapKeys(value), expected)
+		}
+	}
+}
+
+func assertCompactJSON(t *testing.T, output string) {
+	t.Helper()
+	if !strings.HasSuffix(output, "\n") {
+		t.Fatalf("JSON output has no trailing newline: %q", output)
+	}
+	if strings.Contains(strings.TrimSuffix(output, "\n"), "\n") {
+		t.Fatalf("JSON output is not compact: %q", output)
+	}
+}
+
+func assertNormalSuccess(t *testing.T, result commandOutput, required ...string) map[string]json.RawMessage {
+	t.Helper()
+	if result.exit != 0 || result.stderr != "" {
+		t.Fatalf("normal command failed: stdout=%q stderr=%q exit=%d", result.stdout, result.stderr, result.exit)
+	}
+	assertCompactJSON(t, result.stdout)
+	value := decodeObject(t, []byte(result.stdout), result.stdout)
+	assertDirectObject(t, value, required...)
+	return value
 }
 
 func assertEnvelopeKeys(t *testing.T, envelope resultEnvelope, expected ...string) {
@@ -110,7 +196,7 @@ func TestBlackBoxJSONCRUDAndCycle(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "blackbox.db")
 	feature, stderr, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "release", "--title", "Release")
-	if exit != 0 || stderr != "" || !feature.OK || feature.SchemaVersion != "2" {
+	if exit != 0 || stderr != "" || !feature.OK || feature.SchemaVersion != "1" {
 		t.Fatalf("feature result=%+v stderr=%q exit=%d", feature, stderr, exit)
 	}
 	assertEnvelopeKeys(t, feature, "schema_version", "ok", "data")
@@ -395,7 +481,7 @@ func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			value, stderr, exit := runCLI(t, binary, dbPath, test.args...)
-			if exit != 0 || stderr != "" || !value.OK || value.SchemaVersion != "2" {
+			if exit != 0 || stderr != "" || !value.OK || value.SchemaVersion != "1" {
 				t.Fatalf("result=%+v stderr=%q exit=%d", value, stderr, exit)
 			}
 			data := decodeDataObject(t, value)
@@ -427,7 +513,7 @@ func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
 				"",
 				test.args...,
 			)
-			if exit != 0 || stderr != "" || !value.OK || value.SchemaVersion != "2" {
+			if exit != 0 || stderr != "" || !value.OK || value.SchemaVersion != "1" {
 				t.Fatalf("result=%+v stderr=%q exit=%d", value, stderr, exit)
 			}
 			data := decodeDataObject(t, value)
@@ -442,19 +528,255 @@ func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
 	}
 }
 
+func TestBlackBoxSuccessOutputModes(t *testing.T) {
+	binary := buildCLI(t)
+	cases := []struct {
+		name       string
+		args       []string
+		normalWant string
+		jsonWant   string
+	}{
+		{
+			name: "config auth list",
+			args: []string{"config", "auth", "list"},
+			normalWant: `{"auth_methods":[]}
+`,
+			jsonWant: `{"schema_version":"1","ok":true,"data":{"auth_methods":[]}}
+`,
+		},
+		{
+			name: "feature list",
+			args: []string{"feature", "list"},
+			normalWant: `{"features":[]}
+`,
+			jsonWant: `{"schema_version":"1","ok":true,"data":{"features":[]}}
+`,
+		},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			dbPath := filepath.Join(t.TempDir(), "output.db")
+			configPath := filepath.Join(t.TempDir(), "config.yaml")
+			base := []string{"--db", dbPath, "--config", configPath}
+
+			normal := executeCLI(t, binary, "", append(base, test.args...)...)
+			if normal.exit != 0 || normal.stderr != "" || normal.stdout != test.normalWant {
+				t.Fatalf(
+					"normal output=%q stderr=%q exit=%d, want %q",
+					normal.stdout,
+					normal.stderr,
+					normal.exit,
+					test.normalWant,
+				)
+			}
+
+			jsonOutput := executeCLI(t, binary, "", append(append(base, "--json"), test.args...)...)
+			if jsonOutput.exit != 0 || jsonOutput.stderr != "" || jsonOutput.stdout != test.jsonWant {
+				t.Fatalf(
+					"JSON output=%q stderr=%q exit=%d, want %q",
+					jsonOutput.stdout,
+					jsonOutput.stderr,
+					jsonOutput.exit,
+					test.jsonWant,
+				)
+			}
+		})
+	}
+}
+
+func TestBlackBoxNormalResponsesCoverEveryResponseCommand(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "normal.db")
+	dbConfigPath := filepath.Join(root, "normal-config.yaml")
+	configPath := filepath.Join(root, "config.yaml")
+
+	runDB := func(args ...string) map[string]json.RawMessage {
+		commandArgs := []string{"--db", dbPath, "--config", dbConfigPath}
+		result := executeCLI(t, binary, "", append(commandArgs, args...)...)
+		return assertNormalSuccess(t, result)
+	}
+	runConfig := func(args ...string) map[string]json.RawMessage {
+		commandArgs := []string{"--db", filepath.Join(root, "config-unused.db"), "--config", configPath}
+		result := executeCLI(t, binary, "", append(commandArgs, args...)...)
+		return assertNormalSuccess(t, result)
+	}
+
+	configList := executeCLI(
+		t,
+		binary,
+		"",
+		"--db",
+		filepath.Join(root, "config-list-unused.db"),
+		"--config",
+		configPath,
+		"config",
+		"auth",
+		"list",
+	)
+	if configList.exit != 0 || configList.stderr != "" {
+		t.Fatalf(
+			"config auth list failed: stdout=%q stderr=%q exit=%d",
+			configList.stdout,
+			configList.stderr,
+			configList.exit,
+		)
+	}
+	if want := `{"auth_methods":[]}
+`; configList.stdout != want {
+		t.Fatalf("config auth list output=%q, want %q", configList.stdout, want)
+	}
+	assertCompactJSON(t, configList.stdout)
+	assertDirectObjectKeys(t, decodeObject(t, []byte(configList.stdout), configList.stdout), "auth_methods")
+
+	configShow := runConfig("config", "show")
+	assertDirectObject(t, configShow, "version", "github")
+	assertDirectObject(t, runConfig("config", "path"), "path")
+	assertDirectObject(t, runConfig("config", "validate"), "valid")
+	assertDirectObject(t, runConfig("config", "host", "add", "--host", "ghe.example.com"), "host")
+	assertDirectObjectKeys(t, runConfig("config", "host", "list"), "hosts")
+	assertDirectObject(
+		t,
+		runConfig("config", "host", "update", "ghe.example.com", "--api-url", "https://ghe.example.com/api/v3/"),
+		"host",
+	)
+	assertDirectObject(t, runConfig(
+		"config",
+		"auth",
+		"add",
+		"--id",
+		"work-gh",
+		"--host",
+		"ghe.example.com",
+		"--type",
+		"environment",
+		"--variable",
+		"GH_ENTERPRISE_TOKEN",
+	), "id")
+	assertDirectObjectKeys(t, runConfig("config", "auth", "list"), "auth_methods")
+	assertDirectObject(t, runConfig("config", "auth", "update", "work-gh", "--user", "HappyOnigiri"), "id")
+	assertDirectObjectKeys(t, runConfig("config", "auth", "reorder", "work-gh"), "auth_methods")
+	assertDirectObjectKeys(t, runConfig("config", "auth", "remove", "work-gh"), "removed")
+	assertDirectObjectKeys(t, runConfig("config", "host", "remove", "ghe.example.com"), "removed")
+
+	feature := runDB("feature", "create", "--slug", "checkout", "--title", "Checkout")
+	assertDirectObject(t, feature, "id", "slug")
+	var featureID string
+	if err := json.Unmarshal(feature["id"], &featureID); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObjectKeys(t, runDB("feature", "list"), "features")
+	assertDirectObject(t, runDB("feature", "get", featureID), "id", "slug")
+	assertDirectObject(t, runDB("feature", "update", featureID, "--title", "Updated checkout"), "id", "slug")
+	assertDirectObject(t, runDB("feature", "archive", featureID), "id", "slug")
+	assertDirectObject(t, runDB("feature", "unarchive", featureID), "id", "slug")
+
+	taskA := runDB("task", "create", "--feature", featureID, "--title", "A")
+	taskB := runDB("task", "create", "--feature", featureID, "--title", "B")
+	assertDirectObject(t, taskA, "id", "feature_id")
+	assertDirectObject(t, taskB, "id", "feature_id")
+	var taskAID, taskBID string
+	if err := json.Unmarshal(taskA["id"], &taskAID); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(taskB["id"], &taskBID); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObjectKeys(t, runDB("task", "list"), "tasks")
+	assertDirectObject(t, runDB("task", "get", taskAID), "id", "feature_id")
+	assertDirectObject(t, runDB("task", "update", taskAID, "--title", "Updated A"), "id", "feature_id")
+
+	assertDirectObject(t, runDB("dependency", "add", taskAID, taskBID), "blocker_task_id", "blocked_task_id")
+	assertDirectObjectKeys(t, runDB("dependency", "list"), "dependencies")
+
+	assertDirectObject(t, runDB(
+		"pr",
+		"attach",
+		"--task",
+		taskAID,
+		"--url",
+		"https://github.com/acme/payments/pull/42",
+	), "task_id", "url")
+	assertDirectObjectKeys(t, runDB("pr", "list"), "pull_requests")
+
+	document := runDB(
+		"document",
+		"add",
+		"--task",
+		taskAID,
+		"--kind",
+		"url",
+		"--value",
+		"https://example.com/checkout",
+	)
+	assertDirectObject(t, document, "id", "task_id")
+	var documentID string
+	if err := json.Unmarshal(document["id"], &documentID); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObjectKeys(t, runDB("document", "list"), "documents")
+
+	planPath := filepath.Join(root, "plan.md")
+	if err := os.WriteFile(planPath, []byte("# Checkout plan\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObject(t, runDB("implementation-plan", "set", taskAID, "--file", planPath), "task_id", "content")
+	assertDirectObject(t, runDB("implementation-plan", "get", taskAID), "task_id", "content")
+
+	assertDirectObject(t, runDB("snapshot"), "features", "tasks", "dependencies", "pull_requests", "documents")
+	assertDirectObjectKeys(t, runDB("graph", featureID), "feature", "tasks", "dependencies")
+	assertDirectObjectKeys(t, runDB("ready"), "ready_tasks")
+	assertDirectObjectKeys(t, runDB("reviews"), "review_waiting_tasks")
+	assertDirectObjectKeys(t, runDB("conflicts"), "conflict_tasks")
+	assertDirectObjectKeys(t, runDB("stale"), "stale_tasks")
+	assertDirectObjectKeys(t, runDB("--github-fixture", "demo", "sync"), "failed", "succeeded")
+	assertDirectObjectKeys(t, runDB("validate"), "valid")
+
+	assertDirectObjectKeys(t, runDB("document", "delete", documentID), "deleted")
+	assertDirectObjectKeys(t, runDB("implementation-plan", "delete", taskAID), "deleted")
+	assertDirectObjectKeys(t, runDB("pr", "detach", taskAID), "detached")
+	assertDirectObjectKeys(t, runDB("dependency", "remove", taskAID, taskBID), "removed")
+	assertDirectObjectKeys(t, runDB("task", "delete", taskBID), "deleted")
+	assertDirectObjectKeys(t, runDB("task", "delete", taskAID, "--cascade"), "deleted")
+
+	deletableFeature := runDB("feature", "create", "--slug", "deletable", "--title", "Deletable")
+	var deletableFeatureID string
+	if err := json.Unmarshal(deletableFeature["id"], &deletableFeatureID); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObjectKeys(t, runDB("feature", "delete", deletableFeatureID, "--cascade"), "deleted")
+
+	seedDB := filepath.Join(root, "seed.db")
+	seedConfig := filepath.Join(root, "seed-config.yaml")
+	seed := executeCLI(
+		t,
+		binary,
+		"",
+		"--db",
+		seedDB,
+		"--config",
+		seedConfig,
+		"seed",
+		"--features",
+		"1",
+		"--tasks",
+		"1",
+	)
+	assertDirectObject(t, assertNormalSuccess(t, seed, "features", "tasks"), "features", "tasks")
+}
+
 func TestBlackBoxSchemaVersionDoesNotOpenStorage(t *testing.T) {
 	binary := buildCLI(t)
 	root := t.TempDir()
 	dbPath := filepath.Join(root, "missing.db")
 	configPath := filepath.Join(root, "missing", "config.yaml")
 	for _, test := range []struct {
-		name    string
-		args    []string
-		compact bool
+		name string
+		args []string
 	}{
-		{name: "indented", args: []string{"schema-version"}},
-		{name: "json before command", args: []string{"--json", "schema-version"}, compact: true},
-		{name: "json after command", args: []string{"schema-version", "--json"}, compact: true},
+		{name: "without json", args: []string{"schema-version"}},
+		{name: "json before command", args: []string{"--json", "schema-version"}},
+		{name: "json after command", args: []string{"schema-version", "--json"}},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			command := exec.CommandContext(
@@ -476,15 +798,12 @@ func TestBlackBoxSchemaVersionDoesNotOpenStorage(t *testing.T) {
 			if err := json.Unmarshal(stdout.Bytes(), &value); err != nil {
 				t.Fatalf("stdout is not JSON: %v\n%s", err, stdout.String())
 			}
-			if len(value) != 1 || string(value["schema_version"]) != `"2"` {
+			if len(value) != 1 || string(value["schema_version"]) != `"1"` {
 				t.Fatalf("schema-version output=%s", stdout.String())
 			}
-			if test.compact && stdout.String() != `{"schema_version":"2"}
+			if stdout.String() != `{"schema_version":"1"}
 ` {
-				t.Fatalf("compact output=%q", stdout.String())
-			}
-			if !test.compact && stdout.String() != "{\n  \"schema_version\": \"2\"\n}\n" {
-				t.Fatalf("indented output=%q", stdout.String())
+				t.Fatalf("schema-version output=%q", stdout.String())
 			}
 			if stderr.Len() != 0 {
 				t.Fatalf("stderr=%q", stderr.String())
@@ -512,14 +831,14 @@ func TestBlackBoxErrorsUseEnvelopeWithoutJSONFlag(t *testing.T) {
 		t.Fatalf("error=%v, want exit code 1", err)
 	}
 	value := decodeEnvelope(t, stdout.Bytes(), stdout.String())
-	if value.OK || value.SchemaVersion != "2" || value.Error == "" || value.Data != nil {
+	if value.OK || value.SchemaVersion != "1" || value.Error == "" || value.Data != nil {
 		t.Fatalf("error response=%+v", value)
 	}
 	assertEnvelopeKeys(t, value, "schema_version", "ok", "error")
 	if stderr.Len() != 0 {
 		t.Fatalf("stderr=%q", stderr.String())
 	}
-	if !strings.Contains(stdout.String(), "\n  \"schema_version\": \"2\"") {
+	if !strings.Contains(stdout.String(), "\n  \"schema_version\": \"1\"") {
 		t.Fatalf("error response is not indented: %s", stdout.String())
 	}
 }
@@ -678,20 +997,6 @@ func runConfigCLI(
 ) (resultEnvelope, string, int) {
 	t.Helper()
 	commandArgs := []string{"--db", dbPath, "--config", configPath, "--json"}
-	command := exec.CommandContext(context.Background(), binary, append(commandArgs, args...)...)
-	command.Stdin = strings.NewReader(input)
-	var stdout, stderr bytes.Buffer
-	command.Stdout = &stdout
-	command.Stderr = &stderr
-	err := command.Run()
-	exit := 0
-	if err != nil {
-		var typed *exec.ExitError
-		if errors.As(err, &typed) {
-			exit = typed.ExitCode()
-		} else {
-			t.Fatal(err)
-		}
-	}
-	return decodeEnvelope(t, stdout.Bytes(), stdout.String()), stderr.String(), exit
+	result := executeCLI(t, binary, input, append(commandArgs, args...)...)
+	return decodeEnvelope(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
 }

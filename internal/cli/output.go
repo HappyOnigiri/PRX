@@ -11,7 +11,7 @@ import (
 	"github.com/spf13/cobra"
 )
 
-const SchemaVersion = "2"
+const SchemaVersion = "1"
 
 type envelope struct {
 	SchemaVersion string          `json:"schema_version"`
@@ -29,7 +29,10 @@ func (s *state) write(value any) error {
 	if err != nil {
 		return err
 	}
-	return encode(s.out, envelope{SchemaVersion: SchemaVersion, OK: true, Data: data}, s.json)
+	if !s.json {
+		return encode(s.out, data, true)
+	}
+	return encode(s.out, envelope{SchemaVersion: SchemaVersion, OK: true, Data: data}, true)
 }
 
 func (s *state) writeError(err error) error {
@@ -39,7 +42,7 @@ func (s *state) writeError(err error) error {
 func (s *state) writeSchemaVersion() error {
 	return encode(s.out, struct {
 		SchemaVersion string `json:"schema_version"`
-	}{SchemaVersion: SchemaVersion}, s.json)
+	}{SchemaVersion: SchemaVersion}, true)
 }
 
 func writeFailure(out io.Writer, err error, compact bool) error {

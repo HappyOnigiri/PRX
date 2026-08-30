@@ -6,7 +6,7 @@ func (s *state) schemaVersionCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "schema-version",
 		Short:   "Show the CLI response schema version",
-		Example: "prx schema-version --json",
+		Example: "prx schema-version\nprx schema-version --json",
 		Args:    cobra.NoArgs,
 		RunE: func(_ *cobra.Command, _ []string) error {
 			return s.writeSchemaVersion()

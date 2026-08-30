@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"strings"
 	"testing"
 )
@@ -14,27 +15,22 @@ func TestWriteAcceptsObjectAndUsesCompactJSON(t *testing.T) {
 	if err := s.write(map[string]string{"value": "ok"}); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := out.String(), `{"schema_version":"2","ok":true,"data":{"value":"ok"}}
+	if got, want := out.String(), `{"schema_version":"1","ok":true,"data":{"value":"ok"}}
 `; got != want {
 		t.Fatalf("compact output = %q, want %q", got, want)
 	}
 }
 
-func TestWriteUsesIndentedJSONByDefault(t *testing.T) {
+func TestWriteReturnsDataObjectByDefault(t *testing.T) {
 	var out bytes.Buffer
 	s := &state{out: &out}
 	if err := s.write(map[string]string{"value": "ok"}); err != nil {
 		t.Fatal(err)
 	}
-	want := "{\n" +
-		"  \"schema_version\": \"2\",\n" +
-		"  \"ok\": true,\n" +
-		"  \"data\": {\n" +
-		"    \"value\": \"ok\"\n" +
-		"  }\n" +
-		"}\n"
+	want := `{"value":"ok"}
+`
 	if got := out.String(); got != want {
-		t.Fatalf("indented output = %q, want %q", got, want)
+		t.Fatalf("normal output = %q, want %q", got, want)
 	}
 }
 
@@ -82,7 +78,7 @@ func TestWriteErrorUsesExclusiveStringError(t *testing.T) {
 	if message != "command failed" {
 		t.Fatalf("error message = %q", message)
 	}
-	if got := string(value["schema_version"]); got != `"2"` {
+	if got := string(value["schema_version"]); got != `"1"` {
 		t.Fatalf("schema version = %s", got)
 	}
 }
@@ -92,23 +88,31 @@ func TestPrintErrorUsesSchemaVersionAndStringMessage(t *testing.T) {
 	if err := PrintError(&out, errors.New("boom")); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := out.String(), `{"schema_version":"2","ok":false,"error":"boom"}
+	if got, want := out.String(), `{"schema_version":"1","ok":false,"error":"boom"}
 `; got != want {
 		t.Fatalf("error output = %q, want %q", got, want)
 	}
 }
 
-func TestWriteSchemaVersionOmitsEnvelopeFields(t *testing.T) {
-	var out bytes.Buffer
-	s := &state{out: &out, json: true}
-	if err := s.writeSchemaVersion(); err != nil {
-		t.Fatal(err)
-	}
-	var value map[string]json.RawMessage
-	if err := json.Unmarshal(out.Bytes(), &value); err != nil {
-		t.Fatal(err)
-	}
-	if len(value) != 1 || string(value["schema_version"]) != `"2"` {
-		t.Fatalf("schema-version output = %s", out.String())
+func TestWriteSchemaVersionIsCompactWithOrWithoutJSONFlag(t *testing.T) {
+	for _, jsonFlag := range []bool{false, true} {
+		t.Run(fmt.Sprintf("json=%t", jsonFlag), func(t *testing.T) {
+			var out bytes.Buffer
+			s := &state{out: &out, json: jsonFlag}
+			if err := s.writeSchemaVersion(); err != nil {
+				t.Fatal(err)
+			}
+			var value map[string]json.RawMessage
+			if err := json.Unmarshal(out.Bytes(), &value); err != nil {
+				t.Fatal(err)
+			}
+			if len(value) != 1 || string(value["schema_version"]) != `"1"` {
+				t.Fatalf("schema-version output = %s", out.String())
+			}
+			if got, want := out.String(), `{"schema_version":"1"}
+`; got != want {
+				t.Fatalf("schema-version output = %q, want %q", got, want)
+			}
+		})
 	}
 }
