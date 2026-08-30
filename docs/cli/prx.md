@@ -9,8 +9,7 @@ Manage pull-request dependency roadmaps
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
   -h, --help                    help for prx
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
   -v, --version                 version for prx
 ```
 

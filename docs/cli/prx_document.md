@@ -15,8 +15,8 @@ prx document [flags]
 ### Examples
 
 ```
-prx document --json
-prx doc --json
+prx document
+prx doc
 ```
 
 ### Options
@@ -31,8 +31,7 @@ prx doc --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO

@@ -9,8 +9,8 @@ prx sync [flags]
 ### Examples
 
 ```
-prx sync --feature FEATURE_ID --json
-prx sync --task TASK_ID --json
+prx sync --feature FEATURE_ID
+prx sync --task TASK_ID
 ```
 
 ### Options
@@ -27,8 +27,7 @@ prx sync --task TASK_ID --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO

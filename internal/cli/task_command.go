@@ -16,7 +16,7 @@ func (s *state) taskCommand() *cobra.Command {
 		Aliases: []string{"t"},
 		Short:   "List tasks or show one by ID",
 		Long:    "List tasks or show one by ID.\n\nAlias: t.",
-		Example: "prx task --json\nprx task --feature checkout --json\nprx task T-1 --json\nprx t T-1 --json",
+		Example: "prx task\nprx task --feature checkout\nprx task T-1\nprx t T-1",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if err := cobra.MaximumNArgs(1)(cmd, args); err != nil {
 				return err
@@ -61,7 +61,7 @@ func (s *state) taskCreateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "create",
 		Short:   "Create an implementation or manual task",
-		Example: "prx task create --feature checkout --title \"Add payment intent API\" --assignee Mika --json",
+		Example: "prx task create --feature checkout --title \"Add payment intent API\" --assignee Mika",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			value, err := s.service.CreateTask(cmd.Context(), feature, title, scope, domain.TaskKind(kind), assignee)
@@ -86,7 +86,7 @@ func (s *state) taskUpdateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "update TASK_ID",
 		Short:   "Update a task by ID",
-		Example: "prx task update TASK_ID --status completed --json",
+		Example: "prx task update TASK_ID --status completed",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.UpdateTask(cmd.Context(), args[0],
@@ -110,7 +110,7 @@ func (s *state) taskDeleteCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "delete TASK_ID",
 		Short:   "Delete a task and optionally its dependencies and references",
-		Example: "prx task delete TASK_ID --cascade --json",
+		Example: "prx task delete TASK_ID --cascade",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := s.service.DeleteTask(cmd.Context(), args[0], cascade); err != nil {
