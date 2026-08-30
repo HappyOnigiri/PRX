@@ -115,7 +115,7 @@ export function FeatureGraph({
     (taskId: string) => tasks.find((task) => task.id === taskId)?.title,
     [tasks],
   );
-  const { nodes, layoutError, retryLayout } = useGraphLayout({
+  const { nodes, layoutError, layoutPending, retryLayout } = useGraphLayout({
     tasks,
     dependencies,
     pullRequests,
@@ -197,6 +197,7 @@ export function FeatureGraph({
           writeGraphZoom(viewport.zoom);
         }}
         connectionPending={connections.pending}
+        layoutPending={layoutPending}
         connectionError={connections.error}
         taskTitle={taskTitle}
         layoutError={layoutError}
@@ -233,6 +234,7 @@ interface GraphCanvasProps {
   ) => void;
   onMoveEnd: OnMove;
   connectionPending: boolean;
+  layoutPending: boolean;
   connectionError: Error | null;
   taskTitle: (taskId: string) => string | undefined;
   layoutError: { message: string | undefined } | undefined;
@@ -253,6 +255,7 @@ function GraphCanvas({
   onReconnectEnd,
   onMoveEnd,
   connectionPending,
+  layoutPending,
   connectionError,
   taskTitle,
   layoutError,
@@ -260,11 +263,12 @@ function GraphCanvas({
   onCreateTask,
   ariaLabelConfig,
 }: GraphCanvasProps) {
+  const graphBusy = connectionPending || layoutPending;
   return (
     <div
       className="graph-stage"
       data-testid="feature-graph"
-      aria-busy={connectionPending}
+      aria-busy={graphBusy}
     >
       <ReactFlow
         nodes={nodes}
@@ -280,7 +284,7 @@ function GraphCanvas({
         minZoom={minGraphZoom}
         maxZoom={maxGraphZoom}
         nodesDraggable={false}
-        nodesConnectable={!connectionPending}
+        nodesConnectable={!graphBusy}
         autoPanOnConnect={false}
         reconnectRadius={12}
         elevateEdgesOnSelect

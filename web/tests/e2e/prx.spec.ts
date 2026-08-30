@@ -170,19 +170,27 @@ async function disconnectTasks(
 }
 
 async function settleGraph(page: Page) {
+  const stage = page.locator(".graph-stage");
   const viewport = page.locator(".react-flow__viewport");
-  let previousStyle: string | null = null;
+  const nodes = page.locator(".react-flow__node");
+  await expect(stage).toHaveAttribute("aria-busy", "false");
+  let previousState: string | null = null;
+  let stableSamples = 0;
   await expect
     .poll(
       async () => {
-        const currentStyle = await viewport.getAttribute("style");
-        const stable = currentStyle === previousStyle;
-        previousStyle = currentStyle;
-        return stable;
+        const viewportStyle = await viewport.getAttribute("style");
+        const nodeStyles = await nodes.evaluateAll((elements) =>
+          elements.map((element) => element.getAttribute("style")),
+        );
+        const currentState = JSON.stringify({ nodeStyles, viewportStyle });
+        stableSamples = currentState === previousState ? stableSamples + 1 : 0;
+        previousState = currentState;
+        return stableSamples;
       },
-      { intervals: [100], timeout: 2000 },
+      { intervals: [100], timeout: 3000 },
     )
-    .toBe(true);
+    .toBeGreaterThanOrEqual(3);
 }
 
 async function graphZoom(page: Page) {
