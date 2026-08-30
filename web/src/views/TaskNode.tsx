@@ -152,10 +152,11 @@ export function TaskNode({
       {(data.pullRequest ?? data.documents.length > 0) && (
         <NodeAssets data={data} />
       )}
-      <footer>
-        <span>{data.assignee || t("common.unassigned")}</span>
-        {data.ready && <b>{t("common.ready")}</b>}
-      </footer>
+      {data.assignee && (
+        <footer>
+          <span>{data.assignee}</span>
+        </footer>
+      )}
       <Handle
         type="source"
         position={Position.Right}
