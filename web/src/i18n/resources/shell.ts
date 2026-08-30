@@ -3,7 +3,6 @@ export const shell = {
     app: { title: "PRX — Dependency control" },
     settings: {
       open: "Settings",
-      eyebrow: "Workspace preferences",
       title: "Settings",
       tabs: { server: "Server", display: "Display" },
       display: {
@@ -16,7 +15,7 @@ export const shell = {
         },
         theme: {
           label: "Display theme",
-          description: "Color scheme used throughout the workspace.",
+          description: "Color scheme used for PRX in this browser.",
           options: { system: "System", light: "Light", dark: "Dark" },
         },
       },
@@ -97,7 +96,6 @@ export const shell = {
     app: { title: "PRX — 依存関係コントロール" },
     settings: {
       open: "設定",
-      eyebrow: "ワークスペース設定",
       title: "設定",
       tabs: { server: "サーバー", display: "表示" },
       display: {
@@ -110,7 +108,7 @@ export const shell = {
         },
         theme: {
           label: "表示テーマ",
-          description: "ワークスペース全体に使う配色です。",
+          description: "このブラウザーでのPRXに使う配色です。",
           options: {
             system: "システム",
             light: "ライト",

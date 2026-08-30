@@ -50,10 +50,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         aria-labelledby="settings-dialog-title"
       >
         <header className="settings-dialog-head">
-          <div>
-            <p className="section-label">{t("settings.eyebrow")}</p>
-            <h2 id="settings-dialog-title">{t("settings.title")}</h2>
-          </div>
+          <h2 id="settings-dialog-title">{t("settings.title")}</h2>
           <IconButton
             icon={X}
             label={t("common.close")}

@@ -370,6 +370,7 @@
 
 .settings-tabs {
   display: flex;
+  flex: 0 0 auto;
   margin-top: 4px;
   overflow-x: auto;
   border-bottom: 1px solid var(--border);
@@ -391,6 +392,10 @@
   color: var(--text);
 }
 
+.settings-tab:active {
+  transform: none;
+}
+
 .settings-tab[aria-selected="true"] {
   border-bottom-color: var(--accent);
   background: transparent;
@@ -403,6 +408,8 @@
   flex: 1 1 auto;
   overflow-y: auto;
   padding-top: 20px;
+  padding-inline-end: 12px;
+  scrollbar-gutter: stable;
 }
 
 .settings-dialog > footer {

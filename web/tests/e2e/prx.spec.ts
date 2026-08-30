@@ -125,10 +125,40 @@ test("keeps the Settings dialog size while switching tabs", async ({
   await page.getByRole("button", { name: "Settings" }).click();
   const dialog = page.getByRole("dialog", { name: "Settings" });
   await expect(dialog).toBeVisible();
+  const tablistBounds = await page.getByRole("tablist").boundingBox();
+  expect(tablistBounds?.height).toBeGreaterThanOrEqual(40);
+  const panelBounds = await page
+    .getByRole("tabpanel", { name: "Server" })
+    .boundingBox();
+  const syncFormBounds = await page
+    .getByRole("heading", { name: "Automatic GitHub updates" })
+    .locator("..")
+    .locator("..")
+    .locator("form")
+    .boundingBox();
+  expect(panelBounds).not.toBeNull();
+  expect(syncFormBounds).not.toBeNull();
+  if (panelBounds && syncFormBounds) {
+    const rightInset =
+      panelBounds.x +
+      panelBounds.width -
+      (syncFormBounds.x + syncFormBounds.width);
+    expect(rightInset).toBeGreaterThanOrEqual(12);
+  }
   const serverBounds = await dialog.boundingBox();
   expect(serverBounds).not.toBeNull();
 
-  await page.getByRole("tab", { name: "Display" }).click();
+  const displayTab = page.getByRole("tab", { name: "Display" });
+  const displayTabBounds = await displayTab.boundingBox();
+  expect(displayTabBounds).not.toBeNull();
+  if (!displayTabBounds) return;
+  await page.mouse.move(
+    displayTabBounds.x + displayTabBounds.width / 2,
+    displayTabBounds.y + displayTabBounds.height / 2,
+  );
+  await page.mouse.down();
+  expect(await displayTab.boundingBox()).toEqual(displayTabBounds);
+  await page.mouse.up();
   await expect(page.getByLabel("Display language")).toBeVisible();
   expect(await dialog.boundingBox()).toEqual(serverBounds);
 });
