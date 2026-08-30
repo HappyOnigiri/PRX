@@ -30,5 +30,5 @@ prx config validate --json
 
 ### SEE ALSO
 
-* [prx config](prx_config.md)	 - Manage GitHub hosts and authentication
+* [prx config](prx_config.md)	 - Show or manage GitHub hosts and authentication
 

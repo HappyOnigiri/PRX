@@ -20,6 +20,6 @@ Manage automatic GitHub synchronization settings
 
 ### SEE ALSO
 
-* [prx config](prx_config.md)	 - Manage GitHub hosts and authentication
+* [prx config](prx_config.md)	 - Show or manage GitHub hosts and authentication
 * [prx config sync update](prx_config_sync_update.md)	 - Update the automatic GitHub synchronization interval
 

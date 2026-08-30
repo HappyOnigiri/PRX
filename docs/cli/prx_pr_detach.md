@@ -30,5 +30,5 @@ prx pr detach TASK_ID --json
 
 ### SEE ALSO
 
-* [prx pr](prx_pr.md)	 - Attach GitHub pull requests
+* [prx pr](prx_pr.md)	 - List or attach GitHub pull requests
 

@@ -1,6 +1,23 @@
 ## prx document
 
-Manage URL and local Markdown references
+List or manage URL and local Markdown references
+
+### Synopsis
+
+List or manage URL and local Markdown references.
+
+Alias: doc.
+
+```
+prx document [flags]
+```
+
+### Examples
+
+```
+prx document --json
+prx doc --json
+```
 
 ### Options
 
@@ -23,5 +40,4 @@ Manage URL and local Markdown references
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
 * [prx document add](prx_document_add.md)	 - Add a URL or local Markdown path
 * [prx document delete](prx_document_delete.md)	 - Delete a document; missing documents return not_found
-* [prx document list](prx_document_list.md)	 - List URL and local Markdown documents
 

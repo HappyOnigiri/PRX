@@ -35,5 +35,5 @@ prx config host add --host ghe.example.com --json
 
 ### SEE ALSO
 
-* [prx config host](prx_config_host.md)	 - Manage configured GitHub hosts
+* [prx config host](prx_config_host.md)	 - List or manage configured GitHub hosts
 

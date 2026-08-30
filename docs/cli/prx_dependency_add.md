@@ -30,5 +30,5 @@ prx dependency add BLOCKER_TASK_ID BLOCKED_TASK_ID --json
 
 ### SEE ALSO
 
-* [prx dependency](prx_dependency.md)	 - Manage directed blocker edges
+* [prx dependency](prx_dependency.md)	 - List or manage directed blocker edges
 

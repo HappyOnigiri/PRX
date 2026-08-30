@@ -31,5 +31,5 @@ prx task delete TASK_ID --cascade --json
 
 ### SEE ALSO
 
-* [prx task](prx_task.md)	 - Manage implementation and manual tasks
+* [prx task](prx_task.md)	 - List tasks or show one by ID
 

@@ -30,5 +30,5 @@ prx config auth reorder ghe-environment ghe-cli --json
 
 ### SEE ALSO
 
-* [prx config auth](prx_config_auth.md)	 - Manage host-scoped authentication methods
+* [prx config auth](prx_config_auth.md)	 - List or manage host-scoped authentication methods
 
