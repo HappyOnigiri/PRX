@@ -23,6 +23,7 @@ const settingsMocks = vi.hoisted(() => {
     updateSync: vi.fn(),
   };
   const mutation = () => ({
+    mutate: vi.fn(),
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
     error: null as Error | null,
@@ -114,6 +115,7 @@ describe("ServerSettingsDialog", () => {
     await setDisplayLanguage("en");
     vi.spyOn(window, "confirm").mockReturnValue(true);
     for (const value of Object.values(settingsMocks.mutations)) {
+      value.mutate.mockReset();
       value.mutateAsync.mockReset();
       value.mutateAsync.mockResolvedValue({});
       value.isPending = false;
@@ -143,9 +145,9 @@ describe("ServerSettingsDialog", () => {
     });
     fireEvent.submit(syncForm);
     await waitFor(() => {
-      expect(
-        settingsMocks.mutations.updateSync.mutateAsync,
-      ).toHaveBeenCalledWith(600n);
+      expect(settingsMocks.mutations.updateSync.mutate).toHaveBeenCalledWith(
+        600n,
+      );
     });
 
     const hostForm = screen
@@ -330,5 +332,15 @@ describe("ServerSettingsDialog", () => {
         }),
       );
     });
+  });
+
+  // The interval form owns its own mutation, so the dialog's shared error area
+  // never sees its failures.
+  it("shows why saving the synchronization interval failed", () => {
+    settingsMocks.mutations.updateSync.error = new Error(
+      "config file is read-only",
+    );
+    render(<ServerSettingsDialog onClose={vi.fn()} />);
+    expect(screen.getByText("config file is read-only")).toBeInTheDocument();
   });
 });

@@ -215,7 +215,7 @@ function AutoSyncSettings({ interval }: { interval: bigint }) {
         className="settings-form settings-sync-form"
         onSubmit={(event) => {
           event.preventDefault();
-          void update.mutateAsync(BigInt(seconds));
+          update.mutate(BigInt(seconds));
         }}
       >
         <label>
@@ -239,6 +239,7 @@ function AutoSyncSettings({ interval }: { interval: bigint }) {
           disabled={update.isPending || !Number.isSafeInteger(seconds)}
         />
       </form>
+      {update.error && <p className="form-error">{update.error.message}</p>}
       <small>{t("serverSettings.syncHint")}</small>
     </section>
   );
