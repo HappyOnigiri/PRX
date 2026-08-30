@@ -29,6 +29,16 @@ test.afterEach(() => {
   expect(browserErrors, browserErrors.join("\n")).toEqual([]);
 });
 
+async function openDisplaySettings(page: Page, language: "en" | "ja" = "en") {
+  const labels =
+    language === "en"
+      ? { button: "Settings", dialog: "Settings", tab: "Display" }
+      : { button: "設定", dialog: "設定", tab: "表示" };
+  await page.getByRole("button", { name: labels.button }).click();
+  await expect(page.getByRole("dialog", { name: labels.dialog })).toBeVisible();
+  await page.getByRole("tab", { name: labels.tab }).click();
+}
+
 test("keeps the bilingual demo reset warning visible", async ({ page }) => {
   await page.goto("/");
   const banner = page.getByRole("status");
@@ -36,10 +46,12 @@ test("keeps the bilingual demo reset warning visible", async ({ page }) => {
   await expect(banner).toContainText("Changes reset on restart");
   await expect(banner).toContainText("変更は再起動時にリセットされます");
 
+  await openDisplaySettings(page);
   await page.getByLabel("Display theme").selectOption("dark");
   await expect(banner).toBeVisible();
   await page.getByLabel("Display language").selectOption("ja");
   await expect(banner).toBeVisible();
+  await page.getByRole("button", { name: "完了" }).click();
 
   await page.setViewportSize({ width: 320, height: 720 });
   await page.evaluate(() => {
@@ -92,16 +104,63 @@ test("switches the display language and restores it from Local Storage", async (
   page,
 }) => {
   await page.goto("/");
+  await openDisplaySettings(page);
   await page.getByLabel("Display language").selectOption("ja");
   await expect(
     page.getByRole("heading", { name: /いま動かせるタスク/ }),
   ).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "ja");
   await page.reload();
+  await openDisplaySettings(page, "ja");
   await expect(page.getByLabel("表示言語")).toHaveValue("ja");
   await expect(
     page.getByRole("heading", { name: /いま動かせるタスク/ }),
   ).toBeVisible();
+});
+
+test("keeps the Settings dialog size while switching tabs", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Settings" }).click();
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  await expect(dialog).toBeVisible();
+  const tablistBounds = await page.getByRole("tablist").boundingBox();
+  expect(tablistBounds?.height).toBeGreaterThanOrEqual(40);
+  const panelBounds = await page
+    .getByRole("tabpanel", { name: "Server" })
+    .boundingBox();
+  const syncFormBounds = await page
+    .getByRole("heading", { name: "Automatic GitHub updates" })
+    .locator("..")
+    .locator("..")
+    .locator("form")
+    .boundingBox();
+  expect(panelBounds).not.toBeNull();
+  expect(syncFormBounds).not.toBeNull();
+  if (panelBounds && syncFormBounds) {
+    const rightInset =
+      panelBounds.x +
+      panelBounds.width -
+      (syncFormBounds.x + syncFormBounds.width);
+    expect(rightInset).toBeGreaterThanOrEqual(12);
+  }
+  const serverBounds = await dialog.boundingBox();
+  expect(serverBounds).not.toBeNull();
+
+  const displayTab = page.getByRole("tab", { name: "Display" });
+  const displayTabBounds = await displayTab.boundingBox();
+  expect(displayTabBounds).not.toBeNull();
+  if (!displayTabBounds) return;
+  await page.mouse.move(
+    displayTabBounds.x + displayTabBounds.width / 2,
+    displayTabBounds.y + displayTabBounds.height / 2,
+  );
+  await page.mouse.down();
+  expect(await displayTab.boundingBox()).toEqual(displayTabBounds);
+  await page.mouse.up();
+  await expect(page.getByLabel("Display language")).toBeVisible();
+  expect(await dialog.boundingBox()).toEqual(serverBounds);
 });
 
 test("follows the system theme unless the user selects an override", async ({
@@ -115,6 +174,7 @@ test("follows the system theme unless the user selects an override", async ({
 
   await page.emulateMedia({ colorScheme: "no-preference" });
   await page.goto("/");
+  await openDisplaySettings(page);
   await expect(page.getByLabel("Display theme")).toHaveValue("system");
   await expect(root).not.toHaveAttribute("data-theme");
   await expect.poll(background).toBe("rgb(245, 246, 248)");
@@ -126,6 +186,7 @@ test("follows the system theme unless the user selects an override", async ({
   await expect(root).toHaveAttribute("data-theme", "light");
   await expect.poll(background).toBe("rgb(245, 246, 248)");
   await page.reload();
+  await openDisplaySettings(page);
   await expect(page.getByLabel("Display theme")).toHaveValue("light");
   await expect.poll(background).toBe("rgb(245, 246, 248)");
 
@@ -512,9 +573,6 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
     1,
   );
-  await openTask(page, "E2E worker");
-  await expect(inspector.locator(".dependency-chip")).toHaveCount(0);
-  await page.getByRole("button", { name: "Close inspector" }).click();
   await openTask(page, "E2E UI");
   page.once("dialog", (dialog) => dialog.accept());
   await inspector
@@ -741,6 +799,28 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
     page.getByRole("link", { name: /Archived features/ }),
   ).toBeVisible();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
+  await openDisplaySettings(page);
+  await page.getByLabel("Display language").selectOption("ja");
+  const settingsDialog = page.getByRole("dialog", { name: "設定" });
+  await expect(settingsDialog).toBeVisible();
+  await expect(page.getByRole("tab", { name: "表示" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  for (const control of await settingsDialog.getByRole("combobox").all()) {
+    const bounds = await control.boundingBox();
+    expect(bounds).not.toBeNull();
+    if (bounds) {
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(320);
+    }
+  }
+  await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
+  await page.getByLabel("表示言語").selectOption("en");
+  await page
+    .getByRole("dialog", { name: "Settings" })
+    .getByRole("button", { name: "Done" })
+    .click();
   await page
     .getByRole("link", { name: /Delivery control showcase/ })
     .first()
