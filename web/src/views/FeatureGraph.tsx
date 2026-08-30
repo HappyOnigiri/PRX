@@ -7,9 +7,11 @@ import {
   type AriaLabelConfig,
   type Connection,
   type Edge,
+  type EdgeChange,
   type EdgeMouseHandler,
   type FinalConnectionState,
   type HandleType,
+  type OnEdgesChange,
   type OnEdgesDelete,
   type OnMove,
   type OnReconnect,
@@ -198,7 +200,25 @@ function useDependencySelection(dependencies: Dependency[]) {
     },
     [],
   );
-  return { clear, select, selectedId };
+  // React Flow drops its own selection updates because the edges are
+  // controlled, so Enter and Space on a focused edge only reach the toolbar and
+  // the Delete key once the change is applied here.
+  const applyChanges = useCallback(
+    (changes: EdgeChange<DependencyFlowEdge>[]) => {
+      for (const change of changes) {
+        if (change.type !== "select") continue;
+        setSelectedId((current) =>
+          change.selected
+            ? change.id
+            : current === change.id
+              ? undefined
+              : current,
+        );
+      }
+    },
+    [],
+  );
+  return { applyChanges, clear, select, selectedId };
 }
 
 interface FeatureGraphProps {
@@ -304,6 +324,7 @@ export function FeatureGraph({
         initialGraphZoom={initialGraphZoom}
         onInit={setFlow}
         onConnect={connections.onConnect}
+        onEdgesChange={selection.applyChanges}
         onEdgesDelete={connections.onEdgesDelete}
         onEdgeClick={selection.select}
         onNodeClick={selection.clear}
@@ -338,6 +359,7 @@ interface GraphCanvasProps {
     instance: ReactFlowInstance<TaskFlowNode, DependencyFlowEdge>,
   ) => void;
   onConnect: (connection: Connection) => void;
+  onEdgesChange: OnEdgesChange<DependencyFlowEdge>;
   onEdgesDelete: OnEdgesDelete<DependencyFlowEdge>;
   onEdgeClick: EdgeMouseHandler<DependencyFlowEdge>;
   onNodeClick: () => void;
@@ -373,6 +395,7 @@ function GraphCanvas({
   initialGraphZoom,
   onInit,
   onConnect,
+  onEdgesChange,
   onEdgesDelete,
   onEdgeClick,
   onNodeClick,
@@ -414,6 +437,7 @@ function GraphCanvas({
         nodesDraggable={false}
         nodeTypes={nodeTypes}
         onConnect={onConnect}
+        onEdgesChange={onEdgesChange}
         onEdgesDelete={onEdgesDelete}
         onEdgeClick={onEdgeClick}
         onInit={onInit}

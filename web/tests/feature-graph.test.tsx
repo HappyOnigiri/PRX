@@ -30,6 +30,7 @@ const graphMocks = vi.hoisted(() => ({
   useGraphLayout: vi.fn(),
   writeGraphZoom: vi.fn(),
   onConnect: undefined as ((connection: unknown) => void) | undefined,
+  onEdgesChange: undefined as ((changes: unknown[]) => void) | undefined,
   onEdgesDelete: undefined as ((edges: unknown[]) => void) | undefined,
   onEdgeClick: undefined as
     ((event: unknown, edge: { id: string }) => void) | undefined,
@@ -63,6 +64,7 @@ vi.mock("@xyflow/react", () => ({
     edges,
     onMoveEnd,
     onConnect,
+    onEdgesChange,
     onEdgesDelete,
     onEdgeClick,
     onPaneClick,
@@ -75,6 +77,7 @@ vi.mock("@xyflow/react", () => ({
     edges?: unknown[];
     onMoveEnd?: (...args: unknown[]) => void;
     onConnect?: (connection: unknown) => void;
+    onEdgesChange?: (changes: unknown[]) => void;
     onEdgesDelete?: (edges: unknown[]) => void;
     onEdgeClick?: (event: unknown, edge: { id: string }) => void;
     onPaneClick?: () => void;
@@ -94,6 +97,7 @@ vi.mock("@xyflow/react", () => ({
   }) => {
     graphMocks.edges = (edges ?? []) as Record<string, unknown>[];
     graphMocks.onConnect = onConnect;
+    graphMocks.onEdgesChange = onEdgesChange;
     graphMocks.onEdgesDelete = onEdgesDelete;
     graphMocks.onEdgeClick = onEdgeClick;
     graphMocks.onPaneClick = onPaneClick;
@@ -144,6 +148,7 @@ describe("FeatureGraph", () => {
     graphMocks.removeDependency.error = null;
     graphMocks.domainMutationCall = 0;
     graphMocks.onConnect = undefined;
+    graphMocks.onEdgesChange = undefined;
     graphMocks.onEdgesDelete = undefined;
     graphMocks.onEdgeClick = undefined;
     graphMocks.onPaneClick = undefined;
@@ -403,6 +408,47 @@ describe("FeatureGraph", () => {
       blocker: "blocker",
       blocked: "blocked",
     });
+  });
+
+  it("selects an edge from a React Flow selection change and deletes it", () => {
+    const dependency = makeDependency({
+      blockerTaskId: "blocker",
+      blockedTaskId: "blocked",
+    });
+    render(
+      <FeatureGraph
+        tasks={[
+          makeTask({ id: "blocker", title: "Blocker task" }),
+          makeTask({ id: "blocked", title: "Blocked task" }),
+        ]}
+        dependencies={[dependency]}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={vi.fn()}
+      />,
+    );
+
+    act(() => {
+      graphMocks.onEdgesChange?.([
+        { type: "select", id: "blocker-blocked", selected: true },
+      ]);
+    });
+    expect(graphMocks.edges[0]?.["selected"]).toBe(true);
+    act(() => {
+      graphMocks.onEdgesDelete?.([{ source: "blocker", target: "blocked" }]);
+    });
+    expect(graphMocks.removeDependency.mutate).toHaveBeenCalledWith({
+      blocker: "blocker",
+      blocked: "blocked",
+    });
+    act(() => {
+      graphMocks.onEdgesChange?.([
+        { type: "select", id: "blocker-blocked", selected: false },
+      ]);
+    });
+    expect(graphMocks.edges[0]?.["selected"]).toBe(false);
   });
 
   it("shows a translated cycle error with task titles", () => {

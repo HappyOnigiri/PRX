@@ -366,6 +366,23 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
     2,
   );
+  // Keyboard users reach the toolbar and the Delete key only when React Flow's
+  // own selection change is applied back to the controlled edges.
+  await settleGraph(page);
+  const keyboardEdge = page.locator(
+    `.react-flow__edge[data-id="${await taskNodeId(page, "E2E worker")}-${await taskNodeId(page, "E2E UI")}"]`,
+  );
+  await keyboardEdge.focus();
+  await page.keyboard.press("Enter");
+  await expect(keyboardEdge).toHaveClass(/selected/);
+  await page.keyboard.press("Delete");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    1,
+  );
+  await connectTasks(page, "E2E worker", "E2E UI");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    2,
+  );
   await selectDependencyEdge(page, "E2E worker", "E2E UI");
   await page.keyboard.press("Delete");
   await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
