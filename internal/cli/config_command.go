@@ -60,7 +60,11 @@ func (s *state) configSyncCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.writeSyncInterval(settings.GitHub.AutoSyncIntervalSeconds)
+			interval := settings.GitHub.AutoSyncIntervalSeconds
+			return s.write(
+				map[string]int64{"interval_seconds": interval},
+				renderMessage("Automatic sync interval: %d seconds.", interval),
+			)
 		},
 	}
 	command.AddCommand(s.configSyncUpdateCommand())
@@ -101,13 +105,6 @@ func (s *state) configSyncUpdateCommand() *cobra.Command {
 		},
 	}
 	return command
-}
-
-func (s *state) writeSyncInterval(interval int64) error {
-	return s.write(
-		map[string]int64{"interval_seconds": interval},
-		renderMessage("Automatic sync interval: %d seconds.", interval),
-	)
 }
 
 func (s *state) configPathCommand() *cobra.Command {
@@ -245,7 +242,11 @@ func (s *state) configHostUpdateCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			updated := findHost(value, newOrExistingHost(cmd, args[0], newHost))
+			updatedHost := args[0]
+			if cmd.Flags().Changed("new-host") {
+				updatedHost = newHost
+			}
+			updated := findHost(value, updatedHost)
 			return s.write(updated, renderMessage("Updated GitHub host %s.", updated.Host))
 		},
 	}
@@ -398,7 +399,11 @@ func (s *state) configAuthUpdateCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			updated := findPublicAuth(settings, newOrExistingID(cmd, args[0], newID))
+			updatedID := args[0]
+			if cmd.Flags().Changed("new-id") {
+				updatedID = newID
+			}
+			updated := findPublicAuth(settings, updatedID)
 			return s.write(updated, renderMessage("Updated authentication method %s.", updated.ID))
 		},
 	}
@@ -501,20 +506,6 @@ func findPublicAuth(settings config.Config, id string) config.PublicAuthMethod {
 		},
 	}.Public()
 	return public.GitHub.AuthMethods[0]
-}
-
-func newOrExistingHost(command *cobra.Command, existing, replacement string) string {
-	if command.Flags().Changed("new-host") {
-		return replacement
-	}
-	return existing
-}
-
-func newOrExistingID(command *cobra.Command, existing, replacement string) string {
-	if command.Flags().Changed("new-id") {
-		return replacement
-	}
-	return existing
 }
 
 func configCommandError(err error) error {
