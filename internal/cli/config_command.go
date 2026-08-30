@@ -42,7 +42,7 @@ func (s *state) configShowCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(value)
+			return s.write(value, renderConfig(value))
 		},
 	}
 }
@@ -58,7 +58,7 @@ func (s *state) configPathCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(map[string]string{"path": store.Path()})
+			return s.write(map[string]string{"path": store.Path()}, renderMessage("Config path: %s", store.Path()))
 		},
 	}
 }
@@ -77,7 +77,7 @@ func (s *state) configValidateCommand() *cobra.Command {
 			if err := store.Validate(); err != nil {
 				return configCommandError(err)
 			}
-			return s.write(map[string]bool{"valid": true})
+			return s.write(map[string]bool{"valid": true}, renderMessage("Configuration is valid."))
 		},
 	}
 }
@@ -111,7 +111,8 @@ func (s *state) configHostAddCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(findHost(value, host))
+			created := findHost(value, host)
+			return s.write(created, renderMessage("Added GitHub host %s.", created.Host))
 		},
 	}
 	command.Flags().StringVar(&host, "host", "", "hostname with optional port")
@@ -137,7 +138,8 @@ func (s *state) configHostListCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(settings.Public().GitHub.Hosts)
+			hosts := settings.Public().GitHub.Hosts
+			return s.write(map[string]any{"hosts": hosts}, renderHostList(hosts))
 		},
 	}
 }
@@ -177,7 +179,8 @@ func (s *state) configHostUpdateCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(findHost(value, newOrExistingHost(cmd, args[0], newHost)))
+			updated := findHost(value, newOrExistingHost(cmd, args[0], newHost))
+			return s.write(updated, renderMessage("Updated GitHub host %s.", updated.Host))
 		},
 	}
 	command.Flags().StringVar(&newHost, "new-host", "", "new hostname")
@@ -203,7 +206,7 @@ func (s *state) configHostRemoveCommand() *cobra.Command {
 			); err != nil {
 				return configCommandError(err)
 			}
-			return s.write(map[string]string{"removed": args[0]})
+			return s.write(map[string]string{"removed": args[0]}, renderMessage("Removed GitHub host %s.", args[0]))
 		},
 	}
 }
@@ -246,7 +249,8 @@ func (s *state) configAuthAddCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(findPublicAuth(settings, id))
+			created := findPublicAuth(settings, id)
+			return s.write(created, renderMessage("Added authentication method %s.", created.ID))
 		},
 	}
 	bindAuthFlags(command, &host, &authType, &account, &service, &variable, &user, &tokenStdin)
@@ -272,7 +276,8 @@ func (s *state) configAuthListCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(settings.Public().GitHub.AuthMethods)
+			methods := settings.Public().GitHub.AuthMethods
+			return s.write(map[string]any{"auth_methods": methods}, renderAuthList(methods))
 		},
 	}
 }
@@ -329,7 +334,8 @@ func (s *state) configAuthUpdateCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(findPublicAuth(settings, newOrExistingID(cmd, args[0], newID)))
+			updated := findPublicAuth(settings, newOrExistingID(cmd, args[0], newID))
+			return s.write(updated, renderMessage("Updated authentication method %s.", updated.ID))
 		},
 	}
 	bindAuthFlags(command, &host, &authType, &account, &service, &variable, &user, &tokenStdin)
@@ -353,7 +359,10 @@ func (s *state) configAuthRemoveCommand() *cobra.Command {
 			); err != nil {
 				return configCommandError(err)
 			}
-			return s.write(map[string]string{"removed": args[0]})
+			return s.write(
+				map[string]string{"removed": args[0]},
+				renderMessage("Removed authentication method %s.", args[0]),
+			)
 		},
 	}
 }
@@ -375,7 +384,8 @@ func (s *state) configAuthReorderCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(settings.Public().GitHub.AuthMethods)
+			methods := settings.Public().GitHub.AuthMethods
+			return s.write(map[string]any{"auth_methods": methods}, renderAuthList(methods))
 		},
 	}
 }

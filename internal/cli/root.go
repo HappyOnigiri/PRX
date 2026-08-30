@@ -2,23 +2,31 @@ package cli
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"io"
 	"os"
 
 	"github.com/spf13/cobra"
+	"golang.org/x/term"
 
 	prx "github.com/HappyOnigiri/PRX"
 	"github.com/HappyOnigiri/PRX/internal/config"
+	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 type state struct {
 	dbPath      string
 	configPath  string
 	json        bool
+	human       bool
 	fixture     string
 	out         io.Writer
 	errOut      io.Writer
+	isTerminal  func(io.Writer) bool
+	mode        outputMode
+	modeSet     bool
+	runStarted  bool
 	openService OpenService
 	service     Service
 	closer      io.Closer
@@ -30,7 +38,7 @@ func NewRoot(out, errOut io.Writer, openService OpenService) *cobra.Command {
 }
 
 func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Command, *state) {
-	s := &state{out: out, errOut: errOut, openService: openService}
+	s := &state{out: out, errOut: errOut, openService: openService, isTerminal: writerIsTerminal}
 	root := &cobra.Command{
 		Use:           "prx",
 		Short:         "Manage pull-request dependency roadmaps",
@@ -38,7 +46,10 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			if cmd.Name() == "help" || isConfigCommand(cmd) {
+			if err := s.resolveOutputMode(); err != nil {
+				return err
+			}
+			if cmd.Name() == "help" || cmd.Name() == "schema-version" || isConfigCommand(cmd) {
 				return nil
 			}
 			baseContext := cmd.Context()
@@ -49,7 +60,7 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			live := cmd.Name() == "serve" || cmd.Name() == "sync"
 			service, closer, err := s.openService(openContext, s.dbPath, s.fixture, live)
 			if err != nil {
-				return err
+				return domain.NewError(domain.DomainErrorCodeInternal, "%s", err)
 			}
 			s.service = service
 			s.closer = closer
@@ -66,9 +77,11 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	root.PersistentFlags().StringVar(&s.dbPath, "db", os.Getenv("PRX_DB"), "SQLite database path (env: PRX_DB)")
 	root.PersistentFlags().
 		StringVar(&s.configPath, "config", os.Getenv("PRX_CONFIG"), "YAML configuration path (env: PRX_CONFIG)")
-	root.PersistentFlags().BoolVar(&s.json, "json", false, "emit a stable JSON envelope")
+	root.PersistentFlags().BoolVar(&s.json, "json", false, "force compact JSON responses")
+	root.PersistentFlags().BoolVar(&s.human, "human", false, "force human-readable responses")
 	root.PersistentFlags().StringVar(&s.fixture, "github-fixture", "", "GitHub fixture JSON path, or demo")
 	root.AddCommand(
+		s.schemaVersionCommand(),
 		s.featureCommand(),
 		s.taskCommand(),
 		s.nodeCommand(),
@@ -90,7 +103,21 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		s.seedCommand(),
 		s.serveCommand(),
 	)
+	markCommandExecution(root, s)
 	return root, s
+}
+
+func markCommandExecution(command *cobra.Command, s *state) {
+	if command.RunE != nil {
+		run := command.RunE
+		command.RunE = func(cmd *cobra.Command, args []string) error {
+			s.runStarted = true
+			return run(cmd, args)
+		}
+	}
+	for _, child := range command.Commands() {
+		markCommandExecution(child, s)
+	}
 }
 
 func isConfigCommand(command *cobra.Command) bool {
@@ -112,12 +139,67 @@ func Execute(ctx context.Context, args []string, out, errOut io.Writer, openServ
 	if err == nil {
 		return nil
 	}
-	if s.json {
-		if printErr := PrintError(out, err); printErr != nil {
-			_, _ = fmt.Fprintln(errOut, "error:", err)
-		}
-	} else {
-		_, _ = fmt.Fprintln(errOut, "error:", err)
+	if !s.runStarted {
+		err = domainUsageError(err)
+	}
+	if printErr := s.writeError(err); printErr != nil {
+		_, _ = fmt.Fprintln(errOut, "Error:", err)
 	}
 	return err
 }
+
+func (s *state) resolveOutputMode() error {
+	if s.modeSet {
+		if s.json && s.human {
+			return domainUsageError(errors.New("--json and --human cannot be used together"))
+		}
+		return nil
+	}
+	s.modeSet = true
+	switch {
+	case s.json && s.human:
+		if s.isTerminal != nil && s.isTerminal(s.out) {
+			s.mode = outputModeHuman
+		} else {
+			s.mode = outputModeJSON
+		}
+		return domainUsageError(errors.New("--json and --human cannot be used together"))
+	case s.json:
+		s.mode = outputModeJSON
+	case s.human:
+		s.mode = outputModeHuman
+	case s.isTerminal != nil && s.isTerminal(s.out):
+		s.mode = outputModeHuman
+	default:
+		s.mode = outputModeJSON
+	}
+	return nil
+}
+
+func writerIsTerminal(out io.Writer) bool {
+	file, ok := out.(interface{ Fd() uintptr })
+	return ok && term.IsTerminal(int(file.Fd()))
+}
+
+func domainUsageError(err error) error {
+	if err == nil {
+		return nil
+	}
+	var domainErr *domain.Error
+	if errors.As(err, &domainErr) {
+		return err
+	}
+	var usageErr *usageError
+	if errors.As(err, &usageErr) {
+		return err
+	}
+	return &usageError{err: err}
+}
+
+type usageError struct {
+	err error
+}
+
+func (e *usageError) Error() string { return e.err.Error() }
+
+func (e *usageError) Unwrap() error { return e.err }

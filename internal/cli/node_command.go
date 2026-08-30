@@ -19,7 +19,7 @@ func (s *state) nodeCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			return s.write(value, renderNode(value))
 		},
 	})
 	return command

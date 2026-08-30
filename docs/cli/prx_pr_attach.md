@@ -26,7 +26,8 @@ prx pr attach --task TASK_ID --url https://github.com/acme/payments/pull/42 --js
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --json                    emit a stable JSON envelope
+      --human                   force human-readable responses
+      --json                    force compact JSON responses
 ```
 
 ### SEE ALSO

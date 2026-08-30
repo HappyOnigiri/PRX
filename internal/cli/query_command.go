@@ -20,7 +20,8 @@ func (s *state) snapshotCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			value = normalizeSnapshotCollections(value)
+			return s.write(value, renderSnapshot("Snapshot", value))
 		},
 	}
 }
@@ -51,7 +52,8 @@ func (s *state) graphCommand() *cobra.Command {
 					deps = append(deps, dep)
 				}
 			}
-			return s.write(map[string]any{"feature": feature, "tasks": tasks, "dependencies": deps})
+			return s.write(map[string]any{"feature": feature, "tasks": tasks, "dependencies": deps},
+				renderGraph(feature, tasks, deps))
 		},
 	}
 }
@@ -75,17 +77,23 @@ func (s *state) queueCommand(name string) *cobra.Command {
 				return err
 			}
 			var tasks []domain.Task
+			key := ""
 			switch name {
 			case "ready":
 				tasks = snapshot.ReadyTasks
+				key = "ready_tasks"
 			case "reviews":
 				tasks = snapshot.ReviewWaitingTasks
+				key = "review_waiting_tasks"
 			case "conflicts":
 				tasks = snapshot.ConflictTasks
+				key = "conflict_tasks"
 			case "stale":
 				tasks = snapshot.StaleTasks
+				key = "stale_tasks"
 			}
-			return s.write(tasks)
+			tasks = nonNilSlice(tasks)
+			return s.write(map[string]any{key: tasks}, renderQueue(queueLabel(name), tasks))
 		},
 	}
 }
@@ -102,7 +110,8 @@ func (s *state) syncCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(map[string]int{"succeeded": succeeded, "failed": failed})
+			return s.write(map[string]int{"succeeded": succeeded, "failed": failed},
+				renderMessage("GitHub sync completed: %d succeeded, %d failed.", succeeded, failed))
 		},
 	}
 	command.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
@@ -121,7 +130,7 @@ func (s *state) validateCommand() *cobra.Command {
 			if len(items) > 0 {
 				return domain.NewError("invalid_database", "database validation failed: %s", strings.Join(items, "; "))
 			}
-			return s.write(map[string]bool{"valid": true})
+			return s.write(map[string]bool{"valid": true}, renderMessage("Dependency data is valid."))
 		},
 	}
 }
@@ -152,13 +161,38 @@ func (s *state) seedCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(snapshot)
+			snapshot = normalizeSnapshotCollections(snapshot)
+			return s.write(snapshot, renderSnapshot("Seed completed", snapshot))
 		},
 	}
 	command.Flags().IntVar(&count, "tasks", 8, "number of demo tasks")
 	command.Flags().StringVar(&slug, "slug", "demo-roadmap", "feature slug")
 	command.Flags().IntVar(&features, "features", 1, "number of demo features")
 	return command
+}
+
+func queueLabel(name string) string {
+	switch name {
+	case "reviews":
+		return "review-waiting"
+	case "conflicts":
+		return "conflict"
+	default:
+		return name
+	}
+}
+
+func normalizeSnapshotCollections(snapshot domain.Snapshot) domain.Snapshot {
+	snapshot.Features = nonNilSlice(snapshot.Features)
+	snapshot.Tasks = nonNilSlice(snapshot.Tasks)
+	snapshot.Dependencies = nonNilSlice(snapshot.Dependencies)
+	snapshot.PullRequests = nonNilSlice(snapshot.PullRequests)
+	snapshot.Documents = nonNilSlice(snapshot.Documents)
+	snapshot.ReadyTasks = nonNilSlice(snapshot.ReadyTasks)
+	snapshot.ReviewWaitingTasks = nonNilSlice(snapshot.ReviewWaitingTasks)
+	snapshot.ConflictTasks = nonNilSlice(snapshot.ConflictTasks)
+	snapshot.StaleTasks = nonNilSlice(snapshot.StaleTasks)
+	return snapshot
 }
 
 func filterTasks(tasks []domain.Task, keep func(domain.Task) bool) []domain.Task {
