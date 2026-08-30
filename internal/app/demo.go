@@ -106,6 +106,8 @@ func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath string) e
 		domain.DocumentKindURL,
 		"Product brief",
 		"https://github.com/HappyOnigiri/PRX",
+		"",
+		false,
 	); err != nil {
 		return err
 	}
@@ -113,9 +115,11 @@ func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath string) e
 		ctx,
 		showcase.ID,
 		"",
-		domain.DocumentKindMarkdownPath,
+		domain.DocumentKindLocalFile,
 		"Demo walkthrough",
 		markdownPath,
+		"",
+		false,
 	); err != nil {
 		return err
 	}
@@ -270,7 +274,8 @@ func (s *Service) createDemoTasks(
 			}
 		}
 		if value.plan != "" {
-			if _, err := s.UpsertImplementationPlan(ctx, task.ID, value.plan); err != nil {
+			plan := domain.Document{Kind: domain.DocumentKindMarkdown, Content: value.plan}
+			if _, err := s.UpsertImplementationPlan(ctx, task.ID, plan); err != nil {
 				return nil, err
 			}
 		}

@@ -51,7 +51,8 @@ export function taskKindLabel(value: TaskKind, t: TFunction): string {
 export const documentKindKeys = {
   [DocumentKind.UNSPECIFIED]: "documentKind.unknown",
   [DocumentKind.URL]: "documentKind.url",
-  [DocumentKind.MARKDOWN_PATH]: "documentKind.markdownPath",
+  [DocumentKind.LOCAL_FILE]: "documentKind.localFile",
+  [DocumentKind.MARKDOWN]: "documentKind.markdown",
 } as const satisfies Record<DocumentKind, string>;
 
 export function documentKindLabel(value: DocumentKind, t: TFunction): string {
@@ -61,7 +62,6 @@ export function documentKindLabel(value: DocumentKind, t: TFunction): string {
 export const displayStateKeys = {
   [TaskDisplayState.UNSPECIFIED]: "displayState.unknown",
   [TaskDisplayState.NOT_STARTED]: "displayState.notStarted",
-  [TaskDisplayState.DESIGNED]: "displayState.designed",
   [TaskDisplayState.IN_PROGRESS]: "displayState.inProgress",
   [TaskDisplayState.COMPLETED]: "displayState.completed",
   [TaskDisplayState.CLOSED]: "displayState.closed",
@@ -140,8 +140,11 @@ export const errorKeys = {
   [DomainErrorCode.CYCLE]: "error.cycle",
   [DomainErrorCode.DOCUMENT_READ_FAILED]: "error.documentReadFailed",
   [DomainErrorCode.DOCUMENT_TOO_LARGE]: "error.documentTooLarge",
+  [DomainErrorCode.DOCUMENT_NOT_TEXT]: "error.documentNotText",
   [DomainErrorCode.DUPLICATE_DEPENDENCY]: "error.duplicateDependency",
   [DomainErrorCode.DUPLICATE_PULL_REQUEST]: "error.duplicatePullRequest",
+  [DomainErrorCode.DUPLICATE_IMPLEMENTATION_PLAN]:
+    "error.duplicateImplementationPlan",
   [DomainErrorCode.GITHUB_AUTH]: "error.githubAuth",
   [DomainErrorCode.INVALID_CONFIG]: "error.invalidConfig",
   [DomainErrorCode.INVALID_DATABASE]: "error.invalidDatabase",

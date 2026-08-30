@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
@@ -17,8 +18,7 @@ import (
 var slugPattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
 
 const (
-	maxMarkdownPreviewBytes    = 1 << 20
-	maxImplementationPlanBytes = 1 << 20
+	maxDocumentContentBytes = 1 << 20
 )
 
 // Repository is the persistence boundary used by the application service.
@@ -42,8 +42,8 @@ type Repository interface {
 	UpdateTask(ctx context.Context, task domain.Task) (domain.Task, error)
 	DeleteTask(ctx context.Context, id string, cascade bool) error
 
-	GetImplementationPlan(ctx context.Context, taskID string) (domain.ImplementationPlan, error)
-	UpsertImplementationPlan(ctx context.Context, taskID, content string) (domain.ImplementationPlan, error)
+	GetImplementationPlan(ctx context.Context, taskID string) (domain.Document, error)
+	UpsertImplementationPlan(ctx context.Context, taskID string, document domain.Document) (domain.Document, error)
 	DeleteImplementationPlan(ctx context.Context, taskID string) error
 
 	AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error)
@@ -56,9 +56,17 @@ type Repository interface {
 		ctx context.Context,
 		featureID, taskID string,
 		kind domain.DocumentKind,
-		title, value string,
+		title, locator, content string,
+		isImplementationPlan bool,
 	) (domain.Document, error)
 	GetDocument(ctx context.Context, id string) (domain.Document, error)
+	UpdateDocument(
+		ctx context.Context,
+		id string,
+		title *string,
+		source *domain.Document,
+		isImplementationPlan *bool,
+	) (domain.Document, error)
 	DeleteDocument(ctx context.Context, id string) error
 
 	Snapshot(ctx context.Context) (domain.Snapshot, error)
@@ -281,33 +289,28 @@ func (s *Service) DeleteTask(ctx context.Context, id string, cascade bool) error
 	return s.repository.DeleteTask(ctx, id, cascade)
 }
 
-func (s *Service) GetImplementationPlan(ctx context.Context, taskID string) (domain.ImplementationPlan, error) {
+func (s *Service) GetImplementationPlan(ctx context.Context, taskID string) (domain.Document, error) {
 	if _, err := s.repository.GetTask(ctx, taskID); err != nil {
-		return domain.ImplementationPlan{}, err
+		return domain.Document{}, err
 	}
 	return s.repository.GetImplementationPlan(ctx, taskID)
 }
 
 func (s *Service) UpsertImplementationPlan(
 	ctx context.Context,
-	taskID, content string,
-) (domain.ImplementationPlan, error) {
+	taskID string,
+	document domain.Document,
+) (domain.Document, error) {
 	if _, err := s.repository.GetTask(ctx, taskID); err != nil {
-		return domain.ImplementationPlan{}, err
+		return domain.Document{}, err
 	}
-	if strings.TrimSpace(content) == "" {
-		return domain.ImplementationPlan{}, domain.NewError(
-			domain.DomainErrorCodeInvalidImplementationPlan,
-			"implementation plan content is required",
-		)
+	document.TaskID = taskID
+	document.FeatureID = ""
+	document.IsImplementationPlan = true
+	if err := validateDocumentSource(&document, true); err != nil {
+		return domain.Document{}, err
 	}
-	if len([]byte(content)) > maxImplementationPlanBytes {
-		return domain.ImplementationPlan{}, domain.NewError(
-			domain.DomainErrorCodeImplementationPlanTooLarge,
-			"implementation plan is limited to 1 MiB",
-		)
-	}
-	return s.repository.UpsertImplementationPlan(ctx, taskID, content)
+	return s.repository.UpsertImplementationPlan(ctx, taskID, document)
 }
 
 func (s *Service) DeleteImplementationPlan(ctx context.Context, taskID string) error {
@@ -384,7 +387,8 @@ func (s *Service) AddDocument(
 	ctx context.Context,
 	featureID, taskID string,
 	kind domain.DocumentKind,
-	title, value string,
+	title, locator, content string,
+	isImplementationPlan bool,
 ) (domain.Document, error) {
 	if (featureID == "") == (taskID == "") {
 		return domain.Document{}, domain.NewError(
@@ -392,24 +396,18 @@ func (s *Service) AddDocument(
 			"set exactly one of feature_id or task_id",
 		)
 	}
-	if !oneOf(kind, domain.DocumentKindURL, domain.DocumentKindMarkdownPath) {
+	document := domain.Document{
+		FeatureID: featureID, TaskID: taskID, Kind: kind, Title: strings.TrimSpace(title),
+		Locator: locator, Content: content, IsImplementationPlan: isImplementationPlan,
+	}
+	if err := validateDocumentSource(&document, false); err != nil {
+		return domain.Document{}, err
+	}
+	if isImplementationPlan && featureID != "" {
 		return domain.Document{}, domain.NewError(
-			domain.DomainErrorCodeInvalidDocumentKind,
-			"document kind must be url or markdown_path",
+			domain.DomainErrorCodeInvalidParent,
+			"feature documents cannot be implementation plans",
 		)
-	}
-	value = strings.TrimSpace(value)
-	if value == "" {
-		return domain.Document{}, domain.NewError(domain.DomainErrorCodeInvalidDocument, "document value is required")
-	}
-	if kind == domain.DocumentKindURL {
-		parsed, err := url.Parse(value)
-		if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") {
-			return domain.Document{}, domain.NewError(
-				domain.DomainErrorCodeInvalidDocumentURL,
-				"document URL must use http or https",
-			)
-		}
 	}
 	if featureID != "" {
 		feature, err := s.ResolveFeature(ctx, featureID)
@@ -422,38 +420,151 @@ func (s *Service) AddDocument(
 		if _, err := s.repository.GetTask(ctx, taskID); err != nil {
 			return domain.Document{}, err
 		}
+		if isImplementationPlan {
+			if _, err := s.repository.GetImplementationPlan(ctx, taskID); err == nil {
+				return domain.Document{}, domain.NewError(
+					domain.DomainErrorCodeDuplicateImplementationPlan,
+					"task %q already has an implementation plan", taskID,
+				)
+			} else if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+				return domain.Document{}, err
+			}
+		}
 	}
-	return s.repository.CreateDocument(ctx, featureID, taskID, kind, strings.TrimSpace(title), value)
+	return s.repository.CreateDocument(
+		ctx, featureID, taskID, document.Kind, document.Title, document.Locator, document.Content, isImplementationPlan,
+	)
+}
+
+func (s *Service) GetDocument(ctx context.Context, id string) (domain.Document, error) {
+	return s.repository.GetDocument(ctx, id)
+}
+
+func (s *Service) UpdateDocument(
+	ctx context.Context,
+	id string,
+	title *string,
+	source *domain.Document,
+	isImplementationPlan *bool,
+) (domain.Document, error) {
+	document, err := s.repository.GetDocument(ctx, id)
+	if err != nil {
+		return domain.Document{}, err
+	}
+	if title != nil {
+		document.Title = strings.TrimSpace(*title)
+	}
+	if source != nil {
+		document.Kind = source.Kind
+		document.Locator = source.Locator
+		document.Content = source.Content
+	}
+	if isImplementationPlan != nil {
+		document.IsImplementationPlan = *isImplementationPlan
+	}
+	if document.IsImplementationPlan && document.TaskID == "" {
+		return domain.Document{}, domain.NewError(
+			domain.DomainErrorCodeInvalidParent,
+			"feature documents cannot be implementation plans",
+		)
+	}
+	if err := validateDocumentSource(&document, false); err != nil {
+		return domain.Document{}, err
+	}
+	var updatedTitle *string
+	if title != nil {
+		updatedTitle = &document.Title
+	}
+	var updatedSource *domain.Document
+	if source != nil {
+		updatedSource = &domain.Document{
+			Kind:    document.Kind,
+			Locator: document.Locator,
+			Content: document.Content,
+		}
+	}
+	return s.repository.UpdateDocument(ctx, id, updatedTitle, updatedSource, isImplementationPlan)
 }
 
 func (s *Service) DeleteDocument(ctx context.Context, id string) error {
 	return s.repository.DeleteDocument(ctx, id)
 }
 
-// ReadMarkdownDocument only reads paths that were explicitly registered as a
-// Markdown document. The size limit keeps a preview request from consuming an
+// ReadDocumentContent only reads paths that were explicitly registered or
+// Markdown stored by PRX. The size limit keeps a preview request from consuming an
 // unbounded amount of memory in the server or browser.
-func (s *Service) ReadMarkdownDocument(ctx context.Context, id string) (string, error) {
+func (s *Service) ReadDocumentContent(ctx context.Context, id string) (string, error) {
 	document, err := s.repository.GetDocument(ctx, id)
 	if err != nil {
 		return "", err
 	}
-	if document.Kind != domain.DocumentKindMarkdownPath {
-		return "", domain.NewError(domain.DomainErrorCodeInvalidDocumentKind, "document is not a Markdown path")
+	if document.Kind == domain.DocumentKindMarkdown {
+		return document.Content, nil
 	}
-	file, err := os.Open(document.Value)
+	if document.Kind != domain.DocumentKindLocalFile {
+		return "", domain.NewError(
+			domain.DomainErrorCodeInvalidDocumentKind,
+			"URL documents do not have readable content",
+		)
+	}
+	file, err := os.Open(document.Locator)
 	if err != nil {
-		return "", domain.NewError(domain.DomainErrorCodeDocumentReadFailed, "could not read the Markdown file")
+		return "", domain.NewError(domain.DomainErrorCodeDocumentReadFailed, "could not read the local file")
 	}
 	defer func() { _ = file.Close() }()
-	content, err := io.ReadAll(io.LimitReader(file, maxMarkdownPreviewBytes+1))
+	content, err := io.ReadAll(io.LimitReader(file, maxDocumentContentBytes+1))
 	if err != nil {
-		return "", domain.NewError(domain.DomainErrorCodeDocumentReadFailed, "could not read the Markdown file")
+		return "", domain.NewError(domain.DomainErrorCodeDocumentReadFailed, "could not read the local file")
 	}
-	if len(content) > maxMarkdownPreviewBytes {
-		return "", domain.NewError(domain.DomainErrorCodeDocumentTooLarge, "Markdown preview is limited to 1 MiB")
+	if len(content) > maxDocumentContentBytes {
+		return "", domain.NewError(domain.DomainErrorCodeDocumentTooLarge, "document preview is limited to 1 MiB")
+	}
+	if !utf8.Valid(content) {
+		return "", domain.NewError(domain.DomainErrorCodeDocumentNotText, "local file is not valid UTF-8 text")
 	}
 	return string(content), nil
+}
+
+func validateDocumentSource(document *domain.Document, implementationPlanCommand bool) error {
+	if !oneOf(document.Kind, domain.DocumentKindURL, domain.DocumentKindLocalFile, domain.DocumentKindMarkdown) {
+		return domain.NewError(
+			domain.DomainErrorCodeInvalidDocumentKind,
+			"document kind must be url, local_file, or markdown",
+		)
+	}
+	document.Locator = strings.TrimSpace(document.Locator)
+	if document.Kind == domain.DocumentKindMarkdown {
+		document.Locator = ""
+		if strings.TrimSpace(document.Content) == "" {
+			code := domain.DomainErrorCodeInvalidDocument
+			if implementationPlanCommand {
+				code = domain.DomainErrorCodeInvalidImplementationPlan
+			}
+			return domain.NewError(code, "Markdown content is required")
+		}
+		if !utf8.ValidString(document.Content) {
+			return domain.NewError(domain.DomainErrorCodeDocumentNotText, "Markdown content must be valid UTF-8")
+		}
+		if len([]byte(document.Content)) > maxDocumentContentBytes {
+			code := domain.DomainErrorCodeDocumentTooLarge
+			if implementationPlanCommand {
+				code = domain.DomainErrorCodeImplementationPlanTooLarge
+			}
+			return domain.NewError(code, "Markdown content is limited to 1 MiB")
+		}
+		return nil
+	}
+	document.Content = ""
+	if document.Locator == "" {
+		return domain.NewError(domain.DomainErrorCodeInvalidDocument, "document locator is required")
+	}
+	if document.Kind == domain.DocumentKindURL {
+		parsed, err := url.Parse(document.Locator)
+		if err != nil || (parsed.Scheme != "https" && parsed.Scheme != "http") {
+			return domain.NewError(domain.DomainErrorCodeInvalidDocumentURL, "document URL must use http or https")
+		}
+	}
+	return nil
 }
 
 func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {

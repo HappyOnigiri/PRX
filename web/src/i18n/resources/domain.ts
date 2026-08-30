@@ -7,7 +7,8 @@ export const domain = {
     },
     documentKind: {
       url: "URL",
-      markdownPath: "Markdown path",
+      localFile: "Local file",
+      markdown: "Markdown",
       unknown: "Unknown",
     },
     featureStatus: {
@@ -27,7 +28,6 @@ export const domain = {
     },
     displayState: {
       notStarted: "not started",
-      designed: "designed",
       inProgress: "in progress",
       completed: "completed",
       closed: "closed",
@@ -55,7 +55,8 @@ export const domain = {
     },
     documentKind: {
       url: "URL",
-      markdownPath: "Markdown パス",
+      localFile: "ローカルファイル",
+      markdown: "Markdown",
       unknown: "不明",
     },
     featureStatus: {
@@ -75,7 +76,6 @@ export const domain = {
     },
     displayState: {
       notStarted: "未着手",
-      designed: "設計済み",
       inProgress: "進行中",
       completed: "完了",
       closed: "クローズ済み",

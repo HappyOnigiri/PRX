@@ -60,6 +60,7 @@ Failed JSON commands emit the versioned error object to stderr and leave stdout 
 The current CLI response schema version is `2`.
 Its error object contains `code`, `message`, and the failed command's complete help in `hint`, the only machine-readable field that carries presentation text.
 Failures return a non-zero exit status.
+Warnings go to stderr as text in both output modes and leave the exit status and the stdout contract untouched.
 Text output does not vary with terminal width or ambient environment.
 The CLI implementation and black-box tests own current field names and presentation details.
 
@@ -70,7 +71,8 @@ Help succeeds without opening configuration or storage resources.
 Resource commands use their shallow form for routine reads.
 Feature and task commands list without an identifier and show details with one identifier.
 `show` resolves a feature public ID, feature slug, or task public ID when a feature slug conflicts with a mutation command name.
-Dependency, pull-request, and document commands list when invoked without a mutation subcommand.
+Dependency and pull-request commands list when invoked without a mutation subcommand.
+Document commands list without a subcommand and use `document get DOCUMENT_ID` for a detailed read.
 Implementation plans use `plan TASK_ID`, and configuration reads use `config`, `config host`, or `config auth`.
 Mutation operations retain explicit verbs so state-changing intent remains visible.
 
@@ -78,8 +80,11 @@ Mutations remain non-interactive so people and coding agents use the same surfac
 A missing mutation target fails instead of reporting a successful no-op.
 Destructive traversal of referenced data requires an explicit cascade request.
 
-Public feature and task identifiers remain distinct from storage identifiers.
-Storage UUIDs must not cross the CLI, RPC, or WebUI boundary.
+Features and tasks carry public identifiers that remain distinct from their storage identifiers.
+Their storage UUIDs must not cross the CLI, RPC, or WebUI boundary.
+Documents are the deliberate exception: they have no separate public identifier,
+so their storage identifier is the identifier callers pass to `document get`, `document update`, and `document delete`.
+That identifier is opaque, and migrated documents may carry a value that is not formatted as a UUID.
 
 A bulk operation may report item-level failures without discarding successful items.
 Command-level failure is reserved for failure of the operation itself.
@@ -116,6 +121,10 @@ Settings follow ownership rather than convenience:
 
 Persistent mutations and migrations are atomic.
 Configuration writes preserve local secret-file protections and use atomic replacement.
+
+A configuration file using a supported version still loads when it contains unknown fields.
+Those fields are reported as warnings instead of failing the command or the server start, and the next configuration write drops them.
+Unsupported versions and every other decoding failure keep the configuration from loading, so a malformed or ambiguous file is never accepted silently.
 
 `prx serve --demo` creates a new temporary database, configuration, and Markdown document set for each server process.
 It never reads or writes the normal database and configuration paths, including paths supplied through environment variables.
@@ -159,6 +168,15 @@ Manual refreshes continue to return operation-level failures while preserving su
 Large Markdown bodies stay outside snapshots.
 Snapshots carry only the metadata needed for derived state.
 
+Documents use one model for feature and task references.
+Each document stores exactly one source: an HTTP or HTTPS URL, a registered local file path, or inline Markdown.
+Inline Markdown is limited to 1 MiB and is loaded only by a detailed read.
+Snapshots and list operations never include inline bodies.
+
+A task may designate at most one document as its implementation plan.
+The designation is metadata and does not affect display state, readiness, dependency satisfaction, or completion.
+Non-plan documents and feature documents have no application-level count limit.
+
 ## GitHub credential policy
 
 Credential methods are scoped to one normalized host and evaluated in explicit order.
@@ -184,9 +202,10 @@ The server binds to loopback by default.
 Non-loopback exposure requires an explicit listen address.
 Requests must be bound to the configured origin and RPC protocol so another origin cannot drive the local database.
 
-Markdown preview is limited to explicitly registered document paths.
+Local file preview is limited to explicitly registered document paths.
 It must not become a general filesystem reader.
-Markdown preview reads remain bounded.
+Local file reads remain bounded to 1 MiB and must contain valid UTF-8 text.
+URL documents are never fetched by the content-read API.
 
 Production responses use restrictive browser security headers.
 The server implementation owns the current header set and request-validation mechanics.

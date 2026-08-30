@@ -41,15 +41,6 @@ func protoTask(v domain.Task) *prxv1.Task {
 	}
 }
 
-func protoImplementationPlan(v domain.ImplementationPlan) *prxv1.ImplementationPlan {
-	return &prxv1.ImplementationPlan{
-		TaskId:    v.TaskID,
-		Content:   v.Content,
-		CreatedAt: v.CreatedAt.Format(timeFormat),
-		UpdatedAt: v.UpdatedAt.Format(timeFormat),
-	}
-}
-
 func protoDependency(v domain.Dependency) *prxv1.Dependency {
 	return &prxv1.Dependency{
 		BlockerTaskId: v.BlockerTaskID,
@@ -88,13 +79,15 @@ func protoPullRequest(v domain.PullRequest) *prxv1.PullRequest {
 
 func protoDocument(v domain.Document) *prxv1.Document {
 	return &prxv1.Document{
-		Id:        v.ID,
-		FeatureId: v.FeatureID,
-		TaskId:    v.TaskID,
-		Kind:      protoDocumentKind(v.Kind),
-		Title:     v.Title,
-		Value:     v.Value,
-		CreatedAt: v.CreatedAt.Format(timeFormat),
+		Id:                   v.ID,
+		FeatureId:            v.FeatureID,
+		TaskId:               v.TaskID,
+		Kind:                 protoDocumentKind(v.Kind),
+		Title:                v.Title,
+		Locator:              v.Locator,
+		CreatedAt:            v.CreatedAt.Format(timeFormat),
+		UpdatedAt:            v.UpdatedAt.Format(timeFormat),
+		IsImplementationPlan: v.IsImplementationPlan,
 	}
 }
 
@@ -241,7 +234,6 @@ func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 func protoTaskDisplayState(value domain.TaskDisplayState) prxv1.TaskDisplayState {
 	states := map[domain.TaskDisplayState]prxv1.TaskDisplayState{
 		domain.TaskDisplayStateNotStarted:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED,
-		domain.TaskDisplayStateDesigned:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED,
 		domain.TaskDisplayStateInProgress:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS,
 		domain.TaskDisplayStateCompleted:        prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED,
 		domain.TaskDisplayStateClosed:           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED,
@@ -331,23 +323,38 @@ func protoDocumentKind(value domain.DocumentKind) prxv1.DocumentKind {
 	switch value {
 	case domain.DocumentKindURL:
 		return prxv1.DocumentKind_DOCUMENT_KIND_URL
-	case domain.DocumentKindMarkdownPath:
-		return prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH
+	case domain.DocumentKindLocalFile:
+		return prxv1.DocumentKind_DOCUMENT_KIND_LOCAL_FILE
+	case domain.DocumentKindMarkdown:
+		return prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN
 	default:
 		return prxv1.DocumentKind_DOCUMENT_KIND_UNSPECIFIED
 	}
 }
 
-func domainDocumentKind(value prxv1.DocumentKind) domain.DocumentKind {
-	switch value {
-	case prxv1.DocumentKind_DOCUMENT_KIND_URL:
-		return domain.DocumentKindURL
-	case prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH:
-		return domain.DocumentKindMarkdownPath
-	case prxv1.DocumentKind_DOCUMENT_KIND_UNSPECIFIED:
-		return ""
+func protoAddDocumentSource(value *prxv1.AddDocumentRequest) domain.Document {
+	switch value.GetSource().(type) {
+	case *prxv1.AddDocumentRequest_Url:
+		return domain.Document{Kind: domain.DocumentKindURL, Locator: value.GetUrl()}
+	case *prxv1.AddDocumentRequest_LocalFile:
+		return domain.Document{Kind: domain.DocumentKindLocalFile, Locator: value.GetLocalFile()}
+	case *prxv1.AddDocumentRequest_Markdown:
+		return domain.Document{Kind: domain.DocumentKindMarkdown, Content: value.GetMarkdown()}
 	default:
-		return ""
+		return domain.Document{}
+	}
+}
+
+func protoUpdateDocumentSource(value *prxv1.UpdateDocumentRequest) domain.Document {
+	switch value.GetSource().(type) {
+	case *prxv1.UpdateDocumentRequest_Url:
+		return domain.Document{Kind: domain.DocumentKindURL, Locator: value.GetUrl()}
+	case *prxv1.UpdateDocumentRequest_LocalFile:
+		return domain.Document{Kind: domain.DocumentKindLocalFile, Locator: value.GetLocalFile()}
+	case *prxv1.UpdateDocumentRequest_Markdown:
+		return domain.Document{Kind: domain.DocumentKindMarkdown, Content: value.GetMarkdown()}
+	default:
+		return domain.Document{}
 	}
 }
 
@@ -379,6 +386,10 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED
 	case domain.DomainErrorCodeDocumentTooLarge:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE
+	case domain.DomainErrorCodeDocumentNotText:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT
+	case domain.DomainErrorCodeDuplicateImplementationPlan:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN
 	case domain.DomainErrorCodeInvalidImplementationPlan:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN
 	case domain.DomainErrorCodeImplementationPlanTooLarge:

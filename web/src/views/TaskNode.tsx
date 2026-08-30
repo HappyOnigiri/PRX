@@ -16,7 +16,8 @@ export interface TaskNodeDocument {
   id: string;
   kind: DocumentKind;
   title: string;
-  value: string;
+  locator: string;
+  isImplementationPlan: boolean;
 }
 
 interface TaskNodePort {
@@ -149,48 +150,7 @@ export function TaskNode({
         <p className="node-sync-error">{t("inspector.githubSyncError")}</p>
       )}
       {(data.pullRequest ?? data.documents.length > 0) && (
-        <div className="node-assets nodrag nowheel nopan">
-          {data.pullRequest && (
-            <a
-              className="node-asset node-asset-pr"
-              href={data.pullRequest.url}
-              target="_blank"
-              rel="noreferrer"
-            >
-              <span>PR</span>
-              <b>{data.pullRequest.label}</b>
-              <ExternalLink aria-hidden="true" focusable="false" size={14} />
-            </a>
-          )}
-          {data.documents.map((document) =>
-            document.kind === DocumentKind.URL ? (
-              <a
-                className="node-asset"
-                href={document.value}
-                target="_blank"
-                rel="noreferrer"
-                key={document.id}
-              >
-                <span>URL</span>
-                <b>{document.title || document.value}</b>
-                <ExternalLink aria-hidden="true" focusable="false" size={14} />
-              </a>
-            ) : (
-              <button
-                type="button"
-                className="node-asset"
-                onClick={() => {
-                  data.onPreview(document);
-                }}
-                key={document.id}
-              >
-                <span>MD</span>
-                <b>{document.title || document.value}</b>
-                <Eye aria-hidden="true" focusable="false" size={14} />
-              </button>
-            ),
-          )}
-        </div>
+        <NodeAssets data={data} />
       )}
       <footer>
         <span>{data.assignee || t("common.unassigned")}</span>
@@ -205,6 +165,70 @@ export function TaskNode({
         aria-label={t("workspace.flow.blockerHandle")}
         title={t("workspace.flow.blockerHandle")}
       />
+    </div>
+  );
+}
+
+function NodeAssets({ data }: { data: TaskNodeData }) {
+  const { t } = useTranslation();
+  return (
+    <div className="node-assets nodrag nowheel nopan">
+      {data.pullRequest && (
+        <a
+          className="node-asset node-asset-pr"
+          href={data.pullRequest.url}
+          target="_blank"
+          rel="noreferrer"
+        >
+          <span>PR</span>
+          <b>{data.pullRequest.label}</b>
+          <ExternalLink aria-hidden="true" focusable="false" size={14} />
+        </a>
+      )}
+      {[...data.documents]
+        .sort(
+          (left, right) =>
+            Number(right.isImplementationPlan) -
+            Number(left.isImplementationPlan),
+        )
+        .map((document) =>
+          document.kind === DocumentKind.URL ? (
+            <a
+              className="node-asset"
+              href={document.locator}
+              target="_blank"
+              rel="noreferrer"
+              key={document.id}
+            >
+              <span>{document.isImplementationPlan ? "PLAN" : "URL"}</span>
+              <b>{document.title || document.locator}</b>
+              <ExternalLink aria-hidden="true" focusable="false" size={14} />
+            </a>
+          ) : (
+            <button
+              type="button"
+              className="node-asset"
+              onClick={() => {
+                data.onPreview(document);
+              }}
+              key={document.id}
+            >
+              <span>
+                {document.isImplementationPlan
+                  ? "PLAN"
+                  : document.kind === DocumentKind.LOCAL_FILE
+                    ? "FILE"
+                    : "MD"}
+              </span>
+              <b>
+                {document.title ||
+                  document.locator ||
+                  t("inspector.referenceFallback")}
+              </b>
+              <Eye aria-hidden="true" focusable="false" size={14} />
+            </button>
+          ),
+        )}
     </div>
   );
 }

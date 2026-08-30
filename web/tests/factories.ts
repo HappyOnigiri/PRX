@@ -59,7 +59,7 @@ const documentDefaults = {
   taskId: "task-1",
   kind: DocumentKind.URL,
   title: "Runbook",
-  value: "https://example.com/runbook",
+  locator: "https://example.com/runbook",
 } satisfies MessageInitShape<typeof DocumentSchema>;
 
 export function makeFeature(

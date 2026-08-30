@@ -62,7 +62,8 @@ func TestCommandTreeUsesCanonicalReadSyntax(t *testing.T) {
 	}
 	var visit func(*cobra.Command)
 	visit = func(command *cobra.Command) {
-		if command != root && (command.Name() == "list" || command.Name() == "get") {
+		if command != root && (command.Name() == "list" ||
+			(command.Name() == "get" && command.Parent().Name() != "document")) {
 			t.Errorf("removed read verb remains registered: %s", command.CommandPath())
 		}
 		for _, child := range command.Commands() {

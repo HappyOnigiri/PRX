@@ -130,6 +130,29 @@
   font-size: var(--text-sm);
 }
 
+.document-chip.is-plan {
+  border-color: var(--accent);
+}
+
+.document-plan-label {
+  display: inline-block;
+  margin-right: 0.45rem;
+  color: var(--accent);
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  letter-spacing: 0.08em;
+}
+
+.document-plan-toggle {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.document-plan-toggle input {
+  width: auto;
+}
+
 .linked-pr {
   border-radius: 3px;
   background: var(--surface-2);

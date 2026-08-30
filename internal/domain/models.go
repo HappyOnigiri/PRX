@@ -33,7 +33,6 @@ type TaskDisplayState string
 
 const (
 	TaskDisplayStateNotStarted       TaskDisplayState = "not_started"
-	TaskDisplayStateDesigned         TaskDisplayState = "designed"
 	TaskDisplayStateInProgress       TaskDisplayState = "in_progress"
 	TaskDisplayStateCompleted        TaskDisplayState = "completed"
 	TaskDisplayStateClosed           TaskDisplayState = "closed"
@@ -91,8 +90,9 @@ const (
 type DocumentKind string
 
 const (
-	DocumentKindURL          DocumentKind = "url"
-	DocumentKindMarkdownPath DocumentKind = "markdown_path"
+	DocumentKindURL       DocumentKind = "url"
+	DocumentKindLocalFile DocumentKind = "local_file"
+	DocumentKindMarkdown  DocumentKind = "markdown"
 )
 
 type BlockedReasonCode string
@@ -137,13 +137,6 @@ type Task struct {
 	BlockedReason         string            `json:"blocked_reason,omitempty"`
 	BlockedCode           BlockedReasonCode `json:"-"`
 	BlockerTaskID         string            `json:"-"`
-}
-
-type ImplementationPlan struct {
-	TaskID    string    `json:"task_id"`
-	Content   string    `json:"content"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Dependency struct {
@@ -191,13 +184,16 @@ type GitHubSyncStatus struct {
 }
 
 type Document struct {
-	ID        string       `json:"id"`
-	FeatureID string       `json:"feature_id,omitempty"`
-	TaskID    string       `json:"task_id,omitempty"`
-	Kind      DocumentKind `json:"kind"`
-	Title     string       `json:"title"`
-	Value     string       `json:"value"`
-	CreatedAt time.Time    `json:"created_at"`
+	ID                   string       `json:"id"`
+	FeatureID            string       `json:"feature_id,omitempty"`
+	TaskID               string       `json:"task_id,omitempty"`
+	Kind                 DocumentKind `json:"kind"`
+	Title                string       `json:"title"`
+	Locator              string       `json:"locator,omitempty"`
+	Content              string       `json:"content,omitempty"`
+	IsImplementationPlan bool         `json:"is_implementation_plan"`
+	CreatedAt            time.Time    `json:"created_at"`
+	UpdatedAt            time.Time    `json:"updated_at"`
 }
 
 type Snapshot struct {

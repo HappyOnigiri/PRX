@@ -25,7 +25,7 @@ func TestTypedValuesKeepTheirJSONStrings(t *testing.T) {
 		}{PullRequestStateMerged}, `{"state":"merged"}`},
 		{"document kind", struct {
 			Kind DocumentKind `json:"kind"`
-		}{DocumentKindMarkdownPath}, `{"kind":"markdown_path"}`},
+		}{DocumentKindLocalFile}, `{"kind":"local_file"}`},
 		{"domain error code", struct {
 			Code DomainErrorCode `json:"code"`
 		}{DomainErrorCodeCycle}, `{"code":"cycle"}`},

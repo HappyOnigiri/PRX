@@ -308,6 +308,27 @@ test("creates and edits a feature DAG while preserving state", async ({
     "Browser-tested delivery circuit, updated",
   );
 
+  const featureReferences = page.locator(".documents-section").first();
+  await featureReferences
+    .locator("select[name=kind]")
+    .selectOption({ label: "Local file" });
+  await featureReferences
+    .getByPlaceholder("Design notes")
+    .fill("Feature brief");
+  await featureReferences.getByPlaceholder("docs/plan.md").fill("README.md");
+  await featureReferences
+    .getByRole("button", { name: "Add reference" })
+    .click();
+  await expect(featureReferences.locator(".document-chip")).toHaveCount(1);
+  await featureReferences
+    .getByRole("button", { name: /^Feature brief README\.md$/ })
+    .click();
+  const featurePreview = page.getByRole("dialog", { name: "Feature brief" });
+  await expect(featurePreview.locator("article")).toContainText("PRX");
+  await featurePreview
+    .getByRole("button", { name: "Close Markdown preview" })
+    .click();
+
   await addTask(page, "E2E API");
   await addTask(page, "E2E worker");
   await addTask(page, "E2E UI");
@@ -357,17 +378,15 @@ test("creates and edits a feature DAG while preserving state", async ({
     .filter({ has: page.getByRole("heading", { name: "Reference" }) });
   await reference
     .locator("select[name=kind]")
-    .selectOption({ label: "Markdown path" });
+    .selectOption({ label: "Local file" });
   await reference.getByPlaceholder("Design notes").fill("Delivery plan");
-  await reference
-    .getByPlaceholder("https://… or docs/plan.md")
-    .fill("README.md");
+  await reference.getByPlaceholder("docs/plan.md").fill("README.md");
   await reference.getByRole("button", { name: "Add reference" }).click();
   await expect(reference.locator(".document-chip")).toHaveCount(1);
   await reference.locator("select[name=kind]").selectOption({ label: "URL" });
   await reference.getByPlaceholder("Design notes").fill("Release runbook");
   await reference
-    .getByPlaceholder("https://… or docs/plan.md")
+    .getByPlaceholder("https://example.com/document")
     .fill("https://example.com/runbook");
   await reference.getByRole("button", { name: "Add reference" }).click();
   await expect(reference.locator(".document-chip")).toHaveCount(2);
