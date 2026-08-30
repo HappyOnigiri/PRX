@@ -373,22 +373,17 @@ describe("SettingsDialog", () => {
     expect(serverTab).toHaveFocus();
   });
 
-  it("shows the React Flow license in the credits tab", () => {
+  it("shows the React Flow credit link in the credits tab", () => {
     render(<SettingsDialog onClose={vi.fn()} />);
 
     fireEvent.click(screen.getByRole("tab", { name: "Credits" }));
 
     const panel = screen.getByRole("tabpanel", { name: "Credits" });
     expect(panel).toBeVisible();
-    const license = panel.querySelector(".settings-license");
-    if (!(license instanceof HTMLElement)) throw new Error("license missing");
-    expect(license).toHaveTextContent("MIT License");
     expect(
-      within(panel).getByRole("link", { name: "License source" }),
-    ).toHaveAttribute(
-      "href",
-      "https://github.com/xyflow/xyflow/blob/main/packages/react/LICENSE",
-    );
+      within(panel).getByRole("link", { name: "React Flow" }),
+    ).toHaveAttribute("href", "https://reactflow.dev/attribution");
+    expect(panel.querySelectorAll("a")).toHaveLength(1);
   });
 
   it("keeps display settings available while server settings load", () => {

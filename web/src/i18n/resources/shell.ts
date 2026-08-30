@@ -20,14 +20,7 @@ export const shell = {
         },
       },
       credits: {
-        description:
-          "PRX uses open-source software. Third-party licenses are listed here.",
-        reactFlowLabel: "Dependency graph",
         reactFlowName: "React Flow",
-        reactFlowDescription:
-          "React Flow powers the dependency graph and is distributed under the MIT License.",
-        website: "React Flow website",
-        licenseSource: "License source",
       },
     },
     nav: {
@@ -121,14 +114,7 @@ export const shell = {
         },
       },
       credits: {
-        description:
-          "PRXはオープンソースソフトウェアを利用しています。第三者コンポーネントのライセンスをここに表示します。",
-        reactFlowLabel: "依存関係グラフ",
         reactFlowName: "React Flow",
-        reactFlowDescription:
-          "React Flowは依存関係グラフに使われており、MITライセンスで提供されています。",
-        website: "React FlowのWebサイト",
-        licenseSource: "ライセンスの出典",
       },
     },
     nav: {
