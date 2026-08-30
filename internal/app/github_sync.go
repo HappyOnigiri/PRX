@@ -155,26 +155,44 @@ func (s *Service) syncRepositoryGroups(
 				return succeeded, failed, cacheErr
 			}
 		}
-		for _, current := range values {
-			if updated, ok := result.successes[current.TaskID]; ok {
-				if _, persistErr := s.repository.UpsertPullRequest(ctx, updated); persistErr != nil {
-					return succeeded, failed, persistErr
-				}
-				succeeded++
-				continue
-			}
-			failure := result.failures[current.TaskID]
-			if failure == nil {
-				failure = fmt.Errorf("GitHub synchronization did not produce a result")
-			}
-			current.LastSyncedAt = timePointer(time.Now().UTC())
-			current.SyncError = failure.Error()
-			current.Stale = true
-			if _, persistErr := s.repository.UpsertPullRequest(ctx, current); persistErr != nil {
+		groupSucceeded, groupFailed, persistErr := s.persistSyncResult(ctx, values, result)
+		succeeded += groupSucceeded
+		failed += groupFailed
+		if persistErr != nil {
+			return succeeded, failed, persistErr
+		}
+	}
+	return succeeded, failed, nil
+}
+
+// persistSyncResult stores every refreshed pull request and records the rest as
+// stale with the failure that kept them from refreshing. Both synchronization
+// paths share it so they agree on the fallback used when a pull request ends up
+// in neither map.
+func (s *Service) persistSyncResult(
+	ctx context.Context,
+	values []domain.PullRequest,
+	result repositorySyncResult,
+) (succeeded, failed int, err error) {
+	for _, current := range values {
+		if updated, ok := result.successes[current.TaskID]; ok {
+			if _, persistErr := s.repository.UpsertPullRequest(ctx, updated); persistErr != nil {
 				return succeeded, failed, persistErr
 			}
-			failed++
+			succeeded++
+			continue
 		}
+		failure := result.failures[current.TaskID]
+		if failure == nil {
+			failure = fmt.Errorf("GitHub synchronization did not produce a result")
+		}
+		current.LastSyncedAt = timePointer(time.Now().UTC())
+		current.SyncError = failure.Error()
+		current.Stale = true
+		if _, persistErr := s.repository.UpsertPullRequest(ctx, current); persistErr != nil {
+			return succeeded, failed, persistErr
+		}
+		failed++
 	}
 	return succeeded, failed, nil
 }
@@ -273,22 +291,11 @@ func (s *Service) syncHostBatch(
 	}
 	addUnavailableFailures(result.failures, work, keys[0].host)
 	for _, key := range keys {
-		for _, current := range groups[key] {
-			if updated, ok := result.successes[current.TaskID]; ok {
-				if _, persistErr := s.repository.UpsertPullRequest(ctx, updated); persistErr != nil {
-					return succeeded, failed, persistErr
-				}
-				succeeded++
-				continue
-			}
-			failure := result.failures[current.TaskID]
-			current.LastSyncedAt = timePointer(time.Now().UTC())
-			current.SyncError = failure.Error()
-			current.Stale = true
-			if _, persistErr := s.repository.UpsertPullRequest(ctx, current); persistErr != nil {
-				return succeeded, failed, persistErr
-			}
-			failed++
+		groupSucceeded, groupFailed, persistErr := s.persistSyncResult(ctx, groups[key], result)
+		succeeded += groupSucceeded
+		failed += groupFailed
+		if persistErr != nil {
+			return succeeded, failed, persistErr
 		}
 	}
 	return succeeded, failed, nil
