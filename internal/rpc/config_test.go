@@ -6,6 +6,7 @@ import (
 	"errors"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"path/filepath"
 	"strings"
 	"testing"
@@ -127,7 +128,8 @@ func TestRPCGitHubConfigCRUDNeverReturnsInlineToken(t *testing.T) {
 		t.Fatal(err)
 	}
 	validation, err := client.ValidateConfig(ctx, connect.NewRequest(&prxv1.ValidateConfigRequest{}))
-	if err != nil || !validation.Msg.GetValid() || len(validation.Msg.GetErrors()) != 0 {
+	if err != nil || !validation.Msg.GetValid() || len(validation.Msg.GetErrors()) != 0 ||
+		len(validation.Msg.GetWarnings()) != 0 {
 		t.Fatalf("validation=%+v err=%v", validation.Msg, err)
 	}
 	if _, err := client.DeleteGitHubAuthMethod(
@@ -280,3 +282,36 @@ func (noopRepository) Snapshot(context.Context) (domain.Snapshot, error) {
 	return domain.Snapshot{}, errors.New("not implemented")
 }
 func (noopRepository) Validate(context.Context) []string { return nil }
+
+// TestRPCValidateConfigReportsUnknownFields keeps the server usable against a
+// configuration written by a newer PRX and gives the WebUI the same warnings the
+// CLI prints.
+func TestRPCValidateConfigReportsUnknownFields(t *testing.T) {
+	ctx := context.Background()
+	database, err := store.Open(ctx, filepath.Join(t.TempDir(), "rpc-warning.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = database.Close() }()
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	if err := os.WriteFile(path, []byte("version: 1\nfuture_setting: 42\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	configStore, err := config.NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := newConfigClient(t, app.NewWithConfig(database, nil, configStore))
+
+	if _, err := client.GetConfig(ctx, connect.NewRequest(&prxv1.GetConfigRequest{})); err != nil {
+		t.Fatalf("unknown fields blocked a configuration read: %v", err)
+	}
+	validation, err := client.ValidateConfig(ctx, connect.NewRequest(&prxv1.ValidateConfigRequest{}))
+	if err != nil || !validation.Msg.GetValid() || len(validation.Msg.GetErrors()) != 0 {
+		t.Fatalf("validation=%+v err=%v", validation.Msg, err)
+	}
+	warnings := validation.Msg.GetWarnings()
+	if len(warnings) != 1 || !strings.Contains(warnings[0], `"future_setting"`) {
+		t.Fatalf("warnings=%q", warnings)
+	}
+}

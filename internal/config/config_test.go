@@ -205,7 +205,66 @@ func TestConfigStoreRoundTripMasksSecretsAndPreservesImplicitMode(t *testing.T) 
 	}
 }
 
-func TestConfigStoreRejectsUnknownFieldsAndInsecureFiles(t *testing.T) {
+func TestConfigStoreWarnsAboutUnknownFieldsAndRejectsInsecureFiles(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A file a newer PRX wrote must keep loading, with the fields this build does
+	// not know reported instead of refused.
+	newer := "version: 1\nunknown: true\ngithub:\n  hosts:\n" +
+		"    - host: ghe.example.com\n      future_url: https://ghe.example.com/future\n"
+	if err := os.WriteFile(path, []byte(newer), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	warnings, err := store.Validate()
+	if err != nil {
+		t.Fatalf("unknown fields failed the load: %v", err)
+	}
+	if len(warnings) != 2 || !strings.Contains(warnings[0], `"unknown"`) ||
+		!strings.Contains(warnings[1], `"future_url"`) {
+		t.Fatalf("unknown field warnings=%q", warnings)
+	}
+	loaded, warnings, err := store.LoadWithWarnings()
+	if err != nil || len(warnings) != 2 {
+		t.Fatalf("load warnings=%q err=%v", warnings, err)
+	}
+	if len(loaded.GitHub.Hosts) != 1 || loaded.GitHub.Hosts[0].Host != "ghe.example.com" {
+		t.Fatalf("known fields were lost: %+v", loaded.GitHub.Hosts)
+	}
+
+	for _, test := range []struct {
+		name string
+		body string
+	}{
+		{name: "type error", body: "version: nope\n"},
+		{name: "unknown field with a type error", body: "version: nope\nunknown: true\n"},
+		{name: "duplicate key", body: "version: 1\nversion: 1\n"},
+		{name: "syntax error", body: "version: 1\n  github:\n"},
+		{name: "second document", body: "version: 1\n---\nversion: 1\n"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			if err := os.WriteFile(path, []byte(test.body), 0o600); err != nil {
+				t.Fatal(err)
+			}
+			if _, err := store.Load(); ErrorCodeOf(err) != ErrorCodeInvalid {
+				t.Fatalf("error=%v code=%s", err, ErrorCodeOf(err))
+			}
+		})
+	}
+
+	if err := os.WriteFile(path, []byte("version: 1\ngithub:\n  hosts: []\n"), 0o644); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Load(); ErrorCodeOf(err) != ErrorCodeInvalid {
+		t.Fatalf("insecure mode error=%v code=%s", err, ErrorCodeOf(err))
+	}
+}
+
+// TestConfigStoreUpdateDropsUnknownFields records that a write by an older build
+// removes what it could not represent, which is what the load warning announces.
+func TestConfigStoreUpdateDropsUnknownFields(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	store, err := NewStore(path)
 	if err != nil {
@@ -214,14 +273,12 @@ func TestConfigStoreRejectsUnknownFieldsAndInsecureFiles(t *testing.T) {
 	if err := os.WriteFile(path, []byte("version: 1\nunknown: true\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	if err := store.Validate(); ErrorCodeOf(err) != ErrorCodeInvalid {
-		t.Fatalf("unknown field error=%v code=%s", err, ErrorCodeOf(err))
-	}
-	if err := os.WriteFile(path, []byte("version: 1\ngithub:\n  hosts: []\n"), 0o644); err != nil {
+	if _, err := store.Update(func(*Config) error { return nil }); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := store.Load(); ErrorCodeOf(err) != ErrorCodeInvalid {
-		t.Fatalf("insecure mode error=%v code=%s", err, ErrorCodeOf(err))
+	warnings, err := store.Validate()
+	if err != nil || len(warnings) != 0 {
+		t.Fatalf("warnings after write=%q err=%v", warnings, err)
 	}
 }
 

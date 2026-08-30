@@ -1584,3 +1584,56 @@ func runConfigCLI(
 	}
 	return decodeResult(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
 }
+
+// TestConfigUnknownFieldsWarnWithoutFailing proves a configuration file written
+// by a newer PRX keeps working: commands still succeed, the fields this build
+// cannot represent are named on stderr, and validation reports them as data.
+func TestConfigUnknownFieldsWarnWithoutFailing(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "prx.db")
+	configPath := filepath.Join(root, "config.yaml")
+	body := "version: 1\ngithub:\n  hosts:\n    - host: github.com\n" +
+		"      future_url: https://github.com/future\n  future_setting: 42\n"
+	if err := os.WriteFile(configPath, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	base := []string{"--db", dbPath, "--config", configPath}
+
+	listing := executeCLI(t, binary, "", append(base, "feature")...)
+	if listing.exit != 0 {
+		t.Fatalf("feature listing failed: stdout=%q stderr=%q exit=%d", listing.stdout, listing.stderr, listing.exit)
+	}
+	for _, want := range []string{configPath, `"future_url"`, `"future_setting"`} {
+		if !strings.Contains(listing.stderr, want) {
+			t.Fatalf("stderr omitted %q: %q", want, listing.stderr)
+		}
+	}
+
+	validation := executeCLI(t, binary, "", append(base, "config", "validate", "--json")...)
+	if validation.exit != 0 {
+		t.Fatalf("config validate failed: stderr=%q exit=%d", validation.stderr, validation.exit)
+	}
+	assertCompactJSON(t, validation.stdout)
+	value := decodeObject(t, []byte(validation.stdout), validation.stdout)
+	assertDirectObjectKeys(t, value, "valid", "warnings")
+	var warnings []string
+	if err := json.Unmarshal(value["warnings"], &warnings); err != nil {
+		t.Fatalf("warnings are not a string list: %v\n%s", err, validation.stdout)
+	}
+	if len(warnings) != 2 || !strings.Contains(warnings[0], `"future_url"`) ||
+		!strings.Contains(warnings[1], `"future_setting"`) {
+		t.Fatalf("validate warnings=%q", warnings)
+	}
+
+	// A file this build fully understands stays quiet, so the warning marks a real
+	// difference rather than appearing on every run.
+	quiet := filepath.Join(root, "known-config.yaml")
+	if err := os.WriteFile(quiet, []byte("version: 1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	clean := executeCLI(t, binary, "", "--db", dbPath, "--config", quiet, "config", "validate")
+	if clean.exit != 0 || clean.stderr != "" || clean.stdout != "Configuration is valid.\n" {
+		t.Fatalf("known config stdout=%q stderr=%q exit=%d", clean.stdout, clean.stderr, clean.exit)
+	}
+}

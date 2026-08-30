@@ -266,11 +266,12 @@ func (h *Handler) ValidateConfig(
 	if err != nil {
 		return nil, err
 	}
-	if err := store.Validate(); err != nil {
+	warnings, err := store.Validate()
+	if err != nil {
 		//nolint:nilerr // validation failures are returned as data in a successful RPC response.
 		return connect.NewResponse(&prxv1.ValidateConfigResponse{Errors: []string{err.Error()}}), nil
 	}
-	return connect.NewResponse(&prxv1.ValidateConfigResponse{Valid: true}), nil
+	return connect.NewResponse(&prxv1.ValidateConfigResponse{Valid: true, Warnings: warnings}), nil
 }
 
 func configAuthMethodFromAdd(value *prxv1.AddGitHubAuthMethodRequest) (config.AuthMethod, error) {
