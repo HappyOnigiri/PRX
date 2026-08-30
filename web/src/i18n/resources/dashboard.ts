@@ -7,8 +7,6 @@ export const dashboard = {
       noData: "No data returned.",
       titleStart: "What can move ",
       titleEmphasis: "now?",
-      description:
-        "Every queue is derived from the dependency graph—never manually marked ready.",
       nodesUnderControl: "nodes under control",
       githubSync: "GitHub sync",
       syncNever: "Never updated",
@@ -62,8 +60,6 @@ export const dashboard = {
       noData: "データが返されませんでした。",
       titleStart: "いま動かせるタスクは",
       titleEmphasis: "？",
-      description:
-        "各キューは依存関係グラフから自動算出され、手動で着手可能にはできません。",
       nodesUnderControl: "個のノードを管理中",
       githubSync: "GitHub同期",
       syncNever: "未更新",

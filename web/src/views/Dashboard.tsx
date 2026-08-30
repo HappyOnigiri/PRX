@@ -78,7 +78,6 @@ export function Dashboard() {
             {t("dashboard.titleStart")}
             <em>{t("dashboard.titleEmphasis")}</em>
           </h1>
-          <p>{t("dashboard.description")}</p>
         </div>
         <div className="page-head-status">
           <div className="clock">
