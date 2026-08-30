@@ -101,10 +101,17 @@
   align-items: center;
   gap: 14px;
   border-right: 1px solid var(--border);
+  color: var(--text);
+  text-decoration: none;
 }
 
 .queue-meter:last-child {
   border-right: 0;
+}
+
+.queue-meter:hover,
+.queue-meter:focus-visible {
+  background: var(--surface-2);
 }
 
 .queue-meter > span {
@@ -381,8 +388,8 @@
   color: var(--status-conflict);
 }
 
-.queue-meter.queue-stale > span {
-  color: var(--text-2);
+.queue-meter.queue-sync-error > span {
+  color: var(--status-conflict);
 }
 
 @media (width <= 900px) {

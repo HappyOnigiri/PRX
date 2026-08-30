@@ -6,6 +6,7 @@ import type { Feature } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
 import { formatError } from "../i18n/domain";
 import { useAutoSyncStatus } from "../sync-status";
+import { filterTaskSearchResults } from "../task-search";
 import { IconButton } from "./IconButton";
 
 const queueNames = [
@@ -14,24 +15,28 @@ const queueNames = [
     "queue-ready",
     "dashboard.queues.ready.title",
     "dashboard.queues.ready.detail",
+    "task-status:ready",
   ],
   [
     "reviewWaitingTasks",
     "queue-review-waiting",
     "dashboard.queues.review.title",
     "dashboard.queues.review.detail",
+    "github-status:review-waiting",
   ],
   [
     "conflictTasks",
     "queue-conflict",
     "dashboard.queues.conflicts.title",
     "dashboard.queues.conflicts.detail",
+    "github-status:conflict",
   ],
   [
-    "staleTasks",
-    "queue-stale",
-    "dashboard.queues.stale.title",
-    "dashboard.queues.stale.detail",
+    "syncErrorTasks",
+    "queue-sync-error",
+    "dashboard.queues.syncError.title",
+    "dashboard.queues.syncError.detail",
+    "github-status:error",
   ],
 ] as const;
 
@@ -55,6 +60,12 @@ export function Dashboard() {
     );
   const features = data.features.filter((feature) => !feature.archived);
   const featureIds = new Set(features.map((feature) => feature.id));
+  const syncErrorTaskIds = new Set(
+    filterTaskSearchResults(data, {
+      qualifiers: [{ type: "github-status", value: "error" }],
+      terms: [],
+    }).map(({ task }) => task.id),
+  );
   const projected = {
     readyTasks: data.readyTasks.filter((task) =>
       featureIds.has(task.featureId),
@@ -65,8 +76,8 @@ export function Dashboard() {
     conflictTasks: data.conflictTasks.filter((task) =>
       featureIds.has(task.featureId),
     ),
-    staleTasks: data.staleTasks.filter((task) =>
-      featureIds.has(task.featureId),
+    syncErrorTasks: data.tasks.filter(
+      (task) => featureIds.has(task.featureId) && syncErrorTaskIds.has(task.id),
     ),
   };
   return (
@@ -86,14 +97,19 @@ export function Dashboard() {
         className="queue-strip"
         aria-label={t("dashboard.roadmapStatus")}
       >
-        {queueNames.map(([key, className, title, detail]) => (
-          <article key={key} className={`queue-meter ${className}`}>
+        {queueNames.map(([key, className, title, detail, query]) => (
+          <Link
+            key={key}
+            to="/tasks"
+            search={{ q: query }}
+            className={`queue-meter ${className}`}
+          >
             <span>{projected[key].length}</span>
             <div>
               <h2>{t(title)}</h2>
               <p>{t(detail)}</p>
             </div>
-          </article>
+          </Link>
         ))}
       </section>
       <div className="dashboard-grid">

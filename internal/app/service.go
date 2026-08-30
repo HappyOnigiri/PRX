@@ -626,7 +626,7 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 func (s *Service) syncSelected(
 	ctx context.Context,
 	featureID, taskID string,
-	automatic bool,
+	_ bool,
 ) (succeeded, failed int, err error) {
 	if s.provider == nil && s.configStore == nil {
 		return 0, 0, domain.NewError(domain.DomainErrorCodeGitHubAuth, "GitHub provider is not configured")
@@ -656,12 +656,10 @@ func (s *Service) syncSelected(
 	for _, feature := range snapshot.Features {
 		activeFeatures[feature.ID] = !feature.Archived
 	}
+	allFeatures := featureID == "" && taskID == ""
 	eligible := snapshot.PullRequests[:0]
 	for _, pullRequest := range snapshot.PullRequests {
-		if pullRequest.State == domain.PullRequestStateMerged {
-			continue
-		}
-		if automatic && !activeFeatures[taskFeature[pullRequest.TaskID]] {
+		if allFeatures && !activeFeatures[taskFeature[pullRequest.TaskID]] {
 			continue
 		}
 		eligible = append(eligible, pullRequest)
@@ -690,15 +688,18 @@ func (s *Service) syncSelected(
 			if updated.TaskID == "" {
 				updated = pr
 			}
-			now := time.Now().UTC()
-			updated.TaskID = pr.TaskID
-			updated.LastSyncedAt = &now
-			updated.SyncError = fetchErr.Error()
-			updated.Stale = true
+			updated, needsAttention := syncFailureValue(
+				pr,
+				updated,
+				fetchErr,
+				s.currentTime(),
+			)
 			if _, persistErr := s.repository.UpsertPullRequest(ctx, updated); persistErr != nil {
 				return succeeded, failed, persistErr
 			}
-			failed++
+			if needsAttention {
+				failed++
+			}
 			continue
 		}
 		updated.TaskID = pr.TaskID

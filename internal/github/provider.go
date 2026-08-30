@@ -22,13 +22,16 @@ type Provider interface {
 	// Fetch returns the newest pull-request record. Implementations may return a
 	// partially updated record together with an error when the pull-request body
 	// was fetched but a later metadata request failed; callers persist that
-	// partial state with the error marked stale.
+	// partial state and decide whether the known state still needs attention.
 	Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error)
 }
 
 type BatchResult struct {
 	PullRequests map[string]domain.PullRequest
-	Errors       map[string]error
+	// PartialPullRequests contains the newest fields known before an item-level
+	// error stopped the rest of its refresh.
+	PartialPullRequests map[string]domain.PullRequest
+	Errors              map[string]error
 }
 
 type BatchProvider interface {
@@ -171,6 +174,9 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	current.Draft = value.GetDraft()
 	current.Mergeability = mergeability
 	current.GitHubUpdatedAt = &updated
+	if state == domain.PullRequestStateClosed || state == domain.PullRequestStateMerged {
+		return markPullRequestSynced(current), nil
+	}
 	reviews, err := allPages(
 		ctx,
 		func(ctx context.Context, options *gh.ListOptions) ([]*gh.PullRequestReview, *gh.Response, error) {
@@ -231,13 +237,17 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	if reviewState == domain.ReviewStateNone && (len(requested.Users) > 0 || len(requested.Teams) > 0) {
 		reviewState = domain.ReviewStateRequired
 	}
-	now := time.Now().UTC()
 	current.State = state
 	current.ReviewState = reviewState
-	current.LastSyncedAt = &now
-	current.SyncError = ""
-	current.Stale = false
-	return current, nil
+	return markPullRequestSynced(current), nil
+}
+
+func markPullRequestSynced(value domain.PullRequest) domain.PullRequest {
+	now := time.Now().UTC()
+	value.LastSyncedAt = &now
+	value.SyncError = ""
+	value.Stale = false
+	return value
 }
 
 func (p *LiveProvider) Probe(ctx context.Context, owner, repository string) error {

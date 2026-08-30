@@ -2,10 +2,12 @@ package github
 
 import (
 	"context"
+	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"sync/atomic"
 	"testing"
 	"time"
 
@@ -170,6 +172,58 @@ func TestLiveProviderIgnoresNonDecisionReviews(t *testing.T) {
 			}
 			if got.ReviewState != tc.want {
 				t.Fatalf("review state = %q, want %q", got.ReviewState, tc.want)
+			}
+		})
+	}
+}
+
+func TestLiveProviderTreatsTerminalPullRequestsAsSuccessfulWithoutReviewMetadata(t *testing.T) {
+	for name, state := range map[string]struct {
+		state  string
+		merged bool
+	}{
+		"closed": {state: "closed"},
+		"merged": {state: "closed", merged: true},
+	} {
+		t.Run(name, func(t *testing.T) {
+			var metadataRequests atomic.Int32
+			mux := http.NewServeMux()
+			mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
+				w.Header().Set("Content-Type", "application/json")
+				_, _ = fmt.Fprintf(w, `{"number":7,"state":%q,"merged":%t,"draft":false,`+
+					`"mergeable":true,"node_id":"PR_7","user":{"login":"octocat"},`+
+					`"updated_at":"2026-01-01T00:00:00Z"}`, state.state, state.merged)
+			})
+			metadataHandler := func(w http.ResponseWriter, _ *http.Request) {
+				metadataRequests.Add(1)
+				w.WriteHeader(http.StatusInternalServerError)
+			}
+			mux.HandleFunc("/repos/acme/api/pulls/7/reviews", metadataHandler)
+			mux.HandleFunc("/repos/acme/api/pulls/7/requested_reviewers", metadataHandler)
+			server := httptest.NewServer(mux)
+			defer server.Close()
+			client := gh.NewClient(nil)
+			base, _ := client.BaseURL.Parse(server.URL + "/")
+			client.BaseURL = base
+			provider := &LiveProvider{client: client}
+
+			got, err := provider.Fetch(context.Background(), domain.PullRequest{
+				Owner: "acme", Repository: "api", Number: 7,
+			})
+			if err != nil {
+				t.Fatalf("terminal fetch=%+v err=%v", got, err)
+			}
+			if state.merged && got.State != domain.PullRequestStateMerged {
+				t.Fatalf("merged state=%q", got.State)
+			}
+			if !state.merged && got.State != domain.PullRequestStateClosed {
+				t.Fatalf("closed state=%q", got.State)
+			}
+			if got.Stale || got.SyncError != "" || got.LastSyncedAt == nil {
+				t.Fatalf("terminal result=%+v", got)
+			}
+			if metadataRequests.Load() != 0 {
+				t.Fatalf("terminal pull request fetched metadata %d times", metadataRequests.Load())
 			}
 		})
 	}

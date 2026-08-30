@@ -119,6 +119,34 @@ test("shows GitHub sync diagnostics and runs a full refresh", async ({
   await expect(syncButton).toBeEnabled();
 });
 
+test("searches active tasks from a dashboard queue", async ({ page }) => {
+  await page.goto("/");
+  await page.getByRole("link", { name: /Ready now/ }).click();
+  await expect(page).toHaveURL(/\/tasks\?q=task-status%3Aready/);
+  await expect(
+    page.getByRole("heading", { name: "Task search", exact: true }),
+  ).toBeVisible();
+  const input = page.getByRole("textbox", {
+    name: "Search active tasks",
+  });
+  await expect(input).toHaveValue("task-status:ready");
+  await expect(page.locator(".task-results")).toBeVisible();
+
+  await input.fill("Merged server");
+  await page
+    .getByRole("search")
+    .getByRole("button", { name: "Search" })
+    .click();
+  await expect(page).toHaveURL(/\/tasks\?q=Merged\+server/);
+  await expect(page.locator(".task-results")).toContainText(
+    "Merged server support",
+  );
+  await page.reload();
+  await expect(input).toHaveValue("Merged server");
+  await page.goBack();
+  await expect(input).toHaveValue("task-status:ready");
+});
+
 test("switches the display language and restores it from Local Storage", async ({
   page,
 }) => {

@@ -158,11 +158,12 @@ The YAML configuration owns the shared interval and each host's GraphQL endpoint
 The interval defaults to 3600 seconds and cannot be lower than 600 seconds.
 SQLite records the latest attempt and completion, and atomically grants one caller the right to run an expired refresh.
 
-Automatic refreshes include pull requests from active features only.
-Merged pull requests are terminal and are not fetched again.
-Closed pull requests remain eligible so a reopened pull request can be detected.
-Manual refreshes ignore the interval and may target an archived feature, but they also skip merged pull requests.
+Automatic and unscoped manual refreshes include pull requests from active features only.
+Explicit feature or task refreshes may still maintain archived history.
+Merged and closed pull requests remain eligible so state changes and prior errors can be detected.
 Only a refresh that covers every eligible pull request records a run and resets the interval; one narrowed to a feature or task leaves the recorded run status untouched.
+When a refresh fails after a closed or merged state is known, that state is preserved, SyncError is cleared, Stale is set, and the item is excluded from failed counts.
+Open or unknown failures preserve partial fields, record SyncError, set Stale, and count as failed.
 
 Automatic failures are best effort and never fail the command or page load that noticed the expired interval.
 An automatic refresh is bounded by a deadline so an unreachable host cannot block the command that noticed the expired interval; exceeding it is recorded as an automatic failure.
@@ -236,6 +237,7 @@ Controls keep a visible label when an icon cannot communicate the target, result
 Pointer interactions retain a keyboard-accessible alternative.
 
 Current screens, components, gestures, and control placement belong to the WebUI implementation and its tests.
+Task search operates over the current Snapshot in the browser; its q query stays in the URL so reload, history, and sharing reproduce the view.
 
 Demo mode is injected through the served HTML metadata rather than RPC or domain state.
 The WebUI keeps a non-dismissible bilingual reset warning at the top of every demo screen.

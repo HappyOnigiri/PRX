@@ -12,7 +12,7 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/store"
 )
 
-func TestAutomaticSyncClaimsOnceAndFiltersArchivedAndMergedPullRequests(t *testing.T) {
+func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests(t *testing.T) {
 	ctx := context.Background()
 	database, err := store.Open(ctx, filepath.Join(t.TempDir(), "auto-sync.db"))
 	if err != nil {
@@ -77,7 +77,7 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedAndMergedPullRequests(t *testi
 		t.Fatalf("initial status=%+v err=%v", before, err)
 	}
 	ran, status, err := service.SyncIfDue(ctx)
-	if err != nil || !ran || status.Succeeded != 1 || status.Failed != 0 || status.LastUpdatedAt == nil {
+	if err != nil || !ran || status.Succeeded != 2 || status.Failed != 0 || status.LastUpdatedAt == nil {
 		t.Fatalf("automatic sync ran=%v status=%+v err=%v", ran, status, err)
 	}
 	ran, _, err = service.SyncIfDue(ctx)
@@ -93,10 +93,23 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedAndMergedPullRequests(t *testi
 		byTask[pullRequest.TaskID] = pullRequest
 	}
 	if byTask[activeTask.ID].LastSyncedAt == nil || byTask[archivedTask.ID].LastSyncedAt != nil ||
-		byTask[mergedTask.ID].LastSyncedAt != nil {
+		byTask[mergedTask.ID].LastSyncedAt == nil || byTask[mergedTask.ID].State != domain.PullRequestStateMerged {
 		t.Fatalf("filtered pull requests=%+v", byTask)
 	}
-	succeeded, failed, err := service.Sync(ctx, "", archivedTask.ID)
+	succeeded, failed, err := service.Sync(ctx, "", "")
+	if err != nil || succeeded != 2 || failed != 0 {
+		t.Fatalf("manual full sync succeeded=%d failed=%d err=%v", succeeded, failed, err)
+	}
+	snapshot, err = service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, pullRequest := range snapshot.PullRequests {
+		if pullRequest.TaskID == archivedTask.ID && pullRequest.LastSyncedAt != nil {
+			t.Fatalf("unscoped manual sync included archived pull request=%+v", pullRequest)
+		}
+	}
+	succeeded, failed, err = service.Sync(ctx, "", archivedTask.ID)
 	if err != nil || succeeded != 1 || failed != 0 {
 		t.Fatalf("manual archived sync succeeded=%d failed=%d err=%v", succeeded, failed, err)
 	}

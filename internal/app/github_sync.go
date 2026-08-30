@@ -19,12 +19,14 @@ type repositoryKey struct {
 
 type repositorySyncResult struct {
 	successes map[string]domain.PullRequest
+	partials  map[string]domain.PullRequest
 	failures  map[string]error
 	authID    string
 }
 
 type candidateAttempt struct {
 	successes map[string]domain.PullRequest
+	partials  map[string]domain.PullRequest
 	failures  map[string]error
 	failedAt  int
 	err       error
@@ -166,9 +168,9 @@ func (s *Service) syncRepositoryGroups(
 }
 
 // persistSyncResult stores every refreshed pull request and records the rest as
-// stale with the failure that kept them from refreshing. Both synchronization
-// paths share it so they agree on the fallback used when a pull request ends up
-// in neither map.
+// stale with the failure that kept them from refreshing. A known terminal pull
+// request is retained as stale without becoming an actionable failure. Both
+// synchronization paths share this fallback for items in neither map.
 func (s *Service) persistSyncResult(
 	ctx context.Context,
 	values []domain.PullRequest,
@@ -183,18 +185,53 @@ func (s *Service) persistSyncResult(
 			continue
 		}
 		failure := result.failures[current.TaskID]
-		if failure == nil {
-			failure = fmt.Errorf("GitHub synchronization did not produce a result")
+		partial, hasPartial := result.partials[current.TaskID]
+		if !hasPartial {
+			partial = current
 		}
-		current.LastSyncedAt = timePointer(time.Now().UTC())
-		current.SyncError = failure.Error()
-		current.Stale = true
-		if _, persistErr := s.repository.UpsertPullRequest(ctx, current); persistErr != nil {
+		value, needsAttention := syncFailureValue(
+			current,
+			partial,
+			failure,
+			s.currentTime(),
+		)
+		if _, persistErr := s.repository.UpsertPullRequest(ctx, value); persistErr != nil {
 			return succeeded, failed, persistErr
 		}
-		failed++
+		if needsAttention {
+			failed++
+		}
 	}
 	return succeeded, failed, nil
+}
+
+func syncFailureValue(
+	current, partial domain.PullRequest,
+	failure error,
+	attemptedAt time.Time,
+) (domain.PullRequest, bool) {
+	value := partial
+	value.TaskID = current.TaskID
+	value.LastSyncedAt = timePointer(attemptedAt)
+	value.Stale = true
+	state := value.State
+	if state == "" || state == domain.PullRequestStateUnknown {
+		state = current.State
+		value.State = state
+	}
+	if terminalPullRequestState(state) {
+		value.SyncError = ""
+		return value, false
+	}
+	if failure == nil {
+		failure = fmt.Errorf("GitHub synchronization did not produce a result")
+	}
+	value.SyncError = failure.Error()
+	return value, true
+}
+
+func terminalPullRequestState(state domain.PullRequestState) bool {
+	return state == domain.PullRequestStateClosed || state == domain.PullRequestStateMerged
 }
 
 func repositoriesHaveCachedAuth(
@@ -230,7 +267,9 @@ func (s *Service) syncHostBatch(
 		}
 	}
 	result := repositorySyncResult{
-		successes: map[string]domain.PullRequest{}, failures: map[string]error{},
+		successes: map[string]domain.PullRequest{},
+		partials:  map[string]domain.PullRequest{},
+		failures:  map[string]error{},
 	}
 	for _, candidate := range resolver.Candidates(keys[0].host) {
 		if len(work) == 0 {
@@ -254,7 +293,8 @@ func (s *Service) syncHostBatch(
 		// means for the pull requests it never reached.
 		next := make([]domain.PullRequest, 0)
 		for _, current := range work {
-			if updated, ok := batch.PullRequests[current.TaskID]; ok {
+			itemErr := batch.Errors[current.TaskID]
+			if updated, ok := batch.PullRequests[current.TaskID]; ok && itemErr == nil {
 				result.successes[current.TaskID] = updated
 				if cache != nil {
 					key := keyByTask[current.TaskID]
@@ -266,7 +306,12 @@ func (s *Service) syncHostBatch(
 				}
 				continue
 			}
-			itemErr := batch.Errors[current.TaskID]
+			if updated, ok := batch.PullRequests[current.TaskID]; ok && itemErr != nil {
+				result.partials[current.TaskID] = updated
+			}
+			if updated, ok := batch.PartialPullRequests[current.TaskID]; ok {
+				result.partials[current.TaskID] = updated
+			}
 			if itemErr == nil && batchErr == nil {
 				itemErr = fmt.Errorf("GitHub synchronization did not produce a result")
 			}
@@ -310,6 +355,7 @@ func (s *Service) syncRepository(
 ) (repositorySyncResult, error) {
 	result := repositorySyncResult{
 		successes: map[string]domain.PullRequest{},
+		partials:  map[string]domain.PullRequest{},
 		failures:  map[string]error{},
 	}
 	candidates := resolver.Candidates(key.host)
@@ -446,6 +492,7 @@ func (s *Service) attemptCandidate(
 ) (candidateAttempt, error) {
 	result := candidateAttempt{
 		successes: map[string]domain.PullRequest{},
+		partials:  map[string]domain.PullRequest{},
 		failures:  map[string]error{},
 		failedAt:  -1,
 	}
@@ -463,7 +510,14 @@ func (s *Service) attemptCandidate(
 	}
 	batchResult, batchErr := provider.FetchBatch(ctx, values)
 	for taskID, value := range batchResult.PullRequests {
+		if itemErr := batchResult.Errors[taskID]; itemErr != nil {
+			result.partials[taskID] = value
+			continue
+		}
 		result.successes[taskID] = value
+	}
+	for taskID, value := range batchResult.PartialPullRequests {
+		result.partials[taskID] = value
 	}
 	// A chunked fetch stops at the first failing chunk and reports the earlier
 	// chunks with the failure, so keep what it produced and let the caller retry
@@ -526,6 +580,9 @@ func unresolvedIndex(values []domain.PullRequest, batch githubprovider.BatchResu
 		if _, ok := batch.PullRequests[value.TaskID]; ok {
 			continue
 		}
+		if _, ok := batch.PartialPullRequests[value.TaskID]; ok {
+			continue
+		}
 		if _, ok := batch.Errors[value.TaskID]; ok {
 			continue
 		}
@@ -537,6 +594,9 @@ func unresolvedIndex(values []domain.PullRequest, batch githubprovider.BatchResu
 func mergeCandidateAttempt(destination *repositorySyncResult, attempt candidateAttempt) {
 	for taskID, value := range attempt.successes {
 		destination.successes[taskID] = value
+	}
+	for taskID, value := range attempt.partials {
+		destination.partials[taskID] = value
 	}
 	for taskID, err := range attempt.failures {
 		destination.failures[taskID] = err
@@ -566,6 +626,13 @@ func addRemainingFailures(destination map[string]error, values []domain.PullRequ
 	for _, value := range values[failedAt:] {
 		destination[value.TaskID] = err
 	}
+}
+
+func (s *Service) currentTime() time.Time {
+	if s.now != nil {
+		return s.now().UTC()
+	}
+	return time.Now().UTC()
 }
 
 func timePointer(value time.Time) *time.Time { return &value }

@@ -62,6 +62,9 @@ function AppShellLayout({ children }: { children: ReactNode }) {
           <Link to="/archived" className="nav-link">
             {t("nav.archivedFeatures")} <span>{archivedCount ?? "—"}</span>
           </Link>
+          <Link to="/tasks" search={{ q: "" }} className="nav-link">
+            {t("nav.taskSearch")}
+          </Link>
           <div className="nav-caption">{t("nav.activeCircuits")}</div>
           {snapshot.data?.features
             .filter((f) => !f.archived)
