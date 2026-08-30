@@ -9,49 +9,88 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
+
+	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 const SchemaVersion = "1"
 
-type envelope struct {
-	SchemaVersion string          `json:"schema_version"`
-	OK            bool            `json:"ok"`
-	Data          json.RawMessage `json:"data,omitempty"`
-	Error         string          `json:"error,omitempty"`
+type outputMode uint8
+
+const (
+	outputModeJSON outputMode = iota + 1
+	outputModeHuman
+)
+
+type humanRenderer func(io.Writer) error
+
+type errorEnvelope struct {
+	Error errorData `json:"error"`
+}
+
+type errorData struct {
+	Code    string `json:"code"`
+	Message string `json:"message"`
 }
 
 func PrintError(out io.Writer, err error) error {
-	return writeFailure(out, err, true)
+	return writeJSONFailure(out, err)
 }
 
-func (s *state) write(value any) error {
+func (s *state) write(value any, render humanRenderer) error {
+	if err := s.resolveOutputMode(); err != nil {
+		return err
+	}
+	if s.mode == outputModeHuman {
+		if render == nil {
+			return errors.New("human output renderer is required")
+		}
+		return render(s.out)
+	}
 	data, err := marshalObject(value)
 	if err != nil {
 		return err
 	}
-	return encode(s.out, data, true)
+	return encodeJSON(s.out, data)
 }
 
 func (s *state) writeError(err error) error {
-	return writeFailure(s.out, err, s.json)
+	if resolveErr := s.resolveOutputMode(); resolveErr != nil && err == nil {
+		err = resolveErr
+	}
+	if s.mode == outputModeHuman {
+		_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n", errorMessage(err))
+		return writeErr
+	}
+	return writeJSONFailure(s.errOut, err)
 }
 
 func (s *state) writeSchemaVersion() error {
-	return encode(s.out, struct {
-		SchemaVersion string `json:"schema_version"`
-	}{SchemaVersion: SchemaVersion}, true)
+	return s.write(
+		struct {
+			SchemaVersion string `json:"schema_version"`
+		}{SchemaVersion: SchemaVersion},
+		func(out io.Writer) error {
+			_, err := fmt.Fprintf(out, "Schema version: %s\n", SchemaVersion)
+			return err
+		},
+	)
 }
 
-func writeFailure(out io.Writer, err error, compact bool) error {
-	return encode(out, envelope{SchemaVersion: SchemaVersion, OK: false, Error: errorMessage(err)}, compact)
+func writeJSONFailure(out io.Writer, err error) error {
+	return encodeJSON(out, errorEnvelope{Error: errorData{Code: commandErrorCode(err), Message: errorMessage(err)}})
 }
 
-func encode(out io.Writer, value any, compact bool) error {
-	encoder := json.NewEncoder(out)
-	if !compact {
-		encoder.SetIndent("", "  ")
+func commandErrorCode(err error) string {
+	var usageErr *usageError
+	if errors.As(err, &usageErr) {
+		return "usage_error"
 	}
-	return encoder.Encode(value)
+	return string(domain.ErrorCode(err))
+}
+
+func encodeJSON(out io.Writer, value any) error {
+	return json.NewEncoder(out).Encode(value)
 }
 
 func marshalObject(value any) (json.RawMessage, error) {
@@ -64,6 +103,13 @@ func marshalObject(value any) (json.RawMessage, error) {
 		return nil, errors.New("response data must be a JSON object")
 	}
 	return data, nil
+}
+
+func nonNilSlice[T any](values []T) []T {
+	if values == nil {
+		return []T{}
+	}
+	return values
 }
 
 func errorMessage(err error) string {

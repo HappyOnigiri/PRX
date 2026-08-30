@@ -1,6 +1,9 @@
 package cli
 
 import (
+	"fmt"
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
@@ -20,7 +23,7 @@ func (s *state) taskCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			return s.write(value, renderMessage("Created task %s.", value.ID))
 		},
 	}
 	create.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
@@ -48,7 +51,8 @@ func (s *state) taskCommand() *cobra.Command {
 				}
 				tasks = filterTasks(tasks, func(task domain.Task) bool { return task.FeatureID == f.ID })
 			}
-			return s.write(map[string]any{"tasks": tasks})
+			tasks = nonNilSlice(tasks)
+			return s.write(map[string]any{"tasks": tasks}, renderTaskList(tasks))
 		},
 	}
 	list.Flags().StringVar(&feature, "feature", "", "filter by feature")
@@ -64,7 +68,7 @@ func (s *state) taskCommand() *cobra.Command {
 			}
 			for _, task := range snapshot.Tasks {
 				if task.ID == args[0] {
-					return s.write(task)
+					return s.write(task, renderTaskDetail(task))
 				}
 			}
 			return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", args[0])
@@ -82,7 +86,7 @@ func (s *state) taskCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			return s.write(value, renderMessage("%s", taskUpdateMessage(cmd, value.ID, title, scope, status, assignee)))
 		},
 	}
 	update.Flags().StringVar(&title, "title", "", "new title")
@@ -98,10 +102,26 @@ func (s *state) taskCommand() *cobra.Command {
 			if err := s.service.DeleteTask(cmd.Context(), args[0], cascade); err != nil {
 				return err
 			}
-			return s.write(map[string]string{"deleted": args[0]})
+			return s.write(map[string]string{"deleted": args[0]}, renderMessage("Deleted task %s.", args[0]))
 		},
 	}
 	deleteCmd.Flags().BoolVar(&cascade, "cascade", false, "delete dependencies and references")
 	command.AddCommand(create, list, get, update, deleteCmd)
 	return command
+}
+
+func taskUpdateMessage(cmd *cobra.Command, taskID, title, scope, status, assignee string) string {
+	changes := make([]string, 0, 4)
+	for _, field := range []struct {
+		name  string
+		value string
+	}{{"title", title}, {"scope", scope}, {"status", status}, {"assignee", assignee}} {
+		if cmd.Flags().Changed(field.name) {
+			changes = append(changes, fmt.Sprintf("%s=%s", field.name, field.value))
+		}
+	}
+	if len(changes) == 0 {
+		return fmt.Sprintf("Updated task %s.", taskID)
+	}
+	return fmt.Sprintf("Updated task %s: %s.", taskID, strings.Join(changes, ", "))
 }

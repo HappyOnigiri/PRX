@@ -32,7 +32,7 @@ func (s *state) featureCreateCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			return s.write(value, renderMessage("Created feature %s (%s).", value.Slug, value.ID))
 		},
 	}
 	command.Flags().StringVar(&slug, "slug", "", "stable feature slug")
@@ -54,7 +54,8 @@ func (s *state) featureListCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(map[string]any{"features": value.Features})
+			features := nonNilSlice(value.Features)
+			return s.write(map[string]any{"features": features}, renderFeatureList(features))
 		},
 	}
 }
@@ -70,7 +71,7 @@ func (s *state) featureGetCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			return s.write(value, renderFeatureDetail(value))
 		},
 	}
 }
@@ -100,7 +101,7 @@ func (s *state) featureUpdateCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			return s.write(value, renderMessage("Updated feature %s (%s).", value.Slug, value.ID))
 		},
 	}
 	command.Flags().StringVar(&slug, "slug", "", "new slug")
@@ -128,7 +129,11 @@ func (s *state) featureArchiveCommand(archived bool) *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			action := "Archived"
+			if !archived {
+				action = "Unarchived"
+			}
+			return s.write(value, renderMessage("%s feature %s (%s).", action, value.Slug, value.ID))
 		},
 	}
 }
@@ -144,7 +149,7 @@ func (s *state) featureDeleteCommand() *cobra.Command {
 			if err := s.service.DeleteFeature(cmd.Context(), args[0], cascade); err != nil {
 				return err
 			}
-			return s.write(map[string]string{"deleted": args[0]})
+			return s.write(map[string]string{"deleted": args[0]}, renderMessage("Deleted feature %s.", args[0]))
 		},
 	}
 	command.Flags().BoolVar(&cascade, "cascade", false, "delete contained tasks and references")

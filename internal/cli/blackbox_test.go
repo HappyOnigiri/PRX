@@ -22,11 +22,11 @@ import (
 )
 
 type resultEnvelope struct {
-	SchemaVersion string          `json:"schema_version"`
-	OK            bool            `json:"ok"`
-	Data          json.RawMessage `json:"data"`
-	Error         string          `json:"error"`
-	keys          map[string]json.RawMessage
+	OK        bool
+	Data      json.RawMessage
+	Error     string
+	ErrorCode string
+	keys      map[string]json.RawMessage
 }
 
 type commandOutput struct {
@@ -61,6 +61,9 @@ func runCLIWithFixture(
 		base = append(base, "--github-fixture", fixture)
 	}
 	result := executeCLI(t, binary, "", append(base, args...)...)
+	if result.exit != 0 {
+		return decodeFailure(t, []byte(result.stderr), result.stderr), result.stderr, result.exit
+	}
 	return decodeResult(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
 }
 
@@ -86,26 +89,24 @@ func executeCLI(t *testing.T, binary, input string, args ...string) commandOutpu
 	return commandOutput{stdout: stdout.String(), stderr: stderr.String(), exit: exit}
 }
 
-func decodeEnvelope(t *testing.T, body []byte, output string) resultEnvelope {
+func decodeFailure(t *testing.T, body []byte, output string) resultEnvelope {
 	t.Helper()
-	var envelope resultEnvelope
-	if decodeErr := json.Unmarshal(body, &envelope); decodeErr != nil {
-		t.Fatalf("stdout is not pure JSON: %v\n%s", decodeErr, output)
+	var response struct {
+		Error struct {
+			Code    string `json:"code"`
+			Message string `json:"message"`
+		} `json:"error"`
 	}
-	if decodeErr := json.Unmarshal(body, &envelope.keys); decodeErr != nil {
-		t.Fatalf("stdout is not a JSON object: %v\n%s", decodeErr, output)
+	if decodeErr := json.Unmarshal(body, &response); decodeErr != nil {
+		t.Fatalf("stderr is not pure JSON: %v\n%s", decodeErr, output)
 	}
-	return envelope
+	keys := decodeObject(t, body, output)
+	return resultEnvelope{Error: response.Error.Message, ErrorCode: response.Error.Code, keys: keys}
 }
 
 func decodeResult(t *testing.T, body []byte, output string) resultEnvelope {
 	t.Helper()
 	keys := decodeObject(t, body, output)
-	if _, ok := keys["schema_version"]; ok {
-		envelope := decodeEnvelope(t, body, output)
-		envelope.keys = keys
-		return envelope
-	}
 	assertCompactJSON(t, output)
 	assertNoEnvelopeKeys(t, keys)
 	return resultEnvelope{OK: true, Data: json.RawMessage(bytes.TrimSpace(body)), keys: keys}
@@ -293,7 +294,7 @@ func TestBlackBoxCRUDAndCycle(t *testing.T) {
 	if exit == 0 || value.Error == "" || !strings.Contains(value.Error, "cycle") {
 		t.Fatalf("cycle result=%+v exit=%d", value, exit)
 	}
-	assertEnvelopeKeys(t, value, "schema_version", "ok", "error")
+	assertEnvelopeKeys(t, value, "error")
 	for _, removal := range [][]string{
 		{"dependency", "remove", at.ID, "missing-task"},
 		{"pr", "detach", at.ID},
@@ -303,7 +304,7 @@ func TestBlackBoxCRUDAndCycle(t *testing.T) {
 		if exit == 0 || value.Error == "" || !strings.Contains(value.Error, "was not found") {
 			t.Fatalf("%v result=%+v exit=%d", removal, value, exit)
 		}
-		assertEnvelopeKeys(t, value, "schema_version", "ok", "error")
+		assertEnvelopeKeys(t, value, "error")
 	}
 	valid, _, exit := runCLI(t, binary, dbPath, "validate")
 	if exit != 0 || !valid.OK {
@@ -618,13 +619,13 @@ func TestBlackBoxJSONFlagFormsAgree(t *testing.T) {
 			if err := command.Run(); err == nil {
 				t.Fatal("expected a non-zero exit for a missing task")
 			}
-			envelope := decodeEnvelope(t, stdout.Bytes(), stdout.String())
+			envelope := decodeFailure(t, stderr.Bytes(), stderr.String())
 			if envelope.OK || envelope.Error == "" || !strings.Contains(envelope.Error, "was not found") {
 				t.Fatalf("envelope=%+v", envelope)
 			}
-			assertEnvelopeKeys(t, envelope, "schema_version", "ok", "error")
-			if stderr.Len() != 0 {
-				t.Fatalf("stderr must stay empty in JSON mode: %q", stderr.String())
+			assertEnvelopeKeys(t, envelope, "error")
+			if stdout.Len() != 0 {
+				t.Fatalf("stdout must stay empty in JSON mode: %q", stdout.String())
 			}
 		})
 	}
@@ -661,6 +662,7 @@ func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
 			if _, ok := data[test.key]; !ok {
 				t.Fatalf("data keys=%v, want %q", mapKeys(data), test.key)
 			}
+			assertJSONArray(t, data[test.key], test.key)
 			assertNoEnvelopeKeys(t, value.keys)
 		})
 	}
@@ -693,8 +695,20 @@ func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
 			if _, ok := data[test.key]; !ok {
 				t.Fatalf("data keys=%v, want %q", mapKeys(data), test.key)
 			}
+			assertJSONArray(t, data[test.key], test.key)
 			assertNoEnvelopeKeys(t, value.keys)
 		})
+	}
+}
+
+func assertJSONArray(t *testing.T, value json.RawMessage, name string) {
+	t.Helper()
+	var items []json.RawMessage
+	if err := json.Unmarshal(value, &items); err != nil {
+		t.Fatalf("%s is not an array: %v (%s)", name, err, value)
+	}
+	if items == nil {
+		t.Fatalf("%s is null, want []", name)
 	}
 }
 
@@ -705,6 +719,7 @@ func TestBlackBoxSuccessOutputModes(t *testing.T) {
 		args       []string
 		normalWant string
 		jsonWant   string
+		humanWant  string
 	}{
 		{
 			name: "config auth list",
@@ -713,6 +728,7 @@ func TestBlackBoxSuccessOutputModes(t *testing.T) {
 `,
 			jsonWant: `{"auth_methods":[]}
 `,
+			humanWant: "No authentication methods configured.\n",
 		},
 		{
 			name: "feature list",
@@ -721,6 +737,7 @@ func TestBlackBoxSuccessOutputModes(t *testing.T) {
 `,
 			jsonWant: `{"features":[]}
 `,
+			humanWant: "No features found.\n",
 		},
 	}
 	for _, test := range cases {
@@ -750,7 +767,146 @@ func TestBlackBoxSuccessOutputModes(t *testing.T) {
 					test.jsonWant,
 				)
 			}
+
+			humanOutput := executeCLI(t, binary, "", append(append(base, "--human"), test.args...)...)
+			if humanOutput.exit != 0 || humanOutput.stderr != "" || humanOutput.stdout != test.humanWant {
+				t.Fatalf(
+					"human output=%q stderr=%q exit=%d, want %q",
+					humanOutput.stdout,
+					humanOutput.stderr,
+					humanOutput.exit,
+					test.humanWant,
+				)
+			}
 		})
+	}
+}
+
+func TestBlackBoxHumanOutputCoversResourcesAndSummaries(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "human.db")
+	configPath := filepath.Join(root, "config.yaml")
+	base := []string{"--db", dbPath, "--config", configPath, "--human"}
+	run := func(args ...string) commandOutput {
+		result := executeCLI(t, binary, "", append(base, args...)...)
+		if result.exit != 0 || result.stderr != "" || result.stdout == "" {
+			t.Fatalf("%v: stdout=%q stderr=%q exit=%d", args, result.stdout, result.stderr, result.exit)
+		}
+		if json.Valid([]byte(result.stdout)) {
+			t.Fatalf("%v emitted JSON in human mode: %s", args, result.stdout)
+		}
+		return result
+	}
+
+	createdFeature := run("feature", "create", "--slug", "checkout", "--title", "Checkout rollout")
+	if !strings.Contains(createdFeature.stdout, "Created feature checkout (F-1).") {
+		t.Fatalf("feature create output=%q", createdFeature.stdout)
+	}
+	featureList := run("feature", "list")
+	for _, value := range []string{"ID", "SLUG", "STATUS", "TASKS", "Checkout rollout"} {
+		if !strings.Contains(featureList.stdout, value) {
+			t.Fatalf("feature list omitted %q: %s", value, featureList.stdout)
+		}
+	}
+	featureGet := run("feature", "get", "checkout")
+	for _, value := range []string{"ID:", "Slug:", "Description:", "Created:", "Updated:"} {
+		if !strings.Contains(featureGet.stdout, value) {
+			t.Fatalf("feature detail omitted %q: %s", value, featureGet.stdout)
+		}
+	}
+
+	taskA := run("task", "create", "--feature", "checkout", "--title", "Payment API")
+	taskB := run("task", "create", "--feature", "checkout", "--title", "Checkout UI")
+	if !strings.Contains(taskA.stdout, "Created task T-1.") || !strings.Contains(taskB.stdout, "Created task T-2.") {
+		t.Fatalf("task create outputs=%q %q", taskA.stdout, taskB.stdout)
+	}
+	taskList := run("task", "list", "--feature", "checkout")
+	for _, value := range []string{"STATUS", "READY", "KIND", "ASSIGNEE", "Payment API"} {
+		if !strings.Contains(taskList.stdout, value) {
+			t.Fatalf("task list omitted %q: %s", value, taskList.stdout)
+		}
+	}
+	dependency := run("dependency", "add", "T-1", "T-2")
+	if dependency.stdout != "Added dependency T-1 -> T-2.\n" {
+		t.Fatalf("dependency output=%q", dependency.stdout)
+	}
+	graph := run("graph", "checkout")
+	for _, value := range []string{"Feature", "Tasks", "Dependencies", "BLOCKER", "BLOCKED"} {
+		if !strings.Contains(graph.stdout, value) {
+			t.Fatalf("graph omitted %q: %s", value, graph.stdout)
+		}
+	}
+
+	planPath := filepath.Join(root, "plan.md")
+	if err := os.WriteFile(planPath, []byte("# Implementation plan\n\n1. Build it.\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	run("implementation-plan", "set", "T-1", "--file", planPath)
+	plan := run("implementation-plan", "get", "T-1")
+	for _, value := range []string{"Task: T-1", "Updated:", "# Implementation plan", "1. Build it."} {
+		if !strings.Contains(plan.stdout, value) {
+			t.Fatalf("plan omitted %q: %s", value, plan.stdout)
+		}
+	}
+	snapshot := run("snapshot")
+	snapshotSections := []string{
+		"Snapshot:", "Queues:", "Features", "Tasks", "Dependencies", "Pull requests", "Documents",
+	}
+	for _, value := range snapshotSections {
+		if !strings.Contains(snapshot.stdout, value) {
+			t.Fatalf("snapshot omitted %q: %s", value, snapshot.stdout)
+		}
+	}
+	configShow := run("config", "show")
+	for _, value := range []string{"Config version:", "Hosts", "Authentication methods"} {
+		if !strings.Contains(configShow.stdout, value) {
+			t.Fatalf("config show omitted %q: %s", value, configShow.stdout)
+		}
+	}
+}
+
+func TestBlackBoxOutputFlagsAndErrorModes(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "flags.db")
+
+	for _, args := range [][]string{
+		{"--human", "schema-version"},
+		{"schema-version", "--human"},
+	} {
+		result := executeCLI(t, binary, "", args...)
+		if result.exit != 0 || result.stderr != "" || result.stdout != "Schema version: 1\n" {
+			t.Fatalf("%v: %+v", args, result)
+		}
+	}
+
+	automatic := executeCLI(t, binary, "", "--json=false", "schema-version", "--human=false")
+	if automatic.exit != 0 || automatic.stderr != "" || automatic.stdout != `{"schema_version":"1"}
+` {
+		t.Fatalf("false flags did not restore automatic non-TTY JSON: %+v", automatic)
+	}
+
+	conflict := executeCLI(t, binary, "", "--json", "schema-version", "--human")
+	if conflict.exit == 0 || conflict.stdout != "" {
+		t.Fatalf("conflicting flags result=%+v", conflict)
+	}
+	failure := decodeFailure(t, []byte(conflict.stderr), conflict.stderr)
+	if failure.ErrorCode != "usage_error" || !strings.Contains(failure.Error, "cannot be used together") {
+		t.Fatalf("conflicting flags error=%+v", failure)
+	}
+
+	humanError := executeCLI(t, binary, "", "--db", dbPath, "--human", "task", "get", "missing")
+	if humanError.exit == 0 || humanError.stdout != "" || !strings.HasPrefix(humanError.stderr, "Error: ") {
+		t.Fatalf("human error result=%+v", humanError)
+	}
+
+	usage := executeCLI(t, binary, "", "--json", "feature", "create")
+	if usage.exit == 0 || usage.stdout != "" {
+		t.Fatalf("usage error result=%+v", usage)
+	}
+	usageFailure := decodeFailure(t, []byte(usage.stderr), usage.stderr)
+	if usageFailure.ErrorCode != "usage_error" {
+		t.Fatalf("usage error code=%q body=%s", usageFailure.ErrorCode, usage.stderr)
 	}
 }
 
@@ -943,10 +1099,16 @@ func TestBlackBoxSchemaVersionDoesNotOpenStorage(t *testing.T) {
 	for _, test := range []struct {
 		name string
 		args []string
+		want string
 	}{
-		{name: "without json", args: []string{"schema-version"}},
-		{name: "json before command", args: []string{"--json", "schema-version"}},
-		{name: "json after command", args: []string{"schema-version", "--json"}},
+		{name: "automatic non-TTY", args: []string{"schema-version"}, want: `{"schema_version":"1"}
+`},
+		{name: "json before command", args: []string{"--json", "schema-version"}, want: `{"schema_version":"1"}
+`},
+		{name: "json after command", args: []string{"schema-version", "--json"}, want: `{"schema_version":"1"}
+`},
+		{name: "human before command", args: []string{"--human", "schema-version"}, want: "Schema version: 1\n"},
+		{name: "human after command", args: []string{"schema-version", "--human"}, want: "Schema version: 1\n"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			command := exec.CommandContext(
@@ -964,16 +1126,8 @@ func TestBlackBoxSchemaVersionDoesNotOpenStorage(t *testing.T) {
 			if err := command.Run(); err != nil {
 				t.Fatalf("schema-version failed: %v\nstdout=%s\nstderr=%s", err, stdout.String(), stderr.String())
 			}
-			var value map[string]json.RawMessage
-			if err := json.Unmarshal(stdout.Bytes(), &value); err != nil {
-				t.Fatalf("stdout is not JSON: %v\n%s", err, stdout.String())
-			}
-			if len(value) != 1 || string(value["schema_version"]) != `"1"` {
-				t.Fatalf("schema-version output=%s", stdout.String())
-			}
-			if stdout.String() != `{"schema_version":"1"}
-` {
-				t.Fatalf("schema-version output=%q", stdout.String())
+			if stdout.String() != test.want {
+				t.Fatalf("schema-version output=%q, want %q", stdout.String(), test.want)
 			}
 			if stderr.Len() != 0 {
 				t.Fatalf("stderr=%q", stderr.String())
@@ -988,7 +1142,7 @@ func TestBlackBoxSchemaVersionDoesNotOpenStorage(t *testing.T) {
 	}
 }
 
-func TestBlackBoxErrorsUseEnvelopeWithoutJSONFlag(t *testing.T) {
+func TestBlackBoxNonTTYErrorsUseJSONOnStderr(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "errors.db")
 	command := exec.CommandContext(context.Background(), binary, "--db", dbPath, "task", "get", "missing-task")
@@ -1000,16 +1154,17 @@ func TestBlackBoxErrorsUseEnvelopeWithoutJSONFlag(t *testing.T) {
 	if !errors.As(err, &typed) || typed.ExitCode() != 1 {
 		t.Fatalf("error=%v, want exit code 1", err)
 	}
-	value := decodeEnvelope(t, stdout.Bytes(), stdout.String())
-	if value.OK || value.SchemaVersion != "1" || value.Error == "" || value.Data != nil {
+	value := decodeFailure(t, stderr.Bytes(), stderr.String())
+	if value.OK || value.ErrorCode != "not_found" || value.Error == "" || value.Data != nil {
 		t.Fatalf("error response=%+v", value)
 	}
-	assertEnvelopeKeys(t, value, "schema_version", "ok", "error")
-	if stderr.Len() != 0 {
-		t.Fatalf("stderr=%q", stderr.String())
+	assertEnvelopeKeys(t, value, "error")
+	if stdout.Len() != 0 {
+		t.Fatalf("stdout=%q", stdout.String())
 	}
-	if !strings.Contains(stdout.String(), "\n  \"schema_version\": \"1\"") {
-		t.Fatalf("error response is not indented: %s", stdout.String())
+	assertCompactJSON(t, stderr.String())
+	if strings.Contains(stderr.String(), "\n  ") {
+		t.Fatalf("error response is not compact: %s", stderr.String())
 	}
 }
 
@@ -1082,7 +1237,7 @@ func TestBlackBoxConfigUsesSecureSecretFreeOutput(t *testing.T) {
 		"remove",
 		"ghe.example.com",
 	)
-	if exit == 0 || stderr != "" || removed.Error == "" || !strings.Contains(removed.Error, "used by auth method") {
+	if exit == 0 || stderr == "" || removed.Error == "" || !strings.Contains(removed.Error, "used by auth method") {
 		t.Fatalf("referenced host removal=%+v stderr=%q exit=%d", removed, stderr, exit)
 	}
 	updated, stderr, exit := runConfigCLI(
@@ -1168,5 +1323,8 @@ func runConfigCLI(
 	t.Helper()
 	commandArgs := []string{"--db", dbPath, "--config", configPath, "--json"}
 	result := executeCLI(t, binary, input, append(commandArgs, args...)...)
+	if result.exit != 0 {
+		return decodeFailure(t, []byte(result.stderr), result.stderr), result.stderr, result.exit
+	}
 	return decodeResult(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
 }

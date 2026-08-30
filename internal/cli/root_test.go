@@ -17,13 +17,14 @@ func (failingWriter) Write([]byte) (int, error) {
 	return 0, errors.New("write failed")
 }
 
-func TestExecuteFallsBackWhenJSONErrorCannotBeWritten(t *testing.T) {
+func TestExecuteWritesJSONErrorToStderrWhenStdoutFails(t *testing.T) {
 	var errOut bytes.Buffer
 	err := Execute(context.Background(), []string{"--json", "unknown"}, failingWriter{}, &errOut, testOpenService)
 	if err == nil {
 		t.Fatal("expected command error")
 	}
-	if !strings.Contains(errOut.String(), "error: unknown command") {
+	if !strings.Contains(errOut.String(), `"code":"usage_error"`) ||
+		!strings.Contains(errOut.String(), "unknown command") {
 		t.Fatalf("stderr=%q", errOut.String())
 	}
 }

@@ -26,7 +26,8 @@ prx implementation-plan set TASK_ID --file plan.md --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --json                    emit compact JSON responses
+      --human                   force human-readable responses
+      --json                    force compact JSON responses
 ```
 
 ### SEE ALSO
