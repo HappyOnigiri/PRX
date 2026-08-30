@@ -792,6 +792,23 @@ func TestBlackBoxResolvedCommandErrorsIncludeCompleteHelp(t *testing.T) {
 	}
 }
 
+func TestBlackBoxUnknownHelpTopicUsesTheErrorPath(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "help.db")
+	result := executeCLI(t, binary, "", "--db", dbPath, "--json", "help", "nosuchtopic")
+	if result.exit == 0 || result.stdout != "" {
+		t.Fatalf("result=%+v", result)
+	}
+	failure := decodeFailure(t, []byte(result.stderr), result.stderr)
+	if !strings.Contains(failure.Error, "unknown command") || !strings.Contains(failure.Hint, "Usage:\n  prx help") {
+		t.Fatalf("failure=%+v", failure)
+	}
+	assertCompactJSON(t, result.stderr)
+	if _, err := os.Stat(dbPath); !os.IsNotExist(err) {
+		t.Fatalf("unknown help topic opened storage: %v", err)
+	}
+}
+
 func TestBlackBoxErrorHintDoesNotVaryWithAmbientEnvironment(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "hint.db")

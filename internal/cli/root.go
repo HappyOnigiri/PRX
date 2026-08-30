@@ -110,8 +110,32 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	)
 	s.standardHelp = root.HelpFunc()
 	root.SetHelpFunc(s.writeHelp)
+	root.SetHelpCommand(s.helpCommand(root))
 	markCommandExecution(root, s)
 	return root, s
+}
+
+// helpCommand replaces the default help command, which prints its own message
+// and the root usage to stdout and exits successfully when the topic is
+// unknown. Returning the error instead keeps every failure on the shared error
+// path, so stdout stays empty and JSON callers always parse the same shape.
+func (s *state) helpCommand(root *cobra.Command) *cobra.Command {
+	return &cobra.Command{
+		Use:   "help [command]",
+		Short: "Help about any command",
+		Long:  "Help provides help for any command in the application.",
+		RunE: func(_ *cobra.Command, args []string) error {
+			target, _, err := root.Find(args)
+			if err != nil {
+				return err
+			}
+			if target == nil {
+				target = root
+			}
+			s.writeHelp(target, args)
+			return nil
+		},
+	}
 }
 
 // applyEnvironmentPaths resolves the environment fallbacks at run time instead
