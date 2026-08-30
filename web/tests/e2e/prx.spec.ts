@@ -45,9 +45,18 @@ test("keeps the bilingual demo reset warning visible", async ({ page }) => {
   await page.evaluate(() => {
     document.body.style.zoom = "2";
   });
-  await expect(banner.locator(".demo-banner-compact")).toBeVisible();
-  await expect(banner).toContainText("Reset on restart");
-  await expect(banner).toContainText("再起動でリセット");
+  // toContainText reads textContent, so the hidden wide-viewport wording would
+  // satisfy it even when nothing is left for a screen reader to announce.
+  const compact = banner.locator(".demo-banner-compact");
+  await expect(compact).toBeVisible();
+  await expect(banner.locator(".demo-banner-full")).toBeHidden();
+  await expect(compact).toHaveText("DEMO · Reset on restart再起動でリセット");
+  expect(
+    await banner.evaluate(
+      (element) =>
+        Array.from(element.querySelectorAll("[aria-hidden='true']")).length,
+    ),
+  ).toBe(0);
 });
 
 // The demo banner takes its height from the viewport, so a workspace still

@@ -42,7 +42,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           <span className="demo-banner-full">
             DEMO — Changes reset on restart / 変更は再起動時にリセットされます
           </span>
-          <span className="demo-banner-compact" aria-hidden="true">
+          <span className="demo-banner-compact">
             <span>DEMO · Reset on restart</span>
             <span>再起動でリセット</span>
           </span>
