@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"io"
+	"net"
 	"os"
 	"path/filepath"
 	"testing"
@@ -79,5 +80,44 @@ func assertFileContent(t *testing.T, path, want string) {
 	}
 	if string(got) != want {
 		t.Fatalf("%s = %q, want %q", path, got, want)
+	}
+}
+
+// Cobra skips its post-run hooks once a command returns an error, so a serve
+// that fails after the demo is built has to release the temporary root itself.
+func TestDemoServeFailureRemovesTemporaryRoot(t *testing.T) {
+	var listenConfig net.ListenConfig
+	listener, err := listenConfig.Listen(context.Background(), "tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = listener.Close() })
+
+	var temporaryRoot string
+	open := func(
+		ctx context.Context,
+		options cli.ServiceOptions,
+	) (cli.Service, io.Closer, error) {
+		service, closer, err := newOpenService(io.Discard)(ctx, options)
+		if err == nil {
+			temporaryRoot = closer.(*serviceCloser).temporaryRoot
+		}
+		return service, closer, err
+	}
+	err = cli.Execute(
+		context.Background(),
+		[]string{"serve", "--demo", "--addr", listener.Addr().String()},
+		io.Discard,
+		io.Discard,
+		open,
+	)
+	if err == nil {
+		t.Fatal("serve on a busy address unexpectedly succeeded")
+	}
+	if temporaryRoot == "" {
+		t.Fatal("the demo service was never opened, so this test proves nothing")
+	}
+	if _, statErr := os.Stat(temporaryRoot); !os.IsNotExist(statErr) {
+		t.Errorf("temporary demo root still exists: %v", statErr)
 	}
 }

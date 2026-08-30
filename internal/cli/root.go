@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -35,7 +36,21 @@ type state struct {
 	openService  OpenService
 	service      Service
 	closer       io.Closer
+	closeOnce    sync.Once
+	closeErr     error
 	standardHelp func(*cobra.Command, []string)
+}
+
+// closeService releases what opening the service reserved. A demo reserves a
+// temporary directory, and Cobra skips its post-run hooks once a command
+// returns an error, so this has to be reachable from the failing path too.
+func (s *state) closeService() error {
+	s.closeOnce.Do(func() {
+		if s.closer != nil {
+			s.closeErr = s.closer.Close()
+		}
+	})
+	return s.closeErr
 }
 
 func NewRoot(out, errOut io.Writer, openService OpenService) *cobra.Command {
@@ -95,9 +110,7 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			return nil
 		},
 		PersistentPostRun: func(_ *cobra.Command, _ []string) {
-			if s.closer != nil {
-				_ = s.closer.Close()
-			}
+			_ = s.closeService()
 		},
 	}
 	root.SetOut(out)
@@ -205,8 +218,14 @@ func isAutomaticSyncExcluded(command *cobra.Command) bool {
 // Execute runs the CLI and formats any error according to the parsed --json
 // flag. Deciding that from os.Args would miss --json=true and would misread a
 // flag value that happens to be the literal string.
-func Execute(ctx context.Context, args []string, out, errOut io.Writer, openService OpenService) error {
+func Execute(
+	ctx context.Context,
+	args []string,
+	out, errOut io.Writer,
+	openService OpenService,
+) (err error) {
 	root, s := newRootWithState(out, errOut, openService)
+	defer func() { err = errors.Join(err, s.closeService()) }()
 	s.preScanOutputFlags(root, args)
 	root.SetArgs(args)
 	failedCommand, err := root.ExecuteContextC(ctx)
