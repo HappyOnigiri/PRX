@@ -7,7 +7,10 @@ import {
   type AriaLabelConfig,
   type Connection,
   type Edge,
+  type FinalConnectionState,
+  type HandleType,
   type OnMove,
+  type OnReconnect,
   type ReactFlowInstance,
 } from "@xyflow/react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -26,6 +29,61 @@ import { TaskNode, type TaskFlowNode, type TaskNodeDocument } from "./TaskNode";
 import { useGraphLayout } from "./useGraphLayout";
 
 const nodeTypes = { task: TaskNode };
+
+function useDependencyConnections() {
+  const addDependency = useDomainMutation(
+    ({ blocker, blocked }: { blocker: string; blocked: string }) =>
+      mutations.addDependency(blocker, blocked),
+  );
+  const removeDependency = useDomainMutation(
+    ({ blocker, blocked }: { blocker: string; blocked: string }) =>
+      mutations.removeDependency(blocker, blocked),
+  );
+  const [detaching, setDetaching] = useState(false);
+  const pending = addDependency.isPending || removeDependency.isPending;
+  const onConnect = useCallback(
+    ({ source, target }: Connection) => {
+      if (pending || !source || !target) return;
+      addDependency.mutate({ blocker: source, blocked: target });
+    },
+    [addDependency, pending],
+  );
+  const onReconnect = useCallback<OnReconnect>(() => {
+    setDetaching(false);
+  }, []);
+  const onReconnectStart = useCallback(() => {
+    setDetaching(true);
+  }, []);
+  const onReconnectEnd = useCallback(
+    (
+      _event: MouseEvent | TouchEvent,
+      edge: Edge,
+      _handleType: HandleType,
+      connectionState: FinalConnectionState,
+    ) => {
+      void _event;
+      void _handleType;
+      setDetaching(false);
+      if (removeDependency.isPending || connectionState.isValid === true) {
+        return;
+      }
+      removeDependency.mutate({ blocker: edge.source, blocked: edge.target });
+    },
+    [removeDependency],
+  );
+
+  return {
+    adding: addDependency.isPending,
+    detaching,
+    error: removeDependency.error ?? addDependency.error,
+    onConnect,
+    onReconnect,
+    onReconnectEnd,
+    onReconnectStart,
+    pending,
+    removing: removeDependency.isPending,
+  };
+}
 
 interface FeatureGraphProps {
   tasks: Task[];
@@ -50,17 +108,7 @@ export function FeatureGraph({
   const [flow, setFlow] = useState<ReactFlowInstance<TaskFlowNode>>();
   const [initialGraphZoom] = useState(readGraphZoom);
   const graphZoom = useRef(initialGraphZoom);
-  const addDependency = useDomainMutation(
-    ({ blocker, blocked }: { blocker: string; blocked: string }) =>
-      mutations.addDependency(blocker, blocked),
-  );
-  const handleConnect = useCallback(
-    ({ source, target }: Connection) => {
-      if (addDependency.isPending || !source || !target) return;
-      addDependency.mutate({ blocker: source, blocked: target });
-    },
-    [addDependency],
-  );
+  const connections = useDependencyConnections();
   const taskTitle = useCallback(
     (taskId: string) => tasks.find((task) => task.id === taskId)?.title,
     [tasks],
@@ -76,14 +124,19 @@ export function FeatureGraph({
   const edges: Edge[] = useMemo(
     () =>
       dependencies.map((dep) => ({
-        id: `${dep.blockerTaskId}-${dep.blockedTaskId}`,
+        id: dependencyEdgeId(dep.blockerTaskId, dep.blockedTaskId),
         source: dep.blockerTaskId,
         target: dep.blockedTaskId,
         type: "smoothstep",
         markerEnd: { type: MarkerType.ArrowClosed },
         className: "dependency-edge",
+        reconnectable: connections.pending ? false : "source",
+        ariaLabel: t("workspace.flow.dependencyEdge", {
+          blocker: taskTitle(dep.blockerTaskId) ?? dep.blockerTaskId,
+          blocked: taskTitle(dep.blockedTaskId) ?? dep.blockedTaskId,
+        }),
       })),
-    [dependencies],
+    [connections.pending, dependencies, t, taskTitle],
   );
   const ariaLabelConfig = useMemo(
     () => ({
@@ -123,7 +176,9 @@ export function FeatureGraph({
       <GraphLegend
         taskCount={tasks.length}
         dependencyCount={dependencies.length}
-        connectionPending={addDependency.isPending}
+        addingDependency={connections.adding}
+        detachingDependency={connections.detaching}
+        removingDependency={connections.removing}
       />
       <GraphCanvas
         tasks={tasks}
@@ -131,13 +186,16 @@ export function FeatureGraph({
         edges={edges}
         initialGraphZoom={initialGraphZoom}
         onInit={setFlow}
-        onConnect={handleConnect}
+        onConnect={connections.onConnect}
+        onReconnect={connections.onReconnect}
+        onReconnectStart={connections.onReconnectStart}
+        onReconnectEnd={connections.onReconnectEnd}
         onMoveEnd={(_, viewport) => {
           graphZoom.current = viewport.zoom;
           writeGraphZoom(viewport.zoom);
         }}
-        connectionPending={addDependency.isPending}
-        connectionError={addDependency.error}
+        connectionPending={connections.pending}
+        connectionError={connections.error}
         taskTitle={taskTitle}
         layoutError={layoutError}
         retryLayout={retryLayout}
@@ -148,6 +206,10 @@ export function FeatureGraph({
   );
 }
 
+function dependencyEdgeId(blockerTaskId: string, blockedTaskId: string) {
+  return `${blockerTaskId}-${blockedTaskId}`;
+}
+
 interface GraphCanvasProps {
   tasks: Task[];
   nodes: TaskFlowNode[];
@@ -155,6 +217,18 @@ interface GraphCanvasProps {
   initialGraphZoom: number;
   onInit: (instance: ReactFlowInstance<TaskFlowNode>) => void;
   onConnect: (connection: Connection) => void;
+  onReconnect: OnReconnect;
+  onReconnectStart: (
+    event: React.MouseEvent,
+    edge: Edge,
+    handleType: HandleType,
+  ) => void;
+  onReconnectEnd: (
+    event: MouseEvent | TouchEvent,
+    edge: Edge,
+    handleType: HandleType,
+    connectionState: FinalConnectionState,
+  ) => void;
   onMoveEnd: OnMove;
   connectionPending: boolean;
   connectionError: Error | null;
@@ -172,6 +246,9 @@ function GraphCanvas({
   initialGraphZoom,
   onInit,
   onConnect,
+  onReconnect,
+  onReconnectStart,
+  onReconnectEnd,
   onMoveEnd,
   connectionPending,
   connectionError,
@@ -194,6 +271,9 @@ function GraphCanvas({
         nodeTypes={nodeTypes}
         onInit={onInit}
         onConnect={onConnect}
+        onReconnect={onReconnect}
+        onReconnectStart={onReconnectStart}
+        onReconnectEnd={onReconnectEnd}
         defaultViewport={{ x: 0, y: 0, zoom: initialGraphZoom }}
         onMoveEnd={onMoveEnd}
         minZoom={minGraphZoom}
@@ -201,6 +281,8 @@ function GraphCanvas({
         nodesDraggable={false}
         nodesConnectable={!connectionPending}
         autoPanOnConnect={false}
+        reconnectRadius={12}
+        elevateEdgesOnSelect
         defaultEdgeOptions={{ animated: false }}
         ariaLabelConfig={ariaLabelConfig}
       >
@@ -240,22 +322,32 @@ function GraphCanvas({
 function GraphLegend({
   taskCount,
   dependencyCount,
-  connectionPending,
+  addingDependency,
+  detachingDependency,
+  removingDependency,
 }: {
   taskCount: number;
   dependencyCount: number;
-  connectionPending: boolean;
+  addingDependency: boolean;
+  detachingDependency: boolean;
+  removingDependency: boolean;
 }) {
   const { t } = useTranslation();
+  const instruction = removingDependency
+    ? t("workspace.flow.dependencyRemoving")
+    : addingDependency
+      ? t("workspace.flow.connectionSaving")
+      : detachingDependency
+        ? t("workspace.flow.detachInstruction")
+        : t("workspace.flow.connectionInstruction");
   return (
     <div className="graph-legend">
       <p
-        className={`graph-connection-help ${connectionPending ? "is-saving" : ""}`}
+        className={`graph-connection-help ${addingDependency || removingDependency ? "is-saving" : ""}`}
         aria-live="polite"
+        title={instruction}
       >
-        {connectionPending
-          ? t("workspace.flow.connectionSaving")
-          : t("workspace.flow.connectionInstruction")}
+        {instruction}
       </p>
       <div className="graph-legend-states">
         <span>

@@ -112,9 +112,54 @@ async function connectTasks(
   const target = blocked.locator(".react-flow__handle.target");
   await expect(source).toBeVisible();
   await expect(target).toBeVisible();
+  const initialBox = await source.boundingBox();
   await source.hover();
+  const hoveredBox = await source.boundingBox();
+  if (!initialBox || !hoveredBox) throw new Error("connection handle missing");
+  expect(hoveredBox.x + hoveredBox.width / 2).toBeCloseTo(
+    initialBox.x + initialBox.width / 2,
+    1,
+  );
+  expect(hoveredBox.y + hoveredBox.height / 2).toBeCloseTo(
+    initialBox.y + initialBox.height / 2,
+    1,
+  );
   await page.mouse.down();
   await target.hover();
+  await page.mouse.up();
+}
+
+async function disconnectTasks(
+  page: Page,
+  blockerTitle: string,
+  blockedTitle: string,
+) {
+  await settleGraph(page);
+  const blocker = page.locator(".task-node").filter({ hasText: blockerTitle });
+  const blocked = page.locator(".task-node").filter({ hasText: blockedTitle });
+  const blockerId = await blocker.evaluate((element) =>
+    element.closest(".react-flow__node")?.getAttribute("data-id"),
+  );
+  const blockedId = await blocked.evaluate((element) =>
+    element.closest(".react-flow__node")?.getAttribute("data-id"),
+  );
+  if (!blockerId || !blockedId) throw new Error("task node id missing");
+
+  const edge = page.locator(
+    `.react-flow__edge[data-id="${blockerId}-${blockedId}"]`,
+  );
+  const sourceEndpoint = edge.locator(".react-flow__edgeupdater-source");
+  const endpointBox = await sourceEndpoint.boundingBox();
+  const stageBox = await page.locator(".graph-stage").boundingBox();
+  if (!endpointBox || !stageBox) throw new Error("graph bounds missing");
+
+  await page.mouse.move(
+    endpointBox.x + endpointBox.width / 2,
+    endpointBox.y + endpointBox.height / 2,
+  );
+  await expect(sourceEndpoint).toHaveCSS("opacity", "1");
+  await page.mouse.down();
+  await page.mouse.move(stageBox.x + 28, stageBox.y + 28, { steps: 6 });
   await page.mouse.up();
 }
 
@@ -283,9 +328,11 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(
     page.locator(".task-node").filter({ hasText: "E2E UI" }),
   ).toBeVisible();
+  await disconnectTasks(page, "E2E API", "E2E worker");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    1,
+  );
   await openTask(page, "E2E worker");
-  await expect(inspector.locator(".dependency-chip")).toContainText("E2E API");
-  await inspector.getByRole("button", { name: "Remove dependency" }).click();
   await expect(inspector.locator(".dependency-chip")).toHaveCount(0);
   await page.getByRole("button", { name: "Close inspector" }).click();
   await openTask(page, "E2E UI");

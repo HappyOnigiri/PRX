@@ -38,7 +38,7 @@ The repository must provide a `GH_TOKEN` Actions secret with permission to write
 
 ## End-to-end tests
 
-Playwright covers browser CRUD, language selection persistence, dependency creation by dragging between task handles, cycle rejection, pull-request and Markdown attachment, deterministic sync, dependency removal, persistence after reload, console/network failures, 320-pixel reflow, and 8/50/100-node layouts. Graph screenshots are written to `test-results/screenshots/` and uploaded by GitHub Actions. `E2E_FLAGS` passes extra flags to Playwright, for example `make e2e E2E_FLAGS=--shard=1/3`.
+Playwright covers browser CRUD, language selection persistence, dependency creation between task handles and removal from the blocker-side edge endpoint, cycle rejection, pull-request and Markdown attachment, deterministic sync, persistence after reload, console/network failures, 320-pixel reflow, and 8/50/100-node layouts. Graph screenshots are written to `test-results/screenshots/` and uploaded by GitHub Actions. `E2E_FLAGS` passes extra flags to Playwright, for example `make e2e E2E_FLAGS=--shard=1/3`.
 
 GitHub Actions runs the same checks as `make ci`, but as one job per Makefile target plus three Playwright shards, so a run takes as long as its slowest check. Each Go job restores its own module and build cache from the newest cache saved on `main`; pull request runs only save a cache when nothing could be restored.
 

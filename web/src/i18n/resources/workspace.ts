@@ -33,9 +33,12 @@ export const workspace = {
           "Use the links to open references, or the Edit button to edit this task.",
         keyboardDisabled: "Use the Edit button to open task details.",
         edgeDescription: "An edge connects a blocker to a blocked task.",
+        dependencyEdge: "{{blocker}} blocks {{blocked}}",
         connectionInstruction:
-          "Drag from a blocker output to a blocked task input to add a dependency.",
+          "Add: drag right output → left input. Remove: select a link, then drag its blocker end into empty space.",
         connectionSaving: "Saving dependency…",
+        detachInstruction: "Drop in empty space to remove this blocker.",
+        dependencyRemoving: "Removing dependency…",
         blockerHandle: "Blocker output (drag from here)",
         blockedHandle: "Blocked task input (drop here)",
         controls: "Graph controls",
@@ -96,9 +99,12 @@ export const workspace = {
         keyboardDisabled: "編集ボタンからタスクの詳細を開きます。",
         edgeDescription:
           "エッジはブロッカーからブロック対象のタスクへ接続します。",
+        dependencyEdge: "{{blocker}} が {{blocked}} をブロック",
         connectionInstruction:
-          "依存関係を追加するには、ブロッカーの送り口からブロック対象の受け口へドラッグします。",
+          "追加: 右の送り口→左の受け口へドラッグ。解除: リンクを選択し、ブロッカー側の端を空白へドラッグ。",
         connectionSaving: "依存関係を保存しています…",
+        detachInstruction: "空白にドロップすると、このブロッカーを解除します。",
+        dependencyRemoving: "依存関係を解除しています…",
         blockerHandle: "ブロッカーの送り口（ここからドラッグ）",
         blockedHandle: "ブロック対象の受け口（ここにドロップ）",
         controls: "グラフ操作",

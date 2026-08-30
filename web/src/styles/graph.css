@@ -96,13 +96,37 @@
   stroke-width: 1.5;
 }
 
+.react-flow__edgeupdater-source {
+  cursor: grab;
+  fill: var(--surface);
+  opacity: 0;
+  stroke: var(--border-strong);
+  stroke-width: 1.5;
+  transition: opacity 0.12s;
+}
+
+.react-flow__edgeupdater-source:active {
+  cursor: grabbing;
+}
+
+.react-flow__edge:hover .react-flow__edgeupdater-source,
+.react-flow__edge.selected .react-flow__edgeupdater-source,
+.react-flow__edge.updating .react-flow__edgeupdater-source {
+  opacity: 1;
+}
+
+.react-flow__edge.updating.dependency-edge {
+  stroke: var(--accent);
+  stroke-width: 2;
+}
+
 .react-flow__connection-path {
   stroke: var(--accent);
   stroke-width: 2;
   stroke-dasharray: 6 4;
 }
 
-.react-flow__edge.selected .dependency-edge {
+.react-flow__edge.selected.dependency-edge {
   stroke: var(--accent);
   stroke-width: 2;
 }
@@ -334,12 +358,20 @@
     box-shadow 0.15s;
 }
 
+.task-handle::after {
+  position: absolute;
+  inset: -5px;
+  content: "";
+}
+
 .task-handle-source {
   border-radius: 3px;
+  transform: translate(50%, -50%);
 }
 
 .task-handle-target {
   border-radius: 50%;
+  transform: translate(-50%, -50%);
 }
 
 .task-handle:hover,
@@ -347,7 +379,16 @@
   z-index: 2;
   outline: 2px solid var(--accent);
   outline-offset: 3px;
-  transform: scale(1.25);
+}
+
+.task-handle-source:hover,
+.task-handle-source:focus-visible {
+  transform: translate(50%, -50%) scale(1.25);
+}
+
+.task-handle-target:hover,
+.task-handle-target:focus-visible {
+  transform: translate(-50%, -50%) scale(1.25);
 }
 
 .task-handle.connectingfrom,
@@ -356,7 +397,16 @@
   box-shadow:
     0 0 0 2px var(--accent),
     0 0 0 4px var(--surface);
-  transform: scale(1.15);
+}
+
+.task-handle-source.connectingfrom,
+.task-handle-source.connectingto {
+  transform: translate(50%, -50%) scale(1.15);
+}
+
+.task-handle-target.connectingfrom,
+.task-handle-target.connectingto {
+  transform: translate(-50%, -50%) scale(1.15);
 }
 
 .task-handle.connectingto.valid {
@@ -438,7 +488,7 @@
   background: var(--surface-2);
 }
 
-@media (width <= 600px) {
+@media (width <= 1050px) {
   .graph-legend {
     gap: 10px;
     padding-inline: 12px;
