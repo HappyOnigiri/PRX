@@ -65,16 +65,19 @@ describe("TaskNode", () => {
         <TaskNode {...props} />
       </ReactFlowProvider>,
     );
-    expect(screen.getByText("T-42")).toBeInTheDocument();
-    expect(container.querySelector(".task-node-identifier")).toHaveClass(
-      "nodrag",
-      "nopan",
-    );
+    const taskIdButton = screen.getByRole("button", { name: "Copy Task ID" });
+    expect(taskIdButton).toHaveTextContent("T-42");
+    expect(taskIdButton.querySelector("svg")).not.toBeInTheDocument();
+    const taskActions = container.querySelector(".task-node-actions");
+    expect(taskActions).toHaveClass("nodrag", "nopan");
+    expect(taskActions?.firstElementChild).toContainElement(taskIdButton);
     await act(async () => {
-      fireEvent.click(screen.getByRole("button", { name: "Copy Task ID" }));
+      fireEvent.click(taskIdButton);
       await Promise.resolve();
     });
     expect(writeText).toHaveBeenCalledWith("T-42");
+    expect(taskIdButton).toHaveClass("is-copied");
+    expect(taskIdButton).toHaveAccessibleName("Copied");
     expect(screen.getByText("Merge billing schema")).toBeInTheDocument();
     expect(screen.getByText("Ren")).toBeInTheDocument();
     expect(screen.queryByText("READY")).not.toBeInTheDocument();

@@ -187,10 +187,13 @@
   gap: 10px;
 }
 
-.task-node-identifier {
-  min-height: 24px;
+.task-node-actions {
+  min-width: 0;
   display: flex;
   align-items: center;
+  justify-content: flex-end;
+  gap: 4px;
+  margin-left: auto;
 }
 
 .node-state {
