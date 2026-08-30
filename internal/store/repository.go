@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"strings"
@@ -474,7 +475,10 @@ func (s *Store) UpsertPullRequest(ctx context.Context, value domain.PullRequest)
 	if value.Host == "" {
 		value.Host = "github.com"
 	}
-	assignees, _ := jsonMarshal(value.Assignees)
+	assignees, err := json.Marshal(value.Assignees)
+	if err != nil {
+		return domain.PullRequest{}, fmt.Errorf("marshal assignees: %w", err)
+	}
 	q := db.New(s.db)
 	task, err := q.GetTaskByPublicID(ctx, value.TaskID)
 	if err != nil {

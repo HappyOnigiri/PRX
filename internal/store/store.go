@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"embed"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io/fs"
@@ -430,7 +431,7 @@ func domainPullRequest(value db.PullRequest, taskIDs map[string]string) domain.P
 		SyncError:       value.SyncError,
 		Stale:           value.Stale != 0,
 	}
-	if err := jsonUnmarshal([]byte(value.AssigneesJson), &result.Assignees); err != nil {
+	if err := json.Unmarshal([]byte(value.AssigneesJson), &result.Assignees); err != nil {
 		result.Assignees = []string{}
 	}
 	result.DisplayState = domain.PullRequestDisplayState(domain.PRDisplayState(&result))
