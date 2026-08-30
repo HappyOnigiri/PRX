@@ -43,6 +43,13 @@ type GithubRepositoryAuthCache struct {
 	LastSucceededAt string `json:"last_succeeded_at"`
 }
 
+type ImplementationPlan struct {
+	TaskID    string `json:"task_id"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
 type PullRequest struct {
 	TaskID          string         `json:"task_id"`
 	Host            string         `json:"host"`

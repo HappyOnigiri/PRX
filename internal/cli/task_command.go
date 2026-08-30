@@ -87,7 +87,7 @@ func (s *state) taskCommand() *cobra.Command {
 	}
 	update.Flags().StringVar(&title, "title", "", "new title")
 	update.Flags().StringVar(&scope, "scope", "", "new scope")
-	update.Flags().StringVar(&status, "status", "", "planned, in_progress, completed, or cancelled")
+	update.Flags().StringVar(&status, "status", "", "auto, not_started, in_progress, completed, or closed")
 	update.Flags().StringVar(&assignee, "assignee", "", "new assignee")
 	deleteCmd := &cobra.Command{
 		Use:     "delete TASK_ID",

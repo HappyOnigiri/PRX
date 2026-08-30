@@ -25,18 +25,28 @@ func protoFeature(v domain.Feature) *prxv1.Feature {
 
 func protoTask(v domain.Task) *prxv1.Task {
 	return &prxv1.Task{
-		Id:            v.ID,
-		FeatureId:     v.FeatureID,
-		Title:         v.Title,
-		Scope:         v.Scope,
-		Kind:          protoTaskKind(v.Kind),
-		Status:        protoTaskStatus(v.Status),
-		Assignee:      v.Assignee,
-		CreatedAt:     v.CreatedAt.Format(timeFormat),
-		UpdatedAt:     v.UpdatedAt.Format(timeFormat),
-		Ready:         v.Ready,
-		DisplayState:  protoTaskDisplayState(v.DisplayState),
-		BlockedReason: protoBlockedReason(v),
+		Id:                    v.ID,
+		FeatureId:             v.FeatureID,
+		Title:                 v.Title,
+		Scope:                 v.Scope,
+		Kind:                  protoTaskKind(v.Kind),
+		Status:                protoTaskStatus(v.Status),
+		Assignee:              v.Assignee,
+		HasImplementationPlan: v.HasImplementationPlan,
+		CreatedAt:             v.CreatedAt.Format(timeFormat),
+		UpdatedAt:             v.UpdatedAt.Format(timeFormat),
+		Ready:                 v.Ready,
+		DisplayState:          protoTaskDisplayState(v.DisplayState),
+		BlockedReason:         protoBlockedReason(v),
+	}
+}
+
+func protoImplementationPlan(v domain.ImplementationPlan) *prxv1.ImplementationPlan {
+	return &prxv1.ImplementationPlan{
+		TaskId:    v.TaskID,
+		Content:   v.Content,
+		CreatedAt: v.CreatedAt.Format(timeFormat),
+		UpdatedAt: v.UpdatedAt.Format(timeFormat),
 	}
 }
 
@@ -187,14 +197,16 @@ func domainTaskKind(value prxv1.TaskKind) (domain.TaskKind, error) {
 
 func protoTaskStatus(value domain.TaskStatus) prxv1.TaskStatus {
 	switch value {
-	case domain.TaskStatusPlanned:
-		return prxv1.TaskStatus_TASK_STATUS_PLANNED
+	case domain.TaskStatusAuto:
+		return prxv1.TaskStatus_TASK_STATUS_AUTO
+	case domain.TaskStatusNotStarted:
+		return prxv1.TaskStatus_TASK_STATUS_NOT_STARTED
 	case domain.TaskStatusInProgress:
 		return prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS
 	case domain.TaskStatusCompleted:
 		return prxv1.TaskStatus_TASK_STATUS_COMPLETED
-	case domain.TaskStatusCancelled:
-		return prxv1.TaskStatus_TASK_STATUS_CANCELLED
+	case domain.TaskStatusClosed:
+		return prxv1.TaskStatus_TASK_STATUS_CLOSED
 	default:
 		return prxv1.TaskStatus_TASK_STATUS_UNSPECIFIED
 	}
@@ -208,14 +220,16 @@ func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 	}
 	var result domain.TaskStatus
 	switch *value {
-	case prxv1.TaskStatus_TASK_STATUS_PLANNED:
-		result = domain.TaskStatusPlanned
+	case prxv1.TaskStatus_TASK_STATUS_AUTO:
+		result = domain.TaskStatusAuto
+	case prxv1.TaskStatus_TASK_STATUS_NOT_STARTED:
+		result = domain.TaskStatusNotStarted
 	case prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS:
 		result = domain.TaskStatusInProgress
 	case prxv1.TaskStatus_TASK_STATUS_COMPLETED:
 		result = domain.TaskStatusCompleted
-	case prxv1.TaskStatus_TASK_STATUS_CANCELLED:
-		result = domain.TaskStatusCancelled
+	case prxv1.TaskStatus_TASK_STATUS_CLOSED:
+		result = domain.TaskStatusClosed
 	case prxv1.TaskStatus_TASK_STATUS_UNSPECIFIED:
 		return nil, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid task status")
 	default:
@@ -226,13 +240,12 @@ func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 
 func protoTaskDisplayState(value domain.TaskDisplayState) prxv1.TaskDisplayState {
 	states := map[domain.TaskDisplayState]prxv1.TaskDisplayState{
-		domain.TaskDisplayStatePlanned:          prxv1.TaskDisplayState_TASK_DISPLAY_STATE_PLANNED,
+		domain.TaskDisplayStateNotStarted:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED,
+		domain.TaskDisplayStateDesigned:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED,
 		domain.TaskDisplayStateInProgress:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS,
 		domain.TaskDisplayStateCompleted:        prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED,
-		domain.TaskDisplayStateCancelled:        prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CANCELLED,
-		domain.TaskDisplayStateUnlinked:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNLINKED,
-		domain.TaskDisplayStateMerged:           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_MERGED,
 		domain.TaskDisplayStateClosed:           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED,
+		domain.TaskDisplayStateMerged:           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_MERGED,
 		domain.TaskDisplayStateDraft:            prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DRAFT,
 		domain.TaskDisplayStateConflict:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CONFLICT,
 		domain.TaskDisplayStateChangesRequested: prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CHANGES_REQUESTED,
@@ -343,8 +356,6 @@ func protoBlockedReason(task domain.Task) *prxv1.BlockedReason {
 	switch task.BlockedCode {
 	case domain.BlockedReasonCodeDependencyDataIncomplete:
 		code = prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE
-	case domain.BlockedReasonCodeBlockerStale:
-		code = prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_BLOCKER_STALE
 	case domain.BlockedReasonCodeWaitingForBlocker:
 		code = prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER
 	}
@@ -368,6 +379,10 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED
 	case domain.DomainErrorCodeDocumentTooLarge:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE
+	case domain.DomainErrorCodeInvalidImplementationPlan:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN
+	case domain.DomainErrorCodeImplementationPlanTooLarge:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE
 	case domain.DomainErrorCodeInvalidConfig:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_CONFIG
 	case domain.DomainErrorCodeGitHubAuth:
@@ -396,8 +411,6 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE
 	case domain.DomainErrorCodeNotFound:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND
-	case domain.DomainErrorCodePRTaskCompletesOnMerge:
-		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE
 	case domain.DomainErrorCodePullRequestOnManualTask:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK
 	case domain.DomainErrorCodeReferencesExist:

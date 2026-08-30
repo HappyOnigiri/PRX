@@ -18,64 +18,65 @@ enum FeatureStatus {
   FEATURE_STATUS_CANCELLED = 4;
 }
 
-// TaskKind identifies whether a task is completed by merging a pull request or manually.
+// TaskKind identifies whether a task is tracked with a pull request or a manual gate.
 enum TaskKind {
   // TASK_KIND_UNSPECIFIED is never returned by the server; in create requests it defaults to a pull-request task.
   TASK_KIND_UNSPECIFIED = 0;
-  // TASK_KIND_PULL_REQUEST identifies a task completed by merging its pull request.
+  // TASK_KIND_PULL_REQUEST identifies a task whose automatic state comes from its pull request.
   TASK_KIND_PULL_REQUEST = 1;
-  // TASK_KIND_MANUAL identifies a task completed by setting its status to completed.
+  // TASK_KIND_MANUAL identifies a task whose completion is controlled manually.
   TASK_KIND_MANUAL = 2;
 }
 
-// TaskStatus is the stored workflow state of a task.
+// TaskStatus is the stored workflow state of a task. Auto derives the task's
+// effective state from its pull request or implementation plan.
 enum TaskStatus {
   // TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
   TASK_STATUS_UNSPECIFIED = 0;
-  // TASK_STATUS_PLANNED means work has not started.
-  TASK_STATUS_PLANNED = 1;
-  // TASK_STATUS_IN_PROGRESS means work is underway.
-  TASK_STATUS_IN_PROGRESS = 2;
-  // TASK_STATUS_COMPLETED means a manual task is complete; pull-request tasks complete on merge.
-  TASK_STATUS_COMPLETED = 3;
-  // TASK_STATUS_CANCELLED means the task is cancelled and does not satisfy dependencies.
-  TASK_STATUS_CANCELLED = 4;
+  // TASK_STATUS_AUTO derives the task's effective state from its linked data.
+  TASK_STATUS_AUTO = 1;
+  // TASK_STATUS_NOT_STARTED overrides automatic derivation with an unfinished task.
+  TASK_STATUS_NOT_STARTED = 2;
+  // TASK_STATUS_IN_PROGRESS overrides automatic derivation with an active task.
+  TASK_STATUS_IN_PROGRESS = 3;
+  // TASK_STATUS_COMPLETED overrides automatic derivation with a satisfied task.
+  TASK_STATUS_COMPLETED = 4;
+  // TASK_STATUS_CLOSED overrides automatic derivation with a closed task.
+  TASK_STATUS_CLOSED = 5;
 }
 
 // TaskDisplayState is the derived state presented for a task.
-// For pull-request tasks, priority is merged, closed, draft, conflict, changes requested, approved,
-// review waiting, open, then unknown.
+// Automatic pull-request states use priority merged, closed, draft, conflict,
+// changes requested, approved, review waiting, open, then unknown.
 enum TaskDisplayState {
   // TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
   TASK_DISPLAY_STATE_UNSPECIFIED = 0;
-  // TASK_DISPLAY_STATE_PLANNED mirrors a planned manual task.
-  TASK_DISPLAY_STATE_PLANNED = 1;
-  // TASK_DISPLAY_STATE_IN_PROGRESS mirrors an in-progress manual task.
-  TASK_DISPLAY_STATE_IN_PROGRESS = 2;
-  // TASK_DISPLAY_STATE_COMPLETED mirrors a completed manual task.
-  TASK_DISPLAY_STATE_COMPLETED = 3;
-  // TASK_DISPLAY_STATE_CANCELLED mirrors a cancelled task.
-  TASK_DISPLAY_STATE_CANCELLED = 4;
-  // TASK_DISPLAY_STATE_UNLINKED means a pull-request task has no attached pull request.
-  TASK_DISPLAY_STATE_UNLINKED = 5;
+  // TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached and no plan exists.
+  TASK_DISPLAY_STATE_NOT_STARTED = 1;
+  // TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
+  TASK_DISPLAY_STATE_DESIGNED = 2;
+  // TASK_DISPLAY_STATE_IN_PROGRESS is a manual in-progress override.
+  TASK_DISPLAY_STATE_IN_PROGRESS = 3;
+  // TASK_DISPLAY_STATE_COMPLETED is a manual completed override.
+  TASK_DISPLAY_STATE_COMPLETED = 4;
+  // TASK_DISPLAY_STATE_CLOSED is a manual closed override or a closed pull request.
+  TASK_DISPLAY_STATE_CLOSED = 5;
   // TASK_DISPLAY_STATE_MERGED means the attached pull request is merged.
   TASK_DISPLAY_STATE_MERGED = 6;
-  // TASK_DISPLAY_STATE_CLOSED means the attached pull request is closed without being merged.
-  TASK_DISPLAY_STATE_CLOSED = 7;
   // TASK_DISPLAY_STATE_DRAFT means the attached pull request is a draft.
-  TASK_DISPLAY_STATE_DRAFT = 8;
+  TASK_DISPLAY_STATE_DRAFT = 7;
   // TASK_DISPLAY_STATE_CONFLICT means the attached pull request has a merge conflict.
-  TASK_DISPLAY_STATE_CONFLICT = 9;
+  TASK_DISPLAY_STATE_CONFLICT = 8;
   // TASK_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
-  TASK_DISPLAY_STATE_CHANGES_REQUESTED = 10;
+  TASK_DISPLAY_STATE_CHANGES_REQUESTED = 9;
   // TASK_DISPLAY_STATE_APPROVED means the attached pull request has an approval.
-  TASK_DISPLAY_STATE_APPROVED = 11;
+  TASK_DISPLAY_STATE_APPROVED = 10;
   // TASK_DISPLAY_STATE_REVIEW_WAITING means the attached open pull request is waiting for review.
-  TASK_DISPLAY_STATE_REVIEW_WAITING = 12;
+  TASK_DISPLAY_STATE_REVIEW_WAITING = 11;
   // TASK_DISPLAY_STATE_OPEN means the attached pull request is open without a higher-priority state.
-  TASK_DISPLAY_STATE_OPEN = 13;
+  TASK_DISPLAY_STATE_OPEN = 12;
   // TASK_DISPLAY_STATE_UNKNOWN means the attached pull request state or relevant data is unknown.
-  TASK_DISPLAY_STATE_UNKNOWN = 14;
+  TASK_DISPLAY_STATE_UNKNOWN = 13;
 }
 
 // PullRequestState is the raw lifecycle state reported for a GitHub pull request.
@@ -155,14 +156,13 @@ enum DocumentKind {
   DOCUMENT_KIND_MARKDOWN_PATH = 2;
 }
 
-// BlockedReasonCode explains why a planned task is not ready.
+// BlockedReasonCode explains why a task is not ready.
 enum BlockedReasonCode {
   // BLOCKED_REASON_CODE_UNSPECIFIED is never returned; no BlockedReason is sent when there is no structured reason.
   BLOCKED_REASON_CODE_UNSPECIFIED = 0;
   // BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE means a referenced blocker is missing.
   BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE = 1;
-  // BLOCKED_REASON_CODE_BLOCKER_STALE means a blocker has stale GitHub data.
-  BLOCKED_REASON_CODE_BLOCKER_STALE = 2;
+  reserved 2;
   // BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER means a dependency has not been satisfied.
   BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER = 3;
 }
@@ -207,8 +207,7 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_REFERENCES_EXIST = 18;
   // DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK means a pull request cannot attach to a manual task.
   DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK = 19;
-  // DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE means a pull-request task cannot be manually completed.
-  DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE = 20;
+  reserved 20;
   // DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL means a document URL is not HTTP or HTTPS.
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL = 21;
   // DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED means a registered Markdown file could not be read.
@@ -217,6 +216,10 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE = 23;
   // DOMAIN_ERROR_CODE_INVALID_CONFIG means the GitHub YAML configuration is invalid.
   DOMAIN_ERROR_CODE_INVALID_CONFIG = 24;
+  // DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN means plan content is empty or invalid.
+  DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN = 25;
+  // DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE means plan content exceeds 1 MiB.
+  DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE = 26;
 }
 
 // GitHubAuthMethodType identifies how a GitHub token is obtained.
@@ -233,7 +236,7 @@ enum GithubAuthMethodType {
   GITHUB_AUTH_METHOD_TYPE_GH_CLI = 4;
 }
 
-// BlockedReason is the structured reason a planned task is not ready.
+// BlockedReason is the structured reason a task is not ready.
 message BlockedReason {
   // code identifies the dependency condition preventing readiness.
   BlockedReasonCode code = 1;
@@ -289,9 +292,9 @@ message Task {
   string title = 3;
   // scope describes the work covered by the task.
   string scope = 4;
-  // kind determines whether completion is driven by a pull request or manual status.
+  // kind determines whether automatic state comes from a pull request or an implementation plan.
   TaskKind kind = 5;
-  // status is the stored workflow state; pull-request completion is derived from merge state.
+  // status is the stored automatic/manual workflow control value.
   TaskStatus status = 6;
   // assignee is the person responsible for the task, when assigned.
   string assignee = 7;
@@ -299,12 +302,26 @@ message Task {
   string created_at = 8;
   // updated_at is the last update time in RFC 3339 format.
   string updated_at = 9;
-  // ready indicates that the planned task has no unsatisfied blockers.
+  // ready indicates that the task is not started or designed and has no unsatisfied blockers.
   bool ready = 10;
   // display_state is the derived state intended for task presentation.
   TaskDisplayState display_state = 11;
-  // blocked_reason explains why a planned task is not ready, when applicable.
+  // blocked_reason explains why a task is not ready, when applicable.
   BlockedReason blocked_reason = 12;
+  // has_implementation_plan indicates whether a Markdown plan is stored for this task.
+  bool has_implementation_plan = 13;
+}
+
+// ImplementationPlan is the Markdown plan stored for exactly one task.
+message ImplementationPlan {
+  // task_id identifies the task owning the plan.
+  string task_id = 1;
+  // content contains the Markdown plan body.
+  string content = 2;
+  // created_at is the plan creation time in RFC 3339 format.
+  string created_at = 3;
+  // updated_at is the last plan update time in RFC 3339 format.
+  string updated_at = 4;
 }
 
 // Dependency is a directed edge from a blocker task to a blocked task in one feature.
@@ -387,7 +404,7 @@ message Snapshot {
   repeated PullRequest pull_requests = 4;
   // documents contains all registered document references without file contents.
   repeated Document documents = 5;
-  // ready_tasks contains planned tasks whose blockers are satisfied.
+  // ready_tasks contains tasks whose effective state is not started or designed and whose blockers are satisfied.
   repeated Task ready_tasks = 6;
   // review_waiting_tasks contains tasks whose pull requests are waiting for review.
   repeated Task review_waiting_tasks = 7;
@@ -501,12 +518,50 @@ message UpdateTaskResponse {
 message DeleteTaskRequest {
   // id identifies the task to delete.
   string id = 1;
-  // cascade permits deletion of the task's dependencies, pull request, and documents.
+  // cascade permits deletion of the task's dependencies, pull request, plan, and documents.
   bool cascade = 2;
 }
 
 // DeleteTaskResponse confirms that the task was deleted.
 message DeleteTaskResponse {}
+
+// GetImplementationPlanRequest identifies the task whose plan should be read.
+message GetImplementationPlanRequest {
+  // task_id identifies the task owning the plan.
+  string task_id = 1;
+}
+
+// GetImplementationPlanResponse returns the stored Markdown plan.
+message GetImplementationPlanResponse {
+  // implementation_plan is the task's plan.
+  ImplementationPlan implementation_plan = 1;
+}
+
+// UpsertImplementationPlanRequest stores or replaces a task's Markdown plan.
+message UpsertImplementationPlanRequest {
+  // task_id identifies the task owning the plan.
+  string task_id = 1;
+  // content is the non-empty Markdown plan body, limited to 1 MiB.
+  string content = 2;
+}
+
+// UpsertImplementationPlanResponse returns the stored Markdown plan.
+message UpsertImplementationPlanResponse {
+  // implementation_plan is the newly stored plan.
+  ImplementationPlan implementation_plan = 1;
+}
+
+// DeleteImplementationPlanRequest identifies the task whose plan should be deleted.
+message DeleteImplementationPlanRequest {
+  // task_id identifies the task owning the plan.
+  string task_id = 1;
+}
+
+// DeleteImplementationPlanResponse confirms the deleted task plan.
+message DeleteImplementationPlanResponse {
+  // task_id identifies the task whose plan was deleted.
+  string task_id = 1;
+}
 
 // AddDependencyRequest creates a same-feature dependency edge.
 message AddDependencyRequest {
@@ -828,6 +883,12 @@ service PRXService {
   rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
   // DeleteTask deletes a task, subject to the cascade option.
   rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
+  // GetImplementationPlan returns a task's stored Markdown implementation plan.
+  rpc GetImplementationPlan(GetImplementationPlanRequest) returns (GetImplementationPlanResponse);
+  // UpsertImplementationPlan stores or replaces a task's Markdown implementation plan.
+  rpc UpsertImplementationPlan(UpsertImplementationPlanRequest) returns (UpsertImplementationPlanResponse);
+  // DeleteImplementationPlan removes a task's stored implementation plan.
+  rpc DeleteImplementationPlan(DeleteImplementationPlanRequest) returns (DeleteImplementationPlanResponse);
   // AddDependency adds a same-feature dependency when it does not create a cycle.
   rpc AddDependency(AddDependencyRequest) returns (AddDependencyResponse);
   // RemoveDependency removes an existing dependency edge.

@@ -229,6 +229,36 @@ func (q *Queries) DeleteGitHubRepositoryAuthCache(ctx context.Context, arg Delet
 	return result.RowsAffected()
 }
 
+const deleteImplementationPlan = `-- name: DeleteImplementationPlan :execrows
+DELETE FROM implementation_plans WHERE task_id=?
+`
+
+func (q *Queries) DeleteImplementationPlan(ctx context.Context, taskID string) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteImplementationPlan, taskID)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
+const deleteImplementationPlansForFeature = `-- name: DeleteImplementationPlansForFeature :exec
+DELETE FROM implementation_plans WHERE task_id IN (SELECT id FROM tasks WHERE feature_id=?)
+`
+
+func (q *Queries) DeleteImplementationPlansForFeature(ctx context.Context, featureID string) error {
+	_, err := q.db.ExecContext(ctx, deleteImplementationPlansForFeature, featureID)
+	return err
+}
+
+const deleteImplementationPlansForTask = `-- name: DeleteImplementationPlansForTask :exec
+DELETE FROM implementation_plans WHERE task_id=?
+`
+
+func (q *Queries) DeleteImplementationPlansForTask(ctx context.Context, taskID string) error {
+	_, err := q.db.ExecContext(ctx, deleteImplementationPlansForTask, taskID)
+	return err
+}
+
 const deletePullRequest = `-- name: DeletePullRequest :execrows
 DELETE FROM pull_requests WHERE task_id=?
 `
@@ -346,6 +376,22 @@ func (q *Queries) GetGitHubRepositoryAuthCache(ctx context.Context, arg GetGitHu
 		&i.Repository,
 		&i.AuthMethodID,
 		&i.LastSucceededAt,
+	)
+	return i, err
+}
+
+const getImplementationPlan = `-- name: GetImplementationPlan :one
+SELECT task_id, content, created_at, updated_at FROM implementation_plans WHERE task_id=?
+`
+
+func (q *Queries) GetImplementationPlan(ctx context.Context, taskID string) (ImplementationPlan, error) {
+	row := q.db.QueryRowContext(ctx, getImplementationPlan, taskID)
+	var i ImplementationPlan
+	err := row.Scan(
+		&i.TaskID,
+		&i.Content,
+		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -516,6 +562,33 @@ func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
 			return nil, err
 		}
 		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listImplementationPlanTaskIDs = `-- name: ListImplementationPlanTaskIDs :many
+SELECT task_id FROM implementation_plans ORDER BY task_id
+`
+
+func (q *Queries) ListImplementationPlanTaskIDs(ctx context.Context) ([]string, error) {
+	rows, err := q.db.QueryContext(ctx, listImplementationPlanTaskIDs)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []string{}
+	for rows.Next() {
+		var task_id string
+		if err := rows.Scan(&task_id); err != nil {
+			return nil, err
+		}
+		items = append(items, task_id)
 	}
 	if err := rows.Close(); err != nil {
 		return nil, err
@@ -761,6 +834,37 @@ func (q *Queries) UpsertGitHubRepositoryAuthCache(ctx context.Context, arg Upser
 		arg.LastSucceededAt,
 	)
 	return err
+}
+
+const upsertImplementationPlan = `-- name: UpsertImplementationPlan :one
+INSERT INTO implementation_plans (task_id, content, created_at, updated_at)
+VALUES (?, ?, ?, ?)
+ON CONFLICT(task_id) DO UPDATE SET content=excluded.content, updated_at=excluded.updated_at
+RETURNING task_id, content, created_at, updated_at
+`
+
+type UpsertImplementationPlanParams struct {
+	TaskID    string `json:"task_id"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
+func (q *Queries) UpsertImplementationPlan(ctx context.Context, arg UpsertImplementationPlanParams) (ImplementationPlan, error) {
+	row := q.db.QueryRowContext(ctx, upsertImplementationPlan,
+		arg.TaskID,
+		arg.Content,
+		arg.CreatedAt,
+		arg.UpdatedAt,
+	)
+	var i ImplementationPlan
+	err := row.Scan(
+		&i.TaskID,
+		&i.Content,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
 }
 
 const upsertPullRequest = `-- name: UpsertPullRequest :one

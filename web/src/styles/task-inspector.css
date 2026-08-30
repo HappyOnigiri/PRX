@@ -167,8 +167,7 @@
 
 .linked-pr.state-approved span,
 .linked-pr.state-review-waiting span,
-.linked-pr.state-changes-requested span,
-.linked-pr.is-stale span {
+.linked-pr.state-changes-requested span {
   color: var(--status-review);
 }
 
@@ -179,6 +178,61 @@
 .linked-pr p {
   color: var(--status-conflict);
   font-size: var(--text-xs);
+}
+
+.linked-pr .pr-stale {
+  display: block;
+  color: var(--status-review);
+  font-size: var(--text-xs);
+}
+
+.linked-pr .sync-error {
+  display: flex;
+  gap: 4px;
+  overflow-wrap: anywhere;
+}
+
+.linked-pr .sync-error strong {
+  flex: 0 0 auto;
+}
+
+.implementation-plan-section {
+  min-width: 0;
+}
+
+.implementation-plan-section .sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.plan-empty,
+.plan-loading {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.plan-loading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.plan-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.implementation-plan-preview {
+  max-height: 260px;
+  margin-top: 12px;
+  overflow: auto;
+  border-top: 1px solid var(--border);
+  padding-top: 12px;
 }
 
 .text-action {

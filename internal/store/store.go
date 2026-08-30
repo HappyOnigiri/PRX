@@ -89,6 +89,9 @@ func (s *Store) migrate(ctx context.Context) error {
 	); err != nil {
 		return fmt.Errorf("create migration metadata: %w", err)
 	}
+	if err := s.repairMigrationVersionCollisions(ctx); err != nil {
+		return fmt.Errorf("repair migration metadata: %w", err)
+	}
 	entries, err := fs.ReadDir(migrations, "migrations")
 	if err != nil {
 		return fmt.Errorf("read migrations: %w", err)
@@ -138,6 +141,109 @@ func (s *Store) migrate(ctx context.Context) error {
 	return nil
 }
 
+// repairMigrationVersionCollisions handles databases created from the feature
+// branch before it was merged with the migration added on main. Those two
+// branches both used versions 2 and 3 for different schemas, so the version
+// alone cannot tell the migration runner what has actually been applied.
+func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
+	rows, err := s.db.QueryContext(
+		ctx,
+		`SELECT version FROM schema_migrations WHERE version IN (2, 3)`,
+	)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = rows.Close() }()
+	versions := make(map[int]bool, 2)
+	for rows.Next() {
+		var version int
+		if err := rows.Scan(&version); err != nil {
+			return err
+		}
+		versions[version] = true
+	}
+	if err := rows.Err(); err != nil {
+		return err
+	}
+
+	hasHost, err := s.pullRequestsHaveHostColumn(ctx)
+	if err != nil {
+		return err
+	}
+	hasAutomaticStatus, err := s.tasksUseAutomaticStatusSchema(ctx)
+	if err != nil {
+		return err
+	}
+	staleVersions := make([]int, 0, 2)
+	if versions[2] && !hasHost {
+		staleVersions = append(staleVersions, 2)
+	}
+	if versions[3] && !hasAutomaticStatus {
+		staleVersions = append(staleVersions, 3)
+	}
+	if len(staleVersions) == 0 {
+		return nil
+	}
+
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	for _, version := range staleVersions {
+		if _, err := tx.ExecContext(ctx, `DELETE FROM schema_migrations WHERE version=?`, version); err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
+	if err := tx.Commit(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *Store) pullRequestsHaveHostColumn(ctx context.Context) (bool, error) {
+	rows, err := s.db.QueryContext(ctx, `PRAGMA table_info(pull_requests)`)
+	if err != nil {
+		return false, err
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var (
+			cid        int
+			name       string
+			dataType   string
+			notNull    int
+			defaultVal sql.NullString
+			primaryKey int
+		)
+		if err := rows.Scan(&cid, &name, &dataType, &notNull, &defaultVal, &primaryKey); err != nil {
+			return false, err
+		}
+		if name == "host" {
+			return true, nil
+		}
+	}
+	return false, rows.Err()
+}
+
+func (s *Store) tasksUseAutomaticStatusSchema(ctx context.Context) (bool, error) {
+	var definition sql.NullString
+	if err := s.db.QueryRowContext(
+		ctx,
+		`SELECT sql FROM sqlite_master WHERE type='table' AND name='tasks'`,
+	).Scan(&definition); err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return false, nil
+		}
+		return false, err
+	}
+	normalized := strings.Join(strings.Fields(strings.ToLower(definition.String)), "")
+	return strings.Contains(
+		normalized,
+		"statusin('auto','not_started','in_progress','completed','closed')",
+	), nil
+}
+
 func timestamp(t time.Time) string { return t.UTC().Format(time.RFC3339Nano) }
 
 func parseTime(value string) time.Time {
@@ -175,6 +281,15 @@ func domainTask(value db.Task) domain.Task {
 		Kind:      domain.TaskKind(value.Kind),
 		Status:    domain.TaskStatus(value.Status),
 		Assignee:  value.Assignee,
+		CreatedAt: parseTime(value.CreatedAt),
+		UpdatedAt: parseTime(value.UpdatedAt),
+	}
+}
+
+func domainImplementationPlan(value db.ImplementationPlan) domain.ImplementationPlan {
+	return domain.ImplementationPlan{
+		TaskID:    value.TaskID,
+		Content:   value.Content,
 		CreatedAt: parseTime(value.CreatedAt),
 		UpdatedAt: parseTime(value.UpdatedAt),
 	}

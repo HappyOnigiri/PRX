@@ -2,7 +2,7 @@ package domain
 
 func PRDisplayState(pr *PullRequest) TaskDisplayState {
 	if pr == nil {
-		return TaskDisplayStateUnlinked
+		return TaskDisplayStateUnknown
 	}
 	if pr.State == PullRequestStateMerged {
 		return TaskDisplayStateMerged
@@ -32,18 +32,20 @@ func PRDisplayState(pr *PullRequest) TaskDisplayState {
 }
 
 func IsSatisfied(task Task, pr *PullRequest) bool {
-	if task.Status == TaskStatusCancelled {
+	if task.Status != TaskStatusAuto {
+		return task.Status == TaskStatusCompleted || task.Status == TaskStatusClosed
+	}
+	if task.Kind != TaskKindPR {
 		return false
 	}
-	if task.Kind == TaskKindManual {
-		return task.Status == TaskStatusCompleted
-	}
-	return pr != nil && !pr.Stale && pr.State == PullRequestStateMerged
+	return pr != nil && (pr.State == PullRequestStateOpen ||
+		pr.State == PullRequestStateClosed || pr.State == PullRequestStateMerged)
 }
 
-func IsIncomplete(task Task, pr *PullRequest) bool {
-	if task.Status == TaskStatusCancelled || task.Status == TaskStatusCompleted {
-		return false
+func isReadyCandidate(task Task, display TaskDisplayState) bool {
+	if task.Status == TaskStatusNotStarted {
+		return true
 	}
-	return task.Kind != TaskKindPR || pr == nil || pr.State != PullRequestStateMerged
+	return task.Status == TaskStatusAuto &&
+		(display == TaskDisplayStateNotStarted || display == TaskDisplayStateDesigned)
 }

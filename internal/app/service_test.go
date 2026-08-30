@@ -54,6 +54,18 @@ func (repositoryStub) DeleteTask(context.Context, string, bool) error {
 	return errors.New("unexpected DeleteTask call")
 }
 
+func (repositoryStub) GetImplementationPlan(context.Context, string) (domain.ImplementationPlan, error) {
+	return domain.ImplementationPlan{}, errors.New("unexpected GetImplementationPlan call")
+}
+
+func (repositoryStub) UpsertImplementationPlan(context.Context, string, string) (domain.ImplementationPlan, error) {
+	return domain.ImplementationPlan{}, errors.New("unexpected UpsertImplementationPlan call")
+}
+
+func (repositoryStub) DeleteImplementationPlan(context.Context, string) error {
+	return errors.New("unexpected DeleteImplementationPlan call")
+}
+
 func (repositoryStub) AddDependency(context.Context, string, string) (domain.Dependency, error) {
 	return domain.Dependency{}, errors.New("unexpected AddDependency call")
 }
@@ -110,6 +122,57 @@ type taskRepository struct {
 
 func (r *taskRepository) GetTask(context.Context, string) (domain.Task, error) {
 	return r.task, nil
+}
+
+func (r *taskRepository) UpdateTask(_ context.Context, task domain.Task) (domain.Task, error) {
+	r.task = task
+	return task, nil
+}
+
+type planRepository struct {
+	taskRepository
+	plan domain.ImplementationPlan
+}
+
+func (r *planRepository) GetImplementationPlan(context.Context, string) (domain.ImplementationPlan, error) {
+	return r.plan, nil
+}
+
+func (r *planRepository) UpsertImplementationPlan(
+	_ context.Context,
+	taskID, content string,
+) (domain.ImplementationPlan, error) {
+	r.plan = domain.ImplementationPlan{TaskID: taskID, Content: content}
+	return r.plan, nil
+}
+
+func (r *planRepository) DeleteImplementationPlan(context.Context, string) error {
+	r.plan = domain.ImplementationPlan{}
+	return nil
+}
+
+type syncRepository struct {
+	repositoryStub
+	snapshot domain.Snapshot
+	updated  domain.PullRequest
+}
+
+func (r *syncRepository) Snapshot(context.Context) (domain.Snapshot, error) {
+	return r.snapshot, nil
+}
+
+func (r *syncRepository) UpsertPullRequest(_ context.Context, value domain.PullRequest) (domain.PullRequest, error) {
+	r.updated = value
+	return value, nil
+}
+
+type syncProvider struct {
+	updated domain.PullRequest
+	err     error
+}
+
+func (p syncProvider) Fetch(context.Context, domain.PullRequest) (domain.PullRequest, error) {
+	return p.updated, p.err
 }
 
 type createFeatureRepository struct {
@@ -178,16 +241,78 @@ func TestCreateTaskRejectsUnknownKind(t *testing.T) {
 	}
 }
 
-func TestUpdateTaskRejectsManualCompletionForPRTask(t *testing.T) {
+func TestUpdateTaskAcceptsManualOverridesForPRTask(t *testing.T) {
 	repository := &taskRepository{
-		task: domain.Task{ID: "task-id", Title: "Ship", Kind: domain.TaskKindPR, Status: domain.TaskInProgress},
+		task: domain.Task{ID: "task-id", Title: "Ship", Kind: domain.TaskKindPR, Status: domain.TaskStatusAuto},
 	}
 	service := app.New(repository, nil)
-	completed := domain.TaskCompleted
+	completed := domain.TaskStatusCompleted
 
-	_, err := service.UpdateTask(context.Background(), "task-id", nil, nil, &completed, nil)
-	if got := errorCode(t, err); got != "pr_task_completes_on_merge" {
-		t.Fatalf("error code=%q, want pr_task_completes_on_merge", got)
+	updated, err := service.UpdateTask(context.Background(), "task-id", nil, nil, &completed, nil)
+	if err != nil || updated.Status != domain.TaskStatusCompleted {
+		t.Fatalf("updated task=%+v err=%v", updated, err)
+	}
+}
+
+func TestImplementationPlanValidationPreservesContent(t *testing.T) {
+	repository := &planRepository{
+		taskRepository: taskRepository{task: domain.Task{ID: "task-id", Title: "Plan", Kind: domain.TaskKindManual}},
+	}
+	service := app.New(repository, nil)
+	content := "  # Plan\n\nKeep the surrounding whitespace.  \n"
+	plan, err := service.UpsertImplementationPlan(context.Background(), "task-id", content)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if plan.Content != content || repository.plan.Content != content {
+		t.Fatalf("plan content=%q repository content=%q, want original content", plan.Content, repository.plan.Content)
+	}
+	if _, err := service.UpsertImplementationPlan(
+		context.Background(),
+		"task-id",
+		" \n\t ",
+	); errorCode(
+		t,
+		err,
+	) != domain.DomainErrorCodeInvalidImplementationPlan {
+		t.Fatalf("blank plan code=%q", errorCode(t, err))
+	}
+	if _, err := service.UpsertImplementationPlan(
+		context.Background(),
+		"task-id",
+		string(make([]byte, (1<<20)+1)),
+	); errorCode(
+		t,
+		err,
+	) != domain.DomainErrorCodeImplementationPlanTooLarge {
+		t.Fatalf("large plan code=%q", errorCode(t, err))
+	}
+}
+
+func TestSyncPersistsProviderPartialResultOnError(t *testing.T) {
+	initial := domain.PullRequest{
+		TaskID:       "task-id",
+		State:        domain.PullRequestStateUnknown,
+		ReviewState:  domain.ReviewStateUnknown,
+		Mergeability: domain.MergeabilityUnknown,
+		Stale:        true,
+	}
+	partial := initial
+	partial.State = domain.PullRequestStateOpen
+	partial.NodeID = "new-node"
+	repository := &syncRepository{snapshot: domain.Snapshot{PullRequests: []domain.PullRequest{initial}}}
+	service := app.New(repository, syncProvider{updated: partial, err: errors.New("review failed")})
+	if succeeded, failed, err := service.Sync(
+		context.Background(),
+		"",
+		"",
+	); succeeded != 0 || failed != 1 ||
+		err != nil {
+		t.Fatalf("sync result=(%d, %d, %v)", succeeded, failed, err)
+	}
+	if repository.updated.State != domain.PullRequestStateOpen || repository.updated.NodeID != "new-node" ||
+		repository.updated.SyncError != "review failed" || !repository.updated.Stale {
+		t.Fatalf("persisted partial result=%+v", repository.updated)
 	}
 }
 

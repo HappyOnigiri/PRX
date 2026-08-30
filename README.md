@@ -35,6 +35,8 @@ The development server uses the same live GitHub configuration as `prx serve`; u
 
 Run `make ci` before handing off a change.
 
+Tasks use automatic status by default. A pull-request task derives its display state from the linked PR; without a PR, a stored implementation plan displays as designed and no plan displays as not started. Use `prx task update TASK_ID --status auto|not_started|in_progress|completed|closed` for a manual override, and `prx implementation-plan get|set|delete TASK_ID` to manage a task's Markdown plan. Automatic dependencies are satisfied by a known open, closed, or merged PR, or by a manual completed or closed override; stale data remains visible as a warning.
+
 ## Documentation
 
 - `prx -h`, and `-h` on any subcommand, documents the CLI. [docs/cli/prx.md](docs/cli/prx.md) is the same reference in Markdown, generated from the command definitions by `make generate`.

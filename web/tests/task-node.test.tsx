@@ -22,6 +22,7 @@ describe("TaskNode", () => {
         state: TaskDisplayState.REVIEW_WAITING,
         ready: true,
         stale: true,
+        syncError: false,
         pullRequest: {
           label: "acme/api #42",
           url: "https://github.com/acme/api/pull/42",
