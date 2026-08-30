@@ -1,4 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
+import { Plus, Settings, X } from "lucide-react";
 import { useState, type ReactNode, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
@@ -15,6 +16,7 @@ import {
 } from "./i18n/settings";
 import { setDisplayTheme } from "./theme";
 import { appVersion } from "./version";
+import { IconButton } from "./views/IconButton";
 import { ServerSettingsDialog } from "./views/ServerSettingsDialog";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -67,14 +69,15 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Link>
             ))}
         </nav>
-        <button
+        <IconButton
+          icon={Plus}
+          label={t("nav.newFeature")}
+          variant="primary"
           className="rail-action"
           onClick={() => {
             setShowCreate(true);
           }}
-        >
-          {t("nav.newFeature")}
-        </button>
+        />
         <RailSettings
           theme={theme}
           onThemeChange={(preference) => {
@@ -155,12 +158,13 @@ function RailSettings({
           ))}
         </select>
       </label>
-      <button
-        className="secondary settings-trigger"
+      <IconButton
+        icon={Settings}
+        label={t("serverSettings.open")}
+        variant="secondary"
+        className="settings-trigger"
         onClick={onOpenServerSettings}
-      >
-        {t("serverSettings.open")}
-      </button>
+      />
     </div>
   );
 }
@@ -224,12 +228,19 @@ function FeatureCreateDialog({ onClose }: { onClose: () => void }) {
           <p className="form-error">{formatError(createFeature.error, t)}</p>
         )}
         <footer>
-          <button type="button" className="secondary" onClick={onClose}>
-            {t("common.cancel")}
-          </button>
-          <button disabled={createFeature.isPending}>
-            {t("featureCreate.submit")}
-          </button>
+          <IconButton
+            icon={X}
+            label={t("common.cancel")}
+            variant="secondary"
+            onClick={onClose}
+          />
+          <IconButton
+            icon={Plus}
+            label={t("featureCreate.submit")}
+            variant="primary"
+            type="submit"
+            disabled={createFeature.isPending}
+          />
         </footer>
       </form>
     </div>

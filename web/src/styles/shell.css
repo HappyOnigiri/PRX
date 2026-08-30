@@ -300,11 +300,9 @@
     min-width: 32px;
     padding-inline: 0;
     overflow: hidden;
-    font-size: 0;
   }
 
-  .settings-trigger::before {
-    content: "⚙";
-    font-size: var(--text-md);
+  .settings-trigger .icon-button-label {
+    display: none;
   }
 }

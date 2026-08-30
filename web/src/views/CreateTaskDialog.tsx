@@ -1,3 +1,4 @@
+import { Plus, X } from "lucide-react";
 import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
@@ -5,6 +6,7 @@ import { formValue } from "../form";
 import { TaskKind } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { formatError, taskKindLabel } from "../i18n/domain";
+import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 
 interface CreateTaskDialogProps {
@@ -85,12 +87,19 @@ export function CreateTaskDialog({
           <p className="form-error">{formatError(createTask.error, t)}</p>
         )}
         <footer>
-          <button type="button" className="secondary" onClick={onClose}>
-            {t("common.cancel")}
-          </button>
-          <button disabled={createTask.isPending}>
-            {t("taskCreate.submit")}
-          </button>
+          <IconButton
+            icon={X}
+            label={t("common.cancel")}
+            variant="secondary"
+            onClick={onClose}
+          />
+          <IconButton
+            icon={Plus}
+            label={t("taskCreate.submit")}
+            variant="primary"
+            type="submit"
+            disabled={createTask.isPending}
+          />
         </footer>
         <MutationError error={createTask.error} />
       </form>

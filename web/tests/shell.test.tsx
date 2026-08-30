@@ -111,7 +111,7 @@ describe("AppShell", () => {
         <p>Workspace</p>
       </AppShell>,
     );
-    fireEvent.click(screen.getByRole("button", { name: "＋ New feature" }));
+    fireEvent.click(screen.getByRole("button", { name: "New feature" }));
     fireEvent.change(screen.getByLabelText("Slug"), {
       target: { value: "release" },
     });
@@ -136,7 +136,7 @@ describe("AppShell", () => {
       params: { featureId: "created" },
     });
 
-    fireEvent.click(screen.getByRole("button", { name: "＋ New feature" }));
+    fireEvent.click(screen.getByRole("button", { name: "New feature" }));
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(
       screen.queryByRole("form", { name: "Create feature" }),

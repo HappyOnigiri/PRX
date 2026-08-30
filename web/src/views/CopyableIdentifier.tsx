@@ -1,6 +1,7 @@
 import { Check, Copy } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import { IconButton } from "./IconButton";
 
 type CopyStatus = "copied" | "failed";
 
@@ -35,21 +36,18 @@ export function CopyableIdentifier({
       <code className="copyable-identifier-value" title={value}>
         {value}
       </code>
-      <button
-        type="button"
+      <IconButton
+        icon={Icon}
+        label={copyLabel}
+        variant="quiet"
+        size="compact"
+        iconOnly
         className={`copyable-identifier-button${isCopied ? " is-copied" : ""}`}
         aria-label={isCopied ? t("common.copied") : copyLabel}
         title={copyLabel}
         onClick={() => void copyIdentifier()}
-      >
-        <Icon
-          data-icon={isCopied ? "check" : "copy"}
-          aria-hidden="true"
-          focusable="false"
-          size={14}
-          strokeWidth={1.35}
-        />
-      </button>
+        iconProps={{ "data-icon": isCopied ? "check" : "copy" }}
+      />
       <span className="copyable-identifier-status" aria-live="polite">
         {status === "failed" && t("common.copyFailed")}
       </span>

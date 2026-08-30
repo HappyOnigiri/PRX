@@ -1,4 +1,13 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
+import {
+  Archive,
+  ArchiveRestore,
+  ArrowLeft,
+  Pencil,
+  Plus,
+  RefreshCw,
+  Trash2,
+} from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
@@ -13,6 +22,7 @@ import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { EditFeatureDialog } from "./EditFeatureDialog";
 import { FeatureGraph } from "./FeatureGraph";
+import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { MutationError } from "./MutationError";
 import { TaskInspector } from "./TaskInspector";
@@ -73,9 +83,12 @@ export function FeatureWorkspace() {
     return (
       <div className="state-message">
         <h1>{t("workspace.notFound")}</h1>
-        <button onClick={() => void navigate({ to: "/" })}>
-          {t("workspace.returnOverview")}
-        </button>
+        <IconButton
+          icon={ArrowLeft}
+          label={t("workspace.returnOverview")}
+          variant="secondary"
+          onClick={() => void navigate({ to: "/" })}
+        />
       </div>
     );
 
@@ -183,41 +196,48 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           </p>
         </div>
         <div className="workspace-actions">
-          <button
-            className="secondary"
+          <IconButton
+            icon={RefreshCw}
+            label={
+              props.syncPending
+                ? t("workspace.syncing")
+                : t("workspace.syncGithub")
+            }
+            variant="secondary"
             onClick={props.onSync}
             disabled={props.syncPending}
-          >
-            {props.syncPending
-              ? t("workspace.syncing")
-              : t("workspace.syncGithub")}
-          </button>
-          <button onClick={props.onCreateTask}>{t("workspace.addTask")}</button>
-          <button
-            className="icon-button"
-            aria-label={t("workspace.editFeature")}
+          />
+          <IconButton
+            icon={Plus}
+            label={t("workspace.addTask")}
+            variant="primary"
+            onClick={props.onCreateTask}
+          />
+          <IconButton
+            icon={Pencil}
+            label={t("workspace.editFeature")}
+            variant="secondary"
+            iconOnly
             onClick={props.onEditFeature}
-          >
-            ✎
-          </button>
-          <button
-            className="icon-button"
-            aria-label={
+          />
+          <IconButton
+            icon={props.feature.archived ? ArchiveRestore : Archive}
+            label={
               props.feature.archived
                 ? t("workspace.unarchiveFeature")
                 : t("workspace.archiveFeature")
             }
+            variant="secondary"
+            iconOnly
             onClick={props.onToggleArchive}
-          >
-            ⌁
-          </button>
-          <button
-            className="icon-button danger"
-            aria-label={t("workspace.deleteFeature")}
+          />
+          <IconButton
+            icon={Trash2}
+            label={t("workspace.deleteFeature")}
+            variant="danger"
+            iconOnly
             onClick={props.onDeleteFeature}
-          >
-            ×
-          </button>
+          />
         </div>
       </header>
       <MutationError error={props.deleteError} />

@@ -11,16 +11,6 @@
   background: var(--surface);
 }
 
-.dependency-chip button {
-  width: 28px;
-  min-width: 28px;
-  min-height: 28px;
-  border: 0;
-  background: transparent;
-  color: var(--text-2);
-  padding: 0;
-}
-
 .inspector > header {
   position: sticky;
   top: 0;
@@ -46,36 +36,6 @@
   min-width: 0;
   display: grid;
   gap: 4px;
-}
-
-.inspector > header button {
-  width: 32px;
-  min-width: 32px;
-  min-height: 32px;
-  border: 1px solid var(--border-strong);
-  background: transparent;
-  color: var(--text-2);
-  padding: 0;
-}
-
-.document-chip > button:last-child {
-  width: 28px;
-  min-width: 28px;
-  min-height: 28px;
-  border: 0;
-  background: transparent;
-  color: var(--text-2);
-  padding: 0;
-}
-
-.dependency-chip button:hover {
-  background: var(--border);
-  color: var(--text);
-}
-
-.inspector > header button:hover {
-  background: var(--surface-2);
-  color: var(--text);
 }
 
 .inspector-state {
@@ -116,21 +76,6 @@
   color: var(--text-2);
   font-size: var(--text-sm);
   font-weight: 600;
-}
-
-.inspector form > button:not(.text-action) {
-  border-color: var(--border-strong);
-  background: transparent;
-  color: var(--text);
-}
-
-.document-chip > button:last-child:hover {
-  background: var(--border);
-  color: var(--text);
-}
-
-.inspector form > button:not(.text-action):hover {
-  background: var(--surface-2);
 }
 
 .dependency-chip,
@@ -327,10 +272,23 @@
 
 .document-preview {
   min-height: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
   border: 0;
   background: transparent;
   color: inherit;
   padding: 0;
+}
+
+.document-preview-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.document-preview > svg {
+  flex: 0 0 auto;
+  color: var(--text-3);
 }
 
 .document-preview:hover {
