@@ -9,7 +9,7 @@ prx seed [flags]
 ### Examples
 
 ```
-prx seed --github-fixture demo --features 100 --tasks 50 --json
+prx seed --github-fixture demo --features 100 --tasks 50
 ```
 
 ### Options
@@ -27,8 +27,7 @@ prx seed --github-fixture demo --features 100 --tasks 50 --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO

@@ -105,14 +105,13 @@ func TestCommandDescriptionsMentionTheirAliases(t *testing.T) {
 
 func TestPreScanOutputFlagsRespectsValuesAndBoundary(t *testing.T) {
 	for _, test := range []struct {
-		name      string
-		args      []string
-		wantJSON  bool
-		wantHuman bool
+		name     string
+		args     []string
+		wantJSON bool
 	}{
 		{name: "json after unknown command", args: []string{"unknown", "--json"}, wantJSON: true},
 		{name: "JSON after unknown local flag", args: []string{"unknown", "--title", "--json"}, wantJSON: true},
-		{name: "boolean values", args: []string{"--json=false", "--human=true"}, wantHuman: true},
+		{name: "false value", args: []string{"--json=false"}},
 		{name: "literal flag value", args: []string{"--db", "--json", "unknown"}},
 		{name: "literal local flag value", args: []string{"feature", "create", "--title", "--json"}},
 		{name: "double dash boundary", args: []string{"unknown", "--", "--json"}},
@@ -120,9 +119,8 @@ func TestPreScanOutputFlagsRespectsValuesAndBoundary(t *testing.T) {
 		t.Run(test.name, func(t *testing.T) {
 			root, state := newRootWithState(io.Discard, io.Discard, testOpenService)
 			state.preScanOutputFlags(root, test.args)
-			if state.json != test.wantJSON || state.human != test.wantHuman {
-				t.Fatalf("flags=(json=%t human=%t), want (%t %t)",
-					state.json, state.human, test.wantJSON, test.wantHuman)
+			if state.json != test.wantJSON {
+				t.Fatalf("json=%t, want %t", state.json, test.wantJSON)
 			}
 		})
 	}

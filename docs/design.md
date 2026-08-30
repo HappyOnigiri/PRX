@@ -48,11 +48,11 @@ Errors use stderr and leave stdout empty so automation cannot confuse a failed c
 
 | Condition | Output policy |
 |---|---|
-| No output flag and stdout is a TTY | Human-readable output |
-| No output flag and stdout is not a TTY | JSON |
+| No output flag | Concise text regardless of stdout |
 | `--json` | JSON regardless of stdout |
-| `--human` | Human-readable output regardless of stdout |
-| Both output flags | Usage error |
+
+Concise text is the default for routine inspection by people and coding agents.
+Use JSON when a caller needs fields omitted from the text presentation or a stable schema for programmatic parsing.
 
 Successful JSON commands emit their data object directly without a `schema_version`, `ok`, or `data` envelope.
 Empty collections are `[]`, never `null`.
@@ -60,11 +60,11 @@ Failed JSON commands emit the versioned error object to stderr and leave stdout 
 The current CLI response schema version is `2`.
 Its error object contains `code`, `message`, and the failed command's complete help in `hint`, the only machine-readable field that carries presentation text.
 Failures return a non-zero exit status.
-Human output does not vary with terminal width or ambient environment.
+Text output does not vary with terminal width or ambient environment.
 The CLI implementation and black-box tests own current field names and presentation details.
 
-Human failures print the error followed by the same complete command help used by normal help.
-An explicit `--json` makes successful help a compact object with the complete help in `hint`.
+Text failures print the error followed by the same complete command help used by normal help.
+An explicit `--json` makes successful help a JSON object with the complete help in `hint`.
 Help succeeds without opening configuration or storage resources.
 
 Resource commands use their shallow form for routine reads.

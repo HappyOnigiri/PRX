@@ -15,13 +15,6 @@ import (
 
 const SchemaVersion = "2"
 
-type outputMode uint8
-
-const (
-	outputModeJSON outputMode = iota + 1
-	outputModeHuman
-)
-
 type humanRenderer func(io.Writer) error
 
 type errorEnvelope struct {
@@ -39,10 +32,7 @@ func PrintError(out io.Writer, err error) error {
 }
 
 func (s *state) write(value any, render humanRenderer) error {
-	if err := s.resolveOutputMode(); err != nil {
-		return err
-	}
-	if s.mode == outputModeHuman {
+	if !s.json {
 		if render == nil {
 			return errors.New("human output renderer is required")
 		}
@@ -56,10 +46,7 @@ func (s *state) write(value any, render humanRenderer) error {
 }
 
 func (s *state) writeError(err error, hint string) error {
-	if resolveErr := s.resolveOutputMode(); resolveErr != nil && err == nil {
-		err = resolveErr
-	}
-	if s.mode == outputModeHuman {
+	if !s.json {
 		if hint == "" {
 			_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n", errorMessage(err))
 			return writeErr

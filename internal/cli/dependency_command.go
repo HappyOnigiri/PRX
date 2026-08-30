@@ -8,7 +8,7 @@ func (s *state) dependencyCommand() *cobra.Command {
 		Aliases: []string{"dep"},
 		Short:   "List or manage directed blocker edges",
 		Long:    "List or manage directed blocker edges.\n\nAlias: dep.",
-		Example: "prx dependency --json\nprx dep --json",
+		Example: "prx dependency\nprx dep",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			snapshot, err := s.service.Snapshot(cmd.Context())
@@ -22,7 +22,7 @@ func (s *state) dependencyCommand() *cobra.Command {
 	add := &cobra.Command{
 		Use:     "add BLOCKER_TASK_ID BLOCKED_TASK_ID",
 		Short:   "Add a blocker-to-blocked dependency",
-		Example: "prx dependency add BLOCKER_TASK_ID BLOCKED_TASK_ID --json",
+		Example: "prx dependency add BLOCKER_TASK_ID BLOCKED_TASK_ID",
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.AddDependency(cmd.Context(), args[0], args[1])
@@ -35,7 +35,7 @@ func (s *state) dependencyCommand() *cobra.Command {
 	remove := &cobra.Command{
 		Use:     "remove BLOCKER_TASK_ID BLOCKED_TASK_ID",
 		Short:   "Remove a dependency; missing edges return not_found",
-		Example: "prx dependency remove BLOCKER_TASK_ID BLOCKED_TASK_ID --json",
+		Example: "prx dependency remove BLOCKER_TASK_ID BLOCKED_TASK_ID",
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := s.service.RemoveDependency(cmd.Context(), args[0], args[1]); err != nil {

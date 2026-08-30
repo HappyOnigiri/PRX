@@ -13,7 +13,7 @@ func (s *state) planCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "plan TASK_ID",
 		Short:   "Show or manage a task's implementation plan",
-		Example: "prx plan T-1 --json",
+		Example: "prx plan T-1",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.GetImplementationPlan(cmd.Context(), args[0])
@@ -29,7 +29,7 @@ func (s *state) planCommand() *cobra.Command {
 	set := &cobra.Command{
 		Use:     "set TASK_ID",
 		Short:   "Create or replace a task's implementation plan",
-		Example: "prx plan set TASK_ID --file plan.md --json",
+		Example: "prx plan set TASK_ID --file plan.md",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if (file == "") == !stdin {
@@ -65,7 +65,7 @@ func (s *state) planCommand() *cobra.Command {
 	deleteCmd := &cobra.Command{
 		Use:     "delete TASK_ID",
 		Short:   "Delete a task's implementation plan",
-		Example: "prx plan delete TASK_ID --json",
+		Example: "prx plan delete TASK_ID",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := s.service.DeleteImplementationPlan(cmd.Context(), args[0]); err != nil {

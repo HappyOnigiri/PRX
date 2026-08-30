@@ -15,10 +15,10 @@ prx feature [FEATURE_ID_OR_SLUG] [flags]
 ### Examples
 
 ```
-prx feature --json
-prx feature F-1 --json
-prx f checkout --json
-prx show create --json
+prx feature
+prx feature F-1
+prx f checkout
+prx show create
 ```
 
 ### Options
@@ -33,8 +33,7 @@ prx show create --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
