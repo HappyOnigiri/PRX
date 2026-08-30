@@ -75,22 +75,6 @@ export default defineConfig({
   build: {
     outDir: resolve(__dirname, "../internal/webui/dist"),
     emptyOutDir: false,
-    rollupOptions: {
-      output: {
-        manualChunks(id) {
-          if (id.includes("@xyflow")) return "graph";
-          if (id.includes("@tanstack")) return "tanstack";
-          if (id.includes("@bufbuild") || id.includes("@connectrpc"))
-            return "rpc";
-          if (
-            id.includes("/node_modules/react/") ||
-            id.includes("/node_modules/react-dom/")
-          )
-            return "react";
-          return undefined;
-        },
-      },
-    },
   },
   test: {
     environment: "jsdom",
