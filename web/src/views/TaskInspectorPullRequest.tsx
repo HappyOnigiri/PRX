@@ -33,6 +33,9 @@ export function PullRequestSection({
           className={`linked-pr state-${pullRequestDisplayStateToken(pullRequest.displayState)} ${pullRequest.stale ? "is-stale" : ""}`}
         >
           <a href={pullRequest.url} target="_blank" rel="noreferrer">
+            {pullRequest.host && pullRequest.host !== "github.com"
+              ? `${pullRequest.host}/`
+              : ""}
             {pullRequest.owner}/{pullRequest.repository} #
             {String(pullRequest.number)}
           </a>

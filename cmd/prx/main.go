@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"os"
 	"os/signal"
@@ -10,11 +9,12 @@ import (
 
 	"github.com/HappyOnigiri/PRX/internal/app"
 	"github.com/HappyOnigiri/PRX/internal/cli"
+	"github.com/HappyOnigiri/PRX/internal/config"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/store"
 )
 
-func newOpenService(w io.Writer) cli.OpenService {
+func newOpenService(_ io.Writer) cli.OpenService {
 	return func(ctx context.Context, dbPath, fixturePath string, live bool) (cli.Service, io.Closer, error) {
 		database, err := store.Open(ctx, dbPath)
 		if err != nil {
@@ -28,17 +28,22 @@ func newOpenService(w io.Writer) cli.OpenService {
 				_ = database.Close()
 				return nil, nil, err
 			}
-		} else if live {
-			provider, err = githubprovider.NewLiveProvider(ctx)
-			if err != nil {
-				// Serving without a provider is useful for local CRUD and matches
-				// the historical warning-only behavior when GitHub auth is absent.
-				_, _ = fmt.Fprintf(w, "warning: %v\n", err)
-				provider = nil
+		}
+		configStore, configErr := config.NewStore(config.PathFromContext(ctx))
+		if configErr != nil {
+			_ = database.Close()
+			return nil, nil, configErr
+		}
+		if live && fixturePath == "" {
+			// Resolver construction is deliberately lazy: credentials are read
+			// only when a repository is synchronized, so local CRUD and serve
+			// startup do not require a working Keychain or gh session.
+			if _, loadErr := configStore.Load(); loadErr != nil {
+				_ = database.Close()
+				return nil, nil, loadErr
 			}
 		}
-
-		return app.New(database, provider), database, nil
+		return app.NewWithConfig(database, provider, configStore), database, nil
 	}
 }
 

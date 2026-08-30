@@ -10,6 +10,7 @@ import (
 	"os"
 	"os/exec"
 	"path/filepath"
+	"strings"
 	"testing"
 	"time"
 
@@ -327,4 +328,175 @@ func TestBlackBoxJSONFlagFormsAgree(t *testing.T) {
 			}
 		})
 	}
+}
+
+func TestBlackBoxConfigUsesSecureSecretFreeOutput(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	configPath := filepath.Join(root, "prx", "config.yaml")
+	dbPath := filepath.Join(root, "unused.db")
+	show, stderr, exit := runConfigCLI(t, binary, dbPath, configPath, "", "config", "show")
+	if exit != 0 || stderr != "" || !show.OK {
+		t.Fatalf("config show=%+v stderr=%q exit=%d", show, stderr, exit)
+	}
+	if _, err := os.Stat(dbPath); !os.IsNotExist(err) {
+		t.Fatalf("config command opened database: err=%v", err)
+	}
+	if _, stderr, exit := runConfigCLI(
+		t,
+		binary,
+		dbPath,
+		configPath,
+		"",
+		"config",
+		"host",
+		"add",
+		"--host",
+		"ghe.example.com",
+	); exit != 0 ||
+		stderr != "" {
+		t.Fatalf("host add stderr=%q exit=%d", stderr, exit)
+	}
+	added, stderr, exit := runConfigCLI(
+		t,
+		binary,
+		dbPath,
+		configPath,
+		"github_pat_cli_secret\n",
+		"config",
+		"auth",
+		"add",
+		"--id",
+		"ghe-inline",
+		"--host",
+		"ghe.example.com",
+		"--type",
+		"inline",
+		"--token-stdin",
+	)
+	if exit != 0 || stderr != "" || !added.OK {
+		t.Fatalf("auth add=%+v stderr=%q exit=%d", added, stderr, exit)
+	}
+	if strings.Contains(string(added.Data), "github_pat_cli_secret") {
+		t.Fatalf("auth add response exposed token: %s", added.Data)
+	}
+	body, err := os.ReadFile(configPath)
+	if err != nil || !strings.Contains(string(body), "github_pat_cli_secret") {
+		t.Fatalf("config did not persist inline token: %s err=%v", body, err)
+	}
+	listed, stderr, exit := runConfigCLI(t, binary, dbPath, configPath, "", "config", "auth", "list")
+	if exit != 0 || stderr != "" || strings.Contains(string(listed.Data), "github_pat_cli_secret") {
+		t.Fatalf("auth list=%s stderr=%q exit=%d", listed.Data, stderr, exit)
+	}
+	removed, stderr, exit := runConfigCLI(
+		t,
+		binary,
+		dbPath,
+		configPath,
+		"",
+		"config",
+		"host",
+		"remove",
+		"ghe.example.com",
+	)
+	if exit == 0 || stderr != "" || removed.Error == nil || removed.Error.Code != "references_exist" {
+		t.Fatalf("referenced host removal=%+v stderr=%q exit=%d", removed, stderr, exit)
+	}
+	updated, stderr, exit := runConfigCLI(
+		t,
+		binary,
+		dbPath,
+		configPath,
+		"",
+		"config",
+		"auth",
+		"update",
+		"ghe-inline",
+		"--type",
+		"environment",
+		"--variable",
+		"GH_ENTERPRISE_TOKEN",
+	)
+	if exit != 0 || stderr != "" || !updated.OK {
+		t.Fatalf("auth update=%+v stderr=%q exit=%d", updated, stderr, exit)
+	}
+	body, err = os.ReadFile(configPath)
+	if err != nil || strings.Contains(string(body), "github_pat_cli_secret") {
+		t.Fatalf("changing away from inline retained token: %s err=%v", body, err)
+	}
+	if _, stderr, exit := runConfigCLI(
+		t,
+		binary,
+		dbPath,
+		configPath,
+		"",
+		"config",
+		"auth",
+		"reorder",
+		"ghe-inline",
+	); exit != 0 ||
+		stderr != "" {
+		t.Fatalf("auth reorder stderr=%q exit=%d", stderr, exit)
+	}
+	if _, stderr, exit := runConfigCLI(
+		t,
+		binary,
+		dbPath,
+		configPath,
+		"",
+		"config",
+		"auth",
+		"remove",
+		"ghe-inline",
+	); exit != 0 ||
+		stderr != "" {
+		t.Fatalf("auth remove stderr=%q exit=%d", stderr, exit)
+	}
+	if _, stderr, exit := runConfigCLI(
+		t,
+		binary,
+		dbPath,
+		configPath,
+		"",
+		"config",
+		"host",
+		"remove",
+		"ghe.example.com",
+	); exit != 0 ||
+		stderr != "" {
+		t.Fatalf("host remove stderr=%q exit=%d", stderr, exit)
+	}
+	valid, stderr, exit := runConfigCLI(t, binary, dbPath, configPath, "", "config", "validate")
+	if exit != 0 || stderr != "" || !valid.OK {
+		t.Fatalf("config validate=%+v stderr=%q exit=%d", valid, stderr, exit)
+	}
+}
+
+func runConfigCLI(
+	t *testing.T,
+	binary, dbPath, configPath, input string,
+	args ...string,
+) (resultEnvelope, string, int) {
+	t.Helper()
+	commandArgs := []string{"--db", dbPath, "--config", configPath, "--json"}
+	command := exec.CommandContext(context.Background(), binary, append(commandArgs, args...)...)
+	command.Stdin = strings.NewReader(input)
+	var stdout, stderr bytes.Buffer
+	command.Stdout = &stdout
+	command.Stderr = &stderr
+	err := command.Run()
+	exit := 0
+	if err != nil {
+		var typed *exec.ExitError
+		if errors.As(err, &typed) {
+			exit = typed.ExitCode()
+		} else {
+			t.Fatal(err)
+		}
+	}
+	var envelope resultEnvelope
+	if decodeErr := json.Unmarshal(stdout.Bytes(), &envelope); decodeErr != nil {
+		t.Fatalf("stdout is not pure JSON: %v\n%s", decodeErr, stdout.String())
+	}
+	return envelope, stderr.String(), exit
 }

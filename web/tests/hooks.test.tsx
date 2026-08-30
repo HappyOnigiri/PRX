@@ -1,12 +1,23 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { useDomainMutation, useSnapshot } from "../src/hooks";
+import {
+  useConfig,
+  useConfigMutation,
+  useDomainMutation,
+  useSnapshot,
+} from "../src/hooks";
 import { makeSnapshot } from "./factories";
 
-const hookMocks = vi.hoisted(() => ({ getSnapshot: vi.fn() }));
+const hookMocks = vi.hoisted(() => ({
+  getSnapshot: vi.fn(),
+  getConfig: vi.fn(),
+}));
 
-vi.mock("../src/api", () => ({ getSnapshot: hookMocks.getSnapshot }));
+vi.mock("../src/api", () => ({
+  getSnapshot: hookMocks.getSnapshot,
+  getConfig: hookMocks.getConfig,
+}));
 
 function createWrapper(queryClient: QueryClient) {
   return function Wrapper({ children }: { children: React.ReactNode }) {
@@ -51,6 +62,36 @@ describe("domain query hooks", () => {
     expect(mutation.mock.calls[0]?.[0]).toBe("input");
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ["snapshot"],
+    });
+  });
+
+  it("loads and invalidates the server configuration", async () => {
+    const config = { version: 1 };
+    hookMocks.getConfig.mockResolvedValue(config);
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(() => useConfig(), {
+      wrapper: createWrapper(queryClient),
+    });
+    await waitFor(() => {
+      expect(result.current.data).toBe(config);
+    });
+    expect(hookMocks.getConfig).toHaveBeenCalledOnce();
+
+    const mutation = vi.fn().mockResolvedValue("saved");
+    const mutationHook = renderHook(() => useConfigMutation(mutation), {
+      wrapper: createWrapper(queryClient),
+    });
+    await expect(
+      mutationHook.result.current.mutateAsync("input"),
+    ).resolves.toBe("saved");
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["github-config"],
     });
   });
 });

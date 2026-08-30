@@ -49,7 +49,7 @@ export function useGraphLayout({
           syncError: hasSyncError,
           pullRequest: pr
             ? {
-                label: `${pr.owner}/${pr.repository} #${String(pr.number)}`,
+                label: `${pr.host && pr.host !== "github.com" ? `${pr.host}/` : ""}${pr.owner}/${pr.repository} #${String(pr.number)}`,
                 url: pr.url,
               }
             : undefined,

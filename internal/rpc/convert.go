@@ -61,6 +61,7 @@ func protoDependency(v domain.Dependency) *prxv1.Dependency {
 func protoPullRequest(v domain.PullRequest) *prxv1.PullRequest {
 	result := &prxv1.PullRequest{
 		TaskId:       v.TaskID,
+		Host:         v.Host,
 		Owner:        v.Owner,
 		Repository:   v.Repository,
 		Number:       v.Number,
@@ -382,6 +383,8 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN
 	case domain.DomainErrorCodeImplementationPlanTooLarge:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE
+	case domain.DomainErrorCodeInvalidConfig:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_CONFIG
 	case domain.DomainErrorCodeGitHubAuth:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH
 	case domain.DomainErrorCodeInvalidDatabase:

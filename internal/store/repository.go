@@ -3,6 +3,7 @@ package store
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -299,10 +300,54 @@ func (s *Store) DeleteFeature(ctx context.Context, id string, cascade bool) erro
 	return tx.Commit()
 }
 
+func (s *Store) GetGitHubRepositoryAuthCache(
+	ctx context.Context,
+	host, owner, repository string,
+) (string, bool, error) {
+	row, err := db.New(s.db).GetGitHubRepositoryAuthCache(ctx, db.GetGitHubRepositoryAuthCacheParams{
+		Host:       host,
+		Owner:      owner,
+		Repository: repository,
+	})
+	if errors.Is(err, sql.ErrNoRows) {
+		return "", false, nil
+	}
+	if err != nil {
+		return "", false, err
+	}
+	return row.AuthMethodID, true, nil
+}
+
+func (s *Store) UpsertGitHubRepositoryAuthCache(
+	ctx context.Context,
+	host, owner, repository, authMethodID string,
+) error {
+	return db.New(s.db).UpsertGitHubRepositoryAuthCache(ctx, db.UpsertGitHubRepositoryAuthCacheParams{
+		Host:            host,
+		Owner:           owner,
+		Repository:      repository,
+		AuthMethodID:    authMethodID,
+		LastSucceededAt: timestamp(s.now()),
+	})
+}
+
+func (s *Store) DeleteGitHubRepositoryAuthCache(ctx context.Context, host, owner, repository string) error {
+	_, err := db.New(s.db).DeleteGitHubRepositoryAuthCache(ctx, db.DeleteGitHubRepositoryAuthCacheParams{
+		Host:       host,
+		Owner:      owner,
+		Repository: repository,
+	})
+	return err
+}
+
 func (s *Store) UpsertPullRequest(ctx context.Context, value domain.PullRequest) (domain.PullRequest, error) {
+	if value.Host == "" {
+		value.Host = "github.com"
+	}
 	assignees, _ := jsonMarshal(value.Assignees)
 	row, err := db.New(s.db).UpsertPullRequest(ctx, db.UpsertPullRequestParams{
 		TaskID:        value.TaskID,
+		Host:          value.Host,
 		Owner:         value.Owner,
 		Repository:    value.Repository,
 		Number:        value.Number,

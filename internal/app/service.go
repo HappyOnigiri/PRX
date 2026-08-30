@@ -10,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 )
@@ -65,14 +66,30 @@ type Repository interface {
 	Validate(ctx context.Context) []string
 }
 
+// GitHubAuthCache is implemented by the SQLite repository when live GitHub
+// synchronization is enabled. Keeping it optional preserves the small
+// repository fakes used by application-level tests.
+type GitHubAuthCache interface {
+	GetGitHubRepositoryAuthCache(ctx context.Context, host, owner, repository string) (string, bool, error)
+	UpsertGitHubRepositoryAuthCache(ctx context.Context, host, owner, repository, authMethodID string) error
+	DeleteGitHubRepositoryAuthCache(ctx context.Context, host, owner, repository string) error
+}
+
 type Service struct {
-	repository Repository
-	provider   githubprovider.Provider
+	repository  Repository
+	provider    githubprovider.Provider
+	configStore *config.Store
 }
 
 func New(repository Repository, provider githubprovider.Provider) *Service {
 	return &Service{repository: repository, provider: provider}
 }
+
+func NewWithConfig(repository Repository, provider githubprovider.Provider, configStore *config.Store) *Service {
+	return &Service{repository: repository, provider: provider, configStore: configStore}
+}
+
+func (s *Service) ConfigStore() *config.Store { return s.configStore }
 
 func (s *Service) CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error) {
 	slug = strings.TrimSpace(strings.ToLower(slug))
@@ -273,14 +290,34 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 			"manual tasks cannot have pull requests",
 		)
 	}
-	owner, repo, number, canonical, err := githubprovider.ParsePullRequestURL(rawURL)
+	host, owner, repo, number, parsedCanonical, err := githubprovider.ParsePullRequestURLDetails(rawURL)
 	if err != nil {
 		return domain.PullRequest{}, domain.NewError(domain.DomainErrorCodeInvalidPullRequestURL, "%s", err)
+	}
+	canonical := parsedCanonical
+	if s.provider == nil && s.configStore != nil {
+		settings, loadErr := s.configStore.Load()
+		if loadErr != nil {
+			return domain.PullRequest{}, configDomainError(loadErr)
+		}
+		hostConfig, ok := settings.HostFor(host)
+		if !ok {
+			return domain.PullRequest{}, domain.NewError(
+				domain.DomainErrorCodeInvalidPullRequestURL,
+				"GitHub host %q is not configured",
+				host,
+			)
+		}
+		host = hostConfig.Host
+		canonical = canonicalPullRequestURL(hostConfig, owner, repo, number)
+	} else if host == "" {
+		host = "github.com"
 	}
 	return s.repository.UpsertPullRequest(
 		ctx,
 		domain.PullRequest{
 			TaskID:       taskID,
+			Host:         host,
 			Owner:        owner,
 			Repository:   repo,
 			Number:       number,
@@ -430,7 +467,7 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 }
 
 func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded, failed int, err error) {
-	if s.provider == nil {
+	if s.provider == nil && s.configStore == nil {
 		return 0, 0, domain.NewError(domain.DomainErrorCodeGitHubAuth, "GitHub provider is not configured")
 	}
 	snapshot, err := s.repository.Snapshot(ctx)
@@ -448,6 +485,17 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 	taskFeature := map[string]string{}
 	for _, task := range snapshot.Tasks {
 		taskFeature[task.ID] = task.FeatureID
+	}
+	if s.provider == nil {
+		settings, loadErr := s.configStore.Load()
+		if loadErr != nil {
+			return 0, 0, configDomainError(loadErr)
+		}
+		resolver, resolverErr := githubprovider.NewResolver(settings)
+		if resolverErr != nil {
+			return 0, 0, configDomainError(resolverErr)
+		}
+		return s.syncLive(ctx, snapshot, taskFeature, featureResolved, taskID, resolver)
 	}
 	for _, pr := range snapshot.PullRequests {
 		if taskID != "" && pr.TaskID != taskID {

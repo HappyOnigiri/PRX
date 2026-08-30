@@ -214,10 +214,26 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED = 22;
   // DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE means a Markdown preview exceeds the 1 MiB limit.
   DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE = 23;
+  // DOMAIN_ERROR_CODE_INVALID_CONFIG means the GitHub YAML configuration is invalid.
+  DOMAIN_ERROR_CODE_INVALID_CONFIG = 24;
   // DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN means plan content is empty or invalid.
-  DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN = 24;
+  DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN = 25;
   // DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE means plan content exceeds 1 MiB.
-  DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE = 25;
+  DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE = 26;
+}
+
+// GitHubAuthMethodType identifies how a GitHub token is obtained.
+enum GithubAuthMethodType {
+  // GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED is never returned and is rejected in requests.
+  GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED = 0;
+  // GITHUB_AUTH_METHOD_TYPE_KEYCHAIN reads a macOS generic password.
+  GITHUB_AUTH_METHOD_TYPE_KEYCHAIN = 1;
+  // GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT reads a configured environment variable.
+  GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT = 2;
+  // GITHUB_AUTH_METHOD_TYPE_INLINE reads a token stored in the YAML file.
+  GITHUB_AUTH_METHOD_TYPE_INLINE = 3;
+  // GITHUB_AUTH_METHOD_TYPE_GH_CLI invokes gh auth token for the host.
+  GITHUB_AUTH_METHOD_TYPE_GH_CLI = 4;
 }
 
 // BlockedReason is the structured reason a task is not ready.
@@ -354,6 +370,8 @@ message PullRequest {
   bool stale = 16;
   // display_state is the derived presentation state using the documented priority order.
   PullRequestDisplayState display_state = 17;
+  // host is the case-insensitive GitHub or GitHub Enterprise Server host key.
+  string host = 18;
 }
 
 // Document is a reference attached to exactly one feature or task.
@@ -634,6 +652,193 @@ message ReadMarkdownDocumentResponse {
   string content = 1;
 }
 
+// GitHubHost describes one configured GitHub.com or GitHub Enterprise Server host.
+message GitHubHost {
+  // host is the normalized hostname, optionally including a port.
+  string host = 1;
+  // web_url is the HTTPS web origin used for canonical pull-request URLs.
+  string web_url = 2;
+  // api_url is the HTTPS API base URL.
+  string api_url = 3;
+  // upload_url is the HTTPS upload base URL.
+  string upload_url = 4;
+}
+
+// GitHubAuthMethod is the public representation of a host-scoped credential.
+// The token itself is never returned by the server.
+message GitHubAuthMethod {
+  // id identifies the authentication method and its cache entries.
+  string id = 1;
+  // host identifies the only GitHub host to which this method may be sent.
+  string host = 2;
+  // type identifies the credential source.
+  GithubAuthMethodType type = 3;
+  // account is the Keychain account when type is keychain.
+  string account = 4;
+  // service is the Keychain service when type is keychain.
+  string service = 5;
+  // variable is the environment variable when type is environment.
+  string variable = 6;
+  // user selects a gh CLI account when type is gh_cli.
+  string user = 7;
+  // secret_configured indicates that a credential source is configured.
+  bool secret_configured = 8;
+  // secret_hint is a short masked hint for inline credentials.
+  string secret_hint = 9;
+}
+
+// GitHubConfig is the public, secret-free server configuration.
+message GitHubConfig {
+  // version is the YAML schema version.
+  int32 version = 1;
+  // hosts contains the configured GitHub host boundaries.
+  repeated GitHubHost hosts = 2;
+  // auth_methods contains host-scoped credentials in priority order.
+  repeated GitHubAuthMethod auth_methods = 3;
+}
+
+// GetConfigRequest requests the public GitHub configuration.
+message GetConfigRequest {}
+
+// GetConfigResponse returns the public GitHub configuration.
+message GetConfigResponse {
+  // config contains hosts and secret-free authentication metadata.
+  GitHubConfig config = 1;
+}
+
+// AddGitHubHostRequest adds a GitHub host.
+message AddGitHubHostRequest {
+  // host is the hostname with optional port.
+  string host = 1;
+  // web_url is optional and defaults from host.
+  string web_url = 2;
+  // api_url is optional and defaults from host.
+  string api_url = 3;
+  // upload_url is optional and defaults from host.
+  string upload_url = 4;
+}
+
+// AddGitHubHostResponse returns the added host.
+message AddGitHubHostResponse {
+  // host is the normalized host after validation.
+  GitHubHost host = 1;
+}
+
+// UpdateGitHubHostRequest updates a host and only the fields that are present.
+message UpdateGitHubHostRequest {
+  // host identifies the existing host.
+  string host = 1;
+  // new_host changes the host key when present.
+  optional string new_host = 2;
+  // web_url replaces the web URL when present.
+  optional string web_url = 3;
+  // api_url replaces the API URL when present.
+  optional string api_url = 4;
+  // upload_url replaces the upload URL when present.
+  optional string upload_url = 5;
+}
+
+// UpdateGitHubHostResponse returns the updated host.
+message UpdateGitHubHostResponse {
+  // host is the normalized host after validation.
+  GitHubHost host = 1;
+}
+
+// DeleteGitHubHostRequest removes a host when no authentication method uses it.
+message DeleteGitHubHostRequest {
+  // host identifies the host to remove.
+  string host = 1;
+}
+
+// DeleteGitHubHostResponse confirms the host was removed.
+message DeleteGitHubHostResponse {}
+
+// AddGitHubAuthMethodRequest adds one host-scoped authentication method.
+message AddGitHubAuthMethodRequest {
+  // id identifies the method.
+  string id = 1;
+  // host identifies the only host for this method.
+  string host = 2;
+  // type identifies the credential source.
+  GithubAuthMethodType type = 3;
+  // account is the Keychain account.
+  string account = 4;
+  // service is the Keychain service.
+  string service = 5;
+  // variable is the environment variable.
+  string variable = 6;
+  // user selects a gh CLI account.
+  string user = 7;
+  // token is write-only and is accepted only for inline credentials.
+  optional string token = 8;
+}
+
+// AddGitHubAuthMethodResponse returns secret-free authentication metadata.
+message AddGitHubAuthMethodResponse {
+  // auth_method is the added method without its token.
+  GitHubAuthMethod auth_method = 1;
+}
+
+// UpdateGitHubAuthMethodRequest updates a method while preserving an omitted token.
+message UpdateGitHubAuthMethodRequest {
+  // id identifies the existing method.
+  string id = 1;
+  // new_id changes the method ID when present.
+  optional string new_id = 2;
+  // host changes the host when present.
+  optional string host = 3;
+  // type changes the source when present.
+  optional GithubAuthMethodType type = 4;
+  // account changes the Keychain account when present.
+  optional string account = 5;
+  // service changes the Keychain service when present.
+  optional string service = 6;
+  // variable changes the environment variable when present.
+  optional string variable = 7;
+  // user changes the gh CLI user when present.
+  optional string user = 8;
+  // token replaces the inline token when present and is never returned.
+  optional string token = 9;
+}
+
+// UpdateGitHubAuthMethodResponse returns secret-free authentication metadata.
+message UpdateGitHubAuthMethodResponse {
+  // auth_method is the updated method without its token.
+  GitHubAuthMethod auth_method = 1;
+}
+
+// DeleteGitHubAuthMethodRequest removes a host-scoped authentication method.
+message DeleteGitHubAuthMethodRequest {
+  // id identifies the method to remove.
+  string id = 1;
+}
+
+// DeleteGitHubAuthMethodResponse confirms the method was removed.
+message DeleteGitHubAuthMethodResponse {}
+
+// ReorderGitHubAuthMethodsRequest sets the complete authentication priority.
+message ReorderGitHubAuthMethodsRequest {
+  // ids contains every configured authentication method exactly once.
+  repeated string ids = 1;
+}
+
+// ReorderGitHubAuthMethodsResponse returns the new secret-free priority.
+message ReorderGitHubAuthMethodsResponse {
+  // auth_methods contains the reordered methods.
+  repeated GitHubAuthMethod auth_methods = 1;
+}
+
+// ValidateConfigRequest validates the YAML configuration.
+message ValidateConfigRequest {}
+
+// ValidateConfigResponse reports whether configuration validation succeeded.
+message ValidateConfigResponse {
+  // valid is true when the configuration can be loaded and used.
+  bool valid = 1;
+  // errors contains validation failures when valid is false.
+  repeated string errors = 2;
+}
+
 // SyncRequest selects pull requests to refresh from GitHub.
 // Empty selectors refresh all pull requests; setting both selectors applies both filters.
 message SyncRequest {
@@ -702,4 +907,22 @@ service PRXService {
   rpc Sync(SyncRequest) returns (SyncResponse);
   // Validate checks database integrity and returns any detected errors.
   rpc Validate(ValidateRequest) returns (ValidateResponse);
+  // GetConfig returns the public GitHub configuration.
+  rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
+  // AddGitHubHost adds a host boundary.
+  rpc AddGitHubHost(AddGitHubHostRequest) returns (AddGitHubHostResponse);
+  // UpdateGitHubHost updates a host boundary.
+  rpc UpdateGitHubHost(UpdateGitHubHostRequest) returns (UpdateGitHubHostResponse);
+  // DeleteGitHubHost removes a host boundary.
+  rpc DeleteGitHubHost(DeleteGitHubHostRequest) returns (DeleteGitHubHostResponse);
+  // AddGitHubAuthMethod adds a host-scoped credential.
+  rpc AddGitHubAuthMethod(AddGitHubAuthMethodRequest) returns (AddGitHubAuthMethodResponse);
+  // UpdateGitHubAuthMethod updates a host-scoped credential.
+  rpc UpdateGitHubAuthMethod(UpdateGitHubAuthMethodRequest) returns (UpdateGitHubAuthMethodResponse);
+  // DeleteGitHubAuthMethod removes a host-scoped credential.
+  rpc DeleteGitHubAuthMethod(DeleteGitHubAuthMethodRequest) returns (DeleteGitHubAuthMethodResponse);
+  // ReorderGitHubAuthMethods changes credential priority.
+  rpc ReorderGitHubAuthMethods(ReorderGitHubAuthMethodsRequest) returns (ReorderGitHubAuthMethodsResponse);
+  // ValidateConfig validates the YAML configuration without changing it.
+  rpc ValidateConfig(ValidateConfigRequest) returns (ValidateConfigResponse);
 }

@@ -4,25 +4,36 @@ import { createConnectTransport } from "@connectrpc/connect-web";
 import {
   AddDependencyRequestSchema,
   AddDocumentRequestSchema,
+  AddGitHubAuthMethodRequestSchema,
+  AddGitHubHostRequestSchema,
   AttachPullRequestRequestSchema,
   CreateFeatureRequestSchema,
   CreateTaskRequestSchema,
   DeleteDocumentRequestSchema,
   DeleteFeatureRequestSchema,
+  DeleteGitHubAuthMethodRequestSchema,
+  DeleteGitHubHostRequestSchema,
   DeleteImplementationPlanRequestSchema,
   DeleteTaskRequestSchema,
   DetachPullRequestRequestSchema,
+  GetConfigRequestSchema,
   GetImplementationPlanRequestSchema,
   GetSnapshotRequestSchema,
   PRXService,
   ReadMarkdownDocumentRequestSchema,
   RemoveDependencyRequestSchema,
+  ReorderGitHubAuthMethodsRequestSchema,
   SyncRequestSchema,
   UpdateFeatureRequestSchema,
+  UpdateGitHubAuthMethodRequestSchema,
+  UpdateGitHubHostRequestSchema,
   UpdateTaskRequestSchema,
   UpsertImplementationPlanRequestSchema,
+  ValidateConfigRequestSchema,
   type DocumentKind,
   type FeatureStatus,
+  type GithubAuthMethodType,
+  type GitHubConfig,
   type Snapshot,
   type TaskKind,
   type TaskStatus,
@@ -36,6 +47,13 @@ export async function getSnapshot(): Promise<Snapshot> {
   if (!response.snapshot)
     throw new Error("The server returned an empty snapshot.");
   return response.snapshot;
+}
+
+export async function getConfig(): Promise<GitHubConfig> {
+  const response = await client.getConfig(create(GetConfigRequestSchema));
+  if (!response.config)
+    throw new Error("The server returned an empty GitHub configuration.");
+  return response.config;
 }
 
 export const mutations = {
@@ -115,6 +133,58 @@ export const mutations = {
     if (taskId !== undefined) input.taskId = taskId;
     return client.sync(create(SyncRequestSchema, input));
   },
+};
+
+export const configMutations = {
+  addHost: (input: {
+    host: string;
+    webUrl?: string;
+    apiUrl?: string;
+    uploadUrl?: string;
+  }) => client.addGitHubHost(create(AddGitHubHostRequestSchema, input)),
+  updateHost: (input: {
+    host: string;
+    newHost?: string;
+    webUrl?: string;
+    apiUrl?: string;
+    uploadUrl?: string;
+  }) => client.updateGitHubHost(create(UpdateGitHubHostRequestSchema, input)),
+  deleteHost: (host: string) =>
+    client.deleteGitHubHost(create(DeleteGitHubHostRequestSchema, { host })),
+  addAuth: (input: {
+    id: string;
+    host: string;
+    type: GithubAuthMethodType;
+    account?: string;
+    service?: string;
+    variable?: string;
+    user?: string;
+    token?: string;
+  }) =>
+    client.addGitHubAuthMethod(create(AddGitHubAuthMethodRequestSchema, input)),
+  updateAuth: (input: {
+    id: string;
+    newId?: string;
+    host?: string;
+    type?: GithubAuthMethodType;
+    account?: string;
+    service?: string;
+    variable?: string;
+    user?: string;
+    token?: string;
+  }) =>
+    client.updateGitHubAuthMethod(
+      create(UpdateGitHubAuthMethodRequestSchema, input),
+    ),
+  deleteAuth: (id: string) =>
+    client.deleteGitHubAuthMethod(
+      create(DeleteGitHubAuthMethodRequestSchema, { id }),
+    ),
+  reorderAuth: (ids: string[]) =>
+    client.reorderGitHubAuthMethods(
+      create(ReorderGitHubAuthMethodsRequestSchema, { ids }),
+    ),
+  validate: () => client.validateConfig(create(ValidateConfigRequestSchema)),
 };
 
 export async function readMarkdownDocument(id: string): Promise<string> {

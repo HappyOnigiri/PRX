@@ -4,9 +4,9 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
-	"os/exec"
 	"slices"
 	"sort"
 	"strconv"
@@ -14,7 +14,6 @@ import (
 	"time"
 
 	gh "github.com/google/go-github/v80/github"
-	"golang.org/x/oauth2"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
@@ -29,32 +28,84 @@ type Provider interface {
 
 type LiveProvider struct{ client *gh.Client }
 
-func NewLiveProvider(ctx context.Context) (*LiveProvider, error) {
-	token := strings.TrimSpace(os.Getenv("GITHUB_TOKEN"))
+type LiveProviderOptions struct {
+	Token      string
+	APIURL     string
+	UploadURL  string
+	HTTPClient *http.Client
+}
+
+// NewLiveProvider constructs a provider from already-resolved credentials.
+// Credential discovery belongs to Resolver so every candidate remains scoped
+// to its configured host.
+func NewLiveProvider(ctx context.Context, options LiveProviderOptions) (*LiveProvider, error) {
+	return NewConfiguredLiveProvider(ctx, options.Token, options.APIURL, options.UploadURL, options.HTTPClient)
+}
+
+func NewConfiguredLiveProvider(
+	ctx context.Context,
+	token, apiURL, uploadURL string,
+	httpClient *http.Client,
+) (*LiveProvider, error) {
+	token = strings.TrimSpace(token)
 	if token == "" {
-		token = strings.TrimSpace(os.Getenv("GH_TOKEN"))
+		return nil, unavailableError("GitHub credential is empty")
 	}
-	if token == "" {
-		command := exec.CommandContext(ctx, "gh", "auth", "token")
-		output, err := command.Output()
-		if err != nil {
-			return nil, fmt.Errorf("GitHub authentication is unavailable; set GITHUB_TOKEN or run gh auth login")
+	if httpClient == nil {
+		httpClient = &http.Client{Timeout: 30 * time.Second}
+	} else {
+		clientCopy := *httpClient
+		httpClient = &clientCopy
+		if httpClient.Timeout == 0 {
+			httpClient.Timeout = 30 * time.Second
 		}
-		token = strings.TrimSpace(string(output))
 	}
-	// oauth2.NewClient returns a client with no timeout, so an unresponsive
-	// endpoint would stall the whole sync instead of failing that one PR.
-	httpClient := oauth2.NewClient(ctx, oauth2.StaticTokenSource(&oauth2.Token{AccessToken: token}))
-	httpClient.Timeout = 30 * time.Second
-	client := gh.NewClient(httpClient)
+	redirectPolicy := httpClient.CheckRedirect
+	httpClient.CheckRedirect = func(request *http.Request, via []*http.Request) error {
+		if err := rejectCrossOriginRedirect(request, via); err != nil {
+			return err
+		}
+		if redirectPolicy != nil {
+			return redirectPolicy(request, via)
+		}
+		return nil
+	}
+	client := gh.NewClient(httpClient).WithAuthToken(token)
+	if apiURL != "" || uploadURL != "" {
+		if apiURL == "" {
+			apiURL = "https://api.github.com/"
+		}
+		if uploadURL == "" {
+			uploadURL = "https://uploads.github.com/"
+		}
+		var err error
+		client, err = client.WithEnterpriseURLs(apiURL, uploadURL)
+		if err != nil {
+			return nil, fmt.Errorf("configure GitHub URLs: %w", err)
+		}
+	}
 	client.UserAgent = "prx/0.1"
 	return &LiveProvider{client: client}, nil
 }
 
+func rejectCrossOriginRedirect(request *http.Request, via []*http.Request) error {
+	if len(via) == 0 || sameOrigin(via[len(via)-1].URL, request.URL) {
+		return nil
+	}
+	return fmt.Errorf("refusing redirect to a different origin")
+}
+
+func sameOrigin(first, second *url.URL) bool {
+	if first == nil || second == nil {
+		return false
+	}
+	return first.Scheme == second.Scheme && strings.EqualFold(first.Host, second.Host)
+}
+
 func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error) {
-	value, _, err := p.client.PullRequests.Get(ctx, current.Owner, current.Repository, int(current.Number))
+	value, response, err := p.client.PullRequests.Get(ctx, current.Owner, current.Repository, int(current.Number))
 	if err != nil {
-		return current, fmt.Errorf("fetch pull request: %w", err)
+		return current, wrapProviderError("fetch pull request", err, response)
 	}
 	state := domain.PullRequestState(value.GetState())
 	if value.GetMerged() {
@@ -93,7 +144,7 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 		},
 	)
 	if err != nil {
-		return current, fmt.Errorf("fetch reviews: %w", err)
+		return current, wrapProviderError("fetch reviews", err, nil)
 	}
 	requestedPages, err := allPages(
 		ctx,
@@ -112,7 +163,7 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 		},
 	)
 	if err != nil {
-		return current, fmt.Errorf("fetch requested reviewers: %w", err)
+		return current, wrapProviderError("fetch requested reviewers", err, nil)
 	}
 	requested := &gh.Reviewers{}
 	for _, page := range requestedPages {
@@ -147,6 +198,17 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	current.SyncError = ""
 	current.Stale = false
 	return current, nil
+}
+
+func (p *LiveProvider) Probe(ctx context.Context, owner, repository string) error {
+	_, response, err := p.client.PullRequests.List(ctx, owner, repository, &gh.PullRequestListOptions{
+		State:       "all",
+		ListOptions: gh.ListOptions{PerPage: 1},
+	})
+	if err != nil {
+		return wrapProviderError("probe pull request access", err, response)
+	}
+	return nil
 }
 
 // allPages walks every page of a GitHub list endpoint. Stopping at the first
@@ -306,18 +368,30 @@ func (p *FixtureProvider) Fetch(ctx context.Context, current domain.PullRequest)
 }
 
 func ParsePullRequestURL(value string) (owner, repository string, number int64, canonical string, err error) {
+	_, owner, repository, number, canonical, err = ParsePullRequestURLDetails(value)
+	return owner, repository, number, canonical, err
+}
+
+func ParsePullRequestURLDetails(
+	value string,
+) (host, owner, repository string, number int64, canonical string, err error) {
 	parsed, err := url.Parse(strings.TrimSpace(value))
-	if err != nil || parsed.Scheme != "https" || !strings.EqualFold(parsed.Hostname(), "github.com") {
-		return "", "", 0, "", fmt.Errorf("expected an https://github.com/OWNER/REPO/pull/NUMBER URL")
+	if err != nil || parsed.Scheme != "https" || parsed.Hostname() == "" || parsed.User != nil ||
+		parsed.RawQuery != "" ||
+		parsed.Fragment != "" ||
+		parsed.Path == "" ||
+		strings.HasSuffix(parsed.Path, "/") {
+		return "", "", "", 0, "", fmt.Errorf("expected an https://HOST/OWNER/REPO/pull/NUMBER URL")
 	}
-	parts := strings.Split(strings.Trim(parsed.Path, "/"), "/")
+	parts := strings.Split(strings.TrimPrefix(parsed.Path, "/"), "/")
 	if len(parts) != 4 || parts[2] != "pull" || parts[0] == "" || parts[1] == "" {
-		return "", "", 0, "", fmt.Errorf("expected an https://github.com/OWNER/REPO/pull/NUMBER URL")
+		return "", "", "", 0, "", fmt.Errorf("expected an https://HOST/OWNER/REPO/pull/NUMBER URL")
 	}
 	number, err = strconv.ParseInt(parts[3], 10, 64)
 	if err != nil || number < 1 {
-		return "", "", 0, "", fmt.Errorf("pull request number must be positive")
+		return "", "", "", 0, "", fmt.Errorf("pull request number must be positive")
 	}
-	canonical = fmt.Sprintf("https://github.com/%s/%s/pull/%d", parts[0], parts[1], number)
-	return parts[0], parts[1], number, canonical, nil
+	host = strings.ToLower(parsed.Host)
+	canonical = fmt.Sprintf("https://%s/%s/%s/pull/%d", host, parts[0], parts[1], number)
+	return host, parts[0], parts[1], number, canonical, nil
 }

@@ -62,6 +62,7 @@ SELECT blocker_task_id, blocked_task_id, created_at FROM dependency_migration;
 
 CREATE TABLE pull_requests (
   task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE RESTRICT,
+  host TEXT NOT NULL DEFAULT 'github.com' COLLATE NOCASE,
   owner TEXT NOT NULL COLLATE NOCASE,
   repository TEXT NOT NULL COLLATE NOCASE,
   number INTEGER NOT NULL CHECK(number > 0),
@@ -77,17 +78,18 @@ CREATE TABLE pull_requests (
   last_synced_at TEXT,
   sync_error TEXT NOT NULL DEFAULT '',
   stale INTEGER NOT NULL DEFAULT 1 CHECK(stale IN (0,1)),
-  UNIQUE(owner, repository, number)
+  UNIQUE(host, owner, repository, number)
 );
 
 CREATE INDEX pull_requests_state_idx ON pull_requests(state, review_state, mergeability, stale);
+CREATE INDEX pull_requests_repository_idx ON pull_requests(host, owner, repository, number);
 INSERT INTO pull_requests (
-  task_id, owner, repository, number, url, node_id, author, assignees_json,
+  task_id, host, owner, repository, number, url, node_id, author, assignees_json,
   state, draft, review_state, mergeability, github_updated_at, last_synced_at,
   sync_error, stale
 )
 SELECT
-  task_id, owner, repository, number, url, node_id, author, assignees_json,
+  task_id, host, owner, repository, number, url, node_id, author, assignees_json,
   state, draft, review_state, mergeability, github_updated_at, last_synced_at,
   sync_error, stale
 FROM pull_request_migration;

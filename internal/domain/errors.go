@@ -31,6 +31,7 @@ const (
 	DomainErrorCodeDocumentTooLarge           DomainErrorCode = "document_too_large"
 	DomainErrorCodeInvalidImplementationPlan  DomainErrorCode = "invalid_implementation_plan"
 	DomainErrorCodeImplementationPlanTooLarge DomainErrorCode = "implementation_plan_too_large"
+	DomainErrorCodeInvalidConfig              DomainErrorCode = "invalid_config"
 	DomainErrorCodeInternal                   DomainErrorCode = "internal"
 )
 

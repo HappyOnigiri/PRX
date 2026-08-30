@@ -83,6 +83,32 @@ const (
 	PRXServiceSyncProcedure = "/prx.v1.PRXService/Sync"
 	// PRXServiceValidateProcedure is the fully-qualified name of the PRXService's Validate RPC.
 	PRXServiceValidateProcedure = "/prx.v1.PRXService/Validate"
+	// PRXServiceGetConfigProcedure is the fully-qualified name of the PRXService's GetConfig RPC.
+	PRXServiceGetConfigProcedure = "/prx.v1.PRXService/GetConfig"
+	// PRXServiceAddGitHubHostProcedure is the fully-qualified name of the PRXService's AddGitHubHost
+	// RPC.
+	PRXServiceAddGitHubHostProcedure = "/prx.v1.PRXService/AddGitHubHost"
+	// PRXServiceUpdateGitHubHostProcedure is the fully-qualified name of the PRXService's
+	// UpdateGitHubHost RPC.
+	PRXServiceUpdateGitHubHostProcedure = "/prx.v1.PRXService/UpdateGitHubHost"
+	// PRXServiceDeleteGitHubHostProcedure is the fully-qualified name of the PRXService's
+	// DeleteGitHubHost RPC.
+	PRXServiceDeleteGitHubHostProcedure = "/prx.v1.PRXService/DeleteGitHubHost"
+	// PRXServiceAddGitHubAuthMethodProcedure is the fully-qualified name of the PRXService's
+	// AddGitHubAuthMethod RPC.
+	PRXServiceAddGitHubAuthMethodProcedure = "/prx.v1.PRXService/AddGitHubAuthMethod"
+	// PRXServiceUpdateGitHubAuthMethodProcedure is the fully-qualified name of the PRXService's
+	// UpdateGitHubAuthMethod RPC.
+	PRXServiceUpdateGitHubAuthMethodProcedure = "/prx.v1.PRXService/UpdateGitHubAuthMethod"
+	// PRXServiceDeleteGitHubAuthMethodProcedure is the fully-qualified name of the PRXService's
+	// DeleteGitHubAuthMethod RPC.
+	PRXServiceDeleteGitHubAuthMethodProcedure = "/prx.v1.PRXService/DeleteGitHubAuthMethod"
+	// PRXServiceReorderGitHubAuthMethodsProcedure is the fully-qualified name of the PRXService's
+	// ReorderGitHubAuthMethods RPC.
+	PRXServiceReorderGitHubAuthMethodsProcedure = "/prx.v1.PRXService/ReorderGitHubAuthMethods"
+	// PRXServiceValidateConfigProcedure is the fully-qualified name of the PRXService's ValidateConfig
+	// RPC.
+	PRXServiceValidateConfigProcedure = "/prx.v1.PRXService/ValidateConfig"
 )
 
 // PRXServiceClient is a client for the prx.v1.PRXService service.
@@ -125,6 +151,24 @@ type PRXServiceClient interface {
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
 	// Validate checks database integrity and returns any detected errors.
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
+	// GetConfig returns the public GitHub configuration.
+	GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error)
+	// AddGitHubHost adds a host boundary.
+	AddGitHubHost(context.Context, *connect.Request[v1.AddGitHubHostRequest]) (*connect.Response[v1.AddGitHubHostResponse], error)
+	// UpdateGitHubHost updates a host boundary.
+	UpdateGitHubHost(context.Context, *connect.Request[v1.UpdateGitHubHostRequest]) (*connect.Response[v1.UpdateGitHubHostResponse], error)
+	// DeleteGitHubHost removes a host boundary.
+	DeleteGitHubHost(context.Context, *connect.Request[v1.DeleteGitHubHostRequest]) (*connect.Response[v1.DeleteGitHubHostResponse], error)
+	// AddGitHubAuthMethod adds a host-scoped credential.
+	AddGitHubAuthMethod(context.Context, *connect.Request[v1.AddGitHubAuthMethodRequest]) (*connect.Response[v1.AddGitHubAuthMethodResponse], error)
+	// UpdateGitHubAuthMethod updates a host-scoped credential.
+	UpdateGitHubAuthMethod(context.Context, *connect.Request[v1.UpdateGitHubAuthMethodRequest]) (*connect.Response[v1.UpdateGitHubAuthMethodResponse], error)
+	// DeleteGitHubAuthMethod removes a host-scoped credential.
+	DeleteGitHubAuthMethod(context.Context, *connect.Request[v1.DeleteGitHubAuthMethodRequest]) (*connect.Response[v1.DeleteGitHubAuthMethodResponse], error)
+	// ReorderGitHubAuthMethods changes credential priority.
+	ReorderGitHubAuthMethods(context.Context, *connect.Request[v1.ReorderGitHubAuthMethodsRequest]) (*connect.Response[v1.ReorderGitHubAuthMethodsResponse], error)
+	// ValidateConfig validates the YAML configuration without changing it.
+	ValidateConfig(context.Context, *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error)
 }
 
 // NewPRXServiceClient constructs a client for the prx.v1.PRXService service. By default, it uses
@@ -252,6 +296,60 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(pRXServiceMethods.ByName("Validate")),
 			connect.WithClientOptions(opts...),
 		),
+		getConfig: connect.NewClient[v1.GetConfigRequest, v1.GetConfigResponse](
+			httpClient,
+			baseURL+PRXServiceGetConfigProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("GetConfig")),
+			connect.WithClientOptions(opts...),
+		),
+		addGitHubHost: connect.NewClient[v1.AddGitHubHostRequest, v1.AddGitHubHostResponse](
+			httpClient,
+			baseURL+PRXServiceAddGitHubHostProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("AddGitHubHost")),
+			connect.WithClientOptions(opts...),
+		),
+		updateGitHubHost: connect.NewClient[v1.UpdateGitHubHostRequest, v1.UpdateGitHubHostResponse](
+			httpClient,
+			baseURL+PRXServiceUpdateGitHubHostProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("UpdateGitHubHost")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteGitHubHost: connect.NewClient[v1.DeleteGitHubHostRequest, v1.DeleteGitHubHostResponse](
+			httpClient,
+			baseURL+PRXServiceDeleteGitHubHostProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("DeleteGitHubHost")),
+			connect.WithClientOptions(opts...),
+		),
+		addGitHubAuthMethod: connect.NewClient[v1.AddGitHubAuthMethodRequest, v1.AddGitHubAuthMethodResponse](
+			httpClient,
+			baseURL+PRXServiceAddGitHubAuthMethodProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("AddGitHubAuthMethod")),
+			connect.WithClientOptions(opts...),
+		),
+		updateGitHubAuthMethod: connect.NewClient[v1.UpdateGitHubAuthMethodRequest, v1.UpdateGitHubAuthMethodResponse](
+			httpClient,
+			baseURL+PRXServiceUpdateGitHubAuthMethodProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("UpdateGitHubAuthMethod")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteGitHubAuthMethod: connect.NewClient[v1.DeleteGitHubAuthMethodRequest, v1.DeleteGitHubAuthMethodResponse](
+			httpClient,
+			baseURL+PRXServiceDeleteGitHubAuthMethodProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("DeleteGitHubAuthMethod")),
+			connect.WithClientOptions(opts...),
+		),
+		reorderGitHubAuthMethods: connect.NewClient[v1.ReorderGitHubAuthMethodsRequest, v1.ReorderGitHubAuthMethodsResponse](
+			httpClient,
+			baseURL+PRXServiceReorderGitHubAuthMethodsProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("ReorderGitHubAuthMethods")),
+			connect.WithClientOptions(opts...),
+		),
+		validateConfig: connect.NewClient[v1.ValidateConfigRequest, v1.ValidateConfigResponse](
+			httpClient,
+			baseURL+PRXServiceValidateConfigProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("ValidateConfig")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -276,6 +374,15 @@ type pRXServiceClient struct {
 	readMarkdownDocument     *connect.Client[v1.ReadMarkdownDocumentRequest, v1.ReadMarkdownDocumentResponse]
 	sync                     *connect.Client[v1.SyncRequest, v1.SyncResponse]
 	validate                 *connect.Client[v1.ValidateRequest, v1.ValidateResponse]
+	getConfig                *connect.Client[v1.GetConfigRequest, v1.GetConfigResponse]
+	addGitHubHost            *connect.Client[v1.AddGitHubHostRequest, v1.AddGitHubHostResponse]
+	updateGitHubHost         *connect.Client[v1.UpdateGitHubHostRequest, v1.UpdateGitHubHostResponse]
+	deleteGitHubHost         *connect.Client[v1.DeleteGitHubHostRequest, v1.DeleteGitHubHostResponse]
+	addGitHubAuthMethod      *connect.Client[v1.AddGitHubAuthMethodRequest, v1.AddGitHubAuthMethodResponse]
+	updateGitHubAuthMethod   *connect.Client[v1.UpdateGitHubAuthMethodRequest, v1.UpdateGitHubAuthMethodResponse]
+	deleteGitHubAuthMethod   *connect.Client[v1.DeleteGitHubAuthMethodRequest, v1.DeleteGitHubAuthMethodResponse]
+	reorderGitHubAuthMethods *connect.Client[v1.ReorderGitHubAuthMethodsRequest, v1.ReorderGitHubAuthMethodsResponse]
+	validateConfig           *connect.Client[v1.ValidateConfigRequest, v1.ValidateConfigResponse]
 }
 
 // GetSnapshot calls prx.v1.PRXService.GetSnapshot.
@@ -373,6 +480,51 @@ func (c *pRXServiceClient) Validate(ctx context.Context, req *connect.Request[v1
 	return c.validate.CallUnary(ctx, req)
 }
 
+// GetConfig calls prx.v1.PRXService.GetConfig.
+func (c *pRXServiceClient) GetConfig(ctx context.Context, req *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error) {
+	return c.getConfig.CallUnary(ctx, req)
+}
+
+// AddGitHubHost calls prx.v1.PRXService.AddGitHubHost.
+func (c *pRXServiceClient) AddGitHubHost(ctx context.Context, req *connect.Request[v1.AddGitHubHostRequest]) (*connect.Response[v1.AddGitHubHostResponse], error) {
+	return c.addGitHubHost.CallUnary(ctx, req)
+}
+
+// UpdateGitHubHost calls prx.v1.PRXService.UpdateGitHubHost.
+func (c *pRXServiceClient) UpdateGitHubHost(ctx context.Context, req *connect.Request[v1.UpdateGitHubHostRequest]) (*connect.Response[v1.UpdateGitHubHostResponse], error) {
+	return c.updateGitHubHost.CallUnary(ctx, req)
+}
+
+// DeleteGitHubHost calls prx.v1.PRXService.DeleteGitHubHost.
+func (c *pRXServiceClient) DeleteGitHubHost(ctx context.Context, req *connect.Request[v1.DeleteGitHubHostRequest]) (*connect.Response[v1.DeleteGitHubHostResponse], error) {
+	return c.deleteGitHubHost.CallUnary(ctx, req)
+}
+
+// AddGitHubAuthMethod calls prx.v1.PRXService.AddGitHubAuthMethod.
+func (c *pRXServiceClient) AddGitHubAuthMethod(ctx context.Context, req *connect.Request[v1.AddGitHubAuthMethodRequest]) (*connect.Response[v1.AddGitHubAuthMethodResponse], error) {
+	return c.addGitHubAuthMethod.CallUnary(ctx, req)
+}
+
+// UpdateGitHubAuthMethod calls prx.v1.PRXService.UpdateGitHubAuthMethod.
+func (c *pRXServiceClient) UpdateGitHubAuthMethod(ctx context.Context, req *connect.Request[v1.UpdateGitHubAuthMethodRequest]) (*connect.Response[v1.UpdateGitHubAuthMethodResponse], error) {
+	return c.updateGitHubAuthMethod.CallUnary(ctx, req)
+}
+
+// DeleteGitHubAuthMethod calls prx.v1.PRXService.DeleteGitHubAuthMethod.
+func (c *pRXServiceClient) DeleteGitHubAuthMethod(ctx context.Context, req *connect.Request[v1.DeleteGitHubAuthMethodRequest]) (*connect.Response[v1.DeleteGitHubAuthMethodResponse], error) {
+	return c.deleteGitHubAuthMethod.CallUnary(ctx, req)
+}
+
+// ReorderGitHubAuthMethods calls prx.v1.PRXService.ReorderGitHubAuthMethods.
+func (c *pRXServiceClient) ReorderGitHubAuthMethods(ctx context.Context, req *connect.Request[v1.ReorderGitHubAuthMethodsRequest]) (*connect.Response[v1.ReorderGitHubAuthMethodsResponse], error) {
+	return c.reorderGitHubAuthMethods.CallUnary(ctx, req)
+}
+
+// ValidateConfig calls prx.v1.PRXService.ValidateConfig.
+func (c *pRXServiceClient) ValidateConfig(ctx context.Context, req *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error) {
+	return c.validateConfig.CallUnary(ctx, req)
+}
+
 // PRXServiceHandler is an implementation of the prx.v1.PRXService service.
 type PRXServiceHandler interface {
 	// GetSnapshot returns the current normalized dataset and derived queues.
@@ -413,6 +565,24 @@ type PRXServiceHandler interface {
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
 	// Validate checks database integrity and returns any detected errors.
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
+	// GetConfig returns the public GitHub configuration.
+	GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error)
+	// AddGitHubHost adds a host boundary.
+	AddGitHubHost(context.Context, *connect.Request[v1.AddGitHubHostRequest]) (*connect.Response[v1.AddGitHubHostResponse], error)
+	// UpdateGitHubHost updates a host boundary.
+	UpdateGitHubHost(context.Context, *connect.Request[v1.UpdateGitHubHostRequest]) (*connect.Response[v1.UpdateGitHubHostResponse], error)
+	// DeleteGitHubHost removes a host boundary.
+	DeleteGitHubHost(context.Context, *connect.Request[v1.DeleteGitHubHostRequest]) (*connect.Response[v1.DeleteGitHubHostResponse], error)
+	// AddGitHubAuthMethod adds a host-scoped credential.
+	AddGitHubAuthMethod(context.Context, *connect.Request[v1.AddGitHubAuthMethodRequest]) (*connect.Response[v1.AddGitHubAuthMethodResponse], error)
+	// UpdateGitHubAuthMethod updates a host-scoped credential.
+	UpdateGitHubAuthMethod(context.Context, *connect.Request[v1.UpdateGitHubAuthMethodRequest]) (*connect.Response[v1.UpdateGitHubAuthMethodResponse], error)
+	// DeleteGitHubAuthMethod removes a host-scoped credential.
+	DeleteGitHubAuthMethod(context.Context, *connect.Request[v1.DeleteGitHubAuthMethodRequest]) (*connect.Response[v1.DeleteGitHubAuthMethodResponse], error)
+	// ReorderGitHubAuthMethods changes credential priority.
+	ReorderGitHubAuthMethods(context.Context, *connect.Request[v1.ReorderGitHubAuthMethodsRequest]) (*connect.Response[v1.ReorderGitHubAuthMethodsResponse], error)
+	// ValidateConfig validates the YAML configuration without changing it.
+	ValidateConfig(context.Context, *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error)
 }
 
 // NewPRXServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -536,6 +706,60 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(pRXServiceMethods.ByName("Validate")),
 		connect.WithHandlerOptions(opts...),
 	)
+	pRXServiceGetConfigHandler := connect.NewUnaryHandler(
+		PRXServiceGetConfigProcedure,
+		svc.GetConfig,
+		connect.WithSchema(pRXServiceMethods.ByName("GetConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceAddGitHubHostHandler := connect.NewUnaryHandler(
+		PRXServiceAddGitHubHostProcedure,
+		svc.AddGitHubHost,
+		connect.WithSchema(pRXServiceMethods.ByName("AddGitHubHost")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceUpdateGitHubHostHandler := connect.NewUnaryHandler(
+		PRXServiceUpdateGitHubHostProcedure,
+		svc.UpdateGitHubHost,
+		connect.WithSchema(pRXServiceMethods.ByName("UpdateGitHubHost")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceDeleteGitHubHostHandler := connect.NewUnaryHandler(
+		PRXServiceDeleteGitHubHostProcedure,
+		svc.DeleteGitHubHost,
+		connect.WithSchema(pRXServiceMethods.ByName("DeleteGitHubHost")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceAddGitHubAuthMethodHandler := connect.NewUnaryHandler(
+		PRXServiceAddGitHubAuthMethodProcedure,
+		svc.AddGitHubAuthMethod,
+		connect.WithSchema(pRXServiceMethods.ByName("AddGitHubAuthMethod")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceUpdateGitHubAuthMethodHandler := connect.NewUnaryHandler(
+		PRXServiceUpdateGitHubAuthMethodProcedure,
+		svc.UpdateGitHubAuthMethod,
+		connect.WithSchema(pRXServiceMethods.ByName("UpdateGitHubAuthMethod")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceDeleteGitHubAuthMethodHandler := connect.NewUnaryHandler(
+		PRXServiceDeleteGitHubAuthMethodProcedure,
+		svc.DeleteGitHubAuthMethod,
+		connect.WithSchema(pRXServiceMethods.ByName("DeleteGitHubAuthMethod")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceReorderGitHubAuthMethodsHandler := connect.NewUnaryHandler(
+		PRXServiceReorderGitHubAuthMethodsProcedure,
+		svc.ReorderGitHubAuthMethods,
+		connect.WithSchema(pRXServiceMethods.ByName("ReorderGitHubAuthMethods")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceValidateConfigHandler := connect.NewUnaryHandler(
+		PRXServiceValidateConfigProcedure,
+		svc.ValidateConfig,
+		connect.WithSchema(pRXServiceMethods.ByName("ValidateConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/prx.v1.PRXService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PRXServiceGetSnapshotProcedure:
@@ -576,6 +800,24 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceSyncHandler.ServeHTTP(w, r)
 		case PRXServiceValidateProcedure:
 			pRXServiceValidateHandler.ServeHTTP(w, r)
+		case PRXServiceGetConfigProcedure:
+			pRXServiceGetConfigHandler.ServeHTTP(w, r)
+		case PRXServiceAddGitHubHostProcedure:
+			pRXServiceAddGitHubHostHandler.ServeHTTP(w, r)
+		case PRXServiceUpdateGitHubHostProcedure:
+			pRXServiceUpdateGitHubHostHandler.ServeHTTP(w, r)
+		case PRXServiceDeleteGitHubHostProcedure:
+			pRXServiceDeleteGitHubHostHandler.ServeHTTP(w, r)
+		case PRXServiceAddGitHubAuthMethodProcedure:
+			pRXServiceAddGitHubAuthMethodHandler.ServeHTTP(w, r)
+		case PRXServiceUpdateGitHubAuthMethodProcedure:
+			pRXServiceUpdateGitHubAuthMethodHandler.ServeHTTP(w, r)
+		case PRXServiceDeleteGitHubAuthMethodProcedure:
+			pRXServiceDeleteGitHubAuthMethodHandler.ServeHTTP(w, r)
+		case PRXServiceReorderGitHubAuthMethodsProcedure:
+			pRXServiceReorderGitHubAuthMethodsHandler.ServeHTTP(w, r)
+		case PRXServiceValidateConfigProcedure:
+			pRXServiceValidateConfigHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -659,4 +901,40 @@ func (UnimplementedPRXServiceHandler) Sync(context.Context, *connect.Request[v1.
 
 func (UnimplementedPRXServiceHandler) Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.Validate is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetConfig is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) AddGitHubHost(context.Context, *connect.Request[v1.AddGitHubHostRequest]) (*connect.Response[v1.AddGitHubHostResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.AddGitHubHost is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) UpdateGitHubHost(context.Context, *connect.Request[v1.UpdateGitHubHostRequest]) (*connect.Response[v1.UpdateGitHubHostResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.UpdateGitHubHost is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) DeleteGitHubHost(context.Context, *connect.Request[v1.DeleteGitHubHostRequest]) (*connect.Response[v1.DeleteGitHubHostResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.DeleteGitHubHost is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) AddGitHubAuthMethod(context.Context, *connect.Request[v1.AddGitHubAuthMethodRequest]) (*connect.Response[v1.AddGitHubAuthMethodResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.AddGitHubAuthMethod is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) UpdateGitHubAuthMethod(context.Context, *connect.Request[v1.UpdateGitHubAuthMethodRequest]) (*connect.Response[v1.UpdateGitHubAuthMethodResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.UpdateGitHubAuthMethod is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) DeleteGitHubAuthMethod(context.Context, *connect.Request[v1.DeleteGitHubAuthMethodRequest]) (*connect.Response[v1.DeleteGitHubAuthMethodResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.DeleteGitHubAuthMethod is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) ReorderGitHubAuthMethods(context.Context, *connect.Request[v1.ReorderGitHubAuthMethodsRequest]) (*connect.Response[v1.ReorderGitHubAuthMethodsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.ReorderGitHubAuthMethods is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) ValidateConfig(context.Context, *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.ValidateConfig is not implemented"))
 }

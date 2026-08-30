@@ -44,7 +44,7 @@ GitHub Actions runs the same checks as `make ci`, but as one job per Makefile ta
 
 ## GitHub fixtures
 
-`--github-fixture` supplies a deterministic provider for the command, so tests and demos run without network access. Without a fixture, only `prx serve` attempts live GitHub authentication; other commands, including `sync`, run without a provider and report `GitHub provider is not configured` when synchronization is requested.
+`--github-fixture` supplies a deterministic provider for the command, so tests and demos run without network access. It takes precedence over the YAML resolver and the SQLite authentication cache. Without a fixture, both `prx serve` and `prx sync` use the configured live resolver; credentials are read lazily per host and repository, so a server can start with no available credential and report stale synchronization failures later.
 
 `prx seed --github-fixture demo --features 100 --tasks 50` creates deterministic performance data. Instead of `demo`, a fixture JSON file can map canonical PR URLs to GitHub states:
 
@@ -63,3 +63,36 @@ GitHub Actions runs the same checks as `make ci`, but as one job per Makefile ta
 `state` must be `open`, `closed`, `merged`, or `unknown`; `review_state` must be `none`, `required`, `approved`, `changes_requested`, or `unknown`; `mergeability` must be `mergeable`, `conflicting`, or `unknown`. A fixture with any other value is rejected when the file is read. An entry may instead carry `"error"` to simulate a fetch failure.
 
 Task fixtures and integration tests use `auto` as the stored task status. A plan is supplied through the implementation-plan CLI/RPC rather than embedded in a snapshot; tests that need the `designed` state should create a plan and then request a fresh snapshot. Synchronization tests should distinguish a first-time `unknown` PR from a stale PR with a previously known open, closed, or merged state: only the former blocks dependent tasks.
+
+## GitHub configuration
+
+The default configuration path is `os.UserConfigDir()/prx/config.yaml`. `--config` takes precedence over `PRX_CONFIG`; when neither is set, the default path is used. `prx config show`, `prx config validate`, and the `prx config host` / `prx config auth` subcommands manage this file without opening SQLite or contacting GitHub.
+
+The file supports multiple GitHub.com or GitHub Enterprise Server hosts. Authentication methods are scoped to one normalized host and tried in their YAML order. Supported sources are `keychain`, `environment`, `inline`, and `gh_cli`:
+
+```yaml
+version: 1
+github:
+  hosts:
+    - host: github.com
+      web_url: https://github.com
+      api_url: https://api.github.com/
+      upload_url: https://uploads.github.com/
+    - host: ghe.example.com
+      web_url: https://ghe.example.com
+      api_url: https://ghe.example.com/api/v3/
+      upload_url: https://ghe.example.com/api/uploads/
+  auth_methods:
+    - id: ghe-environment
+      host: ghe.example.com
+      type: environment
+      variable: GH_ENTERPRISE_TOKEN
+    - id: github-cli
+      host: github.com
+      type: gh_cli
+      user: HappyOnigiri
+```
+
+When `auth_methods` is omitted, GitHub.com keeps the compatibility candidates `GITHUB_TOKEN`, `GH_TOKEN`, and `gh auth token`. An explicit empty list disables those implicit candidates. Inline tokens are accepted through `prx config auth add --token-stdin`; they are stored in YAML but omitted from CLI, RPC, and WebUI reads. The SQLite cache contains only the successful method ID for a host/repository and can be ignored safely when a method is removed.
+
+Configuration tests should use a temporary `--config` path and never depend on the real Keychain, ambient token variables, `gh` accounts, or GitHub. The live resolver tests use fake HTTPS servers and assert host isolation, cache fallback, `404` disambiguation, rate-limit handling, and secret-free outputs. Run the focused checks with `go test ./internal/config ./internal/github ./internal/app ./internal/rpc ./internal/cli` and `corepack pnpm --dir web test`.
