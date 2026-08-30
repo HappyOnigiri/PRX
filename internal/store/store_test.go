@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/HappyOnigiri/PRX/internal/app"
+	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/store"
@@ -1082,6 +1083,77 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	}
 	if issues := service.Validate(ctx); len(issues) != 0 {
 		t.Errorf("validation issues: %v", issues)
+	}
+}
+
+// The WebUI synchronizes on its first render, so the demo only shows what it
+// promises when a synchronization reproduces the states rather than replacing
+// them with the generated preset.
+func TestDemoSurvivesSynchronization(t *testing.T) {
+	database, err := store.Open(context.Background(), filepath.Join(t.TempDir(), "test.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+	temporaryRoot := t.TempDir()
+	fixturePath := filepath.Join(temporaryRoot, "github-fixture.json")
+	if err := app.WriteDemoFixture(fixturePath); err != nil {
+		t.Fatal(err)
+	}
+	provider, err := githubprovider.NewFixtureProvider(fixturePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	configStore, err := config.NewStore(filepath.Join(temporaryRoot, "config.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	service := app.NewWithConfig(database, provider, configStore)
+	ctx := context.Background()
+	if err := service.InitializeDemo(ctx, filepath.Join(temporaryRoot, "walkthrough.md")); err != nil {
+		t.Fatal(err)
+	}
+	before, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ran, _, err := service.SyncIfDue(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ran {
+		t.Fatal("the first synchronization did not run, so this test proves nothing")
+	}
+	after, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	displayStates := func(snapshot domain.Snapshot) map[domain.TaskDisplayState]int {
+		counts := map[domain.TaskDisplayState]int{}
+		for _, task := range snapshot.Tasks {
+			counts[task.DisplayState]++
+		}
+		return counts
+	}
+	beforeStates, afterStates := displayStates(before), displayStates(after)
+	for state, count := range beforeStates {
+		if afterStates[state] != count {
+			t.Errorf("display state %q: %d tasks before the synchronization, %d after",
+				state, count, afterStates[state])
+		}
+	}
+	if len(afterStates) != len(beforeStates) {
+		t.Errorf("display states=%d after the synchronization, want %d", len(afterStates), len(beforeStates))
+	}
+	if len(after.StaleTasks) != len(before.StaleTasks) {
+		t.Errorf("stale tasks=%d after the synchronization, want %d",
+			len(after.StaleTasks), len(before.StaleTasks))
+	}
+	if len(after.ConflictTasks) != len(before.ConflictTasks) ||
+		len(after.ReviewWaitingTasks) != len(before.ReviewWaitingTasks) {
+		t.Errorf("queues changed: conflicts=%d reviews=%d, want %d and %d",
+			len(after.ConflictTasks), len(after.ReviewWaitingTasks),
+			len(before.ConflictTasks), len(before.ReviewWaitingTasks))
 	}
 }
 

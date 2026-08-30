@@ -2,11 +2,13 @@ package app
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"time"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
+	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 )
 
 type demoTask struct {
@@ -17,6 +19,44 @@ type demoTask struct {
 	assignee string
 	plan     string
 	pr       *domain.PullRequest
+}
+
+func demoPullRequestURL(pr domain.PullRequest) string {
+	return fmt.Sprintf("https://%s/%s/%s/pull/%d", pr.Host, pr.Owner, pr.Repository, pr.Number)
+}
+
+func demoPullRequestAuthor(index int) string {
+	return []string{"octocat", "hubot", "monalisa"}[index%3]
+}
+
+// WriteDemoFixture records the demo pull-request states as a GitHub fixture
+// file. Serving the demo through this fixture instead of the generated preset
+// keeps a synchronization from replacing the states the demo exists to show.
+func WriteDemoFixture(path string) error {
+	fixtures := map[string]githubprovider.Fixture{}
+	for _, tasks := range [][]demoTask{showcaseDemoTasks(), completedDemoTasks()} {
+		for index, value := range tasks {
+			if value.pr == nil {
+				continue
+			}
+			fixtures[demoPullRequestURL(*value.pr)] = githubprovider.Fixture{
+				State:        value.pr.State,
+				Draft:        value.pr.Draft,
+				ReviewState:  value.pr.ReviewState,
+				Mergeability: value.pr.Mergeability,
+				Author:       demoPullRequestAuthor(index),
+				Error:        value.pr.SyncError,
+			}
+		}
+	}
+	body, err := json.Marshal(fixtures)
+	if err != nil {
+		return fmt.Errorf("encode demo GitHub fixture: %w", err)
+	}
+	if err := os.WriteFile(path, body, 0o600); err != nil {
+		return fmt.Errorf("write demo GitHub fixture: %w", err)
+	}
+	return nil
 }
 
 // InitializeDemo populates a new, empty repository with the built-in demo.
@@ -147,22 +187,7 @@ func (s *Service) createCompletedDemo(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	completedTasks := make([]demoTask, 100)
-	for index := range completedTasks {
-		completedTasks[index] = demoTask{
-			title:    fmt.Sprintf("Completed delivery slice %03d", index+1),
-			scope:    "A completed repository delivery boundary",
-			kind:     domain.TaskKindPR,
-			status:   domain.TaskStatusAuto,
-			assignee: []string{"Ari", "Mika", "Ren"}[index%3],
-			pr: &domain.PullRequest{
-				Host: "github.com", Owner: "HappyOnigiri", Repository: "prx-demo-scale",
-				Number: int64(1001 + index), State: domain.PullRequestStateMerged,
-				ReviewState: domain.ReviewStateApproved, Mergeability: domain.MergeabilityMergeable,
-			},
-		}
-	}
-	largeTasks, err := s.createDemoTasks(ctx, completed, completedTasks)
+	largeTasks, err := s.createDemoTasks(ctx, completed, completedDemoTasks())
 	if err != nil {
 		return err
 	}
@@ -250,14 +275,7 @@ func (s *Service) createDemoTasks(
 			}
 		}
 		if value.pr != nil {
-			url := fmt.Sprintf(
-				"https://%s/%s/%s/pull/%d",
-				value.pr.Host,
-				value.pr.Owner,
-				value.pr.Repository,
-				value.pr.Number,
-			)
-			attached, err := s.AttachPullRequest(ctx, task.ID, url)
+			attached, err := s.AttachPullRequest(ctx, task.ID, demoPullRequestURL(*value.pr))
 			if err != nil {
 				return nil, err
 			}
@@ -265,7 +283,7 @@ func (s *Service) createDemoTasks(
 			pr.TaskID = task.ID
 			pr.URL = attached.URL
 			pr.NodeID = fmt.Sprintf("demo:%d", pr.Number)
-			pr.Author = []string{"octocat", "hubot", "monalisa"}[index%3]
+			pr.Author = demoPullRequestAuthor(index)
 			now := time.Date(2026, time.August, 30, 0, index, 0, 0, time.UTC)
 			pr.GitHubUpdatedAt = &now
 			pr.LastSyncedAt = &now
@@ -280,6 +298,25 @@ func (s *Service) createDemoTasks(
 
 func showcaseDemoTasks() []demoTask {
 	return append(showcaseManualTasks(), showcasePullRequestTasks()...)
+}
+
+func completedDemoTasks() []demoTask {
+	tasks := make([]demoTask, 100)
+	for index := range tasks {
+		tasks[index] = demoTask{
+			title:    fmt.Sprintf("Completed delivery slice %03d", index+1),
+			scope:    "A completed repository delivery boundary",
+			kind:     domain.TaskKindPR,
+			status:   domain.TaskStatusAuto,
+			assignee: []string{"Ari", "Mika", "Ren"}[index%3],
+			pr: &domain.PullRequest{
+				Host: "github.com", Owner: "HappyOnigiri", Repository: "prx-demo-scale",
+				Number: int64(1001 + index), State: domain.PullRequestStateMerged,
+				ReviewState: domain.ReviewStateApproved, Mergeability: domain.MergeabilityMergeable,
+			},
+		}
+	}
+	return tasks
 }
 
 func showcaseManualTasks() []demoTask {

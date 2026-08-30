@@ -30,7 +30,11 @@ func newOpenService(_ io.Writer) cli.OpenService {
 			}
 			dbPath = filepath.Join(temporaryRoot, "prx.db")
 			configPath = filepath.Join(temporaryRoot, "config.yaml")
-			fixturePath = "demo"
+			fixturePath = filepath.Join(temporaryRoot, "github-fixture.json")
+			if err := app.WriteDemoFixture(fixturePath); err != nil {
+				_ = os.RemoveAll(temporaryRoot)
+				return nil, nil, err
+			}
 		}
 
 		database, err := store.Open(ctx, dbPath)
