@@ -1,8 +1,6 @@
 package cli
 
 import (
-	"strings"
-
 	"github.com/spf13/cobra"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
@@ -32,9 +30,22 @@ func (s *state) documentCommand() *cobra.Command {
 		Example: "prx document add TASK_ID docs/checkout.md --kind markdown_path",
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			feature, task := args[0], ""
-			if strings.HasPrefix(args[0], "T-") {
-				feature, task = "", args[0]
+			parent, err := s.service.GetNode(cmd.Context(), args[0])
+			if err != nil {
+				return err
+			}
+			var feature, task string
+			switch node := parent.(type) {
+			case domain.Feature:
+				feature = node.ID
+			case domain.Task:
+				task = node.ID
+			default:
+				return domain.NewError(
+					domain.DomainErrorCodeInvalidParent,
+					"%q resolved to an unsupported document parent",
+					args[0],
+				)
 			}
 			doc, err := s.service.AddDocument(cmd.Context(), feature, task, domain.DocumentKind(kind), title, args[1])
 			if err != nil {

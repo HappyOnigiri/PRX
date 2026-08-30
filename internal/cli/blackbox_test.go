@@ -1339,10 +1339,28 @@ func TestBlackBoxDocumentAddResolvesPublicParentForms(t *testing.T) {
 		})
 	}
 
-	for _, parent := range []string{"missing-feature", "T-999"} {
-		missing, _, missingExit := runCLI(t, binary, dbPath, "document", "add", parent, "https://example.com/missing")
+	for _, missingCase := range []struct {
+		parent      string
+		wantMessage string
+	}{
+		{parent: "missing-feature", wantMessage: "feature or task"},
+		{parent: "T-999", wantMessage: "task"},
+		{parent: strings.ToLower(taskData.ID), wantMessage: "feature or task"},
+	} {
+		missing, _, missingExit := runCLI(
+			t,
+			binary,
+			dbPath,
+			"document",
+			"add",
+			missingCase.parent,
+			"https://example.com/missing",
+		)
 		if missingExit == 0 || missing.ErrorCode != "not_found" {
-			t.Fatalf("parent=%q result=%+v exit=%d", parent, missing, missingExit)
+			t.Fatalf("parent=%q result=%+v exit=%d", missingCase.parent, missing, missingExit)
+		}
+		if !strings.Contains(missing.Error, missingCase.wantMessage) {
+			t.Fatalf("parent=%q message=%q, want %q", missingCase.parent, missing.Error, missingCase.wantMessage)
 		}
 	}
 }
