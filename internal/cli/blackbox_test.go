@@ -1233,8 +1233,7 @@ func TestBlackBoxRequiredOperandsRejectOldFlagsAndWrongCounts(t *testing.T) {
 		{"config", "auth", "add", "work", "github.com"},
 	}
 	for _, commandArgs := range wrongCounts {
-		name := strings.Join(commandArgs[:2], " ") + " " + commandArgs[len(commandArgs)-1]
-		t.Run(name, func(t *testing.T) {
+		t.Run(strings.Join(commandArgs, " "), func(t *testing.T) {
 			args := []string{"--db", dbPath, "--config", configPath, "--json"}
 			result := executeCLI(t, binary, "", append(args, commandArgs...)...)
 			if result.exit == 0 || result.stdout != "" {
