@@ -9,7 +9,7 @@ prx config validate [flags]
 ### Examples
 
 ```
-prx config validate --json
+prx config validate
 ```
 
 ### Options
@@ -24,11 +24,10 @@ prx config validate --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
 
-* [prx config](prx_config.md)	 - Manage GitHub hosts and authentication
+* [prx config](prx_config.md)	 - Show or manage GitHub hosts and authentication
 

@@ -13,14 +13,7 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-const SchemaVersion = "1"
-
-type outputMode uint8
-
-const (
-	outputModeJSON outputMode = iota + 1
-	outputModeHuman
-)
+const SchemaVersion = "2"
 
 type humanRenderer func(io.Writer) error
 
@@ -31,17 +24,15 @@ type errorEnvelope struct {
 type errorData struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+	Hint    string `json:"hint"`
 }
 
 func PrintError(out io.Writer, err error) error {
-	return writeJSONFailure(out, err)
+	return writeJSONFailure(out, err, "")
 }
 
 func (s *state) write(value any, render humanRenderer) error {
-	if err := s.resolveOutputMode(); err != nil {
-		return err
-	}
-	if s.mode == outputModeHuman {
+	if !s.json {
 		if render == nil {
 			return errors.New("human output renderer is required")
 		}
@@ -54,15 +45,16 @@ func (s *state) write(value any, render humanRenderer) error {
 	return encodeJSON(s.out, data)
 }
 
-func (s *state) writeError(err error) error {
-	if resolveErr := s.resolveOutputMode(); resolveErr != nil && err == nil {
-		err = resolveErr
-	}
-	if s.mode == outputModeHuman {
-		_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n", errorMessage(err))
+func (s *state) writeError(err error, hint string) error {
+	if !s.json {
+		if hint == "" {
+			_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n", errorMessage(err))
+			return writeErr
+		}
+		_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n\n%s", errorMessage(err), hint)
 		return writeErr
 	}
-	return writeJSONFailure(s.errOut, err)
+	return writeJSONFailure(s.errOut, err, hint)
 }
 
 func (s *state) writeSchemaVersion() error {
@@ -77,8 +69,10 @@ func (s *state) writeSchemaVersion() error {
 	)
 }
 
-func writeJSONFailure(out io.Writer, err error) error {
-	return encodeJSON(out, errorEnvelope{Error: errorData{Code: commandErrorCode(err), Message: errorMessage(err)}})
+func writeJSONFailure(out io.Writer, err error, hint string) error {
+	return encodeJSON(out, errorEnvelope{Error: errorData{
+		Code: commandErrorCode(err), Message: errorMessage(err), Hint: hint,
+	}})
 }
 
 func commandErrorCode(err error) string {

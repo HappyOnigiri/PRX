@@ -75,18 +75,38 @@ type GitHubAuthCache interface {
 	DeleteGitHubRepositoryAuthCache(ctx context.Context, host, owner, repository string) error
 }
 
+type GitHubSyncStateRepository interface {
+	GitHubSyncState(ctx context.Context) (domain.GitHubSyncState, error)
+	AcquireGitHubAutoSync(ctx context.Context, runID string, attemptedAt time.Time, dueBeforeUnix int64) (bool, error)
+	StartGitHubSync(ctx context.Context, runID string, attemptedAt time.Time) error
+	// CompleteGitHubSync reports whether the run still owned the shared state.
+	// A concurrent refresh overwrites the run identifier, and the caller must
+	// not present the state it reads back afterwards as its own outcome.
+	CompleteGitHubSync(
+		ctx context.Context,
+		runID string,
+		completedAt time.Time,
+		succeeded, failed int,
+		runError string,
+	) (bool, error)
+}
+
 type Service struct {
 	repository  Repository
 	provider    githubprovider.Provider
 	configStore *config.Store
+	now         func() time.Time
 }
 
 func New(repository Repository, provider githubprovider.Provider) *Service {
-	return &Service{repository: repository, provider: provider}
+	return &Service{repository: repository, provider: provider, now: func() time.Time { return time.Now().UTC() }}
 }
 
 func NewWithConfig(repository Repository, provider githubprovider.Provider, configStore *config.Store) *Service {
-	return &Service{repository: repository, provider: provider, configStore: configStore}
+	return &Service{
+		repository: repository, provider: provider, configStore: configStore,
+		now: func() time.Time { return time.Now().UTC() },
+	}
 }
 
 func (s *Service) ConfigStore() *config.Store { return s.configStore }
@@ -149,27 +169,41 @@ func (s *Service) UpdateFeature(
 	return s.repository.UpdateFeature(ctx, feature)
 }
 
+// ResolveFeature only falls through to the next lookup when the previous one
+// reported a missing row, so a storage failure such as a locked database keeps
+// its own cause instead of being reported as a missing feature.
 func (s *Service) ResolveFeature(ctx context.Context, idOrSlug string) (domain.Feature, error) {
-	if feature, err := s.repository.GetFeature(ctx, idOrSlug); err == nil {
+	feature, err := s.repository.GetFeature(ctx, idOrSlug)
+	if err == nil {
 		return feature, nil
 	}
-	if feature, err := s.repository.GetFeatureBySlug(ctx, idOrSlug); err == nil {
+	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		return domain.Feature{}, err
+	}
+	feature, err = s.repository.GetFeatureBySlug(ctx, idOrSlug)
+	if err == nil {
 		return feature, nil
+	}
+	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		return domain.Feature{}, err
 	}
 	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", idOrSlug)
 }
 
-// GetNode resolves the public typed ID without exposing the storage UUID or
-// requiring callers to choose the feature/task operation first.
+// GetNode resolves a public feature ID or slug or a public task ID without
+// exposing the storage UUID or requiring callers to choose the resource first.
 func (s *Service) GetNode(ctx context.Context, id string) (any, error) {
-	switch {
-	case strings.HasPrefix(id, "F-"):
-		return s.repository.GetFeature(ctx, id)
-	case strings.HasPrefix(id, "T-"):
+	if strings.HasPrefix(id, "T-") {
 		return s.repository.GetTask(ctx, id)
-	default:
-		return nil, domain.NewError(domain.DomainErrorCodeNotFound, "node %q was not found", id)
 	}
+	feature, err := s.ResolveFeature(ctx, id)
+	if err == nil {
+		return feature, nil
+	}
+	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		return nil, err
+	}
+	return nil, domain.NewError(domain.DomainErrorCodeNotFound, "feature or task %q was not found", id)
 }
 
 func (s *Service) DeleteFeature(ctx context.Context, id string, cascade bool) error {
@@ -479,7 +513,11 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 	return snapshot, nil
 }
 
-func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded, failed int, err error) {
+func (s *Service) syncSelected(
+	ctx context.Context,
+	featureID, taskID string,
+	automatic bool,
+) (succeeded, failed int, err error) {
 	if s.provider == nil && s.configStore == nil {
 		return 0, 0, domain.NewError(domain.DomainErrorCodeGitHubAuth, "GitHub provider is not configured")
 	}
@@ -504,6 +542,21 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 	for _, task := range snapshot.Tasks {
 		taskFeature[task.ID] = task.FeatureID
 	}
+	activeFeatures := map[string]bool{}
+	for _, feature := range snapshot.Features {
+		activeFeatures[feature.ID] = !feature.Archived
+	}
+	eligible := snapshot.PullRequests[:0]
+	for _, pullRequest := range snapshot.PullRequests {
+		if pullRequest.State == domain.PullRequestStateMerged {
+			continue
+		}
+		if automatic && !activeFeatures[taskFeature[pullRequest.TaskID]] {
+			continue
+		}
+		eligible = append(eligible, pullRequest)
+	}
+	snapshot.PullRequests = eligible
 	if s.provider == nil {
 		settings, loadErr := s.configStore.Load()
 		if loadErr != nil {

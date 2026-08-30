@@ -13,7 +13,7 @@ func (s *state) snapshotCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "snapshot",
 		Short:   "Show the complete current snapshot",
-		Example: "prx snapshot --json",
+		Example: "prx snapshot",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			value, err := s.service.Snapshot(cmd.Context())
@@ -30,7 +30,7 @@ func (s *state) graphCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "graph FEATURE_ID_OR_SLUG",
 		Short:   "Show a feature graph with tasks and dependencies",
-		Example: "prx graph checkout --json",
+		Example: "prx graph checkout",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			feature, err := s.service.ResolveFeature(cmd.Context(), args[0])
@@ -60,10 +60,10 @@ func (s *state) graphCommand() *cobra.Command {
 
 func (s *state) queueCommand(name string) *cobra.Command {
 	documentation := map[string]struct{ short, example string }{
-		"ready":     {short: "List tasks whose blockers are satisfied", example: "prx ready --json"},
-		"reviews":   {short: "List tasks waiting for pull-request reviews", example: "prx reviews --json"},
-		"conflicts": {short: "List tasks with conflicting pull requests", example: "prx conflicts --json"},
-		"stale":     {short: "List tasks with stale GitHub state", example: "prx stale --json"},
+		"ready":     {short: "List tasks whose blockers are satisfied", example: "prx ready"},
+		"reviews":   {short: "List tasks waiting for pull-request reviews", example: "prx reviews"},
+		"conflicts": {short: "List tasks with conflicting pull requests", example: "prx conflicts"},
+		"stale":     {short: "List tasks with stale GitHub state", example: "prx stale"},
 	}
 	doc := documentation[name]
 	return &cobra.Command{
@@ -103,7 +103,7 @@ func (s *state) syncCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "sync",
 		Short:   "Refresh GitHub state for pull-request tasks",
-		Example: "prx sync --feature FEATURE_ID --json\nprx sync --task TASK_ID --json",
+		Example: "prx sync --feature FEATURE_ID\nprx sync --task TASK_ID",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			succeeded, failed, err := s.service.Sync(cmd.Context(), feature, task)
@@ -116,14 +116,31 @@ func (s *state) syncCommand() *cobra.Command {
 	}
 	command.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
 	command.Flags().StringVar(&task, "task", "", "task ID")
+	command.AddCommand(s.syncStatusCommand())
 	return command
+}
+
+func (s *state) syncStatusCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:     "status",
+		Short:   "Show automatic GitHub synchronization status",
+		Example: "prx sync status --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			status, err := s.service.SyncStatus(cmd.Context())
+			if err != nil {
+				return err
+			}
+			return s.write(status, renderSyncStatus(status))
+		},
+	}
 }
 
 func (s *state) validateCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "validate",
 		Short:   "Validate the stored dependency data",
-		Example: "prx validate --json",
+		Example: "prx validate",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			items := s.service.Validate(cmd.Context())
@@ -142,7 +159,7 @@ func (s *state) seedCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "seed",
 		Short:   "Create deterministic demo roadmap data",
-		Example: "prx seed --github-fixture demo --features 100 --tasks 50 --json",
+		Example: "prx seed --github-fixture demo --features 100 --tasks 50",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			if features < 1 {

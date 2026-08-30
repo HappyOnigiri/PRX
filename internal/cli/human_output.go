@@ -289,11 +289,15 @@ func writeHostTable(out io.Writer, hosts []config.Host) error {
 		_, err := fmt.Fprintln(out, "No GitHub hosts configured.")
 		return err
 	}
-	return writeTable(out, []string{"HOST", "WEB URL", "API URL", "UPLOAD URL"}, func(table *tabwriter.Writer) {
-		for _, host := range hosts {
-			writeRow(table, host.Host, host.WebURL, host.APIURL, host.UploadURL)
-		}
-	})
+	return writeTable(
+		out,
+		[]string{"HOST", "WEB URL", "API URL", "UPLOAD URL", "GRAPHQL URL"},
+		func(table *tabwriter.Writer) {
+			for _, host := range hosts {
+				writeRow(table, host.Host, host.WebURL, host.APIURL, host.UploadURL, host.GraphQLURL)
+			}
+		},
+	)
 }
 
 func renderAuthList(methods []config.PublicAuthMethod) humanRenderer {
@@ -328,7 +332,12 @@ func writeAuthTable(out io.Writer, methods []config.PublicAuthMethod) error {
 
 func renderConfig(value config.PublicConfig) humanRenderer {
 	return func(out io.Writer) error {
-		if _, err := fmt.Fprintf(out, "Config version: %d\n\nHosts\n", value.Version); err != nil {
+		if _, err := fmt.Fprintf(
+			out,
+			"Config version: %d\nAutomatic sync interval: %d seconds\n\nHosts\n",
+			value.Version,
+			value.GitHub.AutoSyncIntervalSeconds,
+		); err != nil {
 			return err
 		}
 		if err := writeHostTable(out, value.GitHub.Hosts); err != nil {
@@ -338,6 +347,27 @@ func renderConfig(value config.PublicConfig) humanRenderer {
 			return err
 		}
 		return writeAuthTable(out, value.GitHub.AuthMethods)
+	}
+}
+
+func renderSyncStatus(status domain.GitHubSyncStatus) humanRenderer {
+	return func(out io.Writer) error {
+		lastAttempt := "never"
+		if status.LastAttemptAt != nil {
+			lastAttempt = formatTime(*status.LastAttemptAt)
+		}
+		lastUpdated := "never"
+		if status.LastUpdatedAt != nil {
+			lastUpdated = formatTime(*status.LastUpdatedAt)
+		}
+		return writeFields(out, [][2]string{
+			{"Interval", fmt.Sprintf("%d seconds", status.IntervalSeconds)},
+			{"Last attempt", lastAttempt},
+			{"Last updated", lastUpdated},
+			{"Succeeded", fmt.Sprint(status.Succeeded)},
+			{"Failed", fmt.Sprint(status.Failed)},
+			{"Error", displayValue(status.Error)},
+		})
 	}
 }
 

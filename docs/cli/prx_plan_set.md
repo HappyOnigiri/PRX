@@ -1,15 +1,15 @@
-## prx implementation-plan set
+## prx plan set
 
 Create or replace a task's implementation plan
 
 ```
-prx implementation-plan set TASK_ID [flags]
+prx plan set TASK_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx implementation-plan set TASK_ID --file plan.md --json
+prx plan set TASK_ID --file plan.md
 ```
 
 ### Options
@@ -26,11 +26,10 @@ prx implementation-plan set TASK_ID --file plan.md --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
 
-* [prx implementation-plan](prx_implementation-plan.md)	 - Manage task implementation plans
+* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan
 

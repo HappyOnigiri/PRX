@@ -9,7 +9,7 @@ prx document add [flags]
 ### Examples
 
 ```
-prx document add --task TASK_ID --kind markdown_path --value docs/checkout.md --json
+prx document add --task TASK_ID --kind markdown_path --value docs/checkout.md
 ```
 
 ### Options
@@ -29,11 +29,10 @@ prx document add --task TASK_ID --kind markdown_path --value docs/checkout.md --
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
 
-* [prx document](prx_document.md)	 - Manage URL and local Markdown references
+* [prx document](prx_document.md)	 - List or manage URL and local Markdown references
 

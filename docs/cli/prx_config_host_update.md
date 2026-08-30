@@ -9,17 +9,18 @@ prx config host update HOST [flags]
 ### Examples
 
 ```
-prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/ --json
+prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/
 ```
 
 ### Options
 
 ```
-      --api-url string      new HTTPS API base URL
-  -h, --help                help for update
-      --new-host string     new hostname
-      --upload-url string   new HTTPS upload base URL
-      --web-url string      new HTTPS web URL
+      --api-url string       new HTTPS API base URL
+      --graphql-url string   new HTTPS GraphQL URL
+  -h, --help                 help for update
+      --new-host string      new hostname
+      --upload-url string    new HTTPS upload base URL
+      --web-url string       new HTTPS web URL
 ```
 
 ### Options inherited from parent commands
@@ -28,11 +29,10 @@ prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
 
-* [prx config host](prx_config_host.md)	 - Manage configured GitHub hosts
+* [prx config host](prx_config_host.md)	 - List or manage configured GitHub hosts
 

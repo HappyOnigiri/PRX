@@ -62,6 +62,8 @@ type Service interface {
 
 	Snapshot(ctx context.Context) (domain.Snapshot, error)
 	Sync(ctx context.Context, featureID, taskID string) (int, int, error)
+	SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus, error)
+	SyncStatus(ctx context.Context) (domain.GitHubSyncStatus, error)
 	Validate(ctx context.Context) []string
 	SeedDemo(ctx context.Context, slug string, count int) error
 }

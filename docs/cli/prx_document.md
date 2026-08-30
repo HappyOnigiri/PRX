@@ -1,6 +1,23 @@
 ## prx document
 
-Manage URL and local Markdown references
+List or manage URL and local Markdown references
+
+### Synopsis
+
+List or manage URL and local Markdown references.
+
+Alias: doc.
+
+```
+prx document [flags]
+```
+
+### Examples
+
+```
+prx document
+prx doc
+```
 
 ### Options
 
@@ -14,8 +31,7 @@ Manage URL and local Markdown references
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
@@ -23,5 +39,4 @@ Manage URL and local Markdown references
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
 * [prx document add](prx_document_add.md)	 - Add a URL or local Markdown path
 * [prx document delete](prx_document_delete.md)	 - Delete a document; missing documents return not_found
-* [prx document list](prx_document_list.md)	 - List URL and local Markdown documents
 

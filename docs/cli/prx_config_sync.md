@@ -1,22 +1,11 @@
-## prx serve
+## prx config sync
 
-Start the local WebUI and ConnectRPC server
-
-```
-prx serve [flags]
-```
-
-### Examples
-
-```
-prx serve --addr 127.0.0.1:7331
-```
+Manage automatic GitHub synchronization settings
 
 ### Options
 
 ```
-      --addr string   listen address (default "127.0.0.1:7331")
-  -h, --help          help for serve
+  -h, --help   help for sync
 ```
 
 ### Options inherited from parent commands
@@ -30,5 +19,6 @@ prx serve --addr 127.0.0.1:7331
 
 ### SEE ALSO
 
-* [prx](prx.md)	 - Manage pull-request dependency roadmaps
+* [prx config](prx_config.md)	 - Show or manage GitHub hosts and authentication
+* [prx config sync update](prx_config_sync_update.md)	 - Update the automatic GitHub synchronization interval
 

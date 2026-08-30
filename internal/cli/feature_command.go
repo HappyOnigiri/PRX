@@ -7,11 +7,31 @@ import (
 )
 
 func (s *state) featureCommand() *cobra.Command {
-	command := &cobra.Command{Use: "feature", Short: "Manage features"}
+	command := &cobra.Command{
+		Use:     "feature [FEATURE_ID_OR_SLUG]",
+		Aliases: []string{"f"},
+		Short:   "List features or show one by ID or slug",
+		Long:    "List features or show one by ID or slug.\n\nAlias: f.",
+		Example: "prx feature\nprx feature F-1\nprx f checkout\nprx show create",
+		Args:    cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 1 {
+				value, err := s.service.ResolveFeature(cmd.Context(), args[0])
+				if err != nil {
+					return err
+				}
+				return s.write(value, renderFeatureDetail(value))
+			}
+			value, err := s.service.Snapshot(cmd.Context())
+			if err != nil {
+				return err
+			}
+			features := nonNilSlice(value.Features)
+			return s.write(map[string]any{"features": features}, renderFeatureList(features))
+		},
+	}
 	command.AddCommand(
 		s.featureCreateCommand(),
-		s.featureListCommand(),
-		s.featureGetCommand(),
 		s.featureUpdateCommand(),
 		s.featureArchiveCommand(true),
 		s.featureArchiveCommand(false),
@@ -25,7 +45,7 @@ func (s *state) featureCreateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "create",
 		Short:   "Create a feature",
-		Example: "prx feature create --slug checkout --title \"Checkout rollout\" --json",
+		Example: "prx feature create --slug checkout --title \"Checkout rollout\"",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			value, err := s.service.CreateFeature(cmd.Context(), slug, title, description)
@@ -43,46 +63,13 @@ func (s *state) featureCreateCommand() *cobra.Command {
 	return command
 }
 
-func (s *state) featureListCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:     "list",
-		Short:   "List features",
-		Example: "prx feature list --json",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			value, err := s.service.Snapshot(cmd.Context())
-			if err != nil {
-				return err
-			}
-			features := nonNilSlice(value.Features)
-			return s.write(map[string]any{"features": features}, renderFeatureList(features))
-		},
-	}
-}
-
-func (s *state) featureGetCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:     "get FEATURE_ID_OR_SLUG",
-		Short:   "Show a feature by ID or slug",
-		Example: "prx feature get F-1 --json",
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := s.service.ResolveFeature(cmd.Context(), args[0])
-			if err != nil {
-				return err
-			}
-			return s.write(value, renderFeatureDetail(value))
-		},
-	}
-}
-
 func (s *state) featureUpdateCommand() *cobra.Command {
 	var slug, title, description, status string
 	var archived bool
 	command := &cobra.Command{
 		Use:     "update FEATURE_ID_OR_SLUG",
 		Short:   "Update a feature by ID or slug",
-		Example: "prx feature update checkout --archived=false --json",
+		Example: "prx feature update checkout --archived=false",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.UpdateFeature(
@@ -122,7 +109,7 @@ func (s *state) featureArchiveCommand(archived bool) *cobra.Command {
 	return &cobra.Command{
 		Use:     verb + " FEATURE_ID_OR_SLUG",
 		Short:   short,
-		Example: "prx feature " + verb + " checkout --json",
+		Example: "prx feature " + verb + " checkout",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, &archived)
@@ -143,7 +130,7 @@ func (s *state) featureDeleteCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "delete FEATURE_ID_OR_SLUG",
 		Short:   "Delete a feature and optionally its contained data",
-		Example: "prx feature delete checkout --cascade --json",
+		Example: "prx feature delete checkout --cascade",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := s.service.DeleteFeature(cmd.Context(), args[0], cascade); err != nil {

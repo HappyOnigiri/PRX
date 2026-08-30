@@ -13,48 +13,6 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-func TestOutputModeSelection(t *testing.T) {
-	tests := []struct {
-		name      string
-		json      bool
-		human     bool
-		terminal  bool
-		want      outputMode
-		wantError bool
-	}{
-		{name: "automatic terminal", terminal: true, want: outputModeHuman},
-		{name: "automatic non-terminal", want: outputModeJSON},
-		{name: "json overrides terminal", json: true, terminal: true, want: outputModeJSON},
-		{name: "human overrides non-terminal", human: true, want: outputModeHuman},
-		{
-			name:      "conflicting flags on terminal",
-			json:      true,
-			human:     true,
-			terminal:  true,
-			want:      outputModeHuman,
-			wantError: true,
-		},
-		{name: "conflicting flags off terminal", json: true, human: true, want: outputModeJSON, wantError: true},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			s := &state{
-				json:       test.json,
-				human:      test.human,
-				out:        io.Discard,
-				isTerminal: func(io.Writer) bool { return test.terminal },
-			}
-			err := s.resolveOutputMode()
-			if (err != nil) != test.wantError {
-				t.Fatalf("resolveOutputMode error = %v, wantError = %t", err, test.wantError)
-			}
-			if s.mode != test.want {
-				t.Fatalf("mode = %v, want %v", s.mode, test.want)
-			}
-		})
-	}
-}
-
 func TestWriteJSONReturnsDataObjectWithoutSuccessEnvelope(t *testing.T) {
 	var out bytes.Buffer
 	s := &state{out: &out, errOut: io.Discard, json: true}
@@ -67,9 +25,9 @@ func TestWriteJSONReturnsDataObjectWithoutSuccessEnvelope(t *testing.T) {
 	}
 }
 
-func TestWriteHumanUsesRenderer(t *testing.T) {
+func TestWriteUsesTextRendererByDefault(t *testing.T) {
 	var out bytes.Buffer
-	s := &state{out: &out, errOut: io.Discard, human: true}
+	s := &state{out: &out, errOut: io.Discard}
 	if err := s.write(map[string]string{"value": "ok"}, renderMessage("Value: ok")); err != nil {
 		t.Fatal(err)
 	}
@@ -99,7 +57,7 @@ func TestWriteJSONErrorUsesCodeAndMessageOnStderr(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	s := &state{out: &stdout, errOut: &stderr, json: true}
 	err := domain.NewError(domain.DomainErrorCodeNotFound, "resource was not found")
-	if writeErr := s.writeError(err); writeErr != nil {
+	if writeErr := s.writeError(err, ""); writeErr != nil {
 		t.Fatal(writeErr)
 	}
 	if stdout.Len() != 0 {
@@ -112,16 +70,16 @@ func TestWriteJSONErrorUsesCodeAndMessageOnStderr(t *testing.T) {
 	if value.Error.Code != string(domain.DomainErrorCodeNotFound) || value.Error.Message != "resource was not found" {
 		t.Fatalf("error response = %+v", value)
 	}
-	if got, want := stderr.String(), `{"error":{"code":"not_found","message":"resource was not found"}}
+	if got, want := stderr.String(), `{"error":{"code":"not_found","message":"resource was not found","hint":""}}
 `; got != want {
 		t.Fatalf("stderr = %q, want %q", got, want)
 	}
 }
 
-func TestWriteHumanErrorUsesPrefixOnStderr(t *testing.T) {
+func TestWriteDefaultErrorUsesPrefixOnStderr(t *testing.T) {
 	var stdout, stderr bytes.Buffer
-	s := &state{out: &stdout, errOut: &stderr, human: true}
-	if err := s.writeError(errors.New("command failed")); err != nil {
+	s := &state{out: &stdout, errOut: &stderr}
+	if err := s.writeError(errors.New("command failed"), ""); err != nil {
 		t.Fatal(err)
 	}
 	if stdout.Len() != 0 || stderr.String() != "Error: command failed\n" {
@@ -134,25 +92,25 @@ func TestPrintErrorUsesJSONErrorContract(t *testing.T) {
 	if err := PrintError(&out, errors.New("boom")); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := out.String(), `{"error":{"code":"internal","message":"boom"}}
+	if got, want := out.String(), `{"error":{"code":"internal","message":"boom","hint":""}}
 `; got != want {
 		t.Fatalf("error output = %q, want %q", got, want)
 	}
 }
 
-func TestWriteSchemaVersionFollowsOutputMode(t *testing.T) {
+func TestWriteSchemaVersionFollowsJSONFlag(t *testing.T) {
 	for _, test := range []struct {
 		name string
-		mode outputMode
+		json bool
 		want string
 	}{
-		{name: "json", mode: outputModeJSON, want: `{"schema_version":"1"}
+		{name: "json", json: true, want: `{"schema_version":"2"}
 `},
-		{name: "human", mode: outputModeHuman, want: "Schema version: 1\n"},
+		{name: "default text", want: "Schema version: 2\n"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var out bytes.Buffer
-			s := &state{out: &out, mode: test.mode, modeSet: true}
+			s := &state{out: &out, json: test.json}
 			if err := s.writeSchemaVersion(); err != nil {
 				t.Fatal(err)
 			}

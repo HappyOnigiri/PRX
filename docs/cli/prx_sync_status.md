@@ -1,21 +1,21 @@
-## prx pr list
+## prx sync status
 
-List attached pull requests
+Show automatic GitHub synchronization status
 
 ```
-prx pr list [flags]
+prx sync status [flags]
 ```
 
 ### Examples
 
 ```
-prx pr list --json
+prx sync status --json
 ```
 
 ### Options
 
 ```
-  -h, --help   help for list
+  -h, --help   help for status
 ```
 
 ### Options inherited from parent commands
@@ -24,11 +24,10 @@ prx pr list --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
 
-* [prx pr](prx_pr.md)	 - Attach GitHub pull requests
+* [prx sync](prx_sync.md)	 - Refresh GitHub state for pull-request tasks
 

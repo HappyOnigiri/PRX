@@ -1,6 +1,25 @@
 ## prx feature
 
-Manage features
+List features or show one by ID or slug
+
+### Synopsis
+
+List features or show one by ID or slug.
+
+Alias: f.
+
+```
+prx feature [FEATURE_ID_OR_SLUG] [flags]
+```
+
+### Examples
+
+```
+prx feature
+prx feature F-1
+prx f checkout
+prx show create
+```
 
 ### Options
 
@@ -14,8 +33,7 @@ Manage features
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
@@ -24,8 +42,6 @@ Manage features
 * [prx feature archive](prx_feature_archive.md)	 - Archive a feature by ID or slug
 * [prx feature create](prx_feature_create.md)	 - Create a feature
 * [prx feature delete](prx_feature_delete.md)	 - Delete a feature and optionally its contained data
-* [prx feature get](prx_feature_get.md)	 - Show a feature by ID or slug
-* [prx feature list](prx_feature_list.md)	 - List features
 * [prx feature unarchive](prx_feature_unarchive.md)	 - Unarchive a feature by ID or slug
 * [prx feature update](prx_feature_update.md)	 - Update a feature by ID or slug
 

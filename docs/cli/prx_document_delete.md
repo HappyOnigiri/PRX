@@ -9,7 +9,7 @@ prx document delete DOCUMENT_ID [flags]
 ### Examples
 
 ```
-prx document delete DOCUMENT_ID --json
+prx document delete DOCUMENT_ID
 ```
 
 ### Options
@@ -24,11 +24,10 @@ prx document delete DOCUMENT_ID --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
 
-* [prx document](prx_document.md)	 - Manage URL and local Markdown references
+* [prx document](prx_document.md)	 - List or manage URL and local Markdown references
 

@@ -138,14 +138,34 @@
 }
 
 .rail-foot {
-  min-height: 48px;
-  padding: 0 18px;
+  min-height: 68px;
+  padding: 9px 18px;
   border-top: 1px solid var(--border);
+  display: grid;
+  gap: 7px;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.sync-status {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  gap: 8px;
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+
+.sync-status > :last-child {
+  overflow: hidden;
+  text-align: right;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.rail-health {
   display: flex;
   align-items: center;
   gap: 8px;
-  color: var(--text-3);
-  font-size: var(--text-xs);
 }
 
 .rail-settings {

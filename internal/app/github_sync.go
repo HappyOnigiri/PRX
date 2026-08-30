@@ -39,8 +39,25 @@ func (s *Service) syncLive(
 	taskID string,
 	resolver *githubprovider.Resolver,
 ) (succeeded, failed int, err error) {
+	groups, keys := groupPullRequests(snapshot.PullRequests, taskFeature, featureID, taskID)
+	cache, _ := s.repository.(GitHubAuthCache)
+	processed, succeeded, failed, err := s.syncUncachedHostGroups(ctx, keys, groups, resolver, cache)
+	if err != nil {
+		return succeeded, failed, err
+	}
+	remainingSucceeded, remainingFailed, err := s.syncRepositoryGroups(
+		ctx, keys, groups, processed, resolver, cache,
+	)
+	return succeeded + remainingSucceeded, failed + remainingFailed, err
+}
+
+func groupPullRequests(
+	pullRequests []domain.PullRequest,
+	taskFeature map[string]string,
+	featureID, taskID string,
+) (map[repositoryKey][]domain.PullRequest, []repositoryKey) {
 	groups := make(map[repositoryKey][]domain.PullRequest)
-	for _, value := range snapshot.PullRequests {
+	for _, value := range pullRequests {
 		if taskID != "" && value.TaskID != taskID {
 			continue
 		}
@@ -58,7 +75,6 @@ func (s *Service) syncLive(
 		}
 		groups[key] = append(groups[key], value)
 	}
-
 	keys := make([]repositoryKey, 0, len(groups))
 	for key := range groups {
 		keys = append(keys, key)
@@ -72,9 +88,57 @@ func (s *Service) syncLive(
 		}
 		return keys[i].repository < keys[j].repository
 	})
+	return groups, keys
+}
 
-	cache, _ := s.repository.(GitHubAuthCache)
+func (s *Service) syncUncachedHostGroups(
+	ctx context.Context,
+	keys []repositoryKey,
+	groups map[repositoryKey][]domain.PullRequest,
+	resolver *githubprovider.Resolver,
+	cache GitHubAuthCache,
+) (processed map[repositoryKey]bool, succeeded, failed int, err error) {
+	processed = make(map[repositoryKey]bool)
+	keysByHost := make(map[string][]repositoryKey)
+	// keys is already sorted, and hosts are visited in that same order so a
+	// failure stops after the same hosts on every run.
+	hosts := make([]string, 0, len(keys))
 	for _, key := range keys {
+		if _, seen := keysByHost[key.host]; !seen {
+			hosts = append(hosts, key.host)
+		}
+		keysByHost[key.host] = append(keysByHost[key.host], key)
+	}
+	for _, host := range hosts {
+		hostKeys := keysByHost[host]
+		if len(hostKeys) < 2 || repositoriesHaveCachedAuth(ctx, cache, hostKeys) {
+			continue
+		}
+		hostSucceeded, hostFailed, hostErr := s.syncHostBatch(ctx, hostKeys, groups, resolver, cache)
+		if hostErr != nil {
+			return processed, succeeded, failed, hostErr
+		}
+		succeeded += hostSucceeded
+		failed += hostFailed
+		for _, key := range hostKeys {
+			processed[key] = true
+		}
+	}
+	return processed, succeeded, failed, nil
+}
+
+func (s *Service) syncRepositoryGroups(
+	ctx context.Context,
+	keys []repositoryKey,
+	groups map[repositoryKey][]domain.PullRequest,
+	processed map[repositoryKey]bool,
+	resolver *githubprovider.Resolver,
+	cache GitHubAuthCache,
+) (succeeded, failed int, err error) {
+	for _, key := range keys {
+		if processed[key] {
+			continue
+		}
 		values := groups[key]
 		result, resultErr := s.syncRepository(ctx, key, values, resolver, cache)
 		if resultErr != nil {
@@ -91,25 +155,147 @@ func (s *Service) syncLive(
 				return succeeded, failed, cacheErr
 			}
 		}
-		for _, current := range values {
-			if updated, ok := result.successes[current.TaskID]; ok {
-				if _, persistErr := s.repository.UpsertPullRequest(ctx, updated); persistErr != nil {
-					return succeeded, failed, persistErr
-				}
-				succeeded++
-				continue
-			}
-			failure := result.failures[current.TaskID]
-			if failure == nil {
-				failure = fmt.Errorf("GitHub synchronization did not produce a result")
-			}
-			current.LastSyncedAt = timePointer(time.Now().UTC())
-			current.SyncError = failure.Error()
-			current.Stale = true
-			if _, persistErr := s.repository.UpsertPullRequest(ctx, current); persistErr != nil {
+		groupSucceeded, groupFailed, persistErr := s.persistSyncResult(ctx, values, result)
+		succeeded += groupSucceeded
+		failed += groupFailed
+		if persistErr != nil {
+			return succeeded, failed, persistErr
+		}
+	}
+	return succeeded, failed, nil
+}
+
+// persistSyncResult stores every refreshed pull request and records the rest as
+// stale with the failure that kept them from refreshing. Both synchronization
+// paths share it so they agree on the fallback used when a pull request ends up
+// in neither map.
+func (s *Service) persistSyncResult(
+	ctx context.Context,
+	values []domain.PullRequest,
+	result repositorySyncResult,
+) (succeeded, failed int, err error) {
+	for _, current := range values {
+		if updated, ok := result.successes[current.TaskID]; ok {
+			if _, persistErr := s.repository.UpsertPullRequest(ctx, updated); persistErr != nil {
 				return succeeded, failed, persistErr
 			}
-			failed++
+			succeeded++
+			continue
+		}
+		failure := result.failures[current.TaskID]
+		if failure == nil {
+			failure = fmt.Errorf("GitHub synchronization did not produce a result")
+		}
+		current.LastSyncedAt = timePointer(time.Now().UTC())
+		current.SyncError = failure.Error()
+		current.Stale = true
+		if _, persistErr := s.repository.UpsertPullRequest(ctx, current); persistErr != nil {
+			return succeeded, failed, persistErr
+		}
+		failed++
+	}
+	return succeeded, failed, nil
+}
+
+func repositoriesHaveCachedAuth(
+	ctx context.Context,
+	cache GitHubAuthCache,
+	keys []repositoryKey,
+) bool {
+	if cache == nil {
+		return false
+	}
+	for _, key := range keys {
+		_, found, err := cache.GetGitHubRepositoryAuthCache(ctx, key.host, key.owner, key.repository)
+		if err != nil || found {
+			return true
+		}
+	}
+	return false
+}
+
+func (s *Service) syncHostBatch(
+	ctx context.Context,
+	keys []repositoryKey,
+	groups map[repositoryKey][]domain.PullRequest,
+	resolver *githubprovider.Resolver,
+	cache GitHubAuthCache,
+) (succeeded, failed int, err error) {
+	work := make([]domain.PullRequest, 0)
+	keyByTask := make(map[string]repositoryKey)
+	for _, key := range keys {
+		for _, value := range groups[key] {
+			work = append(work, value)
+			keyByTask[value.TaskID] = key
+		}
+	}
+	result := repositorySyncResult{
+		successes: map[string]domain.PullRequest{}, failures: map[string]error{},
+	}
+	for _, candidate := range resolver.Candidates(keys[0].host) {
+		if len(work) == 0 {
+			break
+		}
+		provider, openErr := resolver.Open(ctx, candidate)
+		if openErr != nil {
+			if githubprovider.ClassOf(openErr) == githubprovider.ErrorClassUnauthorized {
+				resolver.MarkUnauthorized(candidate.ID)
+			}
+			if isFallbackClass(githubprovider.ClassOf(openErr)) {
+				continue
+			}
+			addRemainingFailures(result.failures, work, 0, openErr)
+			work = nil
+			break
+		}
+		batch, batchErr := provider.FetchBatch(ctx, work)
+		// A chunked fetch reports what earlier chunks already produced alongside
+		// the failure, so take those results before deciding what the failure
+		// means for the pull requests it never reached.
+		next := make([]domain.PullRequest, 0)
+		for _, current := range work {
+			if updated, ok := batch.PullRequests[current.TaskID]; ok {
+				result.successes[current.TaskID] = updated
+				if cache != nil {
+					key := keyByTask[current.TaskID]
+					if cacheErr := cache.UpsertGitHubRepositoryAuthCache(
+						ctx, key.host, key.owner, key.repository, candidate.ID,
+					); cacheErr != nil {
+						return succeeded, failed, cacheErr
+					}
+				}
+				continue
+			}
+			itemErr := batch.Errors[current.TaskID]
+			if itemErr == nil && batchErr == nil {
+				itemErr = fmt.Errorf("GitHub synchronization did not produce a result")
+			}
+			if itemErr == nil || isFallbackClass(githubprovider.ClassOf(itemErr)) {
+				next = append(next, current)
+				continue
+			}
+			result.failures[current.TaskID] = itemErr
+		}
+		if batchErr != nil {
+			class := githubprovider.ClassOf(batchErr)
+			if class == githubprovider.ErrorClassUnauthorized {
+				resolver.MarkUnauthorized(candidate.ID)
+			}
+			if !isFallbackClass(class) {
+				addRemainingFailures(result.failures, next, 0, batchErr)
+				work = nil
+				break
+			}
+		}
+		work = next
+	}
+	addUnavailableFailures(result.failures, work, keys[0].host)
+	for _, key := range keys {
+		groupSucceeded, groupFailed, persistErr := s.persistSyncResult(ctx, groups[key], result)
+		succeeded += groupSucceeded
+		failed += groupFailed
+		if persistErr != nil {
+			return succeeded, failed, persistErr
 		}
 	}
 	return succeeded, failed, nil
@@ -275,10 +461,20 @@ func (s *Service) attemptCandidate(
 			return result, nil
 		}
 	}
-	for index, current := range values {
-		updated, fetchErr := provider.Fetch(ctx, current)
+	batchResult, batchErr := provider.FetchBatch(ctx, values)
+	for taskID, value := range batchResult.PullRequests {
+		result.successes[taskID] = value
+	}
+	// A chunked fetch stops at the first failing chunk and reports the earlier
+	// chunks with the failure, so keep what it produced and let the caller retry
+	// only from the first pull request the failure reached.
+	resolved := values
+	if batchErr != nil {
+		resolved = values[:unresolvedIndex(values, batchResult)]
+	}
+	for index, current := range resolved {
+		fetchErr := batchResult.Errors[current.TaskID]
 		if fetchErr == nil {
-			result.successes[current.TaskID] = updated
 			continue
 		}
 		class := githubprovider.ClassOf(fetchErr)
@@ -306,12 +502,36 @@ func (s *Service) attemptCandidate(
 			)
 			continue
 		}
-		result.failedAt = index
-		result.err = fetchErr
-		result.class = class
-		return result, nil
+		if isFallbackClass(class) {
+			result.failedAt = index
+			result.err = fetchErr
+			result.class = class
+			return result, nil
+		}
+		result.failures[current.TaskID] = fetchErr
+	}
+	if batchErr != nil {
+		result.failedAt = len(resolved)
+		result.err = batchErr
+		result.class = githubprovider.ClassOf(batchErr)
 	}
 	return result, nil
+}
+
+// unresolvedIndex reports the position of the first pull request the batch
+// neither updated nor reported an item error for. A chunked fetch stops at its
+// first failing chunk, so nothing from that position on was attempted.
+func unresolvedIndex(values []domain.PullRequest, batch githubprovider.BatchResult) int {
+	for index, value := range values {
+		if _, ok := batch.PullRequests[value.TaskID]; ok {
+			continue
+		}
+		if _, ok := batch.Errors[value.TaskID]; ok {
+			continue
+		}
+		return index
+	}
+	return len(values)
 }
 
 func mergeCandidateAttempt(destination *repositorySyncResult, attempt candidateAttempt) {

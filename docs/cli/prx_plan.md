@@ -1,22 +1,21 @@
-## prx serve
+## prx plan
 
-Start the local WebUI and ConnectRPC server
+Show or manage a task's implementation plan
 
 ```
-prx serve [flags]
+prx plan TASK_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx serve --addr 127.0.0.1:7331
+prx plan T-1
 ```
 
 ### Options
 
 ```
-      --addr string   listen address (default "127.0.0.1:7331")
-  -h, --help          help for serve
+  -h, --help   help for plan
 ```
 
 ### Options inherited from parent commands
@@ -31,4 +30,6 @@ prx serve --addr 127.0.0.1:7331
 ### SEE ALSO
 
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
+* [prx plan delete](prx_plan_delete.md)	 - Delete a task's implementation plan
+* [prx plan set](prx_plan_set.md)	 - Create or replace a task's implementation plan
 

@@ -9,7 +9,7 @@ prx task delete TASK_ID [flags]
 ### Examples
 
 ```
-prx task delete TASK_ID --cascade --json
+prx task delete TASK_ID --cascade
 ```
 
 ### Options
@@ -25,11 +25,10 @@ prx task delete TASK_ID --cascade --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
 
-* [prx task](prx_task.md)	 - Manage implementation and manual tasks
+* [prx task](prx_task.md)	 - List tasks or show one by ID
 

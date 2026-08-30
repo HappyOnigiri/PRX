@@ -44,6 +44,16 @@ type GithubRepositoryAuthCache struct {
 	LastSucceededAt string `json:"last_succeeded_at"`
 }
 
+type GithubSyncState struct {
+	Singleton         int64         `json:"singleton"`
+	RunID             string        `json:"run_id"`
+	LastAttemptUnix   sql.NullInt64 `json:"last_attempt_unix"`
+	LastCompletedUnix sql.NullInt64 `json:"last_completed_unix"`
+	Succeeded         int64         `json:"succeeded"`
+	Failed            int64         `json:"failed"`
+	RunError          string        `json:"run_error"`
+}
+
 type IDSequence struct {
 	Entity    string `json:"entity"`
 	NextValue int64  `json:"next_value"`

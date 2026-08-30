@@ -454,3 +454,75 @@ func TestSyncLiveKeepsCredentialsOnTheirConfiguredHost(t *testing.T) {
 		t.Fatalf("second cache=%q found=%v err=%v", secondCache, secondFound, err)
 	}
 }
+
+func TestSyncLiveBatchesRepositoriesOnTheSameHost(t *testing.T) {
+	server := newSyncServer(t, func(token string, _ *http.Request) int {
+		if token != "shared-token" {
+			return http.StatusUnauthorized
+		}
+		return 0
+	})
+	hostConfig, host := syncHost(t, server)
+	settings := syncConfig([]config.Host{hostConfig}, []config.AuthMethod{{
+		ID: "shared", Host: host, Type: config.AuthMethodTypeInline, Token: "shared-token",
+	}})
+	service, database, snapshot, taskFeatures := newSyncService(t)
+	addSyncPullRequest(t, database, &snapshot, taskFeatures, host, "acme", "api", 42)
+	addSyncPullRequest(t, database, &snapshot, taskFeatures, host, "acme", "web", 43)
+	resolver, err := githubprovider.NewResolver(settings, server.server.Client())
+	if err != nil {
+		t.Fatal(err)
+	}
+	succeeded, failed, err := service.syncLive(context.Background(), snapshot, taskFeatures, "", "", resolver)
+	if err != nil || succeeded != 2 || failed != 0 {
+		t.Fatalf("same-host sync succeeded=%d failed=%d err=%v", succeeded, failed, err)
+	}
+	if server.count("/api/graphql", "shared-token") != 1 {
+		t.Fatalf("GraphQL batch requests=%+v", server.requests)
+	}
+}
+
+// A chunked fetch stops at its first failing chunk, so the pull requests from
+// that position on were never attempted and must be retried rather than
+// recorded as refreshed.
+func TestUnresolvedIndexMarksWhereAChunkedFetchStopped(t *testing.T) {
+	values := []domain.PullRequest{
+		{TaskID: "first"}, {TaskID: "second"}, {TaskID: "third"},
+	}
+	for name, test := range map[string]struct {
+		batch githubprovider.BatchResult
+		want  int
+	}{
+		"nothing attempted": {
+			batch: githubprovider.BatchResult{},
+			want:  0,
+		},
+		"first chunk succeeded": {
+			batch: githubprovider.BatchResult{
+				PullRequests: map[string]domain.PullRequest{"first": {TaskID: "first"}},
+			},
+			want: 1,
+		},
+		"item error still counts as attempted": {
+			batch: githubprovider.BatchResult{
+				PullRequests: map[string]domain.PullRequest{"first": {TaskID: "first"}},
+				Errors:       map[string]error{"second": fmt.Errorf("not found")},
+			},
+			want: 2,
+		},
+		"everything attempted": {
+			batch: githubprovider.BatchResult{
+				PullRequests: map[string]domain.PullRequest{
+					"first": {TaskID: "first"}, "second": {TaskID: "second"}, "third": {TaskID: "third"},
+				},
+			},
+			want: 3,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := unresolvedIndex(values, test.batch); got != test.want {
+				t.Fatalf("unresolvedIndex=%d, want %d", got, test.want)
+			}
+		})
+	}
+}

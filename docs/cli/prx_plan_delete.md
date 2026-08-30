@@ -1,21 +1,21 @@
-## prx feature list
+## prx plan delete
 
-List features
+Delete a task's implementation plan
 
 ```
-prx feature list [flags]
+prx plan delete TASK_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx feature list --json
+prx plan delete TASK_ID
 ```
 
 ### Options
 
 ```
-  -h, --help   help for list
+  -h, --help   help for delete
 ```
 
 ### Options inherited from parent commands
@@ -24,11 +24,10 @@ prx feature list --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - Manage features
+* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan
 

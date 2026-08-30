@@ -12,26 +12,10 @@ import (
 )
 
 func (s *state) configCommand() *cobra.Command {
-	command := &cobra.Command{Use: "config", Short: "Manage GitHub hosts and authentication"}
-	command.AddCommand(
-		s.configShowCommand(),
-		s.configPathCommand(),
-		s.configValidateCommand(),
-		s.configHostCommand(),
-		s.configAuthCommand(),
-	)
-	return command
-}
-
-func (s *state) configStore() (*config.Store, error) {
-	return config.NewStore(s.configPath)
-}
-
-func (s *state) configShowCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:     "show",
-		Short:   "Show the public GitHub configuration",
-		Example: "prx config show --json",
+	command := &cobra.Command{
+		Use:     "config",
+		Short:   "Show or manage GitHub hosts and authentication",
+		Example: "prx config",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -45,13 +29,61 @@ func (s *state) configShowCommand() *cobra.Command {
 			return s.write(value, renderConfig(value))
 		},
 	}
+	command.AddCommand(
+		s.configPathCommand(),
+		s.configValidateCommand(),
+		s.configSyncCommand(),
+		s.configHostCommand(),
+		s.configAuthCommand(),
+	)
+	return command
+}
+
+func (s *state) configStore() (*config.Store, error) {
+	return config.NewStore(s.configPath)
+}
+
+func (s *state) configSyncCommand() *cobra.Command {
+	command := &cobra.Command{Use: "sync", Short: "Manage automatic GitHub synchronization settings"}
+	command.AddCommand(s.configSyncUpdateCommand())
+	return command
+}
+
+func (s *state) configSyncUpdateCommand() *cobra.Command {
+	var interval int64
+	command := &cobra.Command{
+		Use:     "update",
+		Short:   "Update the automatic GitHub synchronization interval",
+		Example: "prx config sync update --interval-seconds 3600 --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			store, err := s.configStore()
+			if err != nil {
+				return configCommandError(err)
+			}
+			settings, err := store.Update(func(settings *config.Config) error {
+				return settings.SetAutoSyncInterval(interval)
+			})
+			if err != nil {
+				return configCommandError(err)
+			}
+			value := map[string]int64{"interval_seconds": settings.GitHub.AutoSyncIntervalSeconds}
+			return s.write(value, renderMessage(
+				"Automatic sync interval: %d seconds.",
+				settings.GitHub.AutoSyncIntervalSeconds,
+			))
+		},
+	}
+	command.Flags().Int64Var(&interval, "interval-seconds", 0, "automatic sync interval in seconds (minimum 600)")
+	_ = command.MarkFlagRequired("interval-seconds")
+	return command
 }
 
 func (s *state) configPathCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "path",
 		Short:   "Show the resolved configuration path",
-		Example: "prx config path --json",
+		Example: "prx config path",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -67,7 +99,7 @@ func (s *state) configValidateCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "validate",
 		Short:   "Validate the GitHub configuration",
-		Example: "prx config validate --json",
+		Example: "prx config validate",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -83,51 +115,10 @@ func (s *state) configValidateCommand() *cobra.Command {
 }
 
 func (s *state) configHostCommand() *cobra.Command {
-	command := &cobra.Command{Use: "host", Short: "Manage configured GitHub hosts"}
-	command.AddCommand(
-		s.configHostAddCommand(),
-		s.configHostListCommand(),
-		s.configHostUpdateCommand(),
-		s.configHostRemoveCommand(),
-	)
-	return command
-}
-
-func (s *state) configHostAddCommand() *cobra.Command {
-	var host, webURL, apiURL, uploadURL string
 	command := &cobra.Command{
-		Use:     "add",
-		Short:   "Add a GitHub.com or Enterprise host",
-		Example: "prx config host add --host ghe.example.com --json",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			store, err := s.configStore()
-			if err != nil {
-				return configCommandError(err)
-			}
-			value, err := store.Update(func(settings *config.Config) error {
-				return settings.AddHost(config.Host{Host: host, WebURL: webURL, APIURL: apiURL, UploadURL: uploadURL})
-			})
-			if err != nil {
-				return configCommandError(err)
-			}
-			created := findHost(value, host)
-			return s.write(created, renderMessage("Added GitHub host %s.", created.Host))
-		},
-	}
-	command.Flags().StringVar(&host, "host", "", "hostname with optional port")
-	command.Flags().StringVar(&webURL, "web-url", "", "HTTPS web URL (defaults from host)")
-	command.Flags().StringVar(&apiURL, "api-url", "", "HTTPS API base URL (defaults from host)")
-	command.Flags().StringVar(&uploadURL, "upload-url", "", "HTTPS upload base URL (defaults from host)")
-	_ = command.MarkFlagRequired("host")
-	return command
-}
-
-func (s *state) configHostListCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:     "list",
-		Short:   "List configured GitHub hosts",
-		Example: "prx config host list --json",
+		Use:     "host",
+		Short:   "List or manage configured GitHub hosts",
+		Example: "prx config host",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -142,15 +133,54 @@ func (s *state) configHostListCommand() *cobra.Command {
 			return s.write(map[string]any{"hosts": hosts}, renderHostList(hosts))
 		},
 	}
+	command.AddCommand(
+		s.configHostAddCommand(),
+		s.configHostUpdateCommand(),
+		s.configHostRemoveCommand(),
+	)
+	return command
+}
+
+func (s *state) configHostAddCommand() *cobra.Command {
+	var host, webURL, apiURL, uploadURL, graphqlURL string
+	command := &cobra.Command{
+		Use:     "add",
+		Short:   "Add a GitHub.com or Enterprise host",
+		Example: "prx config host add --host ghe.example.com",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			store, err := s.configStore()
+			if err != nil {
+				return configCommandError(err)
+			}
+			value, err := store.Update(func(settings *config.Config) error {
+				return settings.AddHost(config.Host{
+					Host: host, WebURL: webURL, APIURL: apiURL, UploadURL: uploadURL, GraphQLURL: graphqlURL,
+				})
+			})
+			if err != nil {
+				return configCommandError(err)
+			}
+			created := findHost(value, host)
+			return s.write(created, renderMessage("Added GitHub host %s.", created.Host))
+		},
+	}
+	command.Flags().StringVar(&host, "host", "", "hostname with optional port")
+	command.Flags().StringVar(&webURL, "web-url", "", "HTTPS web URL (defaults from host)")
+	command.Flags().StringVar(&apiURL, "api-url", "", "HTTPS API base URL (defaults from host)")
+	command.Flags().StringVar(&uploadURL, "upload-url", "", "HTTPS upload base URL (defaults from host)")
+	command.Flags().StringVar(&graphqlURL, "graphql-url", "", "HTTPS GraphQL URL (defaults from host)")
+	_ = command.MarkFlagRequired("host")
+	return command
 }
 
 func (s *state) configHostUpdateCommand() *cobra.Command {
 	var newHost string
-	var webURL, apiURL, uploadURL string
+	var webURL, apiURL, uploadURL, graphqlURL string
 	command := &cobra.Command{
 		Use:     "update HOST",
 		Short:   "Update a configured GitHub host",
-		Example: "prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/ --json",
+		Example: "prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			store, err := s.configStore()
@@ -174,6 +204,9 @@ func (s *state) configHostUpdateCommand() *cobra.Command {
 				if cmd.Flags().Changed("upload-url") {
 					current.UploadURL = uploadURL
 				}
+				if cmd.Flags().Changed("graphql-url") {
+					current.GraphQLURL = graphqlURL
+				}
 				return settings.UpdateHost(args[0], current)
 			})
 			if err != nil {
@@ -187,6 +220,7 @@ func (s *state) configHostUpdateCommand() *cobra.Command {
 	command.Flags().StringVar(&webURL, "web-url", "", "new HTTPS web URL")
 	command.Flags().StringVar(&apiURL, "api-url", "", "new HTTPS API base URL")
 	command.Flags().StringVar(&uploadURL, "upload-url", "", "new HTTPS upload base URL")
+	command.Flags().StringVar(&graphqlURL, "graphql-url", "", "new HTTPS GraphQL URL")
 	return command
 }
 
@@ -194,7 +228,7 @@ func (s *state) configHostRemoveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "remove HOST",
 		Short:   "Remove a configured GitHub host",
-		Example: "prx config host remove ghe.example.com --json",
+		Example: "prx config host remove ghe.example.com",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			store, err := s.configStore()
@@ -212,10 +246,26 @@ func (s *state) configHostRemoveCommand() *cobra.Command {
 }
 
 func (s *state) configAuthCommand() *cobra.Command {
-	command := &cobra.Command{Use: "auth", Short: "Manage host-scoped authentication methods"}
+	command := &cobra.Command{
+		Use:     "auth",
+		Short:   "List or manage host-scoped authentication methods",
+		Example: "prx config auth",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			store, err := s.configStore()
+			if err != nil {
+				return configCommandError(err)
+			}
+			settings, err := store.Load()
+			if err != nil {
+				return configCommandError(err)
+			}
+			methods := settings.Public().GitHub.AuthMethods
+			return s.write(map[string]any{"auth_methods": methods}, renderAuthList(methods))
+		},
+	}
 	command.AddCommand(
 		s.configAuthAddCommand(),
-		s.configAuthListCommand(),
 		s.configAuthUpdateCommand(),
 		s.configAuthRemoveCommand(),
 		s.configAuthReorderCommand(),
@@ -229,7 +279,7 @@ func (s *state) configAuthAddCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "add",
 		Short:   "Add a host-scoped authentication method",
-		Example: "prx config auth add --id work-gh --host github.com --type gh_cli --json",
+		Example: "prx config auth add --id work-gh --host github.com --type gh_cli",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			token, err := readConfigToken(cmd, tokenStdin)
@@ -261,27 +311,6 @@ func (s *state) configAuthAddCommand() *cobra.Command {
 	return command
 }
 
-func (s *state) configAuthListCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:     "list",
-		Short:   "List authentication methods without secrets",
-		Example: "prx config auth list --json",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			store, err := s.configStore()
-			if err != nil {
-				return configCommandError(err)
-			}
-			settings, err := store.Load()
-			if err != nil {
-				return configCommandError(err)
-			}
-			methods := settings.Public().GitHub.AuthMethods
-			return s.write(map[string]any{"auth_methods": methods}, renderAuthList(methods))
-		},
-	}
-}
-
 func (s *state) configAuthUpdateCommand() *cobra.Command {
 	var host, authType, account, service, variable, user string
 	var tokenStdin bool
@@ -289,7 +318,7 @@ func (s *state) configAuthUpdateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "update AUTH_METHOD_ID",
 		Short:   "Update a host-scoped authentication method",
-		Example: "prx config auth update work-gh --user HappyOnigiri --json",
+		Example: "prx config auth update work-gh --user HappyOnigiri",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			token, err := readConfigToken(cmd, tokenStdin)
@@ -347,7 +376,7 @@ func (s *state) configAuthRemoveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "remove AUTH_METHOD_ID",
 		Short:   "Remove an authentication method and its cached use",
-		Example: "prx config auth remove work-gh --json",
+		Example: "prx config auth remove work-gh",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			store, err := s.configStore()
@@ -371,7 +400,7 @@ func (s *state) configAuthReorderCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "reorder AUTH_METHOD_ID...",
 		Short:   "Set authentication priority order",
-		Example: "prx config auth reorder ghe-environment ghe-cli --json",
+		Example: "prx config auth reorder ghe-environment ghe-cli",
 		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			store, err := s.configStore()
