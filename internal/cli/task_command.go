@@ -59,10 +59,11 @@ func (s *state) taskCommand() *cobra.Command {
 func (s *state) taskCreateCommand() *cobra.Command {
 	var scope, kind, assignee string
 	command := &cobra.Command{
-		Use:     "create FEATURE_ID_OR_SLUG TITLE",
-		Short:   "Create an implementation or manual task",
-		Example: "prx task create checkout \"Add payment intent API\" --assignee Mika",
-		Args:    cobra.ExactArgs(2),
+		Use:   "create FEATURE_ID_OR_SLUG TITLE",
+		Short: "Create an implementation or manual task",
+		Example: "prx task create checkout \"Add payment intent API\" --assignee Mika\n" +
+			"prx task create checkout -- \"-fix login redirect\"",
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.CreateTask(cmd.Context(), args[0], args[1], scope, domain.TaskKind(kind), assignee)
 			if err != nil {

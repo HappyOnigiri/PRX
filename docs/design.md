@@ -79,6 +79,7 @@ A missing mutation target fails instead of reporting a successful no-op.
 Destructive traversal of referenced data requires an explicit cascade request.
 Values required to perform an operation are positional operands.
 Flags are reserved for optional modifiers, filters, partial updates, secret-safe input methods, execution settings, and output formats.
+An operand value that begins with `-` is passed after `--` so it is not parsed as a flag.
 
 Public feature and task identifiers remain distinct from storage identifiers.
 Storage UUIDs must not cross the CLI, RPC, or WebUI boundary.

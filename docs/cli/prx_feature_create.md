@@ -10,6 +10,7 @@ prx feature create SLUG TITLE [flags]
 
 ```
 prx feature create checkout "Checkout rollout"
+prx feature create checkout -- "-fix checkout"
 ```
 
 ### Options

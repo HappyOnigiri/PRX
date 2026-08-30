@@ -45,7 +45,7 @@ func (s *state) featureCreateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "create SLUG TITLE",
 		Short:   "Create a feature",
-		Example: "prx feature create checkout \"Checkout rollout\"",
+		Example: "prx feature create checkout \"Checkout rollout\"\nprx feature create checkout -- \"-fix checkout\"",
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.CreateFeature(cmd.Context(), args[0], args[1], description)
