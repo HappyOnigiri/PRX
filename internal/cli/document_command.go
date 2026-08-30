@@ -10,8 +10,8 @@ import (
 )
 
 type documentSourceFlags struct {
-	url, localFile, markdownFile, legacyKind, legacyValue string
-	stdin                                                 bool
+	url, localFile, markdownFile string
+	stdin                        bool
 }
 
 func (s *state) documentCommand() *cobra.Command {
@@ -116,7 +116,7 @@ func (s *state) documentAddCommand() *cobra.Command {
 	}
 	command.Flags().StringVar(&title, "title", "", "document title")
 	command.Flags().BoolVar(&implementationPlan, "implementation-plan", false, "mark as the task implementation plan")
-	bindDocumentSourceFlags(command, &source, true)
+	bindDocumentSourceFlags(command, &source)
 	return command
 }
 
@@ -173,7 +173,7 @@ func (s *state) documentUpdateCommand() *cobra.Command {
 	}
 	command.Flags().StringVar(&updateTitle, "title", "", "replace the document title")
 	command.Flags().BoolVar(&updatePlan, "implementation-plan", false, "set or clear the plan designation")
-	bindDocumentSourceFlags(command, &updateSource, false)
+	bindDocumentSourceFlags(command, &updateSource)
 	return command
 }
 
@@ -201,23 +201,17 @@ func requireTask(snapshot domain.Snapshot, taskID string) error {
 	return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", taskID)
 }
 
-func bindDocumentSourceFlags(command *cobra.Command, flags *documentSourceFlags, legacy bool) {
+func bindDocumentSourceFlags(command *cobra.Command, flags *documentSourceFlags) {
 	command.Flags().StringVar(&flags.url, "url", "", "HTTP or HTTPS URL")
 	command.Flags().StringVar(&flags.localFile, "local-file", "", "registered local file path")
 	command.Flags().StringVar(&flags.markdownFile, "markdown-file", "", "read stored Markdown from a file")
 	command.Flags().BoolVar(&flags.stdin, "stdin", false, "read stored Markdown from standard input")
-	if legacy {
-		command.Flags().
-			StringVar(&flags.legacyKind, "kind", "url", "compatibility alias: url, local_file, or markdown_path")
-		command.Flags().StringVar(&flags.legacyValue, "value", "", "compatibility value for --kind")
-	}
 }
 
 func documentSourceCount(flags documentSourceFlags) int {
 	count := 0
 	for _, value := range []bool{
 		flags.url != "", flags.localFile != "", flags.markdownFile != "", flags.stdin,
-		flags.legacyValue != "",
 	} {
 		if value {
 			count++
@@ -239,13 +233,6 @@ func readDocumentSource(
 	}
 	if flags.localFile != "" {
 		return domain.Document{Kind: domain.DocumentKindLocalFile, Locator: flags.localFile}, nil
-	}
-	if flags.legacyValue != "" {
-		kind := domain.DocumentKind(flags.legacyKind)
-		if kind == "markdown_path" {
-			kind = domain.DocumentKindLocalFile
-		}
-		return domain.Document{Kind: kind, Locator: flags.legacyValue}, nil
 	}
 	var content []byte
 	var err error
