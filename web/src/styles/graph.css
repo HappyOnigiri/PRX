@@ -98,22 +98,31 @@
   stroke-width: 1.5;
 }
 
-.react-flow__edgeupdater-source {
+.react-flow__edgeupdater-source,
+.react-flow__edgeupdater-target {
   cursor: grab;
   fill: var(--surface);
   opacity: 0;
+  r: 7px;
   stroke: var(--border-strong);
   stroke-width: 1.5;
   transition: opacity 0.12s;
 }
 
-.react-flow__edgeupdater-source:active {
+.react-flow__edgeupdater-target {
+  fill: var(--accent);
+  stroke: var(--surface);
+}
+
+.react-flow__edgeupdater-source:active,
+.react-flow__edgeupdater-target:active {
   cursor: grabbing;
 }
 
-.react-flow__edge:hover .react-flow__edgeupdater-source,
 .react-flow__edge.selected .react-flow__edgeupdater-source,
-.react-flow__edge.updating .react-flow__edgeupdater-source {
+.react-flow__edge.selected .react-flow__edgeupdater-target,
+.react-flow__edge.updating .react-flow__edgeupdater-source,
+.react-flow__edge.updating .react-flow__edgeupdater-target {
   opacity: 1;
 }
 
@@ -131,6 +140,38 @@
 .react-flow__edge.selected.dependency-edge {
   stroke: var(--accent);
   stroke-width: 2;
+}
+
+.react-flow:has(.react-flow__edge.selected)
+  .react-flow__edge.dependency-edge:not(.selected) {
+  opacity: 0.28;
+}
+
+.dependency-edge-toolbar {
+  max-width: 320px;
+  translate: 0 -28px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: 0 4px 14px color-mix(in srgb, var(--bg) 72%, transparent);
+  padding: 4px 4px 4px 8px;
+  color: var(--text);
+}
+
+.dependency-edge-toolbar > span {
+  min-width: 0;
+  overflow: hidden;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dependency-edge-remove {
+  flex: 0 0 auto;
 }
 
 .task-node {
@@ -349,6 +390,15 @@
   border: 2px solid var(--surface);
   background: var(--border-strong);
   box-shadow: 0 0 0 1px var(--border-strong);
+}
+
+.task-edge-port {
+  width: 1px;
+  height: 1px;
+  border: 0;
+  box-shadow: none;
+  opacity: 0;
+  pointer-events: none;
 }
 
 .task-handle {

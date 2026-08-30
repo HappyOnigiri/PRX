@@ -36,6 +36,8 @@ describe("TaskNode", () => {
             value: "https://example.com/runbook",
           },
         ],
+        incomingPorts: [{ id: "edge-target", top: 44 }],
+        outgoingPorts: [{ id: "edge-source", top: 92 }],
         readOnly: false,
         onEdit,
         onPreview,
@@ -59,6 +61,10 @@ describe("TaskNode", () => {
     expect(screen.getByText("Merge billing schema")).toBeInTheDocument();
     expect(screen.getByText("READY")).toBeInTheDocument();
     expect(container.querySelector(".is-stale")).toBeInTheDocument();
+    const edgePorts = container.querySelectorAll(".task-edge-port");
+    expect(edgePorts).toHaveLength(2);
+    expect(edgePorts[0]).toHaveStyle({ top: "44px" });
+    expect(edgePorts[1]).toHaveStyle({ top: "92px" });
     expect(
       screen.getByLabelText("Blocked task input (drop here)"),
     ).toHaveAttribute("title", "Blocked task input (drop here)");

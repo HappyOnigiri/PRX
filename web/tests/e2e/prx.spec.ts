@@ -139,6 +139,7 @@ async function disconnectTasks(
   page: Page,
   blockerTitle: string,
   blockedTitle: string,
+  endpoint: "source" | "target" = "source",
 ) {
   await settleGraph(page);
   const blocker = page.locator(".task-node").filter({ hasText: blockerTitle });
@@ -154,8 +155,10 @@ async function disconnectTasks(
   const edge = page.locator(
     `.react-flow__edge[data-id="${blockerId}-${blockedId}"]`,
   );
-  const sourceEndpoint = edge.locator(".react-flow__edgeupdater-source");
-  const endpointBox = await sourceEndpoint.boundingBox();
+  await edge.click({ force: true });
+  await expect(edge).toHaveClass(/selected/);
+  const endpointHandle = edge.locator(`.react-flow__edgeupdater-${endpoint}`);
+  const endpointBox = await endpointHandle.boundingBox();
   const stageBox = await page.locator(".graph-stage").boundingBox();
   if (!endpointBox || !stageBox) throw new Error("graph bounds missing");
 
@@ -163,7 +166,7 @@ async function disconnectTasks(
     endpointBox.x + endpointBox.width / 2,
     endpointBox.y + endpointBox.height / 2,
   );
-  await expect(sourceEndpoint).toHaveCSS("opacity", "1");
+  await expect(endpointHandle).toHaveCSS("opacity", "1");
   await page.mouse.down();
   await page.mouse.move(stageBox.x + 28, stageBox.y + 28, { steps: 6 });
   await page.mouse.up();
@@ -342,7 +345,7 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(
     page.locator(".task-node").filter({ hasText: "E2E UI" }),
   ).toBeVisible();
-  await disconnectTasks(page, "E2E API", "E2E worker");
+  await disconnectTasks(page, "E2E API", "E2E worker", "target");
   await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
     1,
   );
