@@ -177,33 +177,33 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           </p>
         </div>
         <div className="workspace-actions">
-          {!props.feature.archived && (
-            <>
-              <IconButton
-                icon={RefreshCw}
-                label={
-                  props.syncPending
-                    ? t("workspace.syncing")
-                    : t("workspace.syncGithub")
-                }
-                variant="secondary"
-                onClick={props.onSync}
-                disabled={props.syncPending}
-              />
-              <IconButton
-                icon={Plus}
-                label={t("workspace.addTask")}
-                variant="primary"
-                onClick={props.onCreateTask}
-              />
-            </>
-          )}
           <FeatureReferences
             featureId={props.featureId}
             documents={props.featureDocuments}
             onPreview={props.onPreviewDocument}
             readOnly={props.feature.archived}
           />
+          {!props.feature.archived && (
+            <IconButton
+              icon={RefreshCw}
+              label={
+                props.syncPending
+                  ? t("workspace.syncing")
+                  : t("workspace.syncGithub")
+              }
+              variant="secondary"
+              onClick={props.onSync}
+              disabled={props.syncPending}
+            />
+          )}
+          {!props.feature.archived && (
+            <IconButton
+              icon={Plus}
+              label={t("workspace.addTask")}
+              variant="primary"
+              onClick={props.onCreateTask}
+            />
+          )}
           <IconButton
             icon={Pencil}
             label={

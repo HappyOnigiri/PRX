@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Snapshot } from "../src/gen/prx/v1/prx_pb";
 import { FeatureWorkspace } from "../src/views/FeatureWorkspace";
@@ -212,6 +218,15 @@ describe("FeatureWorkspace", () => {
   it("coordinates active sync, feature management, task inspection, and previews", () => {
     render(<FeatureWorkspace />);
 
+    const workspaceActions = document.querySelector(".workspace-actions");
+    expect(workspaceActions).not.toBeNull();
+    expect(
+      within(workspaceActions as HTMLElement)
+        .getAllByRole("button")
+        .map(
+          (button) => button.getAttribute("aria-label") ?? button.textContent,
+        ),
+    ).toEqual(["References", "Sync GitHub", "Add task", "Edit feature"]);
     expect(
       screen.getByRole("heading", { name: "Payments rollout" }),
     ).toBeInTheDocument();
