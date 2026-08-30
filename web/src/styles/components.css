@@ -564,23 +564,49 @@
   font-size: var(--text-sm);
 }
 
-.settings-credit-list {
+.settings-license-list {
+  list-style: none;
+  min-height: 48px;
+  margin: 0;
+  padding: 0;
   border-top: 1px solid var(--border);
 }
 
-.settings-credit-row {
+.settings-license-row {
+  min-width: 0;
   min-height: 48px;
   display: flex;
   align-items: center;
-  margin: 0;
+  justify-content: space-between;
+  gap: 16px;
   border-bottom: 1px solid var(--border);
   font-size: var(--text-sm);
 }
 
-.settings-credit-row a {
+.settings-license-name {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--accent);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.settings-license-name:hover {
   color: var(--accent);
   text-decoration: underline;
   text-underline-offset: 2px;
+}
+
+.settings-license-row > .settings-license-name:not(a) {
+  color: var(--text);
+}
+
+.settings-license-id {
+  flex: 0 0 auto;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  white-space: nowrap;
 }
 
 @media (width <= 600px) {

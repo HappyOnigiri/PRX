@@ -4,7 +4,7 @@ export const shell = {
     settings: {
       open: "Settings",
       title: "Settings",
-      tabs: { server: "Server", display: "Display", credits: "Credits" },
+      tabs: { server: "Server", display: "Display", licenses: "Licenses" },
       display: {
         description:
           "Choose how PRX appears in this browser. Changes apply immediately.",
@@ -19,8 +19,10 @@ export const shell = {
           options: { system: "System", light: "Light", dark: "Dark" },
         },
       },
-      credits: {
-        reactFlowName: "React Flow",
+      licenses: {
+        loading: "Loading license information…",
+        error: "License information is unavailable.",
+        empty: "No license information is available.",
       },
     },
     nav: {
@@ -93,7 +95,7 @@ export const shell = {
     settings: {
       open: "設定",
       title: "設定",
-      tabs: { server: "サーバー", display: "表示", credits: "クレジット" },
+      tabs: { server: "サーバー", display: "表示", licenses: "ライセンス" },
       display: {
         description:
           "このブラウザーでのPRXの表示を選択します。変更はすぐに反映されます。",
@@ -112,8 +114,10 @@ export const shell = {
           },
         },
       },
-      credits: {
-        reactFlowName: "React Flow",
+      licenses: {
+        loading: "ライセンス情報を読み込んでいます…",
+        error: "ライセンス情報を読み込めません。",
+        empty: "表示できるライセンス情報がありません。",
       },
     },
     nav: {

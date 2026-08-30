@@ -112,11 +112,35 @@ describe("SettingsDialog", () => {
   afterEach(() => {
     cleanup();
     vi.restoreAllMocks();
+    vi.unstubAllGlobals();
   });
 
   beforeEach(async () => {
     localStorage.clear();
     await setDisplayLanguage("en");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn().mockResolvedValue({
+        ok: true,
+        json: () => [
+          {
+            license: "MIT",
+            name: "@xyflow/react",
+            repository: "https://github.com/xyflow/xyflow",
+            source:
+              "https://registry.npmjs.org/@xyflow/react/-/react-12.8.5.tgz",
+            version: "12.8.5",
+          },
+          {
+            license: "MIT",
+            name: "react",
+            repository: "https://github.com/facebook/react",
+            source: "https://registry.npmjs.org/react/-/react-19.1.1.tgz",
+            version: "19.1.1",
+          },
+        ],
+      }),
+    );
     settingsMocks.config.isPending = false;
     settingsMocks.config.error = null;
     vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -344,7 +368,7 @@ describe("SettingsDialog", () => {
     render(<SettingsDialog onClose={vi.fn()} />);
     const serverTab = screen.getByRole("tab", { name: "Server" });
     const displayTab = screen.getByRole("tab", { name: "Display" });
-    const creditsTab = screen.getByRole("tab", { name: "Credits" });
+    const licensesTab = screen.getByRole("tab", { name: "Licenses" });
     const hostForm = screen
       .getByRole("heading", { name: "Register a host" })
       .closest("form");
@@ -368,22 +392,25 @@ describe("SettingsDialog", () => {
     );
 
     fireEvent.keyDown(serverTab, { key: "End" });
-    expect(creditsTab).toHaveFocus();
-    fireEvent.keyDown(creditsTab, { key: "ArrowRight" });
+    expect(licensesTab).toHaveFocus();
+    fireEvent.keyDown(licensesTab, { key: "ArrowRight" });
     expect(serverTab).toHaveFocus();
   });
 
-  it("shows the React Flow credit link in the credits tab", () => {
+  it("lists bundled OSS packages and their licenses", async () => {
     render(<SettingsDialog onClose={vi.fn()} />);
 
-    fireEvent.click(screen.getByRole("tab", { name: "Credits" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Licenses" }));
 
-    const panel = screen.getByRole("tabpanel", { name: "Credits" });
+    const panel = screen.getByRole("tabpanel", { name: "Licenses" });
     expect(panel).toBeVisible();
     expect(
-      within(panel).getByRole("link", { name: "React Flow" }),
-    ).toHaveAttribute("href", "https://reactflow.dev/attribution");
-    expect(panel.querySelectorAll("a")).toHaveLength(1);
+      await within(panel).findByRole("link", {
+        name: "@xyflow/react@12.8.5",
+      }),
+    ).toHaveAttribute("href", "https://github.com/xyflow/xyflow");
+    expect(within(panel).getAllByText("MIT")).toHaveLength(2);
+    expect(within(panel).getAllByRole("link")).toHaveLength(2);
   });
 
   it("keeps display settings available while server settings load", () => {

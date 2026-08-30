@@ -1,6 +1,7 @@
 import react from "@vitejs/plugin-react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { createViteLicensePlugin } from "rollup-license-plugin";
 import { defineConfig } from "vitest/config";
 
 const apiOrigin = "http://127.0.0.1:7332";
@@ -23,7 +24,7 @@ const devOrigins = new Set([
 ]);
 
 export default defineConfig({
-  plugins: [react()],
+  plugins: [react(), createViteLicensePlugin()],
   define: {
     "import.meta.env.APP_VERSION": JSON.stringify(developmentVersion),
   },

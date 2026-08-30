@@ -58,6 +58,7 @@
     "knip": "^6.32.3",
     "prettier": "^3.6.2",
     "prettier-plugin-organize-imports": "^4.3.0",
+    "rollup-license-plugin": "3.2.1",
     "stylelint": "^16.24.0",
     "stylelint-config-standard": "^39.0.0",
     "typescript": "^5.9.2",
