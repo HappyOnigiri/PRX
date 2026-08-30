@@ -87,6 +87,7 @@ function buildLayoutGraph(raw: RawNode[], dependencies: Dependency[]): ElkNode {
       "elk.direction": "RIGHT",
       "elk.edgeRouting": "ORTHOGONAL",
       "elk.layered.mergeEdges": "false",
+      "elk.spacing.componentComponent": "120",
       "elk.spacing.nodeNode": "72",
       "elk.layered.spacing.nodeNodeBetweenLayers": "110",
     },
