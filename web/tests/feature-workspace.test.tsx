@@ -15,7 +15,7 @@ const workspaceMocks = vi.hoisted(() => ({
   navigate: vi.fn().mockResolvedValue(undefined),
   snapshot: { data: undefined as Snapshot | undefined, isPending: false },
   hookIndex: 0,
-  mutations: Array.from({ length: 4 }, () => ({
+  mutations: Array.from({ length: 5 }, () => ({
     mutate: vi.fn(),
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
@@ -57,12 +57,20 @@ vi.mock("../src/hooks", () => ({
           ? 2
           : mutationFn === workspaceMocks.api.updateDocument
             ? 3
-            : 0;
+            : mutationFn === workspaceMocks.api.getDocument
+              ? 4
+              : 0;
     const mutation = workspaceMocks.mutations[index];
     if (!mutation) throw new Error("mutation mock missing");
-    mutation.mutate.mockImplementation((input: unknown) => {
-      return mutationFn(input);
-    });
+    mutation.mutate.mockImplementation(
+      (input: unknown, options?: { onSuccess?: (data: unknown) => void }) => {
+        const result = mutationFn(input);
+        if (options?.onSuccess) {
+          void Promise.resolve(result).then(options.onSuccess);
+        }
+        return result;
+      },
+    );
     return mutation;
   },
 }));

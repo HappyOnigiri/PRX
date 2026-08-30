@@ -31,6 +31,7 @@ export function ReferencesSection({
   const addDocument = useDomainMutation(mutations.addDocument);
   const deleteDocument = useDomainMutation(mutations.deleteDocument);
   const updateDocument = useDomainMutation(mutations.updateDocument);
+  const getDocument = useDomainMutation(mutations.getDocument);
   const [selectedKind, setSelectedKind] = useState(DocumentKind.URL);
   const [editing, setEditing] = useState<{
     id: string;
@@ -41,13 +42,12 @@ export function ReferencesSection({
       Number(right.isImplementationPlan) - Number(left.isImplementationPlan),
   );
 
-  async function editMarkdown(document: TaskNodeDocument) {
-    try {
-      const response = await mutations.getDocument(document.id);
-      setEditing({ id: document.id, content: response.content });
-    } catch {
-      // MutationError renders update failures; read errors keep the document unchanged.
-    }
+  function editMarkdown(document: TaskNodeDocument) {
+    getDocument.mutate(document.id, {
+      onSuccess: (response) => {
+        setEditing({ id: document.id, content: response.content });
+      },
+    });
   }
 
   return (
@@ -81,9 +81,7 @@ export function ReferencesSection({
             onDelete={(id) => {
               deleteDocument.mutate(id);
             }}
-            onEdit={(document) => {
-              void editMarkdown(document);
-            }}
+            onEdit={editMarkdown}
             readOnly={readOnly}
           />
         ),
@@ -134,6 +132,7 @@ export function ReferencesSection({
           <MutationError error={addDocument.error} />
           <MutationError error={deleteDocument.error} />
           <MutationError error={updateDocument.error} />
+          <MutationError error={getDocument.error} />
         </>
       )}
     </section>

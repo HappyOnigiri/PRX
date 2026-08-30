@@ -22,6 +22,7 @@ import {
 } from "./factories";
 
 const inspectorMocks = vi.hoisted(() => ({
+  hookIndex: 0,
   api: {
     updateTask: vi.fn(),
     deleteTask: vi.fn(),
@@ -33,7 +34,6 @@ const inspectorMocks = vi.hoisted(() => ({
     getDocument: vi.fn(),
     updateDocument: vi.fn(),
   },
-  hookIndex: 0,
   mutations: Array.from({ length: 10 }, () => ({
     mutate: vi.fn(),
     mutateAsync: vi.fn().mockResolvedValue({}),
@@ -50,9 +50,15 @@ vi.mock("../src/hooks", () => ({
         inspectorMocks.hookIndex++ % inspectorMocks.mutations.length
       ];
     if (!mutation) throw new Error("mutation mock missing");
-    mutation.mutate.mockImplementation((input: unknown) => {
-      return mutationFn(input);
-    });
+    mutation.mutate.mockImplementation(
+      (input: unknown, options?: { onSuccess?: (data: unknown) => void }) => {
+        const result = mutationFn(input);
+        if (options?.onSuccess) {
+          void Promise.resolve(result).then(options.onSuccess);
+        }
+        return result;
+      },
+    );
     return mutation;
   },
 }));
@@ -288,6 +294,32 @@ describe("TaskInspector", () => {
       screen.getByRole("option", { name: "Completed" }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Close inspector" }));
+  });
+
+  it("reports a failed Markdown read for editing", () => {
+    const task = makeTask();
+    const inline = makeDocument({
+      id: "document-inline",
+      taskId: task.id,
+      kind: DocumentKind.MARKDOWN,
+      title: "Inline plan",
+      locator: "",
+    });
+    const inspector = (
+      <TaskInspector
+        task={task}
+        tasks={[task]}
+        dependencies={[]}
+        pullRequest={undefined}
+        documents={[inline]}
+        onPreview={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+    mutationAt(8).error = new Error("read failed");
+    render(inspector);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("read failed");
   });
 
   it("does not close when task deletion fails", async () => {
