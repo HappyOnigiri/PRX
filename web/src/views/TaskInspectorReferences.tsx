@@ -139,7 +139,7 @@ export function ReferencesSection({
   );
 }
 
-function MarkdownEditForm({
+export function MarkdownEditForm({
   document,
   content,
   compact,
@@ -187,62 +187,95 @@ function MarkdownEditForm({
   );
 }
 
-function DocumentSourceFields({
+export function DocumentSourceFields({
   kind,
   compact,
+  labelled = false,
   onKindChange,
 }: {
   kind: DocumentKind;
   compact: boolean;
+  labelled?: boolean;
   onKindChange: (kind: DocumentKind) => void;
 }) {
   const { t } = useTranslation();
+  const kindSelect = (
+    <select
+      name="kind"
+      value={kind}
+      onChange={(event) => {
+        onKindChange(Number(event.currentTarget.value));
+      }}
+    >
+      <option value={DocumentKind.URL}>
+        {documentKindLabel(DocumentKind.URL, t)}
+      </option>
+      <option value={DocumentKind.LOCAL_FILE}>
+        {documentKindLabel(DocumentKind.LOCAL_FILE, t)}
+      </option>
+      <option value={DocumentKind.MARKDOWN}>
+        {documentKindLabel(DocumentKind.MARKDOWN, t)}
+      </option>
+    </select>
+  );
+  const titleInput = (
+    <input name="title" placeholder={t("inspector.designNotes")} />
+  );
+  const valueInput =
+    kind === DocumentKind.MARKDOWN ? (
+      <textarea
+        name="value"
+        required
+        rows={compact ? 2 : 4}
+        placeholder={t("inspector.referenceMarkdown")}
+      />
+    ) : (
+      <input
+        name="value"
+        required
+        type={kind === DocumentKind.URL ? "url" : "text"}
+        placeholder={
+          kind === DocumentKind.URL
+            ? t("inspector.referenceUrl")
+            : t("inspector.referencePath")
+        }
+      />
+    );
+
+  if (labelled)
+    return (
+      <>
+        <div className="form-row">
+          <label>
+            {t("inspector.referenceKind")}
+            {kindSelect}
+          </label>
+          <label>
+            {t("inspector.referenceTitle")}
+            {titleInput}
+          </label>
+        </div>
+        <label>
+          {kind === DocumentKind.MARKDOWN
+            ? t("inspector.referenceContent")
+            : t("inspector.referenceLocation")}
+          {valueInput}
+        </label>
+      </>
+    );
+
   return (
     <>
       <div className="form-row">
-        <select
-          name="kind"
-          value={kind}
-          onChange={(event) => {
-            onKindChange(Number(event.currentTarget.value));
-          }}
-        >
-          <option value={DocumentKind.URL}>
-            {documentKindLabel(DocumentKind.URL, t)}
-          </option>
-          <option value={DocumentKind.LOCAL_FILE}>
-            {documentKindLabel(DocumentKind.LOCAL_FILE, t)}
-          </option>
-          <option value={DocumentKind.MARKDOWN}>
-            {documentKindLabel(DocumentKind.MARKDOWN, t)}
-          </option>
-        </select>
-        <input name="title" placeholder={t("inspector.designNotes")} />
+        {kindSelect}
+        {titleInput}
       </div>
-      {kind === DocumentKind.MARKDOWN ? (
-        <textarea
-          name="value"
-          required
-          rows={compact ? 2 : 4}
-          placeholder={t("inspector.referenceMarkdown")}
-        />
-      ) : (
-        <input
-          name="value"
-          required
-          type={kind === DocumentKind.URL ? "url" : "text"}
-          placeholder={
-            kind === DocumentKind.URL
-              ? t("inspector.referenceUrl")
-              : t("inspector.referencePath")
-          }
-        />
-      )}
+      {valueInput}
     </>
   );
 }
 
-function DocumentRow({
+export function DocumentRow({
   document,
   onPreview,
   onDelete,
