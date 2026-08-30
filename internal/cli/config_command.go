@@ -2,7 +2,9 @@ package cli
 
 import (
 	"errors"
+	"fmt"
 	"io"
+	"strconv"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -44,19 +46,43 @@ func (s *state) configStore() (*config.Store, error) {
 }
 
 func (s *state) configSyncCommand() *cobra.Command {
-	command := &cobra.Command{Use: "sync", Short: "Manage automatic GitHub synchronization settings"}
+	command := &cobra.Command{
+		Use:     "sync",
+		Short:   "Show or manage automatic GitHub synchronization settings",
+		Example: "prx config sync",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			store, err := s.configStore()
+			if err != nil {
+				return configCommandError(err)
+			}
+			settings, err := store.Load()
+			if err != nil {
+				return configCommandError(err)
+			}
+			return s.writeSyncInterval(settings.GitHub.AutoSyncIntervalSeconds)
+		},
+	}
 	command.AddCommand(s.configSyncUpdateCommand())
 	return command
 }
 
 func (s *state) configSyncUpdateCommand() *cobra.Command {
-	var interval int64
 	command := &cobra.Command{
-		Use:     "update",
-		Short:   "Update the automatic GitHub synchronization interval",
-		Example: "prx config sync update --interval-seconds 3600 --json",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		Use:   "update INTERVAL_SECONDS",
+		Short: "Update the automatic GitHub synchronization interval",
+		Long: fmt.Sprintf(
+			"Update the automatic GitHub synchronization interval.\n\n"+
+				"INTERVAL_SECONDS is a whole number of seconds and must be at least %d.",
+			config.MinimumAutoSyncIntervalSeconds,
+		),
+		Example: "prx config sync update 3600 --json",
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			interval, err := strconv.ParseInt(args[0], 10, 64)
+			if err != nil {
+				return &usageError{err: fmt.Errorf("INTERVAL_SECONDS must be an integer: %q", args[0])}
+			}
 			store, err := s.configStore()
 			if err != nil {
 				return configCommandError(err)
@@ -67,16 +93,21 @@ func (s *state) configSyncUpdateCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			value := map[string]int64{"interval_seconds": settings.GitHub.AutoSyncIntervalSeconds}
-			return s.write(value, renderMessage(
-				"Automatic sync interval: %d seconds.",
-				settings.GitHub.AutoSyncIntervalSeconds,
-			))
+			updated := settings.GitHub.AutoSyncIntervalSeconds
+			return s.write(
+				map[string]int64{"interval_seconds": updated},
+				renderMessage("Updated automatic sync interval to %d seconds.", updated),
+			)
 		},
 	}
-	command.Flags().Int64Var(&interval, "interval-seconds", 0, "automatic sync interval in seconds (minimum 600)")
-	_ = command.MarkFlagRequired("interval-seconds")
 	return command
+}
+
+func (s *state) writeSyncInterval(interval int64) error {
+	return s.write(
+		map[string]int64{"interval_seconds": interval},
+		renderMessage("Automatic sync interval: %d seconds.", interval),
+	)
 }
 
 func (s *state) configPathCommand() *cobra.Command {
@@ -144,35 +175,35 @@ func (s *state) configHostCommand() *cobra.Command {
 }
 
 func (s *state) configHostAddCommand() *cobra.Command {
-	var host, webURL, apiURL, uploadURL, graphqlURL string
+	var webURL, apiURL, uploadURL, graphqlURL string
 	command := &cobra.Command{
-		Use:     "add",
-		Short:   "Add a GitHub.com or Enterprise host",
-		Example: "prx config host add --host ghe.example.com",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		Use:   "add HOST",
+		Short: "Add a GitHub.com or Enterprise host",
+		Long: "Add a GitHub.com or Enterprise host.\n\n" +
+			"HOST is a hostname with an optional port.",
+		Example: "prx config host add ghe.example.com",
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			store, err := s.configStore()
 			if err != nil {
 				return configCommandError(err)
 			}
 			value, err := store.Update(func(settings *config.Config) error {
 				return settings.AddHost(config.Host{
-					Host: host, WebURL: webURL, APIURL: apiURL, UploadURL: uploadURL, GraphQLURL: graphqlURL,
+					Host: args[0], WebURL: webURL, APIURL: apiURL, UploadURL: uploadURL, GraphQLURL: graphqlURL,
 				})
 			})
 			if err != nil {
 				return configCommandError(err)
 			}
-			created := findHost(value, host)
+			created := findHost(value, args[0])
 			return s.write(created, renderMessage("Added GitHub host %s.", created.Host))
 		},
 	}
-	command.Flags().StringVar(&host, "host", "", "hostname with optional port")
 	command.Flags().StringVar(&webURL, "web-url", "", "HTTPS web URL (defaults from host)")
 	command.Flags().StringVar(&apiURL, "api-url", "", "HTTPS API base URL (defaults from host)")
 	command.Flags().StringVar(&uploadURL, "upload-url", "", "HTTPS upload base URL (defaults from host)")
 	command.Flags().StringVar(&graphqlURL, "graphql-url", "", "HTTPS GraphQL URL (defaults from host)")
-	_ = command.MarkFlagRequired("host")
 	return command
 }
 
@@ -276,14 +307,20 @@ func (s *state) configAuthCommand() *cobra.Command {
 }
 
 func (s *state) configAuthAddCommand() *cobra.Command {
-	var id, host, authType, account, service, variable, user string
+	var account, service, variable, user string
 	var tokenStdin bool
 	command := &cobra.Command{
-		Use:     "add",
-		Short:   "Add a host-scoped authentication method",
-		Example: "prx config auth add --id work-gh --host github.com --type gh_cli",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		Use:   "add AUTH_METHOD_ID HOST TYPE",
+		Short: "Add a host-scoped authentication method",
+		Long: "Add a host-scoped authentication method.\n\n" +
+			"AUTH_METHOD_ID names the method and must be unique.\n" +
+			"HOST is a configured host.\n" +
+			"TYPE is keychain, environment, inline, or gh_cli.\n\n" +
+			"Each type needs its own credential flags: keychain needs --account and --service, " +
+			"environment needs --variable, and inline needs --token-stdin.",
+		Example: "prx config auth add work-gh github.com gh_cli",
+		Args:    cobra.ExactArgs(3),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			token, err := readConfigToken(cmd, tokenStdin)
 			if err != nil {
 				return configCommandError(err)
@@ -294,22 +331,18 @@ func (s *state) configAuthAddCommand() *cobra.Command {
 			}
 			settings, err := store.Update(func(settings *config.Config) error {
 				return settings.AddAuthMethod(config.AuthMethod{
-					ID: id, Host: host, Type: config.AuthMethodType(authType), Account: account,
+					ID: args[0], Host: args[1], Type: config.AuthMethodType(args[2]), Account: account,
 					Service: service, Variable: variable, Token: token, User: user,
 				})
 			})
 			if err != nil {
 				return configCommandError(err)
 			}
-			created := findPublicAuth(settings, id)
+			created := findPublicAuth(settings, args[0])
 			return s.write(created, renderMessage("Added authentication method %s.", created.ID))
 		},
 	}
-	bindAuthFlags(command, &host, &authType, &account, &service, &variable, &user, &tokenStdin)
-	command.Flags().StringVar(&id, "id", "", "authentication method ID")
-	_ = command.MarkFlagRequired("id")
-	_ = command.MarkFlagRequired("host")
-	_ = command.MarkFlagRequired("type")
+	bindAuthCredentialFlags(command, &account, &service, &variable, &user, &tokenStdin)
 	return command
 }
 
@@ -424,6 +457,10 @@ func (s *state) configAuthReorderCommand() *cobra.Command {
 func bindAuthFlags(command *cobra.Command, host, authType, account, service, variable, user *string, tokenStdin *bool) {
 	command.Flags().StringVar(host, "host", "", "configured host")
 	command.Flags().StringVar(authType, "type", "", "keychain, environment, inline, or gh_cli")
+	bindAuthCredentialFlags(command, account, service, variable, user, tokenStdin)
+}
+
+func bindAuthCredentialFlags(command *cobra.Command, account, service, variable, user *string, tokenStdin *bool) {
 	command.Flags().StringVar(account, "account", "", "Keychain account")
 	command.Flags().StringVar(service, "service", "", "Keychain service")
 	command.Flags().StringVar(variable, "variable", "", "environment variable name")

@@ -51,6 +51,19 @@ func runCLI(t *testing.T, binary, dbPath string, args ...string) (resultEnvelope
 	return runCLIWithFixture(t, binary, dbPath, "", args...)
 }
 
+func runCLIWithInput(
+	t *testing.T,
+	binary, dbPath, input string,
+	args ...string,
+) (resultEnvelope, string, int) {
+	t.Helper()
+	result := executeCLI(t, binary, input, append([]string{"--db", dbPath, "--json"}, args...)...)
+	if result.exit != 0 {
+		return decodeFailure(t, []byte(result.stderr), result.stderr), result.stderr, result.exit
+	}
+	return decodeResult(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
+}
+
 func runCLIWithFixture(
 	t *testing.T,
 	binary, dbPath, fixture string,
@@ -234,7 +247,7 @@ func decodeDataObject(t *testing.T, envelope resultEnvelope) map[string]json.Raw
 func TestBlackBoxCRUDAndCycle(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "blackbox.db")
-	feature, stderr, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "release", "--title", "Release")
+	feature, stderr, exit := runCLI(t, binary, dbPath, "feature", "create", "release", "Release")
 	if exit != 0 || stderr != "" || !feature.OK {
 		t.Fatalf("feature result=%+v stderr=%q exit=%d", feature, stderr, exit)
 	}
@@ -266,8 +279,8 @@ func TestBlackBoxCRUDAndCycle(t *testing.T) {
 	if nodeFeatureData.ID != featureData.ID || nodeFeatureData.Slug != "release" {
 		t.Fatalf("node feature=%+v", nodeFeatureData)
 	}
-	a, _, _ := runCLI(t, binary, dbPath, "task", "create", "--feature", featureData.ID, "--title", "A")
-	b, _, _ := runCLI(t, binary, dbPath, "task", "create", "--feature", featureData.ID, "--title", "B")
+	a, _, _ := runCLI(t, binary, dbPath, "task", "create", featureData.ID, "A")
+	b, _, _ := runCLI(t, binary, dbPath, "task", "create", featureData.ID, "B")
 	var at, bt struct {
 		ID string `json:"id"`
 	}
@@ -328,7 +341,7 @@ func TestBlackBoxTargetedSyncByID(t *testing.T) {
 	binary := buildCLI(t)
 	t.Setenv("PRX_CONFIG", filepath.Join(t.TempDir(), "missing-config.yaml"))
 	dbPath := filepath.Join(t.TempDir(), "targeted-sync.db")
-	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "targeted", "--title", "Targeted")
+	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "targeted", "Targeted")
 	if exit != 0 || !feature.OK {
 		t.Fatalf("feature create: %+v exit=%d", feature, exit)
 	}
@@ -338,11 +351,11 @@ func TestBlackBoxTargetedSyncByID(t *testing.T) {
 	if err := json.Unmarshal(feature.Data, &featureData); err != nil {
 		t.Fatal(err)
 	}
-	first, _, exit := runCLI(t, binary, dbPath, "task", "create", "--feature", featureData.ID, "--title", "First")
+	first, _, exit := runCLI(t, binary, dbPath, "task", "create", featureData.ID, "First")
 	if exit != 0 || !first.OK {
 		t.Fatalf("first task create: %+v exit=%d", first, exit)
 	}
-	second, _, exit := runCLI(t, binary, dbPath, "task", "create", "--feature", featureData.ID, "--title", "Second")
+	second, _, exit := runCLI(t, binary, dbPath, "task", "create", featureData.ID, "Second")
 	if exit != 0 || !second.OK {
 		t.Fatalf("second task create: %+v exit=%d", second, exit)
 	}
@@ -362,9 +375,7 @@ func TestBlackBoxTargetedSyncByID(t *testing.T) {
 			dbPath,
 			"pr",
 			"attach",
-			"--task",
 			taskID,
-			"--url",
 			fmt.Sprintf("https://github.com/acme/api/pull/%d", index+1),
 		)
 		if attachExit != 0 || !attached.OK {
@@ -423,7 +434,7 @@ func TestBlackBoxTargetedSyncByID(t *testing.T) {
 func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "plans.db")
-	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "plans", "--title", "Plans")
+	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "plans", "Plans")
 	if exit != 0 || !feature.OK {
 		t.Fatalf("feature result=%+v exit=%d", feature, exit)
 	}
@@ -439,9 +450,7 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 		dbPath,
 		"task",
 		"create",
-		"--feature",
 		featureData.ID,
-		"--title",
 		"Plan task",
 		"--kind",
 		"manual",
@@ -511,6 +520,37 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 	if deletedData.ID != taskData.ID {
 		t.Fatalf("deleted=%q, want %q", deletedData.ID, taskData.ID)
 	}
+	stdinSet, _, exit := runCLIWithInput(
+		t,
+		binary,
+		dbPath,
+		"# Standard input plan\n",
+		"plan",
+		"set",
+		taskData.ID,
+		"--stdin",
+	)
+	if exit != 0 || !stdinSet.OK || !bytes.Contains(stdinSet.Data, []byte("Standard input plan")) {
+		t.Fatalf("stdin set result=%+v exit=%d", stdinSet, exit)
+	}
+	missingFile, _, exit := runCLI(
+		t,
+		binary,
+		dbPath,
+		"plan",
+		"set",
+		taskData.ID,
+		"--file",
+		filepath.Join(t.TempDir(), "missing.md"),
+	)
+	if exit == 0 || missingFile.ErrorCode != "invalid_implementation_plan" ||
+		!strings.Contains(missingFile.Error, "could not read Markdown") {
+		t.Fatalf("missing file result=%+v exit=%d", missingFile, exit)
+	}
+	emptyStdin, _, exit := runCLIWithInput(t, binary, dbPath, "", "plan", "set", taskData.ID, "--stdin")
+	if exit == 0 || emptyStdin.ErrorCode != "invalid_implementation_plan" {
+		t.Fatalf("empty stdin result=%+v exit=%d", emptyStdin, exit)
+	}
 	invalid, _, exit := runCLI(
 		t,
 		binary,
@@ -565,7 +605,7 @@ func TestBlackBoxServerAndCLIShareDatabase(t *testing.T) {
 		}
 		time.Sleep(25 * time.Millisecond)
 	}
-	created, _, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "live-write", "--title", "Live write")
+	created, _, exit := runCLI(t, binary, dbPath, "feature", "create", "live-write", "Live write")
 	if exit != 0 || !created.OK {
 		cancel()
 		_ = server.Wait()
@@ -647,7 +687,7 @@ func TestBlackBoxReadAliasesAndFeatureSlugEscape(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "aliases.db")
 	for _, slug := range []string{"checkout", "create"} {
-		created, _, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", slug, "--title", slug)
+		created, _, exit := runCLI(t, binary, dbPath, "feature", "create", slug, slug)
 		if exit != 0 || !created.OK {
 			t.Fatalf("create feature %q: %+v exit=%d", slug, created, exit)
 		}
@@ -661,7 +701,7 @@ func TestBlackBoxReadAliasesAndFeatureSlugEscape(t *testing.T) {
 		t.Fatalf("feature slug escape: %+v exit=%d", escaped, exit)
 	}
 
-	task, _, exit := runCLI(t, binary, dbPath, "task", "create", "--feature", "checkout", "--title", "Build")
+	task, _, exit := runCLI(t, binary, dbPath, "task", "create", "checkout", "Build")
 	if exit != 0 || !task.OK {
 		t.Fatalf("create task: %+v exit=%d", task, exit)
 	}
@@ -686,7 +726,7 @@ func TestBlackBoxReadAliasesAndFeatureSlugEscape(t *testing.T) {
 
 	document, _, exit := runCLI(
 		t, binary, dbPath,
-		"document", "add", "--feature", "checkout", "--url", "https://example.com/checkout",
+		"document", "add", "checkout", "--url", "https://example.com/checkout",
 	)
 	if exit != 0 || !document.OK {
 		t.Fatalf("create document: %+v exit=%d", document, exit)
@@ -799,8 +839,11 @@ func TestBlackBoxResolvedCommandErrorsIncludeCompleteHelp(t *testing.T) {
 			usage: "Usage:\n  prx config host", example: "Examples:\nprx config host", wantError: "unknown command",
 		},
 		{
-			name: "missing required flag", args: []string{"feature", "create", "--json"},
-			usage: "Usage:\n  prx feature create", example: "Examples:\nprx feature create", wantError: "required flag",
+			name:      "missing positional arguments",
+			args:      []string{"feature", "create", "--json"},
+			usage:     "Usage:\n  prx feature create SLUG TITLE",
+			example:   "Examples:\nprx feature create",
+			wantError: "accepts 2 arg(s)",
 		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
@@ -908,7 +951,7 @@ func TestBlackBoxEnvironmentSuppliesStoragePathWithoutFlag(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "env.db")
 	result := executeCLIWithEnv(t, binary, "", []string{"PRX_DB=" + dbPath},
-		"--json", "feature", "create", "--slug", "from-environment", "--title", "From environment")
+		"--json", "feature", "create", "from-environment", "From environment")
 	if result.exit != 0 || result.stderr != "" {
 		t.Fatalf("result=%+v", result)
 	}
@@ -1069,7 +1112,7 @@ func TestBlackBoxDefaultTextOutputCoversResourcesAndSummaries(t *testing.T) {
 		return result
 	}
 
-	createdFeature := run("feature", "create", "--slug", "checkout", "--title", "Checkout rollout")
+	createdFeature := run("feature", "create", "checkout", "Checkout rollout")
 	if !strings.Contains(createdFeature.stdout, "Created feature checkout (F-1).") {
 		t.Fatalf("feature create output=%q", createdFeature.stdout)
 	}
@@ -1086,8 +1129,8 @@ func TestBlackBoxDefaultTextOutputCoversResourcesAndSummaries(t *testing.T) {
 		}
 	}
 
-	taskA := run("task", "create", "--feature", "checkout", "--title", "Payment API")
-	taskB := run("task", "create", "--feature", "checkout", "--title", "Checkout UI")
+	taskA := run("task", "create", "checkout", "Payment API")
+	taskB := run("task", "create", "checkout", "Checkout UI")
 	if !strings.Contains(taskA.stdout, "Created task T-1.") || !strings.Contains(taskB.stdout, "Created task T-2.") {
 		t.Fatalf("task create outputs=%q %q", taskA.stdout, taskB.stdout)
 	}
@@ -1148,8 +1191,12 @@ func TestBlackBoxDefaultTextOutputCoversResourcesAndSummaries(t *testing.T) {
 			t.Fatalf("sync status omitted %q: %s", value, syncStatus.stdout)
 		}
 	}
-	syncUpdate := run("config", "sync", "update", "--interval-seconds", "900")
-	if syncUpdate.stdout != "Automatic sync interval: 900 seconds.\n" {
+	syncRead := run("config", "sync")
+	if syncRead.stdout != "Automatic sync interval: 3600 seconds.\n" {
+		t.Fatalf("config sync output=%q", syncRead.stdout)
+	}
+	syncUpdate := run("config", "sync", "update", "900")
+	if syncUpdate.stdout != "Updated automatic sync interval to 900 seconds.\n" {
 		t.Fatalf("config sync update output=%q", syncUpdate.stdout)
 	}
 }
@@ -1175,6 +1222,224 @@ func TestBlackBoxOutputFlagsAndErrorModes(t *testing.T) {
 	usageFailure := decodeFailure(t, []byte(usage.stderr), usage.stderr)
 	if usageFailure.ErrorCode != "usage_error" {
 		t.Fatalf("usage error code=%q body=%s", usageFailure.ErrorCode, usage.stderr)
+	}
+}
+
+func TestBlackBoxRequiredOperandsRejectOldFlagsAndWrongCounts(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "operands.db")
+	configPath := filepath.Join(t.TempDir(), "config.yaml")
+
+	removedFlags := []struct {
+		flag string
+		args []string
+	}{
+		{flag: "--slug", args: []string{"feature", "create", "checkout", "Checkout", "--slug", "legacy"}},
+		{flag: "--title", args: []string{"feature", "create", "checkout", "Checkout", "--title", "Legacy"}},
+		{flag: "--feature", args: []string{"task", "create", "checkout", "Task", "--feature", "legacy"}},
+		{flag: "--title", args: []string{"task", "create", "checkout", "Task", "--title", "Legacy"}},
+		{flag: "--task", args: []string{"pr", "attach", "T-1", "https://example.com/pull/1", "--task", "T-1"}},
+		{flag: "--url", args: []string{"pr", "attach", "T-1", "https://x.test/1", "--url", "https://x.test/2"}},
+		{
+			flag: "--feature",
+			args: []string{"document", "add", "checkout", "--url", "https://x.test/1", "--feature", "legacy"},
+		},
+		{flag: "--task", args: []string{"document", "add", "T-1", "--url", "https://x.test/1", "--task", "T-1"}},
+		{flag: "--interval-seconds", args: []string{"config", "sync", "update", "600", "--interval-seconds", "600"}},
+		{flag: "--host", args: []string{"config", "host", "add", "ghe.example.com", "--host", "legacy.example.com"}},
+		{flag: "--id", args: []string{"config", "auth", "add", "work", "github.com", "gh_cli", "--id", "legacy"}},
+		{flag: "--type", args: []string{"config", "auth", "add", "work", "github.com", "gh_cli", "--type", "inline"}},
+		{flag: "--host", args: []string{"config", "auth", "add", "work", "github.com", "gh_cli", "--host", "x.test"}},
+	}
+	for _, test := range removedFlags {
+		t.Run(strings.Join(test.args, " "), func(t *testing.T) {
+			args := []string{"--db", dbPath, "--config", configPath, "--json"}
+			result := executeCLI(t, binary, "", append(args, test.args...)...)
+			if result.exit == 0 || result.stdout != "" {
+				t.Fatalf("result=%+v", result)
+			}
+			failure := decodeFailure(t, []byte(result.stderr), result.stderr)
+			if failure.ErrorCode != "usage_error" || !strings.Contains(failure.Error, "unknown flag: "+test.flag) {
+				t.Fatalf("failure=%+v", failure)
+			}
+		})
+	}
+
+	wrongCounts := [][]string{
+		{"feature", "create", "checkout"},
+		{"task", "create", "checkout", "Task", "extra"},
+		{"pr", "attach", "T-1"},
+		{"document", "add", "T-1", "extra"},
+		{"plan", "set"},
+		{"config", "sync", "update", "600", "extra"},
+		{"config", "host", "add"},
+		{"config", "auth", "add", "work", "github.com"},
+	}
+	for _, commandArgs := range wrongCounts {
+		t.Run(strings.Join(commandArgs, " "), func(t *testing.T) {
+			args := []string{"--db", dbPath, "--config", configPath, "--json"}
+			result := executeCLI(t, binary, "", append(args, commandArgs...)...)
+			if result.exit == 0 || result.stdout != "" {
+				t.Fatalf("result=%+v", result)
+			}
+			failure := decodeFailure(t, []byte(result.stderr), result.stderr)
+			if failure.ErrorCode != "usage_error" || !strings.Contains(failure.Error, "arg(s)") {
+				t.Fatalf("failure=%+v", failure)
+			}
+		})
+	}
+}
+
+func TestBlackBoxDoubleDashPreservesLiteralPositionalValue(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "literal.db")
+	created := executeCLI(t, binary, "", "--db", dbPath, "feature", "create", "literal", "--", "--json")
+	if created.exit != 0 || created.stderr != "" || !strings.Contains(created.stdout, "Created feature literal") ||
+		json.Valid([]byte(created.stdout)) {
+		t.Fatalf("create result=%+v", created)
+	}
+	shown, _, exit := runCLI(t, binary, dbPath, "feature", "literal")
+	if exit != 0 || !shown.OK || !bytes.Contains(shown.Data, []byte(`"title":"--json"`)) {
+		t.Fatalf("shown=%+v exit=%d", shown, exit)
+	}
+	task := executeCLI(t, binary, "", "--db", dbPath, "task", "create", "literal", "--", "--assignee")
+	if task.exit != 0 || task.stderr != "" || !strings.Contains(task.stdout, "Created task T-1") {
+		t.Fatalf("task result=%+v", task)
+	}
+	invalidURL := executeCLI(t, binary, "", "--db", dbPath, "pr", "attach", "T-1", "--", "--url")
+	if invalidURL.exit == 0 || invalidURL.stdout != "" || !strings.Contains(invalidURL.stderr, "expected an https") ||
+		strings.Contains(invalidURL.stderr, "unknown flag") {
+		t.Fatalf("pull request result=%+v", invalidURL)
+	}
+}
+
+func TestBlackBoxDocumentAddResolvesPublicParentForms(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "documents.db")
+	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "checkout", "Checkout")
+	if exit != 0 || !feature.OK {
+		t.Fatalf("feature=%+v exit=%d", feature, exit)
+	}
+	var featureData struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(feature.Data, &featureData); err != nil {
+		t.Fatal(err)
+	}
+	task, _, exit := runCLI(t, binary, dbPath, "task", "create", featureData.ID, "Task")
+	if exit != 0 || !task.OK {
+		t.Fatalf("task=%+v exit=%d", task, exit)
+	}
+	var taskData struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(task.Data, &taskData); err != nil {
+		t.Fatal(err)
+	}
+
+	for _, test := range []struct {
+		name       string
+		parent     string
+		wantField  string
+		wantAbsent string
+	}{
+		{name: "feature ID", parent: featureData.ID, wantField: "feature_id", wantAbsent: "task_id"},
+		{name: "feature slug", parent: "checkout", wantField: "feature_id", wantAbsent: "task_id"},
+		{name: "task ID", parent: taskData.ID, wantField: "task_id", wantAbsent: "feature_id"},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			value, _, addExit := runCLI(
+				t,
+				binary,
+				dbPath,
+				"document",
+				"add",
+				test.parent,
+				"--url",
+				"https://example.com/"+strings.ReplaceAll(test.name, " ", "-"),
+			)
+			if addExit != 0 || !value.OK {
+				t.Fatalf("value=%+v exit=%d", value, addExit)
+			}
+			data := decodeDataObject(t, value)
+			if _, ok := data[test.wantField]; !ok {
+				t.Fatalf("data=%v, want %q", mapKeys(data), test.wantField)
+			}
+			if _, ok := data[test.wantAbsent]; ok {
+				t.Fatalf("data=%v, did not want %q", mapKeys(data), test.wantAbsent)
+			}
+		})
+	}
+
+	for _, missingCase := range []struct {
+		parent      string
+		wantMessage string
+	}{
+		{parent: "missing-feature", wantMessage: "feature or task"},
+		{parent: "T-999", wantMessage: "task"},
+		{parent: strings.ToLower(taskData.ID), wantMessage: "feature or task"},
+	} {
+		missing, _, missingExit := runCLI(
+			t,
+			binary,
+			dbPath,
+			"document",
+			"add",
+			missingCase.parent,
+			"--url",
+			"https://example.com/missing",
+		)
+		if missingExit == 0 || missing.ErrorCode != "not_found" {
+			t.Fatalf("parent=%q result=%+v exit=%d", missingCase.parent, missing, missingExit)
+		}
+		if !strings.Contains(missing.Error, missingCase.wantMessage) {
+			t.Fatalf("parent=%q message=%q, want %q", missingCase.parent, missing.Error, missingCase.wantMessage)
+		}
+	}
+}
+
+func TestBlackBoxConfigSyncReadsAndUpdatesOneInterval(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "unused.db")
+	configPath := filepath.Join(root, "config.yaml")
+	readInterval := func() int64 {
+		value, stderr, exit := runConfigCLI(t, binary, dbPath, configPath, "", "config", "sync")
+		if exit != 0 || stderr != "" || !value.OK {
+			t.Fatalf("sync read=%+v stderr=%q exit=%d", value, stderr, exit)
+		}
+		data := decodeDataObject(t, value)
+		assertObjectKeys(t, data, "interval_seconds")
+		var interval int64
+		if err := json.Unmarshal(data["interval_seconds"], &interval); err != nil {
+			t.Fatal(err)
+		}
+		return interval
+	}
+	if interval := readInterval(); interval != 3600 {
+		t.Fatalf("default interval=%d, want 3600", interval)
+	}
+	updated, stderr, exit := runConfigCLI(t, binary, dbPath, configPath, "", "config", "sync", "update", "900")
+	if exit != 0 || stderr != "" || !updated.OK {
+		t.Fatalf("sync update=%+v stderr=%q exit=%d", updated, stderr, exit)
+	}
+	if interval := readInterval(); interval != 900 {
+		t.Fatalf("updated interval=%d, want 900", interval)
+	}
+
+	tooLow, _, exit := runConfigCLI(t, binary, dbPath, configPath, "", "config", "sync", "update", "599")
+	if exit == 0 || tooLow.ErrorCode != "invalid_config" {
+		t.Fatalf("too low=%+v exit=%d", tooLow, exit)
+	}
+	nonNumeric, _, exit := runConfigCLI(t, binary, dbPath, configPath, "", "config", "sync", "update", "later")
+	if exit == 0 || nonNumeric.ErrorCode != "usage_error" {
+		t.Fatalf("non-numeric=%+v exit=%d", nonNumeric, exit)
+	}
+	if interval := readInterval(); interval != 900 {
+		t.Fatalf("failed updates changed interval to %d", interval)
+	}
+	if _, err := os.Stat(dbPath); !os.IsNotExist(err) {
+		t.Fatalf("config sync opened database: %v", err)
 	}
 }
 
@@ -1229,7 +1494,7 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	assertDirectObject(t, configShow, "version", "github")
 	assertDirectObject(t, runConfig("config", "path"), "path")
 	assertDirectObject(t, runConfig("config", "validate"), "valid")
-	assertDirectObject(t, runConfig("config", "host", "add", "--host", "ghe.example.com"), "host")
+	assertDirectObject(t, runConfig("config", "host", "add", "ghe.example.com"), "host")
 	assertDirectObjectKeys(t, runConfig("config", "host"), "hosts")
 	assertDirectObject(
 		t,
@@ -1240,11 +1505,8 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 		"config",
 		"auth",
 		"add",
-		"--id",
 		"work-gh",
-		"--host",
 		"ghe.example.com",
-		"--type",
 		"environment",
 		"--variable",
 		"GH_ENTERPRISE_TOKEN",
@@ -1252,7 +1514,12 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	assertDirectObjectKeys(t, runConfig("config", "auth"), "auth_methods")
 	assertDirectObjectKeys(
 		t,
-		runConfig("config", "sync", "update", "--interval-seconds", "600"),
+		runConfig("config", "sync"),
+		"interval_seconds",
+	)
+	assertDirectObjectKeys(
+		t,
+		runConfig("config", "sync", "update", "600"),
 		"interval_seconds",
 	)
 	assertDirectObject(t, runConfig("config", "auth", "update", "work-gh", "--user", "HappyOnigiri"), "id")
@@ -1260,7 +1527,7 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	assertDirectObjectKeys(t, runConfig("config", "auth", "remove", "work-gh"), "removed")
 	assertDirectObjectKeys(t, runConfig("config", "host", "remove", "ghe.example.com"), "removed")
 
-	feature := runDB("feature", "create", "--slug", "checkout", "--title", "Checkout")
+	feature := runDB("feature", "create", "checkout", "Checkout")
 	assertDirectObject(t, feature, "id", "slug")
 	var featureID string
 	if err := json.Unmarshal(feature["id"], &featureID); err != nil {
@@ -1272,8 +1539,8 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	assertDirectObject(t, runDB("feature", "archive", featureID), "id", "slug")
 	assertDirectObject(t, runDB("feature", "unarchive", featureID), "id", "slug")
 
-	taskA := runDB("task", "create", "--feature", featureID, "--title", "A")
-	taskB := runDB("task", "create", "--feature", featureID, "--title", "B")
+	taskA := runDB("task", "create", featureID, "A")
+	taskB := runDB("task", "create", featureID, "B")
 	assertDirectObject(t, taskA, "id", "feature_id")
 	assertDirectObject(t, taskB, "id", "feature_id")
 	var taskAID, taskBID string
@@ -1293,9 +1560,7 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	assertDirectObject(t, runDB(
 		"pr",
 		"attach",
-		"--task",
 		taskAID,
-		"--url",
 		"https://github.com/acme/payments/pull/42",
 	), "task_id", "url")
 	assertDirectObjectKeys(t, runDB("pr"), "pull_requests")
@@ -1303,11 +1568,8 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	document := runDB(
 		"document",
 		"add",
-		"--task",
 		taskAID,
-		"--kind",
-		"url",
-		"--value",
+		"--url",
 		"https://example.com/checkout",
 	)
 	assertDirectObject(t, document, "id", "task_id")
@@ -1319,7 +1581,6 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	legacyDefault := runDB(
 		"document",
 		"add",
-		"--task",
 		taskAID,
 		"--value",
 		"https://example.com/legacy",
@@ -1367,7 +1628,7 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	assertDirectObjectKeys(t, runDB("task", "delete", taskBID), "deleted")
 	assertDirectObjectKeys(t, runDB("task", "delete", taskAID, "--cascade"), "deleted")
 
-	deletableFeature := runDB("feature", "create", "--slug", "deletable", "--title", "Deletable")
+	deletableFeature := runDB("feature", "create", "deletable", "Deletable")
 	var deletableFeatureID string
 	if err := json.Unmarshal(deletableFeature["id"], &deletableFeatureID); err != nil {
 		t.Fatal(err)
@@ -1470,7 +1731,6 @@ func TestBlackBoxConfigUsesSecureSecretFreeOutput(t *testing.T) {
 		"config",
 		"host",
 		"add",
-		"--host",
 		"ghe.example.com",
 	); exit != 0 ||
 		stderr != "" {
@@ -1485,11 +1745,8 @@ func TestBlackBoxConfigUsesSecureSecretFreeOutput(t *testing.T) {
 		"config",
 		"auth",
 		"add",
-		"--id",
 		"ghe-inline",
-		"--host",
 		"ghe.example.com",
-		"--type",
 		"inline",
 		"--token-stdin",
 	)

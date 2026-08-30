@@ -3,24 +3,23 @@
 Create an implementation or manual task
 
 ```
-prx task create [flags]
+prx task create FEATURE_ID_OR_SLUG TITLE [flags]
 ```
 
 ### Examples
 
 ```
-prx task create --feature checkout --title "Add payment intent API" --assignee Mika
+prx task create checkout "Add payment intent API" --assignee Mika
+prx task create checkout -- "-fix login redirect"
 ```
 
 ### Options
 
 ```
       --assignee string   assignee
-      --feature string    feature ID or slug
   -h, --help              help for create
       --kind string       pr or manual (default "pr")
       --scope string      scope description
-      --title string      task title
 ```
 
 ### Options inherited from parent commands

@@ -1,6 +1,6 @@
 import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
-import { render, screen } from "@testing-library/react";
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { cleanup, render, screen } from "@testing-library/react";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "../src/router";
 import { makeSnapshot } from "./factories";
 
@@ -53,6 +53,8 @@ vi.mock("elkjs/lib/elk-api.js", () => ({
 }));
 
 describe("FeatureWorkspace graph layout", () => {
+  afterEach(cleanup);
+
   beforeEach(async () => {
     router.update({
       history: createMemoryHistory({ initialEntries: ["/features/feature-1"] }),

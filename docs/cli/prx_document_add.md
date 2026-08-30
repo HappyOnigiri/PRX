@@ -3,27 +3,25 @@
 Add a document
 
 ```
-prx document add [flags]
+prx document add FEATURE_ID_OR_SLUG_OR_TASK_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx document add --task T-1 --url https://example.com
-prx document add --feature F-1 --markdown-file notes.md
+prx document add T-1 --url https://example.com
+prx document add checkout --markdown-file notes.md
 ```
 
 ### Options
 
 ```
-      --feature string         feature ID or slug
   -h, --help                   help for add
       --implementation-plan    mark as the task implementation plan
       --kind string            compatibility alias: url, local_file, or markdown_path (default "url")
       --local-file string      registered local file path
       --markdown-file string   read stored Markdown from a file
       --stdin                  read stored Markdown from standard input
-      --task string            task ID
       --title string           document title
       --url string             HTTP or HTTPS URL
       --value string           compatibility value for --kind

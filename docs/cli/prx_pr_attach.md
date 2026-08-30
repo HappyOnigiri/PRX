@@ -3,21 +3,19 @@
 Attach a GitHub pull request to a task
 
 ```
-prx pr attach [flags]
+prx pr attach TASK_ID URL [flags]
 ```
 
 ### Examples
 
 ```
-prx pr attach --task TASK_ID --url https://github.com/acme/payments/pull/42
+prx pr attach TASK_ID https://github.com/acme/payments/pull/42
 ```
 
 ### Options
 
 ```
-  -h, --help          help for attach
-      --task string   task ID
-      --url string    GitHub pull request URL
+  -h, --help   help for attach
 ```
 
 ### Options inherited from parent commands

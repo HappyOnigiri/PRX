@@ -3,13 +3,14 @@
 Create a feature
 
 ```
-prx feature create [flags]
+prx feature create SLUG TITLE [flags]
 ```
 
 ### Examples
 
 ```
-prx feature create --slug checkout --title "Checkout rollout"
+prx feature create checkout "Checkout rollout"
+prx feature create checkout -- "-fix checkout"
 ```
 
 ### Options
@@ -17,8 +18,6 @@ prx feature create --slug checkout --title "Checkout rollout"
 ```
       --description string   feature description
   -h, --help                 help for create
-      --slug string          stable feature slug
-      --title string         feature title
 ```
 
 ### Options inherited from parent commands

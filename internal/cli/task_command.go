@@ -57,27 +57,24 @@ func (s *state) taskCommand() *cobra.Command {
 }
 
 func (s *state) taskCreateCommand() *cobra.Command {
-	var feature, title, scope, kind, assignee string
+	var scope, kind, assignee string
 	command := &cobra.Command{
-		Use:     "create",
-		Short:   "Create an implementation or manual task",
-		Example: "prx task create --feature checkout --title \"Add payment intent API\" --assignee Mika",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			value, err := s.service.CreateTask(cmd.Context(), feature, title, scope, domain.TaskKind(kind), assignee)
+		Use:   "create FEATURE_ID_OR_SLUG TITLE",
+		Short: "Create an implementation or manual task",
+		Example: "prx task create checkout \"Add payment intent API\" --assignee Mika\n" +
+			"prx task create checkout -- \"-fix login redirect\"",
+		Args: cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			value, err := s.service.CreateTask(cmd.Context(), args[0], args[1], scope, domain.TaskKind(kind), assignee)
 			if err != nil {
 				return err
 			}
 			return s.write(value, renderMessage("Created task %s.", value.ID))
 		},
 	}
-	command.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
-	command.Flags().StringVar(&title, "title", "", "task title")
 	command.Flags().StringVar(&scope, "scope", "", "scope description")
 	command.Flags().StringVar(&kind, "kind", "pr", "pr or manual")
 	command.Flags().StringVar(&assignee, "assignee", "", "assignee")
-	_ = command.MarkFlagRequired("feature")
-	_ = command.MarkFlagRequired("title")
 	return command
 }
 

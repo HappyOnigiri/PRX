@@ -67,19 +67,36 @@ func (s *state) documentCommand() *cobra.Command {
 }
 
 func (s *state) documentAddCommand() *cobra.Command {
-	var feature, task, title string
+	var title string
 	var implementationPlan bool
 	var source documentSourceFlags
 	command := &cobra.Command{
-		Use:   "add",
+		Use:   "add FEATURE_ID_OR_SLUG_OR_TASK_ID",
 		Short: "Add a document",
-		Example: "prx document add --task T-1 --url https://example.com\n" +
-			"prx document add --feature F-1 --markdown-file notes.md",
-		Args: cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
+		Example: "prx document add T-1 --url https://example.com\n" +
+			"prx document add checkout --markdown-file notes.md",
+		Args: cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
 			document, err := readDocumentSource(cmd, source, domain.DomainErrorCodeInvalidDocument)
 			if err != nil {
 				return err
+			}
+			parent, err := s.service.GetNode(cmd.Context(), args[0])
+			if err != nil {
+				return err
+			}
+			var feature, task string
+			switch node := parent.(type) {
+			case domain.Feature:
+				feature = node.ID
+			case domain.Task:
+				task = node.ID
+			default:
+				return domain.NewError(
+					domain.DomainErrorCodeInvalidParent,
+					"%q resolved to an unsupported document parent",
+					args[0],
+				)
 			}
 			doc, err := s.service.AddDocument(
 				cmd.Context(),
@@ -97,8 +114,6 @@ func (s *state) documentAddCommand() *cobra.Command {
 			return s.write(doc, renderMessage("Added document %s.", doc.ID))
 		},
 	}
-	command.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
-	command.Flags().StringVar(&task, "task", "", "task ID")
 	command.Flags().StringVar(&title, "title", "", "document title")
 	command.Flags().BoolVar(&implementationPlan, "implementation-plan", false, "mark as the task implementation plan")
 	bindDocumentSourceFlags(command, &source, true)

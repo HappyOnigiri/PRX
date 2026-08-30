@@ -73,12 +73,16 @@ Feature and task commands list without an identifier and show details with one i
 `show` resolves a feature public ID, feature slug, or task public ID when a feature slug conflicts with a mutation command name.
 Dependency and pull-request commands list when invoked without a mutation subcommand.
 Document commands list without a subcommand and use `document get DOCUMENT_ID` for a detailed read.
-Implementation plans use `plan TASK_ID`, and configuration reads use `config`, `config host`, or `config auth`.
+Implementation plans use `plan TASK_ID`, and configuration reads use `config`, `config host`, `config auth`, or `config sync`.
 Mutation operations retain explicit verbs so state-changing intent remains visible.
 
 Mutations remain non-interactive so people and coding agents use the same surface.
 A missing mutation target fails instead of reporting a successful no-op.
 Destructive traversal of referenced data requires an explicit cascade request.
+Values every invocation of an operation requires are positional operands.
+Flags are reserved for optional modifiers, filters, partial updates, secret-safe input methods, execution settings, and output formats.
+Flags also carry values another operand makes necessary and values chosen from mutually exclusive alternatives.
+An operand value that begins with `-` is passed after `--` so it is not parsed as a flag.
 
 Features and tasks carry public identifiers that remain distinct from their storage identifiers.
 Their storage UUIDs must not cross the CLI, RPC, or WebUI boundary.

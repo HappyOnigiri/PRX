@@ -2,21 +2,26 @@
 
 Update the automatic GitHub synchronization interval
 
+### Synopsis
+
+Update the automatic GitHub synchronization interval.
+
+INTERVAL_SECONDS is a whole number of seconds and must be at least 600.
+
 ```
-prx config sync update [flags]
+prx config sync update INTERVAL_SECONDS [flags]
 ```
 
 ### Examples
 
 ```
-prx config sync update --interval-seconds 3600 --json
+prx config sync update 3600 --json
 ```
 
 ### Options
 
 ```
-  -h, --help                   help for update
-      --interval-seconds int   automatic sync interval in seconds (minimum 600)
+  -h, --help   help for update
 ```
 
 ### Options inherited from parent commands
@@ -30,5 +35,5 @@ prx config sync update --interval-seconds 3600 --json
 
 ### SEE ALSO
 
-* [prx config sync](prx_config_sync.md)	 - Manage automatic GitHub synchronization settings
+* [prx config sync](prx_config_sync.md)	 - Show or manage automatic GitHub synchronization settings
 
