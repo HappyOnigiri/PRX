@@ -556,6 +556,17 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 		_ = legacy.Close()
 		t.Fatal(err)
 	}
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO documents(id, feature_id, task_id, kind, title, value, created_at)
+      VALUES('feature-document', 'feature', NULL, 'markdown_path', 'Feature notes', 'docs/feature.md', ?),
+            ('task-document', NULL, 'task', 'url', 'Task runbook', 'https://example.com/runbook', ?)`,
+		timestamp,
+		timestamp,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
 	if err := legacy.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -584,6 +595,68 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	pullRequest, err := database.GetPullRequest(ctx, "T-1")
 	if err != nil || pullRequest.Host != "ghe.example.com" {
 		t.Fatalf("pull request=%+v err=%v, want host preserved", pullRequest, err)
+	}
+	assertMigratedDocuments(t, ctx, database, timestamp)
+}
+
+func assertMigratedDocuments(
+	t *testing.T,
+	ctx context.Context,
+	database *store.Store,
+	timestamp string,
+) {
+	t.Helper()
+	created, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := database.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.Documents) != 3 {
+		t.Fatalf("documents=%+v, want the two legacy documents and the migrated plan", snapshot.Documents)
+	}
+	byID := make(map[string]domain.Document, len(snapshot.Documents))
+	plans := make([]domain.Document, 0, 1)
+	for _, document := range snapshot.Documents {
+		byID[document.ID] = document
+		if document.IsImplementationPlan {
+			plans = append(plans, document)
+		}
+	}
+	featureDocument, ok := byID["feature-document"]
+	if !ok {
+		t.Fatalf("documents=%+v, want the legacy feature document to keep its identifier", snapshot.Documents)
+	}
+	if featureDocument.Kind != domain.DocumentKindLocalFile ||
+		featureDocument.Locator != "docs/feature.md" ||
+		featureDocument.Title != "Feature notes" ||
+		featureDocument.FeatureID != "F-1" ||
+		featureDocument.TaskID != "" ||
+		featureDocument.IsImplementationPlan ||
+		!featureDocument.CreatedAt.Equal(created) {
+		t.Fatalf("feature document=%+v, want a local file document owned by F-1", featureDocument)
+	}
+	taskDocument, ok := byID["task-document"]
+	if !ok {
+		t.Fatalf("documents=%+v, want the legacy task document to keep its identifier", snapshot.Documents)
+	}
+	if taskDocument.Kind != domain.DocumentKindURL ||
+		taskDocument.Locator != "https://example.com/runbook" ||
+		taskDocument.TaskID != "T-1" ||
+		taskDocument.FeatureID != "" ||
+		taskDocument.IsImplementationPlan ||
+		!taskDocument.CreatedAt.Equal(created) {
+		t.Fatalf("task document=%+v, want a URL document owned by T-1", taskDocument)
+	}
+	if len(plans) != 1 {
+		t.Fatalf("implementation plan documents=%+v, want exactly one", plans)
+	}
+	if plans[0].Kind != domain.DocumentKindMarkdown ||
+		plans[0].TaskID != "T-1" ||
+		plans[0].Locator != "" {
+		t.Fatalf("implementation plan document=%+v, want a Markdown document owned by T-1", plans[0])
 	}
 }
 
