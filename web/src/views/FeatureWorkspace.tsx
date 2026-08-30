@@ -14,10 +14,10 @@ import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { EditFeatureDialog } from "./EditFeatureDialog";
 import { FeatureGraph } from "./FeatureGraph";
+import { FeatureReferences } from "./FeatureReferences";
 import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { TaskInspector } from "./TaskInspector";
-import { ReferencesSection } from "./TaskInspectorReferences";
 import { type TaskNodeDocument } from "./TaskNode";
 
 export function FeatureWorkspace() {
@@ -177,26 +177,32 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           </p>
         </div>
         <div className="workspace-actions">
+          <FeatureReferences
+            featureId={props.featureId}
+            documents={props.featureDocuments}
+            onPreview={props.onPreviewDocument}
+            readOnly={props.feature.archived}
+          />
           {!props.feature.archived && (
-            <>
-              <IconButton
-                icon={RefreshCw}
-                label={
-                  props.syncPending
-                    ? t("workspace.syncing")
-                    : t("workspace.syncGithub")
-                }
-                variant="secondary"
-                onClick={props.onSync}
-                disabled={props.syncPending}
-              />
-              <IconButton
-                icon={Plus}
-                label={t("workspace.addTask")}
-                variant="primary"
-                onClick={props.onCreateTask}
-              />
-            </>
+            <IconButton
+              icon={RefreshCw}
+              label={
+                props.syncPending
+                  ? t("workspace.syncing")
+                  : t("workspace.syncGithub")
+              }
+              variant="secondary"
+              onClick={props.onSync}
+              disabled={props.syncPending}
+            />
+          )}
+          {!props.feature.archived && (
+            <IconButton
+              icon={Plus}
+              label={t("workspace.addTask")}
+              variant="primary"
+              onClick={props.onCreateTask}
+            />
           )}
           <IconButton
             icon={Pencil}
@@ -211,13 +217,6 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           />
         </div>
       </header>
-      <ReferencesSection
-        featureId={props.featureId}
-        documents={props.featureDocuments}
-        onPreview={props.onPreviewDocument}
-        readOnly={props.feature.archived}
-        compact
-      />
       {props.feature.archived && (
         <div className="archived-notice" role="status">
           <strong>{t("workspace.archivedLabel")}</strong>

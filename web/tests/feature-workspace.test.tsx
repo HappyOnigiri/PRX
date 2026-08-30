@@ -1,4 +1,10 @@
-import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import {
+  cleanup,
+  fireEvent,
+  render,
+  screen,
+  within,
+} from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Snapshot } from "../src/gen/prx/v1/prx_pb";
 import { FeatureWorkspace } from "../src/views/FeatureWorkspace";
@@ -212,12 +218,28 @@ describe("FeatureWorkspace", () => {
   it("coordinates active sync, feature management, task inspection, and previews", () => {
     render(<FeatureWorkspace />);
 
+    const workspaceActions = document.querySelector(".workspace-actions");
+    expect(workspaceActions).not.toBeNull();
+    expect(
+      within(workspaceActions as HTMLElement)
+        .getAllByRole("button")
+        .map(
+          (button) => button.getAttribute("aria-label") ?? button.textContent,
+        ),
+    ).toEqual(["References", "Sync GitHub", "Add task", "Edit feature"]);
     expect(
       screen.getByRole("heading", { name: "Payments rollout" }),
     ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Copy Feature ID" }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "References" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Add reference" }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sync GitHub" }));
     expect(mutationAt(0).mutate).toHaveBeenCalledWith("feature-1");
     fireEvent.click(screen.getByRole("button", { name: "Edit feature" }));
@@ -294,6 +316,11 @@ describe("FeatureWorkspace", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Mock create task" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "References" }));
+    expect(screen.getByText("No references.")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Add reference" }),
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Mock edit task" }));
     expect(screen.getByText("Mock read-only inspector")).toBeInTheDocument();
