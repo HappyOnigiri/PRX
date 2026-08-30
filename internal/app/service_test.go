@@ -129,12 +129,72 @@ type featureSlugRepository struct {
 	feature domain.Feature
 }
 
-func (r *featureSlugRepository) GetFeature(context.Context, string) (domain.Feature, error) {
-	return domain.Feature{}, errors.New("feature ID was not found")
+func (r *featureSlugRepository) GetFeature(_ context.Context, id string) (domain.Feature, error) {
+	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", id)
 }
 
 func (r *featureSlugRepository) GetFeatureBySlug(context.Context, string) (domain.Feature, error) {
 	return r.feature, nil
+}
+
+type missingFeatureRepository struct {
+	repositoryStub
+}
+
+func (missingFeatureRepository) GetFeature(_ context.Context, id string) (domain.Feature, error) {
+	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", id)
+}
+
+func (missingFeatureRepository) GetFeatureBySlug(_ context.Context, slug string) (domain.Feature, error) {
+	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", slug)
+}
+
+type failingFeatureRepository struct {
+	missingFeatureRepository
+	idFailure   error
+	slugFailure error
+}
+
+func (r *failingFeatureRepository) GetFeature(ctx context.Context, id string) (domain.Feature, error) {
+	if r.idFailure == nil {
+		return r.missingFeatureRepository.GetFeature(ctx, id)
+	}
+	return domain.Feature{}, r.idFailure
+}
+
+func (r *failingFeatureRepository) GetFeatureBySlug(ctx context.Context, slug string) (domain.Feature, error) {
+	if r.slugFailure == nil {
+		return r.missingFeatureRepository.GetFeatureBySlug(ctx, slug)
+	}
+	return domain.Feature{}, r.slugFailure
+}
+
+func TestResolveFeatureAndGetNodeKeepStorageFailures(t *testing.T) {
+	for _, test := range []struct {
+		name       string
+		repository *failingFeatureRepository
+	}{
+		{
+			name:       "feature ID lookup fails",
+			repository: &failingFeatureRepository{idFailure: errors.New("database is locked")},
+		},
+		{
+			name:       "feature slug lookup fails",
+			repository: &failingFeatureRepository{slugFailure: errors.New("database is locked")},
+		},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			service := app.New(test.repository, nil)
+			_, err := service.ResolveFeature(context.Background(), "checkout")
+			if err == nil || err.Error() != "database is locked" {
+				t.Fatalf("ResolveFeature error=%v", err)
+			}
+			_, err = service.GetNode(context.Background(), "checkout")
+			if err == nil || err.Error() != "database is locked" {
+				t.Fatalf("GetNode error=%v", err)
+			}
+		})
+	}
 }
 
 func TestGetNodeResolvesFeatureIDsAndSlugsAndTaskIDs(t *testing.T) {
@@ -164,7 +224,7 @@ func TestGetNodeResolvesFeatureIDsAndSlugsAndTaskIDs(t *testing.T) {
 		t.Fatalf("task node=%#v", taskValue)
 	}
 
-	if _, err := app.New(repositoryStub{}, nil).
+	if _, err := app.New(missingFeatureRepository{}, nil).
 		GetNode(context.Background(), "unknown"); errorCode(
 		t,
 		err,
