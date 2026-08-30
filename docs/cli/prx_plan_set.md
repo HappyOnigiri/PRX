@@ -1,21 +1,23 @@
-## prx dependency list
+## prx plan set
 
-List blocker-to-blocked dependencies
+Create or replace a task's implementation plan
 
 ```
-prx dependency list [flags]
+prx plan set TASK_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx dependency list --json
+prx plan set TASK_ID --file plan.md --json
 ```
 
 ### Options
 
 ```
-  -h, --help   help for list
+      --file string   read plan content from a file
+  -h, --help          help for set
+      --stdin         read plan content from standard input
 ```
 
 ### Options inherited from parent commands
@@ -30,5 +32,5 @@ prx dependency list --json
 
 ### SEE ALSO
 
-* [prx dependency](prx_dependency.md)	 - Manage directed blocker edges
+* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan
 

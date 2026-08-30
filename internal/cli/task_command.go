@@ -10,10 +10,55 @@ import (
 )
 
 func (s *state) taskCommand() *cobra.Command {
-	command := &cobra.Command{Use: "task", Short: "Manage implementation and manual tasks"}
-	var feature, title, scope, kind, assignee, status string
-	var cascade bool
-	create := &cobra.Command{
+	var filterFeature string
+	command := &cobra.Command{
+		Use:     "task [TASK_ID]",
+		Aliases: []string{"t"},
+		Short:   "List tasks or show one by ID",
+		Long:    "List tasks or show one by ID.\n\nAlias: t.",
+		Example: "prx task --json\nprx task --feature checkout --json\nprx task T-1 --json\nprx t T-1 --json",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if err := cobra.MaximumNArgs(1)(cmd, args); err != nil {
+				return err
+			}
+			if len(args) == 1 && cmd.Flags().Changed("feature") {
+				return fmt.Errorf("--feature cannot be used with TASK_ID")
+			}
+			return nil
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			snapshot, err := s.service.Snapshot(cmd.Context())
+			if err != nil {
+				return err
+			}
+			if len(args) == 1 {
+				for _, task := range snapshot.Tasks {
+					if task.ID == args[0] {
+						return s.write(task, renderTaskDetail(task))
+					}
+				}
+				return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", args[0])
+			}
+			tasks := snapshot.Tasks
+			if filterFeature != "" {
+				feature, err := s.service.ResolveFeature(cmd.Context(), filterFeature)
+				if err != nil {
+					return err
+				}
+				tasks = filterTasks(tasks, func(task domain.Task) bool { return task.FeatureID == feature.ID })
+			}
+			tasks = nonNilSlice(tasks)
+			return s.write(map[string]any{"tasks": tasks}, renderTaskList(tasks))
+		},
+	}
+	command.Flags().StringVar(&filterFeature, "feature", "", "filter by feature ID or slug")
+	command.AddCommand(s.taskCreateCommand(), s.taskUpdateCommand(), s.taskDeleteCommand())
+	return command
+}
+
+func (s *state) taskCreateCommand() *cobra.Command {
+	var feature, title, scope, kind, assignee string
+	command := &cobra.Command{
 		Use:     "create",
 		Short:   "Create an implementation or manual task",
 		Example: "prx task create --feature checkout --title \"Add payment intent API\" --assignee Mika --json",
@@ -26,55 +71,19 @@ func (s *state) taskCommand() *cobra.Command {
 			return s.write(value, renderMessage("Created task %s.", value.ID))
 		},
 	}
-	create.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
-	create.Flags().StringVar(&title, "title", "", "task title")
-	create.Flags().StringVar(&scope, "scope", "", "scope description")
-	create.Flags().StringVar(&kind, "kind", "pr", "pr or manual")
-	create.Flags().StringVar(&assignee, "assignee", "", "assignee")
-	_ = create.MarkFlagRequired("feature")
-	_ = create.MarkFlagRequired("title")
-	list := &cobra.Command{
-		Use:     "list",
-		Short:   "List tasks, optionally filtered by feature",
-		Example: "prx task list --feature checkout --json",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			snapshot, err := s.service.Snapshot(cmd.Context())
-			if err != nil {
-				return err
-			}
-			tasks := snapshot.Tasks
-			if feature != "" {
-				f, err := s.service.ResolveFeature(cmd.Context(), feature)
-				if err != nil {
-					return err
-				}
-				tasks = filterTasks(tasks, func(task domain.Task) bool { return task.FeatureID == f.ID })
-			}
-			tasks = nonNilSlice(tasks)
-			return s.write(map[string]any{"tasks": tasks}, renderTaskList(tasks))
-		},
-	}
-	list.Flags().StringVar(&feature, "feature", "", "filter by feature")
-	get := &cobra.Command{
-		Use:     "get TASK_ID",
-		Short:   "Show a task by ID",
-		Example: "prx task get T-1 --json",
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			snapshot, err := s.service.Snapshot(cmd.Context())
-			if err != nil {
-				return err
-			}
-			for _, task := range snapshot.Tasks {
-				if task.ID == args[0] {
-					return s.write(task, renderTaskDetail(task))
-				}
-			}
-			return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", args[0])
-		},
-	}
-	update := &cobra.Command{
+	command.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
+	command.Flags().StringVar(&title, "title", "", "task title")
+	command.Flags().StringVar(&scope, "scope", "", "scope description")
+	command.Flags().StringVar(&kind, "kind", "pr", "pr or manual")
+	command.Flags().StringVar(&assignee, "assignee", "", "assignee")
+	_ = command.MarkFlagRequired("feature")
+	_ = command.MarkFlagRequired("title")
+	return command
+}
+
+func (s *state) taskUpdateCommand() *cobra.Command {
+	var title, scope, status, assignee string
+	command := &cobra.Command{
 		Use:     "update TASK_ID",
 		Short:   "Update a task by ID",
 		Example: "prx task update TASK_ID --status completed --json",
@@ -89,11 +98,16 @@ func (s *state) taskCommand() *cobra.Command {
 			return s.write(value, renderMessage("%s", taskUpdateMessage(cmd, value.ID, title, scope, status, assignee)))
 		},
 	}
-	update.Flags().StringVar(&title, "title", "", "new title")
-	update.Flags().StringVar(&scope, "scope", "", "new scope")
-	update.Flags().StringVar(&status, "status", "", "auto, not_started, in_progress, completed, or closed")
-	update.Flags().StringVar(&assignee, "assignee", "", "new assignee")
-	deleteCmd := &cobra.Command{
+	command.Flags().StringVar(&title, "title", "", "new title")
+	command.Flags().StringVar(&scope, "scope", "", "new scope")
+	command.Flags().StringVar(&status, "status", "", "auto, not_started, in_progress, completed, or closed")
+	command.Flags().StringVar(&assignee, "assignee", "", "new assignee")
+	return command
+}
+
+func (s *state) taskDeleteCommand() *cobra.Command {
+	var cascade bool
+	command := &cobra.Command{
 		Use:     "delete TASK_ID",
 		Short:   "Delete a task and optionally its dependencies and references",
 		Example: "prx task delete TASK_ID --cascade --json",
@@ -105,8 +119,7 @@ func (s *state) taskCommand() *cobra.Command {
 			return s.write(map[string]string{"deleted": args[0]}, renderMessage("Deleted task %s.", args[0]))
 		},
 	}
-	deleteCmd.Flags().BoolVar(&cascade, "cascade", false, "delete dependencies and references")
-	command.AddCommand(create, list, get, update, deleteCmd)
+	command.Flags().BoolVar(&cascade, "cascade", false, "delete dependencies and references")
 	return command
 }
 

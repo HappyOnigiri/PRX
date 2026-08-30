@@ -34,5 +34,5 @@ prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/
 
 ### SEE ALSO
 
-* [prx config host](prx_config_host.md)	 - Manage configured GitHub hosts
+* [prx config host](prx_config_host.md)	 - List or manage configured GitHub hosts
 

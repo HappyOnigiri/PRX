@@ -7,11 +7,31 @@ import (
 )
 
 func (s *state) featureCommand() *cobra.Command {
-	command := &cobra.Command{Use: "feature", Short: "Manage features"}
+	command := &cobra.Command{
+		Use:     "feature [FEATURE_ID_OR_SLUG]",
+		Aliases: []string{"f"},
+		Short:   "List features or show one by ID or slug",
+		Long:    "List features or show one by ID or slug.\n\nAlias: f.",
+		Example: "prx feature --json\nprx feature F-1 --json\nprx f checkout --json\nprx show create --json",
+		Args:    cobra.MaximumNArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if len(args) == 1 {
+				value, err := s.service.ResolveFeature(cmd.Context(), args[0])
+				if err != nil {
+					return err
+				}
+				return s.write(value, renderFeatureDetail(value))
+			}
+			value, err := s.service.Snapshot(cmd.Context())
+			if err != nil {
+				return err
+			}
+			features := nonNilSlice(value.Features)
+			return s.write(map[string]any{"features": features}, renderFeatureList(features))
+		},
+	}
 	command.AddCommand(
 		s.featureCreateCommand(),
-		s.featureListCommand(),
-		s.featureGetCommand(),
 		s.featureUpdateCommand(),
 		s.featureArchiveCommand(true),
 		s.featureArchiveCommand(false),
@@ -41,39 +61,6 @@ func (s *state) featureCreateCommand() *cobra.Command {
 	_ = command.MarkFlagRequired("slug")
 	_ = command.MarkFlagRequired("title")
 	return command
-}
-
-func (s *state) featureListCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:     "list",
-		Short:   "List features",
-		Example: "prx feature list --json",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			value, err := s.service.Snapshot(cmd.Context())
-			if err != nil {
-				return err
-			}
-			features := nonNilSlice(value.Features)
-			return s.write(map[string]any{"features": features}, renderFeatureList(features))
-		},
-	}
-}
-
-func (s *state) featureGetCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:     "get FEATURE_ID_OR_SLUG",
-		Short:   "Show a feature by ID or slug",
-		Example: "prx feature get F-1 --json",
-		Args:    cobra.ExactArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := s.service.ResolveFeature(cmd.Context(), args[0])
-			if err != nil {
-				return err
-			}
-			return s.write(value, renderFeatureDetail(value))
-		},
-	}
 }
 
 func (s *state) featureUpdateCommand() *cobra.Command {

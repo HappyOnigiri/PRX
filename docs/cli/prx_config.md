@@ -1,6 +1,16 @@
 ## prx config
 
-Manage GitHub hosts and authentication
+Show or manage GitHub hosts and authentication
+
+```
+prx config [flags]
+```
+
+### Examples
+
+```
+prx config --json
+```
 
 ### Options
 
@@ -21,9 +31,8 @@ Manage GitHub hosts and authentication
 ### SEE ALSO
 
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
-* [prx config auth](prx_config_auth.md)	 - Manage host-scoped authentication methods
-* [prx config host](prx_config_host.md)	 - Manage configured GitHub hosts
+* [prx config auth](prx_config_auth.md)	 - List or manage host-scoped authentication methods
+* [prx config host](prx_config_host.md)	 - List or manage configured GitHub hosts
 * [prx config path](prx_config_path.md)	 - Show the resolved configuration path
-* [prx config show](prx_config_show.md)	 - Show the public GitHub configuration
 * [prx config validate](prx_config_validate.md)	 - Validate the GitHub configuration
 

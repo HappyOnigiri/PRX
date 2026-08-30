@@ -149,27 +149,41 @@ func (s *Service) UpdateFeature(
 	return s.repository.UpdateFeature(ctx, feature)
 }
 
+// ResolveFeature only falls through to the next lookup when the previous one
+// reported a missing row, so a storage failure such as a locked database keeps
+// its own cause instead of being reported as a missing feature.
 func (s *Service) ResolveFeature(ctx context.Context, idOrSlug string) (domain.Feature, error) {
-	if feature, err := s.repository.GetFeature(ctx, idOrSlug); err == nil {
+	feature, err := s.repository.GetFeature(ctx, idOrSlug)
+	if err == nil {
 		return feature, nil
 	}
-	if feature, err := s.repository.GetFeatureBySlug(ctx, idOrSlug); err == nil {
+	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		return domain.Feature{}, err
+	}
+	feature, err = s.repository.GetFeatureBySlug(ctx, idOrSlug)
+	if err == nil {
 		return feature, nil
+	}
+	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		return domain.Feature{}, err
 	}
 	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", idOrSlug)
 }
 
-// GetNode resolves the public typed ID without exposing the storage UUID or
-// requiring callers to choose the feature/task operation first.
+// GetNode resolves a public feature ID or slug or a public task ID without
+// exposing the storage UUID or requiring callers to choose the resource first.
 func (s *Service) GetNode(ctx context.Context, id string) (any, error) {
-	switch {
-	case strings.HasPrefix(id, "F-"):
-		return s.repository.GetFeature(ctx, id)
-	case strings.HasPrefix(id, "T-"):
+	if strings.HasPrefix(id, "T-") {
 		return s.repository.GetTask(ctx, id)
-	default:
-		return nil, domain.NewError(domain.DomainErrorCodeNotFound, "node %q was not found", id)
 	}
+	feature, err := s.ResolveFeature(ctx, id)
+	if err == nil {
+		return feature, nil
+	}
+	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		return nil, err
+	}
+	return nil, domain.NewError(domain.DomainErrorCodeNotFound, "feature or task %q was not found", id)
 }
 
 func (s *Service) DeleteFeature(ctx context.Context, id string, cascade bool) error {

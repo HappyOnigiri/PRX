@@ -12,26 +12,10 @@ import (
 )
 
 func (s *state) configCommand() *cobra.Command {
-	command := &cobra.Command{Use: "config", Short: "Manage GitHub hosts and authentication"}
-	command.AddCommand(
-		s.configShowCommand(),
-		s.configPathCommand(),
-		s.configValidateCommand(),
-		s.configHostCommand(),
-		s.configAuthCommand(),
-	)
-	return command
-}
-
-func (s *state) configStore() (*config.Store, error) {
-	return config.NewStore(s.configPath)
-}
-
-func (s *state) configShowCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:     "show",
-		Short:   "Show the public GitHub configuration",
-		Example: "prx config show --json",
+	command := &cobra.Command{
+		Use:     "config",
+		Short:   "Show or manage GitHub hosts and authentication",
+		Example: "prx config --json",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -45,6 +29,17 @@ func (s *state) configShowCommand() *cobra.Command {
 			return s.write(value, renderConfig(value))
 		},
 	}
+	command.AddCommand(
+		s.configPathCommand(),
+		s.configValidateCommand(),
+		s.configHostCommand(),
+		s.configAuthCommand(),
+	)
+	return command
+}
+
+func (s *state) configStore() (*config.Store, error) {
+	return config.NewStore(s.configPath)
 }
 
 func (s *state) configPathCommand() *cobra.Command {
@@ -83,10 +78,26 @@ func (s *state) configValidateCommand() *cobra.Command {
 }
 
 func (s *state) configHostCommand() *cobra.Command {
-	command := &cobra.Command{Use: "host", Short: "Manage configured GitHub hosts"}
+	command := &cobra.Command{
+		Use:     "host",
+		Short:   "List or manage configured GitHub hosts",
+		Example: "prx config host --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			store, err := s.configStore()
+			if err != nil {
+				return configCommandError(err)
+			}
+			settings, err := store.Load()
+			if err != nil {
+				return configCommandError(err)
+			}
+			hosts := settings.Public().GitHub.Hosts
+			return s.write(map[string]any{"hosts": hosts}, renderHostList(hosts))
+		},
+	}
 	command.AddCommand(
 		s.configHostAddCommand(),
-		s.configHostListCommand(),
 		s.configHostUpdateCommand(),
 		s.configHostRemoveCommand(),
 	)
@@ -121,27 +132,6 @@ func (s *state) configHostAddCommand() *cobra.Command {
 	command.Flags().StringVar(&uploadURL, "upload-url", "", "HTTPS upload base URL (defaults from host)")
 	_ = command.MarkFlagRequired("host")
 	return command
-}
-
-func (s *state) configHostListCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:     "list",
-		Short:   "List configured GitHub hosts",
-		Example: "prx config host list --json",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			store, err := s.configStore()
-			if err != nil {
-				return configCommandError(err)
-			}
-			settings, err := store.Load()
-			if err != nil {
-				return configCommandError(err)
-			}
-			hosts := settings.Public().GitHub.Hosts
-			return s.write(map[string]any{"hosts": hosts}, renderHostList(hosts))
-		},
-	}
 }
 
 func (s *state) configHostUpdateCommand() *cobra.Command {
@@ -212,10 +202,26 @@ func (s *state) configHostRemoveCommand() *cobra.Command {
 }
 
 func (s *state) configAuthCommand() *cobra.Command {
-	command := &cobra.Command{Use: "auth", Short: "Manage host-scoped authentication methods"}
+	command := &cobra.Command{
+		Use:     "auth",
+		Short:   "List or manage host-scoped authentication methods",
+		Example: "prx config auth --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			store, err := s.configStore()
+			if err != nil {
+				return configCommandError(err)
+			}
+			settings, err := store.Load()
+			if err != nil {
+				return configCommandError(err)
+			}
+			methods := settings.Public().GitHub.AuthMethods
+			return s.write(map[string]any{"auth_methods": methods}, renderAuthList(methods))
+		},
+	}
 	command.AddCommand(
 		s.configAuthAddCommand(),
-		s.configAuthListCommand(),
 		s.configAuthUpdateCommand(),
 		s.configAuthRemoveCommand(),
 		s.configAuthReorderCommand(),
@@ -259,27 +265,6 @@ func (s *state) configAuthAddCommand() *cobra.Command {
 	_ = command.MarkFlagRequired("host")
 	_ = command.MarkFlagRequired("type")
 	return command
-}
-
-func (s *state) configAuthListCommand() *cobra.Command {
-	return &cobra.Command{
-		Use:     "list",
-		Short:   "List authentication methods without secrets",
-		Example: "prx config auth list --json",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			store, err := s.configStore()
-			if err != nil {
-				return configCommandError(err)
-			}
-			settings, err := store.Load()
-			if err != nil {
-				return configCommandError(err)
-			}
-			methods := settings.Public().GitHub.AuthMethods
-			return s.write(map[string]any{"auth_methods": methods}, renderAuthList(methods))
-		},
-	}
 }
 
 func (s *state) configAuthUpdateCommand() *cobra.Command {

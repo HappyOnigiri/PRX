@@ -1,21 +1,21 @@
-## prx implementation-plan get
+## prx plan
 
-Show a task's implementation plan
+Show or manage a task's implementation plan
 
 ```
-prx implementation-plan get TASK_ID [flags]
+prx plan TASK_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx implementation-plan get TASK_ID --json
+prx plan T-1 --json
 ```
 
 ### Options
 
 ```
-  -h, --help   help for get
+  -h, --help   help for plan
 ```
 
 ### Options inherited from parent commands
@@ -30,5 +30,7 @@ prx implementation-plan get TASK_ID --json
 
 ### SEE ALSO
 
-* [prx implementation-plan](prx_implementation-plan.md)	 - Manage task implementation plans
+* [prx](prx.md)	 - Manage pull-request dependency roadmaps
+* [prx plan delete](prx_plan_delete.md)	 - Delete a task's implementation plan
+* [prx plan set](prx_plan_set.md)	 - Create or replace a task's implementation plan
 

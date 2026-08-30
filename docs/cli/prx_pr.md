@@ -1,6 +1,16 @@
 ## prx pr
 
-Attach GitHub pull requests
+List or attach GitHub pull requests
+
+```
+prx pr [flags]
+```
+
+### Examples
+
+```
+prx pr --json
+```
 
 ### Options
 
@@ -23,5 +33,4 @@ Attach GitHub pull requests
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
 * [prx pr attach](prx_pr_attach.md)	 - Attach a GitHub pull request to a task
 * [prx pr detach](prx_pr_detach.md)	 - Detach a pull request; missing tasks return not_found
-* [prx pr list](prx_pr_list.md)	 - List attached pull requests
 

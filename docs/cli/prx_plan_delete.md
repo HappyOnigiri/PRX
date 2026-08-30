@@ -1,21 +1,21 @@
-## prx task get
+## prx plan delete
 
-Show a task by ID
+Delete a task's implementation plan
 
 ```
-prx task get TASK_ID [flags]
+prx plan delete TASK_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx task get T-1 --json
+prx plan delete TASK_ID --json
 ```
 
 ### Options
 
 ```
-  -h, --help   help for get
+  -h, --help   help for delete
 ```
 
 ### Options inherited from parent commands
@@ -30,5 +30,5 @@ prx task get T-1 --json
 
 ### SEE ALSO
 
-* [prx task](prx_task.md)	 - Manage implementation and manual tasks
+* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan
 

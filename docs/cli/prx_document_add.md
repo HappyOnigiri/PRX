@@ -35,5 +35,5 @@ prx document add --task TASK_ID --kind markdown_path --value docs/checkout.md --
 
 ### SEE ALSO
 
-* [prx document](prx_document.md)	 - Manage URL and local Markdown references
+* [prx document](prx_document.md)	 - List or manage URL and local Markdown references
 
