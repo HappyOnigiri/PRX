@@ -133,6 +133,9 @@ GitHub synchronization is opportunistic rather than daemon-driven.
 Commands that open the database and a visible WebUI check whether the shared interval has expired.
 No refresh occurs while both the CLI and WebUI are idle.
 
+Pull requests are fetched through GraphQL in batches that group the repositories of one host into a single request.
+A host whose GraphQL endpoint answers with an HTTP error falls back to fetching each pull request over REST.
+
 The YAML configuration owns the shared interval and each host's GraphQL endpoint.
 The interval defaults to 3600 seconds and cannot be lower than 600 seconds.
 SQLite records the latest attempt and completion, and atomically grants one caller the right to run an expired refresh.
