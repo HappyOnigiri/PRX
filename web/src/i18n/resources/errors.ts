@@ -24,7 +24,6 @@ export const errors = {
       invalidKind: "The task type is invalid.",
       invalidParent: "Choose either a feature or a task for this reference.",
       invalidPullRequestUrl: "Enter a github.com pull request URL.",
-      invalidSeed: "The demo seed is invalid.",
       invalidSlug: "Use lowercase letters, numbers, and hyphens for the slug.",
       invalidStatus: "The selected status is invalid.",
       invalidTitle: "Enter a title.",
@@ -59,7 +58,6 @@ export const errors = {
         "参照先はフィーチャーまたはタスクのどちらか一方を選んでください。",
       invalidPullRequestUrl:
         "github.com のプルリクエスト URL を入力してください。",
-      invalidSeed: "デモデータのシードが正しくありません。",
       invalidSlug: "スラッグには英小文字、数字、ハイフンを使用してください。",
       invalidStatus: "選択したステータスは正しくありません。",
       invalidTitle: "タイトルを入力してください。",

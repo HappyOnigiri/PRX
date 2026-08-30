@@ -2,9 +2,11 @@ package main
 
 import (
 	"context"
+	"errors"
 	"io"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 
 	"github.com/HappyOnigiri/PRX/internal/app"
@@ -15,36 +17,77 @@ import (
 )
 
 func newOpenService(_ io.Writer) cli.OpenService {
-	return func(ctx context.Context, dbPath, fixturePath string, live bool) (cli.Service, io.Closer, error) {
+	return func(ctx context.Context, options cli.ServiceOptions) (cli.Service, io.Closer, error) {
+		dbPath := options.DatabasePath
+		fixturePath := options.FixturePath
+		configPath := config.PathFromContext(ctx)
+		var temporaryRoot string
+		if options.Demo {
+			var err error
+			temporaryRoot, err = os.MkdirTemp("", "prx-demo-")
+			if err != nil {
+				return nil, nil, err
+			}
+			dbPath = filepath.Join(temporaryRoot, "prx.db")
+			configPath = filepath.Join(temporaryRoot, "config.yaml")
+			fixturePath = "demo"
+		}
+
 		database, err := store.Open(ctx, dbPath)
 		if err != nil {
+			if temporaryRoot != "" {
+				_ = os.RemoveAll(temporaryRoot)
+			}
 			return nil, nil, err
 		}
+		closer := &serviceCloser{database: database, temporaryRoot: temporaryRoot}
 
 		var provider githubprovider.Provider
 		if fixturePath != "" {
 			provider, err = githubprovider.NewFixtureProvider(fixturePath)
 			if err != nil {
-				_ = database.Close()
+				_ = closer.Close()
 				return nil, nil, err
 			}
 		}
-		configStore, configErr := config.NewStore(config.PathFromContext(ctx))
+		configStore, configErr := config.NewStore(configPath)
 		if configErr != nil {
-			_ = database.Close()
+			_ = closer.Close()
 			return nil, nil, configErr
 		}
-		if live && fixturePath == "" {
+		if options.Live && fixturePath == "" {
 			// Resolver construction is deliberately lazy: credentials are read
 			// only when a repository is synchronized, so local CRUD and serve
 			// startup do not require a working Keychain or gh session.
 			if _, loadErr := configStore.Load(); loadErr != nil {
-				_ = database.Close()
+				_ = closer.Close()
 				return nil, nil, loadErr
 			}
 		}
-		return app.NewWithConfig(database, provider, configStore), database, nil
+		service := app.NewWithConfig(database, provider, configStore)
+		if options.Demo {
+			markdownPath := filepath.Join(temporaryRoot, "walkthrough.md")
+			if err := service.InitializeDemo(ctx, markdownPath); err != nil {
+				_ = closer.Close()
+				return nil, nil, err
+			}
+		}
+		return service, closer, nil
 	}
+}
+
+type serviceCloser struct {
+	database      io.Closer
+	temporaryRoot string
+}
+
+func (c *serviceCloser) Close() error {
+	closeErr := c.database.Close()
+	if c.temporaryRoot == "" {
+		return closeErr
+	}
+	removeErr := os.RemoveAll(c.temporaryRoot)
+	return errors.Join(closeErr, removeErr)
 }
 
 func main() {

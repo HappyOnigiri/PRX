@@ -22,8 +22,7 @@ The shipped binary does not require Node.js, pnpm, or `gh` when a token is suppl
 
 ```sh
 make install
-prx seed --github-fixture demo
-prx serve
+prx serve --demo
 ```
 
 `make install` installs the locked web dependencies and builds a local binary identified as `<version>-dev`.

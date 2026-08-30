@@ -3,6 +3,7 @@ import { Plus, Settings, X } from "lucide-react";
 import { useState, type ReactNode, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
+import { isDemoMode } from "./demo";
 import { formValue } from "./form";
 import type { GitHubSyncStatus } from "./gen/prx/v1/prx_pb";
 import { useAutoSync, useDomainMutation, useSnapshot } from "./hooks";
@@ -33,8 +34,20 @@ export function AppShell({ children }: { children: ReactNode }) {
   const archivedCount = snapshot.data?.features.filter(
     (feature) => feature.archived,
   ).length;
+  const demo = isDemoMode();
   return (
-    <div className="app-shell">
+    <div className="app-shell" data-demo={demo || undefined}>
+      {demo && (
+        <div className="demo-banner" role="status">
+          <span className="demo-banner-full">
+            DEMO — Changes reset on restart / 変更は再起動時にリセットされます
+          </span>
+          <span className="demo-banner-compact" aria-hidden="true">
+            <span>DEMO · Reset on restart</span>
+            <span>再起動でリセット</span>
+          </span>
+        </div>
+      )}
       <aside className="rail">
         <Link to="/" className="brand" aria-label={t("nav.dashboard")}>
           <span className="brand-line">
@@ -104,7 +117,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             <span className={snapshot.isError ? "health bad" : "health"} />
             {snapshot.isError
               ? t("nav.serverUnavailable")
-              : t("nav.localDatabaseOnline")}
+              : demo
+                ? t("nav.temporaryDemoDatabase")
+                : t("nav.localDatabaseOnline")}
           </span>
         </div>
       </aside>

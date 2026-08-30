@@ -29,6 +29,27 @@ test.afterEach(() => {
   expect(browserErrors, browserErrors.join("\n")).toEqual([]);
 });
 
+test("keeps the bilingual demo reset warning visible", async ({ page }) => {
+  await page.goto("/");
+  const banner = page.getByRole("status");
+  await expect(banner).toContainText("DEMO");
+  await expect(banner).toContainText("Changes reset on restart");
+  await expect(banner).toContainText("変更は再起動時にリセットされます");
+
+  await page.getByLabel("Display theme").selectOption("dark");
+  await expect(banner).toBeVisible();
+  await page.getByLabel("Display language").selectOption("ja");
+  await expect(banner).toBeVisible();
+
+  await page.setViewportSize({ width: 320, height: 720 });
+  await page.evaluate(() => {
+    document.body.style.zoom = "2";
+  });
+  await expect(banner.locator(".demo-banner-compact")).toBeVisible();
+  await expect(banner).toContainText("Reset on restart");
+  await expect(banner).toContainText("再起動でリセット");
+});
+
 test("switches the display language and restores it from Local Storage", async ({
   page,
 }) => {
@@ -430,12 +451,15 @@ test("archives and safely deletes a feature", async ({ page }) => {
   await expect(page.getByText(title)).toHaveCount(0);
 });
 
-for (const size of [8, 50, 100]) {
+for (const { title, size } of [
+  { title: "Delivery control showcase", size: 13 },
+  { title: "Completed 100-task program", size: 100 },
+]) {
   test(`renders and inspects the ${size}-node graph`, async ({ page }) => {
     await page.goto("/");
     await page
       .getByRole("link", {
-        name: new RegExp(`Cross-repository launch · ${size} nodes`),
+        name: new RegExp(title),
       })
       .first()
       .click();
@@ -464,12 +488,12 @@ for (const size of [8, 50, 100]) {
         expect(overlap, `nodes ${i} and ${j} overlap`).toBe(false);
       }
     await mkdir("../test-results/screenshots", { recursive: true });
-    if (size > 8)
+    if (size > 13)
       await page.screenshot({
         path: `../test-results/screenshots/graph-${size}-overview.png`,
         fullPage: true,
       });
-    const zoomSteps = size === 100 ? 3 : size === 50 ? 2 : 0;
+    const zoomSteps = size === 100 ? 3 : 0;
     for (let index = 0; index < zoomSteps; index++)
       await page.locator(".react-flow__controls-zoomin").click();
     await page.screenshot({
@@ -511,10 +535,12 @@ test("keeps the user's graph zoom across features and reloads", async ({
 }) => {
   await page.goto("/");
   await page
-    .getByRole("link", { name: /Cross-repository launch · 8 nodes/ })
+    .getByRole("link", { name: /Delivery control showcase/ })
     .first()
     .click();
-  await expect(page.locator(".task-node")).toHaveCount(8, { timeout: 25_000 });
+  await expect(page.locator(".task-node")).toHaveCount(13, {
+    timeout: 25_000,
+  });
   await page.locator(".react-flow__controls-zoomout").click();
   await page.locator(".react-flow__controls-zoomout").click();
   await expect.poll(() => graphZoom(page)).toBeLessThan(1);
@@ -522,7 +548,7 @@ test("keeps the user's graph zoom across features and reloads", async ({
 
   await page
     .getByRole("navigation", { name: "Features" })
-    .getByText("Cross-repository launch · 100 nodes")
+    .getByText("Completed 100-task program")
     .click();
   await expect(page.locator(".task-node")).toHaveCount(100, {
     timeout: 25_000,
@@ -547,7 +573,7 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
   ).toBeVisible();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
   await page
-    .getByRole("link", { name: /Cross-repository launch · 8 nodes/ })
+    .getByRole("link", { name: /Delivery control showcase/ })
     .first()
     .click();
   const addTaskButton = page.getByRole("button", { name: "Add task" });

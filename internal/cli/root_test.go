@@ -29,7 +29,7 @@ func TestExecuteWritesJSONErrorToStderrWhenStdoutFails(t *testing.T) {
 	}
 }
 
-func testOpenService(context.Context, string, string, bool) (Service, io.Closer, error) {
+func testOpenService(context.Context, ServiceOptions) (Service, io.Closer, error) {
 	return nil, nil, nil
 }
 
@@ -137,15 +137,12 @@ func (c *recordingCloser) Close() error {
 
 func TestRootOpensAndClosesCommandResources(t *testing.T) {
 	closer := &recordingCloser{}
-	var gotDBPath, gotFixture string
-	var gotLive bool
+	var got ServiceOptions
 	root, state := newRootWithState(
 		io.Discard,
 		io.Discard,
-		func(_ context.Context, dbPath, fixturePath string, live bool) (Service, io.Closer, error) {
-			gotDBPath = dbPath
-			gotFixture = fixturePath
-			gotLive = live
+		func(_ context.Context, options ServiceOptions) (Service, io.Closer, error) {
+			got = options
 			return nil, closer, nil
 		},
 	)
@@ -165,8 +162,8 @@ func TestRootOpensAndClosesCommandResources(t *testing.T) {
 	if err := root.PersistentPreRunE(serve, nil); err != nil {
 		t.Fatal(err)
 	}
-	if gotDBPath != "test.db" || gotFixture != "demo" || !gotLive {
-		t.Fatalf("open args = (%q, %q, %t)", gotDBPath, gotFixture, gotLive)
+	if got.DatabasePath != "test.db" || got.FixturePath != "demo" || !got.Live || got.Demo {
+		t.Fatalf("open options = %+v", got)
 	}
 	root.PersistentPostRun(serve, nil)
 	if !closer.closed {
@@ -174,9 +171,67 @@ func TestRootOpensAndClosesCommandResources(t *testing.T) {
 	}
 }
 
+func TestDemoOpensIsolatedServiceAndIgnoresEnvironmentPaths(t *testing.T) {
+	t.Setenv("PRX_DB", "real.db")
+	t.Setenv("PRX_CONFIG", "real.yaml")
+	var got ServiceOptions
+	root, state := newRootWithState(
+		io.Discard,
+		io.Discard,
+		func(_ context.Context, options ServiceOptions) (Service, io.Closer, error) {
+			got = options
+			return nil, io.NopCloser(strings.NewReader("")), nil
+		},
+	)
+	serve, _, err := root.Find([]string{"serve"})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := serve.Flags().Set("demo", "true"); err != nil {
+		t.Fatal(err)
+	}
+	if err := root.PersistentPreRunE(serve, nil); err != nil {
+		t.Fatal(err)
+	}
+	defer root.PersistentPostRun(serve, nil)
+	if !got.Demo || !got.Live || got.DatabasePath != "" || got.FixturePath != "" {
+		t.Fatalf("open options = %+v", got)
+	}
+	if state.configPath != "" {
+		t.Fatalf("config path = %q, want empty", state.configPath)
+	}
+}
+
+func TestDemoRejectsExplicitPersistentStorageAndFixtureFlags(t *testing.T) {
+	for _, name := range []string{"db", "config", "github-fixture"} {
+		t.Run(name, func(t *testing.T) {
+			opened := false
+			root := NewRoot(io.Discard, io.Discard, func(context.Context, ServiceOptions) (Service, io.Closer, error) {
+				opened = true
+				return nil, nil, nil
+			})
+			root.SetArgs([]string{"--" + name, "explicit-value", "serve", "--demo"})
+			if err := root.Execute(); err == nil ||
+				!strings.Contains(err.Error(), "--demo cannot be used with --"+name) {
+				t.Fatalf("error = %v", err)
+			}
+			if opened {
+				t.Fatal("conflicting demo flags opened the service")
+			}
+		})
+	}
+}
+
+func TestSeedCommandIsNotRegistered(t *testing.T) {
+	root := NewRoot(io.Discard, io.Discard, testOpenService)
+	if command, _, err := root.Find([]string{"seed"}); err == nil && command != root {
+		t.Fatalf("seed command is still registered as %q", command.CommandPath())
+	}
+}
+
 func TestRootHelpDoesNotOpenService(t *testing.T) {
 	opened := false
-	root := NewRoot(io.Discard, io.Discard, func(context.Context, string, string, bool) (Service, io.Closer, error) {
+	root := NewRoot(io.Discard, io.Discard, func(context.Context, ServiceOptions) (Service, io.Closer, error) {
 		opened = true
 		return nil, nil, nil
 	})
@@ -193,7 +248,7 @@ func TestRootVersionDoesNotOpenService(t *testing.T) {
 	var out bytes.Buffer
 	opened := false
 	err := Execute(context.Background(), []string{"--version"}, &out, io.Discard,
-		func(context.Context, string, string, bool) (Service, io.Closer, error) {
+		func(context.Context, ServiceOptions) (Service, io.Closer, error) {
 			opened = true
 			return nil, nil, nil
 		},

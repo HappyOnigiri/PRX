@@ -19,7 +19,6 @@ const (
 	DomainErrorCodeInvalidKind                DomainErrorCode = "invalid_kind"
 	DomainErrorCodeInvalidParent              DomainErrorCode = "invalid_parent"
 	DomainErrorCodeInvalidPullRequestURL      DomainErrorCode = "invalid_pull_request_url"
-	DomainErrorCodeInvalidSeed                DomainErrorCode = "invalid_seed"
 	DomainErrorCodeInvalidSlug                DomainErrorCode = "invalid_slug"
 	DomainErrorCodeInvalidStatus              DomainErrorCode = "invalid_status"
 	DomainErrorCodeInvalidTitle               DomainErrorCode = "invalid_title"

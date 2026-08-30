@@ -161,7 +161,7 @@ func TestCompletingADisplacedGitHubSyncRunReportsThatItNoLongerOwnsTheState(t *t
 }
 
 func TestPublicIDsAreTypedAndStorageIDsStayInternal(t *testing.T) {
-	_, service := openTestService(t)
+	database, service := openTestService(t)
 	ctx := context.Background()
 	feature, err := service.CreateFeature(ctx, "public-ids", "Public IDs", "")
 	if err != nil {
@@ -181,6 +181,10 @@ func TestPublicIDsAreTypedAndStorageIDsStayInternal(t *testing.T) {
 	}
 	if feature.ID != "F-1" || secondFeature.ID != "F-2" {
 		t.Fatalf("feature IDs=%q,%q, want F-1,F-2", feature.ID, secondFeature.ID)
+	}
+	bySlug, err := database.GetFeatureBySlug(ctx, "public-ids")
+	if err != nil || bySlug.ID != feature.ID {
+		t.Fatalf("feature by slug=%+v, err=%v", bySlug, err)
 	}
 	if firstTask.ID != "T-1" || secondTask.ID != "T-2" {
 		t.Fatalf("task IDs=%q,%q, want T-1,T-2", firstTask.ID, secondTask.ID)
@@ -977,32 +981,107 @@ func TestConcurrentDependencyWritesDoNotLock(t *testing.T) {
 	}
 }
 
-func TestSeedDemoIsIdempotent(t *testing.T) {
+func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	if err := service.SeedDemo(ctx, "demo-roadmap", 6); err != nil {
+	markdownPath := filepath.Join(t.TempDir(), "walkthrough.md")
+	if err := service.InitializeDemo(ctx, markdownPath); err != nil {
 		t.Fatal(err)
 	}
-	first, err := service.Snapshot(ctx)
+	snapshot, err := service.Snapshot(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := service.SeedDemo(ctx, "demo-roadmap", 6); err != nil {
-		t.Fatalf("second seed: %v", err)
+	if len(snapshot.Features) != 4 || len(snapshot.Tasks) != 120 {
+		t.Fatalf("features=%d tasks=%d, want 4 and 120", len(snapshot.Features), len(snapshot.Tasks))
 	}
-	second, err := service.Snapshot(ctx)
-	if err != nil {
-		t.Fatal(err)
+	statuses := map[domain.FeatureStatus]bool{}
+	featuresBySlug := map[string]domain.Feature{}
+	for _, feature := range snapshot.Features {
+		statuses[feature.Status] = true
+		featuresBySlug[feature.Slug] = feature
 	}
-	if len(second.Features) != len(first.Features) ||
-		len(second.Tasks) != len(first.Tasks) ||
-		len(second.Dependencies) != len(first.Dependencies) ||
-		len(second.PullRequests) != len(first.PullRequests) {
-		t.Fatalf("seed changed counts: features %d→%d tasks %d→%d deps %d→%d prs %d→%d",
-			len(first.Features), len(second.Features),
-			len(first.Tasks), len(second.Tasks),
-			len(first.Dependencies), len(second.Dependencies),
-			len(first.PullRequests), len(second.PullRequests))
+	for _, status := range []domain.FeatureStatus{
+		domain.FeatureStatusActive,
+		domain.FeatureStatusPaused,
+		domain.FeatureStatusCompleted,
+		domain.FeatureStatusCancelled,
+	} {
+		if !statuses[status] {
+			t.Errorf("missing feature status %q", status)
+		}
+	}
+	displayStates := map[domain.TaskDisplayState]bool{}
+	for _, task := range snapshot.Tasks {
+		displayStates[task.DisplayState] = true
+	}
+	for _, state := range []domain.TaskDisplayState{
+		domain.TaskDisplayStateNotStarted,
+		domain.TaskDisplayStateDesigned,
+		domain.TaskDisplayStateInProgress,
+		domain.TaskDisplayStateCompleted,
+		domain.TaskDisplayStateClosed,
+		domain.TaskDisplayStateMerged,
+		domain.TaskDisplayStateDraft,
+		domain.TaskDisplayStateConflict,
+		domain.TaskDisplayStateChangesRequested,
+		domain.TaskDisplayStateApproved,
+		domain.TaskDisplayStateReviewWaiting,
+		domain.TaskDisplayStateOpen,
+		domain.TaskDisplayStateUnknown,
+	} {
+		if !displayStates[state] {
+			t.Errorf("missing display state %q", state)
+		}
+	}
+	if len(snapshot.ReadyTasks) == 0 || len(snapshot.ReviewWaitingTasks) == 0 ||
+		len(snapshot.ConflictTasks) == 0 || len(snapshot.StaleTasks) == 0 {
+		t.Errorf("demo queues are incomplete: ready=%d reviews=%d conflicts=%d stale=%d",
+			len(snapshot.ReadyTasks), len(snapshot.ReviewWaitingTasks),
+			len(snapshot.ConflictTasks), len(snapshot.StaleTasks))
+	}
+	if len(snapshot.Documents) != 2 {
+		t.Errorf("documents=%d, want 2", len(snapshot.Documents))
+	}
+	if !featuresBySlug["cancelled-experiment"].Archived {
+		t.Error("cancelled feature is not archived")
+	}
+	featureByTask := map[string]string{}
+	var designedTaskID string
+	for _, task := range snapshot.Tasks {
+		featureByTask[task.ID] = task.FeatureID
+		if task.Title == "Design dependency policy" {
+			designedTaskID = task.ID
+		}
+	}
+	plan, err := service.GetImplementationPlan(ctx, designedTaskID)
+	if err != nil || plan.Content == "" {
+		t.Errorf("demo implementation plan = %+v, err=%v", plan, err)
+	}
+	completedPRs := 0
+	for _, pr := range snapshot.PullRequests {
+		if featureByTask[pr.TaskID] != featuresBySlug["completed-program"].ID {
+			continue
+		}
+		completedPRs++
+		if pr.State != domain.PullRequestStateMerged {
+			t.Errorf("completed PR %s state=%q", pr.TaskID, pr.State)
+		}
+	}
+	if completedPRs != 100 {
+		t.Errorf("completed PRs=%d, want 100", completedPRs)
+	}
+	for _, document := range snapshot.Documents {
+		if document.Kind != domain.DocumentKindMarkdownPath {
+			continue
+		}
+		body, readErr := service.ReadMarkdownDocument(ctx, document.ID)
+		if readErr != nil || !strings.Contains(body, "PRX demo walkthrough") {
+			t.Errorf("Markdown preview=%q, err=%v", body, readErr)
+		}
+	}
+	if issues := service.Validate(ctx); len(issues) != 0 {
+		t.Errorf("validation issues: %v", issues)
 	}
 }
 

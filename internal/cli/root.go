@@ -28,6 +28,7 @@ type state struct {
 	configPath   string
 	json         bool
 	fixture      string
+	demo         bool
 	out          io.Writer
 	errOut       io.Writer
 	runStarted   bool
@@ -51,7 +52,18 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			s.applyEnvironmentPaths()
+			if s.demo {
+				for _, name := range []string{"db", "config", "github-fixture"} {
+					if cmd.Flags().Changed(name) {
+						return fmt.Errorf("--demo cannot be used with --%s", name)
+					}
+				}
+				s.dbPath = ""
+				s.configPath = ""
+				s.fixture = ""
+			} else {
+				s.applyEnvironmentPaths()
+			}
 			if cmd.Name() == "help" || cmd.Name() == "schema-version" || isConfigCommand(cmd) {
 				return nil
 			}
@@ -61,13 +73,18 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			}
 			openContext := config.WithPath(baseContext, s.configPath)
 			live := cmd.Name() == "serve" || cmd.Name() == "sync"
-			service, closer, err := s.openService(openContext, s.dbPath, s.fixture, live)
+			service, closer, err := s.openService(openContext, ServiceOptions{
+				DatabasePath: s.dbPath,
+				FixturePath:  s.fixture,
+				Live:         live,
+				Demo:         s.demo,
+			})
 			if err != nil {
 				return domain.NewError(domain.DomainErrorCodeInternal, "%s", err)
 			}
 			s.service = service
 			s.closer = closer
-			if !isAutomaticSyncExcluded(cmd) && service != nil {
+			if !s.demo && !isAutomaticSyncExcluded(cmd) && service != nil {
 				// The per-request client timeout does not bound the whole run, so
 				// an unreachable host would otherwise block an ordinary command
 				// for as long as its credential lookups and requests take.
@@ -110,7 +127,6 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		s.queueCommand("stale"),
 		s.syncCommand(),
 		s.validateCommand(),
-		s.seedCommand(),
 		s.serveCommand(),
 	)
 	s.standardHelp = root.HelpFunc()
@@ -179,7 +195,7 @@ func isConfigCommand(command *cobra.Command) bool {
 
 func isAutomaticSyncExcluded(command *cobra.Command) bool {
 	for current := command; current != nil; current = current.Parent() {
-		if current.Name() == "sync" || current.Name() == "seed" {
+		if current.Name() == "sync" {
 			return true
 		}
 	}

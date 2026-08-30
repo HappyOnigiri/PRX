@@ -114,6 +114,25 @@ describe("AppShell", () => {
     expect(document.documentElement.dataset["theme"]).toBe("dark");
   });
 
+  it("keeps the demo reset warning visible and identifies temporary storage", () => {
+    const meta = document.createElement("meta");
+    meta.name = "prx-demo";
+    meta.content = "true";
+    document.head.append(meta);
+
+    render(
+      <AppShell>
+        <p>Workspace</p>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "DEMO — Changes reset on restart / 変更は再起動時にリセットされます",
+    );
+    expect(screen.getByText("Temporary demo database")).toBeInTheDocument();
+    meta.remove();
+  });
+
   it("creates a feature, navigates to it, and supports cancellation", async () => {
     render(
       <AppShell>

@@ -7,9 +7,17 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
+// ServiceOptions carries the runtime boundaries selected by the CLI.
+type ServiceOptions struct {
+	DatabasePath string
+	FixturePath  string
+	Live         bool
+	Demo         bool
+}
+
 // OpenService constructs the application service and returns the resource that
 // must be closed after one CLI command finishes.
-type OpenService func(context.Context, string, string, bool) (Service, io.Closer, error)
+type OpenService func(context.Context, ServiceOptions) (Service, io.Closer, error)
 
 // Service is the application boundary used by CLI commands and the RPC server
 // exposed by the serve command.
@@ -65,5 +73,4 @@ type Service interface {
 	SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus, error)
 	SyncStatus(ctx context.Context) (domain.GitHubSyncStatus, error)
 	Validate(ctx context.Context) []string
-	SeedDemo(ctx context.Context, slug string, count int) error
 }
