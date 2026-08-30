@@ -19,11 +19,8 @@ type Handler struct {
 	configStore *config.Store
 }
 
-func New(service Service, stores ...*config.Store) (string, http.Handler) {
+func New(service Service) (string, http.Handler) {
 	var configStore *config.Store
-	if len(stores) > 0 {
-		configStore = stores[0]
-	}
 	if configStore == nil {
 		if provider, ok := service.(interface{ ConfigStore() *config.Store }); ok {
 			configStore = provider.ConfigStore()
