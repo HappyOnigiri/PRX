@@ -9,28 +9,19 @@ import (
 	"testing"
 )
 
-func TestWriteAcceptsObjectAndUsesCompactJSON(t *testing.T) {
-	var out bytes.Buffer
-	s := &state{out: &out, json: true}
-	if err := s.write(map[string]string{"value": "ok"}); err != nil {
-		t.Fatal(err)
-	}
-	if got, want := out.String(), `{"schema_version":"1","ok":true,"data":{"value":"ok"}}
+func TestWriteReturnsDataObjectWithoutSuccessEnvelope(t *testing.T) {
+	for _, jsonFlag := range []bool{false, true} {
+		t.Run(fmt.Sprintf("json=%t", jsonFlag), func(t *testing.T) {
+			var out bytes.Buffer
+			s := &state{out: &out, json: jsonFlag}
+			if err := s.write(map[string]string{"value": "ok"}); err != nil {
+				t.Fatal(err)
+			}
+			if got, want := out.String(), `{"value":"ok"}
 `; got != want {
-		t.Fatalf("compact output = %q, want %q", got, want)
-	}
-}
-
-func TestWriteReturnsDataObjectByDefault(t *testing.T) {
-	var out bytes.Buffer
-	s := &state{out: &out}
-	if err := s.write(map[string]string{"value": "ok"}); err != nil {
-		t.Fatal(err)
-	}
-	want := `{"value":"ok"}
-`
-	if got := out.String(); got != want {
-		t.Fatalf("normal output = %q, want %q", got, want)
+				t.Fatalf("output = %q, want %q", got, want)
+			}
+		})
 	}
 }
 

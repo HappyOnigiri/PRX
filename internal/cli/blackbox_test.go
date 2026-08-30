@@ -48,7 +48,7 @@ func runCLI(t *testing.T, binary, dbPath string, args ...string) (resultEnvelope
 	t.Helper()
 	base := []string{"--db", dbPath, "--json"}
 	result := executeCLI(t, binary, "", append(base, args...)...)
-	return decodeEnvelope(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
+	return decodeResult(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
 }
 
 func executeCLI(t *testing.T, binary, input string, args ...string) commandOutput {
@@ -83,6 +83,19 @@ func decodeEnvelope(t *testing.T, body []byte, output string) resultEnvelope {
 		t.Fatalf("stdout is not a JSON object: %v\n%s", decodeErr, output)
 	}
 	return envelope
+}
+
+func decodeResult(t *testing.T, body []byte, output string) resultEnvelope {
+	t.Helper()
+	keys := decodeObject(t, body, output)
+	if _, ok := keys["schema_version"]; ok {
+		envelope := decodeEnvelope(t, body, output)
+		envelope.keys = keys
+		return envelope
+	}
+	assertCompactJSON(t, output)
+	assertNoEnvelopeKeys(t, keys)
+	return resultEnvelope{OK: true, Data: json.RawMessage(bytes.TrimSpace(body)), keys: keys}
 }
 
 func decodeObject(t *testing.T, body []byte, output string) map[string]json.RawMessage {
@@ -192,14 +205,14 @@ func decodeDataObject(t *testing.T, envelope resultEnvelope) map[string]json.Raw
 	return value
 }
 
-func TestBlackBoxJSONCRUDAndCycle(t *testing.T) {
+func TestBlackBoxCRUDAndCycle(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "blackbox.db")
 	feature, stderr, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "release", "--title", "Release")
-	if exit != 0 || stderr != "" || !feature.OK || feature.SchemaVersion != "1" {
+	if exit != 0 || stderr != "" || !feature.OK {
 		t.Fatalf("feature result=%+v stderr=%q exit=%d", feature, stderr, exit)
 	}
-	assertEnvelopeKeys(t, feature, "schema_version", "ok", "data")
+	assertNoEnvelopeKeys(t, feature.keys)
 	var featureData struct {
 		ID string `json:"id"`
 	}
@@ -481,7 +494,7 @@ func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
 	for _, test := range cases {
 		t.Run(test.name, func(t *testing.T) {
 			value, stderr, exit := runCLI(t, binary, dbPath, test.args...)
-			if exit != 0 || stderr != "" || !value.OK || value.SchemaVersion != "1" {
+			if exit != 0 || stderr != "" || !value.OK {
 				t.Fatalf("result=%+v stderr=%q exit=%d", value, stderr, exit)
 			}
 			data := decodeDataObject(t, value)
@@ -491,7 +504,7 @@ func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
 			if _, ok := data[test.key]; !ok {
 				t.Fatalf("data keys=%v, want %q", mapKeys(data), test.key)
 			}
-			assertEnvelopeKeys(t, value, "schema_version", "ok", "data")
+			assertNoEnvelopeKeys(t, value.keys)
 		})
 	}
 
@@ -513,7 +526,7 @@ func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
 				"",
 				test.args...,
 			)
-			if exit != 0 || stderr != "" || !value.OK || value.SchemaVersion != "1" {
+			if exit != 0 || stderr != "" || !value.OK {
 				t.Fatalf("result=%+v stderr=%q exit=%d", value, stderr, exit)
 			}
 			data := decodeDataObject(t, value)
@@ -523,7 +536,7 @@ func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
 			if _, ok := data[test.key]; !ok {
 				t.Fatalf("data keys=%v, want %q", mapKeys(data), test.key)
 			}
-			assertEnvelopeKeys(t, value, "schema_version", "ok", "data")
+			assertNoEnvelopeKeys(t, value.keys)
 		})
 	}
 }
@@ -541,7 +554,7 @@ func TestBlackBoxSuccessOutputModes(t *testing.T) {
 			args: []string{"config", "auth", "list"},
 			normalWant: `{"auth_methods":[]}
 `,
-			jsonWant: `{"schema_version":"1","ok":true,"data":{"auth_methods":[]}}
+			jsonWant: `{"auth_methods":[]}
 `,
 		},
 		{
@@ -549,7 +562,7 @@ func TestBlackBoxSuccessOutputModes(t *testing.T) {
 			args: []string{"feature", "list"},
 			normalWant: `{"features":[]}
 `,
-			jsonWant: `{"schema_version":"1","ok":true,"data":{"features":[]}}
+			jsonWant: `{"features":[]}
 `,
 		},
 	}
@@ -998,5 +1011,5 @@ func runConfigCLI(
 	t.Helper()
 	commandArgs := []string{"--db", dbPath, "--config", configPath, "--json"}
 	result := executeCLI(t, binary, input, append(commandArgs, args...)...)
-	return decodeEnvelope(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
+	return decodeResult(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
 }

@@ -29,10 +29,7 @@ func (s *state) write(value any) error {
 	if err != nil {
 		return err
 	}
-	if !s.json {
-		return encode(s.out, data, true)
-	}
-	return encode(s.out, envelope{SchemaVersion: SchemaVersion, OK: true, Data: data}, true)
+	return encode(s.out, data, true)
 }
 
 func (s *state) writeError(err error) error {

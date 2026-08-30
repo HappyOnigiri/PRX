@@ -66,7 +66,7 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	root.PersistentFlags().StringVar(&s.dbPath, "db", os.Getenv("PRX_DB"), "SQLite database path (env: PRX_DB)")
 	root.PersistentFlags().
 		StringVar(&s.configPath, "config", os.Getenv("PRX_CONFIG"), "YAML configuration path (env: PRX_CONFIG)")
-	root.PersistentFlags().BoolVar(&s.json, "json", false, "emit a stable JSON envelope")
+	root.PersistentFlags().BoolVar(&s.json, "json", false, "emit compact JSON responses")
 	root.PersistentFlags().StringVar(&s.fixture, "github-fixture", "", "GitHub fixture JSON path, or demo")
 	root.AddCommand(
 		s.schemaVersionCommand(),
