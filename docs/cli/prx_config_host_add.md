@@ -3,13 +3,13 @@
 Add a GitHub.com or Enterprise host
 
 ```
-prx config host add [flags]
+prx config host add HOST [flags]
 ```
 
 ### Examples
 
 ```
-prx config host add --host ghe.example.com
+prx config host add ghe.example.com
 ```
 
 ### Options
@@ -18,7 +18,6 @@ prx config host add --host ghe.example.com
       --api-url string       HTTPS API base URL (defaults from host)
       --graphql-url string   HTTPS GraphQL URL (defaults from host)
   -h, --help                 help for add
-      --host string          hostname with optional port
       --upload-url string    HTTPS upload base URL (defaults from host)
       --web-url string       HTTPS web URL (defaults from host)
 ```

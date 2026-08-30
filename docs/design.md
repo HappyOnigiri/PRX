@@ -77,6 +77,8 @@ Mutation operations retain explicit verbs so state-changing intent remains visib
 Mutations remain non-interactive so people and coding agents use the same surface.
 A missing mutation target fails instead of reporting a successful no-op.
 Destructive traversal of referenced data requires an explicit cascade request.
+Values required to perform an operation are positional operands.
+Flags are reserved for optional modifiers, filters, partial updates, secret-safe input methods, execution settings, and output formats.
 
 Public feature and task identifiers remain distinct from storage identifiers.
 Storage UUIDs must not cross the CLI, RPC, or WebUI boundary.

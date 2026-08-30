@@ -3,13 +3,13 @@
 Add a host-scoped authentication method
 
 ```
-prx config auth add [flags]
+prx config auth add AUTH_METHOD_ID HOST TYPE [flags]
 ```
 
 ### Examples
 
 ```
-prx config auth add --id work-gh --host github.com --type gh_cli
+prx config auth add work-gh github.com gh_cli
 ```
 
 ### Options
@@ -17,11 +17,8 @@ prx config auth add --id work-gh --host github.com --type gh_cli
 ```
       --account string    Keychain account
   -h, --help              help for add
-      --host string       configured host
-      --id string         authentication method ID
       --service string    Keychain service
       --token-stdin       read an inline token from stdin
-      --type string       keychain, environment, inline, or gh_cli
       --user string       gh CLI user
       --variable string   environment variable name
 ```

@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"strings"
+
 	"github.com/spf13/cobra"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
@@ -23,26 +25,26 @@ func (s *state) documentCommand() *cobra.Command {
 			return s.write(map[string]any{"documents": documents}, renderDocumentList(documents))
 		},
 	}
-	var feature, task, kind, title, value string
+	var kind, title string
 	add := &cobra.Command{
-		Use:     "add",
+		Use:     "add FEATURE_ID_OR_SLUG_OR_TASK_ID VALUE",
 		Short:   "Add a URL or local Markdown path",
-		Example: "prx document add --task TASK_ID --kind markdown_path --value docs/checkout.md",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			doc, err := s.service.AddDocument(cmd.Context(), feature, task, domain.DocumentKind(kind), title, value)
+		Example: "prx document add TASK_ID docs/checkout.md --kind markdown_path",
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			feature, task := args[0], ""
+			if strings.HasPrefix(args[0], "T-") {
+				feature, task = "", args[0]
+			}
+			doc, err := s.service.AddDocument(cmd.Context(), feature, task, domain.DocumentKind(kind), title, args[1])
 			if err != nil {
 				return err
 			}
 			return s.write(doc, renderMessage("Added document %s.", doc.ID))
 		},
 	}
-	add.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
-	add.Flags().StringVar(&task, "task", "", "task ID")
 	add.Flags().StringVar(&kind, "kind", "url", "url or markdown_path")
 	add.Flags().StringVar(&title, "title", "", "document title")
-	add.Flags().StringVar(&value, "value", "", "URL or Markdown path")
-	_ = add.MarkFlagRequired("value")
 	deleteCmd := &cobra.Command{
 		Use:     "delete DOCUMENT_ID",
 		Short:   "Delete a document; missing documents return not_found",

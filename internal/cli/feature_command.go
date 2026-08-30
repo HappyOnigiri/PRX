@@ -41,25 +41,21 @@ func (s *state) featureCommand() *cobra.Command {
 }
 
 func (s *state) featureCreateCommand() *cobra.Command {
-	var slug, title, description string
+	var description string
 	command := &cobra.Command{
-		Use:     "create",
+		Use:     "create SLUG TITLE",
 		Short:   "Create a feature",
-		Example: "prx feature create --slug checkout --title \"Checkout rollout\"",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			value, err := s.service.CreateFeature(cmd.Context(), slug, title, description)
+		Example: "prx feature create checkout \"Checkout rollout\"",
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			value, err := s.service.CreateFeature(cmd.Context(), args[0], args[1], description)
 			if err != nil {
 				return err
 			}
 			return s.write(value, renderMessage("Created feature %s (%s).", value.Slug, value.ID))
 		},
 	}
-	command.Flags().StringVar(&slug, "slug", "", "stable feature slug")
-	command.Flags().StringVar(&title, "title", "", "feature title")
 	command.Flags().StringVar(&description, "description", "", "feature description")
-	_ = command.MarkFlagRequired("slug")
-	_ = command.MarkFlagRequired("title")
 	return command
 }
 

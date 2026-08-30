@@ -113,7 +113,7 @@ func TestPreScanOutputFlagsRespectsValuesAndBoundary(t *testing.T) {
 		{name: "JSON after unknown local flag", args: []string{"unknown", "--title", "--json"}, wantJSON: true},
 		{name: "false value", args: []string{"--json=false"}},
 		{name: "literal flag value", args: []string{"--db", "--json", "unknown"}},
-		{name: "literal local flag value", args: []string{"feature", "create", "--title", "--json"}},
+		{name: "literal local flag value", args: []string{"feature", "create", "--description", "--json"}},
 		{name: "double dash boundary", args: []string{"unknown", "--", "--json"}},
 	} {
 		t.Run(test.name, func(t *testing.T) {

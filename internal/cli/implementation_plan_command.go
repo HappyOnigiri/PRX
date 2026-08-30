@@ -24,26 +24,18 @@ func (s *state) planCommand() *cobra.Command {
 		},
 	}
 
-	var file string
-	var stdin bool
 	set := &cobra.Command{
-		Use:     "set TASK_ID",
+		Use:     "set TASK_ID FILE_OR_DASH",
 		Short:   "Create or replace a task's implementation plan",
-		Example: "prx plan set TASK_ID --file plan.md",
-		Args:    cobra.ExactArgs(1),
+		Example: "prx plan set TASK_ID plan.md\nprx plan set TASK_ID -",
+		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if (file == "") == !stdin {
-				return domain.NewError(
-					domain.DomainErrorCodeInvalidImplementationPlan,
-					"specify exactly one of --file or --stdin",
-				)
-			}
 			var content []byte
 			var err error
-			if stdin {
+			if args[1] == "-" {
 				content, err = io.ReadAll(cmd.InOrStdin())
 			} else {
-				content, err = os.ReadFile(file)
+				content, err = os.ReadFile(args[1])
 			}
 			if err != nil {
 				return domain.NewError(
@@ -59,8 +51,6 @@ func (s *state) planCommand() *cobra.Command {
 			return s.write(value, renderMessage("Set implementation plan for task %s.", value.TaskID))
 		},
 	}
-	set.Flags().StringVar(&file, "file", "", "read plan content from a file")
-	set.Flags().BoolVar(&stdin, "stdin", false, "read plan content from standard input")
 
 	deleteCmd := &cobra.Command{
 		Use:     "delete TASK_ID",

@@ -1,6 +1,16 @@
 ## prx config sync
 
-Manage automatic GitHub synchronization settings
+Show or manage automatic GitHub synchronization settings
+
+```
+prx config sync [flags]
+```
+
+### Examples
+
+```
+prx config sync
+```
 
 ### Options
 

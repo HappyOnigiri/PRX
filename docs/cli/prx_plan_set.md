@@ -3,21 +3,20 @@
 Create or replace a task's implementation plan
 
 ```
-prx plan set TASK_ID [flags]
+prx plan set TASK_ID FILE_OR_DASH [flags]
 ```
 
 ### Examples
 
 ```
-prx plan set TASK_ID --file plan.md
+prx plan set TASK_ID plan.md
+prx plan set TASK_ID -
 ```
 
 ### Options
 
 ```
-      --file string   read plan content from a file
-  -h, --help          help for set
-      --stdin         read plan content from standard input
+  -h, --help   help for set
 ```
 
 ### Options inherited from parent commands

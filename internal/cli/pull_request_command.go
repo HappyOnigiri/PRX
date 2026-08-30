@@ -17,24 +17,19 @@ func (s *state) pullRequestCommand() *cobra.Command {
 			return s.write(map[string]any{"pull_requests": pullRequests}, renderPullRequestList(pullRequests))
 		},
 	}
-	var task, url string
 	attach := &cobra.Command{
-		Use:     "attach",
+		Use:     "attach TASK_ID URL",
 		Short:   "Attach a GitHub pull request to a task",
-		Example: "prx pr attach --task TASK_ID --url https://github.com/acme/payments/pull/42",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			value, err := s.service.AttachPullRequest(cmd.Context(), task, url)
+		Example: "prx pr attach TASK_ID https://github.com/acme/payments/pull/42",
+		Args:    cobra.ExactArgs(2),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			value, err := s.service.AttachPullRequest(cmd.Context(), args[0], args[1])
 			if err != nil {
 				return err
 			}
 			return s.write(value, renderMessage("Attached pull request #%d to task %s.", value.Number, value.TaskID))
 		},
 	}
-	attach.Flags().StringVar(&task, "task", "", "task ID")
-	attach.Flags().StringVar(&url, "url", "", "GitHub pull request URL")
-	_ = attach.MarkFlagRequired("task")
-	_ = attach.MarkFlagRequired("url")
 	detach := &cobra.Command{
 		Use:     "detach TASK_ID",
 		Short:   "Detach a pull request; missing tasks return not_found",

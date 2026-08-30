@@ -3,24 +3,21 @@
 Add a URL or local Markdown path
 
 ```
-prx document add [flags]
+prx document add FEATURE_ID_OR_SLUG_OR_TASK_ID VALUE [flags]
 ```
 
 ### Examples
 
 ```
-prx document add --task TASK_ID --kind markdown_path --value docs/checkout.md
+prx document add TASK_ID docs/checkout.md --kind markdown_path
 ```
 
 ### Options
 
 ```
-      --feature string   feature ID or slug
-  -h, --help             help for add
-      --kind string      url or markdown_path (default "url")
-      --task string      task ID
-      --title string     document title
-      --value string     URL or Markdown path
+  -h, --help           help for add
+      --kind string    url or markdown_path (default "url")
+      --title string   document title
 ```
 
 ### Options inherited from parent commands
