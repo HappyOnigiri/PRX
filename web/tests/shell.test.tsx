@@ -106,6 +106,7 @@ describe("AppShell", () => {
     );
     expect(screen.getByText("Workspace")).toBeInTheDocument();
     expect(screen.getByText(`v${appVersion()}`)).toBeInTheDocument();
+    expect(screen.queryByText("Dependency control")).not.toBeInTheDocument();
     expect(screen.queryByText("GitHub sync")).not.toBeInTheDocument();
     expect(shellMocks.autoSync).toHaveBeenCalledWith(true);
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();

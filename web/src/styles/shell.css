@@ -75,12 +75,6 @@
   font-weight: 500;
 }
 
-.brand-tagline {
-  margin-top: 2px;
-  color: var(--text-3);
-  font-size: var(--text-xs);
-}
-
 .rail nav {
   padding: 12px;
   overflow: auto;
@@ -283,7 +277,6 @@
   }
 
   .rail-action,
-  .brand-tagline,
   .feature-link {
     display: none;
   }

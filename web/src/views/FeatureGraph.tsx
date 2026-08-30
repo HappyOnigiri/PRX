@@ -385,9 +385,7 @@ export function FeatureGraph({
 
   return (
     <>
-      <GraphLegend
-        taskCount={tasks.length}
-        dependencyCount={dependencies.length}
+      <GraphStatusNotice
         addingDependency={connections.adding}
         detachingDependency={connections.detaching}
         removingDependency={connections.removing}
@@ -602,17 +600,13 @@ function GraphState({
   return null;
 }
 
-function GraphLegend({
-  taskCount,
-  dependencyCount,
+function GraphStatusNotice({
   addingDependency,
   detachingDependency,
   removingDependency,
   readOnly,
   taskTitle,
 }: {
-  taskCount: number;
-  dependencyCount: number;
   addingDependency: boolean;
   detachingDependency: { blocker: string; blocked: string } | undefined;
   removingDependency: boolean;
@@ -634,41 +628,16 @@ function GraphLegend({
               detachingDependency.blocked,
           })
         : undefined;
+  if (readOnly || !instruction) return null;
   return (
-    <div className="graph-legend">
-      {!readOnly && instruction && (
-        <p
-          className={`graph-connection-help ${addingDependency || removingDependency ? "is-saving" : ""}`}
-          aria-live="polite"
-          title={instruction}
-        >
-          {instruction}
-        </p>
-      )}
-      <div className="graph-legend-states">
-        <span>
-          <i className="ready" />
-          {t("workspace.legend.ready")}
-        </span>
-        <span>
-          <i className="review" />
-          {t("workspace.legend.review")}
-        </span>
-        <span>
-          <i className="conflict" />
-          {t("workspace.legend.conflict")}
-        </span>
-        <span>
-          <i className="merged" />
-          {t("workspace.legend.merged")}
-        </span>
-      </div>
-      <b>
-        {t("workspace.graphSummary", {
-          nodes: taskCount,
-          links: dependencyCount,
-        })}
-      </b>
+    <div className="graph-status-notice">
+      <p
+        className={`graph-connection-help ${addingDependency || removingDependency ? "is-saving" : ""}`}
+        aria-live="polite"
+        title={instruction}
+      >
+        {instruction}
+      </p>
     </div>
   );
 }

@@ -32,7 +32,6 @@ export const shell = {
     },
     nav: {
       dashboard: "PRX dashboard",
-      dependencyControl: "Dependency control",
       features: "Features",
       overview: "Overview",
       archivedFeatures: "Archived features",
@@ -133,7 +132,6 @@ export const shell = {
     },
     nav: {
       dashboard: "PRX ダッシュボード",
-      dependencyControl: "依存関係コントロール",
       features: "フィーチャー",
       overview: "概要",
       archivedFeatures: "アーカイブ済み",

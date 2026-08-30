@@ -54,7 +54,6 @@ function AppShellLayout({ children }: { children: ReactNode }) {
             </span>
             <span className="app-version">v{appVersion()}</span>
           </span>
-          <small className="brand-tagline">{t("nav.dependencyControl")}</small>
         </Link>
         <nav aria-label={t("nav.features")}>
           <Link to="/" className="nav-link">
