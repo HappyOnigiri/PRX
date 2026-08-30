@@ -22,7 +22,7 @@ The shipped binary does not require Node.js, pnpm, or `gh` when a token is suppl
 
 ```sh
 make install
-prx serve --demo
+prx serve
 ```
 
 `make install` installs the locked web dependencies and builds a local binary identified as `<version>-dev`.
@@ -30,6 +30,8 @@ It installs the binary to `~/.local/bin/prx`.
 Set `INSTALL_DIR` to install elsewhere.
 Ensure the installation directory is on `PATH`, then open <http://127.0.0.1:7331>.
 The production web build is embedded in the binary, so no separate frontend process is needed.
+
+`prx serve --demo` instead starts a temporary demo that ignores the database and configuration below and resets on restart.
 
 The default database is stored under the operating system's user configuration directory.
 Use `--db /path/to/prx.db` or `PRX_DB` to select another database.
