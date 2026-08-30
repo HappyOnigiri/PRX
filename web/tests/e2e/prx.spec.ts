@@ -135,28 +135,40 @@ async function connectTasks(
   await page.mouse.up();
 }
 
+async function taskNodeId(page: Page, title: string) {
+  const id = await page
+    .locator(".task-node")
+    .filter({ hasText: title })
+    .evaluate((element) =>
+      element.closest(".react-flow__node")?.getAttribute("data-id"),
+    );
+  if (!id) throw new Error("task node id missing");
+  return id;
+}
+
+async function selectDependencyEdge(
+  page: Page,
+  blockerTitle: string,
+  blockedTitle: string,
+) {
+  await settleGraph(page);
+  const blockerId = await taskNodeId(page, blockerTitle);
+  const blockedId = await taskNodeId(page, blockedTitle);
+  const edge = page.locator(
+    `.react-flow__edge[data-id="${blockerId}-${blockedId}"]`,
+  );
+  await edge.click({ force: true });
+  await expect(edge).toHaveClass(/selected/);
+  return edge;
+}
+
 async function disconnectTasks(
   page: Page,
   blockerTitle: string,
   blockedTitle: string,
   endpoint: "source" | "target" = "source",
 ) {
-  await settleGraph(page);
-  const blocker = page.locator(".task-node").filter({ hasText: blockerTitle });
-  const blocked = page.locator(".task-node").filter({ hasText: blockedTitle });
-  const blockerId = await blocker.evaluate((element) =>
-    element.closest(".react-flow__node")?.getAttribute("data-id"),
-  );
-  const blockedId = await blocked.evaluate((element) =>
-    element.closest(".react-flow__node")?.getAttribute("data-id"),
-  );
-  if (!blockerId || !blockedId) throw new Error("task node id missing");
-
-  const edge = page.locator(
-    `.react-flow__edge[data-id="${blockerId}-${blockedId}"]`,
-  );
-  await edge.click({ force: true });
-  await expect(edge).toHaveClass(/selected/);
+  const edge = await selectDependencyEdge(page, blockerTitle, blockedTitle);
   const endpointHandle = edge.locator(`.react-flow__edgeupdater-${endpoint}`);
   const endpointBox = await endpointHandle.boundingBox();
   const stageBox = await page.locator(".graph-stage").boundingBox();
@@ -345,6 +357,24 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(
     page.locator(".task-node").filter({ hasText: "E2E UI" }),
   ).toBeVisible();
+  await selectDependencyEdge(page, "E2E worker", "E2E UI");
+  await page.locator(".dependency-edge-remove").click();
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    1,
+  );
+  await connectTasks(page, "E2E worker", "E2E UI");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    2,
+  );
+  await selectDependencyEdge(page, "E2E worker", "E2E UI");
+  await page.keyboard.press("Delete");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    1,
+  );
+  await connectTasks(page, "E2E worker", "E2E UI");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    2,
+  );
   await disconnectTasks(page, "E2E API", "E2E worker", "target");
   await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
     1,
