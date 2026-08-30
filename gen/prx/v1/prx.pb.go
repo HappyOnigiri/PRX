@@ -997,7 +997,7 @@ type Feature struct {
 	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
 	// status is the feature's lifecycle state.
 	Status FeatureStatus `protobuf:"varint,5,opt,name=status,proto3,enum=prx.v1.FeatureStatus" json:"status,omitempty"`
-	// archived indicates whether the feature is hidden from the active sidebar.
+	// archived separates the feature from active WebUI views and queues.
 	Archived bool `protobuf:"varint,6,opt,name=archived,proto3" json:"archived,omitempty"`
 	// created_at is the creation time in RFC 3339 format.
 	CreatedAt string `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`

@@ -1,8 +1,9 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Snapshot } from "../src/gen/prx/v1/prx_pb";
 import { Dashboard } from "../src/views/Dashboard";
-import { makeSnapshot } from "./factories";
+import { makeFeature, makeSnapshot, makeTask } from "./factories";
 
 const dashboardMocks = vi.hoisted(() => ({
   state: {
@@ -15,6 +16,11 @@ const dashboardMocks = vi.hoisted(() => ({
 
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => dashboardMocks.state,
+}));
+vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children }: { children: ReactNode }) => (
+    <a href="#test">{children}</a>
+  ),
 }));
 
 describe("Dashboard states", () => {
@@ -61,5 +67,48 @@ describe("Dashboard states", () => {
     expect(
       screen.getByRole("heading", { name: "No features yet" }),
     ).toBeInTheDocument();
+  });
+
+  it("projects every overview count and queue from active features", () => {
+    const activeTask = makeTask({ id: "active-task", featureId: "active" });
+    const archivedTask = makeTask({
+      id: "archived-task",
+      featureId: "archived",
+      title: "Archived task",
+    });
+    dashboardMocks.state.isPending = false;
+    dashboardMocks.state.data = makeSnapshot({
+      features: [
+        makeFeature({ id: "active", title: "Active graph" }),
+        makeFeature({
+          id: "archived",
+          title: "Archived graph",
+          archived: true,
+        }),
+      ],
+      tasks: [activeTask, archivedTask],
+      readyTasks: [activeTask, archivedTask],
+      reviewWaitingTasks: [archivedTask],
+      conflictTasks: [archivedTask],
+      staleTasks: [archivedTask],
+    });
+    const { container } = render(<Dashboard />);
+
+    expect(container.querySelector(".clock span")).toHaveTextContent("1");
+    expect(container.querySelector(".queue-ready > span")).toHaveTextContent(
+      "1",
+    );
+    expect(
+      container.querySelector(".queue-review-waiting > span"),
+    ).toHaveTextContent("0");
+    expect(container.querySelector(".queue-conflict > span")).toHaveTextContent(
+      "0",
+    );
+    expect(container.querySelector(".queue-stale > span")).toHaveTextContent(
+      "0",
+    );
+    expect(screen.getByText("Active graph")).toBeInTheDocument();
+    expect(screen.queryByText("Archived graph")).not.toBeInTheDocument();
+    expect(screen.queryByText("Archived task")).not.toBeInTheDocument();
   });
 });

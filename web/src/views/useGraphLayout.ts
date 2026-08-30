@@ -11,6 +11,7 @@ interface GraphLayoutOptions {
   documentsByTask: Map<string, TaskNodeDocument[]>;
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
+  readOnly?: boolean;
 }
 
 export function useGraphLayout({
@@ -20,6 +21,7 @@ export function useGraphLayout({
   documentsByTask,
   onEditTask,
   onPreviewDocument,
+  readOnly = false,
 }: GraphLayoutOptions) {
   const [nodes, setNodes] = useState<TaskFlowNode[]>([]);
   // Keep the raw error so changing the display language does not re-run the
@@ -54,6 +56,7 @@ export function useGraphLayout({
               }
             : undefined,
           documents,
+          readOnly,
           onEdit: () => {
             onEditTask(task.id);
           },
@@ -112,6 +115,7 @@ export function useGraphLayout({
     documentsByTask,
     onEditTask,
     onPreviewDocument,
+    readOnly,
     layoutAttempt,
   ]);
 

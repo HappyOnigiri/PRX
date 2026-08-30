@@ -21,6 +21,7 @@ interface TaskNodeData extends Record<string, unknown> {
   syncError: boolean;
   pullRequest: { label: string; url: string } | undefined;
   documents: TaskNodeDocument[];
+  readOnly: boolean;
   onEdit: () => void;
   onPreview: (document: TaskNodeDocument) => void;
 }
@@ -39,8 +40,12 @@ export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
           {taskDisplayStateLabel(data.state, t)}
         </div>
         <IconButton
-          icon={Pencil}
-          label={t("workspace.editTask", { title: data.title })}
+          icon={data.readOnly ? Eye : Pencil}
+          label={
+            data.readOnly
+              ? t("workspace.viewTask", { title: data.title })
+              : t("workspace.editTask", { title: data.title })
+          }
           variant="secondary"
           size="compact"
           iconOnly

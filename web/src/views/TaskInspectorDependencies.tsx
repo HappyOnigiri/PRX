@@ -11,12 +11,14 @@ interface DependencySectionProps {
   taskId: string;
   tasks: Task[];
   dependencies: Dependency[];
+  readOnly?: boolean;
 }
 
 export function DependencySection({
   taskId,
   tasks,
   dependencies,
+  readOnly = false,
 }: DependencySectionProps) {
   const { t } = useTranslation();
   const addDependency = useDomainMutation(
@@ -39,65 +41,76 @@ export function DependencySection({
           <span>
             {tasks.find((task) => task.id === dependency.blockerTaskId)?.title}
           </span>
-          <IconButton
-            icon={Trash2}
-            label={t("inspector.removeDependency")}
-            variant="danger"
-            size="compact"
-            iconOnly
-            onClick={() => {
-              removeDependency.mutate({
-                blocker: dependency.blockerTaskId,
-                blocked: taskId,
-              });
-            }}
-          />
+          {!readOnly && (
+            <IconButton
+              icon={Trash2}
+              label={t("inspector.removeDependency")}
+              variant="danger"
+              size="compact"
+              iconOnly
+              onClick={() => {
+                removeDependency.mutate({
+                  blocker: dependency.blockerTaskId,
+                  blocked: taskId,
+                });
+              }}
+            />
+          )}
         </div>
       ))}
-      <form
-        className="inline-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          addDependency.mutate({
-            blocker: formValue(new FormData(event.currentTarget), "blocker"),
-            blocked: taskId,
-          });
-        }}
-      >
-        <select
-          name="blocker"
-          aria-label={t("inspector.blockerTask")}
-          defaultValue=""
+      {blockers.length === 0 && readOnly && (
+        <p className="read-only-empty">{t("inspector.noDependencies")}</p>
+      )}
+      {!readOnly && (
+        <form
+          className="inline-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            addDependency.mutate({
+              blocker: formValue(new FormData(event.currentTarget), "blocker"),
+              blocked: taskId,
+            });
+          }}
         >
-          <option value="" disabled>
-            {t("inspector.selectBlocker")}
-          </option>
-          {tasks
-            .filter(
-              (candidate) =>
-                candidate.id !== taskId &&
-                !blockers.some(
-                  (dependency) => dependency.blockerTaskId === candidate.id,
-                ),
-            )
-            .map((candidate) => (
-              <option key={candidate.id} value={candidate.id}>
-                {candidate.title}
-              </option>
-            ))}
-        </select>
-        <IconButton
-          icon={Plus}
-          label={t("common.add")}
-          variant="primary"
-          type="submit"
-        />
-      </form>
-      <MutationError
-        error={addDependency.error}
-        taskTitle={(id) => tasks.find((task) => task.id === id)?.title}
-      />
-      <MutationError error={removeDependency.error} />
+          <select
+            name="blocker"
+            aria-label={t("inspector.blockerTask")}
+            defaultValue=""
+          >
+            <option value="" disabled>
+              {t("inspector.selectBlocker")}
+            </option>
+            {tasks
+              .filter(
+                (candidate) =>
+                  candidate.id !== taskId &&
+                  !blockers.some(
+                    (dependency) => dependency.blockerTaskId === candidate.id,
+                  ),
+              )
+              .map((candidate) => (
+                <option key={candidate.id} value={candidate.id}>
+                  {candidate.title}
+                </option>
+              ))}
+          </select>
+          <IconButton
+            icon={Plus}
+            label={t("common.add")}
+            variant="primary"
+            type="submit"
+          />
+        </form>
+      )}
+      {!readOnly && (
+        <>
+          <MutationError
+            error={addDependency.error}
+            taskTitle={(id) => tasks.find((task) => task.id === id)?.title}
+          />
+          <MutationError error={removeDependency.error} />
+        </>
+      )}
     </section>
   );
 }

@@ -14,11 +14,13 @@ import { MutationError } from "./MutationError";
 interface PullRequestSectionProps {
   taskId: string;
   pullRequest: PullRequest | undefined;
+  readOnly?: boolean;
 }
 
 export function PullRequestSection({
   taskId,
   pullRequest,
+  readOnly = false,
 }: PullRequestSectionProps) {
   const { t } = useTranslation();
   const attach = useDomainMutation(
@@ -53,18 +55,22 @@ export function PullRequestSection({
               {pullRequest.syncError}
             </p>
           )}
-          <IconButton
-            icon={Unlink}
-            label={t("inspector.detach")}
-            variant="quiet"
-            size="compact"
-            iconOnly
-            className="text-action"
-            onClick={() => {
-              detach.mutate(taskId);
-            }}
-          />
+          {!readOnly && (
+            <IconButton
+              icon={Unlink}
+              label={t("inspector.detach")}
+              variant="quiet"
+              size="compact"
+              iconOnly
+              className="text-action"
+              onClick={() => {
+                detach.mutate(taskId);
+              }}
+            />
+          )}
         </div>
+      ) : readOnly ? (
+        <p className="read-only-empty">{t("inspector.prNotAttached")}</p>
       ) : (
         <form
           className="inline-form"
@@ -89,8 +95,12 @@ export function PullRequestSection({
           />
         </form>
       )}
-      <MutationError error={attach.error} />
-      <MutationError error={detach.error} />
+      {!readOnly && (
+        <>
+          <MutationError error={attach.error} />
+          <MutationError error={detach.error} />
+        </>
+      )}
     </section>
   );
 }

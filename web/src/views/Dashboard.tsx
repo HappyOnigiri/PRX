@@ -51,6 +51,23 @@ export function Dashboard() {
         action={() => void refetch()}
       />
     );
+  const features = data.features.filter((feature) => !feature.archived);
+  const featureIds = new Set(features.map((feature) => feature.id));
+  const tasks = data.tasks.filter((task) => featureIds.has(task.featureId));
+  const projected = {
+    readyTasks: data.readyTasks.filter((task) =>
+      featureIds.has(task.featureId),
+    ),
+    reviewWaitingTasks: data.reviewWaitingTasks.filter((task) =>
+      featureIds.has(task.featureId),
+    ),
+    conflictTasks: data.conflictTasks.filter((task) =>
+      featureIds.has(task.featureId),
+    ),
+    staleTasks: data.staleTasks.filter((task) =>
+      featureIds.has(task.featureId),
+    ),
+  };
   return (
     <div className="dashboard">
       <header className="page-head">
@@ -62,7 +79,7 @@ export function Dashboard() {
           <p>{t("dashboard.description")}</p>
         </div>
         <div className="clock">
-          <span>{data.tasks.length}</span>
+          <span>{tasks.length}</span>
           <small>{t("dashboard.nodesUnderControl")}</small>
         </div>
       </header>
@@ -72,7 +89,7 @@ export function Dashboard() {
       >
         {queueNames.map(([key, className, title, detail]) => (
           <article key={key} className={`queue-meter ${className}`}>
-            <span>{data[key].length}</span>
+            <span>{projected[key].length}</span>
             <div>
               <h2>{t(title)}</h2>
               <p>{t(detail)}</p>
@@ -86,7 +103,7 @@ export function Dashboard() {
             <p className="section-label">{t("dashboard.executionQueue")}</p>
             <h2>{t("dashboard.readyToStart")}</h2>
           </header>
-          {data.readyTasks.length === 0 ? (
+          {projected.readyTasks.length === 0 ? (
             <div className="empty">
               <span>◇</span>
               <h3>{t("dashboard.noTaskTitle")}</h3>
@@ -94,10 +111,8 @@ export function Dashboard() {
             </div>
           ) : (
             <ol>
-              {data.readyTasks.map((task, index) => {
-                const feature = data.features.find(
-                  (f) => f.id === task.featureId,
-                );
+              {projected.readyTasks.map((task, index) => {
+                const feature = features.find((f) => f.id === task.featureId);
                 return (
                   <li key={task.id}>
                     <span className="queue-index">
@@ -122,13 +137,13 @@ export function Dashboard() {
             </ol>
           )}
         </section>
-        <FeatureBoard features={data.features} />
+        <FeatureBoard features={features} />
       </div>
     </div>
   );
 }
 
-function StateMessage({
+export function StateMessage({
   title,
   detail,
   action,

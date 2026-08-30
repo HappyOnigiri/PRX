@@ -31,6 +31,7 @@ interface FeatureGraphProps {
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onCreateTask: () => void;
+  readOnly?: boolean;
 }
 
 export function FeatureGraph({
@@ -41,6 +42,7 @@ export function FeatureGraph({
   onEditTask,
   onPreviewDocument,
   onCreateTask,
+  readOnly = false,
 }: FeatureGraphProps) {
   const { t } = useTranslation();
   const [flow, setFlow] = useState<ReactFlowInstance<TaskFlowNode>>();
@@ -53,6 +55,7 @@ export function FeatureGraph({
     documentsByTask,
     onEditTask,
     onPreviewDocument,
+    readOnly,
   });
   const edges: Edge[] = useMemo(
     () =>
@@ -135,6 +138,7 @@ export function FeatureGraph({
           layoutError={layoutError}
           onCreateTask={onCreateTask}
           onRetryLayout={retryLayout}
+          readOnly={readOnly}
         />
       </div>
     </>
@@ -146,11 +150,13 @@ function GraphState({
   layoutError,
   onCreateTask,
   onRetryLayout,
+  readOnly,
 }: {
   taskCount: number;
   layoutError: { message: string | undefined } | undefined;
   onCreateTask: () => void;
   onRetryLayout: () => void;
+  readOnly: boolean;
 }) {
   const { t } = useTranslation();
   if (taskCount === 0 && !layoutError)
@@ -161,12 +167,14 @@ function GraphState({
         </span>
         <h2>{t("workspace.graphEmptyTitle")}</h2>
         <p>{t("workspace.graphEmptyDetail")}</p>
-        <IconButton
-          icon={Plus}
-          label={t("workspace.addTaskPlain")}
-          variant="primary"
-          onClick={onCreateTask}
-        />
+        {!readOnly && (
+          <IconButton
+            icon={Plus}
+            label={t("workspace.addTaskPlain")}
+            variant="primary"
+            onClick={onCreateTask}
+          />
+        )}
       </div>
     );
   if (layoutError)

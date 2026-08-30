@@ -279,18 +279,64 @@ test("archives and safely deletes a feature", async ({ page }) => {
   await dialog.getByLabel("Slug").fill(slug);
   await dialog.getByLabel("Title").fill(title);
   await dialog.getByRole("button", { name: "Create feature" }).click();
+  await addTask(page, "Archived E2E task");
+  await page.getByRole("button", { name: "Edit feature" }).click();
   await page.getByRole("button", { name: "Archive feature" }).click();
+  const archiveConfirmation = page.getByRole("dialog", {
+    name: `Archive ${title}?`,
+  });
+  await archiveConfirmation
+    .getByRole("button", { name: "Archive feature" })
+    .click();
+  await expect(page.getByText("Archived · read-only")).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Features" }).getByText(title),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Unarchive feature" }).click();
+  await page.getByRole("link", { name: /Archived features/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Archived features", exact: true }),
+  ).toBeVisible();
+  await page.getByText(title).click();
+  await expect(page.getByRole("button", { name: "Sync GitHub" })).toHaveCount(
+    0,
+  );
+  await page
+    .getByRole("button", { name: "View Archived E2E task details" })
+    .click();
+  const inspector = page.getByRole("complementary", { name: "Task inspector" });
+  await expect(inspector).toContainText("Archived task · read-only");
+  await expect(inspector.getByRole("textbox")).toHaveCount(0);
+  await inspector.getByRole("button", { name: "Close inspector" }).click();
+
+  await page.getByRole("button", { name: "Manage feature" }).click();
+  await page.getByRole("button", { name: "Restore feature" }).click();
+  await expect(page.getByRole("button", { name: "Sync GitHub" })).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Features" }).getByText(title),
   ).toHaveCount(1);
-  page.once("dialog", (confirmation) => confirmation.accept());
+
+  await page.getByRole("button", { name: "Edit feature" }).click();
+  await page.getByRole("button", { name: "Archive feature" }).click();
+  await page
+    .getByRole("dialog", { name: `Archive ${title}?` })
+    .getByRole("button", { name: "Archive feature" })
+    .click();
+  await page.getByRole("button", { name: "Manage feature" }).click();
   await page.getByRole("button", { name: "Delete feature" }).click();
+  const deleteConfirmation = page.getByRole("dialog", {
+    name: `Delete ${title}?`,
+  });
+  await deleteConfirmation.getByRole("button", { name: "Cancel" }).click();
   await expect(
-    page.getByRole("heading", { name: /What can move/ }),
+    page.getByRole("heading", { name: "Feature details" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Delete feature" }).click();
+  await page
+    .getByRole("dialog", { name: `Delete ${title}?` })
+    .getByRole("button", { name: "Delete permanently" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Archived features", exact: true }),
   ).toBeVisible();
   await expect(page.getByText(title)).toHaveCount(0);
 });
@@ -407,6 +453,9 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: /What can move/ }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /Archived features/ }),
+  ).toBeVisible();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
   await page
     .getByRole("link", { name: /Cross-repository launch · 8 nodes/ })
@@ -421,13 +470,13 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
   const secondaryActions = page.locator(
     ".workspace-actions .icon-button-secondary",
   );
-  await expect(secondaryActions).toHaveCount(3);
+  await expect(secondaryActions).toHaveCount(2);
   for (const action of await secondaryActions.all()) {
     await expect(action).toBeHidden();
   }
   await expect(
     page.locator(".workspace-actions .icon-button-danger"),
-  ).toBeHidden();
+  ).toHaveCount(0);
   const addTaskBounds = await addTaskButton.boundingBox();
   expect(addTaskBounds).not.toBeNull();
   if (addTaskBounds) {

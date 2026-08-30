@@ -30,6 +30,7 @@ export interface TaskInspectorProps {
   documents: TaskNodeDocument[];
   onPreview: (document: TaskNodeDocument) => void;
   onClose: () => void;
+  readOnly?: boolean;
 }
 
 function TaskInspectorHeader({
@@ -62,6 +63,7 @@ export function TaskInspector({
   documents,
   onPreview,
   onClose,
+  readOnly = false,
 }: TaskInspectorProps) {
   const { t } = useTranslation();
   const deleteTask = useDomainMutation(mutations.deleteTask);
@@ -84,38 +86,54 @@ export function TaskInspector({
           </small>
         )}
       </div>
-      <TaskInspectorTaskForm task={task} />
-      <PullRequestSection taskId={task.id} pullRequest={pullRequest} />
+      {readOnly && (
+        <p className="inspector-read-only">{t("inspector.readOnly")}</p>
+      )}
+      <TaskInspectorTaskForm task={task} readOnly={readOnly} />
+      <PullRequestSection
+        taskId={task.id}
+        pullRequest={pullRequest}
+        readOnly={readOnly}
+      />
       <ImplementationPlanSection
         taskId={task.id}
         hasPlan={task.hasImplementationPlan}
+        readOnly={readOnly}
       />
       <DependencySection
         taskId={task.id}
         tasks={tasks}
         dependencies={dependencies}
+        readOnly={readOnly}
       />
       <ReferencesSection
         taskId={task.id}
         documents={documents}
         onPreview={onPreview}
+        readOnly={readOnly}
       />
-      <IconButton
-        icon={Trash2}
-        label={t("inspector.deleteTask")}
-        variant="danger"
-        className="danger-zone"
-        onClick={() => {
-          if (
-            !window.confirm(
-              t("inspector.deleteTaskConfirm", { title: task.title }),
-            )
-          )
-            return;
-          void deleteTask.mutateAsync(task.id).then(onClose, () => undefined);
-        }}
-      />
-      <MutationError error={deleteTask.error} />
+      {!readOnly && (
+        <>
+          <IconButton
+            icon={Trash2}
+            label={t("inspector.deleteTask")}
+            variant="danger"
+            className="danger-zone"
+            onClick={() => {
+              if (
+                !window.confirm(
+                  t("inspector.deleteTaskConfirm", { title: task.title }),
+                )
+              )
+                return;
+              void deleteTask
+                .mutateAsync(task.id)
+                .then(onClose, () => undefined);
+            }}
+          />
+          <MutationError error={deleteTask.error} />
+        </>
+      )}
     </aside>
   );
 }

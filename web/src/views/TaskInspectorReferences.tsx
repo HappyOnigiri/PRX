@@ -13,12 +13,14 @@ interface ReferencesSectionProps {
   taskId: string;
   documents: TaskNodeDocument[];
   onPreview: (document: TaskNodeDocument) => void;
+  readOnly?: boolean;
 }
 
 export function ReferencesSection({
   taskId,
   documents,
   onPreview,
+  readOnly = false,
 }: ReferencesSectionProps) {
   const { t } = useTranslation();
   const addDocument = useDomainMutation(mutations.addDocument);
@@ -49,58 +51,69 @@ export function ReferencesSection({
               <Eye aria-hidden="true" focusable="false" size={14} />
             </button>
           )}
-          <IconButton
-            icon={Trash2}
-            label={t("inspector.deleteReference", {
-              title: document.title || t("inspector.referenceFallback"),
-            })}
-            variant="danger"
-            size="compact"
-            iconOnly
-            onClick={() => {
-              deleteDocument.mutate(document.id);
-            }}
-          />
+          {!readOnly && (
+            <IconButton
+              icon={Trash2}
+              label={t("inspector.deleteReference", {
+                title: document.title || t("inspector.referenceFallback"),
+              })}
+              variant="danger"
+              size="compact"
+              iconOnly
+              onClick={() => {
+                deleteDocument.mutate(document.id);
+              }}
+            />
+          )}
         </div>
       ))}
-      <form
-        className="stack-form"
-        onSubmit={(event) => {
-          event.preventDefault();
-          const form = new FormData(event.currentTarget);
-          addDocument.mutate({
-            taskId,
-            kind: Number(form.get("kind")),
-            title: formValue(form, "title"),
-            value: formValue(form, "value"),
-          });
-        }}
-      >
-        <div className="form-row">
-          <select name="kind">
-            <option value={DocumentKind.URL}>
-              {documentKindLabel(DocumentKind.URL, t)}
-            </option>
-            <option value={DocumentKind.MARKDOWN_PATH}>
-              {documentKindLabel(DocumentKind.MARKDOWN_PATH, t)}
-            </option>
-          </select>
-          <input name="title" placeholder={t("inspector.designNotes")} />
-        </div>
-        <input
-          name="value"
-          required
-          placeholder={t("inspector.referenceValue")}
-        />
-        <IconButton
-          icon={Plus}
-          label={t("inspector.addReference")}
-          variant="primary"
-          type="submit"
-        />
-      </form>
-      <MutationError error={addDocument.error} />
-      <MutationError error={deleteDocument.error} />
+      {documents.length === 0 && readOnly && (
+        <p className="read-only-empty">{t("inspector.noReferences")}</p>
+      )}
+      {!readOnly && (
+        <form
+          className="stack-form"
+          onSubmit={(event) => {
+            event.preventDefault();
+            const form = new FormData(event.currentTarget);
+            addDocument.mutate({
+              taskId,
+              kind: Number(form.get("kind")),
+              title: formValue(form, "title"),
+              value: formValue(form, "value"),
+            });
+          }}
+        >
+          <div className="form-row">
+            <select name="kind">
+              <option value={DocumentKind.URL}>
+                {documentKindLabel(DocumentKind.URL, t)}
+              </option>
+              <option value={DocumentKind.MARKDOWN_PATH}>
+                {documentKindLabel(DocumentKind.MARKDOWN_PATH, t)}
+              </option>
+            </select>
+            <input name="title" placeholder={t("inspector.designNotes")} />
+          </div>
+          <input
+            name="value"
+            required
+            placeholder={t("inspector.referenceValue")}
+          />
+          <IconButton
+            icon={Plus}
+            label={t("inspector.addReference")}
+            variant="primary"
+            type="submit"
+          />
+        </form>
+      )}
+      {!readOnly && (
+        <>
+          <MutationError error={addDocument.error} />
+          <MutationError error={deleteDocument.error} />
+        </>
+      )}
     </section>
   );
 }

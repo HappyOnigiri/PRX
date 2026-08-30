@@ -107,4 +107,19 @@ describe("ImplementationPlanSection", () => {
     );
     expect(screen.getByRole("textbox")).toHaveValue("");
   });
+
+  it("loads and previews a registered plan without edit controls when read-only", async () => {
+    planMocks.api.getImplementationPlan.mockResolvedValue({
+      implementationPlan: { content: "# Archived plan" },
+    });
+    render(<ImplementationPlanSection taskId="task-1" hasPlan readOnly />);
+
+    expect(
+      await screen.findByRole("heading", { name: "Archived plan" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Save plan" }),
+    ).not.toBeInTheDocument();
+  });
 });

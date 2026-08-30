@@ -36,6 +36,7 @@ describe("TaskNode", () => {
             value: "https://example.com/runbook",
           },
         ],
+        readOnly: false,
         onEdit,
         onPreview,
       },
@@ -70,6 +71,45 @@ describe("TaskNode", () => {
     expect(onPreview).toHaveBeenCalledWith(markdown);
     fireEvent.click(
       screen.getByRole("button", { name: "Edit Merge billing schema" }),
+    );
+    expect(onEdit).toHaveBeenCalledOnce();
+  });
+
+  it("labels the inspector action as view-only for archived tasks", () => {
+    const onEdit = vi.fn();
+    const props = {
+      id: "task",
+      data: {
+        title: "Archived task",
+        assignee: "",
+        state: TaskDisplayState.NOT_STARTED,
+        ready: false,
+        stale: false,
+        syncError: false,
+        pullRequest: undefined,
+        documents: [],
+        readOnly: true,
+        onEdit,
+        onPreview: vi.fn(),
+      },
+      selected: false,
+      isConnectable: false,
+      zIndex: 0,
+      dragging: false,
+      draggable: false,
+      selectable: true,
+      deletable: false,
+      type: "task",
+      positionAbsoluteX: 0,
+      positionAbsoluteY: 0,
+    } as NodeProps<TaskFlowNode>;
+    render(
+      <ReactFlowProvider>
+        <TaskNode {...props} />
+      </ReactFlowProvider>,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "View Archived task details" }),
     );
     expect(onEdit).toHaveBeenCalledOnce();
   });

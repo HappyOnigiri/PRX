@@ -87,6 +87,10 @@ describe("AppShell", () => {
     expect(screen.getByText("Active feature")).toBeInTheDocument();
     expect(screen.getByText("Conflict feature")).toBeInTheDocument();
     expect(screen.queryByText("Archived feature")).not.toBeInTheDocument();
+    expect(screen.getByText(/Overview/)).toHaveTextContent("Overview 2");
+    expect(screen.getByText(/Archived features/)).toHaveTextContent(
+      "Archived features 1",
+    );
     expect(screen.getByText("Workspace")).toBeInTheDocument();
     expect(screen.getByText(`v${appVersion()}`)).toBeInTheDocument();
 
