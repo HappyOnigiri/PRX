@@ -21,26 +21,43 @@ interface TaskNodeData extends Record<string, unknown> {
   syncError: boolean;
   pullRequest: { label: string; url: string } | undefined;
   documents: TaskNodeDocument[];
+  readOnly: boolean;
   onEdit: () => void;
   onPreview: (document: TaskNodeDocument) => void;
 }
 export type TaskFlowNode = Node<TaskNodeData, "task">;
 
-export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
+export function TaskNode({
+  data,
+  selected,
+  isConnectable,
+}: NodeProps<TaskFlowNode>) {
   const { t } = useTranslation();
   return (
     <div
       className={`task-node state-${taskDisplayStateToken(data.state)} ${data.ready ? "is-ready" : ""} ${data.stale ? "is-stale" : ""} ${selected ? "is-selected" : ""}`}
     >
-      <Handle type="target" position={Position.Left} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="task-handle task-handle-target"
+        isConnectable={isConnectable}
+        tabIndex={isConnectable ? 0 : -1}
+        aria-label={t("workspace.flow.blockedHandle")}
+        title={t("workspace.flow.blockedHandle")}
+      />
       <div className="task-node-head">
         <div className="node-state">
           <i />
           {taskDisplayStateLabel(data.state, t)}
         </div>
         <IconButton
-          icon={Pencil}
-          label={t("workspace.editTask", { title: data.title })}
+          icon={data.readOnly ? Eye : Pencil}
+          label={
+            data.readOnly
+              ? t("workspace.viewTask", { title: data.title })
+              : t("workspace.editTask", { title: data.title })
+          }
           variant="secondary"
           size="compact"
           iconOnly
@@ -100,7 +117,15 @@ export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
         <span>{data.assignee || t("common.unassigned")}</span>
         {data.ready && <b>{t("common.ready")}</b>}
       </footer>
-      <Handle type="source" position={Position.Right} />
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="task-handle task-handle-source"
+        isConnectable={isConnectable}
+        tabIndex={isConnectable ? 0 : -1}
+        aria-label={t("workspace.flow.blockerHandle")}
+        title={t("workspace.flow.blockerHandle")}
+      />
     </div>
   );
 }

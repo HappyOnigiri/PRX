@@ -1,4 +1,4 @@
-import { expect, test, type Page } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
 
 const browserErrors: string[] = [];
@@ -100,15 +100,97 @@ async function openTask(page: Page, title: string) {
   ).toContainText(title);
 }
 
-async function addBlocker(page: Page, blockerTitle: string) {
-  const inspector = page.getByRole("complementary", { name: "Task inspector" });
-  const section = inspector
-    .locator("section")
-    .filter({ has: page.getByRole("heading", { name: "Blocked by" }) });
-  await section
-    .getByLabel("Blocker task")
-    .selectOption({ label: blockerTitle });
-  await section.getByRole("button", { name: "Add" }).click();
+async function handleCenterWithinNode(handle: Locator) {
+  return handle.evaluate((element) => {
+    const node = element.closest(".task-node");
+    if (!node) throw new Error("task node missing");
+    const handleBox = element.getBoundingClientRect();
+    const nodeBox = node.getBoundingClientRect();
+    return {
+      x: (handleBox.left + handleBox.width / 2 - nodeBox.left) / nodeBox.width,
+      y: (handleBox.top + handleBox.height / 2 - nodeBox.top) / nodeBox.height,
+    };
+  });
+}
+
+async function connectTasks(
+  page: Page,
+  blockerTitle: string,
+  blockedTitle: string,
+) {
+  await settleGraph(page);
+  const blocker = page.locator(".task-node").filter({ hasText: blockerTitle });
+  const blocked = page.locator(".task-node").filter({ hasText: blockedTitle });
+  const source = blocker.locator(".react-flow__handle.source");
+  const target = blocked.locator(".react-flow__handle.target");
+  await expect(source).toBeVisible();
+  await expect(target).toBeVisible();
+  const initialCenter = await handleCenterWithinNode(source);
+  await source.hover();
+  const hoveredCenter = await handleCenterWithinNode(source);
+  expect(hoveredCenter.x).toBeCloseTo(initialCenter.x, 2);
+  expect(hoveredCenter.y).toBeCloseTo(initialCenter.y, 2);
+  await page.mouse.down();
+  await target.hover();
+  await page.mouse.up();
+}
+
+async function disconnectTasks(
+  page: Page,
+  blockerTitle: string,
+  blockedTitle: string,
+) {
+  await settleGraph(page);
+  const blocker = page.locator(".task-node").filter({ hasText: blockerTitle });
+  const blocked = page.locator(".task-node").filter({ hasText: blockedTitle });
+  const blockerId = await blocker.evaluate((element) =>
+    element.closest(".react-flow__node")?.getAttribute("data-id"),
+  );
+  const blockedId = await blocked.evaluate((element) =>
+    element.closest(".react-flow__node")?.getAttribute("data-id"),
+  );
+  if (!blockerId || !blockedId) throw new Error("task node id missing");
+
+  const edge = page.locator(
+    `.react-flow__edge[data-id="${blockerId}-${blockedId}"]`,
+  );
+  const sourceEndpoint = edge.locator(".react-flow__edgeupdater-source");
+  const endpointBox = await sourceEndpoint.boundingBox();
+  const stageBox = await page.locator(".graph-stage").boundingBox();
+  if (!endpointBox || !stageBox) throw new Error("graph bounds missing");
+
+  await page.mouse.move(
+    endpointBox.x + endpointBox.width / 2,
+    endpointBox.y + endpointBox.height / 2,
+  );
+  await expect(sourceEndpoint).toHaveCSS("opacity", "1");
+  await page.mouse.down();
+  await page.mouse.move(stageBox.x + 28, stageBox.y + 28, { steps: 6 });
+  await page.mouse.up();
+}
+
+async function settleGraph(page: Page) {
+  const stage = page.locator(".graph-stage");
+  const viewport = page.locator(".react-flow__viewport");
+  const nodes = page.locator(".react-flow__node");
+  await expect(stage).toHaveAttribute("aria-busy", "false");
+  let previousState: string | null = null;
+  let stableSamples = 0;
+  await expect
+    .poll(
+      async () => {
+        const viewportStyle = await viewport.getAttribute("style");
+        const nodeStyles = await nodes.evaluateAll((elements) =>
+          elements.map((element) => element.getAttribute("style")),
+        );
+        const currentState = JSON.stringify({ nodeStyles, viewportStyle });
+        stableSamples = currentState === previousState ? stableSamples + 1 : 0;
+        previousState = currentState;
+        return stableSamples;
+      },
+      { intervals: [100], timeout: 3000 },
+    )
+    .toBeGreaterThanOrEqual(3);
 }
 
 async function graphZoom(page: Page) {
@@ -155,20 +237,25 @@ test("creates and edits a feature DAG while preserving state", async ({
   await addTask(page, "E2E API");
   await addTask(page, "E2E worker");
   await addTask(page, "E2E UI");
-  await openTask(page, "E2E worker");
-  await addBlocker(page, "E2E API");
-  await page.getByRole("button", { name: "Close inspector" }).click();
-  await openTask(page, "E2E UI");
-  await addBlocker(page, "E2E worker");
-  await page.getByRole("button", { name: "Close inspector" }).click();
-  await openTask(page, "E2E API");
-  await addBlocker(page, "E2E UI");
+  await connectTasks(page, "E2E API", "E2E worker");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    1,
+  );
+  await connectTasks(page, "E2E worker", "E2E UI");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    2,
+  );
+  await settleGraph(page);
+  await page.locator(".react-flow__controls-fitview").click();
+  await settleGraph(page);
+  await connectTasks(page, "E2E UI", "E2E API");
   await expect(page.getByRole("alert")).toContainText("cycle");
   expect(
     browserErrors.filter((item) => item.includes("400 (Bad Request)")),
   ).toHaveLength(1);
   browserErrors.splice(0, browserErrors.length);
 
+  await openTask(page, "E2E API");
   const inspector = page.getByRole("complementary", { name: "Task inspector" });
   const prSection = inspector
     .locator("section")
@@ -255,9 +342,11 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(
     page.locator(".task-node").filter({ hasText: "E2E UI" }),
   ).toBeVisible();
+  await disconnectTasks(page, "E2E API", "E2E worker");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    1,
+  );
   await openTask(page, "E2E worker");
-  await expect(inspector.locator(".dependency-chip")).toContainText("E2E API");
-  await inspector.getByRole("button", { name: "Remove dependency" }).click();
   await expect(inspector.locator(".dependency-chip")).toHaveCount(0);
   await page.getByRole("button", { name: "Close inspector" }).click();
   await openTask(page, "E2E UI");
@@ -279,18 +368,64 @@ test("archives and safely deletes a feature", async ({ page }) => {
   await dialog.getByLabel("Slug").fill(slug);
   await dialog.getByLabel("Title").fill(title);
   await dialog.getByRole("button", { name: "Create feature" }).click();
+  await addTask(page, "Archived E2E task");
+  await page.getByRole("button", { name: "Edit feature" }).click();
   await page.getByRole("button", { name: "Archive feature" }).click();
+  const archiveConfirmation = page.getByRole("dialog", {
+    name: `Archive ${title}?`,
+  });
+  await archiveConfirmation
+    .getByRole("button", { name: "Archive feature" })
+    .click();
+  await expect(page.getByText("Archived · read-only")).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Features" }).getByText(title),
   ).toHaveCount(0);
-  await page.getByRole("button", { name: "Unarchive feature" }).click();
+  await page.getByRole("link", { name: /Archived features/ }).click();
+  await expect(
+    page.getByRole("heading", { name: "Archived features", exact: true }),
+  ).toBeVisible();
+  await page.getByText(title).click();
+  await expect(page.getByRole("button", { name: "Sync GitHub" })).toHaveCount(
+    0,
+  );
+  await page
+    .getByRole("button", { name: "View Archived E2E task details" })
+    .click();
+  const inspector = page.getByRole("complementary", { name: "Task inspector" });
+  await expect(inspector).toContainText("Archived task · read-only");
+  await expect(inspector.getByRole("textbox")).toHaveCount(0);
+  await inspector.getByRole("button", { name: "Close inspector" }).click();
+
+  await page.getByRole("button", { name: "Manage feature" }).click();
+  await page.getByRole("button", { name: "Restore feature" }).click();
+  await expect(page.getByRole("button", { name: "Sync GitHub" })).toBeVisible();
   await expect(
     page.getByRole("navigation", { name: "Features" }).getByText(title),
   ).toHaveCount(1);
-  page.once("dialog", (confirmation) => confirmation.accept());
+
+  await page.getByRole("button", { name: "Edit feature" }).click();
+  await page.getByRole("button", { name: "Archive feature" }).click();
+  await page
+    .getByRole("dialog", { name: `Archive ${title}?` })
+    .getByRole("button", { name: "Archive feature" })
+    .click();
+  await page.getByRole("button", { name: "Manage feature" }).click();
   await page.getByRole("button", { name: "Delete feature" }).click();
+  const deleteConfirmation = page.getByRole("dialog", {
+    name: `Delete ${title}?`,
+  });
+  await deleteConfirmation.getByRole("button", { name: "Cancel" }).click();
   await expect(
-    page.getByRole("heading", { name: /What can move/ }),
+    page.getByRole("heading", { name: "Feature details" }),
+  ).toBeVisible();
+  await page.getByRole("button", { name: "Delete feature" }).click();
+  await page
+    .getByRole("dialog", { name: `Delete ${title}?` })
+    .getByRole("button", { name: "Delete permanently" })
+    .click();
+  await expect(
+    page.getByRole("heading", { name: "Archived features", exact: true }),
   ).toBeVisible();
   await expect(page.getByText(title)).toHaveCount(0);
 });
@@ -407,6 +542,9 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: /What can move/ }),
   ).toBeVisible();
+  await expect(
+    page.getByRole("link", { name: /Archived features/ }),
+  ).toBeVisible();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
   await page
     .getByRole("link", { name: /Cross-repository launch · 8 nodes/ })
@@ -421,13 +559,13 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
   const secondaryActions = page.locator(
     ".workspace-actions .icon-button-secondary",
   );
-  await expect(secondaryActions).toHaveCount(3);
+  await expect(secondaryActions).toHaveCount(2);
   for (const action of await secondaryActions.all()) {
     await expect(action).toBeHidden();
   }
   await expect(
     page.locator(".workspace-actions .icon-button-danger"),
-  ).toBeHidden();
+  ).toHaveCount(0);
   const addTaskBounds = await addTaskButton.boundingBox();
   expect(addTaskBounds).not.toBeNull();
   if (addTaskBounds) {

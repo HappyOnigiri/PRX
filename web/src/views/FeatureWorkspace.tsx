@@ -1,13 +1,5 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
-import {
-  Archive,
-  ArchiveRestore,
-  ArrowLeft,
-  Pencil,
-  Plus,
-  RefreshCw,
-  Trash2,
-} from "lucide-react";
+import { ArrowLeft, Pencil, Plus, RefreshCw } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
@@ -24,7 +16,6 @@ import { EditFeatureDialog } from "./EditFeatureDialog";
 import { FeatureGraph } from "./FeatureGraph";
 import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
-import { MutationError } from "./MutationError";
 import { TaskInspector } from "./TaskInspector";
 import { type TaskNodeDocument } from "./TaskNode";
 
@@ -69,8 +60,6 @@ export function FeatureWorkspace() {
     setShowTask(true);
   }, []);
   const sync = useDomainMutation((id: string) => mutations.sync(id));
-  const updateFeature = useDomainMutation(mutations.updateFeature);
-  const deleteFeature = useDomainMutation(mutations.deleteFeature);
 
   if (snapshot.isPending)
     return (
@@ -92,21 +81,6 @@ export function FeatureWorkspace() {
       </div>
     );
 
-  async function removeFeature() {
-    if (
-      !window.confirm(
-        t("workspace.deleteFeatureConfirm", { title: feature?.title ?? "" }),
-      )
-    )
-      return;
-    try {
-      await deleteFeature.mutateAsync(featureId);
-    } catch {
-      return;
-    }
-    await navigate({ to: "/" });
-  }
-
   const selectedTask = tasks.find((task) => task.id === selected);
   return (
     <WorkspaceContent
@@ -121,7 +95,6 @@ export function FeatureWorkspace() {
       showTask={showTask}
       showFeatureEdit={showFeatureEdit}
       syncPending={sync.isPending}
-      deleteError={deleteFeature.error}
       onSync={() => {
         sync.mutate(featureId);
       }}
@@ -131,10 +104,6 @@ export function FeatureWorkspace() {
       onEditFeature={() => {
         setShowFeatureEdit(true);
       }}
-      onToggleArchive={() => {
-        updateFeature.mutate({ id: featureId, archived: !feature.archived });
-      }}
-      onDeleteFeature={removeFeature}
       onCloseInspector={() => {
         setSelected(undefined);
       }}
@@ -146,6 +115,9 @@ export function FeatureWorkspace() {
       }}
       onCloseFeatureEdit={() => {
         setShowFeatureEdit(false);
+      }}
+      onFeatureDeleted={() => {
+        void navigate({ to: feature.archived ? "/archived" : "/" });
       }}
     />
   );
@@ -163,24 +135,24 @@ interface WorkspaceContentProps {
   showTask: boolean;
   showFeatureEdit: boolean;
   syncPending: boolean;
-  deleteError: Error | null;
   onSync: () => void;
   onCreateTask: () => void;
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onEditFeature: () => void;
-  onToggleArchive: () => void;
-  onDeleteFeature: () => void;
   onCloseInspector: () => void;
   onClosePreview: () => void;
   onCloseTask: () => void;
   onCloseFeatureEdit: () => void;
+  onFeatureDeleted: () => void;
 }
 
 function WorkspaceContent(props: WorkspaceContentProps) {
   const { t } = useTranslation();
   return (
-    <div className="workspace">
+    <div
+      className={props.feature.archived ? "workspace is-archived" : "workspace"}
+    >
       <header className="workspace-head">
         <div
           className="workspace-title"
@@ -196,51 +168,46 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           </p>
         </div>
         <div className="workspace-actions">
-          <IconButton
-            icon={RefreshCw}
-            label={
-              props.syncPending
-                ? t("workspace.syncing")
-                : t("workspace.syncGithub")
-            }
-            variant="secondary"
-            onClick={props.onSync}
-            disabled={props.syncPending}
-          />
-          <IconButton
-            icon={Plus}
-            label={t("workspace.addTask")}
-            variant="primary"
-            onClick={props.onCreateTask}
-          />
+          {!props.feature.archived && (
+            <>
+              <IconButton
+                icon={RefreshCw}
+                label={
+                  props.syncPending
+                    ? t("workspace.syncing")
+                    : t("workspace.syncGithub")
+                }
+                variant="secondary"
+                onClick={props.onSync}
+                disabled={props.syncPending}
+              />
+              <IconButton
+                icon={Plus}
+                label={t("workspace.addTask")}
+                variant="primary"
+                onClick={props.onCreateTask}
+              />
+            </>
+          )}
           <IconButton
             icon={Pencil}
-            label={t("workspace.editFeature")}
+            label={
+              props.feature.archived
+                ? t("workspace.manageFeature")
+                : t("workspace.editFeature")
+            }
             variant="secondary"
             iconOnly
             onClick={props.onEditFeature}
           />
-          <IconButton
-            icon={props.feature.archived ? ArchiveRestore : Archive}
-            label={
-              props.feature.archived
-                ? t("workspace.unarchiveFeature")
-                : t("workspace.archiveFeature")
-            }
-            variant="secondary"
-            iconOnly
-            onClick={props.onToggleArchive}
-          />
-          <IconButton
-            icon={Trash2}
-            label={t("workspace.deleteFeature")}
-            variant="danger"
-            iconOnly
-            onClick={props.onDeleteFeature}
-          />
         </div>
       </header>
-      <MutationError error={props.deleteError} />
+      {props.feature.archived && (
+        <div className="archived-notice" role="status">
+          <strong>{t("workspace.archivedLabel")}</strong>
+          <span>{t("workspace.archivedDetail")}</span>
+        </div>
+      )}
       <div className="workspace-body">
         <FeatureGraph
           tasks={props.tasks}
@@ -250,6 +217,7 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           onEditTask={props.onEditTask}
           onPreviewDocument={props.onPreviewDocument}
           onCreateTask={props.onCreateTask}
+          readOnly={props.feature.archived}
         />
         {props.selectedTask && (
           <TaskInspector
@@ -258,6 +226,7 @@ function WorkspaceContent(props: WorkspaceContentProps) {
             dependencies={props.dependencies}
             pullRequest={props.pullRequests.get(props.selectedTask.id)}
             documents={props.documentsByTask.get(props.selectedTask.id) ?? []}
+            readOnly={props.feature.archived}
             onPreview={props.onPreviewDocument}
             onClose={props.onCloseInspector}
           />
@@ -280,6 +249,7 @@ function WorkspaceContent(props: WorkspaceContentProps) {
         <EditFeatureDialog
           feature={props.feature}
           onClose={props.onCloseFeatureEdit}
+          onDeleted={props.onFeatureDeleted}
         />
       )}
     </div>

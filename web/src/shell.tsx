@@ -25,6 +25,12 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [showCreate, setShowCreate] = useState(false);
   const [showServerSettings, setShowServerSettings] = useState(false);
   const [theme, setTheme] = useState(readThemePreference);
+  const activeCount = snapshot.data?.features.filter(
+    (feature) => !feature.archived,
+  ).length;
+  const archivedCount = snapshot.data?.features.filter(
+    (feature) => feature.archived,
+  ).length;
   return (
     <div className="app-shell">
       <aside className="rail">
@@ -39,8 +45,10 @@ export function AppShell({ children }: { children: ReactNode }) {
         </Link>
         <nav aria-label={t("nav.features")}>
           <Link to="/" className="nav-link">
-            {t("nav.overview")}{" "}
-            <span>{snapshot.data?.features.length ?? "—"}</span>
+            {t("nav.overview")} <span>{activeCount ?? "—"}</span>
+          </Link>
+          <Link to="/archived" className="nav-link">
+            {t("nav.archivedFeatures")} <span>{archivedCount ?? "—"}</span>
           </Link>
           <div className="nav-caption">{t("nav.activeCircuits")}</div>
           {snapshot.data?.features

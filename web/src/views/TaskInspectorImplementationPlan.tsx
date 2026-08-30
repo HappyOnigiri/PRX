@@ -12,9 +12,11 @@ import { MutationError } from "./MutationError";
 export function ImplementationPlanSection({
   taskId,
   hasPlan,
+  readOnly = false,
 }: {
   taskId: string;
   hasPlan: boolean;
+  readOnly?: boolean;
 }) {
   const { t } = useTranslation();
   const planKey = `${taskId}:${String(hasPlan)}`;
@@ -93,7 +95,7 @@ export function ImplementationPlanSection({
           <div className="spinner" />
           <span>{t("inspector.loadingPlan")}</span>
         </div>
-      ) : (
+      ) : readOnly ? null : (
         <PlanEditor
           content={content ?? ""}
           hasPlan={hasPlan}

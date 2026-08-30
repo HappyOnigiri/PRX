@@ -34,20 +34,47 @@ interface; `internal/rpc` and `internal/cli` use a `Service` interface; and `cmd
 - `internal/app`: use cases shared by CLI and RPC.
 - `internal/github`: host-configured REST provider, credential resolver, error classification, and deterministic
   fixtures.
-- `internal/cli`: non-interactive Cobra surface and stable JSON envelopes.
+- `internal/cli`: Cobra surface with deterministic human output and stable JSON responses.
 - `internal/rpc`: ConnectRPC translation only.
 - `internal/webui`: embedded Vite production assets.
 - `web`: React application, generated API types, tests, and Playwright scenarios.
 
 ## CLI contract
 
-Every mutation is non-interactive so that people and coding agents drive the same surface. `--json` emits a versioned
-envelope; stdout then carries JSON only, and warnings and server logs go to stderr, so output can be piped without
-filtering. Operating on data that does not exist — removing a dependency, detaching a pull request, deleting a document,
-or deleting an implementation plan — fails with `not_found` instead of reporting success, so a caller cannot mistake a
-typo for a completed change. Feature and task deletion refuses to remove referenced data unless `--cascade` is supplied.
-Implementation plans are managed by `prx implementation-plan get|set|delete`; `set` reads exactly one of a file or stdin
-and returns the stored plan.
+Every response-producing CLI command uses response contract version `1`. With neither output flag set, stdout connected
+to a TTY selects deterministic human-readable output; a pipe, redirect, regular file, buffer, CI process, or other
+non-TTY stdout selects machine-readable JSON. `--json` forces JSON and `--human` forces human output regardless of stdout,
+while enabling both is a `usage_error`; explicitly false flags return to automatic selection. The selection is made from
+the actual stdout once per invocation and is reused for success and failure.
+
+A successful JSON command returns its data object directly as one-line compact JSON with a trailing newline and no
+`schema_version`, `ok`, or `data` envelope. Existing object payloads keep their fields, while collection responses use
+named fields: `features`, `tasks`, `dependencies`, `pull_requests`, `documents`, `ready_tasks`, `review_waiting_tasks`,
+`conflict_tasks`, `stale_tasks`, `hosts`, or `auth_methods` as appropriate. Empty collections are `[]`, never `null`.
+JSON stdout contains no prose, color, borders, or logs, and successful stderr is empty except for warnings and continuous
+server logs that belong there.
+
+A failed JSON command leaves stdout empty and writes `{"error":{"code":"...","message":"..."}}` as one-line compact
+JSON to stderr. Domain failures retain their existing code and message, configuration failures retain their domain
+mapping, CLI syntax failures use `usage_error`, and unexpected failures use `internal`. A failed human command also leaves
+stdout empty and writes `Error: <message>` to stderr. All failures return a non-zero exit code.
+
+Human list commands use fixed-column, uncolored tables and explicitly report empty collections. Resource retrieval uses
+labeled details, mutations use concise completion messages, and graph, snapshot, seed, configuration, synchronization,
+and implementation-plan commands use purpose-specific summaries or sections. Human fields and columns do not vary with
+terminal width or environment, and authentication output exposes only whether a secret is configured, never its value.
+
+Help, completion, `--version`, and the continuous logs of `serve` are not data responses. `prx schema-version` does not
+open SQLite, YAML configuration, or GitHub credentials; it emits `Schema version: 1` in human mode and only
+`{"schema_version":"1"}` in JSON mode. This version covers both successful JSON data objects and the JSON error contract.
+
+Every mutation is non-interactive so that people and coding agents drive the same surface. Operating on data that does
+not exist — removing a dependency, detaching a pull request, deleting a document, or deleting an implementation plan —
+fails with `not_found` instead of reporting success, so a caller cannot mistake a typo for a completed change. Feature
+and task deletion refuses to remove referenced data unless `--cascade` is supplied. Implementation plans are managed by
+`prx implementation-plan get|set|delete`; `set` reads exactly one of a file or stdin and returns the stored plan. A
+partial GitHub synchronization remains a successful command with `failed > 0` and preserved per-pull-request `sync_error`
+fields; the stderr error object is reserved for failure of the command itself.
 
 Feature and task public IDs are typed, monotonically allocated values in the forms `F-<number>` and `T-<number>`. They
 are accepted by the corresponding CLI operations and by `prx node get NODE_ID`, which returns the matching feature or
@@ -176,7 +203,11 @@ or content row, or when no suitable icon makes the action unambiguous.
 Task cards expose pull requests, document references, and a short red GitHub sync-error marker as explicit rows.
 External references open in a new browser tab, while a registered Markdown path is read on demand through a document-ID
 RPC and rendered in a read-only modal. Markdown contents remain outside the snapshot, and preview reads are limited to 1
-MiB. The task inspector opens only from the card's edit button so reference activation and editing are distinct actions.
+MiB. Dependencies are added by dragging from a blocker card's right source handle to a blocked card's left target handle.
+A dependency is removed on the canvas by selecting its edge and dragging the blocker-side source endpoint into empty
+space; dropping on another handle leaves the dependency unchanged, and the inspector's remove button remains the
+keyboard-accessible fallback. The task inspector opens only from the card's edit button so reference activation and
+editing are distinct actions.
 The task inspector and feature workspace header expose public typed IDs (`T-*` and `F-*`) with subdued copy controls for
 debugging; identifiers use the existing monospace treatment and do not compete with editing or synchronization actions.
 These are the only feature/task identifiers exposed to CLI, RPC, and WebUI users; storage UUIDs remain internal.
@@ -189,6 +220,14 @@ The Server settings dialog edits the same YAML-backed host and credential order 
 shows host boundaries and secret-free credential metadata, offers source-specific forms, and sends an inline token only
 when it is newly entered or replaced. Reordering affects the next synchronization without a server restart; the browser
 does not persist server credentials in Local Storage.
+
+Overview represents current work only: its feature list, managed-node count, ready queue, and review, conflict, and stale
+meters are all projected from non-archived features. Archived features remain durable in SQLite but move to a separate
+Archived view for historical reference, restoration, or permanent deletion. In the WebUI, an archived feature workspace
+is read-only: graph navigation, identifiers, pull-request and URL links, Markdown previews, and implementation-plan
+content remain available, while synchronization and every task or feature content mutation are removed. Restore and
+cascade deletion remain available from the feature management dialog. This is a browser responsibility and does not add
+server-side rejection to the RPC or CLI contracts.
 
 ## Trade-offs
 

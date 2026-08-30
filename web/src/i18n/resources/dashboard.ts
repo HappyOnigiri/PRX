@@ -30,6 +30,21 @@ export const dashboard = {
         stale: { title: "Stale signal", detail: "Refresh GitHub data" },
       },
     },
+    archived: {
+      loadingTitle: "Loading archived features…",
+      loadingDetail: "Reading feature history from the local database.",
+      errorTitle: "Archived features could not be loaded",
+      eyebrow: "Feature history",
+      title: "Archived features",
+      description:
+        "Review completed graphs, restore them to active work, or delete them permanently.",
+      featureCount: "archived features",
+      listLabel: "Archived feature list",
+      emptyTitle: "No archived features",
+      emptyDetail:
+        "Features you archive will appear here without affecting active queues.",
+      progress: "{{merged}}/{{total}} merged",
+    },
   },
   ja: {
     dashboard: {
@@ -62,6 +77,22 @@ export const dashboard = {
         conflicts: { title: "コンフリクト", detail: "対応が必要" },
         stale: { title: "情報が古い", detail: "GitHub データの更新が必要" },
       },
+    },
+    archived: {
+      loadingTitle: "アーカイブ済みフィーチャーを読み込んでいます…",
+      loadingDetail:
+        "ローカルデータベースからフィーチャー履歴を確認しています。",
+      errorTitle: "アーカイブ済みフィーチャーを読み込めませんでした",
+      eyebrow: "フィーチャー履歴",
+      title: "アーカイブ済み",
+      description:
+        "完了したグラフを参照し、進行中へ復元するか完全に削除できます。",
+      featureCount: "件のアーカイブ",
+      listLabel: "アーカイブ済みフィーチャー一覧",
+      emptyTitle: "アーカイブ済みフィーチャーはありません",
+      emptyDetail:
+        "アーカイブしたフィーチャーは、進行中のキューに影響せずここへ表示されます。",
+      progress: "{{merged}}/{{total}} マージ済み",
     },
   },
 } as const;

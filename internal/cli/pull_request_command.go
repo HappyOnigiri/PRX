@@ -15,7 +15,7 @@ func (s *state) pullRequestCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			return s.write(value, renderMessage("Attached pull request #%d to task %s.", value.Number, value.TaskID))
 		},
 	}
 	attach.Flags().StringVar(&task, "task", "", "task ID")
@@ -31,7 +31,10 @@ func (s *state) pullRequestCommand() *cobra.Command {
 			if err := s.service.DetachPullRequest(cmd.Context(), args[0]); err != nil {
 				return err
 			}
-			return s.write(map[string]string{"detached": args[0]})
+			return s.write(
+				map[string]string{"detached": args[0]},
+				renderMessage("Detached pull request from task %s.", args[0]),
+			)
 		},
 	}
 	list := &cobra.Command{
@@ -44,7 +47,8 @@ func (s *state) pullRequestCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(snapshot.PullRequests)
+			pullRequests := nonNilSlice(snapshot.PullRequests)
+			return s.write(map[string]any{"pull_requests": pullRequests}, renderPullRequestList(pullRequests))
 		},
 	}
 	command.AddCommand(attach, detach, list)

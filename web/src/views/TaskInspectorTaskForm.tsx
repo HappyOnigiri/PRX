@@ -8,9 +8,37 @@ import { taskStatusLabel } from "../i18n/domain";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 
-export function TaskInspectorTaskForm({ task }: { task: Task }) {
+export function TaskInspectorTaskForm({
+  task,
+  readOnly = false,
+}: {
+  task: Task;
+  readOnly?: boolean;
+}) {
   const { t } = useTranslation();
   const updateTask = useDomainMutation(mutations.updateTask);
+
+  if (readOnly)
+    return (
+      <dl className="inspector-values">
+        <div>
+          <dt>{t("common.title")}</dt>
+          <dd>{task.title}</dd>
+        </div>
+        <div>
+          <dt>{t("common.scope")}</dt>
+          <dd>{task.scope || t("inspector.notSet")}</dd>
+        </div>
+        <div>
+          <dt>{t("common.status")}</dt>
+          <dd>{taskStatusLabel(task.status, t)}</dd>
+        </div>
+        <div>
+          <dt>{t("common.assignee")}</dt>
+          <dd>{task.assignee || t("common.unassigned")}</dd>
+        </div>
+      </dl>
+    );
 
   return (
     <form

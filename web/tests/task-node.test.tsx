@@ -36,11 +36,12 @@ describe("TaskNode", () => {
             value: "https://example.com/runbook",
           },
         ],
+        readOnly: false,
         onEdit,
         onPreview,
       },
       selected: false,
-      isConnectable: false,
+      isConnectable: true,
       zIndex: 0,
       dragging: false,
       draggable: false,
@@ -58,6 +59,12 @@ describe("TaskNode", () => {
     expect(screen.getByText("Merge billing schema")).toBeInTheDocument();
     expect(screen.getByText("READY")).toBeInTheDocument();
     expect(container.querySelector(".is-stale")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Blocked task input (drop here)"),
+    ).toHaveAttribute("title", "Blocked task input (drop here)");
+    expect(
+      screen.getByLabelText("Blocker output (drag from here)"),
+    ).toHaveAttribute("title", "Blocker output (drag from here)");
     expect(screen.getByRole("link", { name: /acme\/api #42/ })).toHaveAttribute(
       "target",
       "_blank",
@@ -70,6 +77,45 @@ describe("TaskNode", () => {
     expect(onPreview).toHaveBeenCalledWith(markdown);
     fireEvent.click(
       screen.getByRole("button", { name: "Edit Merge billing schema" }),
+    );
+    expect(onEdit).toHaveBeenCalledOnce();
+  });
+
+  it("labels the inspector action as view-only for archived tasks", () => {
+    const onEdit = vi.fn();
+    const props = {
+      id: "task",
+      data: {
+        title: "Archived task",
+        assignee: "",
+        state: TaskDisplayState.NOT_STARTED,
+        ready: false,
+        stale: false,
+        syncError: false,
+        pullRequest: undefined,
+        documents: [],
+        readOnly: true,
+        onEdit,
+        onPreview: vi.fn(),
+      },
+      selected: false,
+      isConnectable: false,
+      zIndex: 0,
+      dragging: false,
+      draggable: false,
+      selectable: true,
+      deletable: false,
+      type: "task",
+      positionAbsoluteX: 0,
+      positionAbsoluteY: 0,
+    } as NodeProps<TaskFlowNode>;
+    render(
+      <ReactFlowProvider>
+        <TaskNode {...props} />
+      </ReactFlowProvider>,
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "View Archived task details" }),
     );
     expect(onEdit).toHaveBeenCalledOnce();
   });
