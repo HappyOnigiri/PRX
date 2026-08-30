@@ -17,10 +17,12 @@ const apiMocks = vi.hoisted(() => ({
   deleteDocument: vi.fn(),
   getDocument: vi.fn(),
   updateDocument: vi.fn(),
+  selectLocalFile: vi.fn(),
 }));
 
 vi.mock("../src/api", () => ({
   mutations: apiMocks,
+  selectLocalFile: apiMocks.selectLocalFile,
 }));
 
 function renderReferences(
@@ -82,6 +84,9 @@ describe("FeatureReferences", () => {
       .mockReset()
       .mockResolvedValue({ content: "# Decision" });
     apiMocks.updateDocument.mockReset().mockResolvedValue({});
+    apiMocks.selectLocalFile
+      .mockReset()
+      .mockResolvedValue({ path: "", canceled: true });
   });
 
   afterEach(() => {
@@ -140,17 +145,15 @@ describe("FeatureReferences", () => {
       name: "Add feature reference",
     });
     expect(screen.queryByRole("region", { name: "References" })).toBeNull();
-    const kind = screen.getByLabelText("Type");
+    const urlTab = screen.getByRole("tab", { name: "URL" });
     await waitFor(() => {
-      expect(kind).toHaveFocus();
+      expect(urlTab).toHaveFocus();
     });
-    fireEvent.change(kind, {
-      target: { value: String(DocumentKind.LOCAL_FILE) },
-    });
-    fireEvent.change(screen.getByLabelText("Title (optional)"), {
+    fireEvent.click(screen.getByRole("tab", { name: "Local file" }));
+    fireEvent.change(screen.getByLabelText("Reference title (optional)"), {
       target: { value: "Feature brief" },
     });
-    fireEvent.change(screen.getByLabelText("URL or file path"), {
+    fireEvent.change(screen.getByLabelText("File path"), {
       target: { value: "README.md" },
     });
 
@@ -191,10 +194,10 @@ describe("FeatureReferences", () => {
     fireEvent.click(trigger);
     expect(screen.getByText("No references.")).toBeVisible();
     fireEvent.click(screen.getByRole("button", { name: "Add reference" }));
-    fireEvent.change(screen.getByLabelText("Title (optional)"), {
+    fireEvent.change(screen.getByLabelText("Reference title (optional)"), {
       target: { value: "Retry me" },
     });
-    fireEvent.change(screen.getByLabelText("URL or file path"), {
+    fireEvent.change(screen.getByLabelText("Document URL"), {
       target: { value: "https://example.com/retry" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Add reference" }));
@@ -202,28 +205,34 @@ describe("FeatureReferences", () => {
     expect(await screen.findByRole("alert")).toHaveTextContent(
       "Reference failed",
     );
-    expect(screen.getByLabelText("Title (optional)")).toHaveValue("Retry me");
+    expect(screen.getByLabelText("Reference title (optional)")).toHaveValue(
+      "Retry me",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     fireEvent.click(trigger);
     fireEvent.click(screen.getByRole("button", { name: "Add reference" }));
-    expect(screen.getByLabelText("Type")).toHaveValue(String(DocumentKind.URL));
-    expect(screen.getByLabelText("Title (optional)")).toHaveValue("");
+    expect(screen.getByRole("tab", { name: "URL" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(screen.getByLabelText("Reference title (optional)")).toHaveValue("");
   });
 
   it("traps focus inside the add dialog", async () => {
     renderReferences();
     fireEvent.click(screen.getByRole("button", { name: "References" }));
     fireEvent.click(screen.getByRole("button", { name: "Add reference" }));
-    const kind = screen.getByLabelText("Type");
+    const close = screen.getByRole("button", { name: "Close" });
     const submit = screen.getByRole("button", { name: "Add reference" });
     await waitFor(() => {
-      expect(kind).toHaveFocus();
+      expect(screen.getByRole("tab", { name: "URL" })).toHaveFocus();
     });
 
-    fireEvent.keyDown(kind, { key: "Tab", shiftKey: true });
+    close.focus();
+    fireEvent.keyDown(close, { key: "Tab", shiftKey: true });
     expect(submit).toHaveFocus();
     fireEvent.keyDown(submit, { key: "Tab" });
-    expect(kind).toHaveFocus();
+    expect(close).toHaveFocus();
   });
 
   it("supports Markdown editing and deletion without changing the task UI", async () => {

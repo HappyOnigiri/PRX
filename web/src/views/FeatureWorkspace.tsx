@@ -10,6 +10,7 @@ import type {
   Task,
 } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
+import { AddDocumentDialog } from "./AddDocumentDialog";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { EditFeatureDialog } from "./EditFeatureDialog";
@@ -20,6 +21,11 @@ import { MarkdownPreview } from "./MarkdownPreview";
 import { TaskInspector } from "./TaskInspector";
 import { type TaskNodeDocument } from "./TaskNode";
 
+interface DocumentTarget {
+  taskId: string;
+  trigger: HTMLButtonElement;
+}
+
 export function FeatureWorkspace() {
   const { t } = useTranslation();
   const { featureId } = useParams({ from: "/features/$featureId" });
@@ -29,6 +35,7 @@ export function FeatureWorkspace() {
   const [showTask, setShowTask] = useState(false);
   const [showFeatureEdit, setShowFeatureEdit] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<TaskNodeDocument>();
+  const [documentTarget, setDocumentTarget] = useState<DocumentTarget>();
   const data = snapshot.data;
   const feature = data?.features.find((item) => item.id === featureId);
   const tasks = useMemo(
@@ -66,6 +73,12 @@ export function FeatureWorkspace() {
   const openTaskDialog = useCallback(() => {
     setShowTask(true);
   }, []);
+  const openDocumentDialog = useCallback(
+    (taskId: string, trigger: HTMLButtonElement) => {
+      setDocumentTarget({ taskId, trigger });
+    },
+    [],
+  );
   const sync = useDomainMutation((id: string) => mutations.sync(id));
 
   if (snapshot.isPending)
@@ -100,6 +113,7 @@ export function FeatureWorkspace() {
       featureDocuments={featureDocuments}
       selectedTask={selectedTask}
       previewDocument={previewDocument}
+      documentTarget={documentTarget}
       showTask={showTask}
       showFeatureEdit={showFeatureEdit}
       syncPending={sync.isPending}
@@ -109,6 +123,7 @@ export function FeatureWorkspace() {
       onCreateTask={openTaskDialog}
       onEditTask={setSelected}
       onPreviewDocument={setPreviewDocument}
+      onAddDocument={openDocumentDialog}
       onEditFeature={() => {
         setShowFeatureEdit(true);
       }}
@@ -117,6 +132,9 @@ export function FeatureWorkspace() {
       }}
       onClosePreview={() => {
         setPreviewDocument(undefined);
+      }}
+      onCloseDocumentDialog={() => {
+        setDocumentTarget(undefined);
       }}
       onCloseTask={() => {
         setShowTask(false);
@@ -141,6 +159,7 @@ interface WorkspaceContentProps {
   featureDocuments: TaskNodeDocument[];
   selectedTask: Task | undefined;
   previewDocument: TaskNodeDocument | undefined;
+  documentTarget: DocumentTarget | undefined;
   showTask: boolean;
   showFeatureEdit: boolean;
   syncPending: boolean;
@@ -148,9 +167,11 @@ interface WorkspaceContentProps {
   onCreateTask: () => void;
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
+  onAddDocument: (taskId: string, trigger: HTMLButtonElement) => void;
   onEditFeature: () => void;
   onCloseInspector: () => void;
   onClosePreview: () => void;
+  onCloseDocumentDialog: () => void;
   onCloseTask: () => void;
   onCloseFeatureEdit: () => void;
   onFeatureDeleted: () => void;
@@ -231,6 +252,7 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           documentsByTask={props.documentsByTask}
           onEditTask={props.onEditTask}
           onPreviewDocument={props.onPreviewDocument}
+          onAddDocument={props.onAddDocument}
           onCreateTask={props.onCreateTask}
           readOnly={props.feature.archived}
         />
@@ -246,11 +268,26 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           />
         )}
       </div>
+      <WorkspaceOverlays props={props} />
+    </div>
+  );
+}
+
+function WorkspaceOverlays({ props }: { props: WorkspaceContentProps }) {
+  return (
+    <>
       {props.previewDocument && (
         <MarkdownPreview
           key={props.previewDocument.id}
           document={props.previewDocument}
           onClose={props.onClosePreview}
+        />
+      )}
+      {props.documentTarget && (
+        <AddDocumentDialog
+          taskId={props.documentTarget.taskId}
+          trigger={props.documentTarget.trigger}
+          onClose={props.onCloseDocumentDialog}
         />
       )}
       {props.showTask && (
@@ -266,6 +303,6 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           onDeleted={props.onFeatureDeleted}
         />
       )}
-    </div>
+    </>
   );
 }

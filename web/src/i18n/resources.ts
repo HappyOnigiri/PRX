@@ -1,5 +1,6 @@
 import { common } from "./resources/common";
 import { dashboard } from "./resources/dashboard";
+import { documentDialog } from "./resources/document-dialog";
 import { domain } from "./resources/domain";
 import { errors } from "./resources/errors";
 import { inspector } from "./resources/inspector";
@@ -13,6 +14,7 @@ export const resources = {
       ...shell.en,
       ...common.en,
       ...dashboard.en,
+      ...documentDialog.en,
       ...workspace.en,
       ...markdownPreview.en,
       ...inspector.en,
@@ -25,6 +27,7 @@ export const resources = {
       ...shell.ja,
       ...common.ja,
       ...dashboard.ja,
+      ...documentDialog.ja,
       ...workspace.ja,
       ...markdownPreview.ja,
       ...inspector.ja,

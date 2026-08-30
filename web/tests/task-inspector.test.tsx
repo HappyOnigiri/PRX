@@ -80,7 +80,7 @@ describe("TaskInspector", () => {
     }
   });
 
-  it("edits a task and manages its pull request and references", async () => {
+  it("edits a task and keeps reference editing in the inspector", async () => {
     const task = makeTask({
       title: "Current task",
       scope: "Initial scope",
@@ -148,8 +148,11 @@ describe("TaskInspector", () => {
       "https://example.com/runbook",
     );
     expect(
-      screen.getByRole("button", { name: "Delete Runbook" }),
-    ).toBeInTheDocument();
+      screen.queryByRole("button", { name: "Delete Runbook" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Add reference" }),
+    ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("combobox", { name: "Blocker task" }),
     ).not.toBeInTheDocument();
@@ -191,9 +194,6 @@ describe("TaskInspector", () => {
       screen.getByRole("button", { name: "Delivery plandocs/delivery.md" }),
     );
     expect(onPreview).toHaveBeenCalledWith(markdown);
-    fireEvent.click(screen.getByRole("button", { name: "Delete Runbook" }));
-    expect(mutationAt(5).mutate).toHaveBeenCalledWith("document-url");
-
     inspectorMocks.api.getDocument.mockResolvedValue({
       content: "# Old\n\n- first\n- second",
     });
@@ -220,29 +220,6 @@ describe("TaskInspector", () => {
     expect(inspectorMocks.api.updateDocument).toHaveBeenCalledWith({
       id: "document-inline",
       source: { case: "markdown", value: "# New\n\n- first\n- second" },
-    });
-
-    const referenceKind = screen.getAllByRole("combobox").at(-1);
-    if (!referenceKind) throw new Error("reference kind select missing");
-    fireEvent.change(referenceKind, {
-      target: { value: String(DocumentKind.LOCAL_FILE) },
-    });
-    const referenceValue = screen.getByPlaceholderText("docs/plan.md");
-    fireEvent.change(referenceValue, {
-      target: { value: "docs/new.md" },
-    });
-    fireEvent.change(screen.getByPlaceholderText("Design notes"), {
-      target: { value: "New plan" },
-    });
-    const referenceForm = referenceValue.closest("form");
-    if (!referenceForm) throw new Error("reference form missing");
-    fireEvent.submit(referenceForm);
-    expect(inspectorMocks.api.addDocument).toHaveBeenCalledWith({
-      taskId: task.id,
-      kind: DocumentKind.LOCAL_FILE,
-      title: "New plan",
-      value: "docs/new.md",
-      isImplementationPlan: false,
     });
 
     vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -304,7 +281,7 @@ describe("TaskInspector", () => {
         onClose={vi.fn()}
       />
     );
-    mutationAt(7).error = new Error("read failed");
+    mutationAt(5).error = new Error("read failed");
     render(inspector);
 
     expect(screen.getByRole("alert")).toHaveTextContent("read failed");

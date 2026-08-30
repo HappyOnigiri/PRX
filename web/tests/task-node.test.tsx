@@ -8,6 +8,7 @@ describe("TaskNode", () => {
   it("shows an assignee and reflects ready and stale state without badges", () => {
     const onEdit = vi.fn();
     const onPreview = vi.fn();
+    const onAddReference = vi.fn();
     const markdown = {
       id: "doc-md",
       kind: DocumentKind.LOCAL_FILE,
@@ -43,6 +44,7 @@ describe("TaskNode", () => {
         readOnly: false,
         onEdit,
         onPreview,
+        onAddReference,
       },
       selected: false,
       isConnectable: true,
@@ -94,6 +96,15 @@ describe("TaskNode", () => {
       screen.getByRole("button", { name: "Edit Merge billing schema" }),
     );
     expect(onEdit).toHaveBeenCalledOnce();
+    const addReference = screen.getByRole("button", {
+      name: "Add reference to Merge billing schema",
+    });
+    expect(addReference).toHaveAttribute(
+      "title",
+      "Add reference to Merge billing schema",
+    );
+    fireEvent.click(addReference);
+    expect(onAddReference).toHaveBeenCalledWith(addReference);
   });
 
   it("labels the inspector action as view-only for archived tasks", () => {
@@ -131,6 +142,7 @@ describe("TaskNode", () => {
     );
     expect(screen.queryByText("Unassigned")).not.toBeInTheDocument();
     expect(container.querySelector("footer")).not.toBeInTheDocument();
+    expect(container.querySelector(".node-asset-add")).not.toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "View Archived task details" }),
     );

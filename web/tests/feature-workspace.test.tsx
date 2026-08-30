@@ -85,16 +85,27 @@ vi.mock("../src/views/FeatureGraph", () => ({
     onCreateTask,
     onEditTask,
     onPreviewDocument,
+    onAddDocument,
     readOnly,
   }: {
     onCreateTask: () => void;
     onEditTask: (taskId: string) => void;
     onPreviewDocument: (document: unknown) => void;
+    onAddDocument: (taskId: string, trigger: HTMLButtonElement) => void;
     readOnly: boolean;
   }) => (
     <div data-testid="feature-graph">
       <span>{readOnly ? "Mock read-only graph" : "Mock active graph"}</span>
       {!readOnly && <button onClick={onCreateTask}>Mock create task</button>}
+      {!readOnly && (
+        <button
+          onClick={(event) => {
+            onAddDocument("task-1", event.currentTarget);
+          }}
+        >
+          Mock add task reference
+        </button>
+      )}
       <button
         onClick={() => {
           onEditTask("task-1");
@@ -109,6 +120,20 @@ vi.mock("../src/views/FeatureGraph", () => ({
       >
         Mock preview document
       </button>
+    </div>
+  ),
+}));
+vi.mock("../src/views/AddDocumentDialog", () => ({
+  AddDocumentDialog: ({
+    taskId,
+    onClose,
+  }: {
+    taskId: string;
+    onClose: () => void;
+  }) => (
+    <div role="dialog" aria-label="Mock add document">
+      <span>{taskId}</span>
+      <button onClick={onClose}>Mock close document</button>
     </div>
   ),
 }));
@@ -258,6 +283,15 @@ describe("FeatureWorkspace", () => {
       screen.getByRole("dialog", { name: "Mock create task" }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Mock close task" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Mock add task reference" }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Mock add document" }),
+    ).toHaveTextContent("task-1");
+    fireEvent.click(
+      screen.getByRole("button", { name: "Mock close document" }),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Mock edit task" }));
     expect(
       screen.getByRole("complementary", { name: "Mock task inspector" }),

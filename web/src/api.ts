@@ -24,6 +24,7 @@ import {
   ReadDocumentContentRequestSchema,
   RemoveDependencyRequestSchema,
   ReorderGitHubAuthMethodsRequestSchema,
+  SelectLocalFileRequestSchema,
   SyncGitHubIfDueRequestSchema,
   SyncRequestSchema,
   UpdateDocumentRequestSchema,
@@ -230,4 +231,8 @@ export async function readDocumentContent(id: string): Promise<string> {
     create(ReadDocumentContentRequestSchema, { id }),
   );
   return response.content;
+}
+
+export async function selectLocalFile() {
+  return client.selectLocalFile(create(SelectLocalFileRequestSchema));
 }

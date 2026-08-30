@@ -5,7 +5,7 @@ import {
   type Node,
   type NodeProps,
 } from "@xyflow/react";
-import { ExternalLink, Eye, Pencil } from "lucide-react";
+import { ExternalLink, Eye, Pencil, Plus } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { DocumentKind, type TaskDisplayState } from "../gen/prx/v1/prx_pb";
@@ -41,6 +41,7 @@ interface TaskNodeData extends Record<string, unknown> {
   readOnly: boolean;
   onEdit: () => void;
   onPreview: (document: TaskNodeDocument) => void;
+  onAddReference?: (trigger: HTMLButtonElement) => void;
 }
 export type TaskFlowNode = Node<TaskNodeData, "task">;
 
@@ -149,7 +150,7 @@ export function TaskNode({
       {data.syncError && (
         <p className="node-sync-error">{t("inspector.githubSyncError")}</p>
       )}
-      {(data.pullRequest ?? data.documents.length > 0) && (
+      {(data.pullRequest ?? (data.documents.length > 0 || !data.readOnly)) && (
         <NodeAssets data={data} />
       )}
       {data.assignee && (
@@ -230,6 +231,21 @@ function NodeAssets({ data }: { data: TaskNodeData }) {
             </button>
           ),
         )}
+      {!data.readOnly && (
+        <button
+          type="button"
+          className="node-asset node-asset-add"
+          aria-label={t("workspace.addTaskReference", { title: data.title })}
+          title={t("workspace.addTaskReference", { title: data.title })}
+          onClick={(event) => {
+            data.onAddReference?.(event.currentTarget);
+          }}
+        >
+          <span>ADD</span>
+          <b>{t("workspace.addReference")}</b>
+          <Plus aria-hidden="true" focusable="false" size={14} />
+        </button>
+      )}
     </div>
   );
 }

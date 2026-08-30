@@ -11,15 +11,28 @@ import (
 	"github.com/HappyOnigiri/PRX/gen/prx/v1/prxv1connect"
 	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
+	"github.com/HappyOnigiri/PRX/internal/filepicker"
 )
+
+// LocalFilePicker opens a server-local native chooser without reading the file.
+type LocalFilePicker interface {
+	SelectFile(ctx context.Context) (path string, canceled bool, err error)
+}
 
 type Handler struct {
 	prxv1connect.UnimplementedPRXServiceHandler
 	service     Service
 	configStore *config.Store
+	filePicker  LocalFilePicker
+	pickerBusy  chan struct{}
 }
 
 func New(service Service) (string, http.Handler) {
+	return NewWithFilePicker(service, filepicker.New())
+}
+
+// NewWithFilePicker constructs the RPC handler with an injectable native chooser.
+func NewWithFilePicker(service Service, picker LocalFilePicker) (string, http.Handler) {
 	var configStore *config.Store
 	if configStore == nil {
 		if provider, ok := service.(interface{ ConfigStore() *config.Store }); ok {
@@ -29,7 +42,10 @@ func New(service Service) (string, http.Handler) {
 	// Requiring the Connect protocol header keeps the RPCs out of reach of
 	// simple cross-origin requests, which browsers send without a preflight.
 	return prxv1connect.NewPRXServiceHandler(
-		&Handler{service: service, configStore: configStore},
+		&Handler{
+			service: service, configStore: configStore, filePicker: picker,
+			pickerBusy: make(chan struct{}, 1),
+		},
 		connect.WithRequireConnectProtocolHeader(),
 	)
 }
@@ -341,6 +357,36 @@ func (h *Handler) ReadDocumentContent(
 		return nil, rpcError(err)
 	}
 	return connect.NewResponse(&prxv1.ReadDocumentContentResponse{Content: content}), nil
+}
+
+func (h *Handler) SelectLocalFile(
+	ctx context.Context,
+	_ *connect.Request[prxv1.SelectLocalFileRequest],
+) (*connect.Response[prxv1.SelectLocalFileResponse], error) {
+	select {
+	case h.pickerBusy <- struct{}{}:
+		defer func() { <-h.pickerBusy }()
+	default:
+		return nil, connect.NewError(connect.CodeResourceExhausted, errors.New("local file picker is already open"))
+	}
+	path, canceled, err := h.filePicker.SelectFile(ctx)
+	if err != nil {
+		var pickerErr *filepicker.Error
+		if errors.As(err, &pickerErr) && pickerErr.Kind == filepicker.KindUnavailable {
+			return nil, connect.NewError(
+				connect.CodeUnavailable,
+				errors.New("native file picker is unavailable; enter the path manually"),
+			)
+		}
+		if errors.Is(err, context.Canceled) {
+			return nil, connect.NewError(connect.CodeCanceled, err)
+		}
+		return nil, connect.NewError(
+			connect.CodeInternal,
+			errors.New("native file picker failed; enter the path manually"),
+		)
+	}
+	return connect.NewResponse(&prxv1.SelectLocalFileResponse{Path: path, Canceled: canceled}), nil
 }
 
 func (h *Handler) Sync(

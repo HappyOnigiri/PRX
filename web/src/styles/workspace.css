@@ -123,19 +123,6 @@
   justify-content: center;
 }
 
-.feature-reference-dialog {
-  max-height: calc(100vh - 40px);
-  overflow-y: auto;
-}
-
-.feature-reference-dialog > label,
-.feature-reference-dialog .form-row label {
-  display: grid;
-  gap: 6px;
-  color: var(--text-2);
-  font-size: var(--text-sm);
-}
-
 .workspace-body {
   position: relative;
   min-height: 0;
@@ -179,19 +166,6 @@
 
   .feature-references-panel {
     max-height: calc(100dvh - 196px);
-  }
-
-  .feature-reference-dialog .form-row {
-    grid-template-columns: 1fr;
-  }
-
-  .feature-reference-dialog footer {
-    flex-direction: column-reverse;
-  }
-
-  .feature-reference-dialog footer .icon-button {
-    width: 100%;
-    justify-content: center;
   }
 
   .workspace.is-archived .workspace-actions > .icon-button-secondary {

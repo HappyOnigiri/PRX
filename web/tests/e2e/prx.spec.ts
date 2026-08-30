@@ -431,13 +431,11 @@ test("creates and edits a feature DAG while preserving state", async ({
   const featureReferenceDialog = page.getByRole("dialog", {
     name: "Add feature reference",
   });
+  await featureReferenceDialog.getByRole("tab", { name: "Local file" }).click();
   await featureReferenceDialog
-    .getByLabel("Type")
-    .selectOption({ label: "Local file" });
-  await featureReferenceDialog
-    .getByLabel("Title (optional)")
+    .getByLabel("Reference title (optional)")
     .fill("Feature brief");
-  await featureReferenceDialog.getByLabel("URL or file path").fill("README.md");
+  await featureReferenceDialog.getByLabel("File path").fill("README.md");
   await featureReferenceDialog
     .getByRole("button", { name: "Add reference" })
     .click();
@@ -499,30 +497,54 @@ test("creates and edits a feature DAG while preserving state", async ({
       name: new RegExp(`HappyOnigiri/PRX #${prNumber}`),
     }),
   ).toBeVisible();
+  await expect(
+    inspector.getByRole("button", { name: "Add reference" }),
+  ).toHaveCount(0);
+  await page.getByRole("button", { name: "Close inspector" }).click();
+  const apiCard = page.locator(".task-node").filter({ hasText: "E2E API" });
+  await apiCard
+    .getByRole("button", { name: "Add reference to E2E API" })
+    .click();
+  let taskReferenceDialog = page.getByRole("dialog", {
+    name: "Add task reference",
+  });
+  await taskReferenceDialog.getByRole("tab", { name: "Local file" }).click();
+  await taskReferenceDialog
+    .getByLabel("Reference title (optional)")
+    .fill("Delivery plan");
+  await taskReferenceDialog.getByLabel("File path").fill("README.md");
+  await taskReferenceDialog
+    .getByRole("button", { name: "Add reference" })
+    .click();
+  await apiCard
+    .getByRole("button", { name: "Add reference to E2E API" })
+    .click();
+  taskReferenceDialog = page.getByRole("dialog", {
+    name: "Add task reference",
+  });
+  await taskReferenceDialog
+    .getByLabel("Reference title (optional)")
+    .fill("Release runbook");
+  await taskReferenceDialog
+    .getByLabel("Document URL")
+    .fill("https://example.com/runbook");
+  await taskReferenceDialog
+    .getByRole("button", { name: "Add reference" })
+    .click();
+  await openTask(page, "E2E API");
   const reference = inspector
     .locator("section")
-    .filter({ has: page.getByRole("heading", { name: "Reference" }) });
-  await reference
-    .locator("select[name=kind]")
-    .selectOption({ label: "Local file" });
-  await reference.getByPlaceholder("Design notes").fill("Delivery plan");
-  await reference.getByPlaceholder("docs/plan.md").fill("README.md");
-  await reference.getByRole("button", { name: "Add reference" }).click();
-  await expect(reference.locator(".document-chip")).toHaveCount(1);
-  await reference.locator("select[name=kind]").selectOption({ label: "URL" });
-  await reference.getByPlaceholder("Design notes").fill("Release runbook");
-  await reference
-    .getByPlaceholder("https://example.com/document")
-    .fill("https://example.com/runbook");
-  await reference.getByRole("button", { name: "Add reference" }).click();
+    .filter({ has: page.getByRole("heading", { name: "References" }) });
   await expect(reference.locator(".document-chip")).toHaveCount(2);
+  await expect(reference.getByRole("button", { name: /Delete/ })).toHaveCount(
+    0,
+  );
   await inspector
     .locator("select[name=status]")
     .selectOption({ label: "In progress" });
   await inspector.locator("input[name=assignee]").fill("");
   await inspector.getByRole("button", { name: "Save task" }).click();
   await page.getByRole("button", { name: "Close inspector" }).click();
-  const apiCard = page.locator(".task-node").filter({ hasText: "E2E API" });
   await expect(
     apiCard.getByRole("link", {
       name: new RegExp(`HappyOnigiri/PRX #${prNumber}`),
@@ -889,9 +911,10 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
   const referencesButton = page.getByRole("button", { name: "References" });
   await expect(referencesButton).toBeVisible();
   await referencesButton.click();
-  await expect(page.getByRole("region", { name: "References" })).toBeVisible();
+  const referencesPanel = page.getByRole("region", { name: "References" });
+  await expect(referencesPanel).toBeVisible();
   await expect(
-    page.getByRole("button", { name: "Add reference" }),
+    referencesPanel.getByRole("button", { name: "Add reference", exact: true }),
   ).toBeVisible();
   await expect(
     page.locator(".workspace-actions > .icon-button-danger"),

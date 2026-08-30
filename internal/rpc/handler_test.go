@@ -16,6 +16,7 @@ import (
 	"github.com/HappyOnigiri/PRX/gen/prx/v1/prxv1connect"
 	"github.com/HappyOnigiri/PRX/internal/app"
 	"github.com/HappyOnigiri/PRX/internal/domain"
+	"github.com/HappyOnigiri/PRX/internal/filepicker"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/rpc"
 	"github.com/HappyOnigiri/PRX/internal/store"
@@ -189,6 +190,104 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT {
 		t.Fatalf("binary preview code=%s err=%v", got, err)
 	}
+}
+
+type pickerFunc func(context.Context) (string, bool, error)
+
+func (f pickerFunc) SelectFile(ctx context.Context) (string, bool, error) {
+	return f(ctx)
+}
+
+func TestRPCSelectsLocalFilesAndReportsCancellation(t *testing.T) {
+	selected := newPickerClient(t, pickerFunc(func(context.Context) (string, bool, error) {
+		return "/tmp/plan.md", false, nil
+	}))
+	response, err := selected.SelectLocalFile(
+		context.Background(), connect.NewRequest(&prxv1.SelectLocalFileRequest{}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if response.Msg.GetPath() != "/tmp/plan.md" || response.Msg.GetCanceled() {
+		t.Fatalf("response=%+v", response.Msg)
+	}
+
+	canceled := newPickerClient(t, pickerFunc(func(context.Context) (string, bool, error) {
+		return "", true, nil
+	}))
+	response, err = canceled.SelectLocalFile(
+		context.Background(), connect.NewRequest(&prxv1.SelectLocalFileRequest{}),
+	)
+	if err != nil || !response.Msg.GetCanceled() || response.Msg.GetPath() != "" {
+		t.Fatalf("response=%+v err=%v", response.Msg, err)
+	}
+}
+
+func TestRPCClassifiesLocalFilePickerErrors(t *testing.T) {
+	tests := []struct {
+		name string
+		err  error
+		code connect.Code
+	}{
+		{
+			name: "unavailable",
+			err:  &filepicker.Error{Kind: filepicker.KindUnavailable, Err: errors.New("missing")},
+			code: connect.CodeUnavailable,
+		},
+		{name: "canceled context", err: context.Canceled, code: connect.CodeCanceled},
+		{name: "failed", err: errors.New("broken"), code: connect.CodeInternal},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			client := newPickerClient(t, pickerFunc(func(context.Context) (string, bool, error) {
+				return "", false, test.err
+			}))
+			_, err := client.SelectLocalFile(
+				context.Background(), connect.NewRequest(&prxv1.SelectLocalFileRequest{}),
+			)
+			if connect.CodeOf(err) != test.code {
+				t.Fatalf("code=%s err=%v", connect.CodeOf(err), err)
+			}
+		})
+	}
+}
+
+func TestRPCRejectsConcurrentLocalFilePickers(t *testing.T) {
+	started := make(chan struct{})
+	release := make(chan struct{})
+	client := newPickerClient(t, pickerFunc(func(context.Context) (string, bool, error) {
+		close(started)
+		<-release
+		return "/tmp/plan.md", false, nil
+	}))
+	firstDone := make(chan error, 1)
+	go func() {
+		_, err := client.SelectLocalFile(
+			context.Background(), connect.NewRequest(&prxv1.SelectLocalFileRequest{}),
+		)
+		firstDone <- err
+	}()
+	<-started
+	_, err := client.SelectLocalFile(
+		context.Background(), connect.NewRequest(&prxv1.SelectLocalFileRequest{}),
+	)
+	if connect.CodeOf(err) != connect.CodeResourceExhausted {
+		t.Fatalf("code=%s err=%v", connect.CodeOf(err), err)
+	}
+	close(release)
+	if err := <-firstDone; err != nil {
+		t.Fatal(err)
+	}
+}
+
+func newPickerClient(t *testing.T, picker rpc.LocalFilePicker) prxv1connect.PRXServiceClient {
+	t.Helper()
+	path, handler := rpc.NewWithFilePicker(internalErrorService{}, picker)
+	mux := http.NewServeMux()
+	mux.Handle(path, handler)
+	server := httptest.NewServer(mux)
+	t.Cleanup(server.Close)
+	return prxv1connect.NewPRXServiceClient(server.Client(), server.URL)
 }
 
 func TestRPCSharesDomainValidation(t *testing.T) {
