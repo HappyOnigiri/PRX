@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -17,6 +18,11 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
+
+// automaticSyncTimeout bounds the opportunistic refresh that runs before an
+// ordinary command. Expiring it records an automatic failure and leaves the
+// command itself successful.
+const automaticSyncTimeout = 30 * time.Second
 
 type state struct {
 	dbPath       string
@@ -70,7 +76,12 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			s.service = service
 			s.closer = closer
 			if !isAutomaticSyncExcluded(cmd) && service != nil {
-				_, _, _ = service.SyncIfDue(cmd.Context())
+				// The per-request client timeout does not bound the whole run, so
+				// an unreachable host would otherwise block an ordinary command
+				// for as long as its credential lookups and requests take.
+				syncContext, cancel := context.WithTimeout(baseContext, automaticSyncTimeout)
+				_, _, _ = service.SyncIfDue(syncContext)
+				cancel()
 			}
 			return nil
 		},

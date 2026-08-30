@@ -143,6 +143,7 @@ Closed pull requests remain eligible so a reopened pull request can be detected.
 Manual refreshes ignore the interval and may target an archived feature, but they also skip merged pull requests.
 
 Automatic failures are best effort and never fail the command or page load that noticed the expired interval.
+An automatic refresh is bounded by a deadline so an unreachable host cannot block the command that noticed the expired interval; exceeding it is recorded as an automatic failure.
 They remain visible in the persisted run status and the stale state of affected pull requests.
 Manual refreshes continue to return operation-level failures while preserving successful item updates.
 
