@@ -71,7 +71,7 @@ Resource commands use their shallow form for routine reads.
 Feature and task commands list without an identifier and show details with one identifier.
 `show` resolves a feature public ID, feature slug, or task public ID when a feature slug conflicts with a mutation command name.
 Dependency, pull-request, and document commands list when invoked without a mutation subcommand.
-Implementation plans use `plan TASK_ID`, and configuration reads use `config`, `config host`, or `config auth`.
+Implementation plans use `plan TASK_ID`, and configuration reads use `config`, `config host`, `config auth`, or `config sync`.
 Mutation operations retain explicit verbs so state-changing intent remains visible.
 
 Mutations remain non-interactive so people and coding agents use the same surface.
