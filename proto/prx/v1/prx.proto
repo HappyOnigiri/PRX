@@ -859,6 +859,9 @@ message ValidateConfigResponse {
   bool valid = 1;
   // errors contains validation failures when valid is false.
   repeated string errors = 2;
+  // warnings contains recoverable problems, such as unknown fields, that did not
+  // prevent the configuration from loading.
+  repeated string warnings = 3;
 }
 
 // SyncRequest selects pull requests to refresh from GitHub.

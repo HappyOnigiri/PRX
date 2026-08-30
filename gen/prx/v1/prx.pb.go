@@ -4918,7 +4918,10 @@ type ValidateConfigResponse struct {
 	// valid is true when the configuration can be loaded and used.
 	Valid bool `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
 	// errors contains validation failures when valid is false.
-	Errors        []string `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
+	Errors []string `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
+	// warnings contains recoverable problems, such as unknown fields, that did not
+	// prevent the configuration from loading.
+	Warnings      []string `protobuf:"bytes,3,rep,name=warnings,proto3" json:"warnings,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -4963,6 +4966,13 @@ func (x *ValidateConfigResponse) GetValid() bool {
 func (x *ValidateConfigResponse) GetErrors() []string {
 	if x != nil {
 		return x.Errors
+	}
+	return nil
+}
+
+func (x *ValidateConfigResponse) GetWarnings() []string {
+	if x != nil {
+		return x.Warnings
 	}
 	return nil
 }
@@ -5748,10 +5758,11 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x03ids\x18\x01 \x03(\tR\x03ids\"_\n" +
 	" ReorderGitHubAuthMethodsResponse\x12;\n" +
 	"\fauth_methods\x18\x01 \x03(\v2\x18.prx.v1.GitHubAuthMethodR\vauthMethods\"\x17\n" +
-	"\x15ValidateConfigRequest\"F\n" +
+	"\x15ValidateConfigRequest\"b\n" +
 	"\x16ValidateConfigResponse\x12\x14\n" +
 	"\x05valid\x18\x01 \x01(\bR\x05valid\x12\x16\n" +
-	"\x06errors\x18\x02 \x03(\tR\x06errors\"E\n" +
+	"\x06errors\x18\x02 \x03(\tR\x06errors\x12\x1a\n" +
+	"\bwarnings\x18\x03 \x03(\tR\bwarnings\"E\n" +
 	"\vSyncRequest\x12\x1d\n" +
 	"\n" +
 	"feature_id\x18\x01 \x01(\tR\tfeatureId\x12\x17\n" +

@@ -60,6 +60,7 @@ Failed JSON commands emit the versioned error object to stderr and leave stdout 
 The current CLI response schema version is `2`.
 Its error object contains `code`, `message`, and the failed command's complete help in `hint`, the only machine-readable field that carries presentation text.
 Failures return a non-zero exit status.
+Warnings go to stderr as text in both output modes and leave the exit status and the stdout contract untouched.
 Text output does not vary with terminal width or ambient environment.
 The CLI implementation and black-box tests own current field names and presentation details.
 
@@ -116,6 +117,10 @@ Settings follow ownership rather than convenience:
 
 Persistent mutations and migrations are atomic.
 Configuration writes preserve local secret-file protections and use atomic replacement.
+
+A configuration file written by a newer PRX still loads.
+Its unknown fields are reported as warnings instead of failing the command or the server start, and the next configuration write drops them.
+Every other decoding failure keeps the configuration from loading, so a malformed or ambiguous file is never accepted silently.
 
 Pull-request identity includes the normalized host.
 Repositories with the same owner and name on different GitHub hosts must remain distinct.
