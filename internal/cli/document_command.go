@@ -50,7 +50,7 @@ func (s *state) documentCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(snapshot.Documents)
+			return s.write(map[string]any{"documents": snapshot.Documents})
 		},
 	}
 	command.AddCommand(add, deleteCmd, list)

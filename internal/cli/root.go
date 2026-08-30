@@ -38,7 +38,7 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			if cmd.Name() == "help" || isConfigCommand(cmd) {
+			if cmd.Name() == "help" || cmd.Name() == "schema-version" || isConfigCommand(cmd) {
 				return nil
 			}
 			baseContext := cmd.Context()
@@ -66,9 +66,10 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	root.PersistentFlags().StringVar(&s.dbPath, "db", os.Getenv("PRX_DB"), "SQLite database path (env: PRX_DB)")
 	root.PersistentFlags().
 		StringVar(&s.configPath, "config", os.Getenv("PRX_CONFIG"), "YAML configuration path (env: PRX_CONFIG)")
-	root.PersistentFlags().BoolVar(&s.json, "json", false, "emit a stable JSON envelope")
+	root.PersistentFlags().BoolVar(&s.json, "json", false, "emit compact JSON responses")
 	root.PersistentFlags().StringVar(&s.fixture, "github-fixture", "", "GitHub fixture JSON path, or demo")
 	root.AddCommand(
+		s.schemaVersionCommand(),
 		s.featureCommand(),
 		s.taskCommand(),
 		s.nodeCommand(),
@@ -112,11 +113,7 @@ func Execute(ctx context.Context, args []string, out, errOut io.Writer, openServ
 	if err == nil {
 		return nil
 	}
-	if s.json {
-		if printErr := PrintError(out, err); printErr != nil {
-			_, _ = fmt.Fprintln(errOut, "error:", err)
-		}
-	} else {
+	if printErr := s.writeError(err); printErr != nil {
 		_, _ = fmt.Fprintln(errOut, "error:", err)
 	}
 	return err

@@ -137,7 +137,7 @@ func (s *state) configHostListCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(settings.Public().GitHub.Hosts)
+			return s.write(map[string]any{"hosts": settings.Public().GitHub.Hosts})
 		},
 	}
 }
@@ -272,7 +272,7 @@ func (s *state) configAuthListCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(settings.Public().GitHub.AuthMethods)
+			return s.write(map[string]any{"auth_methods": settings.Public().GitHub.AuthMethods})
 		},
 	}
 }
@@ -375,7 +375,7 @@ func (s *state) configAuthReorderCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(settings.Public().GitHub.AuthMethods)
+			return s.write(map[string]any{"auth_methods": settings.Public().GitHub.AuthMethods})
 		},
 	}
 }

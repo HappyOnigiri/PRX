@@ -25,9 +25,14 @@ type resultEnvelope struct {
 	SchemaVersion string          `json:"schema_version"`
 	OK            bool            `json:"ok"`
 	Data          json.RawMessage `json:"data"`
-	Error         *struct {
-		Code string `json:"code"`
-	} `json:"error"`
+	Error         string          `json:"error"`
+	keys          map[string]json.RawMessage
+}
+
+type commandOutput struct {
+	stdout string
+	stderr string
+	exit   int
 }
 
 func buildCLI(t *testing.T) string {
@@ -55,7 +60,16 @@ func runCLIWithFixture(
 	if fixture != "" {
 		base = append(base, "--github-fixture", fixture)
 	}
-	command := exec.CommandContext(context.Background(), binary, append(base, args...)...)
+	result := executeCLI(t, binary, "", append(base, args...)...)
+	return decodeResult(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
+}
+
+func executeCLI(t *testing.T, binary, input string, args ...string) commandOutput {
+	t.Helper()
+	command := exec.CommandContext(context.Background(), binary, args...)
+	if input != "" {
+		command.Stdin = strings.NewReader(input)
+	}
 	var stdout, stderr bytes.Buffer
 	command.Stdout = &stdout
 	command.Stderr = &stderr
@@ -69,20 +83,149 @@ func runCLIWithFixture(
 			t.Fatal(err)
 		}
 	}
-	var envelope resultEnvelope
-	if decodeErr := json.Unmarshal(stdout.Bytes(), &envelope); decodeErr != nil {
-		t.Fatalf("stdout is not pure JSON: %v\n%s", decodeErr, stdout.String())
-	}
-	return envelope, stderr.String(), exit
+	return commandOutput{stdout: stdout.String(), stderr: stderr.String(), exit: exit}
 }
 
-func TestBlackBoxJSONCRUDAndCycle(t *testing.T) {
+func decodeEnvelope(t *testing.T, body []byte, output string) resultEnvelope {
+	t.Helper()
+	var envelope resultEnvelope
+	if decodeErr := json.Unmarshal(body, &envelope); decodeErr != nil {
+		t.Fatalf("stdout is not pure JSON: %v\n%s", decodeErr, output)
+	}
+	if decodeErr := json.Unmarshal(body, &envelope.keys); decodeErr != nil {
+		t.Fatalf("stdout is not a JSON object: %v\n%s", decodeErr, output)
+	}
+	return envelope
+}
+
+func decodeResult(t *testing.T, body []byte, output string) resultEnvelope {
+	t.Helper()
+	keys := decodeObject(t, body, output)
+	if _, ok := keys["schema_version"]; ok {
+		envelope := decodeEnvelope(t, body, output)
+		envelope.keys = keys
+		return envelope
+	}
+	assertCompactJSON(t, output)
+	assertNoEnvelopeKeys(t, keys)
+	return resultEnvelope{OK: true, Data: json.RawMessage(bytes.TrimSpace(body)), keys: keys}
+}
+
+func decodeObject(t *testing.T, body []byte, output string) map[string]json.RawMessage {
+	t.Helper()
+	var value map[string]json.RawMessage
+	if err := json.Unmarshal(body, &value); err != nil {
+		t.Fatalf("stdout is not a JSON object: %v\n%s", err, output)
+	}
+	return value
+}
+
+func assertDirectObjectKeys(t *testing.T, value map[string]json.RawMessage, expected ...string) {
+	t.Helper()
+	assertObjectKeys(t, value, expected...)
+	assertNoEnvelopeKeys(t, value)
+}
+
+func assertDirectObject(t *testing.T, value map[string]json.RawMessage, required ...string) {
+	t.Helper()
+	assertNoEnvelopeKeys(t, value)
+	for _, key := range required {
+		if _, ok := value[key]; !ok {
+			t.Fatalf("response keys=%v, want key %q", mapKeys(value), key)
+		}
+	}
+}
+
+func assertNoEnvelopeKeys(t *testing.T, value map[string]json.RawMessage) {
+	t.Helper()
+	for _, key := range []string{"schema_version", "ok", "data"} {
+		if _, ok := value[key]; ok {
+			t.Fatalf("normal response contains envelope key %q: %v", key, mapKeys(value))
+		}
+	}
+}
+
+func assertObjectKeys(t *testing.T, value map[string]json.RawMessage, expected ...string) {
+	t.Helper()
+	want := make(map[string]struct{}, len(expected))
+	for _, key := range expected {
+		want[key] = struct{}{}
+	}
+	if len(value) != len(want) {
+		t.Fatalf("response keys=%v, want %v", mapKeys(value), expected)
+	}
+	for key := range want {
+		if _, ok := value[key]; !ok {
+			t.Fatalf("response keys=%v, want %v", mapKeys(value), expected)
+		}
+	}
+}
+
+func assertCompactJSON(t *testing.T, output string) {
+	t.Helper()
+	if !strings.HasSuffix(output, "\n") {
+		t.Fatalf("JSON output has no trailing newline: %q", output)
+	}
+	if strings.Contains(strings.TrimSuffix(output, "\n"), "\n") {
+		t.Fatalf("JSON output is not compact: %q", output)
+	}
+}
+
+func assertNormalSuccess(t *testing.T, result commandOutput, required ...string) map[string]json.RawMessage {
+	t.Helper()
+	if result.exit != 0 || result.stderr != "" {
+		t.Fatalf("normal command failed: stdout=%q stderr=%q exit=%d", result.stdout, result.stderr, result.exit)
+	}
+	assertCompactJSON(t, result.stdout)
+	value := decodeObject(t, []byte(result.stdout), result.stdout)
+	assertDirectObject(t, value, required...)
+	return value
+}
+
+func assertEnvelopeKeys(t *testing.T, envelope resultEnvelope, expected ...string) {
+	t.Helper()
+	want := make(map[string]struct{}, len(expected))
+	for _, key := range expected {
+		want[key] = struct{}{}
+	}
+	if len(envelope.keys) != len(want) {
+		t.Fatalf("response keys=%v, want %v", mapKeys(envelope.keys), expected)
+	}
+	for key := range want {
+		if _, ok := envelope.keys[key]; !ok {
+			t.Fatalf("response keys=%v, want %v", mapKeys(envelope.keys), expected)
+		}
+	}
+}
+
+func mapKeys(value map[string]json.RawMessage) []string {
+	keys := make([]string, 0, len(value))
+	for key := range value {
+		keys = append(keys, key)
+	}
+	return keys
+}
+
+func decodeDataObject(t *testing.T, envelope resultEnvelope) map[string]json.RawMessage {
+	t.Helper()
+	if envelope.Data == nil {
+		t.Fatalf("response has no data: %+v", envelope)
+	}
+	var value map[string]json.RawMessage
+	if err := json.Unmarshal(envelope.Data, &value); err != nil {
+		t.Fatalf("data is not an object: %v\n%s", err, envelope.Data)
+	}
+	return value
+}
+
+func TestBlackBoxCRUDAndCycle(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "blackbox.db")
 	feature, stderr, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "release", "--title", "Release")
-	if exit != 0 || stderr != "" || !feature.OK || feature.SchemaVersion != "1" {
+	if exit != 0 || stderr != "" || !feature.OK {
 		t.Fatalf("feature result=%+v stderr=%q exit=%d", feature, stderr, exit)
 	}
+	assertNoEnvelopeKeys(t, feature.keys)
 	var featureData struct {
 		ID string `json:"id"`
 	}
@@ -147,18 +290,20 @@ func TestBlackBoxJSONCRUDAndCycle(t *testing.T) {
 		t.Fatalf("add dependency: %+v", value)
 	}
 	value, _, exit := runCLI(t, binary, dbPath, "dependency", "add", bt.ID, at.ID)
-	if exit == 0 || value.Error == nil || value.Error.Code != "cycle" {
+	if exit == 0 || value.Error == "" || !strings.Contains(value.Error, "cycle") {
 		t.Fatalf("cycle result=%+v exit=%d", value, exit)
 	}
+	assertEnvelopeKeys(t, value, "schema_version", "ok", "error")
 	for _, removal := range [][]string{
 		{"dependency", "remove", at.ID, "missing-task"},
 		{"pr", "detach", at.ID},
 		{"document", "delete", "missing-document"},
 	} {
 		value, _, exit := runCLI(t, binary, dbPath, removal...)
-		if exit == 0 || value.Error == nil || value.Error.Code != "not_found" {
+		if exit == 0 || value.Error == "" || !strings.Contains(value.Error, "was not found") {
 			t.Fatalf("%v result=%+v exit=%d", removal, value, exit)
 		}
+		assertEnvelopeKeys(t, value, "schema_version", "ok", "error")
 	}
 	valid, _, exit := runCLI(t, binary, dbPath, "validate")
 	if exit != 0 || !valid.OK {
@@ -256,7 +401,7 @@ func TestBlackBoxTargetedSyncByID(t *testing.T) {
 		t.Fatalf("sync by feature ID: %+v exit=%d", featureSync, exit)
 	}
 	missing, _, exit := runCLIWithFixture(t, binary, dbPath, "demo", "sync", "--task", "missing-task")
-	if exit == 0 || missing.OK || missing.Error == nil || missing.Error.Code != "not_found" {
+	if exit == 0 || missing.OK || missing.Error == "" || !strings.Contains(missing.Error, "was not found") {
 		t.Fatalf("missing task sync: %+v exit=%d", missing, exit)
 	}
 }
@@ -363,7 +508,7 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 		planPath,
 		"--stdin",
 	)
-	if exit == 0 || invalid.Error == nil || invalid.Error.Code != "invalid_implementation_plan" {
+	if exit == 0 || invalid.Error == "" || !strings.Contains(invalid.Error, "exactly one") {
 		t.Fatalf("invalid input result=%+v exit=%d", invalid, exit)
 	}
 }
@@ -473,17 +618,398 @@ func TestBlackBoxJSONFlagFormsAgree(t *testing.T) {
 			if err := command.Run(); err == nil {
 				t.Fatal("expected a non-zero exit for a missing task")
 			}
-			var envelope resultEnvelope
-			if err := json.Unmarshal(stdout.Bytes(), &envelope); err != nil {
-				t.Fatalf("stdout is not pure JSON: %v\n%s", err, stdout.String())
-			}
-			if envelope.OK || envelope.Error == nil || envelope.Error.Code != "not_found" {
+			envelope := decodeEnvelope(t, stdout.Bytes(), stdout.String())
+			if envelope.OK || envelope.Error == "" || !strings.Contains(envelope.Error, "was not found") {
 				t.Fatalf("envelope=%+v", envelope)
 			}
+			assertEnvelopeKeys(t, envelope, "schema_version", "ok", "error")
 			if stderr.Len() != 0 {
 				t.Fatalf("stderr must stay empty in JSON mode: %q", stderr.String())
 			}
 		})
+	}
+}
+
+func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "collections.db")
+	cases := []struct {
+		name string
+		args []string
+		key  string
+	}{
+		{name: "features", args: []string{"feature", "list"}, key: "features"},
+		{name: "tasks", args: []string{"task", "list"}, key: "tasks"},
+		{name: "dependencies", args: []string{"dependency", "list"}, key: "dependencies"},
+		{name: "pull requests", args: []string{"pr", "list"}, key: "pull_requests"},
+		{name: "documents", args: []string{"document", "list"}, key: "documents"},
+		{name: "ready tasks", args: []string{"ready"}, key: "ready_tasks"},
+		{name: "review waiting tasks", args: []string{"reviews"}, key: "review_waiting_tasks"},
+		{name: "conflict tasks", args: []string{"conflicts"}, key: "conflict_tasks"},
+		{name: "stale tasks", args: []string{"stale"}, key: "stale_tasks"},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			value, stderr, exit := runCLI(t, binary, dbPath, test.args...)
+			if exit != 0 || stderr != "" || !value.OK {
+				t.Fatalf("result=%+v stderr=%q exit=%d", value, stderr, exit)
+			}
+			data := decodeDataObject(t, value)
+			if len(data) != 1 {
+				t.Fatalf("data keys=%v, want only %q", mapKeys(data), test.key)
+			}
+			if _, ok := data[test.key]; !ok {
+				t.Fatalf("data keys=%v, want %q", mapKeys(data), test.key)
+			}
+			assertNoEnvelopeKeys(t, value.keys)
+		})
+	}
+
+	configPath := filepath.Join(t.TempDir(), "config.yaml")
+	for _, test := range []struct {
+		name string
+		args []string
+		key  string
+	}{
+		{name: "hosts", args: []string{"config", "host", "list"}, key: "hosts"},
+		{name: "auth methods", args: []string{"config", "auth", "list"}, key: "auth_methods"},
+	} {
+		t.Run("config "+test.name, func(t *testing.T) {
+			value, stderr, exit := runConfigCLI(
+				t,
+				binary,
+				filepath.Join(t.TempDir(), "unused.db"),
+				configPath,
+				"",
+				test.args...,
+			)
+			if exit != 0 || stderr != "" || !value.OK {
+				t.Fatalf("result=%+v stderr=%q exit=%d", value, stderr, exit)
+			}
+			data := decodeDataObject(t, value)
+			if len(data) != 1 {
+				t.Fatalf("data keys=%v, want only %q", mapKeys(data), test.key)
+			}
+			if _, ok := data[test.key]; !ok {
+				t.Fatalf("data keys=%v, want %q", mapKeys(data), test.key)
+			}
+			assertNoEnvelopeKeys(t, value.keys)
+		})
+	}
+}
+
+func TestBlackBoxSuccessOutputModes(t *testing.T) {
+	binary := buildCLI(t)
+	cases := []struct {
+		name       string
+		args       []string
+		normalWant string
+		jsonWant   string
+	}{
+		{
+			name: "config auth list",
+			args: []string{"config", "auth", "list"},
+			normalWant: `{"auth_methods":[]}
+`,
+			jsonWant: `{"auth_methods":[]}
+`,
+		},
+		{
+			name: "feature list",
+			args: []string{"feature", "list"},
+			normalWant: `{"features":[]}
+`,
+			jsonWant: `{"features":[]}
+`,
+		},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			dbPath := filepath.Join(t.TempDir(), "output.db")
+			configPath := filepath.Join(t.TempDir(), "config.yaml")
+			base := []string{"--db", dbPath, "--config", configPath}
+
+			normal := executeCLI(t, binary, "", append(base, test.args...)...)
+			if normal.exit != 0 || normal.stderr != "" || normal.stdout != test.normalWant {
+				t.Fatalf(
+					"normal output=%q stderr=%q exit=%d, want %q",
+					normal.stdout,
+					normal.stderr,
+					normal.exit,
+					test.normalWant,
+				)
+			}
+
+			jsonOutput := executeCLI(t, binary, "", append(append(base, "--json"), test.args...)...)
+			if jsonOutput.exit != 0 || jsonOutput.stderr != "" || jsonOutput.stdout != test.jsonWant {
+				t.Fatalf(
+					"JSON output=%q stderr=%q exit=%d, want %q",
+					jsonOutput.stdout,
+					jsonOutput.stderr,
+					jsonOutput.exit,
+					test.jsonWant,
+				)
+			}
+		})
+	}
+}
+
+func TestBlackBoxNormalResponsesCoverEveryResponseCommand(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "normal.db")
+	dbConfigPath := filepath.Join(root, "normal-config.yaml")
+	configPath := filepath.Join(root, "config.yaml")
+
+	runDB := func(args ...string) map[string]json.RawMessage {
+		commandArgs := []string{"--db", dbPath, "--config", dbConfigPath}
+		result := executeCLI(t, binary, "", append(commandArgs, args...)...)
+		return assertNormalSuccess(t, result)
+	}
+	runConfig := func(args ...string) map[string]json.RawMessage {
+		commandArgs := []string{"--db", filepath.Join(root, "config-unused.db"), "--config", configPath}
+		result := executeCLI(t, binary, "", append(commandArgs, args...)...)
+		return assertNormalSuccess(t, result)
+	}
+
+	configList := executeCLI(
+		t,
+		binary,
+		"",
+		"--db",
+		filepath.Join(root, "config-list-unused.db"),
+		"--config",
+		configPath,
+		"config",
+		"auth",
+		"list",
+	)
+	if configList.exit != 0 || configList.stderr != "" {
+		t.Fatalf(
+			"config auth list failed: stdout=%q stderr=%q exit=%d",
+			configList.stdout,
+			configList.stderr,
+			configList.exit,
+		)
+	}
+	if want := `{"auth_methods":[]}
+`; configList.stdout != want {
+		t.Fatalf("config auth list output=%q, want %q", configList.stdout, want)
+	}
+	assertCompactJSON(t, configList.stdout)
+	assertDirectObjectKeys(t, decodeObject(t, []byte(configList.stdout), configList.stdout), "auth_methods")
+
+	configShow := runConfig("config", "show")
+	assertDirectObject(t, configShow, "version", "github")
+	assertDirectObject(t, runConfig("config", "path"), "path")
+	assertDirectObject(t, runConfig("config", "validate"), "valid")
+	assertDirectObject(t, runConfig("config", "host", "add", "--host", "ghe.example.com"), "host")
+	assertDirectObjectKeys(t, runConfig("config", "host", "list"), "hosts")
+	assertDirectObject(
+		t,
+		runConfig("config", "host", "update", "ghe.example.com", "--api-url", "https://ghe.example.com/api/v3/"),
+		"host",
+	)
+	assertDirectObject(t, runConfig(
+		"config",
+		"auth",
+		"add",
+		"--id",
+		"work-gh",
+		"--host",
+		"ghe.example.com",
+		"--type",
+		"environment",
+		"--variable",
+		"GH_ENTERPRISE_TOKEN",
+	), "id")
+	assertDirectObjectKeys(t, runConfig("config", "auth", "list"), "auth_methods")
+	assertDirectObject(t, runConfig("config", "auth", "update", "work-gh", "--user", "HappyOnigiri"), "id")
+	assertDirectObjectKeys(t, runConfig("config", "auth", "reorder", "work-gh"), "auth_methods")
+	assertDirectObjectKeys(t, runConfig("config", "auth", "remove", "work-gh"), "removed")
+	assertDirectObjectKeys(t, runConfig("config", "host", "remove", "ghe.example.com"), "removed")
+
+	feature := runDB("feature", "create", "--slug", "checkout", "--title", "Checkout")
+	assertDirectObject(t, feature, "id", "slug")
+	var featureID string
+	if err := json.Unmarshal(feature["id"], &featureID); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObjectKeys(t, runDB("feature", "list"), "features")
+	assertDirectObject(t, runDB("feature", "get", featureID), "id", "slug")
+	assertDirectObject(t, runDB("feature", "update", featureID, "--title", "Updated checkout"), "id", "slug")
+	assertDirectObject(t, runDB("feature", "archive", featureID), "id", "slug")
+	assertDirectObject(t, runDB("feature", "unarchive", featureID), "id", "slug")
+
+	taskA := runDB("task", "create", "--feature", featureID, "--title", "A")
+	taskB := runDB("task", "create", "--feature", featureID, "--title", "B")
+	assertDirectObject(t, taskA, "id", "feature_id")
+	assertDirectObject(t, taskB, "id", "feature_id")
+	var taskAID, taskBID string
+	if err := json.Unmarshal(taskA["id"], &taskAID); err != nil {
+		t.Fatal(err)
+	}
+	if err := json.Unmarshal(taskB["id"], &taskBID); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObjectKeys(t, runDB("task", "list"), "tasks")
+	assertDirectObject(t, runDB("task", "get", taskAID), "id", "feature_id")
+	assertDirectObject(t, runDB("task", "update", taskAID, "--title", "Updated A"), "id", "feature_id")
+
+	assertDirectObject(t, runDB("dependency", "add", taskAID, taskBID), "blocker_task_id", "blocked_task_id")
+	assertDirectObjectKeys(t, runDB("dependency", "list"), "dependencies")
+
+	assertDirectObject(t, runDB(
+		"pr",
+		"attach",
+		"--task",
+		taskAID,
+		"--url",
+		"https://github.com/acme/payments/pull/42",
+	), "task_id", "url")
+	assertDirectObjectKeys(t, runDB("pr", "list"), "pull_requests")
+
+	document := runDB(
+		"document",
+		"add",
+		"--task",
+		taskAID,
+		"--kind",
+		"url",
+		"--value",
+		"https://example.com/checkout",
+	)
+	assertDirectObject(t, document, "id", "task_id")
+	var documentID string
+	if err := json.Unmarshal(document["id"], &documentID); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObjectKeys(t, runDB("document", "list"), "documents")
+
+	planPath := filepath.Join(root, "plan.md")
+	if err := os.WriteFile(planPath, []byte("# Checkout plan\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObject(t, runDB("implementation-plan", "set", taskAID, "--file", planPath), "task_id", "content")
+	assertDirectObject(t, runDB("implementation-plan", "get", taskAID), "task_id", "content")
+
+	assertDirectObject(t, runDB("snapshot"), "features", "tasks", "dependencies", "pull_requests", "documents")
+	assertDirectObjectKeys(t, runDB("graph", featureID), "feature", "tasks", "dependencies")
+	assertDirectObjectKeys(t, runDB("ready"), "ready_tasks")
+	assertDirectObjectKeys(t, runDB("reviews"), "review_waiting_tasks")
+	assertDirectObjectKeys(t, runDB("conflicts"), "conflict_tasks")
+	assertDirectObjectKeys(t, runDB("stale"), "stale_tasks")
+	assertDirectObjectKeys(t, runDB("--github-fixture", "demo", "sync"), "failed", "succeeded")
+	assertDirectObjectKeys(t, runDB("validate"), "valid")
+
+	assertDirectObjectKeys(t, runDB("document", "delete", documentID), "deleted")
+	assertDirectObjectKeys(t, runDB("implementation-plan", "delete", taskAID), "deleted")
+	assertDirectObjectKeys(t, runDB("pr", "detach", taskAID), "detached")
+	assertDirectObjectKeys(t, runDB("dependency", "remove", taskAID, taskBID), "removed")
+	assertDirectObjectKeys(t, runDB("task", "delete", taskBID), "deleted")
+	assertDirectObjectKeys(t, runDB("task", "delete", taskAID, "--cascade"), "deleted")
+
+	deletableFeature := runDB("feature", "create", "--slug", "deletable", "--title", "Deletable")
+	var deletableFeatureID string
+	if err := json.Unmarshal(deletableFeature["id"], &deletableFeatureID); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObjectKeys(t, runDB("feature", "delete", deletableFeatureID, "--cascade"), "deleted")
+
+	seedDB := filepath.Join(root, "seed.db")
+	seedConfig := filepath.Join(root, "seed-config.yaml")
+	seed := executeCLI(
+		t,
+		binary,
+		"",
+		"--db",
+		seedDB,
+		"--config",
+		seedConfig,
+		"seed",
+		"--features",
+		"1",
+		"--tasks",
+		"1",
+	)
+	assertDirectObject(t, assertNormalSuccess(t, seed, "features", "tasks"), "features", "tasks")
+}
+
+func TestBlackBoxSchemaVersionDoesNotOpenStorage(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "missing.db")
+	configPath := filepath.Join(root, "missing", "config.yaml")
+	for _, test := range []struct {
+		name string
+		args []string
+	}{
+		{name: "without json", args: []string{"schema-version"}},
+		{name: "json before command", args: []string{"--json", "schema-version"}},
+		{name: "json after command", args: []string{"schema-version", "--json"}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			command := exec.CommandContext(
+				context.Background(),
+				binary,
+				"--db",
+				dbPath,
+				"--config",
+				configPath,
+			)
+			command.Args = append(command.Args, test.args...)
+			var stdout, stderr bytes.Buffer
+			command.Stdout = &stdout
+			command.Stderr = &stderr
+			if err := command.Run(); err != nil {
+				t.Fatalf("schema-version failed: %v\nstdout=%s\nstderr=%s", err, stdout.String(), stderr.String())
+			}
+			var value map[string]json.RawMessage
+			if err := json.Unmarshal(stdout.Bytes(), &value); err != nil {
+				t.Fatalf("stdout is not JSON: %v\n%s", err, stdout.String())
+			}
+			if len(value) != 1 || string(value["schema_version"]) != `"1"` {
+				t.Fatalf("schema-version output=%s", stdout.String())
+			}
+			if stdout.String() != `{"schema_version":"1"}
+` {
+				t.Fatalf("schema-version output=%q", stdout.String())
+			}
+			if stderr.Len() != 0 {
+				t.Fatalf("stderr=%q", stderr.String())
+			}
+		})
+	}
+	if _, err := os.Stat(dbPath); !os.IsNotExist(err) {
+		t.Fatalf("schema-version opened database: err=%v", err)
+	}
+	if _, err := os.Stat(configPath); !os.IsNotExist(err) {
+		t.Fatalf("schema-version opened config: err=%v", err)
+	}
+}
+
+func TestBlackBoxErrorsUseEnvelopeWithoutJSONFlag(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "errors.db")
+	command := exec.CommandContext(context.Background(), binary, "--db", dbPath, "task", "get", "missing-task")
+	var stdout, stderr bytes.Buffer
+	command.Stdout = &stdout
+	command.Stderr = &stderr
+	err := command.Run()
+	var typed *exec.ExitError
+	if !errors.As(err, &typed) || typed.ExitCode() != 1 {
+		t.Fatalf("error=%v, want exit code 1", err)
+	}
+	value := decodeEnvelope(t, stdout.Bytes(), stdout.String())
+	if value.OK || value.SchemaVersion != "1" || value.Error == "" || value.Data != nil {
+		t.Fatalf("error response=%+v", value)
+	}
+	assertEnvelopeKeys(t, value, "schema_version", "ok", "error")
+	if stderr.Len() != 0 {
+		t.Fatalf("stderr=%q", stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "\n  \"schema_version\": \"1\"") {
+		t.Fatalf("error response is not indented: %s", stdout.String())
 	}
 }
 
@@ -556,7 +1082,7 @@ func TestBlackBoxConfigUsesSecureSecretFreeOutput(t *testing.T) {
 		"remove",
 		"ghe.example.com",
 	)
-	if exit == 0 || stderr != "" || removed.Error == nil || removed.Error.Code != "references_exist" {
+	if exit == 0 || stderr != "" || removed.Error == "" || !strings.Contains(removed.Error, "used by auth method") {
 		t.Fatalf("referenced host removal=%+v stderr=%q exit=%d", removed, stderr, exit)
 	}
 	updated, stderr, exit := runConfigCLI(
@@ -581,7 +1107,7 @@ func TestBlackBoxConfigUsesSecureSecretFreeOutput(t *testing.T) {
 	if err != nil || strings.Contains(string(body), "github_pat_cli_secret") {
 		t.Fatalf("changing away from inline retained token: %s err=%v", body, err)
 	}
-	if _, stderr, exit := runConfigCLI(
+	reordered, stderr, exit := runConfigCLI(
 		t,
 		binary,
 		dbPath,
@@ -591,9 +1117,14 @@ func TestBlackBoxConfigUsesSecureSecretFreeOutput(t *testing.T) {
 		"auth",
 		"reorder",
 		"ghe-inline",
-	); exit != 0 ||
-		stderr != "" {
+	)
+	if exit != 0 || stderr != "" {
 		t.Fatalf("auth reorder stderr=%q exit=%d", stderr, exit)
+	}
+	if data := decodeDataObject(t, reordered); len(data) != 1 {
+		t.Fatalf("auth reorder data keys=%v", mapKeys(data))
+	} else if _, ok := data["auth_methods"]; !ok {
+		t.Fatalf("auth reorder data keys=%v, want auth_methods", mapKeys(data))
 	}
 	if _, stderr, exit := runConfigCLI(
 		t,
@@ -636,24 +1167,6 @@ func runConfigCLI(
 ) (resultEnvelope, string, int) {
 	t.Helper()
 	commandArgs := []string{"--db", dbPath, "--config", configPath, "--json"}
-	command := exec.CommandContext(context.Background(), binary, append(commandArgs, args...)...)
-	command.Stdin = strings.NewReader(input)
-	var stdout, stderr bytes.Buffer
-	command.Stdout = &stdout
-	command.Stderr = &stderr
-	err := command.Run()
-	exit := 0
-	if err != nil {
-		var typed *exec.ExitError
-		if errors.As(err, &typed) {
-			exit = typed.ExitCode()
-		} else {
-			t.Fatal(err)
-		}
-	}
-	var envelope resultEnvelope
-	if decodeErr := json.Unmarshal(stdout.Bytes(), &envelope); decodeErr != nil {
-		t.Fatalf("stdout is not pure JSON: %v\n%s", decodeErr, stdout.String())
-	}
-	return envelope, stderr.String(), exit
+	result := executeCLI(t, binary, input, append(commandArgs, args...)...)
+	return decodeResult(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
 }

@@ -44,7 +44,7 @@ func (s *state) pullRequestCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(snapshot.PullRequests)
+			return s.write(map[string]any{"pull_requests": snapshot.PullRequests})
 		},
 	}
 	command.AddCommand(attach, detach, list)

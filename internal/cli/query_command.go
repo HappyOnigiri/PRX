@@ -75,17 +75,22 @@ func (s *state) queueCommand(name string) *cobra.Command {
 				return err
 			}
 			var tasks []domain.Task
+			key := ""
 			switch name {
 			case "ready":
 				tasks = snapshot.ReadyTasks
+				key = "ready_tasks"
 			case "reviews":
 				tasks = snapshot.ReviewWaitingTasks
+				key = "review_waiting_tasks"
 			case "conflicts":
 				tasks = snapshot.ConflictTasks
+				key = "conflict_tasks"
 			case "stale":
 				tasks = snapshot.StaleTasks
+				key = "stale_tasks"
 			}
-			return s.write(tasks)
+			return s.write(map[string]any{key: tasks})
 		},
 	}
 }

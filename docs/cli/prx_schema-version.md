@@ -1,21 +1,22 @@
-## prx feature unarchive
+## prx schema-version
 
-Unarchive a feature by ID or slug
+Show the CLI response schema version
 
 ```
-prx feature unarchive FEATURE_ID_OR_SLUG [flags]
+prx schema-version [flags]
 ```
 
 ### Examples
 
 ```
-prx feature unarchive checkout --json
+prx schema-version
+prx schema-version --json
 ```
 
 ### Options
 
 ```
-  -h, --help   help for unarchive
+  -h, --help   help for schema-version
 ```
 
 ### Options inherited from parent commands
@@ -29,5 +30,5 @@ prx feature unarchive checkout --json
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - Manage features
+* [prx](prx.md)	 - Manage pull-request dependency roadmaps
 

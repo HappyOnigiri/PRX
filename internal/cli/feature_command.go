@@ -54,7 +54,7 @@ func (s *state) featureListCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value.Features)
+			return s.write(map[string]any{"features": value.Features})
 		},
 	}
 }
