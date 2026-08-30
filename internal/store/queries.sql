@@ -136,7 +136,7 @@ INSERT INTO documents (
   is_implementation_plan, created_at, updated_at
 ) VALUES (?, NULL, ?, ?, ?, ?, ?, 1, ?, ?)
 ON CONFLICT(task_id) WHERE is_implementation_plan=1 DO UPDATE SET
-  kind=excluded.kind, title=excluded.title, locator=excluded.locator,
+  kind=excluded.kind, locator=excluded.locator,
   content=excluded.content, updated_at=excluded.updated_at
 RETURNING *;
 

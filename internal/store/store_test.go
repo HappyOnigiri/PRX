@@ -1619,3 +1619,37 @@ func TestStoreUpdateDocumentWritesOnlyRequestedFields(t *testing.T) {
 		t.Fatalf("document=%+v, want only the implementation plan flag changed", withPlan)
 	}
 }
+
+func TestStoreUpsertImplementationPlanKeepsExistingTitle(t *testing.T) {
+	ctx := context.Background()
+	database, _ := openTestService(t)
+	feature, err := database.CreateFeature(ctx, "checkout", "Checkout", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := database.CreateTask(ctx, feature.ID, "Ship it", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan, err := database.UpsertImplementationPlan(ctx, task.ID, domain.Document{
+		Kind:    domain.DocumentKindMarkdown,
+		Content: "# First",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	title := "Design plan"
+	if _, err := database.UpdateDocument(ctx, plan.ID, &title, nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	updated, err := database.UpsertImplementationPlan(ctx, task.ID, domain.Document{
+		Kind:    domain.DocumentKindURL,
+		Locator: "https://example.com/plan",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Title != title || updated.Locator != "https://example.com/plan" {
+		t.Fatalf("plan=%+v, want the title kept and the source replaced", updated)
+	}
+}
