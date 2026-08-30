@@ -385,7 +385,7 @@ export function FeatureGraph({
 
   return (
     <>
-      <GraphStatusBar
+      <GraphStatusNotice
         addingDependency={connections.adding}
         detachingDependency={connections.detaching}
         removingDependency={connections.removing}
@@ -599,7 +599,7 @@ function GraphState({
   return null;
 }
 
-function GraphStatusBar({
+function GraphStatusNotice({
   addingDependency,
   detachingDependency,
   removingDependency,
@@ -627,17 +627,16 @@ function GraphStatusBar({
               detachingDependency.blocked,
           })
         : undefined;
+  if (readOnly || !instruction) return null;
   return (
-    <div className="graph-status-bar">
-      {!readOnly && instruction && (
-        <p
-          className={`graph-connection-help ${addingDependency || removingDependency ? "is-saving" : ""}`}
-          aria-live="polite"
-          title={instruction}
-        >
-          {instruction}
-        </p>
-      )}
+    <div className="graph-status-notice">
+      <p
+        className={`graph-connection-help ${addingDependency || removingDependency ? "is-saving" : ""}`}
+        aria-live="polite"
+        title={instruction}
+      >
+        {instruction}
+      </p>
     </div>
   );
 }

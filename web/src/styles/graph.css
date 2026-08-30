@@ -1,18 +1,22 @@
-.graph-status-bar {
-  min-width: 0;
-  height: 36px;
+.graph-status-notice {
+  position: absolute;
+  z-index: 10;
+  top: 12px;
+  left: 50%;
+  max-width: calc(100% - 24px);
   overflow: hidden;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  transform: translateX(-50%);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
   color: var(--text-2);
   font-size: var(--text-xs);
+  pointer-events: none;
 }
 
 .graph-connection-help {
-  flex: 0 1 420px;
   min-width: 0;
   overflow: hidden;
   margin: 0;
@@ -496,8 +500,8 @@
 }
 
 @media (width <= 1050px) {
-  .graph-status-bar {
-    gap: 10px;
-    padding-inline: 12px;
+  .graph-status-notice {
+    top: 8px;
+    max-width: calc(100% - 16px);
   }
 }
