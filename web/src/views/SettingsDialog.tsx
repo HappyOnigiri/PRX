@@ -11,9 +11,10 @@ import {
 } from "../i18n/settings";
 import { setDisplayTheme } from "../theme";
 import { IconButton } from "./IconButton";
+import { LicensesSettingsPanel } from "./LicensesSettingsPanel";
 import { ServerSettingsPanel } from "./ServerSettingsPanel";
 
-const settingsTabs = ["server", "display"] as const;
+const settingsTabs = ["server", "display", "licenses"] as const;
 type SettingsTab = (typeof settingsTabs)[number];
 
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
@@ -88,6 +89,9 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         </SettingsPanel>
         <SettingsPanel active={activeTab === "display"} tab="display">
           <DisplaySettingsPanel />
+        </SettingsPanel>
+        <SettingsPanel active={activeTab === "licenses"} tab="licenses">
+          <LicensesSettingsPanel />
         </SettingsPanel>
         <footer>
           <IconButton

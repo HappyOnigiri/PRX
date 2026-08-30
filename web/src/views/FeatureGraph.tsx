@@ -522,6 +522,7 @@ function GraphCanvas({
         onReconnect={onReconnect}
         onReconnectEnd={onReconnectEnd}
         onReconnectStart={onReconnectStart}
+        proOptions={{ hideAttribution: true }}
         reconnectRadius={12}
       >
         <Background

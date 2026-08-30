@@ -4,7 +4,7 @@ export const shell = {
     settings: {
       open: "Settings",
       title: "Settings",
-      tabs: { server: "Server", display: "Display" },
+      tabs: { server: "Server", display: "Display", licenses: "Licenses" },
       display: {
         description:
           "Choose how PRX appears in this browser. Changes apply immediately.",
@@ -18,6 +18,11 @@ export const shell = {
           description: "Color scheme used for PRX in this browser.",
           options: { system: "System", light: "Light", dark: "Dark" },
         },
+      },
+      licenses: {
+        loading: "Loading license information…",
+        error: "License information is unavailable.",
+        empty: "No license information is available.",
       },
     },
     nav: {
@@ -90,7 +95,7 @@ export const shell = {
     settings: {
       open: "設定",
       title: "設定",
-      tabs: { server: "サーバー", display: "表示" },
+      tabs: { server: "サーバー", display: "表示", licenses: "ライセンス" },
       display: {
         description:
           "このブラウザーでのPRXの表示を選択します。変更はすぐに反映されます。",
@@ -108,6 +113,11 @@ export const shell = {
             dark: "ダーク",
           },
         },
+      },
+      licenses: {
+        loading: "ライセンス情報を読み込んでいます…",
+        error: "ライセンス情報を読み込めません。",
+        empty: "表示できるライセンス情報がありません。",
       },
     },
     nav: {

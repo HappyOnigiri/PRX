@@ -47,6 +47,7 @@ const graphMocks = vi.hoisted(() => ({
         connectionState: { isValid: boolean | null },
       ) => void)
     | undefined,
+  hideAttribution: undefined as boolean | undefined,
 }));
 
 vi.mock("../src/api", () => ({
@@ -73,6 +74,7 @@ vi.mock("@xyflow/react", () => ({
     onReconnectStart,
     onReconnectEnd,
     nodesConnectable,
+    proOptions,
   }: {
     children?: ReactNode;
     edges?: unknown[];
@@ -95,6 +97,7 @@ vi.mock("@xyflow/react", () => ({
       connectionState: { isValid: boolean | null },
     ) => void;
     nodesConnectable?: boolean;
+    proOptions?: { hideAttribution?: boolean };
   }) => {
     graphMocks.edges = (edges ?? []) as Record<string, unknown>[];
     graphMocks.onConnect = onConnect;
@@ -105,6 +108,7 @@ vi.mock("@xyflow/react", () => ({
     graphMocks.onReconnect = onReconnect;
     graphMocks.onReconnectStart = onReconnectStart;
     graphMocks.onReconnectEnd = onReconnectEnd;
+    graphMocks.hideAttribution = proOptions?.hideAttribution;
     return (
       <button
         type="button"
@@ -156,12 +160,29 @@ describe("FeatureGraph", () => {
     graphMocks.onReconnect = undefined;
     graphMocks.onReconnectStart = undefined;
     graphMocks.onReconnectEnd = undefined;
+    graphMocks.hideAttribution = undefined;
     graphMocks.useGraphLayout.mockReturnValue({
       edgeRoutes: new Map(),
       nodes: [],
       layoutError: undefined,
       retryLayout: vi.fn(),
     });
+  });
+
+  it("hides the React Flow attribution", () => {
+    render(
+      <FeatureGraph
+        tasks={[makeTask()]}
+        dependencies={[]}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={vi.fn()}
+      />,
+    );
+
+    expect(graphMocks.hideAttribution).toBe(true);
   });
 
   it("sends a blocker-to-blocked connection without adding an optimistic edge", () => {
