@@ -99,7 +99,7 @@ func TestWriteJSONErrorUsesCodeAndMessageOnStderr(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	s := &state{out: &stdout, errOut: &stderr, json: true}
 	err := domain.NewError(domain.DomainErrorCodeNotFound, "resource was not found")
-	if writeErr := s.writeError(err); writeErr != nil {
+	if writeErr := s.writeError(err, ""); writeErr != nil {
 		t.Fatal(writeErr)
 	}
 	if stdout.Len() != 0 {
@@ -121,7 +121,7 @@ func TestWriteJSONErrorUsesCodeAndMessageOnStderr(t *testing.T) {
 func TestWriteHumanErrorUsesPrefixOnStderr(t *testing.T) {
 	var stdout, stderr bytes.Buffer
 	s := &state{out: &stdout, errOut: &stderr, human: true}
-	if err := s.writeError(errors.New("command failed")); err != nil {
+	if err := s.writeError(errors.New("command failed"), ""); err != nil {
 		t.Fatal(err)
 	}
 	if stdout.Len() != 0 || stderr.String() != "Error: command failed\n" {

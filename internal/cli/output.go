@@ -55,12 +55,11 @@ func (s *state) write(value any, render humanRenderer) error {
 	return encodeJSON(s.out, data)
 }
 
-func (s *state) writeError(err error, hints ...string) error {
+func (s *state) writeError(err error, hint string) error {
 	if resolveErr := s.resolveOutputMode(); resolveErr != nil && err == nil {
 		err = resolveErr
 	}
 	if s.mode == outputModeHuman {
-		hint := firstHint(hints)
 		if hint == "" {
 			_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n", errorMessage(err))
 			return writeErr
@@ -68,7 +67,7 @@ func (s *state) writeError(err error, hints ...string) error {
 		_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n\n%s", errorMessage(err), hint)
 		return writeErr
 	}
-	return writeJSONFailure(s.errOut, err, firstHint(hints))
+	return writeJSONFailure(s.errOut, err, hint)
 }
 
 func (s *state) writeSchemaVersion() error {
@@ -87,13 +86,6 @@ func writeJSONFailure(out io.Writer, err error, hint string) error {
 	return encodeJSON(out, errorEnvelope{Error: errorData{
 		Code: commandErrorCode(err), Message: errorMessage(err), Hint: hint,
 	}})
-}
-
-func firstHint(hints []string) string {
-	if len(hints) == 0 {
-		return ""
-	}
-	return hints[0]
 }
 
 func commandErrorCode(err error) string {
