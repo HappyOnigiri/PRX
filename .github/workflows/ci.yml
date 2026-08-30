@@ -33,6 +33,8 @@ jobs:
               bin/golangci-lint
           - target: go-deadcode
             go: true
+          - target: markdown-lint
+            go: true
           - target: mod-tidy-check
             go: true
           - target: test-race-coverage

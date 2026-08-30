@@ -1,103 +1,177 @@
-# PRX initial design
+# PRX design policies
 
-## Product job
+## Product direction
 
-- Audience: engineers coordinating 5–100 pull requests across repositories.
-- Primary job: identify the next safe task and understand why another task is blocked.
-- Artifact: a durable feature graph backed by SQLite and refreshed from GitHub.
-- Frequency: checked throughout the workday by people and coding agents.
-- First action: open the ready queue or select a graph node.
-- Success evidence: dependency, review, conflict, merge, and stale states are visible without opening each pull request.
+- Serve engineers coordinating 5–100 pull requests across repositories.
+- Make the next safe task and its blockers understandable without opening every pull request.
+- Keep the dependency graph durable, local-first, and useful to both people and coding agents.
+- Treat graph causality as the primary product concern and generic project metrics as secondary.
 
-## Architecture
+## Sources of truth
 
-`cmd/prx` constructs one application service used directly by Cobra commands and by thin ConnectRPC handlers. The service owns validation and derived state. The SQLite repository owns persistence and transactions. The versioned YAML configuration store owns host and credential settings, while a GitHub resolver selects host-scoped credentials for each live synchronization. A GitHub provider interface isolates network synchronization and makes fixtures deterministic.
+This document records durable policy, rationale, and compatibility or safety constraints.
+It does not mirror implementation details that should evolve with feature work.
 
-The browser uses generated Protocol Buffer descriptors through ConnectRPC. It never opens SQLite or invokes the CLI. Fixed states and known reasons cross the RPC boundary as enums or structured details, while unexpected server and GitHub error messages may remain English. The production build is emitted into `internal/webui/dist` and embedded in the Go binary.
+| Concern | Source of current behavior |
+|---|---|
+| CLI commands and flags | Cobra definitions and the generated reference under `docs/cli/` |
+| Domain values and derivation details | `internal/domain`, application code, and their tests |
+| RPC fields | Protocol Buffer definitions under `proto/` |
+| Persistence structure | Migrations and query definitions |
+| WebUI components and interactions | `web/src/` and browser tests |
 
-Package dependencies follow the same direction: `internal/domain` and `internal/config` are leaves; `internal/store` may import only `internal/domain` and `internal/db`; `internal/github` depends on `internal/config` and `internal/domain`; `internal/app` may import `internal/config`, `internal/domain`, and `internal/github` and depends on its `Repository` interface; `internal/rpc` and `internal/cli` use a `Service` interface; and `cmd/prx` assembles all concrete pieces.
+Update this document when a change alters a policy, rationale, public contract, or trust boundary.
+Feature additions that follow existing policy should update their owning implementation and generated references instead.
 
-## Packages
+## Architectural policy
 
-- `internal/domain`: entities, status derivation, DAG validation, ready calculation.
-- `internal/store`: embedded migrations, sqlc queries, and transactional repository.
-- `internal/config`: versioned YAML settings, secure atomic writes, and public secret-free views.
-- `internal/app`: use cases shared by CLI and RPC.
-- `internal/github`: host-configured REST provider, credential resolver, error classification, and deterministic fixtures.
-- `internal/cli`: Cobra surface with deterministic human output and stable JSON responses.
-- `internal/rpc`: ConnectRPC translation only.
-- `internal/webui`: embedded Vite production assets.
-- `web`: React application, generated API types, tests, and Playwright scenarios.
+Business rules have one application-level implementation shared by the CLI and RPC handlers.
+Adapters translate that implementation instead of introducing alternate validation or status semantics.
 
-## CLI contract
+Dependencies point inward toward domain policy.
+Persistence owns storage and transactions, but it does not define competing business rules.
+External providers remain replaceable behind application-facing interfaces.
 
-Every response-producing CLI command uses response contract version `1`. With neither output flag set, stdout connected to a TTY selects deterministic human-readable output; a pipe, redirect, regular file, buffer, CI process, or other non-TTY stdout selects machine-readable JSON. `--json` forces JSON and `--human` forces human output regardless of stdout, while enabling both is a `usage_error`; explicitly false flags return to automatic selection. The selection is made from the actual stdout once per invocation and is reused for success and failure.
+The browser uses RPC and never opens SQLite or invokes the CLI.
+The server remains authoritative for validation and derived business state.
+The browser may translate and arrange structured state for presentation.
+Known states and expected failure reasons cross RPC boundaries as enums or structured details.
+Only unexpected diagnostics may remain unstructured English.
 
-A successful JSON command returns its data object directly as one-line compact JSON with a trailing newline and no `schema_version`, `ok`, or `data` envelope. Existing object payloads keep their fields, while collection responses use named fields: `features`, `tasks`, `dependencies`, `pull_requests`, `documents`, `ready_tasks`, `review_waiting_tasks`, `conflict_tasks`, `stale_tasks`, `hosts`, or `auth_methods` as appropriate. Empty collections are `[]`, never `null`. JSON stdout contains no prose, color, borders, or logs, and successful stderr is empty except for warnings and continuous server logs that belong there.
+## Public contract policy
 
-A failed JSON command leaves stdout empty and writes `{"error":{"code":"...","message":"..."}}` as one-line compact JSON to stderr. Domain failures retain their existing code and message, configuration failures retain their domain mapping, CLI syntax failures use `usage_error`, and unexpected failures use `internal`. A failed human command also leaves stdout empty and writes `Error: <message>` to stderr. All failures return a non-zero exit code.
+Behavior documented as a CLI, JSON, state, or dependency contract is public.
+Changes to those contracts require coordinated implementation, tests, generated references, and policy updates when the policy itself changes.
 
-Human list commands use fixed-column, uncolored tables and explicitly report empty collections. Resource retrieval uses labeled details, mutations use concise completion messages, and graph, snapshot, seed, configuration, synchronization, and implementation-plan commands use purpose-specific summaries or sections. Human fields and columns do not vary with terminal width or environment, and authentication output exposes only whether a secret is configured, never its value.
+Machine-readable CLI output must be deterministic, versioned, and free of presentation text.
+Errors use stderr and leave stdout empty so automation cannot confuse a failed command with data.
 
-Help, completion, `--version`, and the continuous logs of `serve` are not data responses. `prx schema-version` does not open SQLite, YAML configuration, or GitHub credentials; it emits `Schema version: 1` in human mode and only `{"schema_version":"1"}` in JSON mode. This version covers both successful JSON data objects and the JSON error contract.
+| Condition | Output policy |
+|---|---|
+| No output flag and stdout is a TTY | Human-readable output |
+| No output flag and stdout is not a TTY | JSON |
+| `--json` | JSON regardless of stdout |
+| `--human` | Human-readable output regardless of stdout |
+| Both output flags | Usage error |
 
-Every mutation is non-interactive so that people and coding agents drive the same surface. Operating on data that does not exist — removing a dependency, detaching a pull request, deleting a document, or deleting an implementation plan — fails with `not_found` instead of reporting success, so a caller cannot mistake a typo for a completed change. Feature and task deletion refuses to remove referenced data unless `--cascade` is supplied. Implementation plans are managed by `prx implementation-plan get|set|delete`; `set` reads exactly one of a file or stdin and returns the stored plan. A partial GitHub synchronization remains a successful command with `failed > 0` and preserved per-pull-request `sync_error` fields; the stderr error object is reserved for failure of the command itself.
+Successful JSON commands emit their data object directly without a `schema_version`, `ok`, or `data` envelope.
+Empty collections are `[]`, never `null`.
+Failed JSON commands emit the versioned error object to stderr and leave stdout empty.
+Failures return a non-zero exit status.
+Human output does not vary with terminal width or ambient environment.
+The CLI implementation and black-box tests own current field names and presentation details.
 
-Feature and task public IDs are typed, monotonically allocated values in the forms `F-<number>` and `T-<number>`. They are accepted by the corresponding CLI operations and by `prx node get NODE_ID`, which returns the matching feature or task object. The UUIDs used for SQLite relationships are storage details and are not exposed to CLI, RPC, or WebUI users.
+Mutations remain non-interactive so people and coding agents use the same surface.
+A missing mutation target fails instead of reporting a successful no-op.
+Destructive traversal of referenced data requires an explicit cascade request.
 
-`prx config` manages GitHub hosts and host-scoped authentication methods without opening the database or contacting GitHub. Its public output never contains inline tokens. Configuration is read from `--config`, then `PRX_CONFIG`, then the operating system user configuration directory; server-only presentation preferences remain in browser Local Storage.
+Public feature and task identifiers remain distinct from storage identifiers.
+Storage UUIDs must not cross the CLI, RPC, or WebUI boundary.
 
-The root `package.json` is the single source of the product version. Every current build and install path appends `-dev` so it identifies the release on which development is based without claiming to be that release. A future distribution pipeline will stamp the stable version only into its release artifacts. `prx --version` and the WebUI read the same value from the running binary; the server injects it into the embedded index rather than maintaining a separate frontend version.
+A bulk operation may report item-level failures without discarding successful items.
+Command-level failure is reserved for failure of the operation itself.
 
-## Domain decisions
+## Domain policy
 
-Feature states are `active`, `paused`, `completed`, and `cancelled`. Task storage states are `auto`, `not_started`, `in_progress`, `completed`, and `closed`; `auto` is the default and the other four values are manual overrides. With `auto`, a linked pull-request task uses the PR display priority, while a task without a PR is `designed` when it has an implementation plan and otherwise `not_started`. Manual overrides take precedence over both the PR and plan.
+The server derives display state from stored state and external facts.
+Clients must not recreate that derivation independently.
 
-Dependencies use raw completion semantics rather than display labels. A manual completed or closed override satisfies a blocker. An automatic PR task satisfies a blocker when its last known raw PR state is open, closed, or merged, regardless of draft, review, conflict, or stale flags; an unknown state or missing PR remains blocking. Stale data stays visible as a warning and does not erase the last known state. Ready tasks are automatic or manual-not-started tasks displayed as not started or designed whose blockers are satisfied.
+Manual task-state overrides take precedence over automatic derivation.
+Dependency satisfaction uses raw completion semantics rather than display labels.
+Presentation flags such as review, conflict, or staleness do not silently redefine completion.
 
-GitHub display priority is merged, closed without merge, draft, conflict, changes requested, approved, review waiting, open, then unknown. Conflict and review decision remain separate stored fields. Review waiting means an open, non-draft PR whose current review decision is review-required or that has requested reviewers.
+Stale synchronization data preserves the last known state and remains visibly marked as stale.
+An external failure must not rewrite known state as unknown.
 
-Dependencies are directed from blocker to blocked. Edge insertion loads the feature graph inside the write transaction and returns the discovered cycle path. Database checks cover self edges, duplicates, ownership, and foreign keys; application validation covers reachability.
+Dependencies point from blocker to blocked.
+Dependency mutations preserve feature ownership and DAG integrity.
+Cycle rejection includes enough context for callers to explain the failure.
 
-## Storage and operational boundaries
+Current state values, display precedence, and readiness conditions belong to the domain implementation and its tests.
 
-SQLite uses WAL, foreign keys, a 5-second busy timeout, and explicit transactions. Migrations are embedded and each version is committed atomically. The default database lives in the user data directory and is replaceable with `--db` or `PRX_DB`. GitHub settings live in `config.yaml` under the user configuration directory and are replaceable with `--config` or `PRX_CONFIG`. The config directory is `0700`, the config file is `0600`, and updates use a same-directory temporary file, `fsync`, and atomic rename under an advisory lock.
+## Persistence and configuration policy
 
-Pull-request identity includes the normalized GitHub host, owner, repository, and number. The migration assigns `github.com` to existing rows and changes uniqueness to include host, so identical repository names on two Enterprise hosts remain distinct. The SQLite `github_repository_auth_cache` stores only the successful host/repository/auth-method mapping and timestamp; it never stores tokens, token hashes, or Keychain data. A cache entry for a removed method is ignored and replaced after the next successful synchronization.
+PRX uses SQLite to keep installation, inspection, and backup local.
+The design accepts a single-writer constraint in exchange for a single local database.
 
-The CLI calls a `Service` interface. Its local implementation is used now; a future remote implementation can forward the same operations over Connect without changing command parsing.
+Settings follow ownership rather than convenience:
 
-GitHub calls are direct HTTPS requests. A `LiveProvider` receives a resolved token, API URL, upload URL, and a 30-second timeout client; it does not discover credentials. The resolver reads Keychain credentials through `/usr/bin/security`, configured environment variables, inline YAML tokens, or `gh auth token --hostname HOST --user USER`. `gh` receives an environment with GitHub token variables removed so an explicitly selected account cannot silently mix with an ambient token. The historical GitHub.com order remains an implicit candidate list (`GITHUB_TOKEN`, `GH_TOKEN`, then `gh`) only when the config file omits `auth_methods`; an explicit list is used in YAML order and is host-filtered.
+| Setting | Storage policy |
+|---|---|
+| Affects CLI or server behavior | A configuration file accessible to the CLI |
+| Affects only WebUI presentation | Browser Local Storage |
 
-GitHub.com and Enterprise clients use their configured API and upload bases through `WithEnterpriseURLs`. The HTTP client rejects redirects to a different origin, keeping an Authorization-bearing request inside its configured host boundary. An authentication method that returns `401` is excluded for the rest of the current sync. Permission errors and access-related `404` responses may advance to the next method, while rate limits, network/TLS errors, and `5xx` responses fail that repository without credential fallback. A `404` from a cached credential is disambiguated by one repository pull-request list probe: a successful probe means the requested PR is absent, while a failed probe permits authentication fallback.
+Persistent mutations and migrations are atomic.
+Configuration writes preserve local secret-file protections and use atomic replacement.
 
-Synchronization fails safe rather than destructively. A failed refresh keeps the last successful fields and marks the record stale with a sync error, so a temporary outage never rewrites known state as unknown. If the PR body request succeeds but review metadata fails, the newly received core PR fields are persisted together with the previous review fields and the error. A bulk refresh persists successes and failures independently, so one inaccessible repository does not discard the results for the others.
+Pull-request identity includes the normalized host.
+Repositories with the same owner and name on different GitHub hosts must remain distinct.
 
-Implementation plans live in a one-to-one `implementation_plans` table keyed by task. Their Markdown body is fetched only by the plan RPC or CLI command; snapshots carry only `has_implementation_plan`, allowing the server to derive `designed` without loading every body. Task and feature deletion treats plans as references unless cascading was requested.
+Caches may remember which credential method succeeded, but they must never contain credential material or token-derived secrets.
+Removing a credential method invalidates its cached selection without requiring manual database repair.
+
+Synchronization fails safely:
+
+- Preserve each field's last successful value when that field cannot be refreshed.
+- Record staleness and the failure without replacing known state with guesses.
+- Isolate item-level failures so one inaccessible repository does not discard unrelated successes.
+
+Large Markdown bodies stay outside snapshots.
+Snapshots carry only the metadata needed for derived state.
+
+## GitHub credential policy
+
+Credential methods are scoped to one normalized host and evaluated in explicit order.
+An omitted method list may use documented compatibility defaults.
+An explicitly empty method list disables implicit credentials.
+
+An explicitly selected account must not inherit ambient credentials from another source.
+Authorization-bearing requests must not follow redirects to another origin.
+
+Fallback is appropriate for authentication and permission failures that another credential may resolve.
+Rate limits, transport failures, and server failures do not trigger credential rotation.
+The provider implementation owns the current error classification and disambiguation probes.
+
+Public CLI, RPC, WebUI, log, error, and cache reads remain secret-free.
+Inline credentials are an explicit local-trust trade-off, not permission to expose stored values.
 
 ## Local trust boundary
 
-`prx serve` is a local tool rather than an authenticated service, so its defenses assume a single trusted user and an untrusted network and browser. It binds to `127.0.0.1:7331` unless `--addr` is supplied explicitly, rejects requests whose `Host` or `Origin` header does not match the listen address, and requires the Connect protocol header on RPC calls; a page from another origin or a rebound DNS name therefore cannot drive the local database. Production responses set a restrictive content security policy and related browser headers.
+`prx serve` is a local tool for one trusted user, not an authenticated multi-user service.
+Its threat model treats the network and browser as untrusted.
 
-Markdown documents are stored as path references, resolved relative to the server's working directory or as absolute paths. Only paths explicitly registered as `markdown_path` documents can be read, which keeps the preview from turning the server into a general file reader. Inline GitHub tokens are a deliberate local-trust-boundary trade-off: they are stored in YAML when selected, but are write-only across RPC and UI reads and are never included in CLI JSON, logs, errors, or cache rows.
+The server binds to loopback by default.
+Non-loopback exposure requires an explicit listen address.
+Requests must be bound to the configured origin and RPC protocol so another origin cannot drive the local database.
 
-## UI structure decision
+Markdown preview is limited to explicitly registered document paths.
+It must not become a general filesystem reader.
+Markdown preview reads remain bounded.
 
-Three structures were considered: metric cards leading to tables, a queue/table split with a mini graph, and a full dependency canvas with navigation and an inspector. The full canvas is provisionally selected because graph causality—not generic project metrics—is the product's defining work.
+Production responses use restrictive browser security headers.
+The server implementation owns the current header set and request-validation mechanics.
 
-The interface uses matched neutral light and dark palettes with role-based tokens for the application background, rail, surfaces, borders, text, actions, and task states. A single blue accent identifies primary actions, links, selection, and focus; ready, review, conflict, and merged colors appear only on state indicators. System sans supports daily reading in English and Japanese, while monospace is reserved for identifiers and counts. The signature is a directional dependency spine with restrained state stripes that remains legible from 8 to 100 nodes. Motion is limited to state feedback and disabled under reduced-motion preferences.
-CSS class names use kebab-case, and state tokens use `state-<kebab>`.
+## WebUI policy
 
-WebUI copy uses semantic i18next keys with bundled English and Japanese resources. The initial language is selected from a saved Local Storage preference, then the browser's preferred languages, with English as the fallback. Changing the display language updates Local Storage, the document language, and the page title without changing CLI or server configuration. The theme follows the browser color-scheme preference by default and falls back to light when no preference is reported. An explicit light or dark selection is stored in Local Storage and takes precedence until the user selects System again. The dependency canvas stores one user-selected zoom level in Local Storage and applies it to every feature graph while centering each graph independently. The server remains responsible for deriving business state; the browser only translates and assembles display text from structured RPC values.
+The dependency canvas was selected because causal relationships are the product's defining information.
+Navigation and inspection should preserve that context instead of replacing it with a generic dashboard workflow.
 
-Command buttons use Lucide icons through one shared icon-button component. Primary create, add, save, and attach actions use the accent variant; secondary, quiet, and danger variants preserve the existing action hierarchy for navigation, dismissal, and destructive operations. Icon-only buttons must provide a translated `aria-label` and tooltip, while a label remains visible when the icon alone would not identify the target, result, or danger scope. The shared component keeps icon size, stroke, disabled state, and button type consistent; icon-only controls are at least 24 CSS px and form submissions opt into `type="submit"` explicitly. Buttons may keep a text label when it identifies a Markdown operation or content row, or when no suitable icon makes the action unambiguous.
+Business state and credentials stay on the server.
+Language, theme, zoom, and similar presentation-only preferences may remain browser-local.
 
-Task cards expose pull requests, document references, and a short red GitHub sync-error marker as explicit rows. External references open in a new browser tab, while a registered Markdown path is read on demand through a document-ID RPC and rendered in a read-only modal. Markdown contents remain outside the snapshot, and preview reads are limited to 1 MiB. Dependencies are added by dragging from a blocker card's right source handle to a blocked card's left target handle. A dependency is removed on the canvas by selecting its edge and dragging the blocker-side source endpoint into empty space; dropping on another handle leaves the dependency unchanged, and the inspector's remove button remains the keyboard-accessible fallback. The task inspector opens only from the card's edit button so reference activation and editing are distinct actions. The task inspector and feature workspace header expose public typed IDs (`T-*` and `F-*`) with subdued copy controls for debugging; identifiers use the existing monospace treatment and do not compete with editing or synchronization actions. These are the only feature/task identifiers exposed to CLI, RPC, and WebUI users; storage UUIDs remain internal. `prx node get NODE_ID` resolves either public ID and returns the matching feature or task object. The implementation-plan section loads the plan on demand, edits Markdown in a textarea, and renders a safe preview with the existing ReactMarkdown component; save and delete invalidate the snapshot so `not_started` and `designed` update immediately. Stale PR state and the last display state remain separate in the inspector.
+State colors are reserved for state communication rather than decoration.
+Identifiers and counts may use monospace, while normal content prioritizes readability in English and Japanese.
+Nonessential motion respects the reduced-motion preference.
 
-The Server settings dialog edits the same YAML-backed host and credential order used by `prx sync` and `prx serve`. It shows host boundaries and secret-free credential metadata, offers source-specific forms, and sends an inline token only when it is newly entered or replaced. Reordering affects the next synchronization without a server restart; the browser does not persist server credentials in Local Storage.
+Icon-only controls require an accessible name and tooltip.
+Controls keep a visible label when an icon cannot communicate the target, result, or danger scope.
+Pointer interactions retain a keyboard-accessible alternative.
 
-Overview represents current work only: its feature list, managed-node count, ready queue, and review, conflict, and stale meters are all projected from non-archived features. Archived features remain durable in SQLite but move to a separate Archived view for historical reference, restoration, or permanent deletion. In the WebUI, an archived feature workspace is read-only: graph navigation, identifiers, pull-request and URL links, Markdown previews, and implementation-plan content remain available, while synchronization and every task or feature content mutation are removed. Restore and cascade deletion remain available from the feature management dialog. This is a browser responsibility and does not add server-side rejection to the RPC or CLI contracts.
+Current screens, components, gestures, and control placement belong to the WebUI implementation and its tests.
 
 ## Trade-offs
 
-SQLite keeps installation local and a single binary possible, while WAL and retries mitigate but do not remove its single-writer constraint. Manual sync avoids worker lifecycle complexity. A normalized schema makes future PostgreSQL migration practical. Inline credentials are convenient for local automation but intentionally carry the YAML file's filesystem trust requirement; Keychain, environment, and `gh` sources are available when plaintext storage is undesirable. Layout persistence, webhooks, remote mode, authentication, and collaboration remain outside the initial implementation.
+- Synchronization remains user-triggered until background-worker lifecycle complexity is justified.
+- A normalized schema keeps a future PostgreSQL migration practical.
+- Inline credentials favor local automation while accepting the configuration file's trust boundary.
+- Track prospective features in their owning plans or pull requests instead of maintaining a feature backlog here.
