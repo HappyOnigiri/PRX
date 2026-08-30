@@ -100,10 +100,17 @@ func (s *Service) syncUncachedHostGroups(
 ) (processed map[repositoryKey]bool, succeeded, failed int, err error) {
 	processed = make(map[repositoryKey]bool)
 	keysByHost := make(map[string][]repositoryKey)
+	// keys is already sorted, and hosts are visited in that same order so a
+	// failure stops after the same hosts on every run.
+	hosts := make([]string, 0, len(keys))
 	for _, key := range keys {
+		if _, seen := keysByHost[key.host]; !seen {
+			hosts = append(hosts, key.host)
+		}
 		keysByHost[key.host] = append(keysByHost[key.host], key)
 	}
-	for _, hostKeys := range keysByHost {
+	for _, host := range hosts {
+		hostKeys := keysByHost[host]
 		if len(hostKeys) < 2 || repositoriesHaveCachedAuth(ctx, cache, hostKeys) {
 			continue
 		}
