@@ -326,6 +326,7 @@ func TestBlackBoxCRUDAndCycle(t *testing.T) {
 
 func TestBlackBoxTargetedSyncByID(t *testing.T) {
 	binary := buildCLI(t)
+	t.Setenv("PRX_CONFIG", filepath.Join(t.TempDir(), "missing-config.yaml"))
 	dbPath := filepath.Join(t.TempDir(), "targeted-sync.db")
 	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "targeted", "--title", "Targeted")
 	if exit != 0 || !feature.OK {
@@ -1113,6 +1114,18 @@ func TestBlackBoxDefaultTextOutputCoversResourcesAndSummaries(t *testing.T) {
 			t.Fatalf("config show omitted %q: %s", value, configShow.stdout)
 		}
 	}
+	syncStatus := run("sync", "status")
+	for _, value := range []string{
+		"Interval:", "Last attempt:", "Last updated:", "Succeeded:", "Failed:", "Error:",
+	} {
+		if !strings.Contains(syncStatus.stdout, value) {
+			t.Fatalf("sync status omitted %q: %s", value, syncStatus.stdout)
+		}
+	}
+	syncUpdate := run("config", "sync", "update", "--interval-seconds", "900")
+	if syncUpdate.stdout != "Automatic sync interval: 900 seconds.\n" {
+		t.Fatalf("config sync update output=%q", syncUpdate.stdout)
+	}
 }
 
 func TestBlackBoxOutputFlagsAndErrorModes(t *testing.T) {
@@ -1211,6 +1224,11 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 		"GH_ENTERPRISE_TOKEN",
 	), "id")
 	assertDirectObjectKeys(t, runConfig("config", "auth"), "auth_methods")
+	assertDirectObjectKeys(
+		t,
+		runConfig("config", "sync", "update", "--interval-seconds", "600"),
+		"interval_seconds",
+	)
 	assertDirectObject(t, runConfig("config", "auth", "update", "work-gh", "--user", "HappyOnigiri"), "id")
 	assertDirectObjectKeys(t, runConfig("config", "auth", "reorder", "work-gh"), "auth_methods")
 	assertDirectObjectKeys(t, runConfig("config", "auth", "remove", "work-gh"), "removed")
@@ -1287,6 +1305,15 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	assertDirectObjectKeys(t, runDB("conflicts"), "conflict_tasks")
 	assertDirectObjectKeys(t, runDB("stale"), "stale_tasks")
 	assertDirectObjectKeys(t, runDB("--github-fixture", "demo", "sync"), "failed", "succeeded")
+	assertDirectObjectKeys(
+		t,
+		runDB("sync", "status"),
+		"interval_seconds",
+		"last_attempt_at",
+		"last_updated_at",
+		"succeeded",
+		"failed",
+	)
 	assertDirectObjectKeys(t, runDB("validate"), "valid")
 
 	assertDirectObjectKeys(t, runDB("document", "delete", documentID), "deleted")

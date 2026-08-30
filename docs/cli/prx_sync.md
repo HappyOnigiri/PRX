@@ -33,4 +33,5 @@ prx sync --task TASK_ID
 ### SEE ALSO
 
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
+* [prx sync status](prx_sync_status.md)	 - Show automatic GitHub synchronization status
 

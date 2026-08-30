@@ -49,7 +49,8 @@ func TestRPCGitHubConfigCRUDNeverReturnsInlineToken(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(configuration.Msg.GetConfig().GetAuthMethods()) != 1 ||
-		configuration.Msg.GetConfig().GetAuthMethods()[0].GetSecretHint() != "gith…cret" {
+		configuration.Msg.GetConfig().GetAuthMethods()[0].GetSecretHint() != "gith…cret" ||
+		configuration.Msg.GetConfig().GetAutoSyncIntervalSeconds() != 3600 {
 		t.Fatalf("public config=%+v", configuration.Msg.GetConfig())
 	}
 	encoded, err := protojson.Marshal(configuration.Msg)
@@ -63,6 +64,30 @@ func TestRPCGitHubConfigCRUDNeverReturnsInlineToken(t *testing.T) {
 	host, err := client.AddGitHubHost(ctx, connect.NewRequest(&prxv1.AddGitHubHostRequest{Host: "ghe.example.com"}))
 	if err != nil || host.Msg.GetHost().GetApiUrl() != "https://ghe.example.com/api/v3/" {
 		t.Fatalf("add host=%+v err=%v", host.Msg.GetHost(), err)
+	}
+	if host.Msg.GetHost().GetGraphqlUrl() != "https://ghe.example.com/api/graphql" {
+		t.Fatalf("GraphQL URL=%q", host.Msg.GetHost().GetGraphqlUrl())
+	}
+	interval, err := client.UpdateGitHubSyncConfig(
+		ctx,
+		connect.NewRequest(&prxv1.UpdateGitHubSyncConfigRequest{IntervalSeconds: 600}),
+	)
+	if err != nil || interval.Msg.GetConfig().GetAutoSyncIntervalSeconds() != 600 {
+		t.Fatalf("updated interval=%+v err=%v", interval.Msg.GetConfig(), err)
+	}
+	statusBefore, err := client.GetGitHubSyncStatus(
+		ctx,
+		connect.NewRequest(&prxv1.GetGitHubSyncStatusRequest{}),
+	)
+	if err != nil || statusBefore.Msg.GetStatus().LastUpdatedAt != nil {
+		t.Fatalf("initial sync status=%+v err=%v", statusBefore.Msg.GetStatus(), err)
+	}
+	automatic, err := client.SyncGitHubIfDue(
+		ctx,
+		connect.NewRequest(&prxv1.SyncGitHubIfDueRequest{}),
+	)
+	if err != nil || !automatic.Msg.GetRan() || automatic.Msg.GetStatus().LastUpdatedAt == nil {
+		t.Fatalf("automatic sync=%+v err=%v", automatic.Msg, err)
 	}
 	apiURL := "https://ghe.example.com/api/v3/"
 	updatedHost, err := client.UpdateGitHubHost(ctx, connect.NewRequest(&prxv1.UpdateGitHubHostRequest{

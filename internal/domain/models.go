@@ -173,6 +173,23 @@ type PullRequest struct {
 	DisplayState    PullRequestDisplayState `json:"display_state"`
 }
 
+type GitHubSyncState struct {
+	LastAttemptAt   *time.Time `json:"last_attempt_at,omitempty"`
+	LastCompletedAt *time.Time `json:"last_updated_at,omitempty"`
+	Succeeded       int        `json:"succeeded"`
+	Failed          int        `json:"failed"`
+	Error           string     `json:"error,omitempty"`
+}
+
+type GitHubSyncStatus struct {
+	IntervalSeconds int64      `json:"interval_seconds"`
+	LastAttemptAt   *time.Time `json:"last_attempt_at"`
+	LastUpdatedAt   *time.Time `json:"last_updated_at"`
+	Succeeded       int        `json:"succeeded"`
+	Failed          int        `json:"failed"`
+	Error           string     `json:"error,omitempty"`
+}
+
 type Document struct {
 	ID        string       `json:"id"`
 	FeatureID string       `json:"feature_id,omitempty"`

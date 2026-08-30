@@ -81,10 +81,19 @@ const (
 	PRXServiceReadMarkdownDocumentProcedure = "/prx.v1.PRXService/ReadMarkdownDocument"
 	// PRXServiceSyncProcedure is the fully-qualified name of the PRXService's Sync RPC.
 	PRXServiceSyncProcedure = "/prx.v1.PRXService/Sync"
+	// PRXServiceGetGitHubSyncStatusProcedure is the fully-qualified name of the PRXService's
+	// GetGitHubSyncStatus RPC.
+	PRXServiceGetGitHubSyncStatusProcedure = "/prx.v1.PRXService/GetGitHubSyncStatus"
+	// PRXServiceSyncGitHubIfDueProcedure is the fully-qualified name of the PRXService's
+	// SyncGitHubIfDue RPC.
+	PRXServiceSyncGitHubIfDueProcedure = "/prx.v1.PRXService/SyncGitHubIfDue"
 	// PRXServiceValidateProcedure is the fully-qualified name of the PRXService's Validate RPC.
 	PRXServiceValidateProcedure = "/prx.v1.PRXService/Validate"
 	// PRXServiceGetConfigProcedure is the fully-qualified name of the PRXService's GetConfig RPC.
 	PRXServiceGetConfigProcedure = "/prx.v1.PRXService/GetConfig"
+	// PRXServiceUpdateGitHubSyncConfigProcedure is the fully-qualified name of the PRXService's
+	// UpdateGitHubSyncConfig RPC.
+	PRXServiceUpdateGitHubSyncConfigProcedure = "/prx.v1.PRXService/UpdateGitHubSyncConfig"
 	// PRXServiceAddGitHubHostProcedure is the fully-qualified name of the PRXService's AddGitHubHost
 	// RPC.
 	PRXServiceAddGitHubHostProcedure = "/prx.v1.PRXService/AddGitHubHost"
@@ -149,10 +158,16 @@ type PRXServiceClient interface {
 	ReadMarkdownDocument(context.Context, *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error)
 	// Sync refreshes selected pull requests from GitHub and records successes and failures independently.
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
+	// GetGitHubSyncStatus returns automatic synchronization diagnostics.
+	GetGitHubSyncStatus(context.Context, *connect.Request[v1.GetGitHubSyncStatusRequest]) (*connect.Response[v1.GetGitHubSyncStatusResponse], error)
+	// SyncGitHubIfDue claims and runs an automatic refresh only when due.
+	SyncGitHubIfDue(context.Context, *connect.Request[v1.SyncGitHubIfDueRequest]) (*connect.Response[v1.SyncGitHubIfDueResponse], error)
 	// Validate checks database integrity and returns any detected errors.
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
 	// GetConfig returns the public GitHub configuration.
 	GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error)
+	// UpdateGitHubSyncConfig changes the shared automatic refresh interval.
+	UpdateGitHubSyncConfig(context.Context, *connect.Request[v1.UpdateGitHubSyncConfigRequest]) (*connect.Response[v1.UpdateGitHubSyncConfigResponse], error)
 	// AddGitHubHost adds a host boundary.
 	AddGitHubHost(context.Context, *connect.Request[v1.AddGitHubHostRequest]) (*connect.Response[v1.AddGitHubHostResponse], error)
 	// UpdateGitHubHost updates a host boundary.
@@ -290,6 +305,18 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(pRXServiceMethods.ByName("Sync")),
 			connect.WithClientOptions(opts...),
 		),
+		getGitHubSyncStatus: connect.NewClient[v1.GetGitHubSyncStatusRequest, v1.GetGitHubSyncStatusResponse](
+			httpClient,
+			baseURL+PRXServiceGetGitHubSyncStatusProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("GetGitHubSyncStatus")),
+			connect.WithClientOptions(opts...),
+		),
+		syncGitHubIfDue: connect.NewClient[v1.SyncGitHubIfDueRequest, v1.SyncGitHubIfDueResponse](
+			httpClient,
+			baseURL+PRXServiceSyncGitHubIfDueProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("SyncGitHubIfDue")),
+			connect.WithClientOptions(opts...),
+		),
 		validate: connect.NewClient[v1.ValidateRequest, v1.ValidateResponse](
 			httpClient,
 			baseURL+PRXServiceValidateProcedure,
@@ -300,6 +327,12 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			httpClient,
 			baseURL+PRXServiceGetConfigProcedure,
 			connect.WithSchema(pRXServiceMethods.ByName("GetConfig")),
+			connect.WithClientOptions(opts...),
+		),
+		updateGitHubSyncConfig: connect.NewClient[v1.UpdateGitHubSyncConfigRequest, v1.UpdateGitHubSyncConfigResponse](
+			httpClient,
+			baseURL+PRXServiceUpdateGitHubSyncConfigProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("UpdateGitHubSyncConfig")),
 			connect.WithClientOptions(opts...),
 		),
 		addGitHubHost: connect.NewClient[v1.AddGitHubHostRequest, v1.AddGitHubHostResponse](
@@ -373,8 +406,11 @@ type pRXServiceClient struct {
 	deleteDocument           *connect.Client[v1.DeleteDocumentRequest, v1.DeleteDocumentResponse]
 	readMarkdownDocument     *connect.Client[v1.ReadMarkdownDocumentRequest, v1.ReadMarkdownDocumentResponse]
 	sync                     *connect.Client[v1.SyncRequest, v1.SyncResponse]
+	getGitHubSyncStatus      *connect.Client[v1.GetGitHubSyncStatusRequest, v1.GetGitHubSyncStatusResponse]
+	syncGitHubIfDue          *connect.Client[v1.SyncGitHubIfDueRequest, v1.SyncGitHubIfDueResponse]
 	validate                 *connect.Client[v1.ValidateRequest, v1.ValidateResponse]
 	getConfig                *connect.Client[v1.GetConfigRequest, v1.GetConfigResponse]
+	updateGitHubSyncConfig   *connect.Client[v1.UpdateGitHubSyncConfigRequest, v1.UpdateGitHubSyncConfigResponse]
 	addGitHubHost            *connect.Client[v1.AddGitHubHostRequest, v1.AddGitHubHostResponse]
 	updateGitHubHost         *connect.Client[v1.UpdateGitHubHostRequest, v1.UpdateGitHubHostResponse]
 	deleteGitHubHost         *connect.Client[v1.DeleteGitHubHostRequest, v1.DeleteGitHubHostResponse]
@@ -475,6 +511,16 @@ func (c *pRXServiceClient) Sync(ctx context.Context, req *connect.Request[v1.Syn
 	return c.sync.CallUnary(ctx, req)
 }
 
+// GetGitHubSyncStatus calls prx.v1.PRXService.GetGitHubSyncStatus.
+func (c *pRXServiceClient) GetGitHubSyncStatus(ctx context.Context, req *connect.Request[v1.GetGitHubSyncStatusRequest]) (*connect.Response[v1.GetGitHubSyncStatusResponse], error) {
+	return c.getGitHubSyncStatus.CallUnary(ctx, req)
+}
+
+// SyncGitHubIfDue calls prx.v1.PRXService.SyncGitHubIfDue.
+func (c *pRXServiceClient) SyncGitHubIfDue(ctx context.Context, req *connect.Request[v1.SyncGitHubIfDueRequest]) (*connect.Response[v1.SyncGitHubIfDueResponse], error) {
+	return c.syncGitHubIfDue.CallUnary(ctx, req)
+}
+
 // Validate calls prx.v1.PRXService.Validate.
 func (c *pRXServiceClient) Validate(ctx context.Context, req *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error) {
 	return c.validate.CallUnary(ctx, req)
@@ -483,6 +529,11 @@ func (c *pRXServiceClient) Validate(ctx context.Context, req *connect.Request[v1
 // GetConfig calls prx.v1.PRXService.GetConfig.
 func (c *pRXServiceClient) GetConfig(ctx context.Context, req *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error) {
 	return c.getConfig.CallUnary(ctx, req)
+}
+
+// UpdateGitHubSyncConfig calls prx.v1.PRXService.UpdateGitHubSyncConfig.
+func (c *pRXServiceClient) UpdateGitHubSyncConfig(ctx context.Context, req *connect.Request[v1.UpdateGitHubSyncConfigRequest]) (*connect.Response[v1.UpdateGitHubSyncConfigResponse], error) {
+	return c.updateGitHubSyncConfig.CallUnary(ctx, req)
 }
 
 // AddGitHubHost calls prx.v1.PRXService.AddGitHubHost.
@@ -563,10 +614,16 @@ type PRXServiceHandler interface {
 	ReadMarkdownDocument(context.Context, *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error)
 	// Sync refreshes selected pull requests from GitHub and records successes and failures independently.
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
+	// GetGitHubSyncStatus returns automatic synchronization diagnostics.
+	GetGitHubSyncStatus(context.Context, *connect.Request[v1.GetGitHubSyncStatusRequest]) (*connect.Response[v1.GetGitHubSyncStatusResponse], error)
+	// SyncGitHubIfDue claims and runs an automatic refresh only when due.
+	SyncGitHubIfDue(context.Context, *connect.Request[v1.SyncGitHubIfDueRequest]) (*connect.Response[v1.SyncGitHubIfDueResponse], error)
 	// Validate checks database integrity and returns any detected errors.
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
 	// GetConfig returns the public GitHub configuration.
 	GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error)
+	// UpdateGitHubSyncConfig changes the shared automatic refresh interval.
+	UpdateGitHubSyncConfig(context.Context, *connect.Request[v1.UpdateGitHubSyncConfigRequest]) (*connect.Response[v1.UpdateGitHubSyncConfigResponse], error)
 	// AddGitHubHost adds a host boundary.
 	AddGitHubHost(context.Context, *connect.Request[v1.AddGitHubHostRequest]) (*connect.Response[v1.AddGitHubHostResponse], error)
 	// UpdateGitHubHost updates a host boundary.
@@ -700,6 +757,18 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(pRXServiceMethods.ByName("Sync")),
 		connect.WithHandlerOptions(opts...),
 	)
+	pRXServiceGetGitHubSyncStatusHandler := connect.NewUnaryHandler(
+		PRXServiceGetGitHubSyncStatusProcedure,
+		svc.GetGitHubSyncStatus,
+		connect.WithSchema(pRXServiceMethods.ByName("GetGitHubSyncStatus")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceSyncGitHubIfDueHandler := connect.NewUnaryHandler(
+		PRXServiceSyncGitHubIfDueProcedure,
+		svc.SyncGitHubIfDue,
+		connect.WithSchema(pRXServiceMethods.ByName("SyncGitHubIfDue")),
+		connect.WithHandlerOptions(opts...),
+	)
 	pRXServiceValidateHandler := connect.NewUnaryHandler(
 		PRXServiceValidateProcedure,
 		svc.Validate,
@@ -710,6 +779,12 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		PRXServiceGetConfigProcedure,
 		svc.GetConfig,
 		connect.WithSchema(pRXServiceMethods.ByName("GetConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceUpdateGitHubSyncConfigHandler := connect.NewUnaryHandler(
+		PRXServiceUpdateGitHubSyncConfigProcedure,
+		svc.UpdateGitHubSyncConfig,
+		connect.WithSchema(pRXServiceMethods.ByName("UpdateGitHubSyncConfig")),
 		connect.WithHandlerOptions(opts...),
 	)
 	pRXServiceAddGitHubHostHandler := connect.NewUnaryHandler(
@@ -798,10 +873,16 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceReadMarkdownDocumentHandler.ServeHTTP(w, r)
 		case PRXServiceSyncProcedure:
 			pRXServiceSyncHandler.ServeHTTP(w, r)
+		case PRXServiceGetGitHubSyncStatusProcedure:
+			pRXServiceGetGitHubSyncStatusHandler.ServeHTTP(w, r)
+		case PRXServiceSyncGitHubIfDueProcedure:
+			pRXServiceSyncGitHubIfDueHandler.ServeHTTP(w, r)
 		case PRXServiceValidateProcedure:
 			pRXServiceValidateHandler.ServeHTTP(w, r)
 		case PRXServiceGetConfigProcedure:
 			pRXServiceGetConfigHandler.ServeHTTP(w, r)
+		case PRXServiceUpdateGitHubSyncConfigProcedure:
+			pRXServiceUpdateGitHubSyncConfigHandler.ServeHTTP(w, r)
 		case PRXServiceAddGitHubHostProcedure:
 			pRXServiceAddGitHubHostHandler.ServeHTTP(w, r)
 		case PRXServiceUpdateGitHubHostProcedure:
@@ -899,12 +980,24 @@ func (UnimplementedPRXServiceHandler) Sync(context.Context, *connect.Request[v1.
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.Sync is not implemented"))
 }
 
+func (UnimplementedPRXServiceHandler) GetGitHubSyncStatus(context.Context, *connect.Request[v1.GetGitHubSyncStatusRequest]) (*connect.Response[v1.GetGitHubSyncStatusResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetGitHubSyncStatus is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) SyncGitHubIfDue(context.Context, *connect.Request[v1.SyncGitHubIfDueRequest]) (*connect.Response[v1.SyncGitHubIfDueResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.SyncGitHubIfDue is not implemented"))
+}
+
 func (UnimplementedPRXServiceHandler) Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.Validate is not implemented"))
 }
 
 func (UnimplementedPRXServiceHandler) GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetConfig is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) UpdateGitHubSyncConfig(context.Context, *connect.Request[v1.UpdateGitHubSyncConfigRequest]) (*connect.Response[v1.UpdateGitHubSyncConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.UpdateGitHubSyncConfig is not implemented"))
 }
 
 func (UnimplementedPRXServiceHandler) AddGitHubHost(context.Context, *connect.Request[v1.AddGitHubHostRequest]) (*connect.Response[v1.AddGitHubHostResponse], error) {

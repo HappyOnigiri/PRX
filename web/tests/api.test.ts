@@ -3,8 +3,10 @@ import {
   configMutations,
   getConfig,
   getSnapshot,
+  getSyncStatus,
   mutations,
   readMarkdownDocument,
+  syncIfDue,
 } from "../src/api";
 import { makeSnapshot } from "./factories";
 
@@ -12,6 +14,8 @@ const apiMocks = vi.hoisted(() => {
   const client = {
     getSnapshot: vi.fn(),
     getConfig: vi.fn(),
+    getGitHubSyncStatus: vi.fn(),
+    syncGitHubIfDue: vi.fn(),
     createFeature: vi.fn(),
     updateFeature: vi.fn(),
     deleteFeature: vi.fn(),
@@ -37,6 +41,7 @@ const apiMocks = vi.hoisted(() => {
     deleteGitHubAuthMethod: vi.fn(),
     reorderGitHubAuthMethods: vi.fn(),
     validateConfig: vi.fn(),
+    updateGitHubSyncConfig: vi.fn(),
   };
   return {
     client,
@@ -96,6 +101,7 @@ describe("RPC API wrappers", () => {
     await configMutations.deleteAuth("token");
     await configMutations.reorderAuth(["token"]);
     await configMutations.validate();
+    await configMutations.updateSync(600n);
     expect(apiMocks.client.addGitHubHost).toHaveBeenCalled();
     expect(apiMocks.client.updateGitHubHost).toHaveBeenCalled();
     expect(apiMocks.client.deleteGitHubHost).toHaveBeenCalled();
@@ -104,6 +110,22 @@ describe("RPC API wrappers", () => {
     expect(apiMocks.client.deleteGitHubAuthMethod).toHaveBeenCalled();
     expect(apiMocks.client.reorderGitHubAuthMethods).toHaveBeenCalled();
     expect(apiMocks.client.validateConfig).toHaveBeenCalled();
+    expect(apiMocks.client.updateGitHubSyncConfig).toHaveBeenCalledWith(
+      expect.objectContaining({ intervalSeconds: 600n }),
+    );
+  });
+
+  it("reads synchronization status and requests a due refresh", async () => {
+    const status = { intervalSeconds: 3600n, succeeded: 2, failed: 0 };
+    apiMocks.client.getGitHubSyncStatus.mockResolvedValueOnce({ status });
+    await expect(getSyncStatus()).resolves.toBe(status);
+    apiMocks.client.getGitHubSyncStatus.mockResolvedValueOnce({});
+    await expect(getSyncStatus()).rejects.toThrow("empty sync status");
+    apiMocks.client.syncGitHubIfDue.mockResolvedValueOnce({
+      ran: false,
+      status,
+    });
+    await expect(syncIfDue()).resolves.toEqual({ ran: false, status });
   });
 
   it("serializes every mutation request and propagates markdown content", async () => {

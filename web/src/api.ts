@@ -17,16 +17,19 @@ import {
   DeleteTaskRequestSchema,
   DetachPullRequestRequestSchema,
   GetConfigRequestSchema,
+  GetGitHubSyncStatusRequestSchema,
   GetImplementationPlanRequestSchema,
   GetSnapshotRequestSchema,
   PRXService,
   ReadMarkdownDocumentRequestSchema,
   RemoveDependencyRequestSchema,
   ReorderGitHubAuthMethodsRequestSchema,
+  SyncGitHubIfDueRequestSchema,
   SyncRequestSchema,
   UpdateFeatureRequestSchema,
   UpdateGitHubAuthMethodRequestSchema,
   UpdateGitHubHostRequestSchema,
+  UpdateGitHubSyncConfigRequestSchema,
   UpdateTaskRequestSchema,
   UpsertImplementationPlanRequestSchema,
   ValidateConfigRequestSchema,
@@ -34,6 +37,7 @@ import {
   type FeatureStatus,
   type GithubAuthMethodType,
   type GitHubConfig,
+  type GitHubSyncStatus,
   type Snapshot,
   type TaskKind,
   type TaskStatus,
@@ -54,6 +58,19 @@ export async function getConfig(): Promise<GitHubConfig> {
   if (!response.config)
     throw new Error("The server returned an empty GitHub configuration.");
   return response.config;
+}
+
+export async function getSyncStatus(): Promise<GitHubSyncStatus> {
+  const response = await client.getGitHubSyncStatus(
+    create(GetGitHubSyncStatusRequestSchema),
+  );
+  if (!response.status)
+    throw new Error("The server returned an empty sync status.");
+  return response.status;
+}
+
+export async function syncIfDue() {
+  return client.syncGitHubIfDue(create(SyncGitHubIfDueRequestSchema));
 }
 
 export const mutations = {
@@ -141,6 +158,7 @@ export const configMutations = {
     webUrl?: string;
     apiUrl?: string;
     uploadUrl?: string;
+    graphqlUrl?: string;
   }) => client.addGitHubHost(create(AddGitHubHostRequestSchema, input)),
   updateHost: (input: {
     host: string;
@@ -148,6 +166,7 @@ export const configMutations = {
     webUrl?: string;
     apiUrl?: string;
     uploadUrl?: string;
+    graphqlUrl?: string;
   }) => client.updateGitHubHost(create(UpdateGitHubHostRequestSchema, input)),
   deleteHost: (host: string) =>
     client.deleteGitHubHost(create(DeleteGitHubHostRequestSchema, { host })),
@@ -183,6 +202,10 @@ export const configMutations = {
   reorderAuth: (ids: string[]) =>
     client.reorderGitHubAuthMethods(
       create(ReorderGitHubAuthMethodsRequestSchema, { ids }),
+    ),
+  updateSync: (intervalSeconds: bigint) =>
+    client.updateGitHubSyncConfig(
+      create(UpdateGitHubSyncConfigRequestSchema, { intervalSeconds }),
     ),
   validate: () => client.validateConfig(create(ValidateConfigRequestSchema)),
 };

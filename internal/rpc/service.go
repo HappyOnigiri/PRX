@@ -56,5 +56,7 @@ type Service interface {
 	ReadMarkdownDocument(ctx context.Context, id string) (string, error)
 
 	Sync(ctx context.Context, featureID, taskID string) (int, int, error)
+	SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus, error)
+	SyncStatus(ctx context.Context) (domain.GitHubSyncStatus, error)
 	Validate(ctx context.Context) []string
 }

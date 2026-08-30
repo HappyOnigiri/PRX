@@ -10,6 +10,26 @@ import (
 	"database/sql"
 )
 
+const acquireGitHubAutoSync = `-- name: AcquireGitHubAutoSync :execrows
+UPDATE github_sync_state
+SET run_id=?, last_attempt_unix=?, run_error=''
+WHERE singleton=1 AND (last_attempt_unix IS NULL OR last_attempt_unix<=?)
+`
+
+type AcquireGitHubAutoSyncParams struct {
+	RunID             string        `json:"run_id"`
+	LastAttemptUnix   sql.NullInt64 `json:"last_attempt_unix"`
+	LastAttemptUnix_2 sql.NullInt64 `json:"last_attempt_unix_2"`
+}
+
+func (q *Queries) AcquireGitHubAutoSync(ctx context.Context, arg AcquireGitHubAutoSyncParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, acquireGitHubAutoSync, arg.RunID, arg.LastAttemptUnix, arg.LastAttemptUnix_2)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const addDependency = `-- name: AddDependency :one
 INSERT INTO dependencies (blocker_task_id, blocked_task_id, created_at) VALUES (?, ?, ?) RETURNING blocker_task_id, blocked_task_id, created_at
 `
@@ -25,6 +45,34 @@ func (q *Queries) AddDependency(ctx context.Context, arg AddDependencyParams) (D
 	var i Dependency
 	err := row.Scan(&i.BlockerTaskID, &i.BlockedTaskID, &i.CreatedAt)
 	return i, err
+}
+
+const completeGitHubSync = `-- name: CompleteGitHubSync :execrows
+UPDATE github_sync_state
+SET last_completed_unix=?, succeeded=?, failed=?, run_error=?
+WHERE singleton=1 AND run_id=?
+`
+
+type CompleteGitHubSyncParams struct {
+	LastCompletedUnix sql.NullInt64 `json:"last_completed_unix"`
+	Succeeded         int64         `json:"succeeded"`
+	Failed            int64         `json:"failed"`
+	RunError          string        `json:"run_error"`
+	RunID             string        `json:"run_id"`
+}
+
+func (q *Queries) CompleteGitHubSync(ctx context.Context, arg CompleteGitHubSyncParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, completeGitHubSync,
+		arg.LastCompletedUnix,
+		arg.Succeeded,
+		arg.Failed,
+		arg.RunError,
+		arg.RunID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
 }
 
 const createDocument = `-- name: CreateDocument :one
@@ -405,6 +453,25 @@ func (q *Queries) GetGitHubRepositoryAuthCache(ctx context.Context, arg GetGitHu
 		&i.Repository,
 		&i.AuthMethodID,
 		&i.LastSucceededAt,
+	)
+	return i, err
+}
+
+const getGitHubSyncState = `-- name: GetGitHubSyncState :one
+SELECT singleton, run_id, last_attempt_unix, last_completed_unix, succeeded, failed, run_error FROM github_sync_state WHERE singleton=1
+`
+
+func (q *Queries) GetGitHubSyncState(ctx context.Context) (GithubSyncState, error) {
+	row := q.db.QueryRowContext(ctx, getGitHubSyncState)
+	var i GithubSyncState
+	err := row.Scan(
+		&i.Singleton,
+		&i.RunID,
+		&i.LastAttemptUnix,
+		&i.LastCompletedUnix,
+		&i.Succeeded,
+		&i.Failed,
+		&i.RunError,
 	)
 	return i, err
 }
@@ -799,6 +866,20 @@ func (q *Queries) RemoveDependency(ctx context.Context, arg RemoveDependencyPara
 		return 0, err
 	}
 	return result.RowsAffected()
+}
+
+const startGitHubSync = `-- name: StartGitHubSync :exec
+UPDATE github_sync_state SET run_id=?, last_attempt_unix=?, run_error='' WHERE singleton=1
+`
+
+type StartGitHubSyncParams struct {
+	RunID           string        `json:"run_id"`
+	LastAttemptUnix sql.NullInt64 `json:"last_attempt_unix"`
+}
+
+func (q *Queries) StartGitHubSync(ctx context.Context, arg StartGitHubSyncParams) error {
+	_, err := q.db.ExecContext(ctx, startGitHubSync, arg.RunID, arg.LastAttemptUnix)
+	return err
 }
 
 const updateFeature = `-- name: UpdateFeature :one

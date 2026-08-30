@@ -20,8 +20,10 @@ const settingsMocks = vi.hoisted(() => {
     updateAuth: vi.fn(),
     deleteAuth: vi.fn(),
     reorderAuth: vi.fn(),
+    updateSync: vi.fn(),
   };
   const mutation = () => ({
+    mutate: vi.fn(),
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
     error: null as Error | null,
@@ -30,18 +32,21 @@ const settingsMocks = vi.hoisted(() => {
     api,
     config: {
       data: {
+        autoSyncIntervalSeconds: 3600n,
         hosts: [
           {
             host: "github.com",
             webUrl: "https://github.com",
             apiUrl: "https://api.github.com/",
             uploadUrl: "https://uploads.github.com/",
+            graphqlUrl: "https://api.github.com/graphql",
           },
           {
             host: "ghe.example.com",
             webUrl: "https://ghe.example.com",
             apiUrl: "https://ghe.example.com/api/v3/",
             uploadUrl: "https://ghe.example.com/api/uploads/",
+            graphqlUrl: "https://ghe.example.com/api/graphql",
           },
         ],
         authMethods: [
@@ -77,6 +82,7 @@ const settingsMocks = vi.hoisted(() => {
       updateAuth: mutation(),
       deleteAuth: mutation(),
       reorderAuth: mutation(),
+      updateSync: mutation(),
     },
   };
 });
@@ -96,6 +102,7 @@ vi.mock("../src/hooks", () => ({
       [settingsMocks.api.updateAuth, settingsMocks.mutations.updateAuth],
       [settingsMocks.api.deleteAuth, settingsMocks.mutations.deleteAuth],
       [settingsMocks.api.reorderAuth, settingsMocks.mutations.reorderAuth],
+      [settingsMocks.api.updateSync, settingsMocks.mutations.updateSync],
     ];
     return entries.find(([key]) => key === mutation)?.[1];
   },
@@ -108,6 +115,7 @@ describe("ServerSettingsDialog", () => {
     await setDisplayLanguage("en");
     vi.spyOn(window, "confirm").mockReturnValue(true);
     for (const value of Object.values(settingsMocks.mutations)) {
+      value.mutate.mockReset();
       value.mutateAsync.mockReset();
       value.mutateAsync.mockResolvedValue({});
       value.isPending = false;
@@ -127,6 +135,21 @@ describe("ServerSettingsDialog", () => {
       screen.queryByDisplayValue("github_pat_rpc_secret"),
     ).not.toBeInTheDocument();
 
+    const syncForm = screen
+      .getByLabelText("Interval in seconds")
+      .closest("form");
+    if (!(syncForm instanceof HTMLFormElement))
+      throw new Error("sync form missing");
+    fireEvent.change(within(syncForm).getByLabelText("Interval in seconds"), {
+      target: { value: "600" },
+    });
+    fireEvent.submit(syncForm);
+    await waitFor(() => {
+      expect(settingsMocks.mutations.updateSync.mutate).toHaveBeenCalledWith(
+        600n,
+      );
+    });
+
     const hostForm = screen
       .getByRole("heading", { name: "Register a host" })
       .closest("form");
@@ -142,6 +165,7 @@ describe("ServerSettingsDialog", () => {
         webUrl: "",
         apiUrl: "",
         uploadUrl: "",
+        graphqlUrl: "",
       });
     });
 
@@ -174,6 +198,9 @@ describe("ServerSettingsDialog", () => {
     fireEvent.change(within(editHostForm).getByLabelText("Upload URL"), {
       target: { value: "https://ghe-renamed.example.com/api/uploads/" },
     });
+    fireEvent.change(within(editHostForm).getByLabelText("GraphQL URL"), {
+      target: { value: "https://ghe-renamed.example.com/api/graphql" },
+    });
     fireEvent.submit(editHostForm);
     await waitFor(() => {
       expect(
@@ -184,6 +211,7 @@ describe("ServerSettingsDialog", () => {
         webUrl: "https://ghe-renamed.example.com",
         apiUrl: "https://ghe-renamed.example.com/api/v3/",
         uploadUrl: "https://ghe-renamed.example.com/api/uploads/",
+        graphqlUrl: "https://ghe-renamed.example.com/api/graphql",
       });
     });
     fireEvent.click(
@@ -304,5 +332,15 @@ describe("ServerSettingsDialog", () => {
         }),
       );
     });
+  });
+
+  // The interval form owns its own mutation, so the dialog's shared error area
+  // never sees its failures.
+  it("shows why saving the synchronization interval failed", () => {
+    settingsMocks.mutations.updateSync.error = new Error(
+      "config file is read-only",
+    );
+    render(<ServerSettingsDialog onClose={vi.fn()} />);
+    expect(screen.getByText("config file is read-only")).toBeInTheDocument();
   });
 });

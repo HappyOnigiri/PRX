@@ -129,6 +129,28 @@ Synchronization fails safely:
 - Record staleness and the failure without replacing known state with guesses.
 - Isolate item-level failures so one inaccessible repository does not discard unrelated successes.
 
+GitHub synchronization is opportunistic rather than daemon-driven.
+Commands that open the database and a visible WebUI check whether the shared interval has expired.
+No refresh occurs while both the CLI and WebUI are idle.
+
+Pull requests are fetched through GraphQL in batches that group the repositories of one host into a single request.
+A host whose GraphQL endpoint answers with an HTTP error falls back to fetching each pull request over REST.
+
+The YAML configuration owns the shared interval and each host's GraphQL endpoint.
+The interval defaults to 3600 seconds and cannot be lower than 600 seconds.
+SQLite records the latest attempt and completion, and atomically grants one caller the right to run an expired refresh.
+
+Automatic refreshes include pull requests from active features only.
+Merged pull requests are terminal and are not fetched again.
+Closed pull requests remain eligible so a reopened pull request can be detected.
+Manual refreshes ignore the interval and may target an archived feature, but they also skip merged pull requests.
+Only a refresh that covers every eligible pull request records a run and resets the interval; one narrowed to a feature or task leaves the recorded run status untouched.
+
+Automatic failures are best effort and never fail the command or page load that noticed the expired interval.
+An automatic refresh is bounded by a deadline so an unreachable host cannot block the command that noticed the expired interval; exceeding it is recorded as an automatic failure.
+They remain visible in the persisted run status and the stale state of affected pull requests.
+Manual refreshes continue to return operation-level failures while preserving successful item updates.
+
 Large Markdown bodies stay outside snapshots.
 Snapshots carry only the metadata needed for derived state.
 
@@ -184,7 +206,7 @@ Current screens, components, gestures, and control placement belong to the WebUI
 
 ## Trade-offs
 
-- Synchronization remains user-triggered until background-worker lifecycle complexity is justified.
+- Synchronization runs opportunistically from CLI commands and a visible WebUI without introducing a background worker.
 - A normalized schema keeps a future PostgreSQL migration practical.
 - Inline credentials favor local automation while accepting the configuration file's trust boundary.
 - Track prospective features in their owning plans or pull requests instead of maintaining a feature backlog here.

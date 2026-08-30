@@ -36,7 +36,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 5 {
+		migrations != 6 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -68,6 +68,95 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	err = database.DB().QueryRowContext(ctx, `SELECT name FROM sqlite_master WHERE name='should_rollback'`).Scan(&name)
 	if !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("failed migration left a table: name=%q err=%v", name, err)
+	}
+}
+
+func TestGitHubAutoSyncClaimIsAtomicAcrossConnections(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "auto-sync.db")
+	first, err := store.Open(ctx, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = first.Close() }()
+	second, err := store.Open(ctx, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = second.Close() }()
+	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
+	stores := []*store.Store{first, second}
+	start := make(chan struct{})
+	results := make(chan bool, len(stores))
+	errorsFound := make(chan error, len(stores))
+	var group sync.WaitGroup
+	for index, database := range stores {
+		group.Add(1)
+		go func(index int, database *store.Store) {
+			defer group.Done()
+			<-start
+			acquired, acquireErr := database.AcquireGitHubAutoSync(
+				ctx, fmt.Sprintf("run-%d", index), now, now.Add(-600*time.Second).Unix(),
+			)
+			results <- acquired
+			errorsFound <- acquireErr
+		}(index, database)
+	}
+	close(start)
+	group.Wait()
+	close(results)
+	close(errorsFound)
+	claimed := 0
+	for acquired := range results {
+		if acquired {
+			claimed++
+		}
+	}
+	for acquireErr := range errorsFound {
+		if acquireErr != nil {
+			t.Fatal(acquireErr)
+		}
+	}
+	if claimed != 1 {
+		t.Fatalf("claimed runs=%d, want 1", claimed)
+	}
+	state, err := first.GitHubSyncState(ctx)
+	if err != nil || state.LastAttemptAt == nil || !state.LastAttemptAt.Equal(now) {
+		t.Fatalf("sync state=%+v err=%v", state, err)
+	}
+}
+
+// A concurrent refresh replaces the run identifier, and the run it displaced
+// must learn that the state it would read back is no longer its own.
+func TestCompletingADisplacedGitHubSyncRunReportsThatItNoLongerOwnsTheState(t *testing.T) {
+	ctx := context.Background()
+	database, err := store.Open(ctx, filepath.Join(t.TempDir(), "complete.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = database.Close() }()
+	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
+	acquired, err := database.AcquireGitHubAutoSync(ctx, "automatic", now, now.Unix())
+	if err != nil || !acquired {
+		t.Fatalf("acquired=%v err=%v", acquired, err)
+	}
+	if err := database.StartGitHubSync(ctx, "manual", now.Add(time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	recorded, err := database.CompleteGitHubSync(ctx, "automatic", now.Add(2*time.Second), 3, 0, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if recorded {
+		t.Fatal("the displaced run reported that it recorded its outcome")
+	}
+	recorded, err = database.CompleteGitHubSync(ctx, "manual", now.Add(3*time.Second), 1, 0, "")
+	if err != nil || !recorded {
+		t.Fatalf("current run recorded=%v err=%v", recorded, err)
+	}
+	state, err := database.GitHubSyncState(ctx)
+	if err != nil || state.Succeeded != 1 {
+		t.Fatalf("sync state=%+v err=%v", state, err)
 	}
 }
 
@@ -479,7 +568,7 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	var migrationCount int
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
-		Scan(&migrationCount); err != nil || migrationCount != 5 {
+		Scan(&migrationCount); err != nil || migrationCount != 6 {
 		t.Fatalf("migration count=%d err=%v", migrationCount, err)
 	}
 	var status string

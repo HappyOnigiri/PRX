@@ -11,7 +11,11 @@ import (
 	"strings"
 )
 
-const CurrentVersion = 1
+const (
+	CurrentVersion                 = 1
+	DefaultAutoSyncIntervalSeconds = int64(3600)
+	MinimumAutoSyncIntervalSeconds = int64(600)
+)
 
 type AuthMethodType string
 
@@ -23,10 +27,11 @@ const (
 )
 
 type Host struct {
-	Host      string `yaml:"host"       json:"host"`
-	WebURL    string `yaml:"web_url"    json:"web_url"`
-	APIURL    string `yaml:"api_url"    json:"api_url"`
-	UploadURL string `yaml:"upload_url" json:"upload_url"`
+	Host       string `yaml:"host"        json:"host"`
+	WebURL     string `yaml:"web_url"     json:"web_url"`
+	APIURL     string `yaml:"api_url"     json:"api_url"`
+	UploadURL  string `yaml:"upload_url"  json:"upload_url"`
+	GraphQLURL string `yaml:"graphql_url" json:"graphql_url"`
 }
 
 type AuthMethod struct {
@@ -41,8 +46,9 @@ type AuthMethod struct {
 }
 
 type GitHubConfig struct {
-	Hosts       []Host       `yaml:"hosts"        json:"hosts"`
-	AuthMethods []AuthMethod `yaml:"auth_methods" json:"auth_methods"`
+	Hosts                   []Host       `yaml:"hosts"                                json:"hosts"`
+	AuthMethods             []AuthMethod `yaml:"auth_methods"                         json:"auth_methods"`
+	AutoSyncIntervalSeconds int64        `yaml:"auto_sync_interval_seconds,omitempty" json:"auto_sync_interval_seconds"`
 }
 
 // MarshalYAML keeps an omitted auth_methods list distinct from an explicitly
@@ -50,15 +56,18 @@ type GitHubConfig struct {
 // discovery; the latter intentionally disables all implicit candidates.
 func (c GitHubConfig) MarshalYAML() (any, error) {
 	type yamlGitHubConfig struct {
-		Hosts       []Host        `yaml:"hosts"`
-		AuthMethods *[]AuthMethod `yaml:"auth_methods,omitempty"`
+		Hosts                   []Host        `yaml:"hosts"`
+		AuthMethods             *[]AuthMethod `yaml:"auth_methods,omitempty"`
+		AutoSyncIntervalSeconds int64         `yaml:"auto_sync_interval_seconds"`
 	}
 	var methods *[]AuthMethod
 	if c.AuthMethods != nil {
 		methodsCopy := append([]AuthMethod{}, c.AuthMethods...)
 		methods = &methodsCopy
 	}
-	return yamlGitHubConfig{Hosts: c.Hosts, AuthMethods: methods}, nil
+	return yamlGitHubConfig{
+		Hosts: c.Hosts, AuthMethods: methods, AutoSyncIntervalSeconds: c.AutoSyncIntervalSeconds,
+	}, nil
 }
 
 // Config is the on-disk configuration. AuthMethod.Token is deliberately not
@@ -81,8 +90,9 @@ type PublicAuthMethod struct {
 }
 
 type PublicGitHubConfig struct {
-	Hosts       []Host             `json:"hosts"`
-	AuthMethods []PublicAuthMethod `json:"auth_methods"`
+	Hosts                   []Host             `json:"hosts"`
+	AuthMethods             []PublicAuthMethod `json:"auth_methods"`
+	AutoSyncIntervalSeconds int64              `json:"auto_sync_interval_seconds"`
 }
 
 type PublicConfig struct {
@@ -124,17 +134,21 @@ var (
 
 func DefaultHost() Host {
 	return Host{
-		Host:      "github.com",
-		WebURL:    "https://github.com",
-		APIURL:    "https://api.github.com/",
-		UploadURL: "https://uploads.github.com/",
+		Host:       "github.com",
+		WebURL:     "https://github.com",
+		APIURL:     "https://api.github.com/",
+		UploadURL:  "https://uploads.github.com/",
+		GraphQLURL: "https://api.github.com/graphql",
 	}
 }
 
 func Default() Config {
 	return Config{
 		Version: CurrentVersion,
-		GitHub:  GitHubConfig{Hosts: []Host{DefaultHost()}},
+		GitHub: GitHubConfig{
+			Hosts:                   []Host{DefaultHost()},
+			AutoSyncIntervalSeconds: DefaultAutoSyncIntervalSeconds,
+		},
 	}
 }
 
@@ -172,6 +186,16 @@ func (c Config) Normalize() (Config, error) {
 	}
 	if len(result.GitHub.Hosts) == 0 {
 		result.GitHub.Hosts = []Host{DefaultHost()}
+	}
+	if result.GitHub.AutoSyncIntervalSeconds == 0 {
+		result.GitHub.AutoSyncIntervalSeconds = DefaultAutoSyncIntervalSeconds
+	}
+	if result.GitHub.AutoSyncIntervalSeconds < MinimumAutoSyncIntervalSeconds {
+		return Config{}, newError(
+			ErrorCodeInvalid,
+			"github.auto_sync_interval_seconds must be at least %d",
+			MinimumAutoSyncIntervalSeconds,
+		)
 	}
 
 	hosts := make(map[string]struct{}, len(result.GitHub.Hosts))
@@ -253,6 +277,13 @@ func normalizeHostConfig(value Host) (Host, error) {
 			value.UploadURL = "https://" + host + "/api/uploads/"
 		}
 	}
+	if value.GraphQLURL == "" {
+		if host == "github.com" {
+			value.GraphQLURL = DefaultHost().GraphQLURL
+		} else {
+			value.GraphQLURL = "https://" + host + "/api/graphql"
+		}
+	}
 	var errURL error
 	value.WebURL, errURL = normalizeURL(value.WebURL, "web_url", false)
 	if errURL != nil {
@@ -266,19 +297,29 @@ func normalizeHostConfig(value Host) (Host, error) {
 	if errURL != nil {
 		return Host{}, errURL
 	}
+	value.GraphQLURL, errURL = normalizeURL(value.GraphQLURL, "graphql_url", false)
+	if errURL != nil {
+		return Host{}, errURL
+	}
 	web, _ := url.Parse(value.WebURL)
 	if strings.ToLower(web.Host) != host {
 		return Host{}, newError(ErrorCodeInvalid, "web_url host %q does not match host %q", web.Host, host)
 	}
 	api, _ := url.Parse(value.APIURL)
 	upload, _ := url.Parse(value.UploadURL)
+	graphql, _ := url.Parse(value.GraphQLURL)
 	if host == "github.com" {
 		if !oneOfHost(api.Host, "api.github.com", "github.com") ||
-			!oneOfHost(upload.Host, "uploads.github.com", "github.com") {
-			return Host{}, newError(ErrorCodeInvalid, "GitHub.com API and upload URLs must stay on GitHub origins")
+			!oneOfHost(upload.Host, "uploads.github.com", "github.com") ||
+			!oneOfHost(graphql.Host, "api.github.com", "github.com") {
+			return Host{}, newError(
+				ErrorCodeInvalid,
+				"GitHub.com API, upload, and GraphQL URLs must stay on GitHub origins",
+			)
 		}
-	} else if strings.ToLower(api.Host) != host || strings.ToLower(upload.Host) != host {
-		return Host{}, newError(ErrorCodeInvalid, "API and upload URL hosts must match GitHub host %q", host)
+	} else if strings.ToLower(api.Host) != host || strings.ToLower(upload.Host) != host ||
+		strings.ToLower(graphql.Host) != host {
+		return Host{}, newError(ErrorCodeInvalid, "API, upload, and GraphQL URL hosts must match GitHub host %q", host)
 	}
 	return value, nil
 }
@@ -466,6 +507,20 @@ func (c *Config) ReorderAuthMethods(ids []string) error {
 	return c.normalizeInPlace()
 }
 
+func (c *Config) SetAutoSyncInterval(seconds int64) error {
+	// Normalize reads an omitted interval as the default, which would silently
+	// turn an explicit 0 into 3600 instead of reporting the documented minimum.
+	if seconds < MinimumAutoSyncIntervalSeconds {
+		return newError(
+			ErrorCodeInvalid,
+			"github.auto_sync_interval_seconds must be at least %d",
+			MinimumAutoSyncIntervalSeconds,
+		)
+	}
+	c.GitHub.AutoSyncIntervalSeconds = seconds
+	return c.normalizeInPlace()
+}
+
 func (c *Config) normalizeInPlace() error {
 	normalized, err := c.Normalize()
 	if err != nil {
@@ -479,8 +534,9 @@ func (c Config) Public() PublicConfig {
 	result := PublicConfig{
 		Version: c.Version,
 		GitHub: PublicGitHubConfig{
-			Hosts:       append([]Host(nil), c.GitHub.Hosts...),
-			AuthMethods: make([]PublicAuthMethod, 0, len(c.GitHub.AuthMethods)),
+			Hosts:                   append([]Host(nil), c.GitHub.Hosts...),
+			AuthMethods:             make([]PublicAuthMethod, 0, len(c.GitHub.AuthMethods)),
+			AutoSyncIntervalSeconds: c.GitHub.AutoSyncIntervalSeconds,
 		},
 	}
 	for _, method := range c.GitHub.AuthMethods {

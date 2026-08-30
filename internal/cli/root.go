@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/spf13/cobra"
 
@@ -16,6 +17,11 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
+
+// automaticSyncTimeout bounds the opportunistic refresh that runs before an
+// ordinary command. Expiring it records an automatic failure and leaves the
+// command itself successful.
+const automaticSyncTimeout = 30 * time.Second
 
 type state struct {
 	dbPath       string
@@ -61,6 +67,14 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			}
 			s.service = service
 			s.closer = closer
+			if !isAutomaticSyncExcluded(cmd) && service != nil {
+				// The per-request client timeout does not bound the whole run, so
+				// an unreachable host would otherwise block an ordinary command
+				// for as long as its credential lookups and requests take.
+				syncContext, cancel := context.WithTimeout(baseContext, automaticSyncTimeout)
+				_, _, _ = service.SyncIfDue(syncContext)
+				cancel()
+			}
 			return nil
 		},
 		PersistentPostRun: func(_ *cobra.Command, _ []string) {
@@ -157,6 +171,15 @@ func markCommandExecution(command *cobra.Command, s *state) {
 func isConfigCommand(command *cobra.Command) bool {
 	for current := command; current != nil; current = current.Parent() {
 		if current.Name() == "config" {
+			return true
+		}
+	}
+	return false
+}
+
+func isAutomaticSyncExcluded(command *cobra.Command) bool {
+	for current := command; current != nil; current = current.Parent() {
+		if current.Name() == "sync" || current.Name() == "seed" {
 			return true
 		}
 	}

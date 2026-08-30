@@ -664,6 +664,8 @@ message GitHubHost {
   string api_url = 3;
   // upload_url is the HTTPS upload base URL.
   string upload_url = 4;
+  // graphql_url is the HTTPS GraphQL endpoint used for batched pull-request refreshes.
+  string graphql_url = 5;
 }
 
 // GitHubAuthMethod is the public representation of a host-scoped credential.
@@ -697,6 +699,8 @@ message GitHubConfig {
   repeated GitHubHost hosts = 2;
   // auth_methods contains host-scoped credentials in priority order.
   repeated GitHubAuthMethod auth_methods = 3;
+  // auto_sync_interval_seconds is the shared CLI and server refresh interval.
+  int64 auto_sync_interval_seconds = 4;
 }
 
 // GetConfigRequest requests the public GitHub configuration.
@@ -705,6 +709,18 @@ message GetConfigRequest {}
 // GetConfigResponse returns the public GitHub configuration.
 message GetConfigResponse {
   // config contains hosts and secret-free authentication metadata.
+  GitHubConfig config = 1;
+}
+
+// UpdateGitHubSyncConfigRequest changes the shared automatic synchronization interval.
+message UpdateGitHubSyncConfigRequest {
+  // interval_seconds must be at least 600.
+  int64 interval_seconds = 1;
+}
+
+// UpdateGitHubSyncConfigResponse returns the resulting public configuration.
+message UpdateGitHubSyncConfigResponse {
+  // config is the updated secret-free configuration.
   GitHubConfig config = 1;
 }
 
@@ -718,6 +734,8 @@ message AddGitHubHostRequest {
   string api_url = 3;
   // upload_url is optional and defaults from host.
   string upload_url = 4;
+  // graphql_url is optional and defaults from host.
+  string graphql_url = 5;
 }
 
 // AddGitHubHostResponse returns the added host.
@@ -738,6 +756,8 @@ message UpdateGitHubHostRequest {
   optional string api_url = 4;
   // upload_url replaces the upload URL when present.
   optional string upload_url = 5;
+  // graphql_url replaces the GraphQL endpoint when present.
+  optional string graphql_url = 6;
 }
 
 // UpdateGitHubHostResponse returns the updated host.
@@ -858,6 +878,42 @@ message SyncResponse {
   int32 failed = 2;
 }
 
+// GitHubSyncStatus describes the latest process-wide synchronization attempt.
+message GitHubSyncStatus {
+  // interval_seconds is the configured automatic synchronization interval.
+  int64 interval_seconds = 1;
+  // last_attempt_at is the last claimed run time in RFC 3339 UTC format.
+  optional string last_attempt_at = 2;
+  // last_updated_at is the last completed run time in RFC 3339 UTC format.
+  optional string last_updated_at = 3;
+  // succeeded is the number of items refreshed by the latest completed run.
+  int32 succeeded = 4;
+  // failed is the number of items left stale by the latest completed run.
+  int32 failed = 5;
+  // error is the latest run-level failure, when present.
+  string error = 6;
+}
+
+// GetGitHubSyncStatusRequest requests the persisted synchronization status.
+message GetGitHubSyncStatusRequest {}
+
+// GetGitHubSyncStatusResponse returns the persisted synchronization status.
+message GetGitHubSyncStatusResponse {
+  // status contains interval, timestamps, counts, and the latest run error.
+  GitHubSyncStatus status = 1;
+}
+
+// SyncGitHubIfDueRequest asks the server to refresh only when the interval has expired.
+message SyncGitHubIfDueRequest {}
+
+// SyncGitHubIfDueResponse reports whether this caller claimed a run and the resulting status.
+message SyncGitHubIfDueResponse {
+  // ran is true only when this request acquired and completed a synchronization run.
+  bool ran = 1;
+  // status contains the latest persisted synchronization status.
+  GitHubSyncStatus status = 2;
+}
+
 // ValidateRequest requests database integrity validation.
 message ValidateRequest {}
 
@@ -907,10 +963,16 @@ service PRXService {
   rpc ReadMarkdownDocument(ReadMarkdownDocumentRequest) returns (ReadMarkdownDocumentResponse);
   // Sync refreshes selected pull requests from GitHub and records successes and failures independently.
   rpc Sync(SyncRequest) returns (SyncResponse);
+  // GetGitHubSyncStatus returns automatic synchronization diagnostics.
+  rpc GetGitHubSyncStatus(GetGitHubSyncStatusRequest) returns (GetGitHubSyncStatusResponse);
+  // SyncGitHubIfDue claims and runs an automatic refresh only when due.
+  rpc SyncGitHubIfDue(SyncGitHubIfDueRequest) returns (SyncGitHubIfDueResponse);
   // Validate checks database integrity and returns any detected errors.
   rpc Validate(ValidateRequest) returns (ValidateResponse);
   // GetConfig returns the public GitHub configuration.
   rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
+  // UpdateGitHubSyncConfig changes the shared automatic refresh interval.
+  rpc UpdateGitHubSyncConfig(UpdateGitHubSyncConfigRequest) returns (UpdateGitHubSyncConfigResponse);
   // AddGitHubHost adds a host boundary.
   rpc AddGitHubHost(AddGitHubHostRequest) returns (AddGitHubHostResponse);
   // UpdateGitHubHost updates a host boundary.

@@ -360,6 +360,30 @@ func (h *Handler) Sync(
 	return connect.NewResponse(&prxv1.SyncResponse{Succeeded: int32(succeeded), Failed: int32(failed)}), nil
 }
 
+func (h *Handler) GetGitHubSyncStatus(
+	ctx context.Context,
+	_ *connect.Request[prxv1.GetGitHubSyncStatusRequest],
+) (*connect.Response[prxv1.GetGitHubSyncStatusResponse], error) {
+	status, err := h.service.SyncStatus(ctx)
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.GetGitHubSyncStatusResponse{Status: protoGitHubSyncStatus(status)}), nil
+}
+
+func (h *Handler) SyncGitHubIfDue(
+	ctx context.Context,
+	_ *connect.Request[prxv1.SyncGitHubIfDueRequest],
+) (*connect.Response[prxv1.SyncGitHubIfDueResponse], error) {
+	ran, status, err := h.service.SyncIfDue(ctx)
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.SyncGitHubIfDueResponse{
+		Ran: ran, Status: protoGitHubSyncStatus(status),
+	}), nil
+}
+
 func (h *Handler) Validate(
 	ctx context.Context,
 	_ *connect.Request[prxv1.ValidateRequest],

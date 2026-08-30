@@ -58,6 +58,11 @@ vi.mock("../src/api", () => ({
 }));
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => ({ data: snapshot, isError: false }),
+  useAutoSync: () => ({
+    status: { data: undefined, isError: false },
+    checking: false,
+    error: null,
+  }),
   useDomainMutation: () => shellMocks.mutation,
   useConfig: () => ({ data: { hosts: [], authMethods: [] }, isPending: false }),
   useConfigMutation: () => shellMocks.mutation,

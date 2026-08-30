@@ -20,7 +20,9 @@ func TestNormalizeDefaultsAndRejectsUnsafeValues(t *testing.T) {
 	host := value.GitHub.Hosts[0]
 	if host.Host != "ghe.example.com:8443" || host.WebURL != "https://ghe.example.com:8443" ||
 		host.APIURL != "https://ghe.example.com:8443/api/v3/" ||
-		host.UploadURL != "https://ghe.example.com:8443/api/uploads/" {
+		host.UploadURL != "https://ghe.example.com:8443/api/uploads/" ||
+		host.GraphQLURL != "https://ghe.example.com:8443/api/graphql" ||
+		value.GitHub.AutoSyncIntervalSeconds != DefaultAutoSyncIntervalSeconds {
 		t.Fatalf("normalized host=%+v", host)
 	}
 
@@ -58,6 +60,13 @@ func TestNormalizeDefaultsAndRejectsUnsafeValues(t *testing.T) {
 			},
 		},
 		{
+			name: "automatic sync interval below minimum",
+			value: Config{
+				Version: 1,
+				GitHub:  GitHubConfig{AutoSyncIntervalSeconds: 599},
+			},
+		},
+		{
 			name: "unknown auth host",
 			value: Config{
 				Version: 1,
@@ -83,6 +92,18 @@ func TestNormalizeDefaultsAndRejectsUnsafeValues(t *testing.T) {
 			}
 		})
 	}
+	maximum := Default()
+	if err := maximum.SetAutoSyncInterval(int64(^uint64(0) >> 1)); err != nil {
+		t.Fatalf("maximum interval was rejected: %v", err)
+	}
+	// Normalize reads an omitted interval as the default, so 0 must be rejected
+	// here rather than silently becoming 3600.
+	for _, seconds := range []int64{0, -1, MinimumAutoSyncIntervalSeconds - 1} {
+		below := Default()
+		if err := below.SetAutoSyncInterval(seconds); ErrorCodeOf(err) != ErrorCodeInvalid {
+			t.Fatalf("SetAutoSyncInterval(%d) error=%v code=%s", seconds, err, ErrorCodeOf(err))
+		}
+	}
 
 	for _, raw := range []string{
 		"https://ghe.example.com",
@@ -103,7 +124,8 @@ func TestConfigStoreRoundTripMasksSecretsAndPreservesImplicitMode(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if value, err := store.Load(); err != nil || value.Version != CurrentVersion || len(value.GitHub.Hosts) != 1 {
+	if value, err := store.Load(); err != nil || value.Version != CurrentVersion || len(value.GitHub.Hosts) != 1 ||
+		value.GitHub.AutoSyncIntervalSeconds != DefaultAutoSyncIntervalSeconds {
 		t.Fatalf("missing config value=%+v err=%v", value, err)
 	}
 	if err := store.Save(Default()); err != nil {

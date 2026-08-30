@@ -116,7 +116,24 @@ func (s *state) syncCommand() *cobra.Command {
 	}
 	command.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
 	command.Flags().StringVar(&task, "task", "", "task ID")
+	command.AddCommand(s.syncStatusCommand())
 	return command
+}
+
+func (s *state) syncStatusCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:     "status",
+		Short:   "Show automatic GitHub synchronization status",
+		Example: "prx sync status --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			status, err := s.service.SyncStatus(cmd.Context())
+			if err != nil {
+				return err
+			}
+			return s.write(status, renderSyncStatus(status))
+		},
+	}
 }
 
 func (s *state) validateCommand() *cobra.Command {
