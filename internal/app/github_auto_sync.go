@@ -127,8 +127,7 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 	repository, recordsState := s.repository.(GitHubSyncStateRepository)
 	// A refresh that covers only one feature or task says nothing about the
 	// pull requests it skipped, so it must not reset the shared interval or
-	// overwrite the counts the last full refresh recorded. Seeding reaches this
-	// function with a feature, which keeps fixture results out of the status.
+	// overwrite the counts the last full refresh recorded.
 	recordsState = recordsState && featureID == "" && taskID == ""
 	runID := uuid.NewString()
 	if recordsState {
