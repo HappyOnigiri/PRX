@@ -93,7 +93,11 @@ func (s *state) configSyncUpdateCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			return s.writeSyncInterval(settings.GitHub.AutoSyncIntervalSeconds)
+			updated := settings.GitHub.AutoSyncIntervalSeconds
+			return s.write(
+				map[string]int64{"interval_seconds": updated},
+				renderMessage("Updated automatic sync interval to %d seconds.", updated),
+			)
 		},
 	}
 	return command

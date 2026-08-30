@@ -1155,7 +1155,7 @@ func TestBlackBoxDefaultTextOutputCoversResourcesAndSummaries(t *testing.T) {
 		t.Fatalf("config sync output=%q", syncRead.stdout)
 	}
 	syncUpdate := run("config", "sync", "update", "900")
-	if syncUpdate.stdout != "Automatic sync interval: 900 seconds.\n" {
+	if syncUpdate.stdout != "Updated automatic sync interval to 900 seconds.\n" {
 		t.Fatalf("config sync update output=%q", syncUpdate.stdout)
 	}
 }
