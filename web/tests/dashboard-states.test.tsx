@@ -60,6 +60,7 @@ vi.mock("@tanstack/react-router", () => ({
 
 describe("Dashboard states", () => {
   afterEach(cleanup);
+  afterEach(() => vi.useRealTimers());
   beforeEach(() => {
     dashboardMocks.state.data = undefined;
     dashboardMocks.state.isPending = true;
@@ -159,6 +160,7 @@ describe("Dashboard states", () => {
 
   it("shows the complete latest sync timestamp in the dashboard header", () => {
     const timestamp = "2026-08-30T10:24:31Z";
+    vi.useFakeTimers({ now: new Date("2026-08-31T10:24:31Z") });
     dashboardMocks.state.isPending = false;
     dashboardMocks.state.data = makeSnapshot();
     renderDashboard({
@@ -169,12 +171,34 @@ describe("Dashboard states", () => {
       },
     });
 
-    const label = `Updated · ${new Date(timestamp).toLocaleString("en")}`;
+    const label = new Date(timestamp).toLocaleString("en");
     const time = screen.getByText(label);
     expect(time).toHaveAttribute("dateTime", timestamp);
     expect(time.closest(".page-head")).not.toBeNull();
     expect(time).toHaveTextContent(label);
   });
+
+  it.each([
+    ["less than a minute ago", "2026-08-31T11:59:31Z", "Latest"],
+    ["minutes ago", "2026-08-31T11:42:00Z", "18 min ago"],
+    ["hours ago", "2026-08-31T09:24:31Z", "2 hr ago"],
+  ])(
+    "shows a sync timestamp in relative time when it is %s",
+    (_name, timestamp, label) => {
+      vi.useFakeTimers({ now: new Date("2026-08-31T12:00:00Z") });
+      dashboardMocks.state.isPending = false;
+      dashboardMocks.state.data = makeSnapshot();
+      renderDashboard({
+        ...autoSyncStatus,
+        status: {
+          data: makeGitHubSyncStatus({ lastUpdatedAt: timestamp }),
+          isError: false,
+        },
+      });
+
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    },
+  );
 
   it("starts a full GitHub sync from the dashboard", () => {
     dashboardMocks.state.isPending = false;
@@ -233,7 +257,7 @@ describe("Dashboard states", () => {
           isError: false,
         },
       },
-      `Failed · ${new Date("2026-08-30T10:24:31Z").toLocaleString("en")}`,
+      "Failed · 12 hr ago",
     ],
     [
       "a status query failure",
@@ -251,6 +275,7 @@ describe("Dashboard states", () => {
   ] satisfies [string, AutoSyncStatus, string][])(
     "shows %s",
     (_name, status, label) => {
+      vi.useFakeTimers({ now: new Date("2026-08-30T22:24:31Z") });
       dashboardMocks.state.isPending = false;
       dashboardMocks.state.data = makeSnapshot();
       renderDashboard(status);

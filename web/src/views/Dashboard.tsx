@@ -149,19 +149,21 @@ function SyncStatus() {
   const value = status.status.data;
   const timestamp = value?.lastUpdatedAt;
   const pending = sync.isPending || status.checking;
+  const formattedTimestamp = timestamp
+    ? formatSyncTime(timestamp, i18n.resolvedLanguage, new Date(), {
+        latest: t("dashboard.syncLatest"),
+        minutes: (count) => t("dashboard.syncMinutesAgo", { count }),
+        hours: (count) => t("dashboard.syncHoursAgo", { count }),
+      })
+    : "";
   let label: string = t("dashboard.syncNever");
   if (sync.isPending) label = t("dashboard.syncUpdating");
   else if (status.status.isError || status.error || sync.error)
     label = t("dashboard.syncUnavailable");
   else if (status.checking) label = t("dashboard.syncUpdating");
   else if (timestamp && (value.failed > 0 || value.error))
-    label = t("dashboard.syncFailed", {
-      time: new Date(timestamp).toLocaleString(i18n.resolvedLanguage),
-    });
-  else if (timestamp)
-    label = t("dashboard.syncUpdated", {
-      time: new Date(timestamp).toLocaleString(i18n.resolvedLanguage),
-    });
+    label = t("dashboard.syncFailed", { time: formattedTimestamp });
+  else if (timestamp) label = formattedTimestamp;
   return (
     <div className="dashboard-sync">
       <span className="dashboard-sync-status" aria-label={label}>
@@ -189,6 +191,32 @@ function SyncStatus() {
       )}
     </div>
   );
+}
+
+function formatSyncTime(
+  timestamp: string,
+  language: string | undefined,
+  now: Date,
+  relativeLabels: {
+    latest: string;
+    minutes: (count: number) => string;
+    hours: (count: number) => string;
+  },
+): string {
+  const syncedAt = new Date(timestamp);
+  const elapsedSeconds = Math.max(
+    0,
+    (now.getTime() - syncedAt.getTime()) / 1000,
+  );
+  if (elapsedSeconds < 60) return relativeLabels.latest;
+
+  const elapsedMinutes = Math.floor(elapsedSeconds / 60);
+  if (elapsedMinutes < 60) return relativeLabels.minutes(elapsedMinutes);
+
+  const elapsedHours = Math.floor(elapsedMinutes / 60);
+  if (elapsedHours < 24) return relativeLabels.hours(elapsedHours);
+
+  return syncedAt.toLocaleString(language);
 }
 
 export function StateMessage({
