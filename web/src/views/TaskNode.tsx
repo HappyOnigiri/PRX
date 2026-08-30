@@ -27,13 +27,25 @@ interface TaskNodeData extends Record<string, unknown> {
 }
 export type TaskFlowNode = Node<TaskNodeData, "task">;
 
-export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
+export function TaskNode({
+  data,
+  selected,
+  isConnectable,
+}: NodeProps<TaskFlowNode>) {
   const { t } = useTranslation();
   return (
     <div
       className={`task-node state-${taskDisplayStateToken(data.state)} ${data.ready ? "is-ready" : ""} ${data.stale ? "is-stale" : ""} ${selected ? "is-selected" : ""}`}
     >
-      <Handle type="target" position={Position.Left} />
+      <Handle
+        type="target"
+        position={Position.Left}
+        className="task-handle task-handle-target"
+        isConnectable={isConnectable}
+        tabIndex={isConnectable ? 0 : -1}
+        aria-label={t("workspace.flow.blockedHandle")}
+        title={t("workspace.flow.blockedHandle")}
+      />
       <div className="task-node-head">
         <div className="node-state">
           <i />
@@ -105,7 +117,15 @@ export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
         <span>{data.assignee || t("common.unassigned")}</span>
         {data.ready && <b>{t("common.ready")}</b>}
       </footer>
-      <Handle type="source" position={Position.Right} />
+      <Handle
+        type="source"
+        position={Position.Right}
+        className="task-handle task-handle-source"
+        isConnectable={isConnectable}
+        tabIndex={isConnectable ? 0 : -1}
+        aria-label={t("workspace.flow.blockerHandle")}
+        title={t("workspace.flow.blockerHandle")}
+      />
     </div>
   );
 }

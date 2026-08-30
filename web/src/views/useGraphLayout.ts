@@ -1,6 +1,6 @@
 import ELK from "elkjs/lib/elk-api.js";
 import elkWorkerUrl from "elkjs/lib/elk-worker.min.js?url";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
 import { type TaskFlowNode, type TaskNodeDocument } from "./TaskNode";
 
@@ -12,6 +12,67 @@ interface GraphLayoutOptions {
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   readOnly?: boolean;
+}
+
+interface LayoutRequest extends GraphLayoutOptions {
+  attempt: number;
+}
+
+function isSameLayoutRequest(
+  completed: LayoutRequest | undefined,
+  requested: LayoutRequest,
+) {
+  return (
+    completed?.tasks === requested.tasks &&
+    completed.dependencies === requested.dependencies &&
+    completed.pullRequests === requested.pullRequests &&
+    completed.documentsByTask === requested.documentsByTask &&
+    completed.onEditTask === requested.onEditTask &&
+    completed.onPreviewDocument === requested.onPreviewDocument &&
+    completed.readOnly === requested.readOnly &&
+    completed.attempt === requested.attempt
+  );
+}
+
+function buildRawNodes({
+  tasks,
+  pullRequests,
+  documentsByTask,
+  onEditTask,
+  onPreviewDocument,
+  readOnly = false,
+}: GraphLayoutOptions) {
+  return tasks.map((task) => {
+    const pr = pullRequests.get(task.id);
+    const documents = documentsByTask.get(task.id) ?? [];
+    const assetCount = documents.length + (pr ? 1 : 0);
+    const hasSyncError = Boolean(pr?.syncError);
+    return {
+      id: task.id,
+      width: 284,
+      height: 148 + Math.min(assetCount, 4) * 34 + (hasSyncError ? 22 : 0),
+      data: {
+        title: task.title,
+        assignee: task.assignee,
+        state: task.displayState,
+        ready: task.ready,
+        stale: pr?.stale ?? false,
+        syncError: hasSyncError,
+        pullRequest: pr
+          ? {
+              label: `${pr.host && pr.host !== "github.com" ? `${pr.host}/` : ""}${pr.owner}/${pr.repository} #${String(pr.number)}`,
+              url: pr.url,
+            }
+          : undefined,
+        documents,
+        readOnly,
+        onEdit: () => {
+          onEditTask(task.id);
+        },
+        onPreview: onPreviewDocument,
+      },
+    };
+  });
 }
 
 export function useGraphLayout({
@@ -30,40 +91,34 @@ export function useGraphLayout({
     { message: string | undefined } | undefined
   >();
   const [layoutAttempt, setLayoutAttempt] = useState(0);
+  const [completedLayout, setCompletedLayout] = useState<LayoutRequest>();
+  const layoutRequest = useMemo(
+    () => ({
+      tasks,
+      dependencies,
+      pullRequests,
+      documentsByTask,
+      onEditTask,
+      onPreviewDocument,
+      readOnly,
+      attempt: layoutAttempt,
+    }),
+    [
+      tasks,
+      dependencies,
+      pullRequests,
+      documentsByTask,
+      onEditTask,
+      onPreviewDocument,
+      readOnly,
+      layoutAttempt,
+    ],
+  );
+  const layoutPending = !isSameLayoutRequest(completedLayout, layoutRequest);
 
   useEffect(() => {
     let current = true;
-    const raw = tasks.map((task) => {
-      const pr = pullRequests.get(task.id);
-      const documents = documentsByTask.get(task.id) ?? [];
-      const assetCount = documents.length + (pr ? 1 : 0);
-      const hasSyncError = Boolean(pr?.syncError);
-      return {
-        id: task.id,
-        width: 284,
-        height: 148 + Math.min(assetCount, 4) * 34 + (hasSyncError ? 22 : 0),
-        data: {
-          title: task.title,
-          assignee: task.assignee,
-          state: task.displayState,
-          ready: task.ready,
-          stale: pr?.stale ?? false,
-          syncError: hasSyncError,
-          pullRequest: pr
-            ? {
-                label: `${pr.host && pr.host !== "github.com" ? `${pr.host}/` : ""}${pr.owner}/${pr.repository} #${String(pr.number)}`,
-                url: pr.url,
-              }
-            : undefined,
-          documents,
-          readOnly,
-          onEdit: () => {
-            onEditTask(task.id);
-          },
-          onPreview: onPreviewDocument,
-        },
-      };
-    });
+    const raw = buildRawNodes(layoutRequest);
     const elk = new ELK({ workerUrl: elkWorkerUrl });
     elk
       .layout({
@@ -75,7 +130,7 @@ export function useGraphLayout({
           "elk.layered.spacing.nodeNodeBetweenLayers": "110",
         },
         children: raw.map(({ id, width, height }) => ({ id, width, height })),
-        edges: dependencies.map((dep, index) => ({
+        edges: layoutRequest.dependencies.map((dep, index) => ({
           id: String(index),
           sources: [dep.blockerTaskId],
           targets: [dep.blockedTaskId],
@@ -97,32 +152,25 @@ export function useGraphLayout({
             position: positions.get(node.id) ?? { x: 0, y: 0 },
           })),
         );
+        setCompletedLayout(layoutRequest);
       })
       .catch((error: unknown) => {
         if (!current) return;
         setLayoutError({
           message: error instanceof Error ? error.message : undefined,
         });
+        setCompletedLayout(layoutRequest);
       });
     return () => {
       current = false;
       elk.terminateWorker();
     };
-  }, [
-    tasks,
-    dependencies,
-    pullRequests,
-    documentsByTask,
-    onEditTask,
-    onPreviewDocument,
-    readOnly,
-    layoutAttempt,
-  ]);
+  }, [layoutRequest]);
 
   function retryLayout() {
     setLayoutError(undefined);
     setLayoutAttempt((attempt) => attempt + 1);
   }
 
-  return { nodes, layoutError, retryLayout };
+  return { nodes, layoutError, layoutPending, retryLayout };
 }

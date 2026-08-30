@@ -41,7 +41,7 @@ describe("TaskNode", () => {
         onPreview,
       },
       selected: false,
-      isConnectable: false,
+      isConnectable: true,
       zIndex: 0,
       dragging: false,
       draggable: false,
@@ -59,6 +59,12 @@ describe("TaskNode", () => {
     expect(screen.getByText("Merge billing schema")).toBeInTheDocument();
     expect(screen.getByText("READY")).toBeInTheDocument();
     expect(container.querySelector(".is-stale")).toBeInTheDocument();
+    expect(
+      screen.getByLabelText("Blocked task input (drop here)"),
+    ).toHaveAttribute("title", "Blocked task input (drop here)");
+    expect(
+      screen.getByLabelText("Blocker output (drag from here)"),
+    ).toHaveAttribute("title", "Blocker output (drag from here)");
     expect(screen.getByRole("link", { name: /acme\/api #42/ })).toHaveAttribute(
       "target",
       "_blank",
