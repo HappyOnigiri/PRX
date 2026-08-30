@@ -184,13 +184,15 @@ function buildDependencyEdges({
 
 function useDependencySelection(dependencies: Dependency[]) {
   const [requestedId, setSelectedId] = useState<string>();
-  const selectedId = dependencies.some(
+  const stillPresent = dependencies.some(
     (dependency) =>
       dependencyEdgeId(dependency.blockerTaskId, dependency.blockedTaskId) ===
       requestedId,
-  )
-    ? requestedId
-    : undefined;
+  );
+  const selectedId = stillPresent ? requestedId : undefined;
+  // Dropping the id keeps a re-added dependency from reappearing as selected
+  // without the user ever picking it.
+  if (requestedId !== undefined && !stillPresent) setSelectedId(undefined);
   const clear = useCallback(() => {
     setSelectedId(undefined);
   }, []);

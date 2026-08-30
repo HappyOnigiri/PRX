@@ -451,6 +451,37 @@ describe("FeatureGraph", () => {
     expect(graphMocks.edges[0]?.["selected"]).toBe(false);
   });
 
+  it("does not reselect a dependency that is removed and added again", () => {
+    const dependency = makeDependency({
+      blockerTaskId: "blocker",
+      blockedTaskId: "blocked",
+    });
+    const tasks = [
+      makeTask({ id: "blocker", title: "Blocker task" }),
+      makeTask({ id: "blocked", title: "Blocked task" }),
+    ];
+    const graph = (dependencies: (typeof dependency)[]) => (
+      <FeatureGraph
+        tasks={tasks}
+        dependencies={dependencies}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={vi.fn()}
+      />
+    );
+    const { rerender } = render(graph([dependency]));
+
+    act(() => {
+      graphMocks.onEdgeClick?.({}, { id: "blocker-blocked" });
+    });
+    expect(graphMocks.edges[0]?.["selected"]).toBe(true);
+    rerender(graph([]));
+    rerender(graph([dependency]));
+    expect(graphMocks.edges[0]?.["selected"]).toBe(false);
+  });
+
   it("shows a translated cycle error with task titles", () => {
     const blocker = makeTask({ id: "blocker", title: "Blocker task" });
     const blocked = makeTask({ id: "blocked", title: "Blocked task" });
