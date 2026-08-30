@@ -107,7 +107,8 @@ web-install:
 web-build: web-install
 	$(PNPM) --dir web build
 
-dev: web-install
+# The development middleware serves the license report emitted by web-build.
+dev: web-build
 	$(PNPM) --dir web dev:full
 
 # Extra Playwright flags, e.g. `make e2e E2E_FLAGS=--shard=1/3` to run one shard of the suite.

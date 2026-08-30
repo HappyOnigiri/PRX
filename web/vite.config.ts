@@ -2,9 +2,14 @@ import react from "@vitejs/plugin-react";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createViteLicensePlugin } from "rollup-license-plugin";
+import type { Plugin } from "vite";
 import { defineConfig } from "vitest/config";
 
 const apiOrigin = "http://127.0.0.1:7332";
+const licenseReportPath = resolve(
+  __dirname,
+  "../internal/webui/dist/oss-licenses.json",
+);
 const packageManifest: unknown = JSON.parse(
   readFileSync(resolve(__dirname, "../package.json"), "utf8"),
 );
@@ -23,8 +28,28 @@ const devOrigins = new Set([
   "http://[::1]:7331",
 ]);
 
+function serveLicenseReport(): Plugin {
+  return {
+    name: "serve-license-report",
+    apply: "serve",
+    configureServer(server) {
+      server.middlewares.use(
+        "/oss-licenses.json",
+        (_request, response, next) => {
+          try {
+            response.setHeader("Content-Type", "application/json");
+            response.end(readFileSync(licenseReportPath));
+          } catch (error) {
+            next(error);
+          }
+        },
+      );
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), createViteLicensePlugin()],
+  plugins: [react(), createViteLicensePlugin(), serveLicenseReport()],
   define: {
     "import.meta.env.APP_VERSION": JSON.stringify(developmentVersion),
   },
