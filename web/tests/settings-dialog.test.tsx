@@ -344,6 +344,7 @@ describe("SettingsDialog", () => {
     render(<SettingsDialog onClose={vi.fn()} />);
     const serverTab = screen.getByRole("tab", { name: "Server" });
     const displayTab = screen.getByRole("tab", { name: "Display" });
+    const creditsTab = screen.getByRole("tab", { name: "Credits" });
     const hostForm = screen
       .getByRole("heading", { name: "Register a host" })
       .closest("form");
@@ -367,9 +368,27 @@ describe("SettingsDialog", () => {
     );
 
     fireEvent.keyDown(serverTab, { key: "End" });
-    expect(displayTab).toHaveFocus();
-    fireEvent.keyDown(displayTab, { key: "ArrowRight" });
+    expect(creditsTab).toHaveFocus();
+    fireEvent.keyDown(creditsTab, { key: "ArrowRight" });
     expect(serverTab).toHaveFocus();
+  });
+
+  it("shows the React Flow license in the credits tab", () => {
+    render(<SettingsDialog onClose={vi.fn()} />);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Credits" }));
+
+    const panel = screen.getByRole("tabpanel", { name: "Credits" });
+    expect(panel).toBeVisible();
+    const license = panel.querySelector(".settings-license");
+    if (!(license instanceof HTMLElement)) throw new Error("license missing");
+    expect(license).toHaveTextContent("MIT License");
+    expect(
+      within(panel).getByRole("link", { name: "License source" }),
+    ).toHaveAttribute(
+      "href",
+      "https://github.com/xyflow/xyflow/blob/main/packages/react/LICENSE",
+    );
   });
 
   it("keeps display settings available while server settings load", () => {

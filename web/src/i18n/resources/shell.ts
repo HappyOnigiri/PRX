@@ -4,7 +4,7 @@ export const shell = {
     settings: {
       open: "Settings",
       title: "Settings",
-      tabs: { server: "Server", display: "Display" },
+      tabs: { server: "Server", display: "Display", credits: "Credits" },
       display: {
         description:
           "Choose how PRX appears in this browser. Changes apply immediately.",
@@ -18,6 +18,16 @@ export const shell = {
           description: "Color scheme used for PRX in this browser.",
           options: { system: "System", light: "Light", dark: "Dark" },
         },
+      },
+      credits: {
+        description:
+          "PRX uses open-source software. Third-party licenses are listed here.",
+        reactFlowLabel: "Dependency graph",
+        reactFlowName: "React Flow",
+        reactFlowDescription:
+          "React Flow powers the dependency graph and is distributed under the MIT License.",
+        website: "React Flow website",
+        licenseSource: "License source",
       },
     },
     nav: {
@@ -91,7 +101,7 @@ export const shell = {
     settings: {
       open: "設定",
       title: "設定",
-      tabs: { server: "サーバー", display: "表示" },
+      tabs: { server: "サーバー", display: "表示", credits: "クレジット" },
       display: {
         description:
           "このブラウザーでのPRXの表示を選択します。変更はすぐに反映されます。",
@@ -109,6 +119,16 @@ export const shell = {
             dark: "ダーク",
           },
         },
+      },
+      credits: {
+        description:
+          "PRXはオープンソースソフトウェアを利用しています。第三者コンポーネントのライセンスをここに表示します。",
+        reactFlowLabel: "依存関係グラフ",
+        reactFlowName: "React Flow",
+        reactFlowDescription:
+          "React Flowは依存関係グラフに使われており、MITライセンスで提供されています。",
+        website: "React FlowのWebサイト",
+        licenseSource: "ライセンスの出典",
       },
     },
     nav: {

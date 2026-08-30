@@ -564,6 +564,39 @@
   font-size: var(--text-sm);
 }
 
+.settings-credit-description {
+  margin: 0 0 12px;
+  color: var(--text-2);
+}
+
+.settings-credit-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 16px;
+  margin: 0 0 14px;
+  font-size: var(--text-sm);
+}
+
+.settings-credit-links a {
+  color: var(--accent);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.settings-license {
+  margin: 0;
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text-2);
+  padding: 14px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.55;
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
+}
+
 @media (width <= 600px) {
   .form-row {
     grid-template-columns: 1fr;
@@ -583,7 +616,11 @@
   }
 
   .settings-tab {
-    min-width: 50%;
+    flex: 1 1 0;
+    min-width: 0;
+    padding-inline: 4px;
+    font-size: var(--text-sm);
+    white-space: nowrap;
   }
 
   .dialog .settings-display-row {
