@@ -36,7 +36,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 6 {
+		migrations != 7 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -556,6 +556,17 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 		_ = legacy.Close()
 		t.Fatal(err)
 	}
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO documents(id, feature_id, task_id, kind, title, value, created_at)
+      VALUES('feature-document', 'feature', NULL, 'markdown_path', 'Feature notes', 'docs/feature.md', ?),
+            ('task-document', NULL, 'task', 'url', 'Task runbook', 'https://example.com/runbook', ?)`,
+		timestamp,
+		timestamp,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
 	if err := legacy.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -568,7 +579,7 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	var migrationCount int
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
-		Scan(&migrationCount); err != nil || migrationCount != 6 {
+		Scan(&migrationCount); err != nil || migrationCount != 7 {
 		t.Fatalf("migration count=%d err=%v", migrationCount, err)
 	}
 	var status string
@@ -584,6 +595,68 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	pullRequest, err := database.GetPullRequest(ctx, "T-1")
 	if err != nil || pullRequest.Host != "ghe.example.com" {
 		t.Fatalf("pull request=%+v err=%v, want host preserved", pullRequest, err)
+	}
+	assertMigratedDocuments(t, ctx, database, timestamp)
+}
+
+func assertMigratedDocuments(
+	t *testing.T,
+	ctx context.Context,
+	database *store.Store,
+	timestamp string,
+) {
+	t.Helper()
+	created, err := time.Parse(time.RFC3339, timestamp)
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := database.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.Documents) != 3 {
+		t.Fatalf("documents=%+v, want the two legacy documents and the migrated plan", snapshot.Documents)
+	}
+	byID := make(map[string]domain.Document, len(snapshot.Documents))
+	plans := make([]domain.Document, 0, 1)
+	for _, document := range snapshot.Documents {
+		byID[document.ID] = document
+		if document.IsImplementationPlan {
+			plans = append(plans, document)
+		}
+	}
+	featureDocument, ok := byID["feature-document"]
+	if !ok {
+		t.Fatalf("documents=%+v, want the legacy feature document to keep its identifier", snapshot.Documents)
+	}
+	if featureDocument.Kind != domain.DocumentKindLocalFile ||
+		featureDocument.Locator != "docs/feature.md" ||
+		featureDocument.Title != "Feature notes" ||
+		featureDocument.FeatureID != "F-1" ||
+		featureDocument.TaskID != "" ||
+		featureDocument.IsImplementationPlan ||
+		!featureDocument.CreatedAt.Equal(created) {
+		t.Fatalf("feature document=%+v, want a local file document owned by F-1", featureDocument)
+	}
+	taskDocument, ok := byID["task-document"]
+	if !ok {
+		t.Fatalf("documents=%+v, want the legacy task document to keep its identifier", snapshot.Documents)
+	}
+	if taskDocument.Kind != domain.DocumentKindURL ||
+		taskDocument.Locator != "https://example.com/runbook" ||
+		taskDocument.TaskID != "T-1" ||
+		taskDocument.FeatureID != "" ||
+		taskDocument.IsImplementationPlan ||
+		!taskDocument.CreatedAt.Equal(created) {
+		t.Fatalf("task document=%+v, want a URL document owned by T-1", taskDocument)
+	}
+	if len(plans) != 1 {
+		t.Fatalf("implementation plan documents=%+v, want exactly one", plans)
+	}
+	if plans[0].Kind != domain.DocumentKindMarkdown ||
+		plans[0].TaskID != "T-1" ||
+		plans[0].Locator != "" {
+		t.Fatalf("implementation plan document=%+v, want a Markdown document owned by T-1", plans[0])
 	}
 }
 
@@ -1168,7 +1241,9 @@ func TestImplementationPlanLifecycleAndCascade(t *testing.T) {
 		t.Fatalf("initial task=%+v", snapshot.Tasks[0])
 	}
 	const content = "# API design\n\nDocument the boundary.\n"
-	plan, err := service.UpsertImplementationPlan(ctx, task.ID, content)
+	plan, err := service.UpsertImplementationPlan(
+		ctx, task.ID, domain.Document{Kind: domain.DocumentKindMarkdown, Content: content},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1179,11 +1254,40 @@ func TestImplementationPlanLifecycleAndCascade(t *testing.T) {
 	if err != nil || read.Content != content || !read.CreatedAt.Equal(plan.CreatedAt) {
 		t.Fatalf("read plan=%+v err=%v", read, err)
 	}
+	normal, err := service.AddDocument(
+		ctx,
+		"",
+		task.ID,
+		domain.DocumentKindURL,
+		"Reference",
+		"https://example.com/reference",
+		"",
+		false,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	updatedTitle := "Updated reference"
+	updated, err := service.UpdateDocument(ctx, normal.ID, &updatedTitle, nil, nil)
+	if err != nil || updated.Title != updatedTitle {
+		t.Fatalf("updated document=%+v err=%v", updated, err)
+	}
+	markAsPlan := true
+	if _, err := service.UpdateDocument(
+		ctx,
+		normal.ID,
+		nil,
+		nil,
+		&markAsPlan,
+	); domain.ErrorCode(err) != domain.DomainErrorCodeDuplicateImplementationPlan {
+		t.Fatalf("duplicate plan code=%s err=%v", domain.ErrorCode(err), err)
+	}
 	snapshot, err = service.Snapshot(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !snapshot.Tasks[0].HasImplementationPlan || snapshot.Tasks[0].DisplayState != domain.TaskDisplayStateDesigned ||
+	if !snapshot.Tasks[0].HasImplementationPlan ||
+		snapshot.Tasks[0].DisplayState != domain.TaskDisplayStateNotStarted ||
 		!snapshot.Tasks[0].Ready {
 		t.Fatalf("planned task=%+v", snapshot.Tasks[0])
 	}
@@ -1207,7 +1311,9 @@ func TestImplementationPlanLifecycleAndCascade(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := service.UpsertImplementationPlan(ctx, second.ID, "# Keep this plan"); err != nil {
+	if _, err := service.UpsertImplementationPlan(
+		ctx, second.ID, domain.Document{Kind: domain.DocumentKindMarkdown, Content: "# Keep this plan"},
+	); err != nil {
 		t.Fatal(err)
 	}
 	if err := service.DeleteFeature(ctx, feature.ID, true); err != nil {
@@ -1464,5 +1570,86 @@ func TestDefaultPathUsesUserConfigDirectory(t *testing.T) {
 	want := filepath.Join(configDir, "prx", "prx.db")
 	if got != want {
 		t.Fatalf("DefaultPath()=%q, want %q", got, want)
+	}
+}
+
+func TestStoreUpdateDocumentWritesOnlyRequestedFields(t *testing.T) {
+	ctx := context.Background()
+	database, _ := openTestService(t)
+	feature, err := database.CreateFeature(ctx, "checkout", "Checkout", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := database.CreateTask(ctx, feature.ID, "Ship it", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	document, err := database.CreateDocument(
+		ctx, "", task.ID, domain.DocumentKindMarkdown, "Original", "", "# Original", false,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	title := "Renamed"
+	if _, err := database.UpdateDocument(ctx, document.ID, &title, nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	// A caller that read the document before the rename must not restore the old title.
+	source := domain.Document{Kind: domain.DocumentKindURL, Locator: "https://example.com/runbook"}
+	updated, err := database.UpdateDocument(ctx, document.ID, nil, &source, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Title != title ||
+		updated.Kind != domain.DocumentKindURL ||
+		updated.Locator != "https://example.com/runbook" ||
+		updated.Content != "" {
+		t.Fatalf("document=%+v, want the rename kept and the source replaced", updated)
+	}
+
+	plan := true
+	withPlan, err := database.UpdateDocument(ctx, document.ID, nil, nil, &plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !withPlan.IsImplementationPlan ||
+		withPlan.Title != title ||
+		withPlan.Locator != "https://example.com/runbook" {
+		t.Fatalf("document=%+v, want only the implementation plan flag changed", withPlan)
+	}
+}
+
+func TestStoreUpsertImplementationPlanKeepsExistingTitle(t *testing.T) {
+	ctx := context.Background()
+	database, _ := openTestService(t)
+	feature, err := database.CreateFeature(ctx, "checkout", "Checkout", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := database.CreateTask(ctx, feature.ID, "Ship it", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	plan, err := database.UpsertImplementationPlan(ctx, task.ID, domain.Document{
+		Kind:    domain.DocumentKindMarkdown,
+		Content: "# First",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	title := "Design plan"
+	if _, err := database.UpdateDocument(ctx, plan.ID, &title, nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	updated, err := database.UpsertImplementationPlan(ctx, task.ID, domain.Document{
+		Kind:    domain.DocumentKindURL,
+		Locator: "https://example.com/plan",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Title != title || updated.Locator != "https://example.com/plan" {
+		t.Fatalf("plan=%+v, want the title kept and the source replaced", updated)
 	}
 }

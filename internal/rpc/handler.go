@@ -59,6 +59,7 @@ func rpcError(err error) error {
 		domain.DomainErrorCodeInvalidDocumentURL,
 		domain.DomainErrorCodeDocumentReadFailed,
 		domain.DomainErrorCodeDocumentTooLarge,
+		domain.DomainErrorCodeDocumentNotText,
 		domain.DomainErrorCodeInvalidImplementationPlan,
 		domain.DomainErrorCodeImplementationPlanTooLarge,
 		domain.DomainErrorCodeInvalidConfig:
@@ -68,6 +69,7 @@ func rpcError(err error) error {
 	case domain.DomainErrorCodeDuplicateDependency,
 		domain.DomainErrorCodeDuplicatePullRequest,
 		domain.DomainErrorCodeReferencesExist,
+		domain.DomainErrorCodeDuplicateImplementationPlan,
 		domain.DomainErrorCodeCycle:
 		code = connect.CodeFailedPrecondition
 	case domain.DomainErrorCodeGitHubAuth:
@@ -232,42 +234,6 @@ func (h *Handler) DeleteTask(
 	return connect.NewResponse(&prxv1.DeleteTaskResponse{}), nil
 }
 
-func (h *Handler) GetImplementationPlan(
-	ctx context.Context,
-	req *connect.Request[prxv1.GetImplementationPlanRequest],
-) (*connect.Response[prxv1.GetImplementationPlanResponse], error) {
-	value, err := h.service.GetImplementationPlan(ctx, req.Msg.GetTaskId())
-	if err != nil {
-		return nil, rpcError(err)
-	}
-	return connect.NewResponse(&prxv1.GetImplementationPlanResponse{
-		ImplementationPlan: protoImplementationPlan(value),
-	}), nil
-}
-
-func (h *Handler) UpsertImplementationPlan(
-	ctx context.Context,
-	req *connect.Request[prxv1.UpsertImplementationPlanRequest],
-) (*connect.Response[prxv1.UpsertImplementationPlanResponse], error) {
-	value, err := h.service.UpsertImplementationPlan(ctx, req.Msg.GetTaskId(), req.Msg.GetContent())
-	if err != nil {
-		return nil, rpcError(err)
-	}
-	return connect.NewResponse(&prxv1.UpsertImplementationPlanResponse{
-		ImplementationPlan: protoImplementationPlan(value),
-	}), nil
-}
-
-func (h *Handler) DeleteImplementationPlan(
-	ctx context.Context,
-	req *connect.Request[prxv1.DeleteImplementationPlanRequest],
-) (*connect.Response[prxv1.DeleteImplementationPlanResponse], error) {
-	if err := h.service.DeleteImplementationPlan(ctx, req.Msg.GetTaskId()); err != nil {
-		return nil, rpcError(err)
-	}
-	return connect.NewResponse(&prxv1.DeleteImplementationPlanResponse{TaskId: req.Msg.GetTaskId()}), nil
-}
-
 func (h *Handler) AddDependency(
 	ctx context.Context,
 	req *connect.Request[prxv1.AddDependencyRequest],
@@ -314,18 +280,50 @@ func (h *Handler) AddDocument(
 	ctx context.Context,
 	req *connect.Request[prxv1.AddDocumentRequest],
 ) (*connect.Response[prxv1.AddDocumentResponse], error) {
+	source := protoAddDocumentSource(req.Msg)
 	value, err := h.service.AddDocument(
 		ctx,
 		req.Msg.GetFeatureId(),
 		req.Msg.GetTaskId(),
-		domainDocumentKind(req.Msg.GetKind()),
+		source.Kind,
 		req.Msg.GetTitle(),
-		req.Msg.GetValue(),
+		source.Locator,
+		source.Content,
+		req.Msg.GetIsImplementationPlan(),
 	)
 	if err != nil {
 		return nil, rpcError(err)
 	}
 	return connect.NewResponse(&prxv1.AddDocumentResponse{Document: protoDocument(value)}), nil
+}
+
+func (h *Handler) GetDocument(
+	ctx context.Context,
+	req *connect.Request[prxv1.GetDocumentRequest],
+) (*connect.Response[prxv1.GetDocumentResponse], error) {
+	value, err := h.service.GetDocument(ctx, req.Msg.GetId())
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.GetDocumentResponse{Document: protoDocument(value), Content: value.Content}), nil
+}
+
+func (h *Handler) UpdateDocument(
+	ctx context.Context,
+	req *connect.Request[prxv1.UpdateDocumentRequest],
+) (*connect.Response[prxv1.UpdateDocumentResponse], error) {
+	var source *domain.Document
+	if req.Msg.GetSource() != nil {
+		value := protoUpdateDocumentSource(req.Msg)
+		source = &value
+	}
+	value, err := h.service.UpdateDocument(
+		ctx, req.Msg.GetId(), req.Msg.Title, source, req.Msg.IsImplementationPlan,
+	)
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.UpdateDocumentResponse{Document: protoDocument(value)}), nil
 }
 
 func (h *Handler) DeleteDocument(
@@ -338,15 +336,15 @@ func (h *Handler) DeleteDocument(
 	return connect.NewResponse(&prxv1.DeleteDocumentResponse{}), nil
 }
 
-func (h *Handler) ReadMarkdownDocument(
+func (h *Handler) ReadDocumentContent(
 	ctx context.Context,
-	req *connect.Request[prxv1.ReadMarkdownDocumentRequest],
-) (*connect.Response[prxv1.ReadMarkdownDocumentResponse], error) {
-	content, err := h.service.ReadMarkdownDocument(ctx, req.Msg.GetId())
+	req *connect.Request[prxv1.ReadDocumentContentRequest],
+) (*connect.Response[prxv1.ReadDocumentContentResponse], error) {
+	content, err := h.service.ReadDocumentContent(ctx, req.Msg.GetId())
 	if err != nil {
 		return nil, rpcError(err)
 	}
-	return connect.NewResponse(&prxv1.ReadMarkdownDocumentResponse{Content: content}), nil
+	return connect.NewResponse(&prxv1.ReadDocumentContentResponse{Content: content}), nil
 }
 
 func (h *Handler) Sync(

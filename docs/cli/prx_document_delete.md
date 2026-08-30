@@ -29,5 +29,5 @@ prx document delete DOCUMENT_ID
 
 ### SEE ALSO
 
-* [prx document](prx_document.md)	 - List or manage URL and local Markdown references
+* [prx document](prx_document.md)	 - List or manage documents
 

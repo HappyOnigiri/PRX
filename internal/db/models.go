@@ -15,13 +15,16 @@ type Dependency struct {
 }
 
 type Document struct {
-	ID        string         `json:"id"`
-	FeatureID sql.NullString `json:"feature_id"`
-	TaskID    sql.NullString `json:"task_id"`
-	Kind      string         `json:"kind"`
-	Title     string         `json:"title"`
-	Value     string         `json:"value"`
-	CreatedAt string         `json:"created_at"`
+	ID                   string         `json:"id"`
+	FeatureID            sql.NullString `json:"feature_id"`
+	TaskID               sql.NullString `json:"task_id"`
+	Kind                 string         `json:"kind"`
+	Title                string         `json:"title"`
+	Locator              sql.NullString `json:"locator"`
+	Content              sql.NullString `json:"content"`
+	IsImplementationPlan int64          `json:"is_implementation_plan"`
+	CreatedAt            string         `json:"created_at"`
+	UpdatedAt            string         `json:"updated_at"`
 }
 
 type Feature struct {
@@ -57,13 +60,6 @@ type GithubSyncState struct {
 type IDSequence struct {
 	Entity    string `json:"entity"`
 	NextValue int64  `json:"next_value"`
-}
-
-type ImplementationPlan struct {
-	TaskID    string `json:"task_id"`
-	Content   string `json:"content"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
 }
 
 type PullRequest struct {

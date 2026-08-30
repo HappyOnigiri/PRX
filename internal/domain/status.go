@@ -46,6 +46,5 @@ func isReadyCandidate(task Task, display TaskDisplayState) bool {
 	if task.Status == TaskStatusNotStarted {
 		return true
 	}
-	return task.Status == TaskStatusAuto &&
-		(display == TaskDisplayStateNotStarted || display == TaskDisplayStateDesigned)
+	return task.Status == TaskStatusAuto && display == TaskDisplayStateNotStarted
 }

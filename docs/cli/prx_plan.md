@@ -1,6 +1,6 @@
 ## prx plan
 
-Show or manage a task's implementation plan
+Show or manage a task's implementation plan document
 
 ```
 prx plan TASK_ID [flags]
@@ -30,6 +30,6 @@ prx plan T-1
 ### SEE ALSO
 
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
-* [prx plan delete](prx_plan_delete.md)	 - Delete a task's implementation plan
-* [prx plan set](prx_plan_set.md)	 - Create or replace a task's implementation plan
+* [prx plan delete](prx_plan_delete.md)	 - Delete a task's implementation plan document
+* [prx plan set](prx_plan_set.md)	 - Create or replace a task's implementation plan document
 

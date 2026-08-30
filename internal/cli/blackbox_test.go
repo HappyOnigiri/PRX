@@ -495,7 +495,7 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 	if err := json.Unmarshal(taskSnapshot.Data, &taskState); err != nil {
 		t.Fatal(err)
 	}
-	if !taskState.HasPlan || taskState.Display != "designed" || taskState.Status != "auto" {
+	if !taskState.HasPlan || taskState.Display != "not_started" || taskState.Status != "auto" {
 		t.Fatalf("task state=%+v", taskState)
 	}
 	deleted, _, exit := runCLI(t, binary, dbPath, "plan", "delete", taskData.ID)
@@ -682,6 +682,32 @@ func TestBlackBoxReadAliasesAndFeatureSlugEscape(t *testing.T) {
 	invalid, _, exit := runCLI(t, binary, dbPath, "task", taskData.ID, "--feature", "checkout")
 	if exit == 0 || invalid.ErrorCode != "usage_error" || !strings.Contains(invalid.Error, "cannot be used") {
 		t.Fatalf("task ID with filter: %+v exit=%d", invalid, exit)
+	}
+
+	document, _, exit := runCLI(
+		t, binary, dbPath,
+		"document", "add", "--feature", "checkout", "--url", "https://example.com/checkout",
+	)
+	if exit != 0 || !document.OK {
+		t.Fatalf("create document: %+v exit=%d", document, exit)
+	}
+	var documentData struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(document.Data, &documentData); err != nil {
+		t.Fatal(err)
+	}
+	bySlug, _, exit := runCLI(t, binary, dbPath, "document", "--feature", "checkout")
+	if exit != 0 || !bySlug.OK || !bytes.Contains(bySlug.Data, []byte(documentData.ID)) {
+		t.Fatalf("document filter by slug: %+v exit=%d", bySlug, exit)
+	}
+	unknownFeature, _, exit := runCLI(t, binary, dbPath, "document", "--feature", "missing-feature")
+	if exit == 0 || unknownFeature.ErrorCode != "not_found" {
+		t.Fatalf("document filter by unknown feature: %+v exit=%d", unknownFeature, exit)
+	}
+	unknownTask, _, exit := runCLI(t, binary, dbPath, "document", "--task", "T-404")
+	if exit == 0 || unknownTask.ErrorCode != "not_found" {
+		t.Fatalf("document filter by unknown task: %+v exit=%d", unknownTask, exit)
 	}
 
 	for alias, key := range map[string]string{"dep": "dependencies", "doc": "documents"} {
@@ -1289,6 +1315,24 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	if err := json.Unmarshal(document["id"], &documentID); err != nil {
 		t.Fatal(err)
 	}
+
+	legacyDefault := runDB(
+		"document",
+		"add",
+		"--task",
+		taskAID,
+		"--value",
+		"https://example.com/legacy",
+	)
+	assertDirectObject(t, legacyDefault, "id", "task_id")
+	var legacyKind string
+	if err := json.Unmarshal(legacyDefault["kind"], &legacyKind); err != nil {
+		t.Fatal(err)
+	}
+	if legacyKind != "url" {
+		t.Fatalf("legacy --value kind=%q, want url", legacyKind)
+	}
+
 	assertDirectObjectKeys(t, runDB("document"), "documents")
 
 	planPath := filepath.Join(root, "plan.md")

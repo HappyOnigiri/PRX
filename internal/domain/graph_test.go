@@ -135,7 +135,7 @@ func TestAutomaticDisplayStateMatrix(t *testing.T) {
 		{
 			name:  "automatic task with plan",
 			task:  Task{ID: "task", Kind: TaskKindManual, Status: TaskStatusAuto, HasImplementationPlan: true},
-			want:  TaskDisplayStateDesigned,
+			want:  TaskDisplayStateNotStarted,
 			ready: true,
 		},
 		{

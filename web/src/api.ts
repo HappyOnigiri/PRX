@@ -13,27 +13,26 @@ import {
   DeleteFeatureRequestSchema,
   DeleteGitHubAuthMethodRequestSchema,
   DeleteGitHubHostRequestSchema,
-  DeleteImplementationPlanRequestSchema,
   DeleteTaskRequestSchema,
   DetachPullRequestRequestSchema,
+  DocumentKind,
   GetConfigRequestSchema,
+  GetDocumentRequestSchema,
   GetGitHubSyncStatusRequestSchema,
-  GetImplementationPlanRequestSchema,
   GetSnapshotRequestSchema,
   PRXService,
-  ReadMarkdownDocumentRequestSchema,
+  ReadDocumentContentRequestSchema,
   RemoveDependencyRequestSchema,
   ReorderGitHubAuthMethodsRequestSchema,
   SyncGitHubIfDueRequestSchema,
   SyncRequestSchema,
+  UpdateDocumentRequestSchema,
   UpdateFeatureRequestSchema,
   UpdateGitHubAuthMethodRequestSchema,
   UpdateGitHubHostRequestSchema,
   UpdateGitHubSyncConfigRequestSchema,
   UpdateTaskRequestSchema,
-  UpsertImplementationPlanRequestSchema,
   ValidateConfigRequestSchema,
-  type DocumentKind,
   type FeatureStatus,
   type GithubAuthMethodType,
   type GitHubConfig,
@@ -105,18 +104,6 @@ export const mutations = {
     status?: TaskStatus;
     assignee?: string;
   }) => client.updateTask(create(UpdateTaskRequestSchema, input)),
-  getImplementationPlan: (taskId: string) =>
-    client.getImplementationPlan(
-      create(GetImplementationPlanRequestSchema, { taskId }),
-    ),
-  upsertImplementationPlan: (input: { taskId: string; content: string }) =>
-    client.upsertImplementationPlan(
-      create(UpsertImplementationPlanRequestSchema, input),
-    ),
-  deleteImplementationPlan: (taskId: string) =>
-    client.deleteImplementationPlan(
-      create(DeleteImplementationPlanRequestSchema, { taskId }),
-    ),
   deleteTask: (id: string) =>
     client.deleteTask(create(DeleteTaskRequestSchema, { id, cascade: true })),
   addDependency: (blockerTaskId: string, blockedTaskId: string) =>
@@ -138,10 +125,38 @@ export const mutations = {
   addDocument: (input: {
     featureId?: string;
     taskId?: string;
-    kind: DocumentKind;
     title: string;
+    kind: DocumentKind;
     value: string;
-  }) => client.addDocument(create(AddDocumentRequestSchema, input)),
+    isImplementationPlan?: boolean;
+  }) => {
+    const source =
+      input.kind === DocumentKind.URL
+        ? { case: "url" as const, value: input.value }
+        : input.kind === DocumentKind.LOCAL_FILE
+          ? { case: "localFile" as const, value: input.value }
+          : { case: "markdown" as const, value: input.value };
+    const request: {
+      featureId?: string;
+      taskId?: string;
+      title: string;
+      source: typeof source;
+      isImplementationPlan?: boolean;
+    } = { title: input.title, source };
+    if (input.featureId !== undefined) request.featureId = input.featureId;
+    if (input.taskId !== undefined) request.taskId = input.taskId;
+    if (input.isImplementationPlan !== undefined)
+      request.isImplementationPlan = input.isImplementationPlan;
+    return client.addDocument(create(AddDocumentRequestSchema, request));
+  },
+  getDocument: (id: string) =>
+    client.getDocument(create(GetDocumentRequestSchema, { id })),
+  updateDocument: (input: {
+    id: string;
+    title?: string;
+    source?: { case: "url" | "localFile" | "markdown"; value: string };
+    isImplementationPlan?: boolean;
+  }) => client.updateDocument(create(UpdateDocumentRequestSchema, input)),
   deleteDocument: (id: string) =>
     client.deleteDocument(create(DeleteDocumentRequestSchema, { id })),
   sync: (featureId?: string, taskId?: string) => {
@@ -210,9 +225,9 @@ export const configMutations = {
   validate: () => client.validateConfig(create(ValidateConfigRequestSchema)),
 };
 
-export async function readMarkdownDocument(id: string): Promise<string> {
-  const response = await client.readMarkdownDocument(
-    create(ReadMarkdownDocumentRequestSchema, { id }),
+export async function readDocumentContent(id: string): Promise<string> {
+  const response = await client.readDocumentContent(
+    create(ReadDocumentContentRequestSchema, { id }),
   );
   return response.content;
 }
