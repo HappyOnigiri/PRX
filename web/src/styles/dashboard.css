@@ -52,10 +52,17 @@
   font-size: var(--text-xs);
 }
 
-.dashboard-sync-status {
-  min-width: 0;
+.dashboard-sync {
   padding: 8px 0;
   border-block: 1px solid var(--border);
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 8px 12px;
+}
+
+.dashboard-sync-status {
+  min-width: 0;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   gap: 16px;
@@ -71,6 +78,13 @@
   overflow-wrap: anywhere;
   text-align: right;
   white-space: normal;
+}
+
+.dashboard-sync-error {
+  grid-column: 1 / -1;
+  color: var(--status-conflict);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
 }
 
 .queue-strip {

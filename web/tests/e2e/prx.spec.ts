@@ -88,13 +88,23 @@ test("keeps the demo workspace inside the viewport", async ({ page }) => {
   expect(await overflow()).toEqual({ page: 0, workspace: 0 });
 });
 
-test("shows GitHub sync diagnostics in the dashboard header", async ({
+test("shows GitHub sync diagnostics and runs a full refresh", async ({
   page,
 }) => {
   await page.goto("/");
   await expect(page.locator(".page-head .dashboard-sync-status")).toBeVisible();
   await expect(page.locator(".rail .dashboard-sync-status")).toHaveCount(0);
   await expect(page.locator(".rail")).not.toContainText("GitHub sync");
+  const syncButton = page.getByRole("button", { name: "Sync GitHub now" });
+  await expect(syncButton).toBeEnabled();
+  const syncResponse = page.waitForResponse(
+    (response) =>
+      response.request().method() === "POST" &&
+      response.url().endsWith("/Sync"),
+  );
+  await syncButton.click();
+  expect((await syncResponse).ok()).toBe(true);
+  await expect(syncButton).toBeEnabled();
 });
 
 test("switches the display language and restores it from Local Storage", async ({
@@ -749,6 +759,16 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
   const syncStatus = page.locator(".page-head .dashboard-sync-status");
   await expect(syncStatus).toBeVisible();
   await expect(page.locator(".rail .dashboard-sync-status")).toHaveCount(0);
+  const dashboardSyncButton = page.getByRole("button", {
+    name: "Sync GitHub now",
+  });
+  await expect(dashboardSyncButton).toBeVisible();
+  const dashboardSyncBounds = await dashboardSyncButton.boundingBox();
+  expect(dashboardSyncBounds).not.toBeNull();
+  if (dashboardSyncBounds)
+    expect(
+      dashboardSyncBounds.x + dashboardSyncBounds.width,
+    ).toBeLessThanOrEqual(320);
   const syncValueStyle = await syncStatus
     .locator(":scope > :last-child")
     .evaluate((element) => {

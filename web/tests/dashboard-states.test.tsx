@@ -18,6 +18,12 @@ const dashboardMocks = vi.hoisted(() => ({
     error: null as Error | null,
     refetch: vi.fn(),
   },
+  sync: {
+    mutate: vi.fn(),
+    isPending: false,
+    error: null as Error | null,
+  },
+  api: { sync: vi.fn() },
 }));
 
 const autoSyncStatus = {
@@ -36,6 +42,15 @@ function renderDashboard(status: AutoSyncStatus = autoSyncStatus) {
 
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => dashboardMocks.state,
+  useDomainMutation: (mutationFn: (...input: unknown[]) => unknown) => {
+    dashboardMocks.sync.mutate.mockImplementation((input: unknown) =>
+      mutationFn(input, { source: "react-query" }),
+    );
+    return dashboardMocks.sync;
+  },
+}));
+vi.mock("../src/api", () => ({
+  mutations: dashboardMocks.api,
 }));
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: ReactNode }) => (
@@ -50,6 +65,10 @@ describe("Dashboard states", () => {
     dashboardMocks.state.isPending = true;
     dashboardMocks.state.error = null;
     dashboardMocks.state.refetch.mockReset();
+    dashboardMocks.sync.mutate.mockReset();
+    dashboardMocks.api.sync.mockReset();
+    dashboardMocks.sync.isPending = false;
+    dashboardMocks.sync.error = null;
   });
 
   it("shows loading and error states with a retry action", () => {
@@ -153,6 +172,45 @@ describe("Dashboard states", () => {
     expect(time).toHaveAttribute("dateTime", timestamp);
     expect(time.closest(".page-head")).not.toBeNull();
     expect(time).toHaveTextContent(label);
+  });
+
+  it("starts a full GitHub sync from the dashboard", () => {
+    dashboardMocks.state.isPending = false;
+    dashboardMocks.state.data = makeSnapshot();
+    renderDashboard();
+
+    fireEvent.click(screen.getByRole("button", { name: "Sync GitHub now" }));
+    expect(dashboardMocks.sync.mutate).toHaveBeenCalledOnce();
+    expect(dashboardMocks.sync.mutate).toHaveBeenCalledWith(undefined);
+    expect(dashboardMocks.api.sync).toHaveBeenCalledOnce();
+    expect(dashboardMocks.api.sync).toHaveBeenCalledWith();
+  });
+
+  it("locks repeated syncs and reports a manual sync failure", () => {
+    dashboardMocks.state.isPending = false;
+    dashboardMocks.state.data = makeSnapshot();
+    dashboardMocks.sync.isPending = true;
+    const { rerender } = renderDashboard();
+
+    expect(
+      screen.getByRole("button", { name: "Syncing GitHub…" }),
+    ).toBeDisabled();
+    expect(screen.getByLabelText("Updating…")).toBeInTheDocument();
+
+    dashboardMocks.sync.isPending = false;
+    dashboardMocks.sync.error = new Error("GitHub is unavailable");
+    rerender(
+      <AutoSyncStatusContext.Provider value={autoSyncStatus}>
+        <Dashboard />
+      </AutoSyncStatusContext.Provider>,
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "GitHub is unavailable",
+    );
+    expect(screen.getByLabelText("Status unavailable")).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "Sync GitHub now" }),
+    ).toBeEnabled();
   });
 
   it.each([
