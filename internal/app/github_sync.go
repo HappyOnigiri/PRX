@@ -224,18 +224,9 @@ func (s *Service) syncHostBatch(
 			break
 		}
 		batch, batchErr := provider.FetchBatch(ctx, work)
-		if batchErr != nil {
-			class := githubprovider.ClassOf(batchErr)
-			if class == githubprovider.ErrorClassUnauthorized {
-				resolver.MarkUnauthorized(candidate.ID)
-			}
-			if isFallbackClass(class) {
-				continue
-			}
-			addRemainingFailures(result.failures, work, 0, batchErr)
-			work = nil
-			break
-		}
+		// A chunked fetch reports what earlier chunks already produced alongside
+		// the failure, so take those results before deciding what the failure
+		// means for the pull requests it never reached.
 		next := make([]domain.PullRequest, 0)
 		for _, current := range work {
 			if updated, ok := batch.PullRequests[current.TaskID]; ok {
@@ -251,14 +242,25 @@ func (s *Service) syncHostBatch(
 				continue
 			}
 			itemErr := batch.Errors[current.TaskID]
-			if itemErr == nil {
+			if itemErr == nil && batchErr == nil {
 				itemErr = fmt.Errorf("GitHub synchronization did not produce a result")
 			}
-			if isFallbackClass(githubprovider.ClassOf(itemErr)) {
+			if itemErr == nil || isFallbackClass(githubprovider.ClassOf(itemErr)) {
 				next = append(next, current)
 				continue
 			}
 			result.failures[current.TaskID] = itemErr
+		}
+		if batchErr != nil {
+			class := githubprovider.ClassOf(batchErr)
+			if class == githubprovider.ErrorClassUnauthorized {
+				resolver.MarkUnauthorized(candidate.ID)
+			}
+			if !isFallbackClass(class) {
+				addRemainingFailures(result.failures, next, 0, batchErr)
+				work = nil
+				break
+			}
 		}
 		work = next
 	}
@@ -446,16 +448,17 @@ func (s *Service) attemptCandidate(
 		}
 	}
 	batchResult, batchErr := provider.FetchBatch(ctx, values)
-	if batchErr != nil {
-		result.failedAt = 0
-		result.err = batchErr
-		result.class = githubprovider.ClassOf(batchErr)
-		return result, nil
-	}
 	for taskID, value := range batchResult.PullRequests {
 		result.successes[taskID] = value
 	}
-	for index, current := range values {
+	// A chunked fetch stops at the first failing chunk and reports the earlier
+	// chunks with the failure, so keep what it produced and let the caller retry
+	// only from the first pull request the failure reached.
+	resolved := values
+	if batchErr != nil {
+		resolved = values[:unresolvedIndex(values, batchResult)]
+	}
+	for index, current := range resolved {
 		fetchErr := batchResult.Errors[current.TaskID]
 		if fetchErr == nil {
 			continue
@@ -493,7 +496,28 @@ func (s *Service) attemptCandidate(
 		}
 		result.failures[current.TaskID] = fetchErr
 	}
+	if batchErr != nil {
+		result.failedAt = len(resolved)
+		result.err = batchErr
+		result.class = githubprovider.ClassOf(batchErr)
+	}
 	return result, nil
+}
+
+// unresolvedIndex reports the position of the first pull request the batch
+// neither updated nor reported an item error for. A chunked fetch stops at its
+// first failing chunk, so nothing from that position on was attempted.
+func unresolvedIndex(values []domain.PullRequest, batch githubprovider.BatchResult) int {
+	for index, value := range values {
+		if _, ok := batch.PullRequests[value.TaskID]; ok {
+			continue
+		}
+		if _, ok := batch.Errors[value.TaskID]; ok {
+			continue
+		}
+		return index
+	}
+	return len(values)
 }
 
 func mergeCandidateAttempt(destination *repositorySyncResult, attempt candidateAttempt) {

@@ -151,6 +151,42 @@ func TestLiveProviderFetchBatchFallsBackToRESTOnAnyGraphQLHTTPError(t *testing.T
 	}
 }
 
+// FetchBatch reports what earlier chunks produced alongside a later chunk's
+// failure, so callers can persist the pull requests it did refresh.
+func TestLiveProviderFetchBatchKeepsEarlierChunksWhenALaterChunkFails(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		if requests.Add(1) > 1 {
+			writeGraphQLResponse(t, writer, map[string]any{
+				"errors": []any{map[string]any{"message": "server is unavailable"}},
+			})
+			return
+		}
+		writeGraphQLResponse(t, writer, map[string]any{
+			"data": graphQLDataForQuery(decodeGraphQLQuery(t, request)),
+		})
+	}))
+	defer server.Close()
+	provider := newGraphQLTestProvider(t, server)
+	values := make([]domain.PullRequest, 21)
+	for index := range values {
+		values[index] = domain.PullRequest{
+			TaskID: fmt.Sprintf("task-%02d", index), Owner: "acme",
+			Repository: fmt.Sprintf("repo-%02d", index), Number: int64(index + 1),
+		}
+	}
+	result, err := provider.FetchBatch(context.Background(), values)
+	if err == nil {
+		t.Fatal("second chunk failure was not reported")
+	}
+	if len(result.PullRequests) != graphQLBatchSize {
+		t.Fatalf("kept pull requests=%d, want %d", len(result.PullRequests), graphQLBatchSize)
+	}
+	if _, ok := result.PullRequests["task-20"]; ok {
+		t.Fatal("failed chunk produced a pull request")
+	}
+}
+
 func writeRESTPullRequestResponse(t *testing.T, writer http.ResponseWriter, request *http.Request) {
 	t.Helper()
 	writer.Header().Set("Content-Type", "application/json")

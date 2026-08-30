@@ -481,3 +481,48 @@ func TestSyncLiveBatchesRepositoriesOnTheSameHost(t *testing.T) {
 		t.Fatalf("GraphQL batch requests=%+v", server.requests)
 	}
 }
+
+// A chunked fetch stops at its first failing chunk, so the pull requests from
+// that position on were never attempted and must be retried rather than
+// recorded as refreshed.
+func TestUnresolvedIndexMarksWhereAChunkedFetchStopped(t *testing.T) {
+	values := []domain.PullRequest{
+		{TaskID: "first"}, {TaskID: "second"}, {TaskID: "third"},
+	}
+	for name, test := range map[string]struct {
+		batch githubprovider.BatchResult
+		want  int
+	}{
+		"nothing attempted": {
+			batch: githubprovider.BatchResult{},
+			want:  0,
+		},
+		"first chunk succeeded": {
+			batch: githubprovider.BatchResult{
+				PullRequests: map[string]domain.PullRequest{"first": {TaskID: "first"}},
+			},
+			want: 1,
+		},
+		"item error still counts as attempted": {
+			batch: githubprovider.BatchResult{
+				PullRequests: map[string]domain.PullRequest{"first": {TaskID: "first"}},
+				Errors:       map[string]error{"second": fmt.Errorf("not found")},
+			},
+			want: 2,
+		},
+		"everything attempted": {
+			batch: githubprovider.BatchResult{
+				PullRequests: map[string]domain.PullRequest{
+					"first": {TaskID: "first"}, "second": {TaskID: "second"}, "third": {TaskID: "third"},
+				},
+			},
+			want: 3,
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			if got := unresolvedIndex(values, test.batch); got != test.want {
+				t.Fatalf("unresolvedIndex=%d, want %d", got, test.want)
+			}
+		})
+	}
+}
