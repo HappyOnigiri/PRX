@@ -1572,3 +1572,50 @@ func TestDefaultPathUsesUserConfigDirectory(t *testing.T) {
 		t.Fatalf("DefaultPath()=%q, want %q", got, want)
 	}
 }
+
+func TestStoreUpdateDocumentWritesOnlyRequestedFields(t *testing.T) {
+	ctx := context.Background()
+	database, _ := openTestService(t)
+	feature, err := database.CreateFeature(ctx, "checkout", "Checkout", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := database.CreateTask(ctx, feature.ID, "Ship it", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	document, err := database.CreateDocument(
+		ctx, "", task.ID, domain.DocumentKindMarkdown, "Original", "", "# Original", false,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	title := "Renamed"
+	if _, err := database.UpdateDocument(ctx, document.ID, &title, nil, nil); err != nil {
+		t.Fatal(err)
+	}
+	// A caller that read the document before the rename must not restore the old title.
+	source := domain.Document{Kind: domain.DocumentKindURL, Locator: "https://example.com/runbook"}
+	updated, err := database.UpdateDocument(ctx, document.ID, nil, &source, nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if updated.Title != title ||
+		updated.Kind != domain.DocumentKindURL ||
+		updated.Locator != "https://example.com/runbook" ||
+		updated.Content != "" {
+		t.Fatalf("document=%+v, want the rename kept and the source replaced", updated)
+	}
+
+	plan := true
+	withPlan, err := database.UpdateDocument(ctx, document.ID, nil, nil, &plan)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !withPlan.IsImplementationPlan ||
+		withPlan.Title != title ||
+		withPlan.Locator != "https://example.com/runbook" {
+		t.Fatalf("document=%+v, want only the implementation plan flag changed", withPlan)
+	}
+}

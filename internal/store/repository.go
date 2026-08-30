@@ -647,20 +647,35 @@ func (s *Store) CreateDocument(
 	return domainDocument(row, featureIDs, taskIDs), nil
 }
 
-func (s *Store) UpdateDocument(ctx context.Context, document domain.Document) (domain.Document, error) {
+// UpdateDocument writes only the requested fields so that concurrent updates of
+// independent fields cannot overwrite each other with stale values.
+func (s *Store) UpdateDocument(
+	ctx context.Context,
+	id string,
+	title *string,
+	source *domain.Document,
+	isImplementationPlan *bool,
+) (domain.Document, error) {
 	q := db.New(s.db)
-	row, err := q.UpdateDocument(ctx, db.UpdateDocumentParams{
-		Kind:                 string(document.Kind),
-		Title:                document.Title,
-		Locator:              nullString(document.Locator),
-		Content:              nullString(document.Content),
-		IsImplementationPlan: boolInt(document.IsImplementationPlan),
-		UpdatedAt:            timestamp(s.now()),
-		ID:                   document.ID,
-	})
+	params := db.UpdateDocumentParams{UpdatedAt: timestamp(s.now()), ID: id}
+	if title != nil {
+		params.SetTitle = 1
+		params.Title = *title
+	}
+	if source != nil {
+		params.SetSource = 1
+		params.Kind = string(source.Kind)
+		params.Locator = nullString(source.Locator)
+		params.Content = nullString(source.Content)
+	}
+	if isImplementationPlan != nil {
+		params.SetImplementationPlan = 1
+		params.IsImplementationPlan = boolInt(*isImplementationPlan)
+	}
+	row, err := q.UpdateDocument(ctx, params)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return domain.Document{}, mapNotFound(err, "document", document.ID)
+			return domain.Document{}, mapNotFound(err, "document", id)
 		}
 		return domain.Document{}, mapDocumentConstraint(err)
 	}

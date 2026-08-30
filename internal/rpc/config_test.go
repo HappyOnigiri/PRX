@@ -276,7 +276,13 @@ func (noopRepository) GetDocument(context.Context, string) (domain.Document, err
 	return domain.Document{}, errors.New("not implemented")
 }
 
-func (noopRepository) UpdateDocument(context.Context, domain.Document) (domain.Document, error) {
+func (noopRepository) UpdateDocument(
+	context.Context,
+	string,
+	*string,
+	*domain.Document,
+	*bool,
+) (domain.Document, error) {
 	return domain.Document{}, errors.New("not implemented")
 }
 

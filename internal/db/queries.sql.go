@@ -904,26 +904,40 @@ func (q *Queries) StartGitHubSync(ctx context.Context, arg StartGitHubSyncParams
 }
 
 const updateDocument = `-- name: UpdateDocument :one
-UPDATE documents SET kind=?, title=?, locator=?, content=?,
-  is_implementation_plan=?, updated_at=? WHERE id=? RETURNING id, feature_id, task_id, kind, title, locator, content, is_implementation_plan, created_at, updated_at
+UPDATE documents SET
+  kind = CASE WHEN CAST(?1 AS INTEGER) = 1 THEN ?2 ELSE kind END,
+  locator = CASE WHEN CAST(?1 AS INTEGER) = 1 THEN ?3 ELSE locator END,
+  content = CASE WHEN CAST(?1 AS INTEGER) = 1 THEN ?4 ELSE content END,
+  title = CASE WHEN CAST(?5 AS INTEGER) = 1 THEN ?6 ELSE title END,
+  is_implementation_plan = CASE
+    WHEN CAST(?7 AS INTEGER) = 1 THEN ?8
+    ELSE is_implementation_plan END,
+  updated_at = ?9
+WHERE id = ?10 RETURNING id, feature_id, task_id, kind, title, locator, content, is_implementation_plan, created_at, updated_at
 `
 
 type UpdateDocumentParams struct {
-	Kind                 string         `json:"kind"`
-	Title                string         `json:"title"`
-	Locator              sql.NullString `json:"locator"`
-	Content              sql.NullString `json:"content"`
-	IsImplementationPlan int64          `json:"is_implementation_plan"`
-	UpdatedAt            string         `json:"updated_at"`
-	ID                   string         `json:"id"`
+	SetSource             int64          `json:"set_source"`
+	Kind                  string         `json:"kind"`
+	Locator               sql.NullString `json:"locator"`
+	Content               sql.NullString `json:"content"`
+	SetTitle              int64          `json:"set_title"`
+	Title                 string         `json:"title"`
+	SetImplementationPlan int64          `json:"set_implementation_plan"`
+	IsImplementationPlan  int64          `json:"is_implementation_plan"`
+	UpdatedAt             string         `json:"updated_at"`
+	ID                    string         `json:"id"`
 }
 
 func (q *Queries) UpdateDocument(ctx context.Context, arg UpdateDocumentParams) (Document, error) {
 	row := q.db.QueryRowContext(ctx, updateDocument,
+		arg.SetSource,
 		arg.Kind,
-		arg.Title,
 		arg.Locator,
 		arg.Content,
+		arg.SetTitle,
+		arg.Title,
+		arg.SetImplementationPlan,
 		arg.IsImplementationPlan,
 		arg.UpdatedAt,
 		arg.ID,

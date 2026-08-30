@@ -99,7 +99,13 @@ func (repositoryStub) GetDocument(context.Context, string) (domain.Document, err
 	return domain.Document{}, errors.New("unexpected GetDocument call")
 }
 
-func (repositoryStub) UpdateDocument(context.Context, domain.Document) (domain.Document, error) {
+func (repositoryStub) UpdateDocument(
+	context.Context,
+	string,
+	*string,
+	*domain.Document,
+	*bool,
+) (domain.Document, error) {
 	return domain.Document{}, errors.New("unexpected UpdateDocument call")
 }
 

@@ -141,8 +141,16 @@ ON CONFLICT(task_id) WHERE is_implementation_plan=1 DO UPDATE SET
 RETURNING *;
 
 -- name: UpdateDocument :one
-UPDATE documents SET kind=?, title=?, locator=?, content=?,
-  is_implementation_plan=?, updated_at=? WHERE id=? RETURNING *;
+UPDATE documents SET
+  kind = CASE WHEN CAST(sqlc.arg(set_source) AS INTEGER) = 1 THEN sqlc.arg(kind) ELSE kind END,
+  locator = CASE WHEN CAST(sqlc.arg(set_source) AS INTEGER) = 1 THEN sqlc.narg(locator) ELSE locator END,
+  content = CASE WHEN CAST(sqlc.arg(set_source) AS INTEGER) = 1 THEN sqlc.narg(content) ELSE content END,
+  title = CASE WHEN CAST(sqlc.arg(set_title) AS INTEGER) = 1 THEN sqlc.arg(title) ELSE title END,
+  is_implementation_plan = CASE
+    WHEN CAST(sqlc.arg(set_implementation_plan) AS INTEGER) = 1 THEN sqlc.arg(is_implementation_plan)
+    ELSE is_implementation_plan END,
+  updated_at = sqlc.arg(updated_at)
+WHERE id = sqlc.arg(id) RETURNING *;
 
 -- name: ListImplementationPlanTaskIDs :many
 SELECT task_id FROM documents WHERE is_implementation_plan=1 ORDER BY task_id;

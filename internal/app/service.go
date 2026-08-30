@@ -61,7 +61,13 @@ type Repository interface {
 		isImplementationPlan bool,
 	) (domain.Document, error)
 	GetDocument(ctx context.Context, id string) (domain.Document, error)
-	UpdateDocument(ctx context.Context, document domain.Document) (domain.Document, error)
+	UpdateDocument(
+		ctx context.Context,
+		id string,
+		title *string,
+		source *domain.Document,
+		isImplementationPlan *bool,
+	) (domain.Document, error)
 	DeleteDocument(ctx context.Context, id string) error
 
 	Snapshot(ctx context.Context) (domain.Snapshot, error)
@@ -466,7 +472,19 @@ func (s *Service) UpdateDocument(
 	if err := validateDocumentSource(&document, false); err != nil {
 		return domain.Document{}, err
 	}
-	return s.repository.UpdateDocument(ctx, document)
+	var updatedTitle *string
+	if title != nil {
+		updatedTitle = &document.Title
+	}
+	var updatedSource *domain.Document
+	if source != nil {
+		updatedSource = &domain.Document{
+			Kind:    document.Kind,
+			Locator: document.Locator,
+			Content: document.Content,
+		}
+	}
+	return s.repository.UpdateDocument(ctx, id, updatedTitle, updatedSource, isImplementationPlan)
 }
 
 func (s *Service) DeleteDocument(ctx context.Context, id string) error {
