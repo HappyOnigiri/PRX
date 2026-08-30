@@ -49,6 +49,13 @@ type IDSequence struct {
 	NextValue int64  `json:"next_value"`
 }
 
+type ImplementationPlan struct {
+	TaskID    string `json:"task_id"`
+	Content   string `json:"content"`
+	CreatedAt string `json:"created_at"`
+	UpdatedAt string `json:"updated_at"`
+}
+
 type PullRequest struct {
 	TaskID          string         `json:"task_id"`
 	Host            string         `json:"host"`

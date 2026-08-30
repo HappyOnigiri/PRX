@@ -56,10 +56,11 @@ func rpcError(err error) error {
 		domain.DomainErrorCodeInvalidStatus,
 		domain.DomainErrorCodeInvalidTitle,
 		domain.DomainErrorCodePullRequestOnManualTask,
-		domain.DomainErrorCodePRTaskCompletesOnMerge,
 		domain.DomainErrorCodeInvalidDocumentURL,
 		domain.DomainErrorCodeDocumentReadFailed,
 		domain.DomainErrorCodeDocumentTooLarge,
+		domain.DomainErrorCodeInvalidImplementationPlan,
+		domain.DomainErrorCodeImplementationPlanTooLarge,
 		domain.DomainErrorCodeInvalidConfig:
 		code = connect.CodeInvalidArgument
 	case domain.DomainErrorCodeNotFound:
@@ -229,6 +230,42 @@ func (h *Handler) DeleteTask(
 		return nil, rpcError(err)
 	}
 	return connect.NewResponse(&prxv1.DeleteTaskResponse{}), nil
+}
+
+func (h *Handler) GetImplementationPlan(
+	ctx context.Context,
+	req *connect.Request[prxv1.GetImplementationPlanRequest],
+) (*connect.Response[prxv1.GetImplementationPlanResponse], error) {
+	value, err := h.service.GetImplementationPlan(ctx, req.Msg.GetTaskId())
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.GetImplementationPlanResponse{
+		ImplementationPlan: protoImplementationPlan(value),
+	}), nil
+}
+
+func (h *Handler) UpsertImplementationPlan(
+	ctx context.Context,
+	req *connect.Request[prxv1.UpsertImplementationPlanRequest],
+) (*connect.Response[prxv1.UpsertImplementationPlanResponse], error) {
+	value, err := h.service.UpsertImplementationPlan(ctx, req.Msg.GetTaskId(), req.Msg.GetContent())
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.UpsertImplementationPlanResponse{
+		ImplementationPlan: protoImplementationPlan(value),
+	}), nil
+}
+
+func (h *Handler) DeleteImplementationPlan(
+	ctx context.Context,
+	req *connect.Request[prxv1.DeleteImplementationPlanRequest],
+) (*connect.Response[prxv1.DeleteImplementationPlanResponse], error) {
+	if err := h.service.DeleteImplementationPlan(ctx, req.Msg.GetTaskId()); err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.DeleteImplementationPlanResponse{TaskId: req.Msg.GetTaskId()}), nil
 }
 
 func (h *Handler) AddDependency(

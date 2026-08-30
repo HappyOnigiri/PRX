@@ -16,6 +16,7 @@ interface TaskNodeData extends Record<string, unknown> {
   state: TaskDisplayState;
   ready: boolean;
   stale: boolean;
+  syncError: boolean;
   pullRequest: { label: string; url: string } | undefined;
   documents: TaskNodeDocument[];
   onEdit: () => void;
@@ -44,6 +45,9 @@ export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
         </button>
       </div>
       <h3>{data.title}</h3>
+      {data.syncError && (
+        <p className="node-sync-error">{t("inspector.githubSyncError")}</p>
+      )}
       {(data.pullRequest ?? data.documents.length > 0) && (
         <div className="node-assets nodrag nowheel nopan">
           {data.pullRequest && (

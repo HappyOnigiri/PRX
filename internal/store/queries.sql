@@ -45,6 +45,27 @@ UPDATE tasks SET title=?, scope=?, status=?, assignee=?, updated_at=? WHERE id=?
 -- name: DeleteTask :exec
 DELETE FROM tasks WHERE id=?;
 
+-- name: GetImplementationPlan :one
+SELECT * FROM implementation_plans WHERE task_id=?;
+
+-- name: UpsertImplementationPlan :one
+INSERT INTO implementation_plans (task_id, content, created_at, updated_at)
+VALUES (?, ?, ?, ?)
+ON CONFLICT(task_id) DO UPDATE SET content=excluded.content, updated_at=excluded.updated_at
+RETURNING *;
+
+-- name: DeleteImplementationPlan :execrows
+DELETE FROM implementation_plans WHERE task_id=?;
+
+-- name: ListImplementationPlanTaskIDs :many
+SELECT task_id FROM implementation_plans ORDER BY task_id;
+
+-- name: DeleteImplementationPlansForTask :exec
+DELETE FROM implementation_plans WHERE task_id=?;
+
+-- name: DeleteImplementationPlansForFeature :exec
+DELETE FROM implementation_plans WHERE task_id IN (SELECT id FROM tasks WHERE feature_id=?);
+
 -- name: AddDependency :one
 INSERT INTO dependencies (blocker_task_id, blocked_task_id, created_at) VALUES (?, ?, ?) RETURNING *;
 

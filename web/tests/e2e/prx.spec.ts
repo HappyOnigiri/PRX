@@ -246,7 +246,10 @@ test("creates and edits a feature DAG while preserving state", async ({
   await page.getByRole("button", { name: "Sync GitHub" }).click();
   await expect(
     page.locator(".task-node").filter({ hasText: "E2E API" }),
-  ).toContainText("conflict");
+  ).toHaveClass(/state-in-progress/);
+  await openTask(page, "E2E API");
+  await expect(inspector.locator(".linked-pr")).toContainText("conflict");
+  await page.getByRole("button", { name: "Close inspector" }).click();
 
   await page.reload();
   await expect(

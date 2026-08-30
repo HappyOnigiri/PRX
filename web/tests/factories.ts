@@ -34,10 +34,10 @@ const taskDefaults = {
   featureId: "feature-1",
   title: "Build API",
   kind: TaskKind.PULL_REQUEST,
-  status: TaskStatus.PLANNED,
+  status: TaskStatus.AUTO,
   assignee: "Mika",
   ready: true,
-  displayState: TaskDisplayState.UNLINKED,
+  displayState: TaskDisplayState.NOT_STARTED,
 } satisfies MessageInitShape<typeof TaskSchema>;
 
 const dependencyDefaults = {

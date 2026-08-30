@@ -62,6 +62,8 @@ GitHub Actions runs the same checks as `make ci`, but as one job per Makefile ta
 
 `state` must be `open`, `closed`, `merged`, or `unknown`; `review_state` must be `none`, `required`, `approved`, `changes_requested`, or `unknown`; `mergeability` must be `mergeable`, `conflicting`, or `unknown`. A fixture with any other value is rejected when the file is read. An entry may instead carry `"error"` to simulate a fetch failure.
 
+Task fixtures and integration tests use `auto` as the stored task status. A plan is supplied through the implementation-plan CLI/RPC rather than embedded in a snapshot; tests that need the `designed` state should create a plan and then request a fresh snapshot. Synchronization tests should distinguish a first-time `unknown` PR from a stale PR with a previously known open, closed, or merged state: only the former blocks dependent tasks.
+
 ## GitHub configuration
 
 The default configuration path is `os.UserConfigDir()/prx/config.yaml`. `--config` takes precedence over `PRX_CONFIG`; when neither is set, the default path is used. `prx config show`, `prx config validate`, and the `prx config host` / `prx config auth` subcommands manage this file without opening SQLite or contacting GitHub.

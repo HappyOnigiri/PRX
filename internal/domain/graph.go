@@ -102,8 +102,6 @@ func BlockedReasonText(code BlockedReasonCode, blockerTitle string) string {
 	switch code {
 	case BlockedReasonCodeDependencyDataIncomplete:
 		return "dependency data is incomplete"
-	case BlockedReasonCodeBlockerStale:
-		return "a blocker has stale GitHub data"
 	case BlockedReasonCodeWaitingForBlocker:
 		return "waiting for " + blockerTitle
 	default:
@@ -127,11 +125,33 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 	result := make([]Task, len(tasks))
 	for i, task := range tasks {
 		pr := prByTask[task.ID]
-		task.DisplayState = TaskDisplayState(task.Status)
-		if task.Kind == TaskKindPR {
+		task.Ready = false
+		task.BlockedReason = ""
+		task.BlockedCode = ""
+		task.BlockerTaskID = ""
+		if task.Status != TaskStatusAuto {
+			switch task.Status {
+			case TaskStatusAuto:
+				task.DisplayState = TaskDisplayStateNotStarted
+			case TaskStatusNotStarted:
+				task.DisplayState = TaskDisplayStateNotStarted
+			case TaskStatusInProgress:
+				task.DisplayState = TaskDisplayStateInProgress
+			case TaskStatusCompleted:
+				task.DisplayState = TaskDisplayStateCompleted
+			case TaskStatusClosed:
+				task.DisplayState = TaskDisplayStateClosed
+			default:
+				task.DisplayState = TaskDisplayStateNotStarted
+			}
+		} else if pr != nil {
 			task.DisplayState = PRDisplayState(pr)
+		} else if task.HasImplementationPlan {
+			task.DisplayState = TaskDisplayStateDesigned
+		} else {
+			task.DisplayState = TaskDisplayStateNotStarted
 		}
-		if !IsIncomplete(task, pr) || task.Status != TaskPlanned {
+		if !isReadyCandidate(task, task.DisplayState) {
 			result[i] = task
 			continue
 		}
@@ -144,12 +164,6 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 				break
 			}
 			blockerPR := prByTask[blockerID]
-			if blockerPR != nil && blockerPR.Stale {
-				task.Ready = false
-				task.BlockedCode = BlockedReasonCodeBlockerStale
-				task.BlockerTaskID = blockerID
-				break
-			}
 			if !IsSatisfied(blocker, blockerPR) {
 				task.Ready = false
 				task.BlockedCode = BlockedReasonCodeWaitingForBlocker

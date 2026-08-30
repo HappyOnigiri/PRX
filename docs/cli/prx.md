@@ -21,6 +21,7 @@ Manage pull-request dependency roadmaps
 * [prx document](prx_document.md)	 - Manage URL and local Markdown references
 * [prx feature](prx_feature.md)	 - Manage features
 * [prx graph](prx_graph.md)	 - Show a feature graph with tasks and dependencies
+* [prx implementation-plan](prx_implementation-plan.md)	 - Manage task implementation plans
 * [prx node](prx_node.md)	 - Inspect feature and task nodes
 * [prx pr](prx_pr.md)	 - Attach GitHub pull requests
 * [prx ready](prx_ready.md)	 - List tasks whose blockers are satisfied

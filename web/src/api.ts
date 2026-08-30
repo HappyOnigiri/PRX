@@ -13,9 +13,11 @@ import {
   DeleteFeatureRequestSchema,
   DeleteGitHubAuthMethodRequestSchema,
   DeleteGitHubHostRequestSchema,
+  DeleteImplementationPlanRequestSchema,
   DeleteTaskRequestSchema,
   DetachPullRequestRequestSchema,
   GetConfigRequestSchema,
+  GetImplementationPlanRequestSchema,
   GetSnapshotRequestSchema,
   PRXService,
   ReadMarkdownDocumentRequestSchema,
@@ -26,6 +28,7 @@ import {
   UpdateGitHubAuthMethodRequestSchema,
   UpdateGitHubHostRequestSchema,
   UpdateTaskRequestSchema,
+  UpsertImplementationPlanRequestSchema,
   ValidateConfigRequestSchema,
   type DocumentKind,
   type FeatureStatus,
@@ -85,6 +88,18 @@ export const mutations = {
     status?: TaskStatus;
     assignee?: string;
   }) => client.updateTask(create(UpdateTaskRequestSchema, input)),
+  getImplementationPlan: (taskId: string) =>
+    client.getImplementationPlan(
+      create(GetImplementationPlanRequestSchema, { taskId }),
+    ),
+  upsertImplementationPlan: (input: { taskId: string; content: string }) =>
+    client.upsertImplementationPlan(
+      create(UpsertImplementationPlanRequestSchema, input),
+    ),
+  deleteImplementationPlan: (taskId: string) =>
+    client.deleteImplementationPlan(
+      create(DeleteImplementationPlanRequestSchema, { taskId }),
+    ),
   deleteTask: (id: string) =>
     client.deleteTask(create(DeleteTaskRequestSchema, { id, cascade: true })),
   addDependency: (blockerTaskId: string, blockedTaskId: string) =>

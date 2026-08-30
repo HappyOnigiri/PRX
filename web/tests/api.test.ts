@@ -17,6 +17,9 @@ const apiMocks = vi.hoisted(() => {
     deleteFeature: vi.fn(),
     createTask: vi.fn(),
     updateTask: vi.fn(),
+    getImplementationPlan: vi.fn(),
+    upsertImplementationPlan: vi.fn(),
+    deleteImplementationPlan: vi.fn(),
     deleteTask: vi.fn(),
     addDependency: vi.fn(),
     removeDependency: vi.fn(),
@@ -167,6 +170,22 @@ describe("RPC API wrappers", () => {
         status: 2,
         assignee: "Ren",
       }),
+    );
+
+    await mutations.getImplementationPlan("task-1");
+    expect(apiMocks.client.getImplementationPlan).toHaveBeenCalledWith(
+      expect.objectContaining({ taskId: "task-1" }),
+    );
+    await mutations.upsertImplementationPlan({
+      taskId: "task-1",
+      content: "# Plan",
+    });
+    expect(apiMocks.client.upsertImplementationPlan).toHaveBeenCalledWith(
+      expect.objectContaining({ taskId: "task-1", content: "# Plan" }),
+    );
+    await mutations.deleteImplementationPlan("task-1");
+    expect(apiMocks.client.deleteImplementationPlan).toHaveBeenCalledWith(
+      expect.objectContaining({ taskId: "task-1" }),
     );
 
     await mutations.deleteTask("task-1");

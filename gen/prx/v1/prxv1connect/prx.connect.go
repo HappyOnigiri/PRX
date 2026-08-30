@@ -50,6 +50,15 @@ const (
 	PRXServiceUpdateTaskProcedure = "/prx.v1.PRXService/UpdateTask"
 	// PRXServiceDeleteTaskProcedure is the fully-qualified name of the PRXService's DeleteTask RPC.
 	PRXServiceDeleteTaskProcedure = "/prx.v1.PRXService/DeleteTask"
+	// PRXServiceGetImplementationPlanProcedure is the fully-qualified name of the PRXService's
+	// GetImplementationPlan RPC.
+	PRXServiceGetImplementationPlanProcedure = "/prx.v1.PRXService/GetImplementationPlan"
+	// PRXServiceUpsertImplementationPlanProcedure is the fully-qualified name of the PRXService's
+	// UpsertImplementationPlan RPC.
+	PRXServiceUpsertImplementationPlanProcedure = "/prx.v1.PRXService/UpsertImplementationPlan"
+	// PRXServiceDeleteImplementationPlanProcedure is the fully-qualified name of the PRXService's
+	// DeleteImplementationPlan RPC.
+	PRXServiceDeleteImplementationPlanProcedure = "/prx.v1.PRXService/DeleteImplementationPlan"
 	// PRXServiceAddDependencyProcedure is the fully-qualified name of the PRXService's AddDependency
 	// RPC.
 	PRXServiceAddDependencyProcedure = "/prx.v1.PRXService/AddDependency"
@@ -118,6 +127,12 @@ type PRXServiceClient interface {
 	UpdateTask(context.Context, *connect.Request[v1.UpdateTaskRequest]) (*connect.Response[v1.UpdateTaskResponse], error)
 	// DeleteTask deletes a task, subject to the cascade option.
 	DeleteTask(context.Context, *connect.Request[v1.DeleteTaskRequest]) (*connect.Response[v1.DeleteTaskResponse], error)
+	// GetImplementationPlan returns a task's stored Markdown implementation plan.
+	GetImplementationPlan(context.Context, *connect.Request[v1.GetImplementationPlanRequest]) (*connect.Response[v1.GetImplementationPlanResponse], error)
+	// UpsertImplementationPlan stores or replaces a task's Markdown implementation plan.
+	UpsertImplementationPlan(context.Context, *connect.Request[v1.UpsertImplementationPlanRequest]) (*connect.Response[v1.UpsertImplementationPlanResponse], error)
+	// DeleteImplementationPlan removes a task's stored implementation plan.
+	DeleteImplementationPlan(context.Context, *connect.Request[v1.DeleteImplementationPlanRequest]) (*connect.Response[v1.DeleteImplementationPlanResponse], error)
 	// AddDependency adds a same-feature dependency when it does not create a cycle.
 	AddDependency(context.Context, *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error)
 	// RemoveDependency removes an existing dependency edge.
@@ -207,6 +222,24 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			httpClient,
 			baseURL+PRXServiceDeleteTaskProcedure,
 			connect.WithSchema(pRXServiceMethods.ByName("DeleteTask")),
+			connect.WithClientOptions(opts...),
+		),
+		getImplementationPlan: connect.NewClient[v1.GetImplementationPlanRequest, v1.GetImplementationPlanResponse](
+			httpClient,
+			baseURL+PRXServiceGetImplementationPlanProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("GetImplementationPlan")),
+			connect.WithClientOptions(opts...),
+		),
+		upsertImplementationPlan: connect.NewClient[v1.UpsertImplementationPlanRequest, v1.UpsertImplementationPlanResponse](
+			httpClient,
+			baseURL+PRXServiceUpsertImplementationPlanProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("UpsertImplementationPlan")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteImplementationPlan: connect.NewClient[v1.DeleteImplementationPlanRequest, v1.DeleteImplementationPlanResponse](
+			httpClient,
+			baseURL+PRXServiceDeleteImplementationPlanProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("DeleteImplementationPlan")),
 			connect.WithClientOptions(opts...),
 		),
 		addDependency: connect.NewClient[v1.AddDependencyRequest, v1.AddDependencyResponse](
@@ -329,6 +362,9 @@ type pRXServiceClient struct {
 	createTask               *connect.Client[v1.CreateTaskRequest, v1.CreateTaskResponse]
 	updateTask               *connect.Client[v1.UpdateTaskRequest, v1.UpdateTaskResponse]
 	deleteTask               *connect.Client[v1.DeleteTaskRequest, v1.DeleteTaskResponse]
+	getImplementationPlan    *connect.Client[v1.GetImplementationPlanRequest, v1.GetImplementationPlanResponse]
+	upsertImplementationPlan *connect.Client[v1.UpsertImplementationPlanRequest, v1.UpsertImplementationPlanResponse]
+	deleteImplementationPlan *connect.Client[v1.DeleteImplementationPlanRequest, v1.DeleteImplementationPlanResponse]
 	addDependency            *connect.Client[v1.AddDependencyRequest, v1.AddDependencyResponse]
 	removeDependency         *connect.Client[v1.RemoveDependencyRequest, v1.RemoveDependencyResponse]
 	attachPullRequest        *connect.Client[v1.AttachPullRequestRequest, v1.AttachPullRequestResponse]
@@ -382,6 +418,21 @@ func (c *pRXServiceClient) UpdateTask(ctx context.Context, req *connect.Request[
 // DeleteTask calls prx.v1.PRXService.DeleteTask.
 func (c *pRXServiceClient) DeleteTask(ctx context.Context, req *connect.Request[v1.DeleteTaskRequest]) (*connect.Response[v1.DeleteTaskResponse], error) {
 	return c.deleteTask.CallUnary(ctx, req)
+}
+
+// GetImplementationPlan calls prx.v1.PRXService.GetImplementationPlan.
+func (c *pRXServiceClient) GetImplementationPlan(ctx context.Context, req *connect.Request[v1.GetImplementationPlanRequest]) (*connect.Response[v1.GetImplementationPlanResponse], error) {
+	return c.getImplementationPlan.CallUnary(ctx, req)
+}
+
+// UpsertImplementationPlan calls prx.v1.PRXService.UpsertImplementationPlan.
+func (c *pRXServiceClient) UpsertImplementationPlan(ctx context.Context, req *connect.Request[v1.UpsertImplementationPlanRequest]) (*connect.Response[v1.UpsertImplementationPlanResponse], error) {
+	return c.upsertImplementationPlan.CallUnary(ctx, req)
+}
+
+// DeleteImplementationPlan calls prx.v1.PRXService.DeleteImplementationPlan.
+func (c *pRXServiceClient) DeleteImplementationPlan(ctx context.Context, req *connect.Request[v1.DeleteImplementationPlanRequest]) (*connect.Response[v1.DeleteImplementationPlanResponse], error) {
+	return c.deleteImplementationPlan.CallUnary(ctx, req)
 }
 
 // AddDependency calls prx.v1.PRXService.AddDependency.
@@ -490,6 +541,12 @@ type PRXServiceHandler interface {
 	UpdateTask(context.Context, *connect.Request[v1.UpdateTaskRequest]) (*connect.Response[v1.UpdateTaskResponse], error)
 	// DeleteTask deletes a task, subject to the cascade option.
 	DeleteTask(context.Context, *connect.Request[v1.DeleteTaskRequest]) (*connect.Response[v1.DeleteTaskResponse], error)
+	// GetImplementationPlan returns a task's stored Markdown implementation plan.
+	GetImplementationPlan(context.Context, *connect.Request[v1.GetImplementationPlanRequest]) (*connect.Response[v1.GetImplementationPlanResponse], error)
+	// UpsertImplementationPlan stores or replaces a task's Markdown implementation plan.
+	UpsertImplementationPlan(context.Context, *connect.Request[v1.UpsertImplementationPlanRequest]) (*connect.Response[v1.UpsertImplementationPlanResponse], error)
+	// DeleteImplementationPlan removes a task's stored implementation plan.
+	DeleteImplementationPlan(context.Context, *connect.Request[v1.DeleteImplementationPlanRequest]) (*connect.Response[v1.DeleteImplementationPlanResponse], error)
 	// AddDependency adds a same-feature dependency when it does not create a cycle.
 	AddDependency(context.Context, *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error)
 	// RemoveDependency removes an existing dependency edge.
@@ -575,6 +632,24 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		PRXServiceDeleteTaskProcedure,
 		svc.DeleteTask,
 		connect.WithSchema(pRXServiceMethods.ByName("DeleteTask")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceGetImplementationPlanHandler := connect.NewUnaryHandler(
+		PRXServiceGetImplementationPlanProcedure,
+		svc.GetImplementationPlan,
+		connect.WithSchema(pRXServiceMethods.ByName("GetImplementationPlan")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceUpsertImplementationPlanHandler := connect.NewUnaryHandler(
+		PRXServiceUpsertImplementationPlanProcedure,
+		svc.UpsertImplementationPlan,
+		connect.WithSchema(pRXServiceMethods.ByName("UpsertImplementationPlan")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceDeleteImplementationPlanHandler := connect.NewUnaryHandler(
+		PRXServiceDeleteImplementationPlanProcedure,
+		svc.DeleteImplementationPlan,
+		connect.WithSchema(pRXServiceMethods.ByName("DeleteImplementationPlan")),
 		connect.WithHandlerOptions(opts...),
 	)
 	pRXServiceAddDependencyHandler := connect.NewUnaryHandler(
@@ -701,6 +776,12 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceUpdateTaskHandler.ServeHTTP(w, r)
 		case PRXServiceDeleteTaskProcedure:
 			pRXServiceDeleteTaskHandler.ServeHTTP(w, r)
+		case PRXServiceGetImplementationPlanProcedure:
+			pRXServiceGetImplementationPlanHandler.ServeHTTP(w, r)
+		case PRXServiceUpsertImplementationPlanProcedure:
+			pRXServiceUpsertImplementationPlanHandler.ServeHTTP(w, r)
+		case PRXServiceDeleteImplementationPlanProcedure:
+			pRXServiceDeleteImplementationPlanHandler.ServeHTTP(w, r)
 		case PRXServiceAddDependencyProcedure:
 			pRXServiceAddDependencyHandler.ServeHTTP(w, r)
 		case PRXServiceRemoveDependencyProcedure:
@@ -772,6 +853,18 @@ func (UnimplementedPRXServiceHandler) UpdateTask(context.Context, *connect.Reque
 
 func (UnimplementedPRXServiceHandler) DeleteTask(context.Context, *connect.Request[v1.DeleteTaskRequest]) (*connect.Response[v1.DeleteTaskResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.DeleteTask is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) GetImplementationPlan(context.Context, *connect.Request[v1.GetImplementationPlanRequest]) (*connect.Response[v1.GetImplementationPlanResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetImplementationPlan is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) UpsertImplementationPlan(context.Context, *connect.Request[v1.UpsertImplementationPlanRequest]) (*connect.Response[v1.UpsertImplementationPlanResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.UpsertImplementationPlan is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) DeleteImplementationPlan(context.Context, *connect.Request[v1.DeleteImplementationPlanRequest]) (*connect.Response[v1.DeleteImplementationPlanResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.DeleteImplementationPlan is not implemented"))
 }
 
 func (UnimplementedPRXServiceHandler) AddDependency(context.Context, *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error) {

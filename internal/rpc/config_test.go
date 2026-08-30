@@ -204,6 +204,18 @@ func (noopRepository) DeleteTask(context.Context, string, bool) error {
 	return errors.New("not implemented")
 }
 
+func (noopRepository) GetImplementationPlan(context.Context, string) (domain.ImplementationPlan, error) {
+	return domain.ImplementationPlan{}, errors.New("not implemented")
+}
+
+func (noopRepository) UpsertImplementationPlan(context.Context, string, string) (domain.ImplementationPlan, error) {
+	return domain.ImplementationPlan{}, errors.New("not implemented")
+}
+
+func (noopRepository) DeleteImplementationPlan(context.Context, string) error {
+	return errors.New("not implemented")
+}
+
 func (noopRepository) AddDependency(context.Context, string, string) (domain.Dependency, error) {
 	return domain.Dependency{}, errors.New("not implemented")
 }

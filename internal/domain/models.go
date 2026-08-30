@@ -22,29 +22,22 @@ const (
 type TaskStatus string
 
 const (
-	TaskStatusPlanned    TaskStatus = "planned"
+	TaskStatusAuto       TaskStatus = "auto"
+	TaskStatusNotStarted TaskStatus = "not_started"
 	TaskStatusInProgress TaskStatus = "in_progress"
 	TaskStatusCompleted  TaskStatus = "completed"
-	TaskStatusCancelled  TaskStatus = "cancelled"
-
-	// Keep the original names as aliases for callers that already use the
-	// domain package constants.
-	TaskPlanned    = TaskStatusPlanned
-	TaskInProgress = TaskStatusInProgress
-	TaskCompleted  = TaskStatusCompleted
-	TaskCancelled  = TaskStatusCancelled
+	TaskStatusClosed     TaskStatus = "closed"
 )
 
 type TaskDisplayState string
 
 const (
-	TaskDisplayStatePlanned          TaskDisplayState = "planned"
+	TaskDisplayStateNotStarted       TaskDisplayState = "not_started"
+	TaskDisplayStateDesigned         TaskDisplayState = "designed"
 	TaskDisplayStateInProgress       TaskDisplayState = "in_progress"
 	TaskDisplayStateCompleted        TaskDisplayState = "completed"
-	TaskDisplayStateCancelled        TaskDisplayState = "cancelled"
-	TaskDisplayStateUnlinked         TaskDisplayState = "unlinked"
-	TaskDisplayStateMerged           TaskDisplayState = "merged"
 	TaskDisplayStateClosed           TaskDisplayState = "closed"
+	TaskDisplayStateMerged           TaskDisplayState = "merged"
 	TaskDisplayStateDraft            TaskDisplayState = "draft"
 	TaskDisplayStateConflict         TaskDisplayState = "conflict"
 	TaskDisplayStateChangesRequested TaskDisplayState = "changes_requested"
@@ -106,14 +99,7 @@ type BlockedReasonCode string
 
 const (
 	BlockedReasonCodeDependencyDataIncomplete BlockedReasonCode = "dependency_data_incomplete"
-	BlockedReasonCodeBlockerStale             BlockedReasonCode = "blocker_stale"
 	BlockedReasonCodeWaitingForBlocker        BlockedReasonCode = "waiting_for_blocker"
-
-	// Keep the original names as aliases for callers that already use the
-	// domain package constants.
-	BlockedDependencyDataIncomplete = BlockedReasonCodeDependencyDataIncomplete
-	BlockedByStaleData              = BlockedReasonCodeBlockerStale
-	BlockedWaitingForBlocker        = BlockedReasonCodeWaitingForBlocker
 )
 
 type Feature struct {
@@ -134,22 +120,30 @@ type Feature struct {
 }
 
 type Task struct {
-	ID               string            `json:"id"`
-	StorageID        string            `json:"-"`
-	FeatureID        string            `json:"feature_id"`
-	StorageFeatureID string            `json:"-"`
-	Title            string            `json:"title"`
-	Scope            string            `json:"scope"`
-	Kind             TaskKind          `json:"kind"`
-	Status           TaskStatus        `json:"status"`
-	Assignee         string            `json:"assignee"`
-	CreatedAt        time.Time         `json:"created_at"`
-	UpdatedAt        time.Time         `json:"updated_at"`
-	Ready            bool              `json:"ready"`
-	DisplayState     TaskDisplayState  `json:"display_state"`
-	BlockedReason    string            `json:"blocked_reason,omitempty"`
-	BlockedCode      BlockedReasonCode `json:"-"`
-	BlockerTaskID    string            `json:"-"`
+	ID                    string            `json:"id"`
+	StorageID             string            `json:"-"`
+	FeatureID             string            `json:"feature_id"`
+	StorageFeatureID      string            `json:"-"`
+	Title                 string            `json:"title"`
+	Scope                 string            `json:"scope"`
+	Kind                  TaskKind          `json:"kind"`
+	Status                TaskStatus        `json:"status"`
+	Assignee              string            `json:"assignee"`
+	HasImplementationPlan bool              `json:"has_implementation_plan"`
+	CreatedAt             time.Time         `json:"created_at"`
+	UpdatedAt             time.Time         `json:"updated_at"`
+	Ready                 bool              `json:"ready"`
+	DisplayState          TaskDisplayState  `json:"display_state"`
+	BlockedReason         string            `json:"blocked_reason,omitempty"`
+	BlockedCode           BlockedReasonCode `json:"-"`
+	BlockerTaskID         string            `json:"-"`
+}
+
+type ImplementationPlan struct {
+	TaskID    string    `json:"task_id"`
+	Content   string    `json:"content"`
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 type Dependency struct {

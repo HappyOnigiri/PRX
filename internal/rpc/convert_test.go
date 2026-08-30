@@ -54,10 +54,11 @@ func TestProtoTaskStatusMapsEveryKnownValue(t *testing.T) {
 		value domain.TaskStatus
 		want  prxv1.TaskStatus
 	}{
-		{"planned", domain.TaskStatusPlanned, prxv1.TaskStatus_TASK_STATUS_PLANNED},
+		{"auto", domain.TaskStatusAuto, prxv1.TaskStatus_TASK_STATUS_AUTO},
+		{"not started", domain.TaskStatusNotStarted, prxv1.TaskStatus_TASK_STATUS_NOT_STARTED},
 		{"in progress", domain.TaskStatusInProgress, prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS},
 		{"completed", domain.TaskStatusCompleted, prxv1.TaskStatus_TASK_STATUS_COMPLETED},
-		{"cancelled", domain.TaskStatusCancelled, prxv1.TaskStatus_TASK_STATUS_CANCELLED},
+		{"closed", domain.TaskStatusClosed, prxv1.TaskStatus_TASK_STATUS_CLOSED},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -74,13 +75,12 @@ func TestProtoTaskDisplayStateMapsEveryKnownValue(t *testing.T) {
 		value domain.TaskDisplayState
 		want  prxv1.TaskDisplayState
 	}{
-		{"planned", domain.TaskDisplayStatePlanned, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_PLANNED},
+		{"not started", domain.TaskDisplayStateNotStarted, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED},
+		{"designed", domain.TaskDisplayStateDesigned, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED},
 		{"in progress", domain.TaskDisplayStateInProgress, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS},
 		{"completed", domain.TaskDisplayStateCompleted, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED},
-		{"cancelled", domain.TaskDisplayStateCancelled, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CANCELLED},
-		{"unlinked", domain.TaskDisplayStateUnlinked, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNLINKED},
-		{"merged", domain.TaskDisplayStateMerged, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_MERGED},
 		{"closed", domain.TaskDisplayStateClosed, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED},
+		{"merged", domain.TaskDisplayStateMerged, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_MERGED},
 		{"draft", domain.TaskDisplayStateDraft, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DRAFT},
 		{"conflict", domain.TaskDisplayStateConflict, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CONFLICT},
 		{
@@ -249,11 +249,6 @@ func TestProtoBlockedReasonMapsEveryKnownValue(t *testing.T) {
 			prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE,
 		},
 		{
-			"blocker stale",
-			domain.BlockedReasonCodeBlockerStale,
-			prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_BLOCKER_STALE,
-		},
-		{
 			"waiting for blocker",
 			domain.BlockedReasonCodeWaitingForBlocker,
 			prxv1.BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER,
@@ -330,11 +325,6 @@ func TestRPCErrorDetailsMapEveryKnownDomainErrorCode(t *testing.T) {
 			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK,
 		},
 		{
-			"PR task completes on merge",
-			domain.DomainErrorCodePRTaskCompletesOnMerge,
-			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE,
-		},
-		{
 			"invalid document URL",
 			domain.DomainErrorCodeInvalidDocumentURL,
 			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL,
@@ -348,6 +338,16 @@ func TestRPCErrorDetailsMapEveryKnownDomainErrorCode(t *testing.T) {
 			"document too large",
 			domain.DomainErrorCodeDocumentTooLarge,
 			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE,
+		},
+		{
+			"invalid implementation plan",
+			domain.DomainErrorCodeInvalidImplementationPlan,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN,
+		},
+		{
+			"implementation plan too large",
+			domain.DomainErrorCodeImplementationPlanTooLarge,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE,
 		},
 	}
 	for _, test := range tests {
