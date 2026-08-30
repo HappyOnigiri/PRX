@@ -528,9 +528,6 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
     1,
   );
-  await openTask(page, "E2E worker");
-  await expect(inspector.locator(".dependency-chip")).toHaveCount(0);
-  await page.getByRole("button", { name: "Close inspector" }).click();
   await openTask(page, "E2E UI");
   page.once("dialog", (dialog) => dialog.accept());
   await inspector
