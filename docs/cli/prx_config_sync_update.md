@@ -2,6 +2,12 @@
 
 Update the automatic GitHub synchronization interval
 
+### Synopsis
+
+Update the automatic GitHub synchronization interval.
+
+INTERVAL_SECONDS is a whole number of seconds and must be at least 600.
+
 ```
 prx config sync update INTERVAL_SECONDS [flags]
 ```

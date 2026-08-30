@@ -2,6 +2,12 @@
 
 Create or replace a task's implementation plan
 
+### Synopsis
+
+Create or replace a task's implementation plan.
+
+FILE_OR_DASH is a Markdown file path, or - to read the plan content from standard input.
+
 ```
 prx plan set TASK_ID FILE_OR_DASH [flags]
 ```

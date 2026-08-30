@@ -69,8 +69,13 @@ func (s *state) configSyncCommand() *cobra.Command {
 
 func (s *state) configSyncUpdateCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:     "update INTERVAL_SECONDS",
-		Short:   "Update the automatic GitHub synchronization interval",
+		Use:   "update INTERVAL_SECONDS",
+		Short: "Update the automatic GitHub synchronization interval",
+		Long: fmt.Sprintf(
+			"Update the automatic GitHub synchronization interval.\n\n"+
+				"INTERVAL_SECONDS is a whole number of seconds and must be at least %d.",
+			config.MinimumAutoSyncIntervalSeconds,
+		),
 		Example: "prx config sync update 3600 --json",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -166,8 +171,10 @@ func (s *state) configHostCommand() *cobra.Command {
 func (s *state) configHostAddCommand() *cobra.Command {
 	var webURL, apiURL, uploadURL, graphqlURL string
 	command := &cobra.Command{
-		Use:     "add HOST",
-		Short:   "Add a GitHub.com or Enterprise host",
+		Use:   "add HOST",
+		Short: "Add a GitHub.com or Enterprise host",
+		Long: "Add a GitHub.com or Enterprise host.\n\n" +
+			"HOST is a hostname with an optional port.",
 		Example: "prx config host add ghe.example.com",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -297,8 +304,14 @@ func (s *state) configAuthAddCommand() *cobra.Command {
 	var account, service, variable, user string
 	var tokenStdin bool
 	command := &cobra.Command{
-		Use:     "add AUTH_METHOD_ID HOST TYPE",
-		Short:   "Add a host-scoped authentication method",
+		Use:   "add AUTH_METHOD_ID HOST TYPE",
+		Short: "Add a host-scoped authentication method",
+		Long: "Add a host-scoped authentication method.\n\n" +
+			"AUTH_METHOD_ID names the method and must be unique.\n" +
+			"HOST is a configured host.\n" +
+			"TYPE is keychain, environment, inline, or gh_cli.\n\n" +
+			"Each type needs its own credential flags: keychain needs --account and --service, " +
+			"environment needs --variable, and inline needs --token-stdin.",
 		Example: "prx config auth add work-gh github.com gh_cli",
 		Args:    cobra.ExactArgs(3),
 		RunE: func(cmd *cobra.Command, args []string) error {

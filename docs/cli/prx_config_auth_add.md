@@ -2,6 +2,16 @@
 
 Add a host-scoped authentication method
 
+### Synopsis
+
+Add a host-scoped authentication method.
+
+AUTH_METHOD_ID names the method and must be unique.
+HOST is a configured host.
+TYPE is keychain, environment, inline, or gh_cli.
+
+Each type needs its own credential flags: keychain needs --account and --service, environment needs --variable, and inline needs --token-stdin.
+
 ```
 prx config auth add AUTH_METHOD_ID HOST TYPE [flags]
 ```

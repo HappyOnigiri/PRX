@@ -25,8 +25,10 @@ func (s *state) planCommand() *cobra.Command {
 	}
 
 	set := &cobra.Command{
-		Use:     "set TASK_ID FILE_OR_DASH",
-		Short:   "Create or replace a task's implementation plan",
+		Use:   "set TASK_ID FILE_OR_DASH",
+		Short: "Create or replace a task's implementation plan",
+		Long: "Create or replace a task's implementation plan.\n\n" +
+			"FILE_OR_DASH is a Markdown file path, or - to read the plan content from standard input.",
 		Example: "prx plan set TASK_ID plan.md\nprx plan set TASK_ID -",
 		Args:    cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

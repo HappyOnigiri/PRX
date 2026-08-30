@@ -2,6 +2,12 @@
 
 Add a GitHub.com or Enterprise host
 
+### Synopsis
+
+Add a GitHub.com or Enterprise host.
+
+HOST is a hostname with an optional port.
+
 ```
 prx config host add HOST [flags]
 ```
