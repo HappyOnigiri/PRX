@@ -75,11 +75,12 @@ func (s *Service) SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus,
 	}
 	if loadErr != nil {
 		runError := configDomainError(loadErr).Error()
-		if completeErr := repository.CompleteGitHubSync(ctx, runID, s.now().UTC(), 0, 0, runError); completeErr != nil {
+		recorded, completeErr := repository.CompleteGitHubSync(ctx, runID, s.now().UTC(), 0, 0, runError)
+		if completeErr != nil {
 			return true, domain.GitHubSyncStatus{}, completeErr
 		}
 		status, statusErr := repository.GitHubSyncState(ctx)
-		return true, syncStatus(interval, status), statusErr
+		return recorded, syncStatus(interval, status), statusErr
 	}
 
 	succeeded, failed, syncErr := s.syncSelected(ctx, "", "", true)
@@ -87,7 +88,9 @@ func (s *Service) SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus,
 	if syncErr != nil {
 		runError = syncErr.Error()
 	}
-	completeErr := repository.CompleteGitHubSync(ctx, runID, s.now().UTC(), succeeded, failed, runError)
+	recorded, completeErr := repository.CompleteGitHubSync(
+		ctx, runID, s.now().UTC(), succeeded, failed, runError,
+	)
 	status, statusErr := repository.GitHubSyncState(ctx)
 	if completeErr != nil {
 		return true, syncStatus(interval, status), completeErr
@@ -97,7 +100,9 @@ func (s *Service) SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus,
 	}
 	// The automatic path records errors but deliberately does not fail the CLI
 	// command or page load that happened to notice the expired interval.
-	return true, syncStatus(interval, status), nil
+	// A refresh whose record was superseded reports the same way as one that
+	// never acquired the interval, because the status read back is another run's.
+	return recorded, syncStatus(interval, status), nil
 }
 
 func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded, failed int, err error) {
@@ -119,7 +124,7 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 		if err != nil {
 			runError = err.Error()
 		}
-		if completeErr := repository.CompleteGitHubSync(
+		if _, completeErr := repository.CompleteGitHubSync(
 			ctx, runID, s.now().UTC(), succeeded, failed, runError,
 		); completeErr != nil {
 			return succeeded, failed, errors.Join(err, completeErr)

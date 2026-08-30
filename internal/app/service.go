@@ -79,13 +79,16 @@ type GitHubSyncStateRepository interface {
 	GitHubSyncState(ctx context.Context) (domain.GitHubSyncState, error)
 	AcquireGitHubAutoSync(ctx context.Context, runID string, attemptedAt time.Time, dueBeforeUnix int64) (bool, error)
 	StartGitHubSync(ctx context.Context, runID string, attemptedAt time.Time) error
+	// CompleteGitHubSync reports whether the run still owned the shared state.
+	// A concurrent refresh overwrites the run identifier, and the caller must
+	// not present the state it reads back afterwards as its own outcome.
 	CompleteGitHubSync(
 		ctx context.Context,
 		runID string,
 		completedAt time.Time,
 		succeeded, failed int,
 		runError string,
-	) error
+	) (bool, error)
 }
 
 type Service struct {

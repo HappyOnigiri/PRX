@@ -578,15 +578,15 @@ func (s *Store) CompleteGitHubSync(
 	completedAt time.Time,
 	succeeded, failed int,
 	runError string,
-) error {
-	_, err := db.New(s.db).CompleteGitHubSync(ctx, db.CompleteGitHubSyncParams{
+) (bool, error) {
+	affected, err := db.New(s.db).CompleteGitHubSync(ctx, db.CompleteGitHubSyncParams{
 		LastCompletedUnix: sql.NullInt64{Int64: completedAt.UTC().Unix(), Valid: true},
 		Succeeded:         int64(succeeded),
 		Failed:            int64(failed),
 		RunError:          runError,
 		RunID:             runID,
 	})
-	return err
+	return affected == 1, err
 }
 
 func unixTime(value sql.NullInt64) *time.Time {

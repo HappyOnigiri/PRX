@@ -126,6 +126,40 @@ func TestGitHubAutoSyncClaimIsAtomicAcrossConnections(t *testing.T) {
 	}
 }
 
+// A concurrent refresh replaces the run identifier, and the run it displaced
+// must learn that the state it would read back is no longer its own.
+func TestCompletingADisplacedGitHubSyncRunReportsThatItNoLongerOwnsTheState(t *testing.T) {
+	ctx := context.Background()
+	database, err := store.Open(ctx, filepath.Join(t.TempDir(), "complete.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = database.Close() }()
+	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
+	acquired, err := database.AcquireGitHubAutoSync(ctx, "automatic", now, now.Unix())
+	if err != nil || !acquired {
+		t.Fatalf("acquired=%v err=%v", acquired, err)
+	}
+	if err := database.StartGitHubSync(ctx, "manual", now.Add(time.Second)); err != nil {
+		t.Fatal(err)
+	}
+	recorded, err := database.CompleteGitHubSync(ctx, "automatic", now.Add(2*time.Second), 3, 0, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if recorded {
+		t.Fatal("the displaced run reported that it recorded its outcome")
+	}
+	recorded, err = database.CompleteGitHubSync(ctx, "manual", now.Add(3*time.Second), 1, 0, "")
+	if err != nil || !recorded {
+		t.Fatalf("current run recorded=%v err=%v", recorded, err)
+	}
+	state, err := database.GitHubSyncState(ctx)
+	if err != nil || state.Succeeded != 1 {
+		t.Fatalf("sync state=%+v err=%v", state, err)
+	}
+}
+
 func TestPublicIDsAreTypedAndStorageIDsStayInternal(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
