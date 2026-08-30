@@ -1,4 +1,4 @@
-.graph-legend {
+.graph-status-bar {
   min-width: 0;
   height: 36px;
   overflow: hidden;
@@ -9,12 +9,6 @@
   border-bottom: 1px solid var(--border);
   color: var(--text-2);
   font-size: var(--text-xs);
-}
-
-.graph-legend span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
 }
 
 .graph-connection-help {
@@ -31,36 +25,7 @@
   font-weight: 600;
 }
 
-.graph-legend-states {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.graph-legend i {
-  display: block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.graph-legend i.ready {
-  background: var(--status-ready);
-}
-
-.graph-legend i.review {
-  background: var(--status-review);
-}
-
-.graph-legend i.conflict {
-  background: var(--status-conflict);
-}
-
-.graph-legend i.merged {
-  background: var(--status-merged);
-}
-
-.graph-legend b {
+.graph-status-bar b {
   margin-left: auto;
   font-family: var(--font-mono);
   font-weight: 500;
@@ -538,12 +503,8 @@
 }
 
 @media (width <= 1050px) {
-  .graph-legend {
+  .graph-status-bar {
     gap: 10px;
     padding-inline: 12px;
-  }
-
-  .graph-legend-states {
-    display: none;
   }
 }

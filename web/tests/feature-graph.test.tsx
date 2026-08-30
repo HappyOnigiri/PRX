@@ -620,6 +620,9 @@ describe("FeatureGraph", () => {
     );
 
     expect(screen.getByText("1 nodes · 1 links")).toBeInTheDocument();
+    for (const label of ["Ready", "Review", "Conflict", "Merged"]) {
+      expect(screen.queryByText(label)).not.toBeInTheDocument();
+    }
     expect(screen.getByTestId("mock-react-flow")).toHaveAttribute(
       "data-edge-count",
       "1",

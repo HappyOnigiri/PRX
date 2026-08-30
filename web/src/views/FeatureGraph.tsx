@@ -385,7 +385,7 @@ export function FeatureGraph({
 
   return (
     <>
-      <GraphLegend
+      <GraphStatusBar
         taskCount={tasks.length}
         dependencyCount={dependencies.length}
         addingDependency={connections.adding}
@@ -601,7 +601,7 @@ function GraphState({
   return null;
 }
 
-function GraphLegend({
+function GraphStatusBar({
   taskCount,
   dependencyCount,
   addingDependency,
@@ -634,7 +634,7 @@ function GraphLegend({
           })
         : t("workspace.flow.connectionInstruction");
   return (
-    <div className="graph-legend">
+    <div className="graph-status-bar">
       {!readOnly && (
         <p
           className={`graph-connection-help ${addingDependency || removingDependency ? "is-saving" : ""}`}
@@ -644,24 +644,6 @@ function GraphLegend({
           {instruction}
         </p>
       )}
-      <div className="graph-legend-states">
-        <span>
-          <i className="ready" />
-          {t("workspace.legend.ready")}
-        </span>
-        <span>
-          <i className="review" />
-          {t("workspace.legend.review")}
-        </span>
-        <span>
-          <i className="conflict" />
-          {t("workspace.legend.conflict")}
-        </span>
-        <span>
-          <i className="merged" />
-          {t("workspace.legend.merged")}
-        </span>
-      </div>
       <b>
         {t("workspace.graphSummary", {
           nodes: taskCount,

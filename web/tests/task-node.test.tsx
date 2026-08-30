@@ -5,7 +5,7 @@ import { DocumentKind, TaskDisplayState } from "../src/gen/prx/v1/prx_pb";
 import { TaskNode, type TaskFlowNode } from "../src/views/TaskNode";
 
 describe("TaskNode", () => {
-  it("exposes ready and stale state without relying on color", () => {
+  it("shows an assignee and reflects ready and stale state without badges", () => {
     const onEdit = vi.fn();
     const onPreview = vi.fn();
     const markdown = {
@@ -61,7 +61,9 @@ describe("TaskNode", () => {
       </ReactFlowProvider>,
     );
     expect(screen.getByText("Merge billing schema")).toBeInTheDocument();
-    expect(screen.getByText("READY")).toBeInTheDocument();
+    expect(screen.getByText("Ren")).toBeInTheDocument();
+    expect(screen.queryByText("READY")).not.toBeInTheDocument();
+    expect(container.querySelector(".is-ready")).toBeInTheDocument();
     expect(container.querySelector(".is-stale")).toBeInTheDocument();
     const edgePorts = container.querySelectorAll(".task-edge-port");
     expect(edgePorts).toHaveLength(2);
@@ -122,11 +124,13 @@ describe("TaskNode", () => {
       positionAbsoluteX: 0,
       positionAbsoluteY: 0,
     } as NodeProps<TaskFlowNode>;
-    render(
+    const { container } = render(
       <ReactFlowProvider>
         <TaskNode {...props} />
       </ReactFlowProvider>,
     );
+    expect(screen.queryByText("Unassigned")).not.toBeInTheDocument();
+    expect(container.querySelector("footer")).not.toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "View Archived task details" }),
     );
