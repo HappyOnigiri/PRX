@@ -9,7 +9,7 @@ prx feature archive FEATURE_ID_OR_SLUG [flags]
 ### Examples
 
 ```
-prx feature archive checkout --json
+prx feature archive checkout
 ```
 
 ### Options
@@ -24,8 +24,7 @@ prx feature archive checkout --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO

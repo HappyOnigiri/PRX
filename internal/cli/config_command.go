@@ -15,7 +15,7 @@ func (s *state) configCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "config",
 		Short:   "Show or manage GitHub hosts and authentication",
-		Example: "prx config --json",
+		Example: "prx config",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -46,7 +46,7 @@ func (s *state) configPathCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "path",
 		Short:   "Show the resolved configuration path",
-		Example: "prx config path --json",
+		Example: "prx config path",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -62,7 +62,7 @@ func (s *state) configValidateCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "validate",
 		Short:   "Validate the GitHub configuration",
-		Example: "prx config validate --json",
+		Example: "prx config validate",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -81,7 +81,7 @@ func (s *state) configHostCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "host",
 		Short:   "List or manage configured GitHub hosts",
-		Example: "prx config host --json",
+		Example: "prx config host",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -109,7 +109,7 @@ func (s *state) configHostAddCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "add",
 		Short:   "Add a GitHub.com or Enterprise host",
-		Example: "prx config host add --host ghe.example.com --json",
+		Example: "prx config host add --host ghe.example.com",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -140,7 +140,7 @@ func (s *state) configHostUpdateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "update HOST",
 		Short:   "Update a configured GitHub host",
-		Example: "prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/ --json",
+		Example: "prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			store, err := s.configStore()
@@ -184,7 +184,7 @@ func (s *state) configHostRemoveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "remove HOST",
 		Short:   "Remove a configured GitHub host",
-		Example: "prx config host remove ghe.example.com --json",
+		Example: "prx config host remove ghe.example.com",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			store, err := s.configStore()
@@ -205,7 +205,7 @@ func (s *state) configAuthCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "auth",
 		Short:   "List or manage host-scoped authentication methods",
-		Example: "prx config auth --json",
+		Example: "prx config auth",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			store, err := s.configStore()
@@ -235,7 +235,7 @@ func (s *state) configAuthAddCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "add",
 		Short:   "Add a host-scoped authentication method",
-		Example: "prx config auth add --id work-gh --host github.com --type gh_cli --json",
+		Example: "prx config auth add --id work-gh --host github.com --type gh_cli",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			token, err := readConfigToken(cmd, tokenStdin)
@@ -274,7 +274,7 @@ func (s *state) configAuthUpdateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "update AUTH_METHOD_ID",
 		Short:   "Update a host-scoped authentication method",
-		Example: "prx config auth update work-gh --user HappyOnigiri --json",
+		Example: "prx config auth update work-gh --user HappyOnigiri",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			token, err := readConfigToken(cmd, tokenStdin)
@@ -332,7 +332,7 @@ func (s *state) configAuthRemoveCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "remove AUTH_METHOD_ID",
 		Short:   "Remove an authentication method and its cached use",
-		Example: "prx config auth remove work-gh --json",
+		Example: "prx config auth remove work-gh",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			store, err := s.configStore()
@@ -356,7 +356,7 @@ func (s *state) configAuthReorderCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "reorder AUTH_METHOD_ID...",
 		Short:   "Set authentication priority order",
-		Example: "prx config auth reorder ghe-environment ghe-cli --json",
+		Example: "prx config auth reorder ghe-environment ghe-cli",
 		Args:    cobra.MinimumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			store, err := s.configStore()

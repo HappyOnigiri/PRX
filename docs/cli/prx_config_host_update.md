@@ -9,7 +9,7 @@ prx config host update HOST [flags]
 ### Examples
 
 ```
-prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/ --json
+prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/
 ```
 
 ### Options
@@ -28,8 +28,7 @@ prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO

@@ -12,7 +12,7 @@ func (s *state) featureCommand() *cobra.Command {
 		Aliases: []string{"f"},
 		Short:   "List features or show one by ID or slug",
 		Long:    "List features or show one by ID or slug.\n\nAlias: f.",
-		Example: "prx feature --json\nprx feature F-1 --json\nprx f checkout --json\nprx show create --json",
+		Example: "prx feature\nprx feature F-1\nprx f checkout\nprx show create",
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 1 {
@@ -45,7 +45,7 @@ func (s *state) featureCreateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "create",
 		Short:   "Create a feature",
-		Example: "prx feature create --slug checkout --title \"Checkout rollout\" --json",
+		Example: "prx feature create --slug checkout --title \"Checkout rollout\"",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			value, err := s.service.CreateFeature(cmd.Context(), slug, title, description)
@@ -69,7 +69,7 @@ func (s *state) featureUpdateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "update FEATURE_ID_OR_SLUG",
 		Short:   "Update a feature by ID or slug",
-		Example: "prx feature update checkout --archived=false --json",
+		Example: "prx feature update checkout --archived=false",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.UpdateFeature(
@@ -109,7 +109,7 @@ func (s *state) featureArchiveCommand(archived bool) *cobra.Command {
 	return &cobra.Command{
 		Use:     verb + " FEATURE_ID_OR_SLUG",
 		Short:   short,
-		Example: "prx feature " + verb + " checkout --json",
+		Example: "prx feature " + verb + " checkout",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, &archived)
@@ -130,7 +130,7 @@ func (s *state) featureDeleteCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "delete FEATURE_ID_OR_SLUG",
 		Short:   "Delete a feature and optionally its contained data",
-		Example: "prx feature delete checkout --cascade --json",
+		Example: "prx feature delete checkout --cascade",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := s.service.DeleteFeature(cmd.Context(), args[0], cascade); err != nil {

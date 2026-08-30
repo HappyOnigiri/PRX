@@ -9,7 +9,7 @@ prx pr [flags]
 ### Examples
 
 ```
-prx pr --json
+prx pr
 ```
 
 ### Options
@@ -24,8 +24,7 @@ prx pr --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO

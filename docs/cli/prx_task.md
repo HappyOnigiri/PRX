@@ -15,10 +15,10 @@ prx task [TASK_ID] [flags]
 ### Examples
 
 ```
-prx task --json
-prx task --feature checkout --json
-prx task T-1 --json
-prx t T-1 --json
+prx task
+prx task --feature checkout
+prx task T-1
+prx t T-1
 ```
 
 ### Options
@@ -34,8 +34,7 @@ prx t T-1 --json
       --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
-      --human                   force human-readable responses
-      --json                    force compact JSON responses
+      --json                    output JSON
 ```
 
 ### SEE ALSO

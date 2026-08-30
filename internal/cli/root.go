@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/spf13/cobra"
-	"golang.org/x/term"
 
 	prx "github.com/HappyOnigiri/PRX"
 	"github.com/HappyOnigiri/PRX/internal/config"
@@ -22,13 +21,9 @@ type state struct {
 	dbPath       string
 	configPath   string
 	json         bool
-	human        bool
 	fixture      string
 	out          io.Writer
 	errOut       io.Writer
-	isTerminal   func(io.Writer) bool
-	mode         outputMode
-	modeSet      bool
 	runStarted   bool
 	openService  OpenService
 	service      Service
@@ -42,7 +37,7 @@ func NewRoot(out, errOut io.Writer, openService OpenService) *cobra.Command {
 }
 
 func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Command, *state) {
-	s := &state{out: out, errOut: errOut, openService: openService, isTerminal: writerIsTerminal}
+	s := &state{out: out, errOut: errOut, openService: openService}
 	root := &cobra.Command{
 		Use:           "prx",
 		Short:         "Manage pull-request dependency roadmaps",
@@ -50,9 +45,6 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			if err := s.resolveOutputMode(); err != nil {
-				return err
-			}
 			s.applyEnvironmentPaths()
 			if cmd.Name() == "help" || cmd.Name() == "schema-version" || isConfigCommand(cmd) {
 				return nil
@@ -82,8 +74,7 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	root.PersistentFlags().StringVar(&s.dbPath, "db", "", "SQLite database path (env: PRX_DB)")
 	root.PersistentFlags().
 		StringVar(&s.configPath, "config", "", "YAML configuration path (env: PRX_CONFIG)")
-	root.PersistentFlags().BoolVar(&s.json, "json", false, "force compact JSON responses")
-	root.PersistentFlags().BoolVar(&s.human, "human", false, "force human-readable responses")
+	root.PersistentFlags().BoolVar(&s.json, "json", false, "output JSON")
 	root.PersistentFlags().StringVar(&s.fixture, "github-fixture", "", "GitHub fixture JSON path, or demo")
 	root.AddCommand(
 		s.schemaVersionCommand(),
@@ -179,23 +170,6 @@ func Execute(ctx context.Context, args []string, out, errOut io.Writer, openServ
 	root, s := newRootWithState(out, errOut, openService)
 	s.preScanOutputFlags(root, args)
 	root.SetArgs(args)
-	if s.json && s.human {
-		err := domainUsageError(errors.New("--json and --human cannot be used together"))
-		_ = s.resolveOutputMode()
-		// Cobra adds these on execution, which this branch never reaches, and
-		// without them the rendered help would omit two commands the same help
-		// lists everywhere else.
-		root.InitDefaultHelpCmd()
-		root.InitDefaultCompletionCmd(args...)
-		failedCommand, _, findErr := root.Find(args)
-		if findErr != nil || failedCommand == nil {
-			failedCommand = root
-		}
-		if printErr := s.writeError(err, s.renderHelp(failedCommand)); printErr != nil {
-			_, _ = fmt.Fprintln(errOut, "Error:", err)
-		}
-		return err
-	}
 	failedCommand, err := root.ExecuteContextC(ctx)
 	if err == nil {
 		return nil
@@ -215,10 +189,7 @@ func Execute(ctx context.Context, args []string, out, errOut io.Writer, openServ
 
 func (s *state) writeHelp(command *cobra.Command, _ []string) {
 	hint := s.renderHelp(command)
-	if err := s.resolveOutputMode(); err != nil {
-		return
-	}
-	if s.json && !s.human {
+	if s.json {
 		_ = encodeJSON(s.out, map[string]string{"hint": hint})
 		return
 	}
@@ -236,7 +207,7 @@ func (s *state) renderHelp(command *cobra.Command) string {
 
 // preScanOutputFlags preserves explicit output selection when Cobra cannot
 // finish command discovery. Known value-taking flags consume the following
-// argument so a literal --json or --human value is not mistaken for a flag.
+// argument so a literal --json value is not mistaken for a flag.
 func (s *state) preScanOutputFlags(root *cobra.Command, args []string) {
 	current := root
 	for index := 0; index < len(args); index++ {
@@ -247,7 +218,7 @@ func (s *state) preScanOutputFlags(root *cobra.Command, args []string) {
 		if strings.HasPrefix(arg, "--") {
 			name, rawValue, hasValue := strings.Cut(strings.TrimPrefix(arg, "--"), "=")
 			switch name {
-			case "json", "human":
+			case "json":
 				value := true
 				if hasValue {
 					parsed, err := strconv.ParseBool(rawValue)
@@ -256,11 +227,7 @@ func (s *state) preScanOutputFlags(root *cobra.Command, args []string) {
 					}
 					value = parsed
 				}
-				if name == "json" {
-					s.json = value
-				} else {
-					s.human = value
-				}
+				s.json = value
 			default:
 				if !hasValue && longFlagTakesValue(current, name) && index+1 < len(args) {
 					index++
@@ -304,39 +271,6 @@ func directChild(command *cobra.Command, name string) *cobra.Command {
 		}
 	}
 	return nil
-}
-
-func (s *state) resolveOutputMode() error {
-	if s.modeSet {
-		if s.json && s.human {
-			return domainUsageError(errors.New("--json and --human cannot be used together"))
-		}
-		return nil
-	}
-	s.modeSet = true
-	switch {
-	case s.json && s.human:
-		if s.isTerminal != nil && s.isTerminal(s.out) {
-			s.mode = outputModeHuman
-		} else {
-			s.mode = outputModeJSON
-		}
-		return domainUsageError(errors.New("--json and --human cannot be used together"))
-	case s.json:
-		s.mode = outputModeJSON
-	case s.human:
-		s.mode = outputModeHuman
-	case s.isTerminal != nil && s.isTerminal(s.out):
-		s.mode = outputModeHuman
-	default:
-		s.mode = outputModeJSON
-	}
-	return nil
-}
-
-func writerIsTerminal(out io.Writer) bool {
-	file, ok := out.(interface{ Fd() uintptr })
-	return ok && term.IsTerminal(int(file.Fd()))
 }
 
 func domainUsageError(err error) error {
