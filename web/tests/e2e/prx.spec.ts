@@ -178,6 +178,8 @@ async function connectTasks(
   blockedTitle: string,
 ) {
   await settleGraph(page);
+  await page.locator(".react-flow__controls-fitview").click();
+  await settleGraph(page);
   const blocker = page.locator(".task-node").filter({ hasText: blockerTitle });
   const blocked = page.locator(".task-node").filter({ hasText: blockedTitle });
   const source = blocker.locator(".react-flow__handle.source");
@@ -272,6 +274,42 @@ async function graphZoom(page: Page) {
     const transform = new DOMMatrix(getComputedStyle(viewport).transform);
     return transform.a;
   });
+}
+
+async function taskGroupBounds(page: Page, titles: string[]) {
+  const boxes = await Promise.all(
+    titles.map((title) =>
+      page
+        .locator(".task-node")
+        .filter({
+          has: page.getByRole("heading", { name: title, exact: true }),
+        })
+        .boundingBox(),
+    ),
+  );
+  if (boxes.some((box) => !box)) throw new Error("task bounds missing");
+  const presentBoxes = boxes.filter((box) => box !== null);
+  return {
+    left: Math.min(...presentBoxes.map((box) => box.x)),
+    right: Math.max(...presentBoxes.map((box) => box.x + box.width)),
+    top: Math.min(...presentBoxes.map((box) => box.y)),
+    bottom: Math.max(...presentBoxes.map((box) => box.y + box.height)),
+  };
+}
+
+function boundsGap(
+  first: Awaited<ReturnType<typeof taskGroupBounds>>,
+  second: Awaited<ReturnType<typeof taskGroupBounds>>,
+) {
+  const horizontal = Math.max(
+    0,
+    Math.max(first.left, second.left) - Math.min(first.right, second.right),
+  );
+  const vertical = Math.max(
+    0,
+    Math.max(first.top, second.top) - Math.min(first.bottom, second.bottom),
+  );
+  return Math.hypot(horizontal, vertical);
 }
 
 test("creates and edits a feature DAG while preserving state", async ({
@@ -485,6 +523,30 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(
     page.locator(".task-node").filter({ hasText: "E2E UI" }),
   ).toHaveCount(0);
+});
+
+test("visually separates disconnected dependency chains", async ({ page }) => {
+  const slug = `disconnected-chains-${crypto.randomUUID()}`;
+  await page.goto("/");
+  await page.getByRole("button", { name: "New feature" }).click();
+  const featureDialog = page.getByRole("form", { name: "Create feature" });
+  await featureDialog.getByLabel("Slug").fill(slug);
+  await featureDialog.getByLabel("Title").fill(`Disconnected chains ${slug}`);
+  await featureDialog.getByRole("button", { name: "Create feature" }).click();
+
+  for (const title of ["Chain A1", "Chain A2", "Chain B1", "Chain B2"])
+    await addTask(page, title);
+  await page.locator(".react-flow__controls-fitview").click();
+  await settleGraph(page);
+  await connectTasks(page, "Chain A1", "Chain A2");
+  await connectTasks(page, "Chain B1", "Chain B2");
+  await settleGraph(page);
+
+  const firstChain = await taskGroupBounds(page, ["Chain A1", "Chain A2"]);
+  const secondChain = await taskGroupBounds(page, ["Chain B1", "Chain B2"]);
+  const componentGap =
+    boundsGap(firstChain, secondChain) / (await graphZoom(page));
+  expect(componentGap).toBeGreaterThanOrEqual(118);
 });
 
 test("archives and safely deletes a feature", async ({ page }) => {
