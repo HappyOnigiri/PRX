@@ -43,11 +43,17 @@ interface TaskNodeData extends Record<string, unknown> {
 }
 export type TaskFlowNode = Node<TaskNodeData, "task">;
 
+// React Flow picks the connection target by distance without filtering on
+// connectability, so ports that refuse connections would steal the snap radius
+// from the visible handle and silently drop the connection. They accept
+// connection ends instead, which resolves to the same task pair.
 function TaskEdgePorts({
   incoming,
+  isConnectable,
   outgoing,
 }: {
   incoming: TaskNodePort[];
+  isConnectable: boolean;
   outgoing: TaskNodePort[];
 }) {
   return (
@@ -57,7 +63,9 @@ function TaskEdgePorts({
           aria-hidden="true"
           className="task-edge-port"
           id={port.id}
-          isConnectable={false}
+          isConnectable={isConnectable}
+          isConnectableEnd={isConnectable}
+          isConnectableStart={false}
           key={port.id}
           position={Position.Left}
           style={{ top: port.top }}
@@ -70,7 +78,9 @@ function TaskEdgePorts({
           aria-hidden="true"
           className="task-edge-port"
           id={port.id}
-          isConnectable={false}
+          isConnectable={isConnectable}
+          isConnectableEnd={isConnectable}
+          isConnectableStart={false}
           key={port.id}
           position={Position.Right}
           style={{ top: port.top }}
@@ -110,7 +120,11 @@ export function TaskNode({
         aria-label={t("workspace.flow.blockedHandle")}
         title={t("workspace.flow.blockedHandle")}
       />
-      <TaskEdgePorts incoming={incomingPorts} outgoing={outgoingPorts} />
+      <TaskEdgePorts
+        incoming={incomingPorts}
+        isConnectable={isConnectable}
+        outgoing={outgoingPorts}
+      />
       <div className="task-node-head">
         <div className="node-state">
           <i />

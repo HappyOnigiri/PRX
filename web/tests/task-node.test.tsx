@@ -65,6 +65,11 @@ describe("TaskNode", () => {
     expect(edgePorts).toHaveLength(2);
     expect(edgePorts[0]).toHaveStyle({ top: "44px" });
     expect(edgePorts[1]).toHaveStyle({ top: "92px" });
+    for (const port of edgePorts) {
+      expect(port).toHaveClass("connectable");
+      expect(port).toHaveClass("connectableend");
+      expect(port).not.toHaveClass("connectablestart");
+    }
     expect(
       screen.getByLabelText("Blocked task input (drop here)"),
     ).toHaveAttribute("title", "Blocked task input (drop here)");
