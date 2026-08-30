@@ -792,6 +792,30 @@ func TestBlackBoxResolvedCommandErrorsIncludeCompleteHelp(t *testing.T) {
 	}
 }
 
+func TestBlackBoxConflictingOutputFlagsReuseTheRootHelp(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "conflict.db")
+	help := executeCLI(t, binary, "", "--db", dbPath, "--json", "help")
+	if help.exit != 0 || help.stderr != "" {
+		t.Fatalf("root help failed: %+v", help)
+	}
+	var helpValue struct {
+		Hint string `json:"hint"`
+	}
+	if err := json.Unmarshal([]byte(help.stdout), &helpValue); err != nil {
+		t.Fatal(err)
+	}
+
+	conflict := executeCLI(t, binary, "", "--db", dbPath, "--json", "--human")
+	if conflict.exit == 0 || conflict.stdout != "" {
+		t.Fatalf("conflict=%+v", conflict)
+	}
+	failure := decodeFailure(t, []byte(conflict.stderr), conflict.stderr)
+	if failure.Hint != helpValue.Hint {
+		t.Fatalf("conflict hint differs from root help\nhelp=%q\nhint=%q", helpValue.Hint, failure.Hint)
+	}
+}
+
 func TestBlackBoxUnknownHelpTopicUsesTheErrorPath(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "help.db")

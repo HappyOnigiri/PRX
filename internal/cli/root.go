@@ -182,6 +182,11 @@ func Execute(ctx context.Context, args []string, out, errOut io.Writer, openServ
 	if s.json && s.human {
 		err := domainUsageError(errors.New("--json and --human cannot be used together"))
 		_ = s.resolveOutputMode()
+		// Cobra adds these on execution, which this branch never reaches, and
+		// without them the rendered help would omit two commands the same help
+		// lists everywhere else.
+		root.InitDefaultHelpCmd()
+		root.InitDefaultCompletionCmd(args...)
 		failedCommand, _, findErr := root.Find(args)
 		if findErr != nil || failedCommand == nil {
 			failedCommand = root
