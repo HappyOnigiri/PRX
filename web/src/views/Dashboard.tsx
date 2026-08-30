@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import type { Feature } from "../gen/prx/v1/prx_pb";
 import { useSnapshot } from "../hooks";
 import { formatError } from "../i18n/domain";
+import { useAutoSyncStatus } from "../sync-status";
 import { IconButton } from "./IconButton";
 
 const queueNames = [
@@ -78,9 +79,12 @@ export function Dashboard() {
           </h1>
           <p>{t("dashboard.description")}</p>
         </div>
-        <div className="clock">
-          <span>{tasks.length}</span>
-          <small>{t("dashboard.nodesUnderControl")}</small>
+        <div className="page-head-status">
+          <div className="clock">
+            <span>{tasks.length}</span>
+            <small>{t("dashboard.nodesUnderControl")}</small>
+          </div>
+          <SyncStatus />
         </div>
       </header>
       <section
@@ -140,6 +144,35 @@ export function Dashboard() {
         <FeatureBoard features={features} />
       </div>
     </div>
+  );
+}
+
+function SyncStatus() {
+  const { t, i18n } = useTranslation();
+  const status = useAutoSyncStatus();
+  const value = status.status.data;
+  const timestamp = value?.lastUpdatedAt;
+  let label: string = t("dashboard.syncNever");
+  if (status.status.isError || status.error)
+    label = t("dashboard.syncUnavailable");
+  else if (status.checking) label = t("dashboard.syncUpdating");
+  else if (timestamp && (value.failed > 0 || value.error))
+    label = t("dashboard.syncFailed", {
+      time: new Date(timestamp).toLocaleString(i18n.resolvedLanguage),
+    });
+  else if (timestamp)
+    label = t("dashboard.syncUpdated", {
+      time: new Date(timestamp).toLocaleString(i18n.resolvedLanguage),
+    });
+  return (
+    <span className="dashboard-sync-status" aria-label={label}>
+      <span>{t("dashboard.githubSync")}</span>
+      {timestamp ? (
+        <time dateTime={timestamp}>{label}</time>
+      ) : (
+        <small>{label}</small>
+      )}
+    </span>
   );
 }
 

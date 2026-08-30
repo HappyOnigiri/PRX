@@ -5,7 +5,6 @@ import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
 import { isDemoMode } from "./demo";
 import { formValue } from "./form";
-import type { GitHubSyncStatus } from "./gen/prx/v1/prx_pb";
 import { useAutoSync, useDomainMutation, useSnapshot } from "./hooks";
 import { setDisplayLanguage } from "./i18n";
 import { formatError } from "./i18n/domain";
@@ -16,15 +15,24 @@ import {
   type SupportedLanguage,
   type ThemePreference,
 } from "./i18n/settings";
+import { AutoSyncStatusContext } from "./sync-status";
 import { setDisplayTheme } from "./theme";
 import { appVersion } from "./version";
 import { IconButton } from "./views/IconButton";
 import { ServerSettingsDialog } from "./views/ServerSettingsDialog";
 
 export function AppShell({ children }: { children: ReactNode }) {
+  const autoSync = useAutoSync(true);
+  return (
+    <AutoSyncStatusContext.Provider value={autoSync}>
+      <AppShellLayout>{children}</AppShellLayout>
+    </AutoSyncStatusContext.Provider>
+  );
+}
+
+function AppShellLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const snapshot = useSnapshot();
-  const autoSync = useAutoSync(true);
   const [showCreate, setShowCreate] = useState(false);
   const [showServerSettings, setShowServerSettings] = useState(false);
   const [theme, setTheme] = useState(readThemePreference);
@@ -112,7 +120,6 @@ export function AppShell({ children }: { children: ReactNode }) {
           }}
         />
         <div className="rail-foot">
-          <SyncStatus status={autoSync} />
           <span className="rail-health">
             <span className={snapshot.isError ? "health bad" : "health"} />
             {snapshot.isError
@@ -139,41 +146,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         />
       )}
     </div>
-  );
-}
-
-function SyncStatus({
-  status,
-}: {
-  status: {
-    status: { data: GitHubSyncStatus | undefined; isError: boolean };
-    checking: boolean;
-    error: Error | null;
-  };
-}) {
-  const { t, i18n } = useTranslation();
-  const value = status.status.data;
-  const timestamp = value?.lastUpdatedAt;
-  let label: string = t("nav.syncNever");
-  if (status.status.isError || status.error) label = t("nav.syncUnavailable");
-  else if (status.checking) label = t("nav.syncUpdating");
-  else if (timestamp && (value.failed > 0 || value.error))
-    label = t("nav.syncFailed", {
-      time: new Date(timestamp).toLocaleString(i18n.resolvedLanguage),
-    });
-  else if (timestamp)
-    label = t("nav.syncUpdated", {
-      time: new Date(timestamp).toLocaleString(i18n.resolvedLanguage),
-    });
-  return (
-    <span className="sync-status" aria-label={label}>
-      <span>{t("nav.githubSync")}</span>
-      {timestamp ? (
-        <time dateTime={timestamp}>{label}</time>
-      ) : (
-        <small>{label}</small>
-      )}
-    </span>
   );
 }
 

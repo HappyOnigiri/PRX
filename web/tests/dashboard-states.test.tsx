@@ -2,8 +2,14 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Snapshot } from "../src/gen/prx/v1/prx_pb";
+import { AutoSyncStatusContext, type AutoSyncStatus } from "../src/sync-status";
 import { Dashboard } from "../src/views/Dashboard";
-import { makeFeature, makeSnapshot, makeTask } from "./factories";
+import {
+  makeFeature,
+  makeGitHubSyncStatus,
+  makeSnapshot,
+  makeTask,
+} from "./factories";
 
 const dashboardMocks = vi.hoisted(() => ({
   state: {
@@ -13,6 +19,20 @@ const dashboardMocks = vi.hoisted(() => ({
     refetch: vi.fn(),
   },
 }));
+
+const autoSyncStatus = {
+  status: { data: undefined, isError: false },
+  checking: false,
+  error: null,
+} satisfies AutoSyncStatus;
+
+function renderDashboard(status: AutoSyncStatus = autoSyncStatus) {
+  return render(
+    <AutoSyncStatusContext.Provider value={status}>
+      <Dashboard />
+    </AutoSyncStatusContext.Provider>,
+  );
+}
 
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => dashboardMocks.state,
@@ -33,14 +53,18 @@ describe("Dashboard states", () => {
   });
 
   it("shows loading and error states with a retry action", () => {
-    const { rerender } = render(<Dashboard />);
+    const { rerender } = renderDashboard();
     expect(
       screen.getByRole("heading", { name: "Mapping dependencies…" }),
     ).toBeInTheDocument();
 
     dashboardMocks.state.isPending = false;
     dashboardMocks.state.error = new Error("database unavailable");
-    rerender(<Dashboard />);
+    rerender(
+      <AutoSyncStatusContext.Provider value={autoSyncStatus}>
+        <Dashboard />
+      </AutoSyncStatusContext.Provider>,
+    );
     expect(
       screen.getByRole("heading", { name: "The roadmap could not be loaded" }),
     ).toBeInTheDocument();
@@ -59,7 +83,7 @@ describe("Dashboard states", () => {
       conflictTasks: [],
       staleTasks: [],
     });
-    render(<Dashboard />);
+    renderDashboard();
 
     expect(
       screen.getByRole("heading", { name: "No task is ready yet" }),
@@ -92,7 +116,7 @@ describe("Dashboard states", () => {
       conflictTasks: [archivedTask],
       staleTasks: [archivedTask],
     });
-    const { container } = render(<Dashboard />);
+    const { container } = renderDashboard();
 
     expect(container.querySelector(".clock span")).toHaveTextContent("1");
     expect(container.querySelector(".queue-ready > span")).toHaveTextContent(
@@ -111,4 +135,67 @@ describe("Dashboard states", () => {
     expect(screen.queryByText("Archived graph")).not.toBeInTheDocument();
     expect(screen.queryByText("Archived task")).not.toBeInTheDocument();
   });
+
+  it("shows the complete latest sync timestamp in the dashboard header", () => {
+    const timestamp = "2026-08-30T10:24:31Z";
+    dashboardMocks.state.isPending = false;
+    dashboardMocks.state.data = makeSnapshot();
+    renderDashboard({
+      ...autoSyncStatus,
+      status: {
+        data: makeGitHubSyncStatus({ lastUpdatedAt: timestamp }),
+        isError: false,
+      },
+    });
+
+    const label = `Updated · ${new Date(timestamp).toLocaleString("en")}`;
+    const time = screen.getByText(label);
+    expect(time).toHaveAttribute("dateTime", timestamp);
+    expect(time.closest(".page-head")).not.toBeNull();
+    expect(time).toHaveTextContent(label);
+  });
+
+  it.each([
+    [
+      "an update in progress",
+      { ...autoSyncStatus, checking: true },
+      "Updating…",
+    ],
+    [
+      "a failed latest run",
+      {
+        ...autoSyncStatus,
+        status: {
+          data: makeGitHubSyncStatus({
+            lastUpdatedAt: "2026-08-30T10:24:31Z",
+            failed: 1,
+          }),
+          isError: false,
+        },
+      },
+      `Failed · ${new Date("2026-08-30T10:24:31Z").toLocaleString("en")}`,
+    ],
+    [
+      "a status query failure",
+      {
+        ...autoSyncStatus,
+        status: { data: undefined, isError: true },
+      },
+      "Status unavailable",
+    ],
+    [
+      "an automatic sync check failure",
+      { ...autoSyncStatus, error: new Error("sync unavailable") },
+      "Status unavailable",
+    ],
+  ] satisfies [string, AutoSyncStatus, string][])(
+    "shows %s",
+    (_name, status, label) => {
+      dashboardMocks.state.isPending = false;
+      dashboardMocks.state.data = makeSnapshot();
+      renderDashboard(status);
+
+      expect(screen.getByLabelText(label)).toBeInTheDocument();
+    },
+  );
 });
