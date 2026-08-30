@@ -276,6 +276,9 @@ describe("FeatureGraph", () => {
         graphMocks.onReconnectStart?.({}, edge, handleType);
       });
       expect(
+        document.querySelector(".graph-status-notice"),
+      ).toBeInTheDocument();
+      expect(
         screen.getByText(
           "Drop in empty space to remove Blocker task → Blocked task.",
         ),
@@ -607,7 +610,7 @@ describe("FeatureGraph", () => {
       layoutError: { message: undefined },
       retryLayout,
     });
-    render(
+    const { container } = render(
       <FeatureGraph
         tasks={[makeTask()]}
         dependencies={[makeDependency()]}
@@ -619,7 +622,13 @@ describe("FeatureGraph", () => {
       />,
     );
 
-    expect(screen.getByText("1 nodes · 1 links")).toBeInTheDocument();
+    expect(
+      container.querySelector(".graph-status-notice"),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("1 nodes · 1 links")).not.toBeInTheDocument();
+    for (const label of ["Ready", "Review", "Conflict", "Merged"]) {
+      expect(screen.queryByText(label)).not.toBeInTheDocument();
+    }
     expect(screen.getByTestId("mock-react-flow")).toHaveAttribute(
       "data-edge-count",
       "1",

@@ -1,24 +1,22 @@
-.graph-legend {
-  min-width: 0;
-  height: 36px;
+.graph-status-notice {
+  position: absolute;
+  z-index: 10;
+  top: 12px;
+  left: 50%;
+  max-width: calc(100% - 24px);
   overflow: hidden;
-  padding: 0 20px;
-  display: flex;
-  align-items: center;
-  gap: 18px;
-  border-bottom: 1px solid var(--border);
+  padding: 8px 12px;
+  transform: translateX(-50%);
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: 0 4px 12px rgb(0 0 0 / 10%);
   color: var(--text-2);
   font-size: var(--text-xs);
-}
-
-.graph-legend span {
-  display: flex;
-  align-items: center;
-  gap: 6px;
+  pointer-events: none;
 }
 
 .graph-connection-help {
-  flex: 0 1 420px;
   min-width: 0;
   overflow: hidden;
   margin: 0;
@@ -29,42 +27,6 @@
 .graph-connection-help.is-saving {
   color: var(--accent);
   font-weight: 600;
-}
-
-.graph-legend-states {
-  display: flex;
-  align-items: center;
-  gap: 18px;
-}
-
-.graph-legend i {
-  display: block;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-}
-
-.graph-legend i.ready {
-  background: var(--status-ready);
-}
-
-.graph-legend i.review {
-  background: var(--status-review);
-}
-
-.graph-legend i.conflict {
-  background: var(--status-conflict);
-}
-
-.graph-legend i.merged {
-  background: var(--status-merged);
-}
-
-.graph-legend b {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
 }
 
 .graph-stage {
@@ -538,12 +500,8 @@
 }
 
 @media (width <= 1050px) {
-  .graph-legend {
-    gap: 10px;
-    padding-inline: 12px;
-  }
-
-  .graph-legend-states {
-    display: none;
+  .graph-status-notice {
+    top: 8px;
+    max-width: calc(100% - 16px);
   }
 }
