@@ -218,6 +218,13 @@ describe("FeatureWorkspace", () => {
     expect(
       screen.getByRole("button", { name: "Copy Feature ID" }),
     ).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "References" })).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    expect(
+      screen.queryByRole("button", { name: "Add reference" }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sync GitHub" }));
     expect(mutationAt(0).mutate).toHaveBeenCalledWith("feature-1");
     fireEvent.click(screen.getByRole("button", { name: "Edit feature" }));
@@ -294,6 +301,11 @@ describe("FeatureWorkspace", () => {
     ).not.toBeInTheDocument();
     expect(
       screen.queryByRole("button", { name: "Mock create task" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "References" }));
+    expect(screen.getByText("No references.")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Add reference" }),
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Mock edit task" }));
     expect(screen.getByText("Mock read-only inspector")).toBeInTheDocument();

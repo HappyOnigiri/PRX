@@ -346,21 +346,29 @@ test("creates and edits a feature DAG while preserving state", async ({
     "Browser-tested delivery circuit, updated",
   );
 
-  const featureReferences = page.locator(".documents-section").first();
-  await featureReferences
-    .locator("select[name=kind]")
+  await page.getByRole("button", { name: "References" }).click();
+  await page.getByRole("button", { name: "Add reference" }).click();
+  const featureReferenceDialog = page.getByRole("dialog", {
+    name: "Add feature reference",
+  });
+  await featureReferenceDialog
+    .getByLabel("Type")
     .selectOption({ label: "Local file" });
-  await featureReferences
-    .getByPlaceholder("Design notes")
+  await featureReferenceDialog
+    .getByLabel("Title (optional)")
     .fill("Feature brief");
-  await featureReferences.getByPlaceholder("docs/plan.md").fill("README.md");
-  await featureReferences
+  await featureReferenceDialog.getByLabel("URL or file path").fill("README.md");
+  await featureReferenceDialog
     .getByRole("button", { name: "Add reference" })
     .click();
+  await expect(featureReferenceDialog).toBeHidden();
+  await page.getByRole("button", { name: "References" }).click();
+  const featureReferences = page.getByRole("region", { name: "References" });
   await expect(featureReferences.locator(".document-chip")).toHaveCount(1);
   await featureReferences
     .getByRole("button", { name: /^Feature brief README\.md$/ })
     .click();
+  await expect(featureReferences).toBeHidden();
   const featurePreview = page.getByRole("dialog", { name: "Feature brief" });
   await expect(featurePreview.locator("article")).toContainText("PRX");
   await featurePreview
@@ -751,15 +759,17 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
     "aria-hidden",
     "true",
   );
-  const secondaryActions = page.locator(
-    ".workspace-actions .icon-button-secondary",
-  );
-  await expect(secondaryActions).toHaveCount(2);
-  for (const action of await secondaryActions.all()) {
-    await expect(action).toBeHidden();
-  }
+  await expect(page.getByRole("button", { name: "Sync GitHub" })).toBeHidden();
+  await expect(page.getByRole("button", { name: "Edit feature" })).toBeHidden();
+  const referencesButton = page.getByRole("button", { name: "References" });
+  await expect(referencesButton).toBeVisible();
+  await referencesButton.click();
+  await expect(page.getByRole("region", { name: "References" })).toBeVisible();
   await expect(
-    page.locator(".workspace-actions .icon-button-danger"),
+    page.getByRole("button", { name: "Add reference" }),
+  ).toBeVisible();
+  await expect(
+    page.locator(".workspace-actions > .icon-button-danger"),
   ).toHaveCount(0);
   const addTaskBounds = await addTaskButton.boundingBox();
   expect(addTaskBounds).not.toBeNull();

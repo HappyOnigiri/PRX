@@ -14,10 +14,10 @@ import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { EditFeatureDialog } from "./EditFeatureDialog";
 import { FeatureGraph } from "./FeatureGraph";
+import { FeatureReferences } from "./FeatureReferences";
 import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { TaskInspector } from "./TaskInspector";
-import { ReferencesSection } from "./TaskInspectorReferences";
 import { type TaskNodeDocument } from "./TaskNode";
 
 export function FeatureWorkspace() {
@@ -198,6 +198,12 @@ function WorkspaceContent(props: WorkspaceContentProps) {
               />
             </>
           )}
+          <FeatureReferences
+            featureId={props.featureId}
+            documents={props.featureDocuments}
+            onPreview={props.onPreviewDocument}
+            readOnly={props.feature.archived}
+          />
           <IconButton
             icon={Pencil}
             label={
@@ -211,13 +217,6 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           />
         </div>
       </header>
-      <ReferencesSection
-        featureId={props.featureId}
-        documents={props.featureDocuments}
-        onPreview={props.onPreviewDocument}
-        readOnly={props.feature.archived}
-        compact
-      />
       {props.feature.archived && (
         <div className="archived-notice" role="status">
           <strong>{t("workspace.archivedLabel")}</strong>
