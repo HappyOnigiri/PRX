@@ -349,6 +349,16 @@ func TestRPCErrorDetailsMapEveryKnownDomainErrorCode(t *testing.T) {
 			domain.DomainErrorCodeImplementationPlanTooLarge,
 			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE,
 		},
+		{
+			"document not text",
+			domain.DomainErrorCodeDocumentNotText,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT,
+		},
+		{
+			"duplicate implementation plan",
+			domain.DomainErrorCodeDuplicateImplementationPlan,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN,
+		},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
