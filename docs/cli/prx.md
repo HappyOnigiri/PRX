@@ -26,7 +26,6 @@ Manage pull-request dependency roadmaps
 * [prx ready](prx_ready.md)	 - List tasks whose blockers are satisfied
 * [prx reviews](prx_reviews.md)	 - List tasks waiting for pull-request reviews
 * [prx schema-version](prx_schema-version.md)	 - Show the CLI response schema version
-* [prx seed](prx_seed.md)	 - Create deterministic demo roadmap data
 * [prx serve](prx_serve.md)	 - Start the local WebUI and ConnectRPC server
 * [prx show](prx_show.md)	 - Show a feature or task by public identifier
 * [prx snapshot](prx_snapshot.md)	 - Show the complete current snapshot

@@ -412,8 +412,6 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT
 	case domain.DomainErrorCodeInvalidPullRequestURL:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL
-	case domain.DomainErrorCodeInvalidSeed:
-		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SEED
 	case domain.DomainErrorCodeInvalidSlug:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG
 	case domain.DomainErrorCodeInvalidStatus:

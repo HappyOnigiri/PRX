@@ -51,7 +51,6 @@ func rpcError(err error) error {
 		domain.DomainErrorCodeInvalidKind,
 		domain.DomainErrorCodeInvalidParent,
 		domain.DomainErrorCodeInvalidPullRequestURL,
-		domain.DomainErrorCodeInvalidSeed,
 		domain.DomainErrorCodeInvalidSlug,
 		domain.DomainErrorCodeInvalidStatus,
 		domain.DomainErrorCodeInvalidTitle,

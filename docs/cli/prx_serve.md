@@ -9,13 +9,14 @@ prx serve [flags]
 ### Examples
 
 ```
-prx serve --addr 127.0.0.1:7331
+prx serve --demo
 ```
 
 ### Options
 
 ```
       --addr string   listen address (default "127.0.0.1:7331")
+      --demo          start with isolated temporary demo data
   -h, --help          help for serve
 ```
 

@@ -13,6 +13,7 @@ import (
 	"time"
 
 	"github.com/HappyOnigiri/PRX/internal/app"
+	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/store"
@@ -161,7 +162,7 @@ func TestCompletingADisplacedGitHubSyncRunReportsThatItNoLongerOwnsTheState(t *t
 }
 
 func TestPublicIDsAreTypedAndStorageIDsStayInternal(t *testing.T) {
-	_, service := openTestService(t)
+	database, service := openTestService(t)
 	ctx := context.Background()
 	feature, err := service.CreateFeature(ctx, "public-ids", "Public IDs", "")
 	if err != nil {
@@ -181,6 +182,10 @@ func TestPublicIDsAreTypedAndStorageIDsStayInternal(t *testing.T) {
 	}
 	if feature.ID != "F-1" || secondFeature.ID != "F-2" {
 		t.Fatalf("feature IDs=%q,%q, want F-1,F-2", feature.ID, secondFeature.ID)
+	}
+	bySlug, err := database.GetFeatureBySlug(ctx, "public-ids")
+	if err != nil || bySlug.ID != feature.ID {
+		t.Fatalf("feature by slug=%+v, err=%v", bySlug, err)
 	}
 	if firstTask.ID != "T-1" || secondTask.ID != "T-2" {
 		t.Fatalf("task IDs=%q,%q, want T-1,T-2", firstTask.ID, secondTask.ID)
@@ -1050,32 +1055,185 @@ func TestConcurrentDependencyWritesDoNotLock(t *testing.T) {
 	}
 }
 
-func TestSeedDemoIsIdempotent(t *testing.T) {
+func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	if err := service.SeedDemo(ctx, "demo-roadmap", 6); err != nil {
+	markdownPath := filepath.Join(t.TempDir(), "walkthrough.md")
+	if err := service.InitializeDemo(ctx, markdownPath); err != nil {
 		t.Fatal(err)
 	}
-	first, err := service.Snapshot(ctx)
+	snapshot, err := service.Snapshot(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := service.SeedDemo(ctx, "demo-roadmap", 6); err != nil {
-		t.Fatalf("second seed: %v", err)
+	if len(snapshot.Features) != 4 || len(snapshot.Tasks) != 120 {
+		t.Fatalf("features=%d tasks=%d, want 4 and 120", len(snapshot.Features), len(snapshot.Tasks))
 	}
-	second, err := service.Snapshot(ctx)
+	statuses := map[domain.FeatureStatus]bool{}
+	featuresBySlug := map[string]domain.Feature{}
+	for _, feature := range snapshot.Features {
+		statuses[feature.Status] = true
+		featuresBySlug[feature.Slug] = feature
+	}
+	for _, status := range []domain.FeatureStatus{
+		domain.FeatureStatusActive,
+		domain.FeatureStatusPaused,
+		domain.FeatureStatusCompleted,
+		domain.FeatureStatusCancelled,
+	} {
+		if !statuses[status] {
+			t.Errorf("missing feature status %q", status)
+		}
+	}
+	displayStates := map[domain.TaskDisplayState]bool{}
+	for _, task := range snapshot.Tasks {
+		displayStates[task.DisplayState] = true
+	}
+	for _, state := range []domain.TaskDisplayState{
+		domain.TaskDisplayStateNotStarted,
+		domain.TaskDisplayStateInProgress,
+		domain.TaskDisplayStateCompleted,
+		domain.TaskDisplayStateClosed,
+		domain.TaskDisplayStateMerged,
+		domain.TaskDisplayStateDraft,
+		domain.TaskDisplayStateConflict,
+		domain.TaskDisplayStateChangesRequested,
+		domain.TaskDisplayStateApproved,
+		domain.TaskDisplayStateReviewWaiting,
+		domain.TaskDisplayStateOpen,
+		domain.TaskDisplayStateUnknown,
+	} {
+		if !displayStates[state] {
+			t.Errorf("missing display state %q", state)
+		}
+	}
+	if len(snapshot.ReadyTasks) == 0 || len(snapshot.ReviewWaitingTasks) == 0 ||
+		len(snapshot.ConflictTasks) == 0 || len(snapshot.StaleTasks) == 0 {
+		t.Errorf("demo queues are incomplete: ready=%d reviews=%d conflicts=%d stale=%d",
+			len(snapshot.ReadyTasks), len(snapshot.ReviewWaitingTasks),
+			len(snapshot.ConflictTasks), len(snapshot.StaleTasks))
+	}
+	references, plans := 0, 0
+	for _, document := range snapshot.Documents {
+		if document.IsImplementationPlan {
+			plans++
+			continue
+		}
+		references++
+	}
+	if references != 2 || plans != 1 {
+		t.Errorf("documents: references=%d plans=%d, want 2 and 1", references, plans)
+	}
+	if !featuresBySlug["cancelled-experiment"].Archived {
+		t.Error("cancelled feature is not archived")
+	}
+	featureByTask := map[string]string{}
+	var plannedTaskID string
+	for _, task := range snapshot.Tasks {
+		featureByTask[task.ID] = task.FeatureID
+		if task.Title == "Design dependency policy" {
+			plannedTaskID = task.ID
+		}
+	}
+	plan, err := service.GetImplementationPlan(ctx, plannedTaskID)
+	if err != nil || plan.Content == "" {
+		t.Errorf("demo implementation plan = %+v, err=%v", plan, err)
+	}
+	completedPRs := 0
+	for _, pr := range snapshot.PullRequests {
+		if featureByTask[pr.TaskID] != featuresBySlug["completed-program"].ID {
+			continue
+		}
+		completedPRs++
+		if pr.State != domain.PullRequestStateMerged {
+			t.Errorf("completed PR %s state=%q", pr.TaskID, pr.State)
+		}
+	}
+	if completedPRs != 100 {
+		t.Errorf("completed PRs=%d, want 100", completedPRs)
+	}
+	for _, document := range snapshot.Documents {
+		if document.Kind != domain.DocumentKindLocalFile {
+			continue
+		}
+		body, readErr := service.ReadDocumentContent(ctx, document.ID)
+		if readErr != nil || !strings.Contains(body, "PRX demo walkthrough") {
+			t.Errorf("Markdown preview=%q, err=%v", body, readErr)
+		}
+	}
+	if issues := service.Validate(ctx); len(issues) != 0 {
+		t.Errorf("validation issues: %v", issues)
+	}
+}
+
+// The WebUI synchronizes on its first render, so the demo only shows what it
+// promises when a synchronization reproduces the states rather than replacing
+// them with the generated preset.
+func TestDemoSurvivesSynchronization(t *testing.T) {
+	database, err := store.Open(context.Background(), filepath.Join(t.TempDir(), "test.db"))
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(second.Features) != len(first.Features) ||
-		len(second.Tasks) != len(first.Tasks) ||
-		len(second.Dependencies) != len(first.Dependencies) ||
-		len(second.PullRequests) != len(first.PullRequests) {
-		t.Fatalf("seed changed counts: features %d→%d tasks %d→%d deps %d→%d prs %d→%d",
-			len(first.Features), len(second.Features),
-			len(first.Tasks), len(second.Tasks),
-			len(first.Dependencies), len(second.Dependencies),
-			len(first.PullRequests), len(second.PullRequests))
+	t.Cleanup(func() { _ = database.Close() })
+	temporaryRoot := t.TempDir()
+	fixturePath := filepath.Join(temporaryRoot, "github-fixture.json")
+	if err := app.WriteDemoFixture(fixturePath); err != nil {
+		t.Fatal(err)
+	}
+	provider, err := githubprovider.NewFixtureProvider(fixturePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	configStore, err := config.NewStore(filepath.Join(temporaryRoot, "config.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	service := app.NewWithConfig(database, provider, configStore)
+	ctx := context.Background()
+	if err := service.InitializeDemo(ctx, filepath.Join(temporaryRoot, "walkthrough.md")); err != nil {
+		t.Fatal(err)
+	}
+	before, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ran, _, err := service.SyncIfDue(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !ran {
+		t.Fatal("the first synchronization did not run, so this test proves nothing")
+	}
+	after, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	displayStates := func(snapshot domain.Snapshot) map[domain.TaskDisplayState]int {
+		counts := map[domain.TaskDisplayState]int{}
+		for _, task := range snapshot.Tasks {
+			counts[task.DisplayState]++
+		}
+		return counts
+	}
+	beforeStates, afterStates := displayStates(before), displayStates(after)
+	for state, count := range beforeStates {
+		if afterStates[state] != count {
+			t.Errorf("display state %q: %d tasks before the synchronization, %d after",
+				state, count, afterStates[state])
+		}
+	}
+	if len(afterStates) != len(beforeStates) {
+		t.Errorf("display states=%d after the synchronization, want %d", len(afterStates), len(beforeStates))
+	}
+	if len(after.StaleTasks) != len(before.StaleTasks) {
+		t.Errorf("stale tasks=%d after the synchronization, want %d",
+			len(after.StaleTasks), len(before.StaleTasks))
+	}
+	if len(after.ConflictTasks) != len(before.ConflictTasks) ||
+		len(after.ReviewWaitingTasks) != len(before.ReviewWaitingTasks) {
+		t.Errorf("queues changed: conflicts=%d reviews=%d, want %d and %d",
+			len(after.ConflictTasks), len(after.ReviewWaitingTasks),
+			len(before.ConflictTasks), len(before.ReviewWaitingTasks))
 	}
 }
 

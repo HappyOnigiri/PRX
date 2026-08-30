@@ -22,13 +22,13 @@ func (s *state) serveCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "serve",
 		Short:   "Start the local WebUI and ConnectRPC server",
-		Example: "prx serve --addr 127.0.0.1:7331",
+		Example: "prx serve --demo",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			rpcPath, rpcHandler := rpc.New(s.service)
 			mux := http.NewServeMux()
 			mux.Handle(rpcPath, rpcHandler)
-			mux.Handle("/", webui.Handler(prx.Version()))
+			mux.Handle("/", webui.Handler(prx.Version(), s.demo))
 			listener, err := (&net.ListenConfig{}).Listen(cmd.Context(), "tcp", address)
 			if err != nil {
 				return err
@@ -37,6 +37,9 @@ func (s *state) serveCommand() *cobra.Command {
 				Addr:              address,
 				Handler:           localOnly(listener.Addr(), mux),
 				ReadHeaderTimeout: 5 * time.Second,
+			}
+			if s.demo {
+				_, _ = fmt.Fprintln(s.errOut, "PRX demo mode uses temporary data that resets on restart.")
 			}
 			_, _ = fmt.Fprintf(s.errOut, "PRX listening on http://%s\n", listener.Addr())
 			go func() {
@@ -53,6 +56,7 @@ func (s *state) serveCommand() *cobra.Command {
 		},
 	}
 	command.Flags().StringVar(&address, "addr", "127.0.0.1:7331", "listen address")
+	command.Flags().BoolVar(&s.demo, "demo", false, "start with isolated temporary demo data")
 	return command
 }
 

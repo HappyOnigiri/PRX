@@ -159,6 +159,55 @@ describe("useGraphLayout", () => {
     });
   });
 
+  it("spaces disconnected task groups farther apart", async () => {
+    layoutMocks.layout.mockResolvedValue({ children: [] });
+    const options = {
+      tasks: Array.from({ length: 5 }, (_, index) =>
+        makeTask({ id: `task-${String(index + 1)}` }),
+      ),
+      dependencies: [
+        makeDependency(),
+        makeDependency({
+          blockerTaskId: "task-3",
+          blockedTaskId: "task-4",
+        }),
+      ],
+      pullRequests: new Map(),
+      documentsByTask: new Map(),
+      onEditTask: vi.fn(),
+      onPreviewDocument: vi.fn(),
+    };
+    renderHook(() => useGraphLayout(options));
+
+    await waitFor(() => {
+      expect(layoutMocks.layout).toHaveBeenCalledOnce();
+    });
+
+    const layoutInput: unknown = layoutMocks.layout.mock.calls[0]?.[0];
+    if (
+      !layoutInput ||
+      typeof layoutInput !== "object" ||
+      !("layoutOptions" in layoutInput)
+    )
+      throw new Error("ELK layout options missing");
+    expect(layoutInput.layoutOptions).toMatchObject({
+      "elk.spacing.componentComponent": "120",
+    });
+    expect(layoutInput).toMatchObject({
+      children: [
+        { id: "task-1" },
+        { id: "task-2" },
+        { id: "task-3" },
+        { id: "task-4" },
+        { id: "task-5" },
+      ],
+      edges: [
+        { sources: ["task-1"], targets: ["task-2"] },
+        { sources: ["task-3"], targets: ["task-4"] },
+      ],
+    });
+  });
+
   it("reports layout errors and retries the layout", async () => {
     layoutMocks.layout
       .mockRejectedValueOnce(new Error("worker unavailable"))

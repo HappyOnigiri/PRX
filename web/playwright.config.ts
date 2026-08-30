@@ -5,7 +5,7 @@ export default defineConfig({
   outputDir: "../test-results/playwright",
   timeout: 45_000,
   expect: { timeout: 8_000 },
-  // Tests create features with unique slugs and otherwise only read the seeded
+  // Tests create features with unique slugs and otherwise only read the demo
   // graphs, so they can share the single E2E server across workers.
   fullyParallel: true,
   retries: process.env["CI"] ? 1 : 0,
