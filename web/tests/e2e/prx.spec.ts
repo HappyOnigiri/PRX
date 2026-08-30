@@ -118,6 +118,21 @@ test("switches the display language and restores it from Local Storage", async (
   ).toBeVisible();
 });
 
+test("keeps the Settings dialog size while switching tabs", async ({
+  page,
+}) => {
+  await page.goto("/");
+  await page.getByRole("button", { name: "Settings" }).click();
+  const dialog = page.getByRole("dialog", { name: "Settings" });
+  await expect(dialog).toBeVisible();
+  const serverBounds = await dialog.boundingBox();
+  expect(serverBounds).not.toBeNull();
+
+  await page.getByRole("tab", { name: "Display" }).click();
+  await expect(page.getByLabel("Display language")).toBeVisible();
+  expect(await dialog.boundingBox()).toEqual(serverBounds);
+});
+
 test("follows the system theme unless the user selects an override", async ({
   page,
 }) => {
