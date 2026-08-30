@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { DocumentKind, type TaskDisplayState } from "../gen/prx/v1/prx_pb";
 import { taskDisplayStateLabel, taskDisplayStateToken } from "../i18n/domain";
+import { CopyableIdentifier } from "./CopyableIdentifier";
 import { IconButton } from "./IconButton";
 
 export interface TaskNodeDocument {
@@ -144,6 +145,9 @@ export function TaskNode({
           className="node-edit nodrag nopan"
           onClick={data.onEdit}
         />
+      </div>
+      <div className="task-node-identifier nodrag nowheel nopan">
+        <CopyableIdentifier label={t("common.taskId")} value={id} />
       </div>
       <h3>{data.title}</h3>
       {data.syncError && (
