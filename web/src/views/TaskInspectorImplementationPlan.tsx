@@ -1,9 +1,11 @@
+import { Save, Trash2 } from "lucide-react";
 import { useEffect, useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";
 import { useDomainMutation } from "../hooks";
 import { formatError } from "../i18n/domain";
+import { IconButton } from "./IconButton";
 import { MarkdownContent } from "./MarkdownPreview";
 import { MutationError } from "./MutationError";
 
@@ -151,16 +153,24 @@ function PlanEditor({
         />
       </label>
       <div className="plan-actions">
-        <button disabled={savePending}>{t("inspector.savePlan")}</button>
+        <IconButton
+          icon={Save}
+          label={t("inspector.savePlan")}
+          variant="primary"
+          type="submit"
+          disabled={savePending}
+        />
         {hasPlan && (
-          <button
+          <IconButton
+            icon={Trash2}
+            label={t("inspector.deletePlan")}
+            variant="danger"
+            size="compact"
+            iconOnly
             type="button"
-            className="text-action"
             disabled={deletePending}
             onClick={onDelete}
-          >
-            {t("inspector.deletePlan")}
-          </button>
+          />
         )}
       </div>
       <MutationError error={saveError} />

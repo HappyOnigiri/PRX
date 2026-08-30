@@ -149,9 +149,13 @@ describe("ServerSettingsDialog", () => {
       .getByText("ghe.example.com", { selector: "strong" })
       .closest(".settings-row");
     if (!(hostRow instanceof HTMLElement)) throw new Error("host row missing");
-    fireEvent.click(within(hostRow).getByRole("button", { name: "Edit" }));
+    fireEvent.click(
+      within(hostRow).getByRole("button", { name: "Edit ghe.example.com" }),
+    );
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    fireEvent.click(within(hostRow).getByRole("button", { name: "Edit" }));
+    fireEvent.click(
+      within(hostRow).getByRole("button", { name: "Edit ghe.example.com" }),
+    );
     const editHostForm = screen
       .getByRole("heading", { name: "Edit host" })
       .closest("form");
@@ -182,20 +186,24 @@ describe("ServerSettingsDialog", () => {
         uploadUrl: "https://ghe-renamed.example.com/api/uploads/",
       });
     });
-    fireEvent.click(within(hostRow).getByRole("button", { name: "Remove" }));
+    fireEvent.click(
+      within(hostRow).getByRole("button", {
+        name: "Remove ghe.example.com",
+      }),
+    );
     await waitFor(() => {
       expect(
         settingsMocks.mutations.deleteHost.mutateAsync,
       ).toHaveBeenCalledWith("ghe.example.com");
     });
 
-    const editButtons = screen.getAllByRole("button", { name: "Edit" });
+    const editButtons = screen.getAllByRole("button", { name: /^Edit / });
     const workEditButton = editButtons[2];
     if (!workEditButton) throw new Error("work edit button missing");
     fireEvent.click(workEditButton);
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     const refreshedEditButtons = screen.getAllByRole("button", {
-      name: "Edit",
+      name: /^Edit /,
     });
     const refreshedWorkEditButton = refreshedEditButtons[2];
     if (!refreshedWorkEditButton) throw new Error("work edit button missing");
@@ -223,27 +231,25 @@ describe("ServerSettingsDialog", () => {
       });
     });
 
-    const firstMoveDown = screen.getAllByRole("button", {
-      name: "Move authentication method down",
-    })[0];
-    if (!firstMoveDown) throw new Error("move down button missing");
+    const firstMoveDown = screen.getByRole("button", {
+      name: "Move work down",
+    });
     fireEvent.click(firstMoveDown);
     await waitFor(() => {
       expect(
         settingsMocks.mutations.reorderAuth.mutateAsync,
       ).toHaveBeenCalledWith(["ghe", "work"]);
     });
-    const secondMoveUp = screen.getAllByRole("button", {
-      name: "Move authentication method up",
-    })[1];
-    if (!secondMoveUp) throw new Error("move up button missing");
+    const secondMoveUp = screen.getByRole("button", {
+      name: "Move ghe up",
+    });
     fireEvent.click(secondMoveUp);
     await waitFor(() => {
       expect(
         settingsMocks.mutations.reorderAuth.mutateAsync,
       ).toHaveBeenLastCalledWith(["ghe", "work"]);
     });
-    const removeButtons = screen.getAllByRole("button", { name: "Remove" });
+    const removeButtons = screen.getAllByRole("button", { name: /^Remove / });
     const lastRemove = removeButtons.at(-1);
     if (!lastRemove) throw new Error("remove button missing");
     fireEvent.click(lastRemove);

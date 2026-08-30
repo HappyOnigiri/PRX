@@ -1,3 +1,4 @@
+import { Save, X } from "lucide-react";
 import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
@@ -5,6 +6,7 @@ import { formValue } from "../form";
 import { FeatureStatus, type Feature } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { featureStatusLabel } from "../i18n/domain";
+import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 
 interface EditFeatureDialogProps {
@@ -75,12 +77,19 @@ export function EditFeatureDialog({
         </label>
         <MutationError error={updateFeature.error} />
         <footer>
-          <button type="button" className="secondary" onClick={onClose}>
-            {t("common.cancel")}
-          </button>
-          <button disabled={updateFeature.isPending}>
-            {t("featureEdit.submit")}
-          </button>
+          <IconButton
+            icon={X}
+            label={t("common.cancel")}
+            variant="secondary"
+            onClick={onClose}
+          />
+          <IconButton
+            icon={Save}
+            label={t("featureEdit.submit")}
+            variant="primary"
+            type="submit"
+            disabled={updateFeature.isPending}
+          />
         </footer>
       </form>
     </div>

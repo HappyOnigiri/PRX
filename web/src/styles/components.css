@@ -1,18 +1,77 @@
-.secondary,
-.icon-button {
+.secondary {
   border-color: var(--border-strong);
   background: transparent;
   color: var(--text);
 }
 
-.icon-button {
-  width: 32px;
-  min-width: 32px;
-  padding: 0;
+.secondary:hover {
+  background: var(--surface-2);
 }
 
-.secondary:hover,
-.icon-button:hover {
+.icon-button {
+  min-width: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-color: var(--border-strong);
+  background: transparent;
+  color: var(--text);
+}
+
+.icon-button-standard.icon-button-only {
+  width: 32px;
+  padding-inline: 0;
+}
+
+.icon-button-compact {
+  min-width: 24px;
+  min-height: 24px;
+  padding-inline: 8px;
+}
+
+.icon-button-compact.icon-button-only {
+  width: 24px;
+  padding-inline: 0;
+}
+
+.icon-button svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.icon-button-label {
+  min-width: 0;
+}
+
+.icon-button-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.icon-button-primary:hover {
+  background: var(--accent-hover);
+}
+
+.icon-button-quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-2);
+}
+
+.icon-button-secondary:hover,
+.icon-button-quiet:hover {
+  background: var(--surface-2);
+}
+
+.icon-button-danger {
+  border-color: var(--status-conflict);
+  background: transparent;
+  color: var(--status-conflict);
+}
+
+.icon-button-danger:hover {
   background: var(--surface-2);
 }
 
@@ -56,16 +115,6 @@
   font-weight: 500;
 }
 
-.copyable-identifier-button svg {
-  width: 14px;
-  height: 14px;
-  fill: none;
-  stroke: currentcolor;
-  stroke-linecap: round;
-  stroke-linejoin: round;
-  stroke-width: 1.35;
-}
-
 .copyable-identifier-button:hover {
   background: var(--surface-2);
   color: var(--text);
@@ -82,11 +131,6 @@
   color: var(--text-3);
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.icon-button.danger {
-  border-color: var(--status-conflict);
-  color: var(--status-conflict);
 }
 
 .dialog h2 {
@@ -287,11 +331,6 @@
   display: flex;
   flex: 0 0 auto;
   gap: 5px;
-}
-
-.settings-row-actions button {
-  min-width: 32px;
-  padding-inline: 8px;
 }
 
 .settings-auth-name {

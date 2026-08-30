@@ -150,9 +150,8 @@
   background: var(--status-none);
 }
 
-.node-asset i {
+.node-asset svg {
   color: var(--text-3);
-  font-style: normal;
   text-align: right;
 }
 
@@ -312,8 +311,8 @@
 }
 
 .graph-empty span {
+  display: block;
   color: var(--text-3);
-  font-size: var(--text-num);
 }
 
 .graph-empty h2 {
@@ -329,14 +328,14 @@
   font-size: var(--text-sm);
 }
 
-.graph-empty button {
+.graph-empty button:not(.icon-button) {
   pointer-events: auto;
   border-color: var(--border-strong);
   background: transparent;
   color: var(--text);
 }
 
-.graph-empty button:hover {
+.graph-empty button:not(.icon-button):hover {
   background: var(--surface-2);
 }
 

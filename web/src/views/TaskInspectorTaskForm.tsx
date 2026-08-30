@@ -1,9 +1,11 @@
+import { Save } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";
 import { TaskStatus, type Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { taskStatusLabel } from "../i18n/domain";
+import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 
 export function TaskInspectorTaskForm({ task }: { task: Task }) {
@@ -58,7 +60,13 @@ export function TaskInspectorTaskForm({ task }: { task: Task }) {
           <input name="assignee" defaultValue={task.assignee} />
         </label>
       </div>
-      <button disabled={updateTask.isPending}>{t("inspector.saveTask")}</button>
+      <IconButton
+        icon={Save}
+        label={t("inspector.saveTask")}
+        variant="primary"
+        type="submit"
+        disabled={updateTask.isPending}
+      />
       <MutationError error={updateTask.error} />
     </form>
   );
