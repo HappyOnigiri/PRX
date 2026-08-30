@@ -55,7 +55,6 @@ export function Dashboard() {
     );
   const features = data.features.filter((feature) => !feature.archived);
   const featureIds = new Set(features.map((feature) => feature.id));
-  const tasks = data.tasks.filter((task) => featureIds.has(task.featureId));
   const projected = {
     readyTasks: data.readyTasks.filter((task) =>
       featureIds.has(task.featureId),
@@ -78,13 +77,8 @@ export function Dashboard() {
             {t("dashboard.titleStart")}
             <em>{t("dashboard.titleEmphasis")}</em>
           </h1>
-          <p>{t("dashboard.description")}</p>
         </div>
         <div className="page-head-status">
-          <div className="clock">
-            <span>{tasks.length}</span>
-            <small>{t("dashboard.nodesUnderControl")}</small>
-          </div>
           <SyncStatus />
         </div>
       </header>

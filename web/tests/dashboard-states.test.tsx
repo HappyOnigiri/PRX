@@ -138,7 +138,9 @@ describe("Dashboard states", () => {
     });
     const { container } = renderDashboard();
 
-    expect(container.querySelector(".clock span")).toHaveTextContent("1");
+    expect(
+      container.querySelector(".page-head .clock"),
+    ).not.toBeInTheDocument();
     expect(container.querySelector(".queue-ready > span")).toHaveTextContent(
       "1",
     );
