@@ -18,13 +18,11 @@ prx document add checkout --markdown-file notes.md
 ```
   -h, --help                   help for add
       --implementation-plan    mark as the task implementation plan
-      --kind string            compatibility alias: url, local_file, or markdown_path (default "url")
       --local-file string      registered local file path
       --markdown-file string   read stored Markdown from a file
       --stdin                  read stored Markdown from standard input
       --title string           document title
       --url string             HTTP or HTTPS URL
-      --value string           compatibility value for --kind
 ```
 
 ### Options inherited from parent commands

@@ -1245,6 +1245,8 @@ func TestBlackBoxRequiredOperandsRejectOldFlagsAndWrongCounts(t *testing.T) {
 			args: []string{"document", "add", "checkout", "--url", "https://x.test/1", "--feature", "legacy"},
 		},
 		{flag: "--task", args: []string{"document", "add", "T-1", "--url", "https://x.test/1", "--task", "T-1"}},
+		{flag: "--kind", args: []string{"document", "add", "T-1", "--kind", "url"}},
+		{flag: "--value", args: []string{"document", "add", "T-1", "--value", "https://x.test/1"}},
 		{flag: "--interval-seconds", args: []string{"config", "sync", "update", "600", "--interval-seconds", "600"}},
 		{flag: "--host", args: []string{"config", "host", "add", "ghe.example.com", "--host", "legacy.example.com"}},
 		{flag: "--id", args: []string{"config", "auth", "add", "work", "github.com", "gh_cli", "--id", "legacy"}},
@@ -1576,22 +1578,6 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	var documentID string
 	if err := json.Unmarshal(document["id"], &documentID); err != nil {
 		t.Fatal(err)
-	}
-
-	legacyDefault := runDB(
-		"document",
-		"add",
-		taskAID,
-		"--value",
-		"https://example.com/legacy",
-	)
-	assertDirectObject(t, legacyDefault, "id", "task_id")
-	var legacyKind string
-	if err := json.Unmarshal(legacyDefault["kind"], &legacyKind); err != nil {
-		t.Fatal(err)
-	}
-	if legacyKind != "url" {
-		t.Fatalf("legacy --value kind=%q, want url", legacyKind)
 	}
 
 	assertDirectObjectKeys(t, runDB("document"), "documents")
