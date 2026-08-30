@@ -30,6 +30,7 @@ const (
 	DomainErrorCodeInvalidDocumentURL      DomainErrorCode = "invalid_document_url"
 	DomainErrorCodeDocumentReadFailed      DomainErrorCode = "document_read_failed"
 	DomainErrorCodeDocumentTooLarge        DomainErrorCode = "document_too_large"
+	DomainErrorCodeInvalidConfig           DomainErrorCode = "invalid_config"
 	DomainErrorCodeInternal                DomainErrorCode = "internal"
 )
 

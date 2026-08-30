@@ -51,6 +51,7 @@ func protoDependency(v domain.Dependency) *prxv1.Dependency {
 func protoPullRequest(v domain.PullRequest) *prxv1.PullRequest {
 	result := &prxv1.PullRequest{
 		TaskId:       v.TaskID,
+		Host:         v.Host,
 		Owner:        v.Owner,
 		Repository:   v.Repository,
 		Number:       v.Number,
@@ -367,6 +368,8 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED
 	case domain.DomainErrorCodeDocumentTooLarge:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE
+	case domain.DomainErrorCodeInvalidConfig:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_CONFIG
 	case domain.DomainErrorCodeGitHubAuth:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH
 	case domain.DomainErrorCodeInvalidDatabase:

@@ -11,18 +11,19 @@
 
 ## Architecture
 
-`cmd/prx` constructs one application service used directly by Cobra commands and by thin ConnectRPC handlers. The service owns validation and derived state. The SQLite repository owns persistence and transactions. A GitHub provider interface isolates network synchronization and makes fixtures deterministic.
+`cmd/prx` constructs one application service used directly by Cobra commands and by thin ConnectRPC handlers. The service owns validation and derived state. The SQLite repository owns persistence and transactions. The versioned YAML configuration store owns host and credential settings, while a GitHub resolver selects host-scoped credentials for each live synchronization. A GitHub provider interface isolates network synchronization and makes fixtures deterministic.
 
 The browser uses generated Protocol Buffer descriptors through ConnectRPC. It never opens SQLite or invokes the CLI. Fixed states and known reasons cross the RPC boundary as enums or structured details, while unexpected server and GitHub error messages may remain English. The production build is emitted into `internal/webui/dist` and embedded in the Go binary.
 
-Package dependencies follow the same direction: `internal/domain` and `internal/github` are leaves; `internal/store` may import only `internal/domain` and `internal/db`; `internal/app` may import `internal/domain` and `internal/github` and depends on its `Repository` interface; `internal/rpc` and `internal/cli` use a `Service` interface; and `cmd/prx` assembles all concrete pieces.
+Package dependencies follow the same direction: `internal/domain` and `internal/config` are leaves; `internal/store` may import only `internal/domain` and `internal/db`; `internal/github` depends on `internal/config` and `internal/domain`; `internal/app` may import `internal/config`, `internal/domain`, and `internal/github` and depends on its `Repository` interface; `internal/rpc` and `internal/cli` use a `Service` interface; and `cmd/prx` assembles all concrete pieces.
 
 ## Packages
 
 - `internal/domain`: entities, status derivation, DAG validation, ready calculation.
 - `internal/store`: embedded migrations, sqlc queries, and transactional repository.
+- `internal/config`: versioned YAML settings, secure atomic writes, and public secret-free views.
 - `internal/app`: use cases shared by CLI and RPC.
-- `internal/github`: direct REST provider and deterministic fixtures.
+- `internal/github`: host-configured REST provider, credential resolver, error classification, and deterministic fixtures.
 - `internal/cli`: non-interactive Cobra surface and stable JSON envelopes.
 - `internal/rpc`: ConnectRPC translation only.
 - `internal/webui`: embedded Vite production assets.
@@ -31,6 +32,8 @@ Package dependencies follow the same direction: `internal/domain` and `internal/
 ## CLI contract
 
 Every mutation is non-interactive so that people and coding agents drive the same surface. `--json` emits a versioned envelope; stdout then carries JSON only, and warnings and server logs go to stderr, so output can be piped without filtering. Operating on data that does not exist — removing a dependency, detaching a pull request, deleting a document — fails with `not_found` instead of reporting success, so a caller cannot mistake a typo for a completed change. Feature and task deletion refuses to remove referenced data unless `--cascade` is supplied.
+
+`prx config` manages GitHub hosts and host-scoped authentication methods without opening the database or contacting GitHub. Its public output never contains inline tokens. Configuration is read from `--config`, then `PRX_CONFIG`, then the operating system user configuration directory; server-only presentation preferences remain in browser Local Storage.
 
 The root `package.json` is the single source of the product version. Every current build and install path appends `-dev` so it identifies the release on which development is based without claiming to be that release. A future distribution pipeline will stamp the stable version only into its release artifacts. `prx --version` and the WebUI read the same value from the running binary; the server injects it into the embedded index rather than maintaining a separate frontend version.
 
@@ -44,11 +47,15 @@ Dependencies are directed from blocker to blocked. Edge insertion loads the feat
 
 ## Storage and operational boundaries
 
-SQLite uses WAL, foreign keys, a 5-second busy timeout, and explicit transactions. Migrations are embedded and each version is committed atomically. The default database lives in the user data directory and is replaceable with `--db` or `PRX_DB`.
+SQLite uses WAL, foreign keys, a 5-second busy timeout, and explicit transactions. Migrations are embedded and each version is committed atomically. The default database lives in the user data directory and is replaceable with `--db` or `PRX_DB`. GitHub settings live in `config.yaml` under the user configuration directory and are replaceable with `--config` or `PRX_CONFIG`. The config directory is `0700`, the config file is `0600`, and updates use a same-directory temporary file, `fsync`, and atomic rename under an advisory lock.
+
+Pull-request identity includes the normalized GitHub host, owner, repository, and number. The migration assigns `github.com` to existing rows and changes uniqueness to include host, so identical repository names on two Enterprise hosts remain distinct. The SQLite `github_repository_auth_cache` stores only the successful host/repository/auth-method mapping and timestamp; it never stores tokens, token hashes, or Keychain data. A cache entry for a removed method is ignored and replaced after the next successful synchronization.
 
 The CLI calls a `Service` interface. Its local implementation is used now; a future remote implementation can forward the same operations over Connect without changing command parsing.
 
-GitHub calls are direct HTTP requests. Authentication checks `GITHUB_TOKEN`, then `GH_TOKEN`, then invokes `gh auth token` only to obtain a credential; tokens are never persisted or logged.
+GitHub calls are direct HTTPS requests. A `LiveProvider` receives a resolved token, API URL, upload URL, and a 30-second timeout client; it does not discover credentials. The resolver reads Keychain credentials through `/usr/bin/security`, configured environment variables, inline YAML tokens, or `gh auth token --hostname HOST --user USER`. `gh` receives an environment with GitHub token variables removed so an explicitly selected account cannot silently mix with an ambient token. The historical GitHub.com order remains an implicit candidate list (`GITHUB_TOKEN`, `GH_TOKEN`, then `gh`) only when the config file omits `auth_methods`; an explicit list is used in YAML order and is host-filtered.
+
+GitHub.com and Enterprise clients use their configured API and upload bases through `WithEnterpriseURLs`. The HTTP client rejects redirects to a different origin, keeping an Authorization-bearing request inside its configured host boundary. An authentication method that returns `401` is excluded for the rest of the current sync. Permission errors and access-related `404` responses may advance to the next method, while rate limits, network/TLS errors, and `5xx` responses fail that repository without credential fallback. A `404` from a cached credential is disambiguated by one repository pull-request list probe: a successful probe means the requested PR is absent, while a failed probe permits authentication fallback.
 
 Synchronization fails safe rather than destructively. A failed refresh keeps the last successful fields and marks the record stale with a sync error, so a temporary outage never rewrites known state as unknown. A bulk refresh persists successes and failures independently, so one inaccessible repository does not discard the results for the others.
 
@@ -56,7 +63,7 @@ Synchronization fails safe rather than destructively. A failed refresh keeps the
 
 `prx serve` is a local tool rather than an authenticated service, so its defenses assume a single trusted user and an untrusted network and browser. It binds to `127.0.0.1:7331` unless `--addr` is supplied explicitly, rejects requests whose `Host` or `Origin` header does not match the listen address, and requires the Connect protocol header on RPC calls; a page from another origin or a rebound DNS name therefore cannot drive the local database. Production responses set a restrictive content security policy and related browser headers.
 
-Markdown documents are stored as path references, resolved relative to the server's working directory or as absolute paths. Only paths explicitly registered as `markdown_path` documents can be read, which keeps the preview from turning the server into a general file reader.
+Markdown documents are stored as path references, resolved relative to the server's working directory or as absolute paths. Only paths explicitly registered as `markdown_path` documents can be read, which keeps the preview from turning the server into a general file reader. Inline GitHub tokens are a deliberate local-trust-boundary trade-off: they are stored in YAML when selected, but are write-only across RPC and UI reads and are never included in CLI JSON, logs, errors, or cache rows.
 
 ## UI structure decision
 
@@ -69,6 +76,8 @@ WebUI copy uses semantic i18next keys with bundled English and Japanese resource
 
 Task cards expose pull requests and document references as explicit rows. External references open in a new browser tab, while a registered Markdown path is read on demand through a document-ID RPC and rendered in a read-only modal. Markdown contents remain outside the snapshot, and preview reads are limited to 1 MiB. The task inspector opens only from the card's edit button so reference activation and editing are distinct actions.
 
+The Server settings dialog edits the same YAML-backed host and credential order used by `prx sync` and `prx serve`. It shows host boundaries and secret-free credential metadata, offers source-specific forms, and sends an inline token only when it is newly entered or replaced. Reordering affects the next synchronization without a server restart; the browser does not persist server credentials in Local Storage.
+
 ## Trade-offs
 
-SQLite keeps installation local and a single binary possible, while WAL and retries mitigate but do not remove its single-writer constraint. Manual sync avoids worker lifecycle complexity. A normalized schema makes future PostgreSQL migration practical. Layout persistence, webhooks, remote mode, authentication, and collaboration remain outside the initial implementation.
+SQLite keeps installation local and a single binary possible, while WAL and retries mitigate but do not remove its single-writer constraint. Manual sync avoids worker lifecycle complexity. A normalized schema makes future PostgreSQL migration practical. Inline credentials are convenient for local automation but intentionally carry the YAML file's filesystem trust requirement; Keychain, environment, and `gh` sources are available when plaintext storage is undesirable. Layout persistence, webhooks, remote mode, authentication, and collaboration remain outside the initial implementation.
