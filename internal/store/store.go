@@ -368,15 +368,6 @@ func domainTask(value db.Task, featureID string) domain.Task {
 	}
 }
 
-func domainImplementationPlan(value db.ImplementationPlan, taskID string) domain.ImplementationPlan {
-	return domain.ImplementationPlan{
-		TaskID:    taskID,
-		Content:   value.Content,
-		CreatedAt: parseTime(value.CreatedAt),
-		UpdatedAt: parseTime(value.UpdatedAt),
-	}
-}
-
 func domainDependency(value db.Dependency, taskIDs map[string]string) domain.Dependency {
 	return domain.Dependency{
 		BlockerTaskID: taskIDs[value.BlockerTaskID],
@@ -390,13 +381,33 @@ func domainDocument(
 	featureIDs, taskIDs map[string]string,
 ) domain.Document {
 	return domain.Document{
-		ID:        value.ID,
-		FeatureID: featureIDs[value.FeatureID.String],
-		TaskID:    taskIDs[value.TaskID.String],
-		Kind:      domain.DocumentKind(value.Kind),
-		Title:     value.Title,
-		Value:     value.Value,
-		CreatedAt: parseTime(value.CreatedAt),
+		ID:                   value.ID,
+		FeatureID:            featureIDs[value.FeatureID.String],
+		TaskID:               taskIDs[value.TaskID.String],
+		Kind:                 domain.DocumentKind(value.Kind),
+		Title:                value.Title,
+		Locator:              value.Locator.String,
+		Content:              value.Content.String,
+		IsImplementationPlan: value.IsImplementationPlan != 0,
+		CreatedAt:            parseTime(value.CreatedAt),
+		UpdatedAt:            parseTime(value.UpdatedAt),
+	}
+}
+
+func domainListedDocument(
+	value db.ListDocumentsRow,
+	featureIDs, taskIDs map[string]string,
+) domain.Document {
+	return domain.Document{
+		ID:                   value.ID,
+		FeatureID:            featureIDs[value.FeatureID.String],
+		TaskID:               taskIDs[value.TaskID.String],
+		Kind:                 domain.DocumentKind(value.Kind),
+		Title:                value.Title,
+		Locator:              value.Locator.String,
+		IsImplementationPlan: value.IsImplementationPlan != 0,
+		CreatedAt:            parseTime(value.CreatedAt),
+		UpdatedAt:            parseTime(value.UpdatedAt),
 	}
 }
 

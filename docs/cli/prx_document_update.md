@@ -1,30 +1,27 @@
-## prx document add
+## prx document update
 
-Add a document
+Update a document
 
 ```
-prx document add FEATURE_ID_OR_SLUG_OR_TASK_ID [flags]
+prx document update DOCUMENT_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx document add T-1 --url https://example.com
-prx document add checkout --markdown-file notes.md
+prx document update DOCUMENT_ID --title Runbook
 ```
 
 ### Options
 
 ```
-  -h, --help                   help for add
-      --implementation-plan    mark as the task implementation plan
-      --kind string            compatibility alias: url, local_file, or markdown_path (default "url")
+  -h, --help                   help for update
+      --implementation-plan    set or clear the plan designation
       --local-file string      registered local file path
       --markdown-file string   read stored Markdown from a file
       --stdin                  read stored Markdown from standard input
-      --title string           document title
+      --title string           replace the document title
       --url string             HTTP or HTTPS URL
-      --value string           compatibility value for --kind
 ```
 
 ### Options inherited from parent commands

@@ -15,17 +15,27 @@ const workspaceMocks = vi.hoisted(() => ({
   navigate: vi.fn().mockResolvedValue(undefined),
   snapshot: { data: undefined as Snapshot | undefined, isPending: false },
   hookIndex: 0,
-  mutations: Array.from({ length: 3 }, () => ({
+  mutations: Array.from({ length: 5 }, () => ({
     mutate: vi.fn(),
     mutateAsync: vi.fn().mockResolvedValue({}),
     isPending: false,
     error: null as Error | null,
   })),
+  api: {
+    sync: vi.fn(),
+    updateFeature: vi.fn(),
+    deleteFeature: vi.fn(),
+    addDocument: vi.fn(),
+    deleteDocument: vi.fn(),
+    getDocument: vi.fn(),
+    updateDocument: vi.fn(),
+  },
   previewDocument: {
     id: "preview-doc",
-    kind: 2,
+    kind: 3,
     title: "Preview document",
-    value: "docs/preview.md",
+    locator: "docs/preview.md",
+    isImplementationPlan: false,
   },
 }));
 
@@ -34,21 +44,33 @@ vi.mock("@tanstack/react-router", () => ({
   useParams: () => ({ featureId: "feature-1" }),
 }));
 vi.mock("../src/api", () => ({
-  mutations: {
-    sync: vi.fn(),
-    updateFeature: vi.fn(),
-    deleteFeature: vi.fn(),
-  },
+  mutations: workspaceMocks.api,
 }));
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => workspaceMocks.snapshot,
   useDomainMutation: (mutationFn: (input: unknown) => unknown) => {
     workspaceMocks.hookIndex++;
-    const mutation = workspaceMocks.mutations[0];
+    const index =
+      mutationFn === workspaceMocks.api.addDocument
+        ? 1
+        : mutationFn === workspaceMocks.api.deleteDocument
+          ? 2
+          : mutationFn === workspaceMocks.api.updateDocument
+            ? 3
+            : mutationFn === workspaceMocks.api.getDocument
+              ? 4
+              : 0;
+    const mutation = workspaceMocks.mutations[index];
     if (!mutation) throw new Error("mutation mock missing");
-    mutation.mutate.mockImplementation((input: unknown) => {
-      return mutationFn(input);
-    });
+    mutation.mutate.mockImplementation(
+      (input: unknown, options?: { onSuccess?: (data: unknown) => void }) => {
+        const result = mutationFn(input);
+        if (options?.onSuccess) {
+          void Promise.resolve(result).then(options.onSuccess);
+        }
+        return result;
+      },
+    );
     return mutation;
   },
 }));

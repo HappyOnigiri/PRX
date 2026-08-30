@@ -1,28 +1,26 @@
 ## prx plan set
 
-Create or replace a task's implementation plan
-
-### Synopsis
-
-Create or replace a task's implementation plan.
-
-FILE_OR_DASH is a Markdown file path, or - to read the plan content from standard input.
+Create or replace a task's implementation plan document
 
 ```
-prx plan set TASK_ID FILE_OR_DASH [flags]
+prx plan set TASK_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx plan set TASK_ID plan.md
-prx plan set TASK_ID -
+prx plan set T-1 --file plan.md
+prx plan set T-1 --url https://example.com/plan
 ```
 
 ### Options
 
 ```
-  -h, --help   help for set
+      --file string         read stored Markdown content from a file
+  -h, --help                help for set
+      --local-file string   store a local plan path
+      --stdin               read stored Markdown content from standard input
+      --url string          store an HTTP or HTTPS plan URL
 ```
 
 ### Options inherited from parent commands
@@ -36,5 +34,5 @@ prx plan set TASK_ID -
 
 ### SEE ALSO
 
-* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan
+* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan document
 

@@ -2,14 +2,14 @@ import { Copy, RotateCcw, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
-import { readMarkdownDocument } from "../api";
+import { readDocumentContent } from "../api";
 import { formatError } from "../i18n/domain";
 import { IconButton } from "./IconButton";
 
 interface MarkdownDocument {
   id: string;
   title: string;
-  value: string;
+  locator: string;
 }
 
 export function MarkdownPreview({
@@ -28,7 +28,7 @@ export function MarkdownPreview({
 
   useEffect(() => {
     let current = true;
-    readMarkdownDocument(document.id).then(
+    readDocumentContent(document.id).then(
       (value) => {
         if (current) setContent(value);
       },
@@ -87,7 +87,7 @@ export function MarkdownPreview({
             <h2 id="markdown-preview-title">
               {document.title || t("markdownPreview.untitled")}
             </h2>
-            <code>{document.value}</code>
+            {document.locator && <code>{document.locator}</code>}
           </div>
           <div className="markdown-actions">
             <IconButton
@@ -98,13 +98,15 @@ export function MarkdownPreview({
               disabled={content === undefined}
               onClick={() => void copy(content ?? "", "content")}
             />
-            <IconButton
-              icon={Copy}
-              label={t("markdownPreview.copyPath")}
-              variant="secondary"
-              type="button"
-              onClick={() => void copy(document.value, "path")}
-            />
+            {document.locator && (
+              <IconButton
+                icon={Copy}
+                label={t("markdownPreview.copyPath")}
+                variant="secondary"
+                type="button"
+                onClick={() => void copy(document.locator, "path")}
+              />
+            )}
             <IconButton
               icon={X}
               label={t("markdownPreview.close")}
@@ -165,7 +167,7 @@ function MarkdownBody({
   );
 }
 
-export function MarkdownContent({ content }: { content: string }) {
+function MarkdownContent({ content }: { content: string }) {
   return (
     <ReactMarkdown
       components={{

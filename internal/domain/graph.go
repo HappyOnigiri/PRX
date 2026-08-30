@@ -146,8 +146,6 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 			}
 		} else if pr != nil {
 			task.DisplayState = PRDisplayState(pr)
-		} else if task.HasImplementationPlan {
-			task.DisplayState = TaskDisplayStateDesigned
 		} else {
 			task.DisplayState = TaskDisplayStateNotStarted
 		}

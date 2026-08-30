@@ -17,6 +17,7 @@ import { FeatureGraph } from "./FeatureGraph";
 import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { TaskInspector } from "./TaskInspector";
+import { ReferencesSection } from "./TaskInspectorReferences";
 import { type TaskNodeDocument } from "./TaskNode";
 
 export function FeatureWorkspace() {
@@ -56,6 +57,12 @@ export function FeatureWorkspace() {
     }
     return result;
   }, [data]);
+  const featureDocuments = useMemo(
+    () =>
+      (data?.documents.filter((document) => document.featureId === featureId) ??
+        []) as TaskNodeDocument[],
+    [data, featureId],
+  );
   const openTaskDialog = useCallback(() => {
     setShowTask(true);
   }, []);
@@ -90,6 +97,7 @@ export function FeatureWorkspace() {
       dependencies={dependencies}
       pullRequests={pullRequests}
       documentsByTask={documentsByTask}
+      featureDocuments={featureDocuments}
       selectedTask={selectedTask}
       previewDocument={previewDocument}
       showTask={showTask}
@@ -130,6 +138,7 @@ interface WorkspaceContentProps {
   dependencies: Dependency[];
   pullRequests: Map<string, PullRequest>;
   documentsByTask: Map<string, TaskNodeDocument[]>;
+  featureDocuments: TaskNodeDocument[];
   selectedTask: Task | undefined;
   previewDocument: TaskNodeDocument | undefined;
   showTask: boolean;
@@ -202,6 +211,13 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           />
         </div>
       </header>
+      <ReferencesSection
+        featureId={props.featureId}
+        documents={props.featureDocuments}
+        onPreview={props.onPreviewDocument}
+        readOnly={props.feature.archived}
+        compact
+      />
       {props.feature.archived && (
         <div className="archived-notice" role="status">
           <strong>{t("workspace.archivedLabel")}</strong>

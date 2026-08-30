@@ -76,7 +76,6 @@ func TestProtoTaskDisplayStateMapsEveryKnownValue(t *testing.T) {
 		want  prxv1.TaskDisplayState
 	}{
 		{"not started", domain.TaskDisplayStateNotStarted, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED},
-		{"designed", domain.TaskDisplayStateDesigned, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED},
 		{"in progress", domain.TaskDisplayStateInProgress, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS},
 		{"completed", domain.TaskDisplayStateCompleted, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED},
 		{"closed", domain.TaskDisplayStateClosed, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED},
@@ -226,7 +225,8 @@ func TestProtoDocumentKindMapsEveryKnownValue(t *testing.T) {
 		want  prxv1.DocumentKind
 	}{
 		{"URL", domain.DocumentKindURL, prxv1.DocumentKind_DOCUMENT_KIND_URL},
-		{"Markdown path", domain.DocumentKindMarkdownPath, prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH},
+		{"local file", domain.DocumentKindLocalFile, prxv1.DocumentKind_DOCUMENT_KIND_LOCAL_FILE},
+		{"Markdown", domain.DocumentKindMarkdown, prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {
@@ -348,6 +348,16 @@ func TestRPCErrorDetailsMapEveryKnownDomainErrorCode(t *testing.T) {
 			"implementation plan too large",
 			domain.DomainErrorCodeImplementationPlanTooLarge,
 			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE,
+		},
+		{
+			"document not text",
+			domain.DomainErrorCodeDocumentNotText,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT,
+		},
+		{
+			"duplicate implementation plan",
+			domain.DomainErrorCodeDuplicateImplementationPlan,
+			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN,
 		},
 	}
 	for _, test := range tests {

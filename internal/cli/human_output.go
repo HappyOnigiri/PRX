@@ -171,22 +171,68 @@ func writeDocumentTable(out io.Writer, documents []domain.Document) error {
 		_, err := fmt.Fprintln(out, "No documents found.")
 		return err
 	}
-	return writeTable(out, []string{"ID", "FEATURE", "TASK", "KIND", "TITLE", "VALUE"}, func(table *tabwriter.Writer) {
-		for _, document := range documents {
-			writeRow(table, document.ID, displayValue(document.FeatureID), displayValue(document.TaskID), document.Kind,
-				displayValue(document.Title), document.Value)
-		}
-	})
+	return writeTable(
+		out,
+		[]string{"ID", "FEATURE", "TASK", "KIND", "PLAN", "TITLE", "LOCATOR"},
+		func(table *tabwriter.Writer) {
+			for _, document := range documents {
+				writeRow(
+					table,
+					document.ID,
+					displayValue(document.FeatureID),
+					displayValue(document.TaskID),
+					document.Kind,
+					yesNo(document.IsImplementationPlan),
+					displayValue(document.Title),
+					displayValue(document.Locator),
+				)
+			}
+		},
+	)
 }
 
-func renderImplementationPlan(plan domain.ImplementationPlan) humanRenderer {
+func renderDocumentDetail(document domain.Document) humanRenderer {
+	return func(out io.Writer) error {
+		if err := writeFields(out, [][2]string{
+			{"ID", document.ID},
+			{"Feature", displayValue(document.FeatureID)},
+			{"Task", displayValue(document.TaskID)},
+			{"Kind", string(document.Kind)},
+			{"Title", displayValue(document.Title)},
+			{"Locator", displayValue(document.Locator)},
+			{"Implementation plan", yesNo(document.IsImplementationPlan)},
+			{"Created", formatTime(document.CreatedAt)},
+			{"Updated", formatTime(document.UpdatedAt)},
+		}); err != nil {
+			return err
+		}
+		if document.Content != "" {
+			_, err := fmt.Fprintf(out, "\n%s", document.Content)
+			if err != nil {
+				return err
+			}
+			if !strings.HasSuffix(document.Content, "\n") {
+				_, err = io.WriteString(out, "\n")
+			}
+			return err
+		}
+		return nil
+	}
+}
+
+func renderImplementationPlan(plan domain.Document) humanRenderer {
 	return func(out io.Writer) error {
 		if _, err := fmt.Fprintf(
 			out,
-			"Task: %s\nUpdated: %s\n\n",
+			"Task: %s\nKind: %s\nUpdated: %s\n\n",
 			plan.TaskID,
+			plan.Kind,
 			formatTime(plan.UpdatedAt),
 		); err != nil {
+			return err
+		}
+		if plan.Kind != domain.DocumentKindMarkdown {
+			_, err := fmt.Fprintln(out, plan.Locator)
 			return err
 		}
 		if _, err := io.WriteString(out, plan.Content); err != nil {
@@ -347,6 +393,23 @@ func renderConfig(value config.PublicConfig) humanRenderer {
 			return err
 		}
 		return writeAuthTable(out, value.GitHub.AuthMethods)
+	}
+}
+
+// renderConfigValidation keeps a valid configuration a success even when the
+// file carries fields this build does not know, and lists those fields so the
+// reader learns which ones the next write drops.
+func renderConfigValidation(warnings []string) humanRenderer {
+	return func(out io.Writer) error {
+		if _, err := fmt.Fprintln(out, "Configuration is valid."); err != nil {
+			return err
+		}
+		for _, warning := range warnings {
+			if _, err := fmt.Fprintf(out, "Warning: %s\n", warning); err != nil {
+				return err
+			}
+		}
+		return nil
 	}
 }
 

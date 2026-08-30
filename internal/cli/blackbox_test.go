@@ -469,7 +469,7 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 	if err := os.WriteFile(planPath, []byte(content), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	set, _, exit := runCLI(t, binary, dbPath, "plan", "set", taskData.ID, planPath)
+	set, _, exit := runCLI(t, binary, dbPath, "plan", "set", taskData.ID, "--file", planPath)
 	if exit != 0 || !set.OK {
 		t.Fatalf("set result=%+v exit=%d", set, exit)
 	}
@@ -504,7 +504,7 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 	if err := json.Unmarshal(taskSnapshot.Data, &taskState); err != nil {
 		t.Fatal(err)
 	}
-	if !taskState.HasPlan || taskState.Display != "designed" || taskState.Status != "auto" {
+	if !taskState.HasPlan || taskState.Display != "not_started" || taskState.Status != "auto" {
 		t.Fatalf("task state=%+v", taskState)
 	}
 	deleted, _, exit := runCLI(t, binary, dbPath, "plan", "delete", taskData.ID)
@@ -528,7 +528,7 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 		"plan",
 		"set",
 		taskData.ID,
-		"-",
+		"--stdin",
 	)
 	if exit != 0 || !stdinSet.OK || !bytes.Contains(stdinSet.Data, []byte("Standard input plan")) {
 		t.Fatalf("stdin set result=%+v exit=%d", stdinSet, exit)
@@ -540,15 +540,30 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 		"plan",
 		"set",
 		taskData.ID,
+		"--file",
 		filepath.Join(t.TempDir(), "missing.md"),
 	)
 	if exit == 0 || missingFile.ErrorCode != "invalid_implementation_plan" ||
-		!strings.Contains(missingFile.Error, "could not read implementation plan") {
+		!strings.Contains(missingFile.Error, "could not read Markdown") {
 		t.Fatalf("missing file result=%+v exit=%d", missingFile, exit)
 	}
-	emptyStdin, _, exit := runCLIWithInput(t, binary, dbPath, "", "plan", "set", taskData.ID, "-")
+	emptyStdin, _, exit := runCLIWithInput(t, binary, dbPath, "", "plan", "set", taskData.ID, "--stdin")
 	if exit == 0 || emptyStdin.ErrorCode != "invalid_implementation_plan" {
 		t.Fatalf("empty stdin result=%+v exit=%d", emptyStdin, exit)
+	}
+	invalid, _, exit := runCLI(
+		t,
+		binary,
+		dbPath,
+		"plan",
+		"set",
+		taskData.ID,
+		"--file",
+		planPath,
+		"--stdin",
+	)
+	if exit == 0 || invalid.Error == "" || !strings.Contains(invalid.Error, "exactly one") {
+		t.Fatalf("invalid input result=%+v exit=%d", invalid, exit)
 	}
 }
 
@@ -707,6 +722,32 @@ func TestBlackBoxReadAliasesAndFeatureSlugEscape(t *testing.T) {
 	invalid, _, exit := runCLI(t, binary, dbPath, "task", taskData.ID, "--feature", "checkout")
 	if exit == 0 || invalid.ErrorCode != "usage_error" || !strings.Contains(invalid.Error, "cannot be used") {
 		t.Fatalf("task ID with filter: %+v exit=%d", invalid, exit)
+	}
+
+	document, _, exit := runCLI(
+		t, binary, dbPath,
+		"document", "add", "checkout", "--url", "https://example.com/checkout",
+	)
+	if exit != 0 || !document.OK {
+		t.Fatalf("create document: %+v exit=%d", document, exit)
+	}
+	var documentData struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(document.Data, &documentData); err != nil {
+		t.Fatal(err)
+	}
+	bySlug, _, exit := runCLI(t, binary, dbPath, "document", "--feature", "checkout")
+	if exit != 0 || !bySlug.OK || !bytes.Contains(bySlug.Data, []byte(documentData.ID)) {
+		t.Fatalf("document filter by slug: %+v exit=%d", bySlug, exit)
+	}
+	unknownFeature, _, exit := runCLI(t, binary, dbPath, "document", "--feature", "missing-feature")
+	if exit == 0 || unknownFeature.ErrorCode != "not_found" {
+		t.Fatalf("document filter by unknown feature: %+v exit=%d", unknownFeature, exit)
+	}
+	unknownTask, _, exit := runCLI(t, binary, dbPath, "document", "--task", "T-404")
+	if exit == 0 || unknownTask.ErrorCode != "not_found" {
+		t.Fatalf("document filter by unknown task: %+v exit=%d", unknownTask, exit)
 	}
 
 	for alias, key := range map[string]string{"dep": "dependencies", "doc": "documents"} {
@@ -1120,7 +1161,7 @@ func TestBlackBoxDefaultTextOutputCoversResourcesAndSummaries(t *testing.T) {
 	if err := os.WriteFile(planPath, []byte("# Implementation plan\n\n1. Build it.\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	run("plan", "set", "T-1", planPath)
+	run("plan", "set", "T-1", "--file", planPath)
 	plan := run("plan", "T-1")
 	for _, value := range []string{"Task: T-1", "Updated:", "# Implementation plan", "1. Build it."} {
 		if !strings.Contains(plan.stdout, value) {
@@ -1199,9 +1240,11 @@ func TestBlackBoxRequiredOperandsRejectOldFlagsAndWrongCounts(t *testing.T) {
 		{flag: "--title", args: []string{"task", "create", "checkout", "Task", "--title", "Legacy"}},
 		{flag: "--task", args: []string{"pr", "attach", "T-1", "https://example.com/pull/1", "--task", "T-1"}},
 		{flag: "--url", args: []string{"pr", "attach", "T-1", "https://x.test/1", "--url", "https://x.test/2"}},
-		{flag: "--value", args: []string{"document", "add", "T-1", "https://example.com", "--value", "legacy"}},
-		{flag: "--file", args: []string{"plan", "set", "T-1", "plan.md", "--file", "legacy.md"}},
-		{flag: "--stdin", args: []string{"plan", "set", "T-1", "plan.md", "--stdin"}},
+		{
+			flag: "--feature",
+			args: []string{"document", "add", "checkout", "--url", "https://x.test/1", "--feature", "legacy"},
+		},
+		{flag: "--task", args: []string{"document", "add", "T-1", "--url", "https://x.test/1", "--task", "T-1"}},
 		{flag: "--interval-seconds", args: []string{"config", "sync", "update", "600", "--interval-seconds", "600"}},
 		{flag: "--host", args: []string{"config", "host", "add", "ghe.example.com", "--host", "legacy.example.com"}},
 		{flag: "--id", args: []string{"config", "auth", "add", "work", "github.com", "gh_cli", "--id", "legacy"}},
@@ -1226,8 +1269,8 @@ func TestBlackBoxRequiredOperandsRejectOldFlagsAndWrongCounts(t *testing.T) {
 		{"feature", "create", "checkout"},
 		{"task", "create", "checkout", "Task", "extra"},
 		{"pr", "attach", "T-1"},
-		{"document", "add", "T-1", "value", "extra"},
-		{"plan", "set", "T-1"},
+		{"document", "add", "T-1", "extra"},
+		{"plan", "set"},
 		{"config", "sync", "update", "600", "extra"},
 		{"config", "host", "add"},
 		{"config", "auth", "add", "work", "github.com"},
@@ -1262,23 +1305,6 @@ func TestBlackBoxDoubleDashPreservesLiteralPositionalValue(t *testing.T) {
 	task := executeCLI(t, binary, "", "--db", dbPath, "task", "create", "literal", "--", "--assignee")
 	if task.exit != 0 || task.stderr != "" || !strings.Contains(task.stdout, "Created task T-1") {
 		t.Fatalf("task result=%+v", task)
-	}
-	document := executeCLI(
-		t,
-		binary,
-		"",
-		"--db",
-		dbPath,
-		"document",
-		"add",
-		"T-1",
-		"--kind",
-		"markdown_path",
-		"--",
-		"--json",
-	)
-	if document.exit != 0 || document.stderr != "" || !strings.Contains(document.stdout, "Added document") {
-		t.Fatalf("document result=%+v", document)
 	}
 	invalidURL := executeCLI(t, binary, "", "--db", dbPath, "pr", "attach", "T-1", "--", "--url")
 	if invalidURL.exit == 0 || invalidURL.stdout != "" || !strings.Contains(invalidURL.stderr, "expected an https") ||
@@ -1329,6 +1355,7 @@ func TestBlackBoxDocumentAddResolvesPublicParentForms(t *testing.T) {
 				"document",
 				"add",
 				test.parent,
+				"--url",
 				"https://example.com/"+strings.ReplaceAll(test.name, " ", "-"),
 			)
 			if addExit != 0 || !value.OK {
@@ -1359,6 +1386,7 @@ func TestBlackBoxDocumentAddResolvesPublicParentForms(t *testing.T) {
 			"document",
 			"add",
 			missingCase.parent,
+			"--url",
 			"https://example.com/missing",
 		)
 		if missingExit == 0 || missing.ErrorCode != "not_found" {
@@ -1541,22 +1569,38 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 		"document",
 		"add",
 		taskAID,
+		"--url",
 		"https://example.com/checkout",
-		"--kind",
-		"url",
 	)
 	assertDirectObject(t, document, "id", "task_id")
 	var documentID string
 	if err := json.Unmarshal(document["id"], &documentID); err != nil {
 		t.Fatal(err)
 	}
+
+	legacyDefault := runDB(
+		"document",
+		"add",
+		taskAID,
+		"--value",
+		"https://example.com/legacy",
+	)
+	assertDirectObject(t, legacyDefault, "id", "task_id")
+	var legacyKind string
+	if err := json.Unmarshal(legacyDefault["kind"], &legacyKind); err != nil {
+		t.Fatal(err)
+	}
+	if legacyKind != "url" {
+		t.Fatalf("legacy --value kind=%q, want url", legacyKind)
+	}
+
 	assertDirectObjectKeys(t, runDB("document"), "documents")
 
 	planPath := filepath.Join(root, "plan.md")
 	if err := os.WriteFile(planPath, []byte("# Checkout plan\n"), 0o600); err != nil {
 		t.Fatal(err)
 	}
-	assertDirectObject(t, runDB("plan", "set", taskAID, planPath), "task_id", "content")
+	assertDirectObject(t, runDB("plan", "set", taskAID, "--file", planPath), "task_id", "content")
 	assertDirectObject(t, runDB("plan", taskAID), "task_id", "content")
 
 	assertDirectObject(t, runDB("snapshot"), "features", "tasks", "dependencies", "pull_requests", "documents")
@@ -1840,4 +1884,57 @@ func runConfigCLI(
 		return decodeFailure(t, []byte(result.stderr), result.stderr), result.stderr, result.exit
 	}
 	return decodeResult(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
+}
+
+// TestConfigUnknownFieldsWarnWithoutFailing proves a configuration file written
+// by a newer PRX keeps working: commands still succeed, the fields this build
+// cannot represent are named on stderr, and validation reports them as data.
+func TestConfigUnknownFieldsWarnWithoutFailing(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "prx.db")
+	configPath := filepath.Join(root, "config.yaml")
+	body := "version: 1\ngithub:\n  hosts:\n    - host: github.com\n" +
+		"      future_url: https://github.com/future\n  future_setting: 42\n"
+	if err := os.WriteFile(configPath, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	base := []string{"--db", dbPath, "--config", configPath}
+
+	listing := executeCLI(t, binary, "", append(base, "feature")...)
+	if listing.exit != 0 {
+		t.Fatalf("feature listing failed: stdout=%q stderr=%q exit=%d", listing.stdout, listing.stderr, listing.exit)
+	}
+	for _, want := range []string{configPath, `"future_url"`, `"future_setting"`} {
+		if !strings.Contains(listing.stderr, want) {
+			t.Fatalf("stderr omitted %q: %q", want, listing.stderr)
+		}
+	}
+
+	validation := executeCLI(t, binary, "", append(base, "config", "validate", "--json")...)
+	if validation.exit != 0 {
+		t.Fatalf("config validate failed: stderr=%q exit=%d", validation.stderr, validation.exit)
+	}
+	assertCompactJSON(t, validation.stdout)
+	value := decodeObject(t, []byte(validation.stdout), validation.stdout)
+	assertDirectObjectKeys(t, value, "valid", "warnings")
+	var warnings []string
+	if err := json.Unmarshal(value["warnings"], &warnings); err != nil {
+		t.Fatalf("warnings are not a string list: %v\n%s", err, validation.stdout)
+	}
+	if len(warnings) != 2 || !strings.Contains(warnings[0], `"future_url"`) ||
+		!strings.Contains(warnings[1], `"future_setting"`) {
+		t.Fatalf("validate warnings=%q", warnings)
+	}
+
+	// A file this build fully understands stays quiet, so the warning marks a real
+	// difference rather than appearing on every run.
+	quiet := filepath.Join(root, "known-config.yaml")
+	if err := os.WriteFile(quiet, []byte("version: 1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	clean := executeCLI(t, binary, "", "--db", dbPath, "--config", quiet, "config", "validate")
+	if clean.exit != 0 || clean.stderr != "" || clean.stdout != "Configuration is valid.\n" {
+		t.Fatalf("known config stdout=%q stderr=%q exit=%d", clean.stdout, clean.stderr, clean.exit)
+	}
 }

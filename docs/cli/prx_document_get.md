@@ -1,21 +1,21 @@
-## prx plan delete
+## prx document get
 
-Delete a task's implementation plan document
+Get one document
 
 ```
-prx plan delete TASK_ID [flags]
+prx document get DOCUMENT_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx plan delete T-1
+prx document get DOCUMENT_ID
 ```
 
 ### Options
 
 ```
-  -h, --help   help for delete
+  -h, --help   help for get
 ```
 
 ### Options inherited from parent commands
@@ -29,5 +29,5 @@ prx plan delete T-1
 
 ### SEE ALSO
 
-* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan document
+* [prx document](prx_document.md)	 - List or manage documents
 

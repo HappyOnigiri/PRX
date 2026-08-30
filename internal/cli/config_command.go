@@ -137,10 +137,12 @@ func (s *state) configValidateCommand() *cobra.Command {
 			if err != nil {
 				return configCommandError(err)
 			}
-			if err := store.Validate(); err != nil {
+			warnings, err := store.Validate()
+			if err != nil {
 				return configCommandError(err)
 			}
-			return s.write(map[string]bool{"valid": true}, renderMessage("Configuration is valid."))
+			value := map[string]any{"valid": true, "warnings": nonNilSlice(warnings)}
+			return s.write(value, renderConfigValidation(warnings))
 		},
 	}
 }

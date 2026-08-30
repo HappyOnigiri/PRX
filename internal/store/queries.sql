@@ -45,27 +45,6 @@ UPDATE tasks SET title=?, scope=?, status=?, assignee=?, updated_at=? WHERE id=?
 -- name: DeleteTask :exec
 DELETE FROM tasks WHERE id=?;
 
--- name: GetImplementationPlan :one
-SELECT * FROM implementation_plans WHERE task_id=?;
-
--- name: UpsertImplementationPlan :one
-INSERT INTO implementation_plans (task_id, content, created_at, updated_at)
-VALUES (?, ?, ?, ?)
-ON CONFLICT(task_id) DO UPDATE SET content=excluded.content, updated_at=excluded.updated_at
-RETURNING *;
-
--- name: DeleteImplementationPlan :execrows
-DELETE FROM implementation_plans WHERE task_id=?;
-
--- name: ListImplementationPlanTaskIDs :many
-SELECT task_id FROM implementation_plans ORDER BY task_id;
-
--- name: DeleteImplementationPlansForTask :exec
-DELETE FROM implementation_plans WHERE task_id=?;
-
--- name: DeleteImplementationPlansForFeature :exec
-DELETE FROM implementation_plans WHERE task_id IN (SELECT id FROM tasks WHERE feature_id=?);
-
 -- name: AddDependency :one
 INSERT INTO dependencies (blocker_task_id, blocked_task_id, created_at) VALUES (?, ?, ?) RETURNING *;
 
@@ -135,13 +114,49 @@ DELETE FROM pull_requests WHERE task_id=?;
 DELETE FROM pull_requests WHERE task_id IN (SELECT id FROM tasks WHERE feature_id=?);
 
 -- name: CreateDocument :one
-INSERT INTO documents (id, feature_id, task_id, kind, title, value, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING *;
+INSERT INTO documents (
+  id, feature_id, task_id, kind, title, locator, content,
+  is_implementation_plan, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
 
 -- name: ListDocuments :many
-SELECT * FROM documents ORDER BY created_at, id;
+SELECT id, feature_id, task_id, kind, title, locator, NULL AS content,
+  is_implementation_plan, created_at, updated_at
+FROM documents ORDER BY is_implementation_plan DESC, created_at, id;
 
 -- name: GetDocument :one
 SELECT * FROM documents WHERE id=?;
+
+-- name: GetImplementationPlanDocument :one
+SELECT * FROM documents WHERE task_id=? AND is_implementation_plan=1;
+
+-- name: UpsertImplementationPlanDocument :one
+INSERT INTO documents (
+  id, feature_id, task_id, kind, title, locator, content,
+  is_implementation_plan, created_at, updated_at
+) VALUES (?, NULL, ?, ?, ?, ?, ?, 1, ?, ?)
+ON CONFLICT(task_id) WHERE is_implementation_plan=1 DO UPDATE SET
+  kind=excluded.kind, locator=excluded.locator,
+  content=excluded.content, updated_at=excluded.updated_at
+RETURNING *;
+
+-- name: UpdateDocument :one
+UPDATE documents SET
+  kind = CASE WHEN CAST(sqlc.arg(set_source) AS INTEGER) = 1 THEN sqlc.arg(kind) ELSE kind END,
+  locator = CASE WHEN CAST(sqlc.arg(set_source) AS INTEGER) = 1 THEN sqlc.narg(locator) ELSE locator END,
+  content = CASE WHEN CAST(sqlc.arg(set_source) AS INTEGER) = 1 THEN sqlc.narg(content) ELSE content END,
+  title = CASE WHEN CAST(sqlc.arg(set_title) AS INTEGER) = 1 THEN sqlc.arg(title) ELSE title END,
+  is_implementation_plan = CASE
+    WHEN CAST(sqlc.arg(set_implementation_plan) AS INTEGER) = 1 THEN sqlc.arg(is_implementation_plan)
+    ELSE is_implementation_plan END,
+  updated_at = sqlc.arg(updated_at)
+WHERE id = sqlc.arg(id) RETURNING *;
+
+-- name: ListImplementationPlanTaskIDs :many
+SELECT task_id FROM documents WHERE is_implementation_plan=1 ORDER BY task_id;
+
+-- name: DeleteImplementationPlanDocument :execrows
+DELETE FROM documents WHERE task_id=? AND is_implementation_plan=1;
 
 -- name: DeleteDocument :execrows
 DELETE FROM documents WHERE id=?;

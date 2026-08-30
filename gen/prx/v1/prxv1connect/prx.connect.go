@@ -50,15 +50,6 @@ const (
 	PRXServiceUpdateTaskProcedure = "/prx.v1.PRXService/UpdateTask"
 	// PRXServiceDeleteTaskProcedure is the fully-qualified name of the PRXService's DeleteTask RPC.
 	PRXServiceDeleteTaskProcedure = "/prx.v1.PRXService/DeleteTask"
-	// PRXServiceGetImplementationPlanProcedure is the fully-qualified name of the PRXService's
-	// GetImplementationPlan RPC.
-	PRXServiceGetImplementationPlanProcedure = "/prx.v1.PRXService/GetImplementationPlan"
-	// PRXServiceUpsertImplementationPlanProcedure is the fully-qualified name of the PRXService's
-	// UpsertImplementationPlan RPC.
-	PRXServiceUpsertImplementationPlanProcedure = "/prx.v1.PRXService/UpsertImplementationPlan"
-	// PRXServiceDeleteImplementationPlanProcedure is the fully-qualified name of the PRXService's
-	// DeleteImplementationPlan RPC.
-	PRXServiceDeleteImplementationPlanProcedure = "/prx.v1.PRXService/DeleteImplementationPlan"
 	// PRXServiceAddDependencyProcedure is the fully-qualified name of the PRXService's AddDependency
 	// RPC.
 	PRXServiceAddDependencyProcedure = "/prx.v1.PRXService/AddDependency"
@@ -73,12 +64,17 @@ const (
 	PRXServiceDetachPullRequestProcedure = "/prx.v1.PRXService/DetachPullRequest"
 	// PRXServiceAddDocumentProcedure is the fully-qualified name of the PRXService's AddDocument RPC.
 	PRXServiceAddDocumentProcedure = "/prx.v1.PRXService/AddDocument"
+	// PRXServiceGetDocumentProcedure is the fully-qualified name of the PRXService's GetDocument RPC.
+	PRXServiceGetDocumentProcedure = "/prx.v1.PRXService/GetDocument"
+	// PRXServiceUpdateDocumentProcedure is the fully-qualified name of the PRXService's UpdateDocument
+	// RPC.
+	PRXServiceUpdateDocumentProcedure = "/prx.v1.PRXService/UpdateDocument"
 	// PRXServiceDeleteDocumentProcedure is the fully-qualified name of the PRXService's DeleteDocument
 	// RPC.
 	PRXServiceDeleteDocumentProcedure = "/prx.v1.PRXService/DeleteDocument"
-	// PRXServiceReadMarkdownDocumentProcedure is the fully-qualified name of the PRXService's
-	// ReadMarkdownDocument RPC.
-	PRXServiceReadMarkdownDocumentProcedure = "/prx.v1.PRXService/ReadMarkdownDocument"
+	// PRXServiceReadDocumentContentProcedure is the fully-qualified name of the PRXService's
+	// ReadDocumentContent RPC.
+	PRXServiceReadDocumentContentProcedure = "/prx.v1.PRXService/ReadDocumentContent"
 	// PRXServiceSyncProcedure is the fully-qualified name of the PRXService's Sync RPC.
 	PRXServiceSyncProcedure = "/prx.v1.PRXService/Sync"
 	// PRXServiceGetGitHubSyncStatusProcedure is the fully-qualified name of the PRXService's
@@ -136,12 +132,6 @@ type PRXServiceClient interface {
 	UpdateTask(context.Context, *connect.Request[v1.UpdateTaskRequest]) (*connect.Response[v1.UpdateTaskResponse], error)
 	// DeleteTask deletes a task, subject to the cascade option.
 	DeleteTask(context.Context, *connect.Request[v1.DeleteTaskRequest]) (*connect.Response[v1.DeleteTaskResponse], error)
-	// GetImplementationPlan returns a task's stored Markdown implementation plan.
-	GetImplementationPlan(context.Context, *connect.Request[v1.GetImplementationPlanRequest]) (*connect.Response[v1.GetImplementationPlanResponse], error)
-	// UpsertImplementationPlan stores or replaces a task's Markdown implementation plan.
-	UpsertImplementationPlan(context.Context, *connect.Request[v1.UpsertImplementationPlanRequest]) (*connect.Response[v1.UpsertImplementationPlanResponse], error)
-	// DeleteImplementationPlan removes a task's stored implementation plan.
-	DeleteImplementationPlan(context.Context, *connect.Request[v1.DeleteImplementationPlanRequest]) (*connect.Response[v1.DeleteImplementationPlanResponse], error)
 	// AddDependency adds a same-feature dependency when it does not create a cycle.
 	AddDependency(context.Context, *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error)
 	// RemoveDependency removes an existing dependency edge.
@@ -150,12 +140,16 @@ type PRXServiceClient interface {
 	AttachPullRequest(context.Context, *connect.Request[v1.AttachPullRequestRequest]) (*connect.Response[v1.AttachPullRequestResponse], error)
 	// DetachPullRequest removes the pull request attached to a task.
 	DetachPullRequest(context.Context, *connect.Request[v1.DetachPullRequestRequest]) (*connect.Response[v1.DetachPullRequestResponse], error)
-	// AddDocument registers a URL or Markdown path under a feature or task.
+	// AddDocument registers a URL, local file, or stored Markdown document.
 	AddDocument(context.Context, *connect.Request[v1.AddDocumentRequest]) (*connect.Response[v1.AddDocumentResponse], error)
+	// GetDocument returns one document and stored Markdown content when applicable.
+	GetDocument(context.Context, *connect.Request[v1.GetDocumentRequest]) (*connect.Response[v1.GetDocumentResponse], error)
+	// UpdateDocument changes document metadata, source, or plan designation.
+	UpdateDocument(context.Context, *connect.Request[v1.UpdateDocumentRequest]) (*connect.Response[v1.UpdateDocumentResponse], error)
 	// DeleteDocument removes a registered document reference.
 	DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error)
-	// ReadMarkdownDocument reads a registered Markdown path for preview.
-	ReadMarkdownDocument(context.Context, *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error)
+	// ReadDocumentContent reads bounded UTF-8 content for a local file or stored Markdown document.
+	ReadDocumentContent(context.Context, *connect.Request[v1.ReadDocumentContentRequest]) (*connect.Response[v1.ReadDocumentContentResponse], error)
 	// Sync refreshes selected pull requests from GitHub and records successes and failures independently.
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
 	// GetGitHubSyncStatus returns automatic synchronization diagnostics.
@@ -239,24 +233,6 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(pRXServiceMethods.ByName("DeleteTask")),
 			connect.WithClientOptions(opts...),
 		),
-		getImplementationPlan: connect.NewClient[v1.GetImplementationPlanRequest, v1.GetImplementationPlanResponse](
-			httpClient,
-			baseURL+PRXServiceGetImplementationPlanProcedure,
-			connect.WithSchema(pRXServiceMethods.ByName("GetImplementationPlan")),
-			connect.WithClientOptions(opts...),
-		),
-		upsertImplementationPlan: connect.NewClient[v1.UpsertImplementationPlanRequest, v1.UpsertImplementationPlanResponse](
-			httpClient,
-			baseURL+PRXServiceUpsertImplementationPlanProcedure,
-			connect.WithSchema(pRXServiceMethods.ByName("UpsertImplementationPlan")),
-			connect.WithClientOptions(opts...),
-		),
-		deleteImplementationPlan: connect.NewClient[v1.DeleteImplementationPlanRequest, v1.DeleteImplementationPlanResponse](
-			httpClient,
-			baseURL+PRXServiceDeleteImplementationPlanProcedure,
-			connect.WithSchema(pRXServiceMethods.ByName("DeleteImplementationPlan")),
-			connect.WithClientOptions(opts...),
-		),
 		addDependency: connect.NewClient[v1.AddDependencyRequest, v1.AddDependencyResponse](
 			httpClient,
 			baseURL+PRXServiceAddDependencyProcedure,
@@ -287,16 +263,28 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(pRXServiceMethods.ByName("AddDocument")),
 			connect.WithClientOptions(opts...),
 		),
+		getDocument: connect.NewClient[v1.GetDocumentRequest, v1.GetDocumentResponse](
+			httpClient,
+			baseURL+PRXServiceGetDocumentProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("GetDocument")),
+			connect.WithClientOptions(opts...),
+		),
+		updateDocument: connect.NewClient[v1.UpdateDocumentRequest, v1.UpdateDocumentResponse](
+			httpClient,
+			baseURL+PRXServiceUpdateDocumentProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("UpdateDocument")),
+			connect.WithClientOptions(opts...),
+		),
 		deleteDocument: connect.NewClient[v1.DeleteDocumentRequest, v1.DeleteDocumentResponse](
 			httpClient,
 			baseURL+PRXServiceDeleteDocumentProcedure,
 			connect.WithSchema(pRXServiceMethods.ByName("DeleteDocument")),
 			connect.WithClientOptions(opts...),
 		),
-		readMarkdownDocument: connect.NewClient[v1.ReadMarkdownDocumentRequest, v1.ReadMarkdownDocumentResponse](
+		readDocumentContent: connect.NewClient[v1.ReadDocumentContentRequest, v1.ReadDocumentContentResponse](
 			httpClient,
-			baseURL+PRXServiceReadMarkdownDocumentProcedure,
-			connect.WithSchema(pRXServiceMethods.ByName("ReadMarkdownDocument")),
+			baseURL+PRXServiceReadDocumentContentProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("ReadDocumentContent")),
 			connect.WithClientOptions(opts...),
 		),
 		sync: connect.NewClient[v1.SyncRequest, v1.SyncResponse](
@@ -395,16 +383,15 @@ type pRXServiceClient struct {
 	createTask               *connect.Client[v1.CreateTaskRequest, v1.CreateTaskResponse]
 	updateTask               *connect.Client[v1.UpdateTaskRequest, v1.UpdateTaskResponse]
 	deleteTask               *connect.Client[v1.DeleteTaskRequest, v1.DeleteTaskResponse]
-	getImplementationPlan    *connect.Client[v1.GetImplementationPlanRequest, v1.GetImplementationPlanResponse]
-	upsertImplementationPlan *connect.Client[v1.UpsertImplementationPlanRequest, v1.UpsertImplementationPlanResponse]
-	deleteImplementationPlan *connect.Client[v1.DeleteImplementationPlanRequest, v1.DeleteImplementationPlanResponse]
 	addDependency            *connect.Client[v1.AddDependencyRequest, v1.AddDependencyResponse]
 	removeDependency         *connect.Client[v1.RemoveDependencyRequest, v1.RemoveDependencyResponse]
 	attachPullRequest        *connect.Client[v1.AttachPullRequestRequest, v1.AttachPullRequestResponse]
 	detachPullRequest        *connect.Client[v1.DetachPullRequestRequest, v1.DetachPullRequestResponse]
 	addDocument              *connect.Client[v1.AddDocumentRequest, v1.AddDocumentResponse]
+	getDocument              *connect.Client[v1.GetDocumentRequest, v1.GetDocumentResponse]
+	updateDocument           *connect.Client[v1.UpdateDocumentRequest, v1.UpdateDocumentResponse]
 	deleteDocument           *connect.Client[v1.DeleteDocumentRequest, v1.DeleteDocumentResponse]
-	readMarkdownDocument     *connect.Client[v1.ReadMarkdownDocumentRequest, v1.ReadMarkdownDocumentResponse]
+	readDocumentContent      *connect.Client[v1.ReadDocumentContentRequest, v1.ReadDocumentContentResponse]
 	sync                     *connect.Client[v1.SyncRequest, v1.SyncResponse]
 	getGitHubSyncStatus      *connect.Client[v1.GetGitHubSyncStatusRequest, v1.GetGitHubSyncStatusResponse]
 	syncGitHubIfDue          *connect.Client[v1.SyncGitHubIfDueRequest, v1.SyncGitHubIfDueResponse]
@@ -456,21 +443,6 @@ func (c *pRXServiceClient) DeleteTask(ctx context.Context, req *connect.Request[
 	return c.deleteTask.CallUnary(ctx, req)
 }
 
-// GetImplementationPlan calls prx.v1.PRXService.GetImplementationPlan.
-func (c *pRXServiceClient) GetImplementationPlan(ctx context.Context, req *connect.Request[v1.GetImplementationPlanRequest]) (*connect.Response[v1.GetImplementationPlanResponse], error) {
-	return c.getImplementationPlan.CallUnary(ctx, req)
-}
-
-// UpsertImplementationPlan calls prx.v1.PRXService.UpsertImplementationPlan.
-func (c *pRXServiceClient) UpsertImplementationPlan(ctx context.Context, req *connect.Request[v1.UpsertImplementationPlanRequest]) (*connect.Response[v1.UpsertImplementationPlanResponse], error) {
-	return c.upsertImplementationPlan.CallUnary(ctx, req)
-}
-
-// DeleteImplementationPlan calls prx.v1.PRXService.DeleteImplementationPlan.
-func (c *pRXServiceClient) DeleteImplementationPlan(ctx context.Context, req *connect.Request[v1.DeleteImplementationPlanRequest]) (*connect.Response[v1.DeleteImplementationPlanResponse], error) {
-	return c.deleteImplementationPlan.CallUnary(ctx, req)
-}
-
 // AddDependency calls prx.v1.PRXService.AddDependency.
 func (c *pRXServiceClient) AddDependency(ctx context.Context, req *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error) {
 	return c.addDependency.CallUnary(ctx, req)
@@ -496,14 +468,24 @@ func (c *pRXServiceClient) AddDocument(ctx context.Context, req *connect.Request
 	return c.addDocument.CallUnary(ctx, req)
 }
 
+// GetDocument calls prx.v1.PRXService.GetDocument.
+func (c *pRXServiceClient) GetDocument(ctx context.Context, req *connect.Request[v1.GetDocumentRequest]) (*connect.Response[v1.GetDocumentResponse], error) {
+	return c.getDocument.CallUnary(ctx, req)
+}
+
+// UpdateDocument calls prx.v1.PRXService.UpdateDocument.
+func (c *pRXServiceClient) UpdateDocument(ctx context.Context, req *connect.Request[v1.UpdateDocumentRequest]) (*connect.Response[v1.UpdateDocumentResponse], error) {
+	return c.updateDocument.CallUnary(ctx, req)
+}
+
 // DeleteDocument calls prx.v1.PRXService.DeleteDocument.
 func (c *pRXServiceClient) DeleteDocument(ctx context.Context, req *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error) {
 	return c.deleteDocument.CallUnary(ctx, req)
 }
 
-// ReadMarkdownDocument calls prx.v1.PRXService.ReadMarkdownDocument.
-func (c *pRXServiceClient) ReadMarkdownDocument(ctx context.Context, req *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error) {
-	return c.readMarkdownDocument.CallUnary(ctx, req)
+// ReadDocumentContent calls prx.v1.PRXService.ReadDocumentContent.
+func (c *pRXServiceClient) ReadDocumentContent(ctx context.Context, req *connect.Request[v1.ReadDocumentContentRequest]) (*connect.Response[v1.ReadDocumentContentResponse], error) {
+	return c.readDocumentContent.CallUnary(ctx, req)
 }
 
 // Sync calls prx.v1.PRXService.Sync.
@@ -592,12 +574,6 @@ type PRXServiceHandler interface {
 	UpdateTask(context.Context, *connect.Request[v1.UpdateTaskRequest]) (*connect.Response[v1.UpdateTaskResponse], error)
 	// DeleteTask deletes a task, subject to the cascade option.
 	DeleteTask(context.Context, *connect.Request[v1.DeleteTaskRequest]) (*connect.Response[v1.DeleteTaskResponse], error)
-	// GetImplementationPlan returns a task's stored Markdown implementation plan.
-	GetImplementationPlan(context.Context, *connect.Request[v1.GetImplementationPlanRequest]) (*connect.Response[v1.GetImplementationPlanResponse], error)
-	// UpsertImplementationPlan stores or replaces a task's Markdown implementation plan.
-	UpsertImplementationPlan(context.Context, *connect.Request[v1.UpsertImplementationPlanRequest]) (*connect.Response[v1.UpsertImplementationPlanResponse], error)
-	// DeleteImplementationPlan removes a task's stored implementation plan.
-	DeleteImplementationPlan(context.Context, *connect.Request[v1.DeleteImplementationPlanRequest]) (*connect.Response[v1.DeleteImplementationPlanResponse], error)
 	// AddDependency adds a same-feature dependency when it does not create a cycle.
 	AddDependency(context.Context, *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error)
 	// RemoveDependency removes an existing dependency edge.
@@ -606,12 +582,16 @@ type PRXServiceHandler interface {
 	AttachPullRequest(context.Context, *connect.Request[v1.AttachPullRequestRequest]) (*connect.Response[v1.AttachPullRequestResponse], error)
 	// DetachPullRequest removes the pull request attached to a task.
 	DetachPullRequest(context.Context, *connect.Request[v1.DetachPullRequestRequest]) (*connect.Response[v1.DetachPullRequestResponse], error)
-	// AddDocument registers a URL or Markdown path under a feature or task.
+	// AddDocument registers a URL, local file, or stored Markdown document.
 	AddDocument(context.Context, *connect.Request[v1.AddDocumentRequest]) (*connect.Response[v1.AddDocumentResponse], error)
+	// GetDocument returns one document and stored Markdown content when applicable.
+	GetDocument(context.Context, *connect.Request[v1.GetDocumentRequest]) (*connect.Response[v1.GetDocumentResponse], error)
+	// UpdateDocument changes document metadata, source, or plan designation.
+	UpdateDocument(context.Context, *connect.Request[v1.UpdateDocumentRequest]) (*connect.Response[v1.UpdateDocumentResponse], error)
 	// DeleteDocument removes a registered document reference.
 	DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error)
-	// ReadMarkdownDocument reads a registered Markdown path for preview.
-	ReadMarkdownDocument(context.Context, *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error)
+	// ReadDocumentContent reads bounded UTF-8 content for a local file or stored Markdown document.
+	ReadDocumentContent(context.Context, *connect.Request[v1.ReadDocumentContentRequest]) (*connect.Response[v1.ReadDocumentContentResponse], error)
 	// Sync refreshes selected pull requests from GitHub and records successes and failures independently.
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
 	// GetGitHubSyncStatus returns automatic synchronization diagnostics.
@@ -691,24 +671,6 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(pRXServiceMethods.ByName("DeleteTask")),
 		connect.WithHandlerOptions(opts...),
 	)
-	pRXServiceGetImplementationPlanHandler := connect.NewUnaryHandler(
-		PRXServiceGetImplementationPlanProcedure,
-		svc.GetImplementationPlan,
-		connect.WithSchema(pRXServiceMethods.ByName("GetImplementationPlan")),
-		connect.WithHandlerOptions(opts...),
-	)
-	pRXServiceUpsertImplementationPlanHandler := connect.NewUnaryHandler(
-		PRXServiceUpsertImplementationPlanProcedure,
-		svc.UpsertImplementationPlan,
-		connect.WithSchema(pRXServiceMethods.ByName("UpsertImplementationPlan")),
-		connect.WithHandlerOptions(opts...),
-	)
-	pRXServiceDeleteImplementationPlanHandler := connect.NewUnaryHandler(
-		PRXServiceDeleteImplementationPlanProcedure,
-		svc.DeleteImplementationPlan,
-		connect.WithSchema(pRXServiceMethods.ByName("DeleteImplementationPlan")),
-		connect.WithHandlerOptions(opts...),
-	)
 	pRXServiceAddDependencyHandler := connect.NewUnaryHandler(
 		PRXServiceAddDependencyProcedure,
 		svc.AddDependency,
@@ -739,16 +701,28 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(pRXServiceMethods.ByName("AddDocument")),
 		connect.WithHandlerOptions(opts...),
 	)
+	pRXServiceGetDocumentHandler := connect.NewUnaryHandler(
+		PRXServiceGetDocumentProcedure,
+		svc.GetDocument,
+		connect.WithSchema(pRXServiceMethods.ByName("GetDocument")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceUpdateDocumentHandler := connect.NewUnaryHandler(
+		PRXServiceUpdateDocumentProcedure,
+		svc.UpdateDocument,
+		connect.WithSchema(pRXServiceMethods.ByName("UpdateDocument")),
+		connect.WithHandlerOptions(opts...),
+	)
 	pRXServiceDeleteDocumentHandler := connect.NewUnaryHandler(
 		PRXServiceDeleteDocumentProcedure,
 		svc.DeleteDocument,
 		connect.WithSchema(pRXServiceMethods.ByName("DeleteDocument")),
 		connect.WithHandlerOptions(opts...),
 	)
-	pRXServiceReadMarkdownDocumentHandler := connect.NewUnaryHandler(
-		PRXServiceReadMarkdownDocumentProcedure,
-		svc.ReadMarkdownDocument,
-		connect.WithSchema(pRXServiceMethods.ByName("ReadMarkdownDocument")),
+	pRXServiceReadDocumentContentHandler := connect.NewUnaryHandler(
+		PRXServiceReadDocumentContentProcedure,
+		svc.ReadDocumentContent,
+		connect.WithSchema(pRXServiceMethods.ByName("ReadDocumentContent")),
 		connect.WithHandlerOptions(opts...),
 	)
 	pRXServiceSyncHandler := connect.NewUnaryHandler(
@@ -851,12 +825,6 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceUpdateTaskHandler.ServeHTTP(w, r)
 		case PRXServiceDeleteTaskProcedure:
 			pRXServiceDeleteTaskHandler.ServeHTTP(w, r)
-		case PRXServiceGetImplementationPlanProcedure:
-			pRXServiceGetImplementationPlanHandler.ServeHTTP(w, r)
-		case PRXServiceUpsertImplementationPlanProcedure:
-			pRXServiceUpsertImplementationPlanHandler.ServeHTTP(w, r)
-		case PRXServiceDeleteImplementationPlanProcedure:
-			pRXServiceDeleteImplementationPlanHandler.ServeHTTP(w, r)
 		case PRXServiceAddDependencyProcedure:
 			pRXServiceAddDependencyHandler.ServeHTTP(w, r)
 		case PRXServiceRemoveDependencyProcedure:
@@ -867,10 +835,14 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceDetachPullRequestHandler.ServeHTTP(w, r)
 		case PRXServiceAddDocumentProcedure:
 			pRXServiceAddDocumentHandler.ServeHTTP(w, r)
+		case PRXServiceGetDocumentProcedure:
+			pRXServiceGetDocumentHandler.ServeHTTP(w, r)
+		case PRXServiceUpdateDocumentProcedure:
+			pRXServiceUpdateDocumentHandler.ServeHTTP(w, r)
 		case PRXServiceDeleteDocumentProcedure:
 			pRXServiceDeleteDocumentHandler.ServeHTTP(w, r)
-		case PRXServiceReadMarkdownDocumentProcedure:
-			pRXServiceReadMarkdownDocumentHandler.ServeHTTP(w, r)
+		case PRXServiceReadDocumentContentProcedure:
+			pRXServiceReadDocumentContentHandler.ServeHTTP(w, r)
 		case PRXServiceSyncProcedure:
 			pRXServiceSyncHandler.ServeHTTP(w, r)
 		case PRXServiceGetGitHubSyncStatusProcedure:
@@ -936,18 +908,6 @@ func (UnimplementedPRXServiceHandler) DeleteTask(context.Context, *connect.Reque
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.DeleteTask is not implemented"))
 }
 
-func (UnimplementedPRXServiceHandler) GetImplementationPlan(context.Context, *connect.Request[v1.GetImplementationPlanRequest]) (*connect.Response[v1.GetImplementationPlanResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetImplementationPlan is not implemented"))
-}
-
-func (UnimplementedPRXServiceHandler) UpsertImplementationPlan(context.Context, *connect.Request[v1.UpsertImplementationPlanRequest]) (*connect.Response[v1.UpsertImplementationPlanResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.UpsertImplementationPlan is not implemented"))
-}
-
-func (UnimplementedPRXServiceHandler) DeleteImplementationPlan(context.Context, *connect.Request[v1.DeleteImplementationPlanRequest]) (*connect.Response[v1.DeleteImplementationPlanResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.DeleteImplementationPlan is not implemented"))
-}
-
 func (UnimplementedPRXServiceHandler) AddDependency(context.Context, *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.AddDependency is not implemented"))
 }
@@ -968,12 +928,20 @@ func (UnimplementedPRXServiceHandler) AddDocument(context.Context, *connect.Requ
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.AddDocument is not implemented"))
 }
 
+func (UnimplementedPRXServiceHandler) GetDocument(context.Context, *connect.Request[v1.GetDocumentRequest]) (*connect.Response[v1.GetDocumentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetDocument is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) UpdateDocument(context.Context, *connect.Request[v1.UpdateDocumentRequest]) (*connect.Response[v1.UpdateDocumentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.UpdateDocument is not implemented"))
+}
+
 func (UnimplementedPRXServiceHandler) DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.DeleteDocument is not implemented"))
 }
 
-func (UnimplementedPRXServiceHandler) ReadMarkdownDocument(context.Context, *connect.Request[v1.ReadMarkdownDocumentRequest]) (*connect.Response[v1.ReadMarkdownDocumentResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.ReadMarkdownDocument is not implemented"))
+func (UnimplementedPRXServiceHandler) ReadDocumentContent(context.Context, *connect.Request[v1.ReadDocumentContentRequest]) (*connect.Response[v1.ReadDocumentContentResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.ReadDocumentContent is not implemented"))
 }
 
 func (UnimplementedPRXServiceHandler) Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error) {

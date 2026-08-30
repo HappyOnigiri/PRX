@@ -8,10 +8,15 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"regexp"
 	"syscall"
 
 	"gopkg.in/yaml.v3"
 )
+
+// unknownFieldPattern matches the complaint strict decoding raises for a key
+// that no field claims. Its groups are the source line and the field name.
+var unknownFieldPattern = regexp.MustCompile(`^line (\d+): field (\S+) not found in type \S+$`)
 
 type Store struct {
 	path string
@@ -53,29 +58,27 @@ func NewStore(path string) (*Store, error) {
 func (s *Store) Path() string { return s.path }
 
 func (s *Store) Load() (Config, error) {
-	var result Config
+	value, _, err := s.LoadWithWarnings()
+	return value, err
+}
+
+// LoadWithWarnings reads the configuration together with the recoverable
+// problems that did not stop it from loading, so a caller can report them
+// without failing.
+func (s *Store) LoadWithWarnings() (Config, []string, error) {
+	var (
+		result   Config
+		warnings []string
+	)
 	err := s.withLock(false, func() error {
-		body, err := os.ReadFile(s.path)
-		if errors.Is(err, os.ErrNotExist) {
-			result = Default()
-			return nil
-		}
-		if err != nil {
-			return fmt.Errorf("read config: %w", err)
-		}
-		if info, statErr := os.Stat(s.path); statErr == nil && info.Mode().Perm()&0o077 != 0 {
-			return newError(ErrorCodeInvalid, "config file %q must have permissions 0600", s.path)
-		}
-		if err := decode(body, &result); err != nil {
-			return err
-		}
-		result, err = result.Normalize()
+		var err error
+		result, warnings, err = s.loadLocked()
 		return err
 	})
 	if err != nil {
-		return Config{}, err
+		return Config{}, nil, err
 	}
-	return result, nil
+	return result, warnings, nil
 }
 
 func (s *Store) Save(value Config) error {
@@ -92,7 +95,7 @@ func (s *Store) Update(update func(*Config) error) (Config, error) {
 	var result Config
 	err := s.withLock(true, func() error {
 		var err error
-		result, err = s.loadLocked()
+		result, _, err = s.loadLocked()
 		if err != nil {
 			return err
 		}
@@ -119,17 +122,41 @@ func (s *Store) Public() (PublicConfig, error) {
 	return value.Public(), nil
 }
 
-func (s *Store) Validate() error {
-	_, err := s.Load()
-	return err
+// Validate reports whether the stored configuration loads, together with the
+// warnings the load produced.
+func (s *Store) Validate() ([]string, error) {
+	_, warnings, err := s.LoadWithWarnings()
+	return warnings, err
 }
 
-func decode(body []byte, destination *Config) error {
-	decoder := yaml.NewDecoder(bytes.NewReader(body))
-	decoder.KnownFields(true)
-	if err := decoder.Decode(destination); err != nil {
-		return newError(ErrorCodeInvalid, "decode config: %v", err)
+// decode parses the single configuration document. Unknown fields become
+// warnings instead of failures so a file written by a newer PRX still loads,
+// while every other decoding complaint keeps failing the load.
+func decode(body []byte, destination *Config) ([]string, error) {
+	strict := yaml.NewDecoder(bytes.NewReader(body))
+	strict.KnownFields(true)
+	err := strict.Decode(destination)
+	if err == nil {
+		return nil, expectSingleDocument(strict)
 	}
+	warnings, unknownOnly := unknownFieldWarnings(err)
+	if !unknownOnly {
+		return nil, newError(ErrorCodeInvalid, "decode config: %v", err)
+	}
+	// Strict decoding stops claiming the result once it reports an error, so the
+	// accepted fields are read again with the unknown ones ignored.
+	*destination = Config{}
+	lenient := yaml.NewDecoder(bytes.NewReader(body))
+	if err := lenient.Decode(destination); err != nil {
+		return nil, newError(ErrorCodeInvalid, "decode config: %v", err)
+	}
+	if err := expectSingleDocument(lenient); err != nil {
+		return nil, err
+	}
+	return warnings, nil
+}
+
+func expectSingleDocument(decoder *yaml.Decoder) error {
 	var extra any
 	if err := decoder.Decode(&extra); !errors.Is(err, io.EOF) {
 		if err == nil {
@@ -140,22 +167,50 @@ func decode(body []byte, destination *Config) error {
 	return nil
 }
 
-func (s *Store) loadLocked() (Config, error) {
+// unknownFieldWarnings turns a strict-decoding failure into warnings. It reports
+// false unless every complaint is an unknown field, so a type error, a duplicate
+// key, or a syntax error still fails the load.
+func unknownFieldWarnings(err error) ([]string, bool) {
+	var typeErr *yaml.TypeError
+	if !errors.As(err, &typeErr) || len(typeErr.Errors) == 0 {
+		return nil, false
+	}
+	warnings := make([]string, 0, len(typeErr.Errors))
+	for _, message := range typeErr.Errors {
+		match := unknownFieldPattern.FindStringSubmatch(message)
+		if match == nil {
+			return nil, false
+		}
+		warnings = append(warnings, fmt.Sprintf(
+			"unknown field %q on line %s is ignored and is dropped when the configuration is next written",
+			match[2],
+			match[1],
+		))
+	}
+	return warnings, true
+}
+
+func (s *Store) loadLocked() (Config, []string, error) {
 	body, err := os.ReadFile(s.path)
 	if errors.Is(err, os.ErrNotExist) {
-		return Default(), nil
+		return Default(), nil, nil
 	}
 	if err != nil {
-		return Config{}, fmt.Errorf("read config: %w", err)
+		return Config{}, nil, fmt.Errorf("read config: %w", err)
 	}
 	if info, statErr := os.Stat(s.path); statErr == nil && info.Mode().Perm()&0o077 != 0 {
-		return Config{}, newError(ErrorCodeInvalid, "config file %q must have permissions 0600", s.path)
+		return Config{}, nil, newError(ErrorCodeInvalid, "config file %q must have permissions 0600", s.path)
 	}
 	var result Config
-	if err := decode(body, &result); err != nil {
-		return Config{}, err
+	warnings, err := decode(body, &result)
+	if err != nil {
+		return Config{}, nil, err
 	}
-	return result.Normalize()
+	normalized, err := result.Normalize()
+	if err != nil {
+		return Config{}, nil, err
+	}
+	return normalized, warnings, nil
 }
 
 func (s *Store) saveLocked(value Config) error {

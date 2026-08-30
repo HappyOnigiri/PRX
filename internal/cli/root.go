@@ -52,7 +52,11 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
 			s.applyEnvironmentPaths()
-			if cmd.Name() == "help" || cmd.Name() == "schema-version" || isConfigCommand(cmd) {
+			if cmd.Name() == "help" || cmd.Name() == "schema-version" {
+				return nil
+			}
+			s.warnAboutConfiguration()
+			if isConfigCommand(cmd) {
 				return nil
 			}
 			baseContext := cmd.Context()
@@ -152,6 +156,24 @@ func (s *state) applyEnvironmentPaths() {
 	}
 	if s.configPath == "" {
 		s.configPath = os.Getenv("PRX_CONFIG")
+	}
+}
+
+// warnAboutConfiguration reports the recoverable configuration problems once per
+// run, before any command reads the configuration. A load failure stays silent
+// here so the command that needs the configuration still owns its own error, and
+// so a command that never reads it keeps succeeding.
+func (s *state) warnAboutConfiguration() {
+	store, err := config.NewStore(s.configPath)
+	if err != nil {
+		return
+	}
+	_, warnings, err := store.LoadWithWarnings()
+	if err != nil {
+		return
+	}
+	for _, warning := range warnings {
+		_, _ = fmt.Fprintf(s.errOut, "Warning: %s: %s\n", store.Path(), warning)
 	}
 }
 
