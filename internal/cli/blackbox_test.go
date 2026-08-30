@@ -1194,16 +1194,22 @@ func TestBlackBoxRequiredOperandsRejectOldFlagsAndWrongCounts(t *testing.T) {
 		args []string
 	}{
 		{flag: "--slug", args: []string{"feature", "create", "checkout", "Checkout", "--slug", "legacy"}},
+		{flag: "--title", args: []string{"feature", "create", "checkout", "Checkout", "--title", "Legacy"}},
 		{flag: "--feature", args: []string{"task", "create", "checkout", "Task", "--feature", "legacy"}},
+		{flag: "--title", args: []string{"task", "create", "checkout", "Task", "--title", "Legacy"}},
 		{flag: "--task", args: []string{"pr", "attach", "T-1", "https://example.com/pull/1", "--task", "T-1"}},
+		{flag: "--url", args: []string{"pr", "attach", "T-1", "https://x.test/1", "--url", "https://x.test/2"}},
 		{flag: "--value", args: []string{"document", "add", "T-1", "https://example.com", "--value", "legacy"}},
 		{flag: "--file", args: []string{"plan", "set", "T-1", "plan.md", "--file", "legacy.md"}},
+		{flag: "--stdin", args: []string{"plan", "set", "T-1", "plan.md", "--stdin"}},
 		{flag: "--interval-seconds", args: []string{"config", "sync", "update", "600", "--interval-seconds", "600"}},
 		{flag: "--host", args: []string{"config", "host", "add", "ghe.example.com", "--host", "legacy.example.com"}},
 		{flag: "--id", args: []string{"config", "auth", "add", "work", "github.com", "gh_cli", "--id", "legacy"}},
+		{flag: "--type", args: []string{"config", "auth", "add", "work", "github.com", "gh_cli", "--type", "inline"}},
+		{flag: "--host", args: []string{"config", "auth", "add", "work", "github.com", "gh_cli", "--host", "x.test"}},
 	}
 	for _, test := range removedFlags {
-		t.Run(test.flag, func(t *testing.T) {
+		t.Run(strings.Join(test.args, " "), func(t *testing.T) {
 			args := []string{"--db", dbPath, "--config", configPath, "--json"}
 			result := executeCLI(t, binary, "", append(args, test.args...)...)
 			if result.exit == 0 || result.stdout != "" {
