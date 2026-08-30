@@ -5,6 +5,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -26,9 +27,15 @@ const graphMocks = vi.hoisted(() => ({
     error: null as Error | null,
   },
   domainMutationCall: 0,
+  edges: [] as Record<string, unknown>[],
   useGraphLayout: vi.fn(),
   writeGraphZoom: vi.fn(),
   onConnect: undefined as ((connection: unknown) => void) | undefined,
+  onEdgesChange: undefined as ((changes: unknown[]) => void) | undefined,
+  onEdgesDelete: undefined as ((edges: unknown[]) => void) | undefined,
+  onEdgeClick: undefined as
+    ((event: unknown, edge: { id: string }) => void) | undefined,
+  onPaneClick: undefined as (() => void) | undefined,
   onReconnect: undefined as (() => void) | undefined,
   onReconnectStart: undefined as
     ((event: unknown, edge: unknown, handleType: string) => void) | undefined,
@@ -58,6 +65,10 @@ vi.mock("@xyflow/react", () => ({
     edges,
     onMoveEnd,
     onConnect,
+    onEdgesChange,
+    onEdgesDelete,
+    onEdgeClick,
+    onPaneClick,
     onReconnect,
     onReconnectStart,
     onReconnectEnd,
@@ -67,6 +78,10 @@ vi.mock("@xyflow/react", () => ({
     edges?: unknown[];
     onMoveEnd?: (...args: unknown[]) => void;
     onConnect?: (connection: unknown) => void;
+    onEdgesChange?: (changes: unknown[]) => void;
+    onEdgesDelete?: (edges: unknown[]) => void;
+    onEdgeClick?: (event: unknown, edge: { id: string }) => void;
+    onPaneClick?: () => void;
     onReconnect?: () => void;
     onReconnectStart?: (
       event: unknown,
@@ -81,7 +96,12 @@ vi.mock("@xyflow/react", () => ({
     ) => void;
     nodesConnectable?: boolean;
   }) => {
+    graphMocks.edges = (edges ?? []) as Record<string, unknown>[];
     graphMocks.onConnect = onConnect;
+    graphMocks.onEdgesChange = onEdgesChange;
+    graphMocks.onEdgesDelete = onEdgesDelete;
+    graphMocks.onEdgeClick = onEdgeClick;
+    graphMocks.onPaneClick = onPaneClick;
     graphMocks.onReconnect = onReconnect;
     graphMocks.onReconnectStart = onReconnectStart;
     graphMocks.onReconnectEnd = onReconnectEnd;
@@ -129,10 +149,15 @@ describe("FeatureGraph", () => {
     graphMocks.removeDependency.error = null;
     graphMocks.domainMutationCall = 0;
     graphMocks.onConnect = undefined;
+    graphMocks.onEdgesChange = undefined;
+    graphMocks.onEdgesDelete = undefined;
+    graphMocks.onEdgeClick = undefined;
+    graphMocks.onPaneClick = undefined;
     graphMocks.onReconnect = undefined;
     graphMocks.onReconnectStart = undefined;
     graphMocks.onReconnectEnd = undefined;
     graphMocks.useGraphLayout.mockReturnValue({
+      edgeRoutes: new Map(),
       nodes: [],
       layoutError: undefined,
       retryLayout: vi.fn(),
@@ -143,6 +168,7 @@ describe("FeatureGraph", () => {
     const blocker = makeTask({ id: "blocker", title: "Blocker task" });
     const blocked = makeTask({ id: "blocked", title: "Blocked task" });
     graphMocks.useGraphLayout.mockReturnValue({
+      edgeRoutes: new Map(),
       nodes: [],
       layoutError: undefined,
       retryLayout: vi.fn(),
@@ -216,56 +242,61 @@ describe("FeatureGraph", () => {
     expect(graphMocks.addDependency.mutate).not.toHaveBeenCalled();
   });
 
-  it("removes a dependency dropped from its blocker end into empty space", () => {
-    const dependency = makeDependency({
-      blockerTaskId: "blocker",
-      blockedTaskId: "blocked",
-    });
-    const edge = {
-      id: "blocker-blocked",
-      source: "blocker",
-      target: "blocked",
-    };
-    render(
-      <FeatureGraph
-        tasks={[
-          makeTask({ id: "blocker", title: "Blocker task" }),
-          makeTask({ id: "blocked", title: "Blocked task" }),
-        ]}
-        dependencies={[dependency]}
-        pullRequests={new Map()}
-        documentsByTask={new Map()}
-        onEditTask={vi.fn()}
-        onPreviewDocument={vi.fn()}
-        onCreateTask={vi.fn()}
-      />,
-    );
-
-    if (!graphMocks.onReconnectStart || !graphMocks.onReconnectEnd) {
-      throw new Error("reconnect handlers missing");
-    }
-    act(() => {
-      graphMocks.onReconnectStart?.({}, edge, "target");
-    });
-    expect(
-      screen.getByText("Drop in empty space to remove this blocker."),
-    ).toBeInTheDocument();
-
-    act(() => {
-      graphMocks.onReconnectEnd?.({}, edge, "target", {
-        isValid: null,
+  it.each(["source", "target"] as const)(
+    "removes a dependency dropped from its %s end into empty space",
+    (handleType) => {
+      const dependency = makeDependency({
+        blockerTaskId: "blocker",
+        blockedTaskId: "blocked",
       });
-    });
+      const edge = {
+        id: "blocker-blocked",
+        source: "blocker",
+        target: "blocked",
+      };
+      render(
+        <FeatureGraph
+          tasks={[
+            makeTask({ id: "blocker", title: "Blocker task" }),
+            makeTask({ id: "blocked", title: "Blocked task" }),
+          ]}
+          dependencies={[dependency]}
+          pullRequests={new Map()}
+          documentsByTask={new Map()}
+          onEditTask={vi.fn()}
+          onPreviewDocument={vi.fn()}
+          onCreateTask={vi.fn()}
+        />,
+      );
 
-    expect(graphMocks.removeDependency.mutate).toHaveBeenCalledWith({
-      blocker: "blocker",
-      blocked: "blocked",
-    });
-    expect(graphMocks.removeDependencyApi).toHaveBeenCalledWith(
-      "blocker",
-      "blocked",
-    );
-  });
+      if (!graphMocks.onReconnectStart || !graphMocks.onReconnectEnd) {
+        throw new Error("reconnect handlers missing");
+      }
+      act(() => {
+        graphMocks.onReconnectStart?.({}, edge, handleType);
+      });
+      expect(
+        screen.getByText(
+          "Drop in empty space to remove Blocker task → Blocked task.",
+        ),
+      ).toBeInTheDocument();
+
+      act(() => {
+        graphMocks.onReconnectEnd?.({}, edge, handleType, {
+          isValid: null,
+        });
+      });
+
+      expect(graphMocks.removeDependency.mutate).toHaveBeenCalledWith({
+        blocker: "blocker",
+        blocked: "blocked",
+      });
+      expect(graphMocks.removeDependencyApi).toHaveBeenCalledWith(
+        "blocker",
+        "blocked",
+      );
+    },
+  );
 
   it("keeps a dependency when its source is dropped on a valid handle", () => {
     const dependency = makeDependency();
@@ -297,6 +328,171 @@ describe("FeatureGraph", () => {
     });
 
     expect(graphMocks.removeDependency.mutate).not.toHaveBeenCalled();
+  });
+
+  it("uses routed endpoint ports and removes the selected edge by keyboard", async () => {
+    const dependency = makeDependency({
+      blockerTaskId: "blocker",
+      blockedTaskId: "blocked",
+    });
+    graphMocks.useGraphLayout.mockReturnValue({
+      edgeRoutes: new Map([
+        [
+          "blocker-blocked",
+          {
+            points: [
+              { x: 284, y: 72 },
+              { x: 394, y: 72 },
+            ],
+            sourcePortId: "blocker-blocked-source",
+            sourcePortTop: 72,
+            targetPortId: "blocker-blocked-target",
+            targetPortTop: 72,
+          },
+        ],
+      ]),
+      nodes: [],
+      layoutError: undefined,
+      layoutPending: false,
+      retryLayout: vi.fn(),
+    });
+    render(
+      <FeatureGraph
+        tasks={[
+          makeTask({ id: "blocker", title: "Blocker task" }),
+          makeTask({ id: "blocked", title: "Blocked task" }),
+        ]}
+        dependencies={[dependency]}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={vi.fn()}
+      />,
+    );
+
+    // The ports are measured one frame after the nodes commit, so the first
+    // render must not name handles that React Flow does not know yet.
+    expect(graphMocks.edges[0]).toMatchObject({
+      id: "blocker-blocked",
+      sourceHandle: null,
+      targetHandle: null,
+    });
+    await waitFor(() => {
+      expect(graphMocks.edges[0]?.["sourceHandle"]).toBe(
+        "blocker-blocked-source",
+      );
+    });
+    expect(graphMocks.edges[0]).toMatchObject({
+      id: "blocker-blocked",
+      sourceHandle: "blocker-blocked-source",
+      targetHandle: "blocker-blocked-target",
+      type: "dependency",
+      reconnectable: true,
+      deletable: true,
+      data: {
+        label: "Blocker task → Blocked task",
+        removeLabel: "Remove dependency Blocker task → Blocked task",
+      },
+      selected: false,
+    });
+    act(() => {
+      graphMocks.onEdgeClick?.({}, { id: "blocker-blocked" });
+    });
+    expect(graphMocks.edges[0]?.["selected"]).toBe(true);
+    act(() => {
+      graphMocks.onPaneClick?.();
+    });
+    expect(graphMocks.edges[0]?.["selected"]).toBe(false);
+    act(() => {
+      const data = graphMocks.edges[0]?.["data"] as
+        { onRemove: () => void } | undefined;
+      data?.onRemove();
+    });
+    expect(graphMocks.removeDependency.mutate).toHaveBeenCalledWith({
+      blocker: "blocker",
+      blocked: "blocked",
+    });
+    graphMocks.removeDependency.mutate.mockClear();
+    act(() => {
+      graphMocks.onEdgesDelete?.([{ source: "blocker", target: "blocked" }]);
+    });
+    expect(graphMocks.removeDependency.mutate).toHaveBeenCalledWith({
+      blocker: "blocker",
+      blocked: "blocked",
+    });
+  });
+
+  it("selects an edge from a React Flow selection change and deletes it", () => {
+    const dependency = makeDependency({
+      blockerTaskId: "blocker",
+      blockedTaskId: "blocked",
+    });
+    render(
+      <FeatureGraph
+        tasks={[
+          makeTask({ id: "blocker", title: "Blocker task" }),
+          makeTask({ id: "blocked", title: "Blocked task" }),
+        ]}
+        dependencies={[dependency]}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={vi.fn()}
+      />,
+    );
+
+    act(() => {
+      graphMocks.onEdgesChange?.([
+        { type: "select", id: "blocker-blocked", selected: true },
+      ]);
+    });
+    expect(graphMocks.edges[0]?.["selected"]).toBe(true);
+    act(() => {
+      graphMocks.onEdgesDelete?.([{ source: "blocker", target: "blocked" }]);
+    });
+    expect(graphMocks.removeDependency.mutate).toHaveBeenCalledWith({
+      blocker: "blocker",
+      blocked: "blocked",
+    });
+    act(() => {
+      graphMocks.onEdgesChange?.([
+        { type: "select", id: "blocker-blocked", selected: false },
+      ]);
+    });
+    expect(graphMocks.edges[0]?.["selected"]).toBe(false);
+  });
+
+  it("does not reselect a dependency that is removed and added again", () => {
+    const dependency = makeDependency({
+      blockerTaskId: "blocker",
+      blockedTaskId: "blocked",
+    });
+    const tasks = [
+      makeTask({ id: "blocker", title: "Blocker task" }),
+      makeTask({ id: "blocked", title: "Blocked task" }),
+    ];
+    const graph = (dependencies: (typeof dependency)[]) => (
+      <FeatureGraph
+        tasks={tasks}
+        dependencies={dependencies}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={vi.fn()}
+      />
+    );
+    const { rerender } = render(graph([dependency]));
+
+    act(() => {
+      graphMocks.onEdgeClick?.({}, { id: "blocker-blocked" });
+    });
+    expect(graphMocks.edges[0]?.["selected"]).toBe(true);
+    rerender(graph([]));
+    rerender(graph([dependency]));
+    expect(graphMocks.edges[0]?.["selected"]).toBe(false);
   });
 
   it("shows a translated cycle error with task titles", () => {
@@ -406,6 +602,7 @@ describe("FeatureGraph", () => {
   it("builds dependency edges, persists zoom, and retries a failed layout", () => {
     const retryLayout = vi.fn();
     graphMocks.useGraphLayout.mockReturnValue({
+      edgeRoutes: new Map(),
       nodes: [makeTask()],
       layoutError: { message: undefined },
       retryLayout,

@@ -135,27 +135,42 @@ async function connectTasks(
   await page.mouse.up();
 }
 
-async function disconnectTasks(
+async function taskNodeId(page: Page, title: string) {
+  const id = await page
+    .locator(".task-node")
+    .filter({ hasText: title })
+    .evaluate((element) =>
+      element.closest(".react-flow__node")?.getAttribute("data-id"),
+    );
+  if (!id) throw new Error("task node id missing");
+  return id;
+}
+
+async function selectDependencyEdge(
   page: Page,
   blockerTitle: string,
   blockedTitle: string,
 ) {
   await settleGraph(page);
-  const blocker = page.locator(".task-node").filter({ hasText: blockerTitle });
-  const blocked = page.locator(".task-node").filter({ hasText: blockedTitle });
-  const blockerId = await blocker.evaluate((element) =>
-    element.closest(".react-flow__node")?.getAttribute("data-id"),
-  );
-  const blockedId = await blocked.evaluate((element) =>
-    element.closest(".react-flow__node")?.getAttribute("data-id"),
-  );
-  if (!blockerId || !blockedId) throw new Error("task node id missing");
-
+  const blockerId = await taskNodeId(page, blockerTitle);
+  const blockedId = await taskNodeId(page, blockedTitle);
   const edge = page.locator(
     `.react-flow__edge[data-id="${blockerId}-${blockedId}"]`,
   );
-  const sourceEndpoint = edge.locator(".react-flow__edgeupdater-source");
-  const endpointBox = await sourceEndpoint.boundingBox();
+  await edge.click({ force: true });
+  await expect(edge).toHaveClass(/selected/);
+  return edge;
+}
+
+async function disconnectTasks(
+  page: Page,
+  blockerTitle: string,
+  blockedTitle: string,
+  endpoint: "source" | "target" = "source",
+) {
+  const edge = await selectDependencyEdge(page, blockerTitle, blockedTitle);
+  const endpointHandle = edge.locator(`.react-flow__edgeupdater-${endpoint}`);
+  const endpointBox = await endpointHandle.boundingBox();
   const stageBox = await page.locator(".graph-stage").boundingBox();
   if (!endpointBox || !stageBox) throw new Error("graph bounds missing");
 
@@ -163,7 +178,7 @@ async function disconnectTasks(
     endpointBox.x + endpointBox.width / 2,
     endpointBox.y + endpointBox.height / 2,
   );
-  await expect(sourceEndpoint).toHaveCSS("opacity", "1");
+  await expect(endpointHandle).toHaveCSS("opacity", "1");
   await page.mouse.down();
   await page.mouse.move(stageBox.x + 28, stageBox.y + 28, { steps: 6 });
   await page.mouse.up();
@@ -342,7 +357,42 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(
     page.locator(".task-node").filter({ hasText: "E2E UI" }),
   ).toBeVisible();
-  await disconnectTasks(page, "E2E API", "E2E worker");
+  await selectDependencyEdge(page, "E2E worker", "E2E UI");
+  await page.locator(".dependency-edge-remove").click();
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    1,
+  );
+  await connectTasks(page, "E2E worker", "E2E UI");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    2,
+  );
+  // Keyboard users reach the toolbar and the Delete key only when React Flow's
+  // own selection change is applied back to the controlled edges.
+  await settleGraph(page);
+  const keyboardEdge = page.locator(
+    `.react-flow__edge[data-id="${await taskNodeId(page, "E2E worker")}-${await taskNodeId(page, "E2E UI")}"]`,
+  );
+  await keyboardEdge.focus();
+  await page.keyboard.press("Enter");
+  await expect(keyboardEdge).toHaveClass(/selected/);
+  await page.keyboard.press("Delete");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    1,
+  );
+  await connectTasks(page, "E2E worker", "E2E UI");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    2,
+  );
+  await selectDependencyEdge(page, "E2E worker", "E2E UI");
+  await page.keyboard.press("Delete");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    1,
+  );
+  await connectTasks(page, "E2E worker", "E2E UI");
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    2,
+  );
+  await disconnectTasks(page, "E2E API", "E2E worker", "target");
   await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
     1,
   );
