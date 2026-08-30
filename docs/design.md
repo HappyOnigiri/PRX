@@ -141,6 +141,7 @@ Automatic refreshes include pull requests from active features only.
 Merged pull requests are terminal and are not fetched again.
 Closed pull requests remain eligible so a reopened pull request can be detected.
 Manual refreshes ignore the interval and may target an archived feature, but they also skip merged pull requests.
+Only a refresh that covers every eligible pull request records a run and resets the interval; one narrowed to a feature or task leaves the recorded run status untouched.
 
 Automatic failures are best effort and never fail the command or page load that noticed the expired interval.
 An automatic refresh is bounded by a deadline so an unreachable host cannot block the command that noticed the expired interval; exceeding it is recorded as an automatic failure.

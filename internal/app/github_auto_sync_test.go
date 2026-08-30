@@ -101,3 +101,56 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedAndMergedPullRequests(t *testi
 		t.Fatalf("manual archived sync succeeded=%d failed=%d err=%v", succeeded, failed, err)
 	}
 }
+
+// A refresh narrowed to one task says nothing about the pull requests it
+// skipped, so it must not consume the shared interval or publish its counts.
+func TestTargetedManualSyncLeavesTheAutomaticIntervalAndStatusUntouched(t *testing.T) {
+	ctx := context.Background()
+	service, database := newAutoSyncTestService(t)
+	defer func() { _ = database.Close() }()
+
+	feature, err := service.CreateFeature(ctx, "targeted", "Targeted", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := service.CreateTask(ctx, feature.ID, "Targeted PR", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.AttachPullRequest(ctx, task.ID, "https://github.com/acme/api/pull/1"); err != nil {
+		t.Fatal(err)
+	}
+
+	if _, _, err := service.Sync(ctx, "", task.ID); err != nil {
+		t.Fatal(err)
+	}
+	status, err := service.SyncStatus(ctx)
+	if err != nil || status.LastAttemptAt != nil || status.LastUpdatedAt != nil {
+		t.Fatalf("targeted sync recorded a run: status=%+v err=%v", status, err)
+	}
+	ran, status, err := service.SyncIfDue(ctx)
+	if err != nil || !ran || status.LastUpdatedAt == nil {
+		t.Fatalf("automatic sync after a targeted sync ran=%v status=%+v err=%v", ran, status, err)
+	}
+}
+
+func newAutoSyncTestService(t *testing.T) (*app.Service, *store.Store) {
+	t.Helper()
+	ctx := context.Background()
+	database, err := store.Open(ctx, filepath.Join(t.TempDir(), "auto-sync.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	configStore, err := config.NewStore(filepath.Join(t.TempDir(), "config.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := configStore.Save(config.Default()); err != nil {
+		t.Fatal(err)
+	}
+	provider, err := githubprovider.NewFixtureProvider("demo")
+	if err != nil {
+		t.Fatal(err)
+	}
+	return app.NewWithConfig(database, provider, configStore), database
+}
