@@ -1,9 +1,11 @@
 import { Link } from "@tanstack/react-router";
-import { RotateCcw } from "lucide-react";
+import { RefreshCw, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
+import { mutations } from "../api";
 import type { Feature } from "../gen/prx/v1/prx_pb";
-import { useSnapshot } from "../hooks";
+import { useDomainMutation, useSnapshot } from "../hooks";
 import { formatError } from "../i18n/domain";
+import { useAutoSyncStatus } from "../sync-status";
 import { IconButton } from "./IconButton";
 
 const queueNames = [
@@ -78,9 +80,12 @@ export function Dashboard() {
           </h1>
           <p>{t("dashboard.description")}</p>
         </div>
-        <div className="clock">
-          <span>{tasks.length}</span>
-          <small>{t("dashboard.nodesUnderControl")}</small>
+        <div className="page-head-status">
+          <div className="clock">
+            <span>{tasks.length}</span>
+            <small>{t("dashboard.nodesUnderControl")}</small>
+          </div>
+          <SyncStatus />
         </div>
       </header>
       <section
@@ -139,6 +144,55 @@ export function Dashboard() {
         </section>
         <FeatureBoard features={features} />
       </div>
+    </div>
+  );
+}
+
+function SyncStatus() {
+  const { t, i18n } = useTranslation();
+  const status = useAutoSyncStatus();
+  const sync = useDomainMutation(() => mutations.sync());
+  const value = status.status.data;
+  const timestamp = value?.lastUpdatedAt;
+  const pending = sync.isPending || status.checking;
+  let label: string = t("dashboard.syncNever");
+  if (sync.isPending) label = t("dashboard.syncUpdating");
+  else if (status.status.isError || status.error || sync.error)
+    label = t("dashboard.syncUnavailable");
+  else if (status.checking) label = t("dashboard.syncUpdating");
+  else if (timestamp && (value.failed > 0 || value.error))
+    label = t("dashboard.syncFailed", {
+      time: new Date(timestamp).toLocaleString(i18n.resolvedLanguage),
+    });
+  else if (timestamp)
+    label = t("dashboard.syncUpdated", {
+      time: new Date(timestamp).toLocaleString(i18n.resolvedLanguage),
+    });
+  return (
+    <div className="dashboard-sync">
+      <span className="dashboard-sync-status" aria-label={label}>
+        <span>{t("dashboard.githubSync")}</span>
+        {timestamp ? (
+          <time dateTime={timestamp}>{label}</time>
+        ) : (
+          <small>{label}</small>
+        )}
+      </span>
+      <IconButton
+        icon={RefreshCw}
+        label={pending ? t("dashboard.syncingNow") : t("dashboard.syncNow")}
+        variant="secondary"
+        iconOnly
+        disabled={pending}
+        onClick={() => {
+          sync.mutate(undefined);
+        }}
+      />
+      {sync.error && (
+        <small className="dashboard-sync-error" role="alert">
+          {formatError(sync.error, t)}
+        </small>
+      )}
     </div>
   );
 }

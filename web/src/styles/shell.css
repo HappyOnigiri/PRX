@@ -177,21 +177,6 @@
   font-size: var(--text-xs);
 }
 
-.sync-status {
-  display: grid;
-  grid-template-columns: auto 1fr;
-  gap: 8px;
-  font-family: var(--font-mono);
-  font-variant-numeric: tabular-nums;
-}
-
-.sync-status > :last-child {
-  overflow: hidden;
-  text-align: right;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
 .rail-health {
   display: flex;
   align-items: center;

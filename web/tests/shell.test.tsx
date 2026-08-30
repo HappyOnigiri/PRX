@@ -19,6 +19,12 @@ const shellMocks = vi.hoisted(() => ({
     isPending: false,
     error: null as Error | null,
   },
+  autoSync: vi.fn((enabled: boolean) => ({
+    enabled,
+    status: { data: undefined, isError: false },
+    checking: false,
+    error: null,
+  })),
 }));
 
 const snapshot = makeSnapshot({
@@ -58,11 +64,7 @@ vi.mock("../src/api", () => ({
 }));
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => ({ data: snapshot, isError: false }),
-  useAutoSync: () => ({
-    status: { data: undefined, isError: false },
-    checking: false,
-    error: null,
-  }),
+  useAutoSync: (enabled: boolean) => shellMocks.autoSync(enabled),
   useDomainMutation: () => shellMocks.mutation,
   useConfig: () => ({ data: { hosts: [], authMethods: [] }, isPending: false }),
   useConfigMutation: () => shellMocks.mutation,
@@ -79,6 +81,7 @@ describe("AppShell", () => {
     localStorage.clear();
     await setDisplayLanguage("en");
     shellMocks.navigate.mockClear();
+    shellMocks.autoSync.mockClear();
     shellMocks.mutation.mutateAsync.mockReset();
     shellMocks.mutation.mutateAsync.mockResolvedValue({
       feature: makeFeature({ id: "created" }),
@@ -103,6 +106,8 @@ describe("AppShell", () => {
     );
     expect(screen.getByText("Workspace")).toBeInTheDocument();
     expect(screen.getByText(`v${appVersion()}`)).toBeInTheDocument();
+    expect(screen.queryByText("GitHub sync")).not.toBeInTheDocument();
+    expect(shellMocks.autoSync).toHaveBeenCalledWith(true);
     expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Settings" }));

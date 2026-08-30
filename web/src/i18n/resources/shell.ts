@@ -31,12 +31,6 @@ export const shell = {
       serverUnavailable: "Server unavailable",
       localDatabaseOnline: "Local database online",
       temporaryDemoDatabase: "Temporary demo database",
-      githubSync: "GitHub sync",
-      syncNever: "Never updated",
-      syncUpdating: "Updating…",
-      syncFailed: "Failed · {{time}}",
-      syncUpdated: "Updated · {{time}}",
-      syncUnavailable: "Status unavailable",
     },
     serverSettings: {
       description:
@@ -128,12 +122,6 @@ export const shell = {
       serverUnavailable: "サーバーに接続できません",
       localDatabaseOnline: "ローカルデータベース接続中",
       temporaryDemoDatabase: "一時デモ DB",
-      githubSync: "GitHub同期",
-      syncNever: "未更新",
-      syncUpdating: "更新中…",
-      syncFailed: "失敗 · {{time}}",
-      syncUpdated: "更新 · {{time}}",
-      syncUnavailable: "状態を取得できません",
     },
     serverSettings: {
       description:
