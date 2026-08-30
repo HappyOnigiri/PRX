@@ -80,8 +80,11 @@ Mutations remain non-interactive so people and coding agents use the same surfac
 A missing mutation target fails instead of reporting a successful no-op.
 Destructive traversal of referenced data requires an explicit cascade request.
 
-Public feature and task identifiers remain distinct from storage identifiers.
-Storage UUIDs must not cross the CLI, RPC, or WebUI boundary.
+Features and tasks carry public identifiers that remain distinct from their storage identifiers.
+Their storage UUIDs must not cross the CLI, RPC, or WebUI boundary.
+Documents are the deliberate exception: they have no separate public identifier,
+so their storage identifier is the identifier callers pass to `document get`, `document update`, and `document delete`.
+That identifier is opaque, and migrated documents may carry a value that is not formatted as a UUID.
 
 A bulk operation may report item-level failures without discarding successful items.
 Command-level failure is reserved for failure of the operation itself.
