@@ -19,7 +19,7 @@ prx document add --feature F-1 --markdown-file notes.md
       --feature string         feature ID or slug
   -h, --help                   help for add
       --implementation-plan    mark as the task implementation plan
-      --kind string            compatibility alias: url, local_file, or markdown_path
+      --kind string            compatibility alias: url, local_file, or markdown_path (default "url")
       --local-file string      registered local file path
       --markdown-file string   read stored Markdown from a file
       --stdin                  read stored Markdown from standard input

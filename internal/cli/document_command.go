@@ -171,7 +171,7 @@ func bindDocumentSourceFlags(command *cobra.Command, flags *documentSourceFlags,
 	command.Flags().BoolVar(&flags.stdin, "stdin", false, "read stored Markdown from standard input")
 	if legacy {
 		command.Flags().
-			StringVar(&flags.legacyKind, "kind", "", "compatibility alias: url, local_file, or markdown_path")
+			StringVar(&flags.legacyKind, "kind", "url", "compatibility alias: url, local_file, or markdown_path")
 		command.Flags().StringVar(&flags.legacyValue, "value", "", "compatibility value for --kind")
 	}
 }
@@ -180,7 +180,7 @@ func documentSourceCount(flags documentSourceFlags) int {
 	count := 0
 	for _, value := range []bool{
 		flags.url != "", flags.localFile != "", flags.markdownFile != "", flags.stdin,
-		flags.legacyKind != "" || flags.legacyValue != "",
+		flags.legacyValue != "",
 	} {
 		if value {
 			count++
@@ -203,7 +203,7 @@ func readDocumentSource(
 	if flags.localFile != "" {
 		return domain.Document{Kind: domain.DocumentKindLocalFile, Locator: flags.localFile}, nil
 	}
-	if flags.legacyKind != "" || flags.legacyValue != "" {
+	if flags.legacyValue != "" {
 		kind := domain.DocumentKind(flags.legacyKind)
 		if kind == "markdown_path" {
 			kind = domain.DocumentKindLocalFile

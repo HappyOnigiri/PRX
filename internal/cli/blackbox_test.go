@@ -1289,6 +1289,24 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	if err := json.Unmarshal(document["id"], &documentID); err != nil {
 		t.Fatal(err)
 	}
+
+	legacyDefault := runDB(
+		"document",
+		"add",
+		"--task",
+		taskAID,
+		"--value",
+		"https://example.com/legacy",
+	)
+	assertDirectObject(t, legacyDefault, "id", "task_id")
+	var legacyKind string
+	if err := json.Unmarshal(legacyDefault["kind"], &legacyKind); err != nil {
+		t.Fatal(err)
+	}
+	if legacyKind != "url" {
+		t.Fatalf("legacy --value kind=%q, want url", legacyKind)
+	}
+
 	assertDirectObjectKeys(t, runDB("document"), "documents")
 
 	planPath := filepath.Join(root, "plan.md")
