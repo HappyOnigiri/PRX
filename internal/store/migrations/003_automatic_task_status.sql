@@ -1,6 +1,15 @@
 -- SQLite cannot add a CHECK constraint to an existing table in place. Keep
 -- every dependent row while rebuilding the task table and its foreign-key
--- children around the new stored status values.
+-- children around the new stored status values. The implementation plan table
+-- may already exist when repairing a database from the pre-merge feature
+-- branch, so preserve it across the rebuild as well.
+CREATE TABLE IF NOT EXISTS implementation_plans (
+  task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE RESTRICT,
+  content TEXT NOT NULL CHECK(length(trim(content)) > 0),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+
 CREATE TEMP TABLE task_status_migration AS
 SELECT id, feature_id, title, scope, kind, status, assignee, created_at, updated_at
 FROM tasks;
@@ -8,6 +17,7 @@ FROM tasks;
 CREATE TEMP TABLE dependency_migration AS SELECT * FROM dependencies;
 CREATE TEMP TABLE pull_request_migration AS SELECT * FROM pull_requests;
 CREATE TEMP TABLE document_migration AS SELECT * FROM documents;
+CREATE TEMP TABLE implementation_plan_migration AS SELECT * FROM implementation_plans;
 
 CREATE TABLE tasks_new (
   id TEXT PRIMARY KEY,
@@ -42,6 +52,7 @@ FROM task_status_migration;
 DROP TABLE dependencies;
 DROP TABLE pull_requests;
 DROP TABLE documents;
+DROP TABLE implementation_plans;
 DROP TABLE tasks;
 ALTER TABLE tasks_new RENAME TO tasks;
 
@@ -110,7 +121,17 @@ CREATE INDEX documents_task_idx ON documents(task_id);
 INSERT INTO documents (id, feature_id, task_id, kind, title, value, created_at)
 SELECT id, feature_id, task_id, kind, title, value, created_at FROM document_migration;
 
+CREATE TABLE implementation_plans (
+  task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE RESTRICT,
+  content TEXT NOT NULL CHECK(length(trim(content)) > 0),
+  created_at TEXT NOT NULL,
+  updated_at TEXT NOT NULL
+);
+INSERT INTO implementation_plans (task_id, content, created_at, updated_at)
+SELECT task_id, content, created_at, updated_at FROM implementation_plan_migration;
+
 DROP TABLE task_status_migration;
 DROP TABLE dependency_migration;
 DROP TABLE pull_request_migration;
 DROP TABLE document_migration;
+DROP TABLE implementation_plan_migration;

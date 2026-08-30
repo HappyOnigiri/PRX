@@ -273,6 +273,176 @@ func TestLegacyTaskStatusMigrationPreservesRelatedRows(t *testing.T) {
 	}
 }
 
+func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
+	ctx := context.Background()
+	databasePath := filepath.Join(t.TempDir(), "legacy-branch.db")
+	legacy, err := sql.Open("sqlite", databasePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	legacy.SetMaxOpenConns(1)
+	legacySchema := []string{
+		`CREATE TABLE schema_migrations (version INTEGER PRIMARY KEY, applied_at TEXT NOT NULL)`,
+		`CREATE TABLE features (
+      id TEXT PRIMARY KEY,
+      slug TEXT NOT NULL UNIQUE CHECK(length(trim(slug)) > 0),
+      title TEXT NOT NULL CHECK(length(trim(title)) > 0),
+      description TEXT NOT NULL DEFAULT '',
+      status TEXT NOT NULL DEFAULT 'active' CHECK(status IN ('active','paused','completed','cancelled')),
+      archived INTEGER NOT NULL DEFAULT 0 CHECK(archived IN (0,1)),
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+		`CREATE TABLE tasks (
+      id TEXT PRIMARY KEY,
+      feature_id TEXT NOT NULL REFERENCES features(id) ON DELETE RESTRICT,
+      title TEXT NOT NULL CHECK(length(trim(title)) > 0),
+      scope TEXT NOT NULL DEFAULT '',
+      kind TEXT NOT NULL CHECK(kind IN ('pr','manual')),
+      status TEXT NOT NULL DEFAULT 'planned' CHECK(status IN ('planned','in_progress','completed','cancelled')),
+      assignee TEXT NOT NULL DEFAULT '',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+		`CREATE TABLE dependencies (
+      blocker_task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE RESTRICT,
+      blocked_task_id TEXT NOT NULL REFERENCES tasks(id) ON DELETE RESTRICT,
+      created_at TEXT NOT NULL,
+      PRIMARY KEY(blocker_task_id, blocked_task_id),
+      CHECK(blocker_task_id <> blocked_task_id)
+    )`,
+		`CREATE TABLE pull_requests (
+      task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE RESTRICT,
+      host TEXT NOT NULL DEFAULT 'github.com' COLLATE NOCASE,
+      owner TEXT NOT NULL COLLATE NOCASE,
+      repository TEXT NOT NULL COLLATE NOCASE,
+      number INTEGER NOT NULL CHECK(number > 0),
+      url TEXT NOT NULL,
+      node_id TEXT NOT NULL DEFAULT '',
+      author TEXT NOT NULL DEFAULT '',
+      assignees_json TEXT NOT NULL DEFAULT '[]',
+      state TEXT NOT NULL DEFAULT 'unknown' CHECK(state IN ('open','closed','merged','unknown')),
+      draft INTEGER NOT NULL DEFAULT 0 CHECK(draft IN (0,1)),
+      review_state TEXT NOT NULL DEFAULT 'unknown' CHECK(
+        review_state IN ('none','required','approved','changes_requested','unknown')),
+      mergeability TEXT NOT NULL DEFAULT 'unknown' CHECK(mergeability IN ('mergeable','conflicting','unknown')),
+      github_updated_at TEXT,
+      last_synced_at TEXT,
+      sync_error TEXT NOT NULL DEFAULT '',
+      stale INTEGER NOT NULL DEFAULT 1 CHECK(stale IN (0,1)),
+      UNIQUE(host, owner, repository, number)
+    )`,
+		`CREATE TABLE documents (
+      id TEXT PRIMARY KEY,
+      feature_id TEXT REFERENCES features(id) ON DELETE RESTRICT,
+      task_id TEXT REFERENCES tasks(id) ON DELETE RESTRICT,
+      kind TEXT NOT NULL CHECK(kind IN ('url','markdown_path')),
+      title TEXT NOT NULL DEFAULT '',
+      value TEXT NOT NULL CHECK(length(trim(value)) > 0),
+      created_at TEXT NOT NULL,
+      CHECK((feature_id IS NOT NULL AND task_id IS NULL) OR (feature_id IS NULL AND task_id IS NOT NULL))
+    )`,
+		`CREATE TABLE github_repository_auth_cache (
+      host TEXT NOT NULL COLLATE NOCASE,
+      owner TEXT NOT NULL COLLATE NOCASE,
+      repository TEXT NOT NULL COLLATE NOCASE,
+      auth_method_id TEXT NOT NULL,
+      last_succeeded_at TEXT NOT NULL,
+      PRIMARY KEY(host, owner, repository)
+    )`,
+		`CREATE TABLE implementation_plans (
+      task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE RESTRICT,
+      content TEXT NOT NULL CHECK(length(trim(content)) > 0),
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    )`,
+	}
+	for _, statement := range legacySchema {
+		if _, err := legacy.ExecContext(ctx, statement); err != nil {
+			_ = legacy.Close()
+			t.Fatal(err)
+		}
+	}
+	const timestamp = "2026-08-30T00:00:00Z"
+	for _, version := range []int{1, 2, 3} {
+		if _, err := legacy.ExecContext(
+			ctx,
+			`INSERT INTO schema_migrations(version, applied_at) VALUES(?, ?)`,
+			version,
+			timestamp,
+		); err != nil {
+			_ = legacy.Close()
+			t.Fatal(err)
+		}
+	}
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO features(id, slug, title, created_at, updated_at) VALUES('feature', 'legacy', 'Legacy', ?, ?)`,
+		timestamp,
+		timestamp,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO tasks(id, feature_id, title, kind, status, created_at, updated_at)
+      VALUES('task', 'feature', 'Legacy task', 'pr', 'planned', ?, ?)`,
+		timestamp,
+		timestamp,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO pull_requests(task_id, host, owner, repository, number, url)
+      VALUES('task', 'ghe.example.com', 'acme', 'api', 7, 'https://ghe.example.com/acme/api/pull/7')`,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO implementation_plans(task_id, content, created_at, updated_at)
+      VALUES('task', '# Keep this plan', ?, ?)`,
+		timestamp,
+		timestamp,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
+	if err := legacy.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	database, err := store.Open(ctx, databasePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	t.Cleanup(func() { _ = database.Close() })
+	var migrationCount int
+	if err := database.DB().
+		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
+		Scan(&migrationCount); err != nil || migrationCount != 4 {
+		t.Fatalf("migration count=%d err=%v", migrationCount, err)
+	}
+	var status string
+	if err := database.DB().
+		QueryRowContext(ctx, `SELECT status FROM tasks WHERE id='task'`).
+		Scan(&status); err != nil || status != "auto" {
+		t.Fatalf("task status=%q err=%v, want auto", status, err)
+	}
+	plan, err := database.GetImplementationPlan(ctx, "task")
+	if err != nil || plan.Content != "# Keep this plan" {
+		t.Fatalf("implementation plan=%+v err=%v", plan, err)
+	}
+	pullRequest, err := database.GetPullRequest(ctx, "task")
+	if err != nil || pullRequest.Host != "ghe.example.com" {
+		t.Fatalf("pull request=%+v err=%v, want host preserved", pullRequest, err)
+	}
+}
+
 func TestMigrationAddsGitHubHostAndHostScopedUniqueness(t *testing.T) {
 	ctx := context.Background()
 	databasePath := filepath.Join(t.TempDir(), "legacy.db")
