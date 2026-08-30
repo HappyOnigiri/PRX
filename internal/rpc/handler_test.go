@@ -139,6 +139,56 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE {
 		t.Fatalf("large preview code=%s err=%v", got, err)
 	}
+
+	const stored = "# Stored\n\n- keep the structure\n"
+	storedDocument, err := client.AddDocument(
+		ctx,
+		connect.NewRequest(
+			&prxv1.AddDocumentRequest{
+				TaskId: task.Msg.GetTask().GetId(),
+				Title:  "Stored",
+				Source: &prxv1.AddDocumentRequest_Markdown{Markdown: stored},
+			},
+		),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	storedPreview, err := client.ReadDocumentContent(
+		ctx,
+		connect.NewRequest(&prxv1.ReadDocumentContentRequest{Id: storedDocument.Msg.GetDocument().GetId()}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if storedPreview.Msg.GetContent() != stored {
+		t.Fatalf("stored Markdown content=%q, want %q", storedPreview.Msg.GetContent(), stored)
+	}
+
+	binaryPath := filepath.Join(t.TempDir(), "binary.md")
+	if err := os.WriteFile(binaryPath, []byte{0xff, 0xfe, 0x00, 0x41}, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	binaryDocument, err := client.AddDocument(
+		ctx,
+		connect.NewRequest(
+			&prxv1.AddDocumentRequest{
+				TaskId: task.Msg.GetTask().GetId(),
+				Title:  "Binary",
+				Source: &prxv1.AddDocumentRequest_LocalFile{LocalFile: binaryPath},
+			},
+		),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, err = client.ReadDocumentContent(
+		ctx,
+		connect.NewRequest(&prxv1.ReadDocumentContentRequest{Id: binaryDocument.Msg.GetDocument().GetId()}),
+	)
+	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT {
+		t.Fatalf("binary preview code=%s err=%v", got, err)
+	}
 }
 
 func TestRPCSharesDomainValidation(t *testing.T) {
