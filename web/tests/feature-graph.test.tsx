@@ -5,6 +5,7 @@ import {
   fireEvent,
   render,
   screen,
+  waitFor,
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -329,7 +330,7 @@ describe("FeatureGraph", () => {
     expect(graphMocks.removeDependency.mutate).not.toHaveBeenCalled();
   });
 
-  it("uses routed endpoint ports and removes the selected edge by keyboard", () => {
+  it("uses routed endpoint ports and removes the selected edge by keyboard", async () => {
     const dependency = makeDependency({
       blockerTaskId: "blocker",
       blockedTaskId: "blocked",
@@ -370,6 +371,18 @@ describe("FeatureGraph", () => {
       />,
     );
 
+    // The ports are measured one frame after the nodes commit, so the first
+    // render must not name handles that React Flow does not know yet.
+    expect(graphMocks.edges[0]).toMatchObject({
+      id: "blocker-blocked",
+      sourceHandle: null,
+      targetHandle: null,
+    });
+    await waitFor(() => {
+      expect(graphMocks.edges[0]?.["sourceHandle"]).toBe(
+        "blocker-blocked-source",
+      );
+    });
     expect(graphMocks.edges[0]).toMatchObject({
       id: "blocker-blocked",
       sourceHandle: "blocker-blocked-source",

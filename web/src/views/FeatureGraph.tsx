@@ -240,6 +240,25 @@ function useDependencyEdges(options: {
   );
 }
 
+// React Flow measures the endpoint ports one animation frame after the nodes
+// that carry them commit. Handing the routes to the edges only after that frame
+// keeps the edges from naming handles that do not exist yet, which would drop
+// them from the canvas until the measurement lands.
+function useMeasuredEdgeRoutes(edgeRoutes: Map<string, DependencyEdgeRoute>) {
+  const [measured, setMeasured] = useState<Map<string, DependencyEdgeRoute>>(
+    () => new Map(),
+  );
+  useEffect(() => {
+    const frame = requestAnimationFrame(() => {
+      setMeasured(edgeRoutes);
+    });
+    return () => {
+      cancelAnimationFrame(frame);
+    };
+  }, [edgeRoutes]);
+  return measured;
+}
+
 function useDependencySelection(dependencies: Dependency[]) {
   const [requestedId, setSelectedId] = useState<string>();
   const stillPresent = dependencies.some(
@@ -320,9 +339,10 @@ export function FeatureGraph({
       onPreviewDocument,
       readOnly,
     });
+  const measuredRoutes = useMeasuredEdgeRoutes(edgeRoutes);
   const edges = useDependencyEdges({
     dependencies,
-    edgeRoutes,
+    edgeRoutes: measuredRoutes,
     pending: connections.pending,
     readOnly,
     remove: connections.remove,
