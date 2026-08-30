@@ -77,8 +77,8 @@ Mutation operations retain explicit verbs so state-changing intent remains visib
 Mutations remain non-interactive so people and coding agents use the same surface.
 A missing mutation target fails instead of reporting a successful no-op.
 Destructive traversal of referenced data requires an explicit cascade request.
-Values required to perform an operation are positional operands.
-Flags are reserved for optional modifiers, filters, partial updates, secret-safe input methods, execution settings, and output formats.
+Values every invocation of an operation requires are positional operands.
+Flags are reserved for optional modifiers, filters, partial updates, values another operand makes necessary, secret-safe input methods, execution settings, and output formats.
 An operand value that begins with `-` is passed after `--` so it is not parsed as a flag.
 
 Public feature and task identifiers remain distinct from storage identifiers.
