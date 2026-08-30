@@ -82,8 +82,9 @@
     display: block;
   }
 
-  .workspace-actions > .secondary,
-  .workspace-actions > .icon-button {
+  .workspace-actions > .icon-button-secondary,
+  .workspace-actions > .icon-button-quiet,
+  .workspace-actions > .icon-button-danger {
     display: none;
   }
 }

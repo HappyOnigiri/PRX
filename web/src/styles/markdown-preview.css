@@ -54,15 +54,10 @@
   gap: 7px;
 }
 
-.markdown-actions button {
+.markdown-actions button:not(.icon-button) {
   min-height: 32px;
   padding-inline: 12px;
   font-size: var(--text-sm);
-}
-
-.markdown-actions .icon-button {
-  width: 32px;
-  padding: 0;
 }
 
 .markdown-preview-body {
@@ -200,7 +195,7 @@
     flex-wrap: wrap;
   }
 
-  .markdown-actions .icon-button {
+  .markdown-actions .icon-button-only {
     margin-left: auto;
   }
 }

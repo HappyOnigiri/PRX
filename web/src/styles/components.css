@@ -1,24 +1,136 @@
-.secondary,
-.icon-button {
+.secondary {
   border-color: var(--border-strong);
   background: transparent;
   color: var(--text);
 }
 
-.icon-button {
-  width: 32px;
-  min-width: 32px;
-  padding: 0;
-}
-
-.secondary:hover,
-.icon-button:hover {
+.secondary:hover {
   background: var(--surface-2);
 }
 
-.icon-button.danger {
+.icon-button {
+  min-width: 32px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  border-color: var(--border-strong);
+  background: transparent;
+  color: var(--text);
+}
+
+.icon-button-standard.icon-button-only {
+  width: 32px;
+  padding-inline: 0;
+}
+
+.icon-button-compact {
+  min-width: 24px;
+  min-height: 24px;
+  padding-inline: 8px;
+}
+
+.icon-button-compact.icon-button-only {
+  width: 24px;
+  padding-inline: 0;
+}
+
+.icon-button svg {
+  display: block;
+  flex: 0 0 auto;
+}
+
+.icon-button-label {
+  min-width: 0;
+}
+
+.icon-button-primary {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: var(--accent-text);
+}
+
+.icon-button-primary:hover {
+  background: var(--accent-hover);
+}
+
+.icon-button-quiet {
+  border-color: transparent;
+  background: transparent;
+  color: var(--text-2);
+}
+
+.icon-button-secondary:hover,
+.icon-button-quiet:hover {
+  background: var(--surface-2);
+}
+
+.icon-button-danger {
   border-color: var(--status-conflict);
+  background: transparent;
   color: var(--status-conflict);
+}
+
+.icon-button-danger:hover {
+  background: var(--surface-2);
+}
+
+.copyable-identifier {
+  min-width: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  font-weight: 400;
+}
+
+.copyable-identifier-label {
+  flex: 0 0 auto;
+}
+
+.copyable-identifier-value {
+  min-width: 0;
+  overflow: hidden;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.copyable-identifier-button {
+  min-height: 24px;
+  width: 24px;
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border: 0;
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-3);
+  padding: 0 4px;
+  font-size: var(--text-xs);
+  font-weight: 500;
+}
+
+.copyable-identifier-button:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.copyable-identifier-button.is-copied,
+.copyable-identifier-button.is-copied:hover {
+  color: var(--status-ready);
+}
+
+.copyable-identifier-status {
+  flex: 0 1 auto;
+  overflow: hidden;
+  color: var(--text-3);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .dialog h2 {
@@ -219,11 +331,6 @@
   display: flex;
   flex: 0 0 auto;
   gap: 5px;
-}
-
-.settings-row-actions button {
-  min-width: 32px;
-  padding-inline: 8px;
 }
 
 .settings-auth-name {

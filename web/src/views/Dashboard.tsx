@@ -1,8 +1,10 @@
 import { Link } from "@tanstack/react-router";
+import { RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import type { Feature } from "../gen/prx/v1/prx_pb";
 import { useSnapshot } from "../hooks";
 import { formatError } from "../i18n/domain";
+import { IconButton } from "./IconButton";
 
 const queueNames = [
   [
@@ -147,7 +149,14 @@ function StateMessage({
 
 function StateAction({ action }: { action: () => void }) {
   const { t } = useTranslation();
-  return <button onClick={action}>{t("common.retry")}</button>;
+  return (
+    <IconButton
+      icon={RotateCcw}
+      label={t("common.retry")}
+      variant="secondary"
+      onClick={action}
+    />
+  );
 }
 
 function FeatureBoard({ features }: { features: Feature[] }) {

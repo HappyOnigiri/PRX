@@ -13,6 +13,7 @@ import {
   type OnReconnect,
   type ReactFlowInstance,
 } from "@xyflow/react";
+import { Plus, RotateCcw, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
@@ -24,6 +25,7 @@ import {
   readGraphZoom,
   writeGraphZoom,
 } from "../i18n/settings";
+import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 import { TaskNode, type TaskFlowNode, type TaskNodeDocument } from "./TaskNode";
 import { useGraphLayout } from "./useGraphLayout";
@@ -258,7 +260,6 @@ function GraphCanvas({
   onCreateTask,
   ariaLabelConfig,
 }: GraphCanvasProps) {
-  const { t } = useTranslation();
   return (
     <div
       className="graph-stage"
@@ -299,24 +300,61 @@ function GraphCanvas({
           <MutationError error={connectionError} taskTitle={taskTitle} />
         </div>
       )}
-      {tasks.length === 0 && !layoutError && (
-        <div className="graph-empty">
-          <span>＋</span>
-          <h2>{t("workspace.graphEmptyTitle")}</h2>
-          <p>{t("workspace.graphEmptyDetail")}</p>
-          <button onClick={onCreateTask}>{t("workspace.addTaskPlain")}</button>
-        </div>
-      )}
-      {layoutError && (
-        <div className="graph-empty" role="alert">
-          <span>⚠</span>
-          <h2>{t("workspace.layoutErrorTitle")}</h2>
-          <p>{layoutError.message ?? t("workspace.layoutErrorFallback")}</p>
-          <button onClick={retryLayout}>{t("workspace.retryLayout")}</button>
-        </div>
-      )}
+      <GraphState
+        taskCount={tasks.length}
+        layoutError={layoutError}
+        onCreateTask={onCreateTask}
+        onRetryLayout={retryLayout}
+      />
     </div>
   );
+}
+
+function GraphState({
+  taskCount,
+  layoutError,
+  onCreateTask,
+  onRetryLayout,
+}: {
+  taskCount: number;
+  layoutError: { message: string | undefined } | undefined;
+  onCreateTask: () => void;
+  onRetryLayout: () => void;
+}) {
+  const { t } = useTranslation();
+  if (taskCount === 0 && !layoutError)
+    return (
+      <div className="graph-empty">
+        <span>
+          <Plus aria-hidden="true" focusable="false" size={24} />
+        </span>
+        <h2>{t("workspace.graphEmptyTitle")}</h2>
+        <p>{t("workspace.graphEmptyDetail")}</p>
+        <IconButton
+          icon={Plus}
+          label={t("workspace.addTaskPlain")}
+          variant="primary"
+          onClick={onCreateTask}
+        />
+      </div>
+    );
+  if (layoutError)
+    return (
+      <div className="graph-empty" role="alert">
+        <span>
+          <TriangleAlert aria-hidden="true" focusable="false" size={24} />
+        </span>
+        <h2>{t("workspace.layoutErrorTitle")}</h2>
+        <p>{layoutError.message ?? t("workspace.layoutErrorFallback")}</p>
+        <IconButton
+          icon={RotateCcw}
+          label={t("workspace.retryLayout")}
+          variant="secondary"
+          onClick={onRetryLayout}
+        />
+      </div>
+    );
+  return null;
 }
 
 function GraphLegend({

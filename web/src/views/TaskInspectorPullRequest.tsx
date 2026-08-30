@@ -1,3 +1,4 @@
+import { Link, Unlink } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";
@@ -7,6 +8,7 @@ import {
   pullRequestDisplayStateLabel,
   pullRequestDisplayStateToken,
 } from "../i18n/domain";
+import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 
 interface PullRequestSectionProps {
@@ -51,14 +53,17 @@ export function PullRequestSection({
               {pullRequest.syncError}
             </p>
           )}
-          <button
+          <IconButton
+            icon={Unlink}
+            label={t("inspector.detach")}
+            variant="quiet"
+            size="compact"
+            iconOnly
             className="text-action"
             onClick={() => {
               detach.mutate(taskId);
             }}
-          >
-            {t("inspector.detach")}
-          </button>
+          />
         </div>
       ) : (
         <form
@@ -76,7 +81,12 @@ export function PullRequestSection({
             required
             placeholder="https://github.com/org/repo/pull/42"
           />
-          <button>{t("inspector.attach")}</button>
+          <IconButton
+            icon={Link}
+            label={t("inspector.attach")}
+            variant="primary"
+            type="submit"
+          />
         </form>
       )}
       <MutationError error={attach.error} />

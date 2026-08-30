@@ -1,7 +1,9 @@
+import { Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import type { Dependency, Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
+import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 
 interface DependencySectionProps {
@@ -32,17 +34,19 @@ export function DependencySection({
           <span>
             {tasks.find((task) => task.id === dependency.blockerTaskId)?.title}
           </span>
-          <button
-            aria-label={t("inspector.removeDependency")}
+          <IconButton
+            icon={Trash2}
+            label={t("inspector.removeDependency")}
+            variant="danger"
+            size="compact"
+            iconOnly
             onClick={() => {
               removeDependency.mutate({
                 blocker: dependency.blockerTaskId,
                 blocked: taskId,
               });
             }}
-          >
-            ×
-          </button>
+          />
         </div>
       ))}
       <MutationError error={removeDependency.error} />

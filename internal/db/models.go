@@ -33,6 +33,7 @@ type Feature struct {
 	Archived    int64  `json:"archived"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
+	PublicID    string `json:"public_id"`
 }
 
 type GithubRepositoryAuthCache struct {
@@ -41,6 +42,11 @@ type GithubRepositoryAuthCache struct {
 	Repository      string `json:"repository"`
 	AuthMethodID    string `json:"auth_method_id"`
 	LastSucceededAt string `json:"last_succeeded_at"`
+}
+
+type IDSequence struct {
+	Entity    string `json:"entity"`
+	NextValue int64  `json:"next_value"`
 }
 
 type ImplementationPlan struct {
@@ -80,4 +86,5 @@ type Task struct {
 	Assignee  string `json:"assignee"`
 	CreatedAt string `json:"created_at"`
 	UpdatedAt string `json:"updated_at"`
+	PublicID  string `json:"public_id"`
 }

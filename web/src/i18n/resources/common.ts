@@ -2,9 +2,14 @@ export const common = {
   en: {
     common: {
       cancel: "Cancel",
+      copyIdentifier: "Copy {{label}}",
+      copied: "Copied",
+      copyFailed: "Copy failed",
       title: "Title",
       description: "Description",
       slug: "Slug",
+      taskId: "Task ID",
+      featureId: "Feature ID",
       scope: "Scope",
       status: "Status",
       assignee: "Assignee",
@@ -22,9 +27,14 @@ export const common = {
   ja: {
     common: {
       cancel: "キャンセル",
+      copyIdentifier: "{{label}}をコピー",
+      copied: "コピーしました",
+      copyFailed: "コピーに失敗しました",
       title: "タイトル",
       description: "説明",
       slug: "スラッグ",
+      taskId: "タスクID",
+      featureId: "フィーチャーID",
       scope: "作業範囲",
       status: "ステータス",
       assignee: "担当者",

@@ -28,6 +28,8 @@ type Store struct {
 	now func() time.Time
 }
 
+const publicIDsMigration = 5
+
 func DefaultPath() (string, error) {
 	dir, err := os.UserConfigDir()
 	if err != nil {
@@ -181,7 +183,20 @@ func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
 	if versions[3] && !hasAutomaticStatus {
 		staleVersions = append(staleVersions, 3)
 	}
-	if len(staleVersions) == 0 {
+	hasPublicIDs, err := s.tablesHavePublicIDs(ctx)
+	if err != nil {
+		return err
+	}
+	var publicIDsRecorded int
+	if err := s.db.QueryRowContext(
+		ctx,
+		`SELECT COUNT(*) FROM schema_migrations WHERE version=?`,
+		publicIDsMigration,
+	).Scan(&publicIDsRecorded); err != nil {
+		return err
+	}
+	recordPublicIDs := hasPublicIDs && publicIDsRecorded == 0
+	if len(staleVersions) == 0 && !recordPublicIDs {
 		return nil
 	}
 
@@ -195,10 +210,58 @@ func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
 			return err
 		}
 	}
+	if recordPublicIDs {
+		if _, err := tx.ExecContext(
+			ctx,
+			`INSERT INTO schema_migrations(version, applied_at) VALUES(?, ?)`,
+			publicIDsMigration,
+			s.now().Format(time.RFC3339Nano),
+		); err != nil {
+			_ = tx.Rollback()
+			return err
+		}
+	}
 	if err := tx.Commit(); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (s *Store) tablesHavePublicIDs(ctx context.Context) (bool, error) {
+	featureHasPublicID, err := s.tableHasColumn(ctx, "features", "public_id")
+	if err != nil {
+		return false, err
+	}
+	taskHasPublicID, err := s.tableHasColumn(ctx, "tasks", "public_id")
+	if err != nil {
+		return false, err
+	}
+	return featureHasPublicID && taskHasPublicID, nil
+}
+
+func (s *Store) tableHasColumn(ctx context.Context, table, column string) (bool, error) {
+	rows, err := s.db.QueryContext(ctx, "PRAGMA table_info("+table+")")
+	if err != nil {
+		return false, err
+	}
+	defer func() { _ = rows.Close() }()
+	for rows.Next() {
+		var (
+			cid        int
+			name       string
+			dataType   string
+			notNull    int
+			defaultVal sql.NullString
+			primaryKey int
+		)
+		if err := rows.Scan(&cid, &name, &dataType, &notNull, &defaultVal, &primaryKey); err != nil {
+			return false, err
+		}
+		if name == column {
+			return true, nil
+		}
+	}
+	return false, rows.Err()
 }
 
 func (s *Store) pullRequestsHaveHostColumn(ctx context.Context) (bool, error) {
@@ -261,7 +324,8 @@ func nullableTime(value sql.NullString) *time.Time {
 
 func domainFeature(value db.Feature) domain.Feature {
 	return domain.Feature{
-		ID:          value.ID,
+		ID:          value.PublicID,
+		StorageID:   value.ID,
 		Slug:        value.Slug,
 		Title:       value.Title,
 		Description: value.Description,
@@ -272,42 +336,63 @@ func domainFeature(value db.Feature) domain.Feature {
 	}
 }
 
-func domainTask(value db.Task) domain.Task {
+func publicFeatureIDs(values []db.Feature) map[string]string {
+	result := make(map[string]string, len(values))
+	for _, value := range values {
+		result[value.ID] = value.PublicID
+	}
+	return result
+}
+
+func publicTaskIDs(values []db.Task) map[string]string {
+	result := make(map[string]string, len(values))
+	for _, value := range values {
+		result[value.ID] = value.PublicID
+	}
+	return result
+}
+
+func domainTask(value db.Task, featureID string) domain.Task {
 	return domain.Task{
-		ID:        value.ID,
-		FeatureID: value.FeatureID,
-		Title:     value.Title,
-		Scope:     value.Scope,
-		Kind:      domain.TaskKind(value.Kind),
-		Status:    domain.TaskStatus(value.Status),
-		Assignee:  value.Assignee,
-		CreatedAt: parseTime(value.CreatedAt),
-		UpdatedAt: parseTime(value.UpdatedAt),
+		ID:               value.PublicID,
+		StorageID:        value.ID,
+		FeatureID:        featureID,
+		StorageFeatureID: value.FeatureID,
+		Title:            value.Title,
+		Scope:            value.Scope,
+		Kind:             domain.TaskKind(value.Kind),
+		Status:           domain.TaskStatus(value.Status),
+		Assignee:         value.Assignee,
+		CreatedAt:        parseTime(value.CreatedAt),
+		UpdatedAt:        parseTime(value.UpdatedAt),
 	}
 }
 
-func domainImplementationPlan(value db.ImplementationPlan) domain.ImplementationPlan {
+func domainImplementationPlan(value db.ImplementationPlan, taskID string) domain.ImplementationPlan {
 	return domain.ImplementationPlan{
-		TaskID:    value.TaskID,
+		TaskID:    taskID,
 		Content:   value.Content,
 		CreatedAt: parseTime(value.CreatedAt),
 		UpdatedAt: parseTime(value.UpdatedAt),
 	}
 }
 
-func domainDependency(value db.Dependency) domain.Dependency {
+func domainDependency(value db.Dependency, taskIDs map[string]string) domain.Dependency {
 	return domain.Dependency{
-		BlockerTaskID: value.BlockerTaskID,
-		BlockedTaskID: value.BlockedTaskID,
+		BlockerTaskID: taskIDs[value.BlockerTaskID],
+		BlockedTaskID: taskIDs[value.BlockedTaskID],
 		CreatedAt:     parseTime(value.CreatedAt),
 	}
 }
 
-func domainDocument(value db.Document) domain.Document {
+func domainDocument(
+	value db.Document,
+	featureIDs, taskIDs map[string]string,
+) domain.Document {
 	return domain.Document{
 		ID:        value.ID,
-		FeatureID: value.FeatureID.String,
-		TaskID:    value.TaskID.String,
+		FeatureID: featureIDs[value.FeatureID.String],
+		TaskID:    taskIDs[value.TaskID.String],
 		Kind:      domain.DocumentKind(value.Kind),
 		Title:     value.Title,
 		Value:     value.Value,
@@ -315,9 +400,9 @@ func domainDocument(value db.Document) domain.Document {
 	}
 }
 
-func domainPullRequest(value db.PullRequest) domain.PullRequest {
+func domainPullRequest(value db.PullRequest, taskIDs map[string]string) domain.PullRequest {
 	result := domain.PullRequest{
-		TaskID:          value.TaskID,
+		TaskID:          taskIDs[value.TaskID],
 		Host:            value.Host,
 		Owner:           value.Owner,
 		Repository:      value.Repository,

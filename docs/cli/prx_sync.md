@@ -9,7 +9,8 @@ prx sync [flags]
 ### Examples
 
 ```
-prx sync --feature checkout --json
+prx sync --feature FEATURE_ID --json
+prx sync --task TASK_ID --json
 ```
 
 ### Options

@@ -1,3 +1,4 @@
+import { Trash2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import {
@@ -11,6 +12,8 @@ import {
   taskDisplayStateLabel,
   taskDisplayStateToken,
 } from "../i18n/domain";
+import { CopyableIdentifier } from "./CopyableIdentifier";
+import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 import { DependencySection } from "./TaskInspectorDependencies";
 import { ImplementationPlanSection } from "./TaskInspectorImplementationPlan";
@@ -29,6 +32,28 @@ export interface TaskInspectorProps {
   onClose: () => void;
 }
 
+function TaskInspectorHeader({
+  task,
+  onClose,
+}: Pick<TaskInspectorProps, "task" | "onClose">) {
+  const { t } = useTranslation();
+  return (
+    <header>
+      <div className="inspector-heading">
+        <h2>{task.title}</h2>
+        <CopyableIdentifier label={t("common.taskId")} value={task.id} />
+      </div>
+      <IconButton
+        icon={X}
+        label={t("inspector.close")}
+        variant="secondary"
+        iconOnly
+        onClick={onClose}
+      />
+    </header>
+  );
+}
+
 export function TaskInspector({
   task,
   tasks,
@@ -43,16 +68,7 @@ export function TaskInspector({
 
   return (
     <aside className="inspector" aria-label={t("inspector.label")}>
-      <header>
-        <h2>{task.title}</h2>
-        <button
-          className="icon-button"
-          aria-label={t("inspector.close")}
-          onClick={onClose}
-        >
-          ×
-        </button>
-      </header>
+      <TaskInspectorHeader task={task} onClose={onClose} />
       <div
         className={`inspector-state state-${taskDisplayStateToken(task.displayState)}`}
       >
@@ -84,7 +100,10 @@ export function TaskInspector({
         documents={documents}
         onPreview={onPreview}
       />
-      <button
+      <IconButton
+        icon={Trash2}
+        label={t("inspector.deleteTask")}
+        variant="danger"
         className="danger-zone"
         onClick={() => {
           if (
@@ -95,9 +114,7 @@ export function TaskInspector({
             return;
           void deleteTask.mutateAsync(task.id).then(onClose, () => undefined);
         }}
-      >
-        {t("inspector.deleteTask")}
-      </button>
+      />
       <MutationError error={deleteTask.error} />
     </aside>
   );

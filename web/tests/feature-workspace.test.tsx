@@ -182,7 +182,10 @@ describe("FeatureWorkspace", () => {
     expect(
       screen.getByRole("heading", { name: "Payments rollout" }),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "↻ Sync GitHub" }));
+    expect(
+      screen.getByRole("button", { name: "Copy Feature ID" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Sync GitHub" }));
     expect(mutationAt(0).mutate).toHaveBeenCalledWith("feature-1");
     fireEvent.click(screen.getByRole("button", { name: "Edit feature" }));
     expect(

@@ -1,3 +1,13 @@
+import {
+  Check,
+  ChevronDown,
+  ChevronUp,
+  Pencil,
+  Plus,
+  Save,
+  Trash2,
+  X,
+} from "lucide-react";
 import { useState, type ReactNode, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { configMutations } from "../api";
@@ -7,6 +17,7 @@ import {
   type GitHubHost,
 } from "../gen/prx/v1/prx_pb";
 import { useConfig, useConfigMutation } from "../hooks";
+import { IconButton } from "./IconButton";
 
 interface AuthDraft {
   id: string;
@@ -297,23 +308,31 @@ function HostSettingsSection({
               <small>{host.apiUrl}</small>
             </div>
             <div className="settings-row-actions">
-              <button
-                className="secondary"
+              <IconButton
+                icon={Pencil}
+                label={t("serverSettings.editHostAction", {
+                  host: host.host,
+                })}
+                variant="secondary"
+                size="compact"
+                iconOnly
                 onClick={() => {
                   controller.beginEdit(host);
                 }}
-              >
-                {t("common.edit")}
-              </button>
-              <button
-                className="secondary"
+              />
+              <IconButton
+                icon={Trash2}
+                label={t("serverSettings.removeHostAction", {
+                  host: host.host,
+                })}
+                variant="danger"
+                size="compact"
+                iconOnly
                 disabled={host.host === "github.com" || controller.pending}
                 onClick={() => {
                   void controller.remove(host.host);
                 }}
-              >
-                {t("common.remove")}
-              </button>
+              />
             </div>
           </div>
         ))}
@@ -384,19 +403,23 @@ function HostForm({ controller }: HostFormProps) {
       </div>
       <div className="settings-form-actions">
         {controller.editingHost && (
-          <button
+          <IconButton
+            icon={X}
+            label={t("common.cancel")}
+            variant="secondary"
             type="button"
-            className="secondary"
             onClick={() => {
               controller.reset();
             }}
-          >
-            {t("common.cancel")}
-          </button>
+          />
         )}
-        <button disabled={controller.pending}>
-          {controller.editingHost ? t("common.save") : t("common.add")}
-        </button>
+        <IconButton
+          icon={controller.editingHost ? Save : Plus}
+          label={controller.editingHost ? t("common.save") : t("common.add")}
+          variant="primary"
+          type="submit"
+          disabled={controller.pending}
+        />
       </div>
     </form>
   );
@@ -436,46 +459,54 @@ function AuthSettingsSection({
               </div>
             </div>
             <div className="settings-row-actions">
-              <button
-                className="secondary"
+              <IconButton
+                icon={ChevronUp}
+                label={t("serverSettings.moveUp", { id: method.id })}
+                variant="secondary"
+                size="compact"
+                iconOnly
                 disabled={index === 0 || controller.pending}
                 onClick={() => {
                   void controller.move(index, -1);
                 }}
-                aria-label={t("serverSettings.moveUp")}
-              >
-                ↑
-              </button>
-              <button
-                className="secondary"
+              />
+              <IconButton
+                icon={ChevronDown}
+                label={t("serverSettings.moveDown", { id: method.id })}
+                variant="secondary"
+                size="compact"
+                iconOnly
                 disabled={
                   index === authMethods.length - 1 || controller.pending
                 }
                 onClick={() => {
                   void controller.move(index, 1);
                 }}
-                aria-label={t("serverSettings.moveDown")}
-              >
-                ↓
-              </button>
-              <button
-                className="secondary"
+              />
+              <IconButton
+                icon={Pencil}
+                label={t("serverSettings.editAuthAction", { id: method.id })}
+                variant="secondary"
+                size="compact"
+                iconOnly
                 disabled={controller.pending}
                 onClick={() => {
                   controller.beginEdit(method);
                 }}
-              >
-                {t("common.edit")}
-              </button>
-              <button
-                className="secondary"
+              />
+              <IconButton
+                icon={Trash2}
+                label={t("serverSettings.removeAuthAction", {
+                  id: method.id,
+                })}
+                variant="danger"
+                size="compact"
+                iconOnly
                 disabled={controller.pending}
                 onClick={() => {
                   void controller.remove(method.id);
                 }}
-              >
-                {t("common.remove")}
-              </button>
+              />
             </div>
           </div>
         ))}
@@ -568,19 +599,23 @@ function AuthForm({ hosts, controller, defaultHost }: AuthFormProps) {
       />
       <div className="settings-form-actions">
         {controller.editingAuth && (
-          <button
+          <IconButton
+            icon={X}
+            label={t("common.cancel")}
+            variant="secondary"
             type="button"
-            className="secondary"
             onClick={() => {
               controller.reset();
             }}
-          >
-            {t("common.cancel")}
-          </button>
+          />
         )}
-        <button disabled={controller.pending}>
-          {controller.editingAuth ? t("common.save") : t("common.add")}
-        </button>
+        <IconButton
+          icon={controller.editingAuth ? Save : Plus}
+          label={controller.editingAuth ? t("common.save") : t("common.add")}
+          variant="primary"
+          type="submit"
+          disabled={controller.pending}
+        />
       </div>
     </form>
   );
@@ -694,19 +729,24 @@ function SettingsFrame({
             <p className="section-label">{t("serverSettings.eyebrow")}</p>
             <h2>{title}</h2>
           </div>
-          <button
-            className="icon-button"
+          <IconButton
+            icon={X}
+            label={t("common.close")}
+            variant="secondary"
+            iconOnly
+            type="button"
             onClick={onClose}
-            aria-label={t("common.close")}
-          >
-            ×
-          </button>
+          />
         </header>
         {children}
         <footer>
-          <button className="secondary" onClick={onClose}>
-            {t("common.done")}
-          </button>
+          <IconButton
+            icon={Check}
+            label={t("common.done")}
+            variant="secondary"
+            type="button"
+            onClick={onClose}
+          />
         </footer>
       </section>
     </div>

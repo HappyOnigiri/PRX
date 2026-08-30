@@ -9,7 +9,7 @@ prx task get TASK_ID [flags]
 ### Examples
 
 ```
-prx task get TASK_ID --json
+prx task get T-1 --json
 ```
 
 ### Options
