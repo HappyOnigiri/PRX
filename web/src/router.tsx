@@ -5,6 +5,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { AppShell } from "./shell";
+import { ArchivedFeatures } from "./views/ArchivedFeatures";
 import { Dashboard } from "./views/Dashboard";
 import { FeatureWorkspace } from "./views/FeatureWorkspace";
 
@@ -25,7 +26,16 @@ const featureRoute = createRoute({
   path: "/features/$featureId",
   component: FeatureWorkspace,
 });
-const routeTree = rootRoute.addChildren([indexRoute, featureRoute]);
+const archivedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/archived",
+  component: ArchivedFeatures,
+});
+const routeTree = rootRoute.addChildren([
+  indexRoute,
+  archivedRoute,
+  featureRoute,
+]);
 
 export const router = createRouter({ routeTree });
 

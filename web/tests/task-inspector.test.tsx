@@ -278,4 +278,58 @@ describe("TaskInspector", () => {
     });
     expect(onClose).not.toHaveBeenCalled();
   });
+
+  it("keeps archived task content readable without mutation controls", () => {
+    const task = makeTask({
+      title: "Archived task",
+      scope: "Historical scope",
+      assignee: "Ren",
+    });
+    const blocker = makeTask({ id: "task-2", title: "Archived blocker" });
+    const markdown = makeDocument({
+      kind: DocumentKind.MARKDOWN_PATH,
+      title: "Decision log",
+      value: "docs/decision.md",
+    });
+    const onPreview = vi.fn();
+    render(
+      <TaskInspector
+        task={task}
+        tasks={[task, blocker]}
+        dependencies={[
+          makeDependency({
+            blockerTaskId: blocker.id,
+            blockedTaskId: task.id,
+          }),
+        ]}
+        pullRequest={makePullRequest({ taskId: task.id })}
+        documents={[markdown]}
+        onPreview={onPreview}
+        onClose={vi.fn()}
+        readOnly
+      />,
+    );
+
+    expect(screen.getByText("Archived task · read-only")).toBeInTheDocument();
+    expect(screen.getByText("Historical scope")).toBeInTheDocument();
+    expect(screen.getByText("Archived blocker")).toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "acme/prx #42" })).toHaveAttribute(
+      "target",
+      "_blank",
+    );
+    fireEvent.click(
+      screen.getByRole("button", { name: "Decision logdocs/decision.md" }),
+    );
+    expect(onPreview).toHaveBeenCalledWith(markdown);
+    expect(screen.queryByRole("textbox")).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Detach" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Add" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Delete task and references" }),
+    ).not.toBeInTheDocument();
+  });
 });

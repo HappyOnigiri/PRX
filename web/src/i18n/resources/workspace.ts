@@ -10,7 +10,12 @@ export const workspace = {
       syncGithub: "Sync GitHub",
       addTask: "Add task",
       editFeature: "Edit feature",
+      manageFeature: "Manage feature",
       editTask: "Edit {{title}}",
+      viewTask: "View {{title}} details",
+      archivedLabel: "Archived · read-only",
+      archivedDetail:
+        "This graph stays available for reference. Restore the feature to edit or sync it.",
       archiveFeature: "Archive feature",
       unarchiveFeature: "Unarchive feature",
       deleteFeature: "Delete feature",
@@ -61,6 +66,25 @@ export const workspace = {
       formLabel: "Edit feature",
       title: "Edit feature",
       submit: "Save feature",
+      manageLabel: "Manage archived feature",
+      manageTitle: "Feature details",
+      archivedEyebrow: "Archived · read-only",
+      lifecycle: "Feature lifecycle",
+      activeLifecycleDetail:
+        "Archive this graph when it should leave active queues, or delete it permanently.",
+      archivedLifecycleDetail:
+        "Restore this graph to active work, or delete it permanently.",
+      archive: "Archive feature",
+      restore: "Restore feature",
+      delete: "Delete feature",
+      archiveTitle: "Archive {{title}}?",
+      archiveDescription:
+        "It will leave Overview and Active circuits, and its workspace will become read-only until restored.",
+      confirmArchive: "Archive feature",
+      deleteTitle: "Delete {{title}}?",
+      deleteDescription:
+        "This permanently deletes the feature and its {{count}} tasks, including dependencies, pull requests, references, and implementation plans. This cannot be undone.",
+      confirmDelete: "Delete permanently",
     },
   },
   ja: {
@@ -74,7 +98,12 @@ export const workspace = {
       syncGithub: "GitHub と同期",
       addTask: "タスクを追加",
       editFeature: "フィーチャーを編集",
+      manageFeature: "フィーチャーを管理",
       editTask: "{{title}} を編集",
+      viewTask: "{{title}} の詳細を表示",
+      archivedLabel: "アーカイブ済み・読み取り専用",
+      archivedDetail:
+        "このグラフは参照用に保持されています。編集や同期を行うには復元してください。",
       archiveFeature: "フィーチャーをアーカイブ",
       unarchiveFeature: "フィーチャーを復元",
       deleteFeature: "フィーチャーを削除",
@@ -127,6 +156,24 @@ export const workspace = {
       formLabel: "フィーチャーを編集",
       title: "フィーチャーを編集",
       submit: "フィーチャーを保存",
+      manageLabel: "アーカイブ済みフィーチャーを管理",
+      manageTitle: "フィーチャーの詳細",
+      archivedEyebrow: "アーカイブ済み・読み取り専用",
+      lifecycle: "フィーチャーのライフサイクル",
+      activeLifecycleDetail:
+        "進行中のキューから外す場合はアーカイブし、不要な場合は完全に削除します。",
+      archivedLifecycleDetail: "進行中の作業へ復元するか、完全に削除します。",
+      archive: "フィーチャーをアーカイブ",
+      restore: "フィーチャーを復元",
+      delete: "フィーチャーを削除",
+      archiveTitle: "{{title}} をアーカイブしますか？",
+      archiveDescription:
+        "概要と進行中のフィーチャーから外れ、復元するまでワークスペースが読み取り専用になります。",
+      confirmArchive: "アーカイブする",
+      deleteTitle: "{{title}} を削除しますか？",
+      deleteDescription:
+        "フィーチャーと {{count}} 件のタスクに加え、依存関係、プルリクエスト、参照資料、実装プランを完全に削除します。この操作は取り消せません。",
+      confirmDelete: "完全に削除",
     },
   },
 } as const;

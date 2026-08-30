@@ -111,7 +111,7 @@ export type Feature = Message<"prx.v1.Feature"> & {
   status: FeatureStatus;
 
   /**
-   * archived indicates whether the feature is hidden from the active sidebar.
+   * archived separates the feature from active WebUI views and queues.
    *
    * @generated from field: bool archived = 6;
    */

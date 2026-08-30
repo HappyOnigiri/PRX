@@ -1,10 +1,4 @@
-import {
-  cleanup,
-  fireEvent,
-  render,
-  screen,
-  waitFor,
-} from "@testing-library/react";
+import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Snapshot } from "../src/gen/prx/v1/prx_pb";
 import { FeatureWorkspace } from "../src/views/FeatureWorkspace";
@@ -49,10 +43,8 @@ vi.mock("../src/api", () => ({
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => workspaceMocks.snapshot,
   useDomainMutation: (mutationFn: (input: unknown) => unknown) => {
-    const mutation =
-      workspaceMocks.mutations[
-        workspaceMocks.hookIndex++ % workspaceMocks.mutations.length
-      ];
+    workspaceMocks.hookIndex++;
+    const mutation = workspaceMocks.mutations[0];
     if (!mutation) throw new Error("mutation mock missing");
     mutation.mutate.mockImplementation((input: unknown) => {
       return mutationFn(input);
@@ -65,13 +57,16 @@ vi.mock("../src/views/FeatureGraph", () => ({
     onCreateTask,
     onEditTask,
     onPreviewDocument,
+    readOnly,
   }: {
     onCreateTask: () => void;
     onEditTask: (taskId: string) => void;
     onPreviewDocument: (document: unknown) => void;
+    readOnly: boolean;
   }) => (
     <div data-testid="feature-graph">
-      <button onClick={onCreateTask}>Mock create task</button>
+      <span>{readOnly ? "Mock read-only graph" : "Mock active graph"}</span>
+      {!readOnly && <button onClick={onCreateTask}>Mock create task</button>}
       <button
         onClick={() => {
           onEditTask("task-1");
@@ -90,8 +85,17 @@ vi.mock("../src/views/FeatureGraph", () => ({
   ),
 }));
 vi.mock("../src/views/TaskInspector", () => ({
-  TaskInspector: ({ onClose }: { onClose: () => void }) => (
+  TaskInspector: ({
+    onClose,
+    readOnly,
+  }: {
+    onClose: () => void;
+    readOnly: boolean;
+  }) => (
     <aside aria-label="Mock task inspector">
+      <span>
+        {readOnly ? "Mock read-only inspector" : "Mock active inspector"}
+      </span>
       <button onClick={onClose}>Mock close inspector</button>
     </aside>
   ),
@@ -118,9 +122,16 @@ vi.mock("../src/views/CreateTaskDialog", () => ({
   ),
 }));
 vi.mock("../src/views/EditFeatureDialog", () => ({
-  EditFeatureDialog: ({ onClose }: { onClose: () => void }) => (
+  EditFeatureDialog: ({
+    onClose,
+    onDeleted,
+  }: {
+    onClose: () => void;
+    onDeleted: () => void;
+  }) => (
     <div role="dialog" aria-label="Mock edit feature">
       <button onClick={onClose}>Mock close feature edit</button>
+      <button onClick={onDeleted}>Mock delete feature</button>
     </div>
   ),
 }));
@@ -176,7 +187,7 @@ describe("FeatureWorkspace", () => {
     }
   });
 
-  it("coordinates sync, feature actions, task inspection, and previews", async () => {
+  it("coordinates active sync, feature management, task inspection, and previews", () => {
     render(<FeatureWorkspace />);
 
     expect(
@@ -198,12 +209,6 @@ describe("FeatureWorkspace", () => {
       screen.queryByRole("dialog", { name: "Mock edit feature" }),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Archive feature" }));
-    expect(mutationAt(1).mutate).toHaveBeenCalledWith({
-      id: "feature-1",
-      archived: true,
-    });
-
     fireEvent.click(screen.getByRole("button", { name: "Mock create task" }));
     expect(
       screen.getByRole("dialog", { name: "Mock create task" }),
@@ -224,18 +229,14 @@ describe("FeatureWorkspace", () => {
     ).toHaveTextContent("Preview document");
     fireEvent.click(screen.getByRole("button", { name: "Mock close preview" }));
 
-    const confirm = vi.spyOn(window, "confirm").mockReturnValue(false);
-    fireEvent.click(screen.getByRole("button", { name: "Delete feature" }));
-    expect(mutationAt(2).mutateAsync).not.toHaveBeenCalled();
-    confirm.mockReturnValue(true);
-    fireEvent.click(screen.getByRole("button", { name: "Delete feature" }));
-    await waitFor(() => {
-      expect(workspaceMocks.navigate).toHaveBeenCalledWith({ to: "/" });
-    });
-    expect(mutationAt(2).mutateAsync).toHaveBeenCalledWith("feature-1");
+    fireEvent.click(screen.getByRole("button", { name: "Edit feature" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Mock delete feature" }),
+    );
+    expect(workspaceMocks.navigate).toHaveBeenCalledWith({ to: "/" });
   });
 
-  it("renders loading, missing-feature, pending, and deletion-error states", () => {
+  it("renders loading, missing-feature, and sync-pending states", () => {
     workspaceMocks.snapshot.isPending = true;
     const { rerender } = render(<FeatureWorkspace />);
     expect(
@@ -253,9 +254,31 @@ describe("FeatureWorkspace", () => {
 
     workspaceMocks.snapshot.data = populatedSnapshot();
     mutationAt(0).isPending = true;
-    mutationAt(2).error = new Error("delete failed");
     rerender(<FeatureWorkspace />);
     expect(screen.getByRole("button", { name: "Syncing…" })).toBeDisabled();
-    expect(screen.getByRole("alert")).toHaveTextContent("delete failed");
+  });
+
+  it("makes archived workspaces read-only and returns deletion to the archive", () => {
+    workspaceMocks.snapshot.data = makeSnapshot({
+      features: [{ ...feature, archived: true }],
+      tasks: [task],
+    });
+    render(<FeatureWorkspace />);
+
+    expect(screen.getByText("Archived · read-only")).toBeInTheDocument();
+    expect(screen.getByText("Mock read-only graph")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Sync GitHub" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Mock create task" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Mock edit task" }));
+    expect(screen.getByText("Mock read-only inspector")).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Manage feature" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Mock delete feature" }),
+    );
+    expect(workspaceMocks.navigate).toHaveBeenCalledWith({ to: "/archived" });
   });
 });

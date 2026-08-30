@@ -265,7 +265,7 @@ message Feature {
   string description = 4;
   // status is the feature's lifecycle state.
   FeatureStatus status = 5;
-  // archived indicates whether the feature is hidden from the active sidebar.
+  // archived separates the feature from active WebUI views and queues.
   bool archived = 6;
   // created_at is the creation time in RFC 3339 format.
   string created_at = 7;

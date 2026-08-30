@@ -239,6 +239,105 @@
   border-top: 1px solid var(--border);
 }
 
+.confirmation-scrim {
+  z-index: 110;
+}
+
+.confirmation-dialog {
+  width: min(520px, 100%);
+}
+
+.confirmation-dialog > header {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+}
+
+.confirmation-dialog h2,
+.confirmation-dialog header p {
+  margin: 0;
+}
+
+.confirmation-dialog header p {
+  margin-top: 6px;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  line-height: 1.6;
+}
+
+.confirmation-icon {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--border-strong);
+  color: var(--text-2);
+}
+
+.confirmation-icon.danger {
+  border-color: var(--status-conflict);
+  color: var(--status-conflict);
+}
+
+.feature-management-dialog {
+  max-height: calc(100vh - 40px);
+  overflow: auto;
+}
+
+.feature-lifecycle {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.feature-lifecycle-title,
+.feature-lifecycle-detail {
+  margin: 0;
+}
+
+.feature-lifecycle-title {
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.feature-lifecycle-detail {
+  margin-top: 4px;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
+.feature-lifecycle-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.read-only-values {
+  display: grid;
+  gap: 14px;
+  margin: 0;
+}
+
+.read-only-values div {
+  min-width: 0;
+}
+
+.read-only-values dt {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.read-only-values dd {
+  margin: 4px 0 0;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: var(--text-md);
+  white-space: pre-wrap;
+}
+
 .form-error {
   color: var(--status-conflict);
   font-size: var(--text-sm);

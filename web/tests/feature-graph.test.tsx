@@ -354,6 +354,55 @@ describe("FeatureGraph", () => {
     expect(onCreateTask).toHaveBeenCalledOnce();
   });
 
+  it("keeps an archived empty graph read-only", () => {
+    render(
+      <FeatureGraph
+        tasks={[]}
+        dependencies={[]}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={vi.fn()}
+        readOnly
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Draw the first node" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Add task" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByTestId("mock-react-flow")).toHaveAttribute(
+      "data-nodes-connectable",
+      "false",
+    );
+    expect(
+      screen.queryByText(/Add: drag right output/),
+    ).not.toBeInTheDocument();
+    expect(graphMocks.useGraphLayout).toHaveBeenCalledWith(
+      expect.objectContaining({ readOnly: true }),
+    );
+
+    act(() => {
+      graphMocks.onConnect?.({ source: "task-1", target: "task-2" });
+      graphMocks.onReconnectStart?.(
+        {},
+        { source: "task-1", target: "task-2" },
+        "source",
+      );
+      graphMocks.onReconnectEnd?.(
+        {},
+        { source: "task-1", target: "task-2" },
+        "source",
+        { isValid: null },
+      );
+    });
+    expect(graphMocks.addDependency.mutate).not.toHaveBeenCalled();
+    expect(graphMocks.removeDependency.mutate).not.toHaveBeenCalled();
+  });
+
   it("builds dependency edges, persists zoom, and retries a failed layout", () => {
     const retryLayout = vi.fn();
     graphMocks.useGraphLayout.mockReturnValue({

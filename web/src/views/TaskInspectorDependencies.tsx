@@ -10,12 +10,14 @@ interface DependencySectionProps {
   taskId: string;
   tasks: Task[];
   dependencies: Dependency[];
+  readOnly?: boolean;
 }
 
 export function DependencySection({
   taskId,
   tasks,
   dependencies,
+  readOnly = false,
 }: DependencySectionProps) {
   const { t } = useTranslation();
   const removeDependency = useDomainMutation(
@@ -34,21 +36,26 @@ export function DependencySection({
           <span>
             {tasks.find((task) => task.id === dependency.blockerTaskId)?.title}
           </span>
-          <IconButton
-            icon={Trash2}
-            label={t("inspector.removeDependency")}
-            variant="danger"
-            size="compact"
-            iconOnly
-            onClick={() => {
-              removeDependency.mutate({
-                blocker: dependency.blockerTaskId,
-                blocked: taskId,
-              });
-            }}
-          />
+          {!readOnly && (
+            <IconButton
+              icon={Trash2}
+              label={t("inspector.removeDependency")}
+              variant="danger"
+              size="compact"
+              iconOnly
+              onClick={() => {
+                removeDependency.mutate({
+                  blocker: dependency.blockerTaskId,
+                  blocked: taskId,
+                });
+              }}
+            />
+          )}
         </div>
       ))}
+      {blockers.length === 0 && readOnly && (
+        <p className="read-only-empty">{t("inspector.noDependencies")}</p>
+      )}
       <MutationError error={removeDependency.error} />
     </section>
   );

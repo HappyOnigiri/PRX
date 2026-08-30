@@ -11,6 +11,7 @@ interface GraphLayoutOptions {
   documentsByTask: Map<string, TaskNodeDocument[]>;
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
+  readOnly?: boolean;
 }
 
 interface LayoutRequest extends GraphLayoutOptions {
@@ -28,6 +29,7 @@ function isSameLayoutRequest(
     completed.documentsByTask === requested.documentsByTask &&
     completed.onEditTask === requested.onEditTask &&
     completed.onPreviewDocument === requested.onPreviewDocument &&
+    completed.readOnly === requested.readOnly &&
     completed.attempt === requested.attempt
   );
 }
@@ -38,6 +40,7 @@ function buildRawNodes({
   documentsByTask,
   onEditTask,
   onPreviewDocument,
+  readOnly = false,
 }: GraphLayoutOptions) {
   return tasks.map((task) => {
     const pr = pullRequests.get(task.id);
@@ -62,6 +65,7 @@ function buildRawNodes({
             }
           : undefined,
         documents,
+        readOnly,
         onEdit: () => {
           onEditTask(task.id);
         },
@@ -78,6 +82,7 @@ export function useGraphLayout({
   documentsByTask,
   onEditTask,
   onPreviewDocument,
+  readOnly = false,
 }: GraphLayoutOptions) {
   const [nodes, setNodes] = useState<TaskFlowNode[]>([]);
   // Keep the raw error so changing the display language does not re-run the
@@ -95,6 +100,7 @@ export function useGraphLayout({
       documentsByTask,
       onEditTask,
       onPreviewDocument,
+      readOnly,
       attempt: layoutAttempt,
     }),
     [
@@ -104,6 +110,7 @@ export function useGraphLayout({
       documentsByTask,
       onEditTask,
       onPreviewDocument,
+      readOnly,
       layoutAttempt,
     ],
   );

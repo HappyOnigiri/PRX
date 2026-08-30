@@ -32,7 +32,7 @@ import { useGraphLayout } from "./useGraphLayout";
 
 const nodeTypes = { task: TaskNode };
 
-function useDependencyConnections() {
+function useDependencyConnections(readOnly: boolean) {
   const addDependency = useDomainMutation(
     ({ blocker, blocked }: { blocker: string; blocked: string }) =>
       mutations.addDependency(blocker, blocked),
@@ -45,17 +45,17 @@ function useDependencyConnections() {
   const pending = addDependency.isPending || removeDependency.isPending;
   const onConnect = useCallback(
     ({ source, target }: Connection) => {
-      if (pending || !source || !target) return;
+      if (readOnly || pending || !source || !target) return;
       addDependency.mutate({ blocker: source, blocked: target });
     },
-    [addDependency, pending],
+    [addDependency, pending, readOnly],
   );
   const onReconnect = useCallback<OnReconnect>(() => {
     setDetaching(false);
   }, []);
   const onReconnectStart = useCallback(() => {
-    setDetaching(true);
-  }, []);
+    if (!readOnly) setDetaching(true);
+  }, [readOnly]);
   const onReconnectEnd = useCallback(
     (
       _event: MouseEvent | TouchEvent,
@@ -66,12 +66,16 @@ function useDependencyConnections() {
       void _event;
       void _handleType;
       setDetaching(false);
-      if (removeDependency.isPending || connectionState.isValid === true) {
+      if (
+        readOnly ||
+        removeDependency.isPending ||
+        connectionState.isValid === true
+      ) {
         return;
       }
       removeDependency.mutate({ blocker: edge.source, blocked: edge.target });
     },
-    [removeDependency],
+    [readOnly, removeDependency],
   );
 
   return {
@@ -95,6 +99,7 @@ interface FeatureGraphProps {
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onCreateTask: () => void;
+  readOnly?: boolean;
 }
 
 export function FeatureGraph({
@@ -105,12 +110,13 @@ export function FeatureGraph({
   onEditTask,
   onPreviewDocument,
   onCreateTask,
+  readOnly = false,
 }: FeatureGraphProps) {
   const { t } = useTranslation();
   const [flow, setFlow] = useState<ReactFlowInstance<TaskFlowNode>>();
   const [initialGraphZoom] = useState(readGraphZoom);
   const graphZoom = useRef(initialGraphZoom);
-  const connections = useDependencyConnections();
+  const connections = useDependencyConnections(readOnly);
   const taskTitle = useCallback(
     (taskId: string) => tasks.find((task) => task.id === taskId)?.title,
     [tasks],
@@ -122,6 +128,7 @@ export function FeatureGraph({
     documentsByTask,
     onEditTask,
     onPreviewDocument,
+    readOnly,
   });
   const edges: Edge[] = useMemo(
     () =>
@@ -132,13 +139,13 @@ export function FeatureGraph({
         type: "smoothstep",
         markerEnd: { type: MarkerType.ArrowClosed },
         className: "dependency-edge",
-        reconnectable: connections.pending ? false : "source",
+        reconnectable: readOnly || connections.pending ? false : "source",
         ariaLabel: t("workspace.flow.dependencyEdge", {
           blocker: taskTitle(dep.blockerTaskId) ?? dep.blockerTaskId,
           blocked: taskTitle(dep.blockedTaskId) ?? dep.blockedTaskId,
         }),
       })),
-    [connections.pending, dependencies, t, taskTitle],
+    [connections.pending, dependencies, readOnly, t, taskTitle],
   );
   const ariaLabelConfig = useMemo(
     () => ({
@@ -181,6 +188,7 @@ export function FeatureGraph({
         addingDependency={connections.adding}
         detachingDependency={connections.detaching}
         removingDependency={connections.removing}
+        readOnly={readOnly}
       />
       <GraphCanvas
         tasks={tasks}
@@ -204,6 +212,7 @@ export function FeatureGraph({
         retryLayout={retryLayout}
         onCreateTask={onCreateTask}
         ariaLabelConfig={ariaLabelConfig}
+        readOnly={readOnly}
       />
     </>
   );
@@ -241,6 +250,7 @@ interface GraphCanvasProps {
   retryLayout: () => void;
   onCreateTask: () => void;
   ariaLabelConfig: Partial<AriaLabelConfig>;
+  readOnly: boolean;
 }
 
 function GraphCanvas({
@@ -262,6 +272,7 @@ function GraphCanvas({
   retryLayout,
   onCreateTask,
   ariaLabelConfig,
+  readOnly,
 }: GraphCanvasProps) {
   const graphBusy = connectionPending || layoutPending;
   return (
@@ -284,7 +295,7 @@ function GraphCanvas({
         minZoom={minGraphZoom}
         maxZoom={maxGraphZoom}
         nodesDraggable={false}
-        nodesConnectable={!graphBusy}
+        nodesConnectable={!readOnly && !graphBusy}
         autoPanOnConnect={false}
         reconnectRadius={12}
         elevateEdgesOnSelect
@@ -309,6 +320,7 @@ function GraphCanvas({
         layoutError={layoutError}
         onCreateTask={onCreateTask}
         onRetryLayout={retryLayout}
+        readOnly={readOnly}
       />
     </div>
   );
@@ -319,11 +331,13 @@ function GraphState({
   layoutError,
   onCreateTask,
   onRetryLayout,
+  readOnly,
 }: {
   taskCount: number;
   layoutError: { message: string | undefined } | undefined;
   onCreateTask: () => void;
   onRetryLayout: () => void;
+  readOnly: boolean;
 }) {
   const { t } = useTranslation();
   if (taskCount === 0 && !layoutError)
@@ -334,12 +348,14 @@ function GraphState({
         </span>
         <h2>{t("workspace.graphEmptyTitle")}</h2>
         <p>{t("workspace.graphEmptyDetail")}</p>
-        <IconButton
-          icon={Plus}
-          label={t("workspace.addTaskPlain")}
-          variant="primary"
-          onClick={onCreateTask}
-        />
+        {!readOnly && (
+          <IconButton
+            icon={Plus}
+            label={t("workspace.addTaskPlain")}
+            variant="primary"
+            onClick={onCreateTask}
+          />
+        )}
       </div>
     );
   if (layoutError)
@@ -367,12 +383,14 @@ function GraphLegend({
   addingDependency,
   detachingDependency,
   removingDependency,
+  readOnly,
 }: {
   taskCount: number;
   dependencyCount: number;
   addingDependency: boolean;
   detachingDependency: boolean;
   removingDependency: boolean;
+  readOnly: boolean;
 }) {
   const { t } = useTranslation();
   const instruction = removingDependency
@@ -384,13 +402,15 @@ function GraphLegend({
         : t("workspace.flow.connectionInstruction");
   return (
     <div className="graph-legend">
-      <p
-        className={`graph-connection-help ${addingDependency || removingDependency ? "is-saving" : ""}`}
-        aria-live="polite"
-        title={instruction}
-      >
-        {instruction}
-      </p>
+      {!readOnly && (
+        <p
+          className={`graph-connection-help ${addingDependency || removingDependency ? "is-saving" : ""}`}
+          aria-live="polite"
+          title={instruction}
+        >
+          {instruction}
+        </p>
+      )}
       <div className="graph-legend-states">
         <span>
           <i className="ready" />
