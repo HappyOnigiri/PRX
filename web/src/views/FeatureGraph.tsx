@@ -632,10 +632,10 @@ function GraphLegend({
               taskTitle(detachingDependency.blocked) ??
               detachingDependency.blocked,
           })
-        : t("workspace.flow.connectionInstruction");
+        : undefined;
   return (
     <div className="graph-legend">
-      {!readOnly && (
+      {!readOnly && instruction && (
         <p
           className={`graph-connection-help ${addingDependency || removingDependency ? "is-saving" : ""}`}
           aria-live="polite"
