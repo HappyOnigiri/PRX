@@ -28,9 +28,22 @@ func (s *state) documentCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
+			featureID := featureFilter
+			if featureFilter != "" {
+				feature, err := s.service.ResolveFeature(cmd.Context(), featureFilter)
+				if err != nil {
+					return err
+				}
+				featureID = feature.ID
+			}
+			if taskFilter != "" {
+				if err := requireTask(snapshot, taskFilter); err != nil {
+					return err
+				}
+			}
 			documents := make([]domain.Document, 0, len(snapshot.Documents))
 			for _, document := range snapshot.Documents {
-				if featureFilter != "" && document.FeatureID != featureFilter {
+				if featureID != "" && document.FeatureID != featureID {
 					continue
 				}
 				if taskFilter != "" && document.TaskID != taskFilter {
@@ -41,7 +54,7 @@ func (s *state) documentCommand() *cobra.Command {
 			return s.write(map[string]any{"documents": documents}, renderDocumentList(documents))
 		},
 	}
-	command.Flags().StringVar(&featureFilter, "feature", "", "filter by feature ID")
+	command.Flags().StringVar(&featureFilter, "feature", "", "filter by feature ID or slug")
 	command.Flags().StringVar(&taskFilter, "task", "", "filter by task ID")
 
 	command.AddCommand(
@@ -162,6 +175,15 @@ func (s *state) documentDeleteCommand() *cobra.Command {
 			return s.write(map[string]string{"deleted": args[0]}, renderMessage("Deleted document %s.", args[0]))
 		},
 	}
+}
+
+func requireTask(snapshot domain.Snapshot, taskID string) error {
+	for _, task := range snapshot.Tasks {
+		if task.ID == taskID {
+			return nil
+		}
+	}
+	return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", taskID)
 }
 
 func bindDocumentSourceFlags(command *cobra.Command, flags *documentSourceFlags, legacy bool) {

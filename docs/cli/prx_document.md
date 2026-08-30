@@ -23,7 +23,7 @@ prx doc
 ### Options
 
 ```
-      --feature string   filter by feature ID
+      --feature string   filter by feature ID or slug
   -h, --help             help for document
       --task string      filter by task ID
 ```

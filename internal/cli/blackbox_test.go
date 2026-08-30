@@ -684,6 +684,32 @@ func TestBlackBoxReadAliasesAndFeatureSlugEscape(t *testing.T) {
 		t.Fatalf("task ID with filter: %+v exit=%d", invalid, exit)
 	}
 
+	document, _, exit := runCLI(
+		t, binary, dbPath,
+		"document", "add", "--feature", "checkout", "--url", "https://example.com/checkout",
+	)
+	if exit != 0 || !document.OK {
+		t.Fatalf("create document: %+v exit=%d", document, exit)
+	}
+	var documentData struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(document.Data, &documentData); err != nil {
+		t.Fatal(err)
+	}
+	bySlug, _, exit := runCLI(t, binary, dbPath, "document", "--feature", "checkout")
+	if exit != 0 || !bySlug.OK || !bytes.Contains(bySlug.Data, []byte(documentData.ID)) {
+		t.Fatalf("document filter by slug: %+v exit=%d", bySlug, exit)
+	}
+	unknownFeature, _, exit := runCLI(t, binary, dbPath, "document", "--feature", "missing-feature")
+	if exit == 0 || unknownFeature.ErrorCode != "not_found" {
+		t.Fatalf("document filter by unknown feature: %+v exit=%d", unknownFeature, exit)
+	}
+	unknownTask, _, exit := runCLI(t, binary, dbPath, "document", "--task", "T-404")
+	if exit == 0 || unknownTask.ErrorCode != "not_found" {
+		t.Fatalf("document filter by unknown task: %+v exit=%d", unknownTask, exit)
+	}
+
 	for alias, key := range map[string]string{"dep": "dependencies", "doc": "documents"} {
 		value, _, aliasExit := runCLI(t, binary, dbPath, alias)
 		if aliasExit != 0 || !value.OK {
