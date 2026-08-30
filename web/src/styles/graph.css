@@ -148,7 +148,6 @@
 
 .dependency-edge-toolbar {
   max-width: 320px;
-  translate: 0 -28px;
   display: flex;
   align-items: center;
   gap: 6px;

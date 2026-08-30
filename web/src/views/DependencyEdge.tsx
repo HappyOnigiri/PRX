@@ -77,6 +77,10 @@ export function DependencyEdge({
       />
       {data && (
         <EdgeToolbar
+          // React Flow keeps the toolbar at a constant screen size, so aligning
+          // it above the edge here holds at every zoom level while a CSS offset
+          // would scale with the viewport.
+          alignY="bottom"
           className="dependency-edge-toolbar nodrag nopan"
           edgeId={id}
           isVisible={selected === true}
