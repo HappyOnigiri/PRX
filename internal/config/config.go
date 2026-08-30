@@ -145,7 +145,10 @@ func DefaultHost() Host {
 func Default() Config {
 	return Config{
 		Version: CurrentVersion,
-		GitHub:  GitHubConfig{Hosts: []Host{DefaultHost()}},
+		GitHub: GitHubConfig{
+			Hosts:                   []Host{DefaultHost()},
+			AutoSyncIntervalSeconds: DefaultAutoSyncIntervalSeconds,
+		},
 	}
 }
 

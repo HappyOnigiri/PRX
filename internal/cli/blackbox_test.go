@@ -314,6 +314,7 @@ func TestBlackBoxCRUDAndCycle(t *testing.T) {
 
 func TestBlackBoxTargetedSyncByID(t *testing.T) {
 	binary := buildCLI(t)
+	t.Setenv("PRX_CONFIG", filepath.Join(t.TempDir(), "missing-config.yaml"))
 	dbPath := filepath.Join(t.TempDir(), "targeted-sync.db")
 	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "targeted", "--title", "Targeted")
 	if exit != 0 || !feature.OK {

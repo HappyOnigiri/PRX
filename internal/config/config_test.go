@@ -116,7 +116,8 @@ func TestConfigStoreRoundTripMasksSecretsAndPreservesImplicitMode(t *testing.T) 
 	if err != nil {
 		t.Fatal(err)
 	}
-	if value, err := store.Load(); err != nil || value.Version != CurrentVersion || len(value.GitHub.Hosts) != 1 {
+	if value, err := store.Load(); err != nil || value.Version != CurrentVersion || len(value.GitHub.Hosts) != 1 ||
+		value.GitHub.AutoSyncIntervalSeconds != DefaultAutoSyncIntervalSeconds {
 		t.Fatalf("missing config value=%+v err=%v", value, err)
 	}
 	if err := store.Save(Default()); err != nil {
