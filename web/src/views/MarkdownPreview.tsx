@@ -1,8 +1,10 @@
+import { Copy, RotateCcw, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import ReactMarkdown from "react-markdown";
 import { readMarkdownDocument } from "../api";
 import { formatError } from "../i18n/domain";
+import { IconButton } from "./IconButton";
 
 interface MarkdownDocument {
   id: string;
@@ -88,27 +90,30 @@ export function MarkdownPreview({
             <code>{document.value}</code>
           </div>
           <div className="markdown-actions">
-            <button
-              className="secondary"
+            <IconButton
+              icon={Copy}
+              label={t("markdownPreview.copyContent")}
+              variant="secondary"
+              type="button"
               disabled={content === undefined}
               onClick={() => void copy(content ?? "", "content")}
-            >
-              {t("markdownPreview.copyContent")}
-            </button>
-            <button
-              className="secondary"
+            />
+            <IconButton
+              icon={Copy}
+              label={t("markdownPreview.copyPath")}
+              variant="secondary"
+              type="button"
               onClick={() => void copy(document.value, "path")}
-            >
-              {t("markdownPreview.copyPath")}
-            </button>
-            <button
-              className="icon-button"
-              aria-label={t("markdownPreview.close")}
+            />
+            <IconButton
+              icon={X}
+              label={t("markdownPreview.close")}
+              variant="secondary"
+              iconOnly
+              type="button"
               onClick={onClose}
               ref={closeButton}
-            >
-              ×
-            </button>
+            />
           </div>
         </header>
         <MarkdownBody content={content} error={error} onRetry={retry} />
@@ -143,7 +148,12 @@ function MarkdownBody({
       {error && (
         <div className="preview-state" role="alert">
           <p>{formatError(error, t)}</p>
-          <button onClick={onRetry}>{t("common.retry")}</button>
+          <IconButton
+            icon={RotateCcw}
+            label={t("common.retry")}
+            variant="secondary"
+            onClick={onRetry}
+          />
         </div>
       )}
       {content !== undefined && (

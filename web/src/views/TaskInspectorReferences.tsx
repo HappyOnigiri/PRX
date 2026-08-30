@@ -1,9 +1,11 @@
+import { Eye, Plus, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";
 import { DocumentKind } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { documentKindLabel } from "../i18n/domain";
+import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 import { type TaskNodeDocument } from "./TaskNode";
 
@@ -34,25 +36,31 @@ export function ReferencesSection({
             </a>
           ) : (
             <button
+              type="button"
               className="document-preview"
               onClick={() => {
                 onPreview(document);
               }}
             >
-              <b>{document.title || documentKindLabel(document.kind, t)}</b>
-              <small>{document.value}</small>
+              <span className="document-preview-copy">
+                <b>{document.title || documentKindLabel(document.kind, t)}</b>
+                <small>{document.value}</small>
+              </span>
+              <Eye aria-hidden="true" focusable="false" size={14} />
             </button>
           )}
-          <button
-            aria-label={t("inspector.deleteReference", {
+          <IconButton
+            icon={Trash2}
+            label={t("inspector.deleteReference", {
               title: document.title || t("inspector.referenceFallback"),
             })}
+            variant="danger"
+            size="compact"
+            iconOnly
             onClick={() => {
               deleteDocument.mutate(document.id);
             }}
-          >
-            ×
-          </button>
+          />
         </div>
       ))}
       <form
@@ -84,7 +92,12 @@ export function ReferencesSection({
           required
           placeholder={t("inspector.referenceValue")}
         />
-        <button>{t("inspector.addReference")}</button>
+        <IconButton
+          icon={Plus}
+          label={t("inspector.addReference")}
+          variant="primary"
+          type="submit"
+        />
       </form>
       <MutationError error={addDocument.error} />
       <MutationError error={deleteDocument.error} />

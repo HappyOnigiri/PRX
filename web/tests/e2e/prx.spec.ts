@@ -408,4 +408,29 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
     page.getByRole("heading", { name: /What can move/ }),
   ).toBeVisible();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
+  await page
+    .getByRole("link", { name: /Cross-repository launch · 8 nodes/ })
+    .first()
+    .click();
+  const addTaskButton = page.getByRole("button", { name: "Add task" });
+  await expect(addTaskButton).toBeVisible();
+  await expect(addTaskButton.locator("svg")).toHaveAttribute(
+    "aria-hidden",
+    "true",
+  );
+  const secondaryActions = page.locator(
+    ".workspace-actions .icon-button-secondary",
+  );
+  await expect(secondaryActions).toHaveCount(3);
+  for (const action of await secondaryActions.all()) {
+    await expect(action).toBeHidden();
+  }
+  await expect(
+    page.locator(".workspace-actions .icon-button-danger"),
+  ).toBeHidden();
+  const addTaskBounds = await addTaskButton.boundingBox();
+  expect(addTaskBounds).not.toBeNull();
+  if (addTaskBounds) {
+    expect(addTaskBounds.x + addTaskBounds.width).toBeLessThanOrEqual(320);
+  }
 });

@@ -1,3 +1,4 @@
+import { Trash2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import {
@@ -12,6 +13,7 @@ import {
   taskDisplayStateToken,
 } from "../i18n/domain";
 import { CopyableIdentifier } from "./CopyableIdentifier";
+import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 import { DependencySection } from "./TaskInspectorDependencies";
 import { ImplementationPlanSection } from "./TaskInspectorImplementationPlan";
@@ -41,13 +43,13 @@ function TaskInspectorHeader({
         <h2>{task.title}</h2>
         <CopyableIdentifier label={t("common.taskId")} value={task.id} />
       </div>
-      <button
-        className="icon-button"
-        aria-label={t("inspector.close")}
+      <IconButton
+        icon={X}
+        label={t("inspector.close")}
+        variant="secondary"
+        iconOnly
         onClick={onClose}
-      >
-        ×
-      </button>
+      />
     </header>
   );
 }
@@ -98,7 +100,10 @@ export function TaskInspector({
         documents={documents}
         onPreview={onPreview}
       />
-      <button
+      <IconButton
+        icon={Trash2}
+        label={t("inspector.deleteTask")}
+        variant="danger"
         className="danger-zone"
         onClick={() => {
           if (
@@ -109,9 +114,7 @@ export function TaskInspector({
             return;
           void deleteTask.mutateAsync(task.id).then(onClose, () => undefined);
         }}
-      >
-        {t("inspector.deleteTask")}
-      </button>
+      />
       <MutationError error={deleteTask.error} />
     </aside>
   );

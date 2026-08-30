@@ -1,7 +1,9 @@
 import { Handle, Position, type Node, type NodeProps } from "@xyflow/react";
+import { ExternalLink, Eye, Pencil } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { DocumentKind, type TaskDisplayState } from "../gen/prx/v1/prx_pb";
 import { taskDisplayStateLabel, taskDisplayStateToken } from "../i18n/domain";
+import { IconButton } from "./IconButton";
 
 export interface TaskNodeDocument {
   id: string;
@@ -36,13 +38,15 @@ export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
           <i />
           {taskDisplayStateLabel(data.state, t)}
         </div>
-        <button
+        <IconButton
+          icon={Pencil}
+          label={t("workspace.editTask", { title: data.title })}
+          variant="secondary"
+          size="compact"
+          iconOnly
           className="node-edit nodrag nopan"
-          aria-label={t("workspace.editTask", { title: data.title })}
           onClick={data.onEdit}
-        >
-          {t("common.edit")}
-        </button>
+        />
       </div>
       <h3>{data.title}</h3>
       {data.syncError && (
@@ -59,7 +63,7 @@ export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
             >
               <span>PR</span>
               <b>{data.pullRequest.label}</b>
-              <i aria-hidden="true">↗</i>
+              <ExternalLink aria-hidden="true" focusable="false" size={14} />
             </a>
           )}
           {data.documents.map((document) =>
@@ -73,10 +77,11 @@ export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
               >
                 <span>URL</span>
                 <b>{document.title || document.value}</b>
-                <i aria-hidden="true">↗</i>
+                <ExternalLink aria-hidden="true" focusable="false" size={14} />
               </a>
             ) : (
               <button
+                type="button"
                 className="node-asset"
                 onClick={() => {
                   data.onPreview(document);
@@ -85,7 +90,7 @@ export function TaskNode({ data, selected }: NodeProps<TaskFlowNode>) {
               >
                 <span>MD</span>
                 <b>{document.title || document.value}</b>
-                <i aria-hidden="true">⌕</i>
+                <Eye aria-hidden="true" focusable="false" size={14} />
               </button>
             ),
           )}
