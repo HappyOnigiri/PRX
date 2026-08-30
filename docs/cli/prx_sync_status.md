@@ -1,24 +1,21 @@
-## prx sync
+## prx sync status
 
-Refresh GitHub state for pull-request tasks
+Show automatic GitHub synchronization status
 
 ```
-prx sync [flags]
+prx sync status [flags]
 ```
 
 ### Examples
 
 ```
-prx sync --feature FEATURE_ID --json
-prx sync --task TASK_ID --json
+prx sync status --json
 ```
 
 ### Options
 
 ```
-      --feature string   feature ID or slug
-  -h, --help             help for sync
-      --task string      task ID
+  -h, --help   help for status
 ```
 
 ### Options inherited from parent commands
@@ -33,6 +30,5 @@ prx sync --task TASK_ID --json
 
 ### SEE ALSO
 
-* [prx](prx.md)	 - Manage pull-request dependency roadmaps
-* [prx sync status](prx_sync_status.md)	 - Show automatic GitHub synchronization status
+* [prx sync](prx_sync.md)	 - Refresh GitHub state for pull-request tasks
 

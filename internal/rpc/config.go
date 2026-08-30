@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"time"
 
 	"connectrpc.com/connect"
 
@@ -34,6 +35,25 @@ func (h *Handler) GetConfig(
 	return connect.NewResponse(&prxv1.GetConfigResponse{Config: protoGitHubConfig(value)}), nil
 }
 
+func (h *Handler) UpdateGitHubSyncConfig(
+	ctx context.Context,
+	req *connect.Request[prxv1.UpdateGitHubSyncConfigRequest],
+) (*connect.Response[prxv1.UpdateGitHubSyncConfigResponse], error) {
+	store, err := h.requireConfig()
+	if err != nil {
+		return nil, err
+	}
+	settings, err := store.Update(func(settings *config.Config) error {
+		return settings.SetAutoSyncInterval(req.Msg.GetIntervalSeconds())
+	})
+	if err != nil {
+		return nil, configRPCError(err)
+	}
+	return connect.NewResponse(&prxv1.UpdateGitHubSyncConfigResponse{
+		Config: protoGitHubConfig(settings.Public()),
+	}), nil
+}
+
 func (h *Handler) AddGitHubHost(
 	ctx context.Context,
 	req *connect.Request[prxv1.AddGitHubHostRequest],
@@ -44,10 +64,11 @@ func (h *Handler) AddGitHubHost(
 	}
 	settings, err := store.Update(func(settings *config.Config) error {
 		return settings.AddHost(config.Host{
-			Host:      req.Msg.GetHost(),
-			WebURL:    req.Msg.GetWebUrl(),
-			APIURL:    req.Msg.GetApiUrl(),
-			UploadURL: req.Msg.GetUploadUrl(),
+			Host:       req.Msg.GetHost(),
+			WebURL:     req.Msg.GetWebUrl(),
+			APIURL:     req.Msg.GetApiUrl(),
+			UploadURL:  req.Msg.GetUploadUrl(),
+			GraphQLURL: req.Msg.GetGraphqlUrl(),
 		})
 	})
 	if err != nil {
@@ -84,6 +105,9 @@ func (h *Handler) UpdateGitHubHost(
 		}
 		if req.Msg.UploadUrl != nil {
 			current.UploadURL = req.Msg.GetUploadUrl()
+		}
+		if req.Msg.GraphqlUrl != nil {
+			current.GraphQLURL = req.Msg.GetGraphqlUrl()
 		}
 		return settings.UpdateHost(req.Msg.GetHost(), current)
 	})
@@ -288,7 +312,9 @@ func configAuthMethodType(value prxv1.GithubAuthMethodType) (config.AuthMethodTy
 }
 
 func protoGitHubConfig(value config.PublicConfig) *prxv1.GitHubConfig {
-	result := &prxv1.GitHubConfig{Version: int32(value.Version)}
+	result := &prxv1.GitHubConfig{
+		Version: int32(value.Version), AutoSyncIntervalSeconds: value.GitHub.AutoSyncIntervalSeconds,
+	}
 	for _, host := range value.GitHub.Hosts {
 		result.Hosts = append(result.Hosts, protoGitHubHost(host))
 	}
@@ -299,7 +325,28 @@ func protoGitHubConfig(value config.PublicConfig) *prxv1.GitHubConfig {
 }
 
 func protoGitHubHost(value config.Host) *prxv1.GitHubHost {
-	return &prxv1.GitHubHost{Host: value.Host, WebUrl: value.WebURL, ApiUrl: value.APIURL, UploadUrl: value.UploadURL}
+	return &prxv1.GitHubHost{
+		Host: value.Host, WebUrl: value.WebURL, ApiUrl: value.APIURL,
+		UploadUrl: value.UploadURL, GraphqlUrl: value.GraphQLURL,
+	}
+}
+
+func protoGitHubSyncStatus(value domain.GitHubSyncStatus) *prxv1.GitHubSyncStatus {
+	result := &prxv1.GitHubSyncStatus{
+		IntervalSeconds: value.IntervalSeconds,
+		Succeeded:       int32(value.Succeeded),
+		Failed:          int32(value.Failed),
+		Error:           value.Error,
+	}
+	if value.LastAttemptAt != nil {
+		formatted := value.LastAttemptAt.UTC().Format(time.RFC3339)
+		result.LastAttemptAt = &formatted
+	}
+	if value.LastUpdatedAt != nil {
+		formatted := value.LastUpdatedAt.UTC().Format(time.RFC3339)
+		result.LastUpdatedAt = &formatted
+	}
+	return result
 }
 
 func protoPublicAuthMethod(settings config.Config, id string) *prxv1.GitHubAuthMethod {

@@ -1,24 +1,22 @@
-## prx sync
+## prx config sync update
 
-Refresh GitHub state for pull-request tasks
+Update the automatic GitHub synchronization interval
 
 ```
-prx sync [flags]
+prx config sync update [flags]
 ```
 
 ### Examples
 
 ```
-prx sync --feature FEATURE_ID --json
-prx sync --task TASK_ID --json
+prx config sync update --interval-seconds 3600 --json
 ```
 
 ### Options
 
 ```
-      --feature string   feature ID or slug
-  -h, --help             help for sync
-      --task string      task ID
+  -h, --help                   help for update
+      --interval-seconds int   automatic sync interval in seconds (minimum 600)
 ```
 
 ### Options inherited from parent commands
@@ -33,6 +31,5 @@ prx sync --task TASK_ID --json
 
 ### SEE ALSO
 
-* [prx](prx.md)	 - Manage pull-request dependency roadmaps
-* [prx sync status](prx_sync_status.md)	 - Show automatic GitHub synchronization status
+* [prx config sync](prx_config_sync.md)	 - Manage automatic GitHub synchronization settings
 

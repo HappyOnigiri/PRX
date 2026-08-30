@@ -26,12 +26,27 @@ type Provider interface {
 	Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error)
 }
 
-type LiveProvider struct{ client *gh.Client }
+type BatchResult struct {
+	PullRequests map[string]domain.PullRequest
+	Errors       map[string]error
+}
+
+type BatchProvider interface {
+	FetchBatch(ctx context.Context, current []domain.PullRequest) (BatchResult, error)
+}
+
+type LiveProvider struct {
+	client     *gh.Client
+	httpClient *http.Client
+	token      string
+	graphqlURL string
+}
 
 type LiveProviderOptions struct {
 	Token      string
 	APIURL     string
 	UploadURL  string
+	GraphQLURL string
 	HTTPClient *http.Client
 }
 
@@ -39,12 +54,14 @@ type LiveProviderOptions struct {
 // Credential discovery belongs to Resolver so every candidate remains scoped
 // to its configured host.
 func NewLiveProvider(ctx context.Context, options LiveProviderOptions) (*LiveProvider, error) {
-	return NewConfiguredLiveProvider(ctx, options.Token, options.APIURL, options.UploadURL, options.HTTPClient)
+	return NewConfiguredLiveProvider(
+		ctx, options.Token, options.APIURL, options.UploadURL, options.GraphQLURL, options.HTTPClient,
+	)
 }
 
 func NewConfiguredLiveProvider(
 	ctx context.Context,
-	token, apiURL, uploadURL string,
+	token, apiURL, uploadURL, graphqlURL string,
 	httpClient *http.Client,
 ) (*LiveProvider, error) {
 	token = strings.TrimSpace(token)
@@ -85,7 +102,30 @@ func NewConfiguredLiveProvider(
 		}
 	}
 	client.UserAgent = "prx/0.1"
-	return &LiveProvider{client: client}, nil
+	if graphqlURL == "" {
+		graphqlURL = defaultGraphQLURL(apiURL)
+	}
+	return &LiveProvider{
+		client: client, httpClient: httpClient, token: token, graphqlURL: graphqlURL,
+	}, nil
+}
+
+func defaultGraphQLURL(apiURL string) string {
+	if apiURL == "" {
+		return "https://api.github.com/graphql"
+	}
+	parsed, err := url.Parse(apiURL)
+	if err != nil || parsed.Host == "" {
+		return "https://api.github.com/graphql"
+	}
+	if strings.EqualFold(parsed.Host, "api.github.com") {
+		parsed.Path = "/graphql"
+	} else {
+		parsed.Path = "/api/graphql"
+	}
+	parsed.RawQuery = ""
+	parsed.Fragment = ""
+	return parsed.String()
 }
 
 func rejectCrossOriginRedirect(request *http.Request, via []*http.Request) error {

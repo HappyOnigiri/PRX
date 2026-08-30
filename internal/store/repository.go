@@ -537,6 +537,66 @@ func (s *Store) DeletePullRequest(ctx context.Context, taskID string) error {
 	return nil
 }
 
+func (s *Store) GitHubSyncState(ctx context.Context) (domain.GitHubSyncState, error) {
+	value, err := db.New(s.db).GetGitHubSyncState(ctx)
+	if err != nil {
+		return domain.GitHubSyncState{}, err
+	}
+	return domain.GitHubSyncState{
+		LastAttemptAt:   unixTime(value.LastAttemptUnix),
+		LastCompletedAt: unixTime(value.LastCompletedUnix),
+		Succeeded:       int(value.Succeeded),
+		Failed:          int(value.Failed),
+		Error:           value.RunError,
+	}, nil
+}
+
+func (s *Store) AcquireGitHubAutoSync(
+	ctx context.Context,
+	runID string,
+	attemptedAt time.Time,
+	dueBeforeUnix int64,
+) (bool, error) {
+	affected, err := db.New(s.db).AcquireGitHubAutoSync(ctx, db.AcquireGitHubAutoSyncParams{
+		RunID:             runID,
+		LastAttemptUnix:   sql.NullInt64{Int64: attemptedAt.UTC().Unix(), Valid: true},
+		LastAttemptUnix_2: sql.NullInt64{Int64: dueBeforeUnix, Valid: true},
+	})
+	return affected == 1, err
+}
+
+func (s *Store) StartGitHubSync(ctx context.Context, runID string, attemptedAt time.Time) error {
+	return db.New(s.db).StartGitHubSync(ctx, db.StartGitHubSyncParams{
+		RunID:           runID,
+		LastAttemptUnix: sql.NullInt64{Int64: attemptedAt.UTC().Unix(), Valid: true},
+	})
+}
+
+func (s *Store) CompleteGitHubSync(
+	ctx context.Context,
+	runID string,
+	completedAt time.Time,
+	succeeded, failed int,
+	runError string,
+) error {
+	_, err := db.New(s.db).CompleteGitHubSync(ctx, db.CompleteGitHubSyncParams{
+		LastCompletedUnix: sql.NullInt64{Int64: completedAt.UTC().Unix(), Valid: true},
+		Succeeded:         int64(succeeded),
+		Failed:            int64(failed),
+		RunError:          runError,
+		RunID:             runID,
+	})
+	return err
+}
+
+func unixTime(value sql.NullInt64) *time.Time {
+	if !value.Valid {
+		return nil
+	}
+	result := time.Unix(value.Int64, 0).UTC()
+	return &result
+}
+
 func (s *Store) CreateDocument(
 	ctx context.Context,
 	featureID, taskID string,

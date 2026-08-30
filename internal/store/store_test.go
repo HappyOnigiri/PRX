@@ -36,7 +36,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 5 {
+		migrations != 6 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -68,6 +68,61 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	err = database.DB().QueryRowContext(ctx, `SELECT name FROM sqlite_master WHERE name='should_rollback'`).Scan(&name)
 	if !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("failed migration left a table: name=%q err=%v", name, err)
+	}
+}
+
+func TestGitHubAutoSyncClaimIsAtomicAcrossConnections(t *testing.T) {
+	ctx := context.Background()
+	path := filepath.Join(t.TempDir(), "auto-sync.db")
+	first, err := store.Open(ctx, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = first.Close() }()
+	second, err := store.Open(ctx, path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = second.Close() }()
+	now := time.Date(2026, 8, 30, 12, 0, 0, 0, time.UTC)
+	stores := []*store.Store{first, second}
+	start := make(chan struct{})
+	results := make(chan bool, len(stores))
+	errorsFound := make(chan error, len(stores))
+	var group sync.WaitGroup
+	for index, database := range stores {
+		group.Add(1)
+		go func(index int, database *store.Store) {
+			defer group.Done()
+			<-start
+			acquired, acquireErr := database.AcquireGitHubAutoSync(
+				ctx, fmt.Sprintf("run-%d", index), now, now.Add(-600*time.Second).Unix(),
+			)
+			results <- acquired
+			errorsFound <- acquireErr
+		}(index, database)
+	}
+	close(start)
+	group.Wait()
+	close(results)
+	close(errorsFound)
+	claimed := 0
+	for acquired := range results {
+		if acquired {
+			claimed++
+		}
+	}
+	for acquireErr := range errorsFound {
+		if acquireErr != nil {
+			t.Fatal(acquireErr)
+		}
+	}
+	if claimed != 1 {
+		t.Fatalf("claimed runs=%d, want 1", claimed)
+	}
+	state, err := first.GitHubSyncState(ctx)
+	if err != nil || state.LastAttemptAt == nil || !state.LastAttemptAt.Equal(now) {
+		t.Fatalf("sync state=%+v err=%v", state, err)
 	}
 }
 
@@ -479,7 +534,7 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	var migrationCount int
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
-		Scan(&migrationCount); err != nil || migrationCount != 5 {
+		Scan(&migrationCount); err != nil || migrationCount != 6 {
 		t.Fatalf("migration count=%d err=%v", migrationCount, err)
 	}
 	var status string

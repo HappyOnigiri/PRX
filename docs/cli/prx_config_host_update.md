@@ -15,11 +15,12 @@ prx config host update ghe.example.com --api-url https://ghe.example.com/api/v3/
 ### Options
 
 ```
-      --api-url string      new HTTPS API base URL
-  -h, --help                help for update
-      --new-host string     new hostname
-      --upload-url string   new HTTPS upload base URL
-      --web-url string      new HTTPS web URL
+      --api-url string       new HTTPS API base URL
+      --graphql-url string   new HTTPS GraphQL URL
+  -h, --help                 help for update
+      --new-host string      new hostname
+      --upload-url string    new HTTPS upload base URL
+      --web-url string       new HTTPS web URL
 ```
 
 ### Options inherited from parent commands

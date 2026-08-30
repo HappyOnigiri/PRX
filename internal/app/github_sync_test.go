@@ -454,3 +454,30 @@ func TestSyncLiveKeepsCredentialsOnTheirConfiguredHost(t *testing.T) {
 		t.Fatalf("second cache=%q found=%v err=%v", secondCache, secondFound, err)
 	}
 }
+
+func TestSyncLiveBatchesRepositoriesOnTheSameHost(t *testing.T) {
+	server := newSyncServer(t, func(token string, _ *http.Request) int {
+		if token != "shared-token" {
+			return http.StatusUnauthorized
+		}
+		return 0
+	})
+	hostConfig, host := syncHost(t, server)
+	settings := syncConfig([]config.Host{hostConfig}, []config.AuthMethod{{
+		ID: "shared", Host: host, Type: config.AuthMethodTypeInline, Token: "shared-token",
+	}})
+	service, database, snapshot, taskFeatures := newSyncService(t)
+	addSyncPullRequest(t, database, &snapshot, taskFeatures, host, "acme", "api", 42)
+	addSyncPullRequest(t, database, &snapshot, taskFeatures, host, "acme", "web", 43)
+	resolver, err := githubprovider.NewResolver(settings, server.server.Client())
+	if err != nil {
+		t.Fatal(err)
+	}
+	succeeded, failed, err := service.syncLive(context.Background(), snapshot, taskFeatures, "", "", resolver)
+	if err != nil || succeeded != 2 || failed != 0 {
+		t.Fatalf("same-host sync succeeded=%d failed=%d err=%v", succeeded, failed, err)
+	}
+	if server.count("/api/graphql", "shared-token") != 1 {
+		t.Fatalf("GraphQL batch requests=%+v", server.requests)
+	}
+}

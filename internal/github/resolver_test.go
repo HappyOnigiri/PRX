@@ -50,8 +50,8 @@ func TestResolverScopesCandidatesAndSkipsDuplicateCredentials(t *testing.T) {
 		t.Fatalf("open provider=%v err=%v", provider, err)
 	}
 	duplicate, err := resolver.Open(context.Background(), githubCandidates[0])
-	if duplicate != nil || ClassOf(err) != ErrorClassAuthUnavailable {
-		t.Fatalf("duplicate provider=%v class=%s err=%v", duplicate, ClassOf(err), err)
+	if duplicate != provider || err != nil {
+		t.Fatalf("reused provider=%v want=%v err=%v", duplicate, provider, err)
 	}
 	resolver.MarkUnauthorized(githubCandidates[0].ID)
 	if _, err := resolver.Open(context.Background(), githubCandidates[0]); ClassOf(err) != ErrorClassAuthUnavailable {
@@ -63,6 +63,26 @@ func TestResolverScopesCandidatesAndSkipsDuplicateCredentials(t *testing.T) {
 		config.AuthMethod{Type: config.AuthMethodTypeInline, Token: "inline-token"},
 	); err != nil {
 		t.Fatal(err)
+	}
+}
+
+func TestResolverRejectsTheSameCredentialUnderAnotherMethod(t *testing.T) {
+	value := config.Default()
+	value.GitHub.AuthMethods = []config.AuthMethod{
+		{ID: "first", Host: "github.com", Type: config.AuthMethodTypeInline, Token: "same-token"},
+		{ID: "second", Host: "github.com", Type: config.AuthMethodTypeInline, Token: "same-token"},
+	}
+	resolver, err := NewResolver(value)
+	if err != nil {
+		t.Fatal(err)
+	}
+	candidates := resolver.Candidates("github.com")
+	if _, err := resolver.Open(context.Background(), candidates[0]); err != nil {
+		t.Fatal(err)
+	}
+	provider, err := resolver.Open(context.Background(), candidates[1])
+	if provider != nil || ClassOf(err) != ErrorClassAuthUnavailable {
+		t.Fatalf("duplicate provider=%v class=%s err=%v", provider, ClassOf(err), err)
 	}
 }
 

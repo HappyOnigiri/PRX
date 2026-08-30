@@ -17,9 +17,43 @@ func (s *state) configCommand() *cobra.Command {
 		s.configShowCommand(),
 		s.configPathCommand(),
 		s.configValidateCommand(),
+		s.configSyncCommand(),
 		s.configHostCommand(),
 		s.configAuthCommand(),
 	)
+	return command
+}
+
+func (s *state) configSyncCommand() *cobra.Command {
+	command := &cobra.Command{Use: "sync", Short: "Manage automatic GitHub synchronization settings"}
+	command.AddCommand(s.configSyncUpdateCommand())
+	return command
+}
+
+func (s *state) configSyncUpdateCommand() *cobra.Command {
+	var interval int64
+	command := &cobra.Command{
+		Use:     "update",
+		Short:   "Update the automatic GitHub synchronization interval",
+		Example: "prx config sync update --interval-seconds 3600 --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			store, err := s.configStore()
+			if err != nil {
+				return configCommandError(err)
+			}
+			settings, err := store.Update(func(settings *config.Config) error {
+				return settings.SetAutoSyncInterval(interval)
+			})
+			if err != nil {
+				return configCommandError(err)
+			}
+			value := map[string]int64{"interval_seconds": settings.GitHub.AutoSyncIntervalSeconds}
+			return s.write(value, renderMessage("Automatic sync interval: %d seconds.", interval))
+		},
+	}
+	command.Flags().Int64Var(&interval, "interval-seconds", 0, "automatic sync interval in seconds (minimum 600)")
+	_ = command.MarkFlagRequired("interval-seconds")
 	return command
 }
 
@@ -94,7 +128,7 @@ func (s *state) configHostCommand() *cobra.Command {
 }
 
 func (s *state) configHostAddCommand() *cobra.Command {
-	var host, webURL, apiURL, uploadURL string
+	var host, webURL, apiURL, uploadURL, graphqlURL string
 	command := &cobra.Command{
 		Use:     "add",
 		Short:   "Add a GitHub.com or Enterprise host",
@@ -106,7 +140,9 @@ func (s *state) configHostAddCommand() *cobra.Command {
 				return configCommandError(err)
 			}
 			value, err := store.Update(func(settings *config.Config) error {
-				return settings.AddHost(config.Host{Host: host, WebURL: webURL, APIURL: apiURL, UploadURL: uploadURL})
+				return settings.AddHost(config.Host{
+					Host: host, WebURL: webURL, APIURL: apiURL, UploadURL: uploadURL, GraphQLURL: graphqlURL,
+				})
 			})
 			if err != nil {
 				return configCommandError(err)
@@ -119,6 +155,7 @@ func (s *state) configHostAddCommand() *cobra.Command {
 	command.Flags().StringVar(&webURL, "web-url", "", "HTTPS web URL (defaults from host)")
 	command.Flags().StringVar(&apiURL, "api-url", "", "HTTPS API base URL (defaults from host)")
 	command.Flags().StringVar(&uploadURL, "upload-url", "", "HTTPS upload base URL (defaults from host)")
+	command.Flags().StringVar(&graphqlURL, "graphql-url", "", "HTTPS GraphQL URL (defaults from host)")
 	_ = command.MarkFlagRequired("host")
 	return command
 }
@@ -146,7 +183,7 @@ func (s *state) configHostListCommand() *cobra.Command {
 
 func (s *state) configHostUpdateCommand() *cobra.Command {
 	var newHost string
-	var webURL, apiURL, uploadURL string
+	var webURL, apiURL, uploadURL, graphqlURL string
 	command := &cobra.Command{
 		Use:     "update HOST",
 		Short:   "Update a configured GitHub host",
@@ -174,6 +211,9 @@ func (s *state) configHostUpdateCommand() *cobra.Command {
 				if cmd.Flags().Changed("upload-url") {
 					current.UploadURL = uploadURL
 				}
+				if cmd.Flags().Changed("graphql-url") {
+					current.GraphQLURL = graphqlURL
+				}
 				return settings.UpdateHost(args[0], current)
 			})
 			if err != nil {
@@ -187,6 +227,7 @@ func (s *state) configHostUpdateCommand() *cobra.Command {
 	command.Flags().StringVar(&webURL, "web-url", "", "new HTTPS web URL")
 	command.Flags().StringVar(&apiURL, "api-url", "", "new HTTPS API base URL")
 	command.Flags().StringVar(&uploadURL, "upload-url", "", "new HTTPS upload base URL")
+	command.Flags().StringVar(&graphqlURL, "graphql-url", "", "new HTTPS GraphQL URL")
 	return command
 }
 

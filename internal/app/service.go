@@ -75,18 +75,35 @@ type GitHubAuthCache interface {
 	DeleteGitHubRepositoryAuthCache(ctx context.Context, host, owner, repository string) error
 }
 
+type GitHubSyncStateRepository interface {
+	GitHubSyncState(ctx context.Context) (domain.GitHubSyncState, error)
+	AcquireGitHubAutoSync(ctx context.Context, runID string, attemptedAt time.Time, dueBeforeUnix int64) (bool, error)
+	StartGitHubSync(ctx context.Context, runID string, attemptedAt time.Time) error
+	CompleteGitHubSync(
+		ctx context.Context,
+		runID string,
+		completedAt time.Time,
+		succeeded, failed int,
+		runError string,
+	) error
+}
+
 type Service struct {
 	repository  Repository
 	provider    githubprovider.Provider
 	configStore *config.Store
+	now         func() time.Time
 }
 
 func New(repository Repository, provider githubprovider.Provider) *Service {
-	return &Service{repository: repository, provider: provider}
+	return &Service{repository: repository, provider: provider, now: func() time.Time { return time.Now().UTC() }}
 }
 
 func NewWithConfig(repository Repository, provider githubprovider.Provider, configStore *config.Store) *Service {
-	return &Service{repository: repository, provider: provider, configStore: configStore}
+	return &Service{
+		repository: repository, provider: provider, configStore: configStore,
+		now: func() time.Time { return time.Now().UTC() },
+	}
 }
 
 func (s *Service) ConfigStore() *config.Store { return s.configStore }
@@ -479,7 +496,11 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 	return snapshot, nil
 }
 
-func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded, failed int, err error) {
+func (s *Service) syncSelected(
+	ctx context.Context,
+	featureID, taskID string,
+	automatic bool,
+) (succeeded, failed int, err error) {
 	if s.provider == nil && s.configStore == nil {
 		return 0, 0, domain.NewError(domain.DomainErrorCodeGitHubAuth, "GitHub provider is not configured")
 	}
@@ -504,6 +525,21 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 	for _, task := range snapshot.Tasks {
 		taskFeature[task.ID] = task.FeatureID
 	}
+	activeFeatures := map[string]bool{}
+	for _, feature := range snapshot.Features {
+		activeFeatures[feature.ID] = !feature.Archived
+	}
+	eligible := snapshot.PullRequests[:0]
+	for _, pullRequest := range snapshot.PullRequests {
+		if pullRequest.State == domain.PullRequestStateMerged {
+			continue
+		}
+		if automatic && !activeFeatures[taskFeature[pullRequest.TaskID]] {
+			continue
+		}
+		eligible = append(eligible, pullRequest)
+	}
+	snapshot.PullRequests = eligible
 	if s.provider == nil {
 		settings, loadErr := s.configStore.Load()
 		if loadErr != nil {

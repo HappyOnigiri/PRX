@@ -12,11 +12,15 @@ import { makeSnapshot } from "./factories";
 const hookMocks = vi.hoisted(() => ({
   getSnapshot: vi.fn(),
   getConfig: vi.fn(),
+  getSyncStatus: vi.fn(),
+  syncIfDue: vi.fn(),
 }));
 
 vi.mock("../src/api", () => ({
   getSnapshot: hookMocks.getSnapshot,
   getConfig: hookMocks.getConfig,
+  getSyncStatus: hookMocks.getSyncStatus,
+  syncIfDue: hookMocks.syncIfDue,
 }));
 
 function createWrapper(queryClient: QueryClient) {
@@ -46,6 +50,34 @@ describe("domain query hooks", () => {
       expect(result.current.data).toBe(snapshot);
     });
     expect(hookMocks.getSnapshot).toHaveBeenCalledOnce();
+  });
+
+  it("checks automatic sync and invalidates the snapshot only after a run", async () => {
+    const snapshot = makeSnapshot();
+    const status = { intervalSeconds: 3600n, succeeded: 1, failed: 0 };
+    hookMocks.getSnapshot.mockResolvedValue(snapshot);
+    hookMocks.getSyncStatus.mockResolvedValue(status);
+    hookMocks.syncIfDue.mockResolvedValue({ ran: true, status });
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+    const { result, unmount } = renderHook(() => useSnapshot(true), {
+      wrapper: createWrapper(queryClient),
+    });
+    await waitFor(() => {
+      expect(hookMocks.syncIfDue).toHaveBeenCalled();
+      expect(result.current.autoSync?.status.data).toBe(status);
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["snapshot"] });
+    window.dispatchEvent(new Event("focus"));
+    await waitFor(() => {
+      expect(hookMocks.syncIfDue.mock.calls.length).toBeGreaterThan(1);
+    });
+    unmount();
   });
 
   it("invalidates the snapshot after a successful domain mutation", async () => {

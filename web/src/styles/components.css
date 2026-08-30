@@ -462,6 +462,11 @@
   margin-top: 4px;
 }
 
+.settings-sync-form {
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: end;
+}
+
 .settings-empty {
   margin: 10px 0;
   color: var(--text-3);

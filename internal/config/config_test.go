@@ -20,7 +20,9 @@ func TestNormalizeDefaultsAndRejectsUnsafeValues(t *testing.T) {
 	host := value.GitHub.Hosts[0]
 	if host.Host != "ghe.example.com:8443" || host.WebURL != "https://ghe.example.com:8443" ||
 		host.APIURL != "https://ghe.example.com:8443/api/v3/" ||
-		host.UploadURL != "https://ghe.example.com:8443/api/uploads/" {
+		host.UploadURL != "https://ghe.example.com:8443/api/uploads/" ||
+		host.GraphQLURL != "https://ghe.example.com:8443/api/graphql" ||
+		value.GitHub.AutoSyncIntervalSeconds != DefaultAutoSyncIntervalSeconds {
 		t.Fatalf("normalized host=%+v", host)
 	}
 
@@ -58,6 +60,13 @@ func TestNormalizeDefaultsAndRejectsUnsafeValues(t *testing.T) {
 			},
 		},
 		{
+			name: "automatic sync interval below minimum",
+			value: Config{
+				Version: 1,
+				GitHub:  GitHubConfig{AutoSyncIntervalSeconds: 599},
+			},
+		},
+		{
 			name: "unknown auth host",
 			value: Config{
 				Version: 1,
@@ -82,6 +91,10 @@ func TestNormalizeDefaultsAndRejectsUnsafeValues(t *testing.T) {
 				t.Fatalf("error=%v code=%s", err, ErrorCodeOf(err))
 			}
 		})
+	}
+	maximum := Default()
+	if err := maximum.SetAutoSyncInterval(int64(^uint64(0) >> 1)); err != nil {
+		t.Fatalf("maximum interval was rejected: %v", err)
 	}
 
 	for _, raw := range []string{

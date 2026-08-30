@@ -25,5 +25,6 @@ Manage GitHub hosts and authentication
 * [prx config host](prx_config_host.md)	 - Manage configured GitHub hosts
 * [prx config path](prx_config_path.md)	 - Show the resolved configuration path
 * [prx config show](prx_config_show.md)	 - Show the public GitHub configuration
+* [prx config sync](prx_config_sync.md)	 - Manage automatic GitHub synchronization settings
 * [prx config validate](prx_config_validate.md)	 - Validate the GitHub configuration
 

@@ -15,11 +15,12 @@ prx config host add --host ghe.example.com --json
 ### Options
 
 ```
-      --api-url string      HTTPS API base URL (defaults from host)
-  -h, --help                help for add
-      --host string         hostname with optional port
-      --upload-url string   HTTPS upload base URL (defaults from host)
-      --web-url string      HTTPS web URL (defaults from host)
+      --api-url string       HTTPS API base URL (defaults from host)
+      --graphql-url string   HTTPS GraphQL URL (defaults from host)
+  -h, --help                 help for add
+      --host string          hostname with optional port
+      --upload-url string    HTTPS upload base URL (defaults from host)
+      --web-url string       HTTPS web URL (defaults from host)
 ```
 
 ### Options inherited from parent commands

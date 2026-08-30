@@ -35,6 +35,7 @@ interface HostDraft {
   webUrl: string;
   apiUrl: string;
   uploadUrl: string;
+  graphqlUrl: string;
 }
 
 interface HostController {
@@ -77,6 +78,7 @@ const emptyHostDraft: HostDraft = {
   webUrl: "",
   apiUrl: "",
   uploadUrl: "",
+  graphqlUrl: "",
 };
 
 function emptyAuthDraft(host = ""): AuthDraft {
@@ -114,6 +116,9 @@ export function ServerSettingsDialog({ onClose }: { onClose: () => void }) {
   return (
     <SettingsFrame onClose={onClose} title={t("serverSettings.title")}>
       <p className="dialog-lead">{t("serverSettings.description")}</p>
+      {config.data?.autoSyncIntervalSeconds !== undefined && (
+        <AutoSyncSettings interval={config.data.autoSyncIntervalSeconds} />
+      )}
       <HostSettingsSection hosts={hosts} controller={hostController} />
       <AuthSettingsSection
         hosts={hosts}
@@ -141,6 +146,7 @@ function useHostController(): HostController {
       webUrl: host.webUrl,
       apiUrl: host.apiUrl,
       uploadUrl: host.uploadUrl,
+      graphqlUrl: host.graphqlUrl,
     });
   }
 
@@ -158,6 +164,7 @@ function useHostController(): HostController {
         webUrl: draft.webUrl,
         apiUrl: draft.apiUrl,
         uploadUrl: draft.uploadUrl,
+        graphqlUrl: draft.graphqlUrl,
       });
     } else {
       await addHost.mutateAsync({
@@ -165,6 +172,7 @@ function useHostController(): HostController {
         webUrl: draft.webUrl,
         apiUrl: draft.apiUrl,
         uploadUrl: draft.uploadUrl,
+        graphqlUrl: draft.graphqlUrl,
       });
     }
     reset();
@@ -191,6 +199,49 @@ function useHostController(): HostController {
     submit,
     remove,
   };
+}
+
+function AutoSyncSettings({ interval }: { interval: bigint }) {
+  const { t } = useTranslation();
+  const update = useConfigMutation(configMutations.updateSync);
+  const [seconds, setSeconds] = useState(Number(interval));
+  return (
+    <section className="settings-section" aria-labelledby="settings-sync">
+      <header>
+        <p className="section-label">{t("serverSettings.syncLabel")}</p>
+        <h3 id="settings-sync">{t("serverSettings.syncTitle")}</h3>
+      </header>
+      <form
+        className="settings-form settings-sync-form"
+        onSubmit={(event) => {
+          event.preventDefault();
+          void update.mutateAsync(BigInt(seconds));
+        }}
+      >
+        <label>
+          {t("serverSettings.syncInterval")}
+          <input
+            type="number"
+            min={600}
+            step={1}
+            required
+            value={seconds}
+            onChange={(event) => {
+              setSeconds(event.target.valueAsNumber);
+            }}
+          />
+        </label>
+        <IconButton
+          icon={Save}
+          label={t("common.save")}
+          variant="primary"
+          type="submit"
+          disabled={update.isPending || !Number.isSafeInteger(seconds)}
+        />
+      </form>
+      <small>{t("serverSettings.syncHint")}</small>
+    </section>
+  );
 }
 
 function useAuthController(authMethods: GitHubAuthMethod[]): AuthController {
@@ -379,6 +430,16 @@ function HostForm({ controller }: HostFormProps) {
           />
         </label>
       </div>
+      <label>
+        {t("serverSettings.graphqlUrl")}
+        <input
+          value={draft.graphqlUrl}
+          onChange={(event) => {
+            controller.setDraft({ ...draft, graphqlUrl: event.target.value });
+          }}
+          placeholder="https://ghe.example.com/api/graphql"
+        />
+      </label>
       <div className="form-row">
         <label>
           {t("serverSettings.apiUrl")}

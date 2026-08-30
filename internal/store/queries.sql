@@ -112,6 +112,22 @@ last_succeeded_at=excluded.last_succeeded_at;
 -- name: DeleteGitHubRepositoryAuthCache :execrows
 DELETE FROM github_repository_auth_cache WHERE host=? AND owner=? AND repository=?;
 
+-- name: GetGitHubSyncState :one
+SELECT * FROM github_sync_state WHERE singleton=1;
+
+-- name: AcquireGitHubAutoSync :execrows
+UPDATE github_sync_state
+SET run_id=?, last_attempt_unix=?, run_error=''
+WHERE singleton=1 AND (last_attempt_unix IS NULL OR last_attempt_unix<=?);
+
+-- name: StartGitHubSync :exec
+UPDATE github_sync_state SET run_id=?, last_attempt_unix=?, run_error='' WHERE singleton=1;
+
+-- name: CompleteGitHubSync :execrows
+UPDATE github_sync_state
+SET last_completed_unix=?, succeeded=?, failed=?, run_error=?
+WHERE singleton=1 AND run_id=?;
+
 -- name: DeletePullRequest :execrows
 DELETE FROM pull_requests WHERE task_id=?;
 

@@ -25,6 +25,7 @@ type Resolver struct {
 	unauthorized map[string]bool
 	fingerprints map[string]struct{}
 	httpClient   *http.Client
+	providers    map[string]*LiveProvider
 }
 
 func NewResolver(value config.Config, clients ...*http.Client) (*Resolver, error) {
@@ -41,6 +42,7 @@ func NewResolver(value config.Config, clients ...*http.Client) (*Resolver, error
 		unauthorized: map[string]bool{},
 		fingerprints: map[string]struct{}{},
 		httpClient:   httpClient,
+		providers:    map[string]*LiveProvider{},
 	}, nil
 }
 
@@ -104,6 +106,9 @@ func (r *Resolver) Open(ctx context.Context, candidate Candidate) (*LiveProvider
 	if r.unauthorized[candidate.ID] {
 		return nil, unavailableError("authentication method is unavailable for this sync")
 	}
+	if provider := r.providers[candidate.ID]; provider != nil {
+		return provider, nil
+	}
 	token, err := readToken(ctx, candidate.Host.Host, candidate.Method)
 	if err != nil {
 		return nil, err
@@ -113,7 +118,19 @@ func (r *Resolver) Open(ctx context.Context, candidate Candidate) (*LiveProvider
 		return nil, duplicateCredentialError()
 	}
 	r.fingerprints[fingerprint] = struct{}{}
-	return NewConfiguredLiveProvider(ctx, token, candidate.Host.APIURL, candidate.Host.UploadURL, r.httpClient)
+	provider, err := NewConfiguredLiveProvider(
+		ctx,
+		token,
+		candidate.Host.APIURL,
+		candidate.Host.UploadURL,
+		candidate.Host.GraphQLURL,
+		r.httpClient,
+	)
+	if err != nil {
+		return nil, err
+	}
+	r.providers[candidate.ID] = provider
+	return provider, nil
 }
 
 func readToken(ctx context.Context, host string, method config.AuthMethod) (string, error) {

@@ -64,6 +64,9 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			}
 			s.service = service
 			s.closer = closer
+			if !isAutomaticSyncExcluded(cmd) && service != nil {
+				_, _, _ = service.SyncIfDue(cmd.Context())
+			}
 			return nil
 		},
 		PersistentPostRun: func(_ *cobra.Command, _ []string) {
@@ -123,6 +126,15 @@ func markCommandExecution(command *cobra.Command, s *state) {
 func isConfigCommand(command *cobra.Command) bool {
 	for current := command; current != nil; current = current.Parent() {
 		if current.Name() == "config" {
+			return true
+		}
+	}
+	return false
+}
+
+func isAutomaticSyncExcluded(command *cobra.Command) bool {
+	for current := command; current != nil; current = current.Parent() {
+		if current.Name() == "sync" || current.Name() == "seed" {
 			return true
 		}
 	}
