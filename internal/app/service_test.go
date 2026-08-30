@@ -124,7 +124,20 @@ func (r *taskRepository) GetTask(context.Context, string) (domain.Task, error) {
 	return r.task, nil
 }
 
-func TestGetNodeResolvesTypedPublicIDs(t *testing.T) {
+type featureSlugRepository struct {
+	repositoryStub
+	feature domain.Feature
+}
+
+func (r *featureSlugRepository) GetFeature(context.Context, string) (domain.Feature, error) {
+	return domain.Feature{}, errors.New("feature ID was not found")
+}
+
+func (r *featureSlugRepository) GetFeatureBySlug(context.Context, string) (domain.Feature, error) {
+	return r.feature, nil
+}
+
+func TestGetNodeResolvesFeatureIDsAndSlugsAndTaskIDs(t *testing.T) {
 	feature := domain.Feature{ID: "F-1", Slug: "checkout"}
 	featureValue, err := app.New(&featureRepository{feature: feature}, nil).GetNode(context.Background(), feature.ID)
 	if err != nil {
@@ -132,6 +145,14 @@ func TestGetNodeResolvesTypedPublicIDs(t *testing.T) {
 	}
 	if got, ok := featureValue.(domain.Feature); !ok || got.ID != feature.ID || got.Slug != feature.Slug {
 		t.Fatalf("feature node=%#v", featureValue)
+	}
+	slugValue, err := app.New(&featureSlugRepository{feature: feature}, nil).
+		GetNode(context.Background(), feature.Slug)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got, ok := slugValue.(domain.Feature); !ok || got.ID != feature.ID || got.Slug != feature.Slug {
+		t.Fatalf("feature slug node=%#v", slugValue)
 	}
 
 	task := domain.Task{ID: "T-1", FeatureID: feature.ID, Title: "Implement"}

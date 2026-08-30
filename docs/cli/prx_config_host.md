@@ -1,6 +1,16 @@
 ## prx config host
 
-Manage configured GitHub hosts
+List or manage configured GitHub hosts
+
+```
+prx config host [flags]
+```
+
+### Examples
+
+```
+prx config host --json
+```
 
 ### Options
 
@@ -20,9 +30,8 @@ Manage configured GitHub hosts
 
 ### SEE ALSO
 
-* [prx config](prx_config.md)	 - Manage GitHub hosts and authentication
+* [prx config](prx_config.md)	 - Show or manage GitHub hosts and authentication
 * [prx config host add](prx_config_host_add.md)	 - Add a GitHub.com or Enterprise host
-* [prx config host list](prx_config_host_list.md)	 - List configured GitHub hosts
 * [prx config host remove](prx_config_host_remove.md)	 - Remove a configured GitHub host
 * [prx config host update](prx_config_host_update.md)	 - Update a configured GitHub host
 

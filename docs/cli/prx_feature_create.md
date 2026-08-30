@@ -33,5 +33,5 @@ prx feature create --slug checkout --title "Checkout rollout" --json
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - Manage features
+* [prx feature](prx_feature.md)	 - List features or show one by ID or slug
 

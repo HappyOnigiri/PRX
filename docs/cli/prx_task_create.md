@@ -35,5 +35,5 @@ prx task create --feature checkout --title "Add payment intent API" --assignee M
 
 ### SEE ALSO
 
-* [prx task](prx_task.md)	 - Manage implementation and manual tasks
+* [prx task](prx_task.md)	 - List tasks or show one by ID
 

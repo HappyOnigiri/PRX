@@ -53,6 +53,57 @@ func TestCommandsHaveDocumentation(t *testing.T) {
 	visit(root, false)
 }
 
+func TestCommandTreeUsesCanonicalReadSyntax(t *testing.T) {
+	root := NewRoot(io.Discard, io.Discard, testOpenService)
+	for _, removed := range []string{"node", "implementation-plan"} {
+		if command, _, err := root.Find([]string{removed}); err == nil && command != root {
+			t.Fatalf("removed command %q is still registered as %q", removed, command.CommandPath())
+		}
+	}
+	var visit func(*cobra.Command)
+	visit = func(command *cobra.Command) {
+		if command != root && (command.Name() == "list" || command.Name() == "get") {
+			t.Errorf("removed read verb remains registered: %s", command.CommandPath())
+		}
+		for _, child := range command.Commands() {
+			visit(child)
+		}
+	}
+	visit(root)
+
+	for alias, canonical := range map[string]string{"f": "feature", "t": "task", "dep": "dependency", "doc": "document"} {
+		command, _, err := root.Find([]string{alias})
+		if err != nil || command.Name() != canonical {
+			t.Errorf("alias %q resolved to %v, err=%v", alias, command, err)
+		}
+	}
+}
+
+func TestPreScanOutputFlagsRespectsValuesAndBoundary(t *testing.T) {
+	for _, test := range []struct {
+		name      string
+		args      []string
+		wantJSON  bool
+		wantHuman bool
+	}{
+		{name: "json after unknown command", args: []string{"unknown", "--json"}, wantJSON: true},
+		{name: "JSON after unknown local flag", args: []string{"unknown", "--title", "--json"}, wantJSON: true},
+		{name: "boolean values", args: []string{"--json=false", "--human=true"}, wantHuman: true},
+		{name: "literal flag value", args: []string{"--db", "--json", "unknown"}},
+		{name: "literal local flag value", args: []string{"feature", "create", "--title", "--json"}},
+		{name: "double dash boundary", args: []string{"unknown", "--", "--json"}},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			root, state := newRootWithState(io.Discard, io.Discard, testOpenService)
+			state.preScanOutputFlags(root, test.args)
+			if state.json != test.wantJSON || state.human != test.wantHuman {
+				t.Fatalf("flags=(json=%t human=%t), want (%t %t)",
+					state.json, state.human, test.wantJSON, test.wantHuman)
+			}
+		})
+	}
+}
+
 type recordingCloser struct {
 	closed bool
 }

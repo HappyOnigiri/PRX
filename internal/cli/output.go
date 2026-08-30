@@ -13,7 +13,7 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-const SchemaVersion = "1"
+const SchemaVersion = "2"
 
 type outputMode uint8
 
@@ -31,10 +31,11 @@ type errorEnvelope struct {
 type errorData struct {
 	Code    string `json:"code"`
 	Message string `json:"message"`
+	Hint    string `json:"hint"`
 }
 
 func PrintError(out io.Writer, err error) error {
-	return writeJSONFailure(out, err)
+	return writeJSONFailure(out, err, "")
 }
 
 func (s *state) write(value any, render humanRenderer) error {
@@ -54,15 +55,20 @@ func (s *state) write(value any, render humanRenderer) error {
 	return encodeJSON(s.out, data)
 }
 
-func (s *state) writeError(err error) error {
+func (s *state) writeError(err error, hints ...string) error {
 	if resolveErr := s.resolveOutputMode(); resolveErr != nil && err == nil {
 		err = resolveErr
 	}
 	if s.mode == outputModeHuman {
-		_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n", errorMessage(err))
+		hint := firstHint(hints)
+		if hint == "" {
+			_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n", errorMessage(err))
+			return writeErr
+		}
+		_, writeErr := fmt.Fprintf(s.errOut, "Error: %s\n\n%s", errorMessage(err), hint)
 		return writeErr
 	}
-	return writeJSONFailure(s.errOut, err)
+	return writeJSONFailure(s.errOut, err, firstHint(hints))
 }
 
 func (s *state) writeSchemaVersion() error {
@@ -77,8 +83,17 @@ func (s *state) writeSchemaVersion() error {
 	)
 }
 
-func writeJSONFailure(out io.Writer, err error) error {
-	return encodeJSON(out, errorEnvelope{Error: errorData{Code: commandErrorCode(err), Message: errorMessage(err)}})
+func writeJSONFailure(out io.Writer, err error, hint string) error {
+	return encodeJSON(out, errorEnvelope{Error: errorData{
+		Code: commandErrorCode(err), Message: errorMessage(err), Hint: hint,
+	}})
+}
+
+func firstHint(hints []string) string {
+	if len(hints) == 0 {
+		return ""
+	}
+	return hints[0]
 }
 
 func commandErrorCode(err error) string {

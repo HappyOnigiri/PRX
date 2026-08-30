@@ -30,5 +30,5 @@ prx document delete DOCUMENT_ID --json
 
 ### SEE ALSO
 
-* [prx document](prx_document.md)	 - Manage URL and local Markdown references
+* [prx document](prx_document.md)	 - List or manage URL and local Markdown references
 

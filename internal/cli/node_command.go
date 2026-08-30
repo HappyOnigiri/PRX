@@ -4,15 +4,11 @@ import (
 	"github.com/spf13/cobra"
 )
 
-func (s *state) nodeCommand() *cobra.Command {
-	command := &cobra.Command{
-		Use:   "node",
-		Short: "Inspect feature and task nodes",
-	}
-	command.AddCommand(&cobra.Command{
-		Use:     "get NODE_ID",
-		Short:   "Show a feature or task by its public ID",
-		Example: "prx node get F-1 --json\nprx node get T-1 --json",
+func (s *state) showCommand() *cobra.Command {
+	return &cobra.Command{
+		Use:     "show FEATURE_ID_OR_SLUG_OR_TASK_ID",
+		Short:   "Show a feature or task by public identifier",
+		Example: "prx show F-1 --json\nprx show checkout --json\nprx show T-1 --json",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.GetNode(cmd.Context(), args[0])
@@ -21,6 +17,5 @@ func (s *state) nodeCommand() *cobra.Command {
 			}
 			return s.write(value, renderNode(value))
 		},
-	})
-	return command
+	}
 }

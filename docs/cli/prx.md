@@ -16,23 +16,23 @@ Manage pull-request dependency roadmaps
 
 ### SEE ALSO
 
-* [prx config](prx_config.md)	 - Manage GitHub hosts and authentication
+* [prx config](prx_config.md)	 - Show or manage GitHub hosts and authentication
 * [prx conflicts](prx_conflicts.md)	 - List tasks with conflicting pull requests
-* [prx dependency](prx_dependency.md)	 - Manage directed blocker edges
-* [prx document](prx_document.md)	 - Manage URL and local Markdown references
-* [prx feature](prx_feature.md)	 - Manage features
+* [prx dependency](prx_dependency.md)	 - List or manage directed blocker edges
+* [prx document](prx_document.md)	 - List or manage URL and local Markdown references
+* [prx feature](prx_feature.md)	 - List features or show one by ID or slug
 * [prx graph](prx_graph.md)	 - Show a feature graph with tasks and dependencies
-* [prx implementation-plan](prx_implementation-plan.md)	 - Manage task implementation plans
-* [prx node](prx_node.md)	 - Inspect feature and task nodes
-* [prx pr](prx_pr.md)	 - Attach GitHub pull requests
+* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan
+* [prx pr](prx_pr.md)	 - List or attach GitHub pull requests
 * [prx ready](prx_ready.md)	 - List tasks whose blockers are satisfied
 * [prx reviews](prx_reviews.md)	 - List tasks waiting for pull-request reviews
 * [prx schema-version](prx_schema-version.md)	 - Show the CLI response schema version
 * [prx seed](prx_seed.md)	 - Create deterministic demo roadmap data
 * [prx serve](prx_serve.md)	 - Start the local WebUI and ConnectRPC server
+* [prx show](prx_show.md)	 - Show a feature or task by public identifier
 * [prx snapshot](prx_snapshot.md)	 - Show the complete current snapshot
 * [prx stale](prx_stale.md)	 - List tasks with stale GitHub state
 * [prx sync](prx_sync.md)	 - Refresh GitHub state for pull-request tasks
-* [prx task](prx_task.md)	 - Manage implementation and manual tasks
+* [prx task](prx_task.md)	 - List tasks or show one by ID
 * [prx validate](prx_validate.md)	 - Validate the stored dependency data
 

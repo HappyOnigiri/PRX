@@ -32,5 +32,5 @@ prx pr attach --task TASK_ID --url https://github.com/acme/payments/pull/42 --js
 
 ### SEE ALSO
 
-* [prx pr](prx_pr.md)	 - Attach GitHub pull requests
+* [prx pr](prx_pr.md)	 - List or attach GitHub pull requests
 

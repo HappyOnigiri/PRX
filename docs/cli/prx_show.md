@@ -1,22 +1,23 @@
-## prx task list
+## prx show
 
-List tasks, optionally filtered by feature
+Show a feature or task by public identifier
 
 ```
-prx task list [flags]
+prx show FEATURE_ID_OR_SLUG_OR_TASK_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx task list --feature checkout --json
+prx show F-1 --json
+prx show checkout --json
+prx show T-1 --json
 ```
 
 ### Options
 
 ```
-      --feature string   filter by feature
-  -h, --help             help for list
+  -h, --help   help for show
 ```
 
 ### Options inherited from parent commands
@@ -31,5 +32,5 @@ prx task list --feature checkout --json
 
 ### SEE ALSO
 
-* [prx task](prx_task.md)	 - Manage implementation and manual tasks
+* [prx](prx.md)	 - Manage pull-request dependency roadmaps
 

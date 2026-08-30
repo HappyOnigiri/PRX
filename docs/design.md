@@ -57,9 +57,22 @@ Errors use stderr and leave stdout empty so automation cannot confuse a failed c
 Successful JSON commands emit their data object directly without a `schema_version`, `ok`, or `data` envelope.
 Empty collections are `[]`, never `null`.
 Failed JSON commands emit the versioned error object to stderr and leave stdout empty.
+The current CLI response schema version is `2`.
+Its error object contains `code`, `message`, and the failed command's complete help in `hint`.
 Failures return a non-zero exit status.
 Human output does not vary with terminal width or ambient environment.
 The CLI implementation and black-box tests own current field names and presentation details.
+
+Human failures print the error followed by the same complete command help used by normal help.
+An explicit `--json` makes successful help a compact object with the complete help in `hint`.
+Help succeeds without opening configuration or storage resources.
+
+Resource commands use their shallow form for routine reads.
+Feature and task commands list without an identifier and show details with one identifier.
+`show` resolves a feature public ID, feature slug, or task public ID when a feature slug conflicts with a mutation command name.
+Dependency, pull-request, and document commands list when invoked without a mutation subcommand.
+Implementation plans use `plan TASK_ID`, and configuration reads use `config`, `config host`, or `config auth`.
+Mutation operations retain explicit verbs so state-changing intent remains visible.
 
 Mutations remain non-interactive so people and coding agents use the same surface.
 A missing mutation target fails instead of reporting a successful no-op.

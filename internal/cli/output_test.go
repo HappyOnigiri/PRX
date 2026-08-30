@@ -112,7 +112,7 @@ func TestWriteJSONErrorUsesCodeAndMessageOnStderr(t *testing.T) {
 	if value.Error.Code != string(domain.DomainErrorCodeNotFound) || value.Error.Message != "resource was not found" {
 		t.Fatalf("error response = %+v", value)
 	}
-	if got, want := stderr.String(), `{"error":{"code":"not_found","message":"resource was not found"}}
+	if got, want := stderr.String(), `{"error":{"code":"not_found","message":"resource was not found","hint":""}}
 `; got != want {
 		t.Fatalf("stderr = %q, want %q", got, want)
 	}
@@ -134,7 +134,7 @@ func TestPrintErrorUsesJSONErrorContract(t *testing.T) {
 	if err := PrintError(&out, errors.New("boom")); err != nil {
 		t.Fatal(err)
 	}
-	if got, want := out.String(), `{"error":{"code":"internal","message":"boom"}}
+	if got, want := out.String(), `{"error":{"code":"internal","message":"boom","hint":""}}
 `; got != want {
 		t.Fatalf("error output = %q, want %q", got, want)
 	}
@@ -146,9 +146,9 @@ func TestWriteSchemaVersionFollowsOutputMode(t *testing.T) {
 		mode outputMode
 		want string
 	}{
-		{name: "json", mode: outputModeJSON, want: `{"schema_version":"1"}
+		{name: "json", mode: outputModeJSON, want: `{"schema_version":"2"}
 `},
-		{name: "human", mode: outputModeHuman, want: "Schema version: 1\n"},
+		{name: "human", mode: outputModeHuman, want: "Schema version: 2\n"},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			var out bytes.Buffer

@@ -1,11 +1,14 @@
 package cli
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
 	"io"
 	"os"
+	"strconv"
+	"strings"
 
 	"github.com/spf13/cobra"
 	"golang.org/x/term"
@@ -16,20 +19,21 @@ import (
 )
 
 type state struct {
-	dbPath      string
-	configPath  string
-	json        bool
-	human       bool
-	fixture     string
-	out         io.Writer
-	errOut      io.Writer
-	isTerminal  func(io.Writer) bool
-	mode        outputMode
-	modeSet     bool
-	runStarted  bool
-	openService OpenService
-	service     Service
-	closer      io.Closer
+	dbPath       string
+	configPath   string
+	json         bool
+	human        bool
+	fixture      string
+	out          io.Writer
+	errOut       io.Writer
+	isTerminal   func(io.Writer) bool
+	mode         outputMode
+	modeSet      bool
+	runStarted   bool
+	openService  OpenService
+	service      Service
+	closer       io.Closer
+	standardHelp func(*cobra.Command, []string)
 }
 
 func NewRoot(out, errOut io.Writer, openService OpenService) *cobra.Command {
@@ -84,11 +88,11 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		s.schemaVersionCommand(),
 		s.featureCommand(),
 		s.taskCommand(),
-		s.nodeCommand(),
+		s.showCommand(),
 		s.dependencyCommand(),
 		s.pullRequestCommand(),
 		s.documentCommand(),
-		s.implementationPlanCommand(),
+		s.planCommand(),
 		s.configCommand(),
 	)
 	root.AddCommand(
@@ -103,6 +107,8 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		s.seedCommand(),
 		s.serveCommand(),
 	)
+	s.standardHelp = root.HelpFunc()
+	root.SetHelpFunc(s.writeHelp)
 	markCommandExecution(root, s)
 	return root, s
 }
@@ -134,18 +140,128 @@ func isConfigCommand(command *cobra.Command) bool {
 // flag value that happens to be the literal string.
 func Execute(ctx context.Context, args []string, out, errOut io.Writer, openService OpenService) error {
 	root, s := newRootWithState(out, errOut, openService)
+	s.preScanOutputFlags(root, args)
 	root.SetArgs(args)
-	err := root.ExecuteContext(ctx)
+	if s.json && s.human {
+		err := domainUsageError(errors.New("--json and --human cannot be used together"))
+		_ = s.resolveOutputMode()
+		failedCommand, _, findErr := root.Find(args)
+		if findErr != nil || failedCommand == nil {
+			failedCommand = root
+		}
+		if printErr := s.writeError(err, s.renderHelp(failedCommand)); printErr != nil {
+			_, _ = fmt.Fprintln(errOut, "Error:", err)
+		}
+		return err
+	}
+	failedCommand, err := root.ExecuteContextC(ctx)
 	if err == nil {
 		return nil
 	}
 	if !s.runStarted {
 		err = domainUsageError(err)
 	}
-	if printErr := s.writeError(err); printErr != nil {
+	if failedCommand == nil {
+		failedCommand = root
+	}
+	hint := s.renderHelp(failedCommand)
+	if printErr := s.writeError(err, hint); printErr != nil {
 		_, _ = fmt.Fprintln(errOut, "Error:", err)
 	}
 	return err
+}
+
+func (s *state) writeHelp(command *cobra.Command, _ []string) {
+	hint := s.renderHelp(command)
+	if err := s.resolveOutputMode(); err != nil {
+		return
+	}
+	if s.json && !s.human {
+		_ = encodeJSON(s.out, map[string]string{"hint": hint})
+		return
+	}
+	_, _ = io.WriteString(s.out, hint)
+}
+
+func (s *state) renderHelp(command *cobra.Command) string {
+	var buffer bytes.Buffer
+	previousOut := command.OutOrStdout()
+	command.SetOut(&buffer)
+	s.standardHelp(command, nil)
+	command.SetOut(previousOut)
+	return buffer.String()
+}
+
+// preScanOutputFlags preserves explicit output selection when Cobra cannot
+// finish command discovery. Known value-taking flags consume the following
+// argument so a literal --json or --human value is not mistaken for a flag.
+func (s *state) preScanOutputFlags(root *cobra.Command, args []string) {
+	current := root
+	for index := 0; index < len(args); index++ {
+		arg := args[index]
+		if arg == "--" {
+			return
+		}
+		if strings.HasPrefix(arg, "--") {
+			name, rawValue, hasValue := strings.Cut(strings.TrimPrefix(arg, "--"), "=")
+			switch name {
+			case "json", "human":
+				value := true
+				if hasValue {
+					parsed, err := strconv.ParseBool(rawValue)
+					if err != nil {
+						continue
+					}
+					value = parsed
+				}
+				if name == "json" {
+					s.json = value
+				} else {
+					s.human = value
+				}
+			default:
+				if !hasValue && longFlagTakesValue(current, name) && index+1 < len(args) {
+					index++
+				}
+			}
+			continue
+		}
+		if len(arg) == 2 && arg[0] == '-' && shortFlagTakesValue(current, string(arg[1])) && index+1 < len(args) {
+			index++
+			continue
+		}
+		if !strings.HasPrefix(arg, "-") {
+			if child := directChild(current, arg); child != nil {
+				current = child
+			}
+		}
+	}
+}
+
+func longFlagTakesValue(command *cobra.Command, name string) bool {
+	flag := command.Flag(name)
+	return flag != nil && flag.NoOptDefVal == ""
+}
+
+func shortFlagTakesValue(command *cobra.Command, shorthand string) bool {
+	for current := command; current != nil; current = current.Parent() {
+		if flag := current.LocalNonPersistentFlags().ShorthandLookup(shorthand); flag != nil {
+			return flag.NoOptDefVal == ""
+		}
+		if flag := current.PersistentFlags().ShorthandLookup(shorthand); flag != nil {
+			return flag.NoOptDefVal == ""
+		}
+	}
+	return false
+}
+
+func directChild(command *cobra.Command, name string) *cobra.Command {
+	for _, child := range command.Commands() {
+		if child.Name() == name || child.HasAlias(name) {
+			return child
+		}
+	}
+	return nil
 }
 
 func (s *state) resolveOutputMode() error {

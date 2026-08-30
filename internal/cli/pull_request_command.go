@@ -3,7 +3,20 @@ package cli
 import "github.com/spf13/cobra"
 
 func (s *state) pullRequestCommand() *cobra.Command {
-	command := &cobra.Command{Use: "pr", Short: "Attach GitHub pull requests"}
+	command := &cobra.Command{
+		Use:     "pr",
+		Short:   "List or attach GitHub pull requests",
+		Example: "prx pr --json",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			snapshot, err := s.service.Snapshot(cmd.Context())
+			if err != nil {
+				return err
+			}
+			pullRequests := nonNilSlice(snapshot.PullRequests)
+			return s.write(map[string]any{"pull_requests": pullRequests}, renderPullRequestList(pullRequests))
+		},
+	}
 	var task, url string
 	attach := &cobra.Command{
 		Use:     "attach",
@@ -37,20 +50,6 @@ func (s *state) pullRequestCommand() *cobra.Command {
 			)
 		},
 	}
-	list := &cobra.Command{
-		Use:     "list",
-		Short:   "List attached pull requests",
-		Example: "prx pr list --json",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			snapshot, err := s.service.Snapshot(cmd.Context())
-			if err != nil {
-				return err
-			}
-			pullRequests := nonNilSlice(snapshot.PullRequests)
-			return s.write(map[string]any{"pull_requests": pullRequests}, renderPullRequestList(pullRequests))
-		},
-	}
-	command.AddCommand(attach, detach, list)
+	command.AddCommand(attach, detach)
 	return command
 }
