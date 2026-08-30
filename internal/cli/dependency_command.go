@@ -39,7 +39,7 @@ func (s *state) dependencyCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(snapshot.Dependencies)
+			return s.write(map[string]any{"dependencies": snapshot.Dependencies})
 		},
 	}
 	command.AddCommand(add, remove, list)

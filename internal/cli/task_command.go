@@ -48,7 +48,7 @@ func (s *state) taskCommand() *cobra.Command {
 				}
 				tasks = filterTasks(tasks, func(task domain.Task) bool { return task.FeatureID == f.ID })
 			}
-			return s.write(tasks)
+			return s.write(map[string]any{"tasks": tasks})
 		},
 	}
 	list.Flags().StringVar(&feature, "feature", "", "filter by feature")

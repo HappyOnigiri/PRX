@@ -24,9 +24,8 @@ type resultEnvelope struct {
 	SchemaVersion string          `json:"schema_version"`
 	OK            bool            `json:"ok"`
 	Data          json.RawMessage `json:"data"`
-	Error         *struct {
-		Code string `json:"code"`
-	} `json:"error"`
+	Error         string          `json:"error"`
+	keys          map[string]json.RawMessage
 }
 
 func buildCLI(t *testing.T) string {
@@ -56,20 +55,65 @@ func runCLI(t *testing.T, binary, dbPath string, args ...string) (resultEnvelope
 			t.Fatal(err)
 		}
 	}
+	return decodeEnvelope(t, stdout.Bytes(), stdout.String()), stderr.String(), exit
+}
+
+func decodeEnvelope(t *testing.T, body []byte, output string) resultEnvelope {
+	t.Helper()
 	var envelope resultEnvelope
-	if decodeErr := json.Unmarshal(stdout.Bytes(), &envelope); decodeErr != nil {
-		t.Fatalf("stdout is not pure JSON: %v\n%s", decodeErr, stdout.String())
+	if decodeErr := json.Unmarshal(body, &envelope); decodeErr != nil {
+		t.Fatalf("stdout is not pure JSON: %v\n%s", decodeErr, output)
 	}
-	return envelope, stderr.String(), exit
+	if decodeErr := json.Unmarshal(body, &envelope.keys); decodeErr != nil {
+		t.Fatalf("stdout is not a JSON object: %v\n%s", decodeErr, output)
+	}
+	return envelope
+}
+
+func assertEnvelopeKeys(t *testing.T, envelope resultEnvelope, expected ...string) {
+	t.Helper()
+	want := make(map[string]struct{}, len(expected))
+	for _, key := range expected {
+		want[key] = struct{}{}
+	}
+	if len(envelope.keys) != len(want) {
+		t.Fatalf("response keys=%v, want %v", mapKeys(envelope.keys), expected)
+	}
+	for key := range want {
+		if _, ok := envelope.keys[key]; !ok {
+			t.Fatalf("response keys=%v, want %v", mapKeys(envelope.keys), expected)
+		}
+	}
+}
+
+func mapKeys(value map[string]json.RawMessage) []string {
+	keys := make([]string, 0, len(value))
+	for key := range value {
+		keys = append(keys, key)
+	}
+	return keys
+}
+
+func decodeDataObject(t *testing.T, envelope resultEnvelope) map[string]json.RawMessage {
+	t.Helper()
+	if envelope.Data == nil {
+		t.Fatalf("response has no data: %+v", envelope)
+	}
+	var value map[string]json.RawMessage
+	if err := json.Unmarshal(envelope.Data, &value); err != nil {
+		t.Fatalf("data is not an object: %v\n%s", err, envelope.Data)
+	}
+	return value
 }
 
 func TestBlackBoxJSONCRUDAndCycle(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "blackbox.db")
 	feature, stderr, exit := runCLI(t, binary, dbPath, "feature", "create", "--slug", "release", "--title", "Release")
-	if exit != 0 || stderr != "" || !feature.OK || feature.SchemaVersion != "1" {
+	if exit != 0 || stderr != "" || !feature.OK || feature.SchemaVersion != "2" {
 		t.Fatalf("feature result=%+v stderr=%q exit=%d", feature, stderr, exit)
 	}
+	assertEnvelopeKeys(t, feature, "schema_version", "ok", "data")
 	var featureData struct {
 		ID string `json:"id"`
 	}
@@ -85,18 +129,20 @@ func TestBlackBoxJSONCRUDAndCycle(t *testing.T) {
 		t.Fatalf("add dependency: %+v", value)
 	}
 	value, _, exit := runCLI(t, binary, dbPath, "dependency", "add", bt.ID, at.ID)
-	if exit == 0 || value.Error == nil || value.Error.Code != "cycle" {
+	if exit == 0 || value.Error == "" || !strings.Contains(value.Error, "cycle") {
 		t.Fatalf("cycle result=%+v exit=%d", value, exit)
 	}
+	assertEnvelopeKeys(t, value, "schema_version", "ok", "error")
 	for _, removal := range [][]string{
 		{"dependency", "remove", at.ID, "missing-task"},
 		{"pr", "detach", at.ID},
 		{"document", "delete", "missing-document"},
 	} {
 		value, _, exit := runCLI(t, binary, dbPath, removal...)
-		if exit == 0 || value.Error == nil || value.Error.Code != "not_found" {
+		if exit == 0 || value.Error == "" || !strings.Contains(value.Error, "was not found") {
 			t.Fatalf("%v result=%+v exit=%d", removal, value, exit)
 		}
+		assertEnvelopeKeys(t, value, "schema_version", "ok", "error")
 	}
 	valid, _, exit := runCLI(t, binary, dbPath, "validate")
 	if exit != 0 || !valid.OK {
@@ -206,7 +252,7 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 		planPath,
 		"--stdin",
 	)
-	if exit == 0 || invalid.Error == nil || invalid.Error.Code != "invalid_implementation_plan" {
+	if exit == 0 || invalid.Error == "" || !strings.Contains(invalid.Error, "exactly one") {
 		t.Fatalf("invalid input result=%+v exit=%d", invalid, exit)
 	}
 }
@@ -316,17 +362,165 @@ func TestBlackBoxJSONFlagFormsAgree(t *testing.T) {
 			if err := command.Run(); err == nil {
 				t.Fatal("expected a non-zero exit for a missing task")
 			}
-			var envelope resultEnvelope
-			if err := json.Unmarshal(stdout.Bytes(), &envelope); err != nil {
-				t.Fatalf("stdout is not pure JSON: %v\n%s", err, stdout.String())
-			}
-			if envelope.OK || envelope.Error == nil || envelope.Error.Code != "not_found" {
+			envelope := decodeEnvelope(t, stdout.Bytes(), stdout.String())
+			if envelope.OK || envelope.Error == "" || !strings.Contains(envelope.Error, "was not found") {
 				t.Fatalf("envelope=%+v", envelope)
 			}
+			assertEnvelopeKeys(t, envelope, "schema_version", "ok", "error")
 			if stderr.Len() != 0 {
 				t.Fatalf("stderr must stay empty in JSON mode: %q", stderr.String())
 			}
 		})
+	}
+}
+
+func TestBlackBoxCollectionResponsesUseNamedKeys(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "collections.db")
+	cases := []struct {
+		name string
+		args []string
+		key  string
+	}{
+		{name: "features", args: []string{"feature", "list"}, key: "features"},
+		{name: "tasks", args: []string{"task", "list"}, key: "tasks"},
+		{name: "dependencies", args: []string{"dependency", "list"}, key: "dependencies"},
+		{name: "pull requests", args: []string{"pr", "list"}, key: "pull_requests"},
+		{name: "documents", args: []string{"document", "list"}, key: "documents"},
+		{name: "ready tasks", args: []string{"ready"}, key: "ready_tasks"},
+		{name: "review waiting tasks", args: []string{"reviews"}, key: "review_waiting_tasks"},
+		{name: "conflict tasks", args: []string{"conflicts"}, key: "conflict_tasks"},
+		{name: "stale tasks", args: []string{"stale"}, key: "stale_tasks"},
+	}
+	for _, test := range cases {
+		t.Run(test.name, func(t *testing.T) {
+			value, stderr, exit := runCLI(t, binary, dbPath, test.args...)
+			if exit != 0 || stderr != "" || !value.OK || value.SchemaVersion != "2" {
+				t.Fatalf("result=%+v stderr=%q exit=%d", value, stderr, exit)
+			}
+			data := decodeDataObject(t, value)
+			if len(data) != 1 {
+				t.Fatalf("data keys=%v, want only %q", mapKeys(data), test.key)
+			}
+			if _, ok := data[test.key]; !ok {
+				t.Fatalf("data keys=%v, want %q", mapKeys(data), test.key)
+			}
+			assertEnvelopeKeys(t, value, "schema_version", "ok", "data")
+		})
+	}
+
+	configPath := filepath.Join(t.TempDir(), "config.yaml")
+	for _, test := range []struct {
+		name string
+		args []string
+		key  string
+	}{
+		{name: "hosts", args: []string{"config", "host", "list"}, key: "hosts"},
+		{name: "auth methods", args: []string{"config", "auth", "list"}, key: "auth_methods"},
+	} {
+		t.Run("config "+test.name, func(t *testing.T) {
+			value, stderr, exit := runConfigCLI(
+				t,
+				binary,
+				filepath.Join(t.TempDir(), "unused.db"),
+				configPath,
+				"",
+				test.args...,
+			)
+			if exit != 0 || stderr != "" || !value.OK || value.SchemaVersion != "2" {
+				t.Fatalf("result=%+v stderr=%q exit=%d", value, stderr, exit)
+			}
+			data := decodeDataObject(t, value)
+			if len(data) != 1 {
+				t.Fatalf("data keys=%v, want only %q", mapKeys(data), test.key)
+			}
+			if _, ok := data[test.key]; !ok {
+				t.Fatalf("data keys=%v, want %q", mapKeys(data), test.key)
+			}
+			assertEnvelopeKeys(t, value, "schema_version", "ok", "data")
+		})
+	}
+}
+
+func TestBlackBoxSchemaVersionDoesNotOpenStorage(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "missing.db")
+	configPath := filepath.Join(root, "missing", "config.yaml")
+	for _, test := range []struct {
+		name    string
+		args    []string
+		compact bool
+	}{
+		{name: "indented", args: []string{"schema-version"}},
+		{name: "json before command", args: []string{"--json", "schema-version"}, compact: true},
+		{name: "json after command", args: []string{"schema-version", "--json"}, compact: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			command := exec.CommandContext(
+				context.Background(),
+				binary,
+				"--db",
+				dbPath,
+				"--config",
+				configPath,
+			)
+			command.Args = append(command.Args, test.args...)
+			var stdout, stderr bytes.Buffer
+			command.Stdout = &stdout
+			command.Stderr = &stderr
+			if err := command.Run(); err != nil {
+				t.Fatalf("schema-version failed: %v\nstdout=%s\nstderr=%s", err, stdout.String(), stderr.String())
+			}
+			var value map[string]json.RawMessage
+			if err := json.Unmarshal(stdout.Bytes(), &value); err != nil {
+				t.Fatalf("stdout is not JSON: %v\n%s", err, stdout.String())
+			}
+			if len(value) != 1 || string(value["schema_version"]) != `"2"` {
+				t.Fatalf("schema-version output=%s", stdout.String())
+			}
+			if test.compact && stdout.String() != `{"schema_version":"2"}
+` {
+				t.Fatalf("compact output=%q", stdout.String())
+			}
+			if !test.compact && stdout.String() != "{\n  \"schema_version\": \"2\"\n}\n" {
+				t.Fatalf("indented output=%q", stdout.String())
+			}
+			if stderr.Len() != 0 {
+				t.Fatalf("stderr=%q", stderr.String())
+			}
+		})
+	}
+	if _, err := os.Stat(dbPath); !os.IsNotExist(err) {
+		t.Fatalf("schema-version opened database: err=%v", err)
+	}
+	if _, err := os.Stat(configPath); !os.IsNotExist(err) {
+		t.Fatalf("schema-version opened config: err=%v", err)
+	}
+}
+
+func TestBlackBoxErrorsUseEnvelopeWithoutJSONFlag(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "errors.db")
+	command := exec.CommandContext(context.Background(), binary, "--db", dbPath, "task", "get", "missing-task")
+	var stdout, stderr bytes.Buffer
+	command.Stdout = &stdout
+	command.Stderr = &stderr
+	err := command.Run()
+	var typed *exec.ExitError
+	if !errors.As(err, &typed) || typed.ExitCode() != 1 {
+		t.Fatalf("error=%v, want exit code 1", err)
+	}
+	value := decodeEnvelope(t, stdout.Bytes(), stdout.String())
+	if value.OK || value.SchemaVersion != "2" || value.Error == "" || value.Data != nil {
+		t.Fatalf("error response=%+v", value)
+	}
+	assertEnvelopeKeys(t, value, "schema_version", "ok", "error")
+	if stderr.Len() != 0 {
+		t.Fatalf("stderr=%q", stderr.String())
+	}
+	if !strings.Contains(stdout.String(), "\n  \"schema_version\": \"2\"") {
+		t.Fatalf("error response is not indented: %s", stdout.String())
 	}
 }
 
@@ -399,7 +593,7 @@ func TestBlackBoxConfigUsesSecureSecretFreeOutput(t *testing.T) {
 		"remove",
 		"ghe.example.com",
 	)
-	if exit == 0 || stderr != "" || removed.Error == nil || removed.Error.Code != "references_exist" {
+	if exit == 0 || stderr != "" || removed.Error == "" || !strings.Contains(removed.Error, "used by auth method") {
 		t.Fatalf("referenced host removal=%+v stderr=%q exit=%d", removed, stderr, exit)
 	}
 	updated, stderr, exit := runConfigCLI(
@@ -424,7 +618,7 @@ func TestBlackBoxConfigUsesSecureSecretFreeOutput(t *testing.T) {
 	if err != nil || strings.Contains(string(body), "github_pat_cli_secret") {
 		t.Fatalf("changing away from inline retained token: %s err=%v", body, err)
 	}
-	if _, stderr, exit := runConfigCLI(
+	reordered, stderr, exit := runConfigCLI(
 		t,
 		binary,
 		dbPath,
@@ -434,9 +628,14 @@ func TestBlackBoxConfigUsesSecureSecretFreeOutput(t *testing.T) {
 		"auth",
 		"reorder",
 		"ghe-inline",
-	); exit != 0 ||
-		stderr != "" {
+	)
+	if exit != 0 || stderr != "" {
 		t.Fatalf("auth reorder stderr=%q exit=%d", stderr, exit)
+	}
+	if data := decodeDataObject(t, reordered); len(data) != 1 {
+		t.Fatalf("auth reorder data keys=%v", mapKeys(data))
+	} else if _, ok := data["auth_methods"]; !ok {
+		t.Fatalf("auth reorder data keys=%v, want auth_methods", mapKeys(data))
 	}
 	if _, stderr, exit := runConfigCLI(
 		t,
@@ -494,9 +693,5 @@ func runConfigCLI(
 			t.Fatal(err)
 		}
 	}
-	var envelope resultEnvelope
-	if decodeErr := json.Unmarshal(stdout.Bytes(), &envelope); decodeErr != nil {
-		t.Fatalf("stdout is not pure JSON: %v\n%s", decodeErr, stdout.String())
-	}
-	return envelope, stderr.String(), exit
+	return decodeEnvelope(t, stdout.Bytes(), stdout.String()), stderr.String(), exit
 }
