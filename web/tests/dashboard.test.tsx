@@ -58,6 +58,7 @@ describe("Dashboard", () => {
         "Every queue is derived from the dependency graph—never manually marked ready.",
       ),
     ).not.toBeInTheDocument();
+    expect(screen.queryByText("nodes under control")).not.toBeInTheDocument();
     expect(screen.getByText("Build API")).toBeInTheDocument();
     expect(screen.getByText("1 ready")).toBeInTheDocument();
     expect(screen.getByText("Conflicts")).toBeInTheDocument();
