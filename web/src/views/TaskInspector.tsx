@@ -16,7 +16,6 @@ import { CopyableIdentifier } from "./CopyableIdentifier";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 import { DependencySection } from "./TaskInspectorDependencies";
-import { ImplementationPlanSection } from "./TaskInspectorImplementationPlan";
 import { PullRequestSection } from "./TaskInspectorPullRequest";
 import { ReferencesSection } from "./TaskInspectorReferences";
 import { TaskInspectorTaskForm } from "./TaskInspectorTaskForm";
@@ -93,11 +92,6 @@ export function TaskInspector({
       <PullRequestSection
         taskId={task.id}
         pullRequest={pullRequest}
-        readOnly={readOnly}
-      />
-      <ImplementationPlanSection
-        taskId={task.id}
-        hasPlan={task.hasImplementationPlan}
         readOnly={readOnly}
       />
       <DependencySection

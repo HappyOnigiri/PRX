@@ -8,9 +8,12 @@ export const errors = {
       duplicateDependency: "This dependency already exists.",
       duplicatePullRequest:
         "This pull request is already attached to another task.",
+      duplicateImplementationPlan:
+        "This task already has an implementation plan. Edit or remove it first.",
       documentReadFailed:
         "The Markdown file could not be read. Check that the path exists and is readable from the server's working directory.",
       documentTooLarge: "Markdown preview supports files up to 1 MiB.",
+      documentNotText: "The local file is not valid UTF-8 text.",
       githubAuth: "GitHub authentication failed.",
       invalidConfig: "The GitHub configuration is invalid.",
       invalidDatabase: "The database path is invalid.",
@@ -42,9 +45,13 @@ export const errors = {
       duplicateDependency: "この依存関係はすでに存在します。",
       duplicatePullRequest:
         "このプルリクエストは別のタスクに関連付けられています。",
+      duplicateImplementationPlan:
+        "このタスクには実装プランがすでにあります。先に編集または削除してください。",
       documentReadFailed:
         "Markdown ファイルを読み込めませんでした。パスが存在し、サーバーの作業ディレクトリから読み取れることを確認してください。",
       documentTooLarge: "1 MiB までの Markdown ファイルを表示できます。",
+      documentNotText:
+        "ローカルファイルを UTF-8 テキストとして読み込めません。",
       githubAuth: "GitHub の認証に失敗しました。",
       invalidConfig: "GitHub の設定が不正です。",
       invalidDatabase: "データベースのパスが正しくありません。",

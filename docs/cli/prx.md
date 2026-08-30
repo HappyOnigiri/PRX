@@ -18,10 +18,10 @@ Manage pull-request dependency roadmaps
 * [prx config](prx_config.md)	 - Show or manage GitHub hosts and authentication
 * [prx conflicts](prx_conflicts.md)	 - List tasks with conflicting pull requests
 * [prx dependency](prx_dependency.md)	 - List or manage directed blocker edges
-* [prx document](prx_document.md)	 - List or manage URL and local Markdown references
+* [prx document](prx_document.md)	 - List or manage documents
 * [prx feature](prx_feature.md)	 - List features or show one by ID or slug
 * [prx graph](prx_graph.md)	 - Show a feature graph with tasks and dependencies
-* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan
+* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan document
 * [prx pr](prx_pr.md)	 - List or attach GitHub pull requests
 * [prx ready](prx_ready.md)	 - List tasks whose blockers are satisfied
 * [prx reviews](prx_reviews.md)	 - List tasks waiting for pull-request reviews

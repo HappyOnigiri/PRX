@@ -29,7 +29,7 @@ enum TaskKind {
 }
 
 // TaskStatus is the stored workflow state of a task. Auto derives the task's
-// effective state from its pull request or implementation plan.
+// effective state from its pull request.
 enum TaskStatus {
   // TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
   TASK_STATUS_UNSPECIFIED = 0;
@@ -51,10 +51,10 @@ enum TaskStatus {
 enum TaskDisplayState {
   // TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
   TASK_DISPLAY_STATE_UNSPECIFIED = 0;
-  // TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached and no plan exists.
+  // TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached.
   TASK_DISPLAY_STATE_NOT_STARTED = 1;
-  // TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
-  TASK_DISPLAY_STATE_DESIGNED = 2;
+  reserved 2;
+  reserved "TASK_DISPLAY_STATE_DESIGNED";
   // TASK_DISPLAY_STATE_IN_PROGRESS is a manual in-progress override.
   TASK_DISPLAY_STATE_IN_PROGRESS = 3;
   // TASK_DISPLAY_STATE_COMPLETED is a manual completed override.
@@ -152,8 +152,12 @@ enum DocumentKind {
   DOCUMENT_KIND_UNSPECIFIED = 0;
   // DOCUMENT_KIND_URL stores an HTTP or HTTPS URL.
   DOCUMENT_KIND_URL = 1;
-  // DOCUMENT_KIND_MARKDOWN_PATH stores a path to a registered Markdown file.
-  DOCUMENT_KIND_MARKDOWN_PATH = 2;
+  reserved 2;
+  reserved "DOCUMENT_KIND_MARKDOWN_PATH";
+  // DOCUMENT_KIND_LOCAL_FILE stores a registered local file path.
+  DOCUMENT_KIND_LOCAL_FILE = 3;
+  // DOCUMENT_KIND_MARKDOWN stores Markdown content in the database.
+  DOCUMENT_KIND_MARKDOWN = 4;
 }
 
 // BlockedReasonCode explains why a task is not ready.
@@ -220,6 +224,10 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN = 25;
   // DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE means plan content exceeds 1 MiB.
   DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE = 26;
+  // DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT means document content is not valid UTF-8 text.
+  DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT = 27;
+  // DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN means the task already has a plan document.
+  DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN = 28;
 }
 
 // GitHubAuthMethodType identifies how a GitHub token is obtained.
@@ -304,26 +312,14 @@ message Task {
   string created_at = 8;
   // updated_at is the last update time in RFC 3339 format.
   string updated_at = 9;
-  // ready indicates that the task is not started or designed and has no unsatisfied blockers.
+  // ready indicates that the task is not started and has no unsatisfied blockers.
   bool ready = 10;
   // display_state is the derived state intended for task presentation.
   TaskDisplayState display_state = 11;
   // blocked_reason explains why a task is not ready, when applicable.
   BlockedReason blocked_reason = 12;
-  // has_implementation_plan indicates whether a Markdown plan is stored for this task.
+  // has_implementation_plan indicates whether a plan document is registered for this task.
   bool has_implementation_plan = 13;
-}
-
-// ImplementationPlan is the Markdown plan stored for exactly one task.
-message ImplementationPlan {
-  // task_id identifies the task owning the plan.
-  string task_id = 1;
-  // content contains the Markdown plan body.
-  string content = 2;
-  // created_at is the plan creation time in RFC 3339 format.
-  string created_at = 3;
-  // updated_at is the last plan update time in RFC 3339 format.
-  string updated_at = 4;
 }
 
 // Dependency is a directed edge from a blocker task to a blocked task in one feature.
@@ -384,14 +380,18 @@ message Document {
   string feature_id = 2;
   // task_id identifies the parent task by its public T-<number> ID when the document is task-scoped.
   string task_id = 3;
-  // kind identifies whether value is a URL or a registered Markdown path.
+  // kind identifies the document source.
   DocumentKind kind = 4;
   // title is the human-readable document label.
   string title = 5;
-  // value is the URL or registered Markdown file path.
-  string value = 6;
+  // locator is the URL or local file path; stored Markdown leaves it empty.
+  string locator = 6;
   // created_at is the creation time in RFC 3339 format.
   string created_at = 7;
+  // is_implementation_plan marks the task's single plan document.
+  bool is_implementation_plan = 8;
+  // updated_at is the last update time in RFC 3339 format.
+  string updated_at = 9;
 }
 
 // Snapshot is the complete normalized dataset plus derived task queues.
@@ -406,7 +406,7 @@ message Snapshot {
   repeated PullRequest pull_requests = 4;
   // documents contains all registered document references without file contents.
   repeated Document documents = 5;
-  // ready_tasks contains tasks whose effective state is not started or designed and whose blockers are satisfied.
+  // ready_tasks contains tasks whose effective state is not started and whose blockers are satisfied.
   repeated Task ready_tasks = 6;
   // review_waiting_tasks contains tasks whose pull requests are waiting for review.
   repeated Task review_waiting_tasks = 7;
@@ -527,44 +527,6 @@ message DeleteTaskRequest {
 // DeleteTaskResponse confirms that the task was deleted.
 message DeleteTaskResponse {}
 
-// GetImplementationPlanRequest identifies the task whose plan should be read.
-message GetImplementationPlanRequest {
-  // task_id identifies the task owning the plan.
-  string task_id = 1;
-}
-
-// GetImplementationPlanResponse returns the stored Markdown plan.
-message GetImplementationPlanResponse {
-  // implementation_plan is the task's plan.
-  ImplementationPlan implementation_plan = 1;
-}
-
-// UpsertImplementationPlanRequest stores or replaces a task's Markdown plan.
-message UpsertImplementationPlanRequest {
-  // task_id identifies the task owning the plan.
-  string task_id = 1;
-  // content is the non-empty Markdown plan body, limited to 1 MiB.
-  string content = 2;
-}
-
-// UpsertImplementationPlanResponse returns the stored Markdown plan.
-message UpsertImplementationPlanResponse {
-  // implementation_plan is the newly stored plan.
-  ImplementationPlan implementation_plan = 1;
-}
-
-// DeleteImplementationPlanRequest identifies the task whose plan should be deleted.
-message DeleteImplementationPlanRequest {
-  // task_id identifies the task owning the plan.
-  string task_id = 1;
-}
-
-// DeleteImplementationPlanResponse confirms the deleted task plan.
-message DeleteImplementationPlanResponse {
-  // task_id identifies the task whose plan was deleted.
-  string task_id = 1;
-}
-
 // AddDependencyRequest creates a same-feature dependency edge.
 message AddDependencyRequest {
   // blocker_task_id identifies the task that must be satisfied first.
@@ -613,23 +575,69 @@ message DetachPullRequestRequest {
 // DetachPullRequestResponse confirms that the pull request was detached.
 message DetachPullRequestResponse {}
 
-// AddDocumentRequest registers a URL or Markdown path under exactly one parent.
+// AddDocumentRequest registers one document source under exactly one parent.
 message AddDocumentRequest {
   // feature_id identifies the parent feature when task_id is empty.
   string feature_id = 1;
   // task_id identifies the parent task when feature_id is empty.
   string task_id = 2;
-  // kind identifies whether value is a URL or a Markdown path.
-  DocumentKind kind = 3;
   // title is the human-readable document label.
-  string title = 4;
-  // value is the URL or file path to register.
-  string value = 5;
+  string title = 3;
+  // source contains exactly one URL, local path, or stored Markdown body.
+  oneof source {
+    // url stores an HTTP or HTTPS locator.
+    string url = 4;
+    // local_file stores a path read only through this document ID.
+    string local_file = 5;
+    // markdown stores the inline Markdown body.
+    string markdown = 6;
+  }
+  // is_implementation_plan marks this task document as its plan.
+  bool is_implementation_plan = 7;
 }
 
 // AddDocumentResponse returns the newly registered document.
 message AddDocumentResponse {
   // document is the persisted document reference.
+  Document document = 1;
+}
+
+// GetDocumentRequest identifies a document to return with content when applicable.
+message GetDocumentRequest {
+  // id identifies the document.
+  string id = 1;
+}
+
+// GetDocumentResponse returns document metadata and stored Markdown content separately.
+message GetDocumentResponse {
+  // document contains document metadata without inline content.
+  Document document = 1;
+  // content contains stored Markdown and is empty for locator-backed documents.
+  string content = 2;
+}
+
+// UpdateDocumentRequest replaces only supplied metadata or source fields.
+message UpdateDocumentRequest {
+  // id identifies the document.
+  string id = 1;
+  // title is unchanged when unset; an empty string clears it.
+  optional string title = 2;
+  // source is unchanged when omitted.
+  oneof source {
+    // url replaces the source with an HTTP or HTTPS locator.
+    string url = 3;
+    // local_file replaces the source with a registered local path.
+    string local_file = 4;
+    // markdown replaces the source with inline Markdown.
+    string markdown = 5;
+  }
+  // is_implementation_plan is unchanged when unset.
+  optional bool is_implementation_plan = 6;
+}
+
+// UpdateDocumentResponse returns the updated document metadata.
+message UpdateDocumentResponse {
+  // document is the updated document.
   Document document = 1;
 }
 
@@ -642,15 +650,15 @@ message DeleteDocumentRequest {
 // DeleteDocumentResponse confirms that the document was deleted.
 message DeleteDocumentResponse {}
 
-// ReadMarkdownDocumentRequest identifies a registered Markdown path to read.
-message ReadMarkdownDocumentRequest {
-  // id identifies the Markdown document reference.
+// ReadDocumentContentRequest identifies a registered document to read.
+message ReadDocumentContentRequest {
+  // id identifies a stored Markdown or local file document.
   string id = 1;
 }
 
-// ReadMarkdownDocumentResponse returns Markdown content for a registered path.
-message ReadMarkdownDocumentResponse {
-  // content contains the file contents and is limited to 1 MiB.
+// ReadDocumentContentResponse returns bounded UTF-8 document content.
+message ReadDocumentContentResponse {
+  // content contains the document body and is limited to 1 MiB.
   string content = 1;
 }
 
@@ -944,12 +952,6 @@ service PRXService {
   rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
   // DeleteTask deletes a task, subject to the cascade option.
   rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
-  // GetImplementationPlan returns a task's stored Markdown implementation plan.
-  rpc GetImplementationPlan(GetImplementationPlanRequest) returns (GetImplementationPlanResponse);
-  // UpsertImplementationPlan stores or replaces a task's Markdown implementation plan.
-  rpc UpsertImplementationPlan(UpsertImplementationPlanRequest) returns (UpsertImplementationPlanResponse);
-  // DeleteImplementationPlan removes a task's stored implementation plan.
-  rpc DeleteImplementationPlan(DeleteImplementationPlanRequest) returns (DeleteImplementationPlanResponse);
   // AddDependency adds a same-feature dependency when it does not create a cycle.
   rpc AddDependency(AddDependencyRequest) returns (AddDependencyResponse);
   // RemoveDependency removes an existing dependency edge.
@@ -958,12 +960,16 @@ service PRXService {
   rpc AttachPullRequest(AttachPullRequestRequest) returns (AttachPullRequestResponse);
   // DetachPullRequest removes the pull request attached to a task.
   rpc DetachPullRequest(DetachPullRequestRequest) returns (DetachPullRequestResponse);
-  // AddDocument registers a URL or Markdown path under a feature or task.
+  // AddDocument registers a URL, local file, or stored Markdown document.
   rpc AddDocument(AddDocumentRequest) returns (AddDocumentResponse);
+  // GetDocument returns one document and stored Markdown content when applicable.
+  rpc GetDocument(GetDocumentRequest) returns (GetDocumentResponse);
+  // UpdateDocument changes document metadata, source, or plan designation.
+  rpc UpdateDocument(UpdateDocumentRequest) returns (UpdateDocumentResponse);
   // DeleteDocument removes a registered document reference.
   rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
-  // ReadMarkdownDocument reads a registered Markdown path for preview.
-  rpc ReadMarkdownDocument(ReadMarkdownDocumentRequest) returns (ReadMarkdownDocumentResponse);
+  // ReadDocumentContent reads bounded UTF-8 content for a local file or stored Markdown document.
+  rpc ReadDocumentContent(ReadDocumentContentRequest) returns (ReadDocumentContentResponse);
   // Sync refreshes selected pull requests from GitHub and records successes and failures independently.
   rpc Sync(SyncRequest) returns (SyncResponse);
   // GetGitHubSyncStatus returns automatic synchronization diagnostics.

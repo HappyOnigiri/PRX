@@ -22,19 +22,18 @@ import {
 } from "./factories";
 
 const inspectorMocks = vi.hoisted(() => ({
+  hookIndex: 0,
   api: {
     updateTask: vi.fn(),
     deleteTask: vi.fn(),
-    getImplementationPlan: vi.fn(),
-    upsertImplementationPlan: vi.fn(),
-    deleteImplementationPlan: vi.fn(),
     attachPR: vi.fn(),
     detachPR: vi.fn(),
     removeDependency: vi.fn(),
     addDocument: vi.fn(),
     deleteDocument: vi.fn(),
+    getDocument: vi.fn(),
+    updateDocument: vi.fn(),
   },
-  hookIndex: 0,
   mutations: Array.from({ length: 10 }, () => ({
     mutate: vi.fn(),
     mutateAsync: vi.fn().mockResolvedValue({}),
@@ -51,9 +50,15 @@ vi.mock("../src/hooks", () => ({
         inspectorMocks.hookIndex++ % inspectorMocks.mutations.length
       ];
     if (!mutation) throw new Error("mutation mock missing");
-    mutation.mutate.mockImplementation((input: unknown) => {
-      return mutationFn(input);
-    });
+    mutation.mutate.mockImplementation(
+      (input: unknown, options?: { onSuccess?: (data: unknown) => void }) => {
+        const result = mutationFn(input);
+        if (options?.onSuccess) {
+          void Promise.resolve(result).then(options.onSuccess);
+        }
+        return result;
+      },
+    );
     return mutation;
   },
 }));
@@ -107,15 +112,23 @@ describe("TaskInspector", () => {
     const markdown = makeDocument({
       id: "document-md",
       taskId: task.id,
-      kind: DocumentKind.MARKDOWN_PATH,
+      kind: DocumentKind.LOCAL_FILE,
       title: "Delivery plan",
-      value: "docs/delivery.md",
+      locator: "docs/delivery.md",
     });
     const url = makeDocument({
       id: "document-url",
       taskId: task.id,
       kind: DocumentKind.URL,
       title: "Runbook",
+    });
+    const inline = makeDocument({
+      id: "document-inline",
+      taskId: task.id,
+      kind: DocumentKind.MARKDOWN,
+      title: "Inline plan",
+      locator: "",
+      isImplementationPlan: true,
     });
     const onClose = vi.fn();
     const onPreview = vi.fn();
@@ -125,7 +138,7 @@ describe("TaskInspector", () => {
         tasks={[task, blocker]}
         dependencies={[dependency]}
         pullRequest={pullRequest}
-        documents={[markdown, url]}
+        documents={[markdown, url, inline]}
         onPreview={onPreview}
         onClose={onClose}
       />,
@@ -179,7 +192,7 @@ describe("TaskInspector", () => {
     fireEvent.click(screen.getByRole("button", { name: "Detach" }));
     expect(mutationAt(3).mutate).toHaveBeenCalledWith(task.id);
     fireEvent.click(screen.getByRole("button", { name: "Remove dependency" }));
-    expect(mutationAt(6).mutate).toHaveBeenCalledWith({
+    expect(mutationAt(4).mutate).toHaveBeenCalledWith({
       blocker: "task-2",
       blocked: task.id,
     });
@@ -189,28 +202,57 @@ describe("TaskInspector", () => {
     );
     expect(onPreview).toHaveBeenCalledWith(markdown);
     fireEvent.click(screen.getByRole("button", { name: "Delete Runbook" }));
-    expect(mutationAt(8).mutate).toHaveBeenCalledWith("document-url");
+    expect(mutationAt(6).mutate).toHaveBeenCalledWith("document-url");
 
-    const referenceValue = screen.getByPlaceholderText(
-      "https://… or docs/plan.md",
-    );
+    inspectorMocks.api.getDocument.mockResolvedValue({
+      content: "# Old\n\n- first\n- second",
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Edit Inline plan" }));
+    expect(
+      await screen.findByRole("textbox", { name: "Edit Inline plan" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel edit" }));
+    expect(
+      screen.queryByRole("textbox", { name: "Edit Inline plan" }),
+    ).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("button", { name: "Edit Inline plan" }));
+    const markdownEditor = await screen.findByRole("textbox", {
+      name: "Edit Inline plan",
+    });
+    expect(markdownEditor).toHaveValue("# Old\n\n- first\n- second");
+    fireEvent.change(markdownEditor, {
+      target: { value: "# New\n\n- first\n- second" },
+    });
+    const markdownEditForm = markdownEditor.closest("form");
+    if (!markdownEditForm) throw new Error("markdown edit form missing");
+    fireEvent.submit(markdownEditForm);
+    expect(inspectorMocks.api.updateDocument).toHaveBeenCalledWith({
+      id: "document-inline",
+      source: { case: "markdown", value: "# New\n\n- first\n- second" },
+    });
+
+    const referenceKind = screen.getAllByRole("combobox").at(-1);
+    if (!referenceKind) throw new Error("reference kind select missing");
+    fireEvent.change(referenceKind, {
+      target: { value: String(DocumentKind.LOCAL_FILE) },
+    });
+    const referenceValue = screen.getByPlaceholderText("docs/plan.md");
     fireEvent.change(referenceValue, {
       target: { value: "docs/new.md" },
     });
     fireEvent.change(screen.getByPlaceholderText("Design notes"), {
       target: { value: "New plan" },
     });
-    const referenceKind = screen.getAllByRole("combobox").at(-1);
-    if (!referenceKind) throw new Error("reference kind select missing");
-    fireEvent.change(referenceKind, {
-      target: { value: String(DocumentKind.MARKDOWN_PATH) },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Add reference" }));
-    expect(mutationAt(7).mutate).toHaveBeenCalledWith({
+    const referenceForm = referenceValue.closest("form");
+    if (!referenceForm) throw new Error("reference form missing");
+    fireEvent.submit(referenceForm);
+    expect(inspectorMocks.api.addDocument).toHaveBeenCalledWith({
       taskId: task.id,
-      kind: DocumentKind.MARKDOWN_PATH,
+      kind: DocumentKind.LOCAL_FILE,
       title: "New plan",
       value: "docs/new.md",
+      isImplementationPlan: false,
     });
 
     vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -254,6 +296,32 @@ describe("TaskInspector", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close inspector" }));
   });
 
+  it("reports a failed Markdown read for editing", () => {
+    const task = makeTask();
+    const inline = makeDocument({
+      id: "document-inline",
+      taskId: task.id,
+      kind: DocumentKind.MARKDOWN,
+      title: "Inline plan",
+      locator: "",
+    });
+    const inspector = (
+      <TaskInspector
+        task={task}
+        tasks={[task]}
+        dependencies={[]}
+        pullRequest={undefined}
+        documents={[inline]}
+        onPreview={vi.fn()}
+        onClose={vi.fn()}
+      />
+    );
+    mutationAt(8).error = new Error("read failed");
+    render(inspector);
+
+    expect(screen.getByRole("alert")).toHaveTextContent("read failed");
+  });
+
   it("does not close when task deletion fails", async () => {
     const onClose = vi.fn();
     mutationAt(0).mutateAsync.mockRejectedValueOnce(new Error("delete failed"));
@@ -287,9 +355,9 @@ describe("TaskInspector", () => {
     });
     const blocker = makeTask({ id: "task-2", title: "Archived blocker" });
     const markdown = makeDocument({
-      kind: DocumentKind.MARKDOWN_PATH,
+      kind: DocumentKind.LOCAL_FILE,
       title: "Decision log",
-      value: "docs/decision.md",
+      locator: "docs/decision.md",
     });
     const onPreview = vi.fn();
     render(

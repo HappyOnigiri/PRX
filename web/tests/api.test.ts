@@ -5,7 +5,7 @@ import {
   getSnapshot,
   getSyncStatus,
   mutations,
-  readMarkdownDocument,
+  readDocumentContent,
   syncIfDue,
 } from "../src/api";
 import { makeSnapshot } from "./factories";
@@ -21,18 +21,17 @@ const apiMocks = vi.hoisted(() => {
     deleteFeature: vi.fn(),
     createTask: vi.fn(),
     updateTask: vi.fn(),
-    getImplementationPlan: vi.fn(),
-    upsertImplementationPlan: vi.fn(),
-    deleteImplementationPlan: vi.fn(),
     deleteTask: vi.fn(),
     addDependency: vi.fn(),
     removeDependency: vi.fn(),
     attachPullRequest: vi.fn(),
     detachPullRequest: vi.fn(),
     addDocument: vi.fn(),
+    getDocument: vi.fn(),
+    updateDocument: vi.fn(),
     deleteDocument: vi.fn(),
     sync: vi.fn(),
-    readMarkdownDocument: vi.fn(),
+    readDocumentContent: vi.fn(),
     addGitHubHost: vi.fn(),
     updateGitHubHost: vi.fn(),
     deleteGitHubHost: vi.fn(),
@@ -194,22 +193,6 @@ describe("RPC API wrappers", () => {
       }),
     );
 
-    await mutations.getImplementationPlan("task-1");
-    expect(apiMocks.client.getImplementationPlan).toHaveBeenCalledWith(
-      expect.objectContaining({ taskId: "task-1" }),
-    );
-    await mutations.upsertImplementationPlan({
-      taskId: "task-1",
-      content: "# Plan",
-    });
-    expect(apiMocks.client.upsertImplementationPlan).toHaveBeenCalledWith(
-      expect.objectContaining({ taskId: "task-1", content: "# Plan" }),
-    );
-    await mutations.deleteImplementationPlan("task-1");
-    expect(apiMocks.client.deleteImplementationPlan).toHaveBeenCalledWith(
-      expect.objectContaining({ taskId: "task-1" }),
-    );
-
     await mutations.deleteTask("task-1");
     expect(apiMocks.client.deleteTask).toHaveBeenCalledWith(
       expect.objectContaining({ id: "task-1", cascade: true }),
@@ -251,9 +234,27 @@ describe("RPC API wrappers", () => {
     expect(apiMocks.client.addDocument).toHaveBeenCalledWith(
       expect.objectContaining({
         taskId: "task-1",
-        kind: 1,
         title: "Runbook",
-        value: "https://example.com/runbook",
+        source: {
+          case: "url",
+          value: "https://example.com/runbook",
+        },
+      }),
+    );
+    await mutations.getDocument("document-1");
+    expect(apiMocks.client.getDocument).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "document-1" }),
+    );
+    await mutations.updateDocument({
+      id: "document-1",
+      source: { case: "markdown", value: "# Plan" },
+      isImplementationPlan: true,
+    });
+    expect(apiMocks.client.updateDocument).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "document-1",
+        source: { case: "markdown", value: "# Plan" },
+        isImplementationPlan: true,
       }),
     );
     await mutations.deleteDocument("document-1");
@@ -272,11 +273,11 @@ describe("RPC API wrappers", () => {
       expect.objectContaining({ featureId: "feature-1", taskId: "task-1" }),
     );
 
-    apiMocks.client.readMarkdownDocument.mockResolvedValueOnce({
+    apiMocks.client.readDocumentContent.mockResolvedValueOnce({
       content: "# Notes",
     });
-    await expect(readMarkdownDocument("document-1")).resolves.toBe("# Notes");
-    expect(apiMocks.client.readMarkdownDocument).toHaveBeenCalledWith(
+    await expect(readDocumentContent("document-1")).resolves.toBe("# Notes");
+    expect(apiMocks.client.readDocumentContent).toHaveBeenCalledWith(
       expect.objectContaining({ id: "document-1" }),
     );
   });

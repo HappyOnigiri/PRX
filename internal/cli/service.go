@@ -41,8 +41,8 @@ type Service interface {
 	) (domain.Task, error)
 	DeleteTask(ctx context.Context, id string, cascade bool) error
 
-	GetImplementationPlan(ctx context.Context, taskID string) (domain.ImplementationPlan, error)
-	UpsertImplementationPlan(ctx context.Context, taskID, content string) (domain.ImplementationPlan, error)
+	GetImplementationPlan(ctx context.Context, taskID string) (domain.Document, error)
+	UpsertImplementationPlan(ctx context.Context, taskID string, document domain.Document) (domain.Document, error)
 	DeleteImplementationPlan(ctx context.Context, taskID string) error
 
 	AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error)
@@ -55,10 +55,19 @@ type Service interface {
 		ctx context.Context,
 		featureID, taskID string,
 		kind domain.DocumentKind,
-		title, value string,
+		title, locator, content string,
+		isImplementationPlan bool,
+	) (domain.Document, error)
+	GetDocument(ctx context.Context, id string) (domain.Document, error)
+	UpdateDocument(
+		ctx context.Context,
+		id string,
+		title *string,
+		source *domain.Document,
+		isImplementationPlan *bool,
 	) (domain.Document, error)
 	DeleteDocument(ctx context.Context, id string) error
-	ReadMarkdownDocument(ctx context.Context, id string) (string, error)
+	ReadDocumentContent(ctx context.Context, id string) (string, error)
 
 	Snapshot(ctx context.Context) (domain.Snapshot, error)
 	Sync(ctx context.Context, featureID, taskID string) (int, int, error)
