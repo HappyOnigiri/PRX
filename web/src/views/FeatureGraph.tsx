@@ -182,6 +182,64 @@ function buildDependencyEdges({
   });
 }
 
+function useTaskTitle(tasks: Task[]) {
+  const titlesByTask = useMemo(
+    () => new Map(tasks.map((task) => [task.id, task.title])),
+    [tasks],
+  );
+  return useCallback(
+    (taskId: string) => titlesByTask.get(taskId),
+    [titlesByTask],
+  );
+}
+
+// React Flow compares the edge array by reference, so a fresh array on every
+// render rebuilds its connection lookup and re-renders every store consumer.
+function useDependencyEdges(options: {
+  dependencies: Dependency[];
+  edgeRoutes: Map<string, DependencyEdgeRoute>;
+  pending: boolean;
+  readOnly: boolean;
+  remove: (edge: Pick<Edge, "source" | "target">) => void;
+  selectedId: string | undefined;
+  taskTitle: (taskId: string) => string | undefined;
+  t: TFunction;
+}) {
+  const {
+    dependencies,
+    edgeRoutes,
+    pending,
+    readOnly,
+    remove,
+    selectedId,
+    taskTitle,
+    t,
+  } = options;
+  return useMemo(
+    () =>
+      buildDependencyEdges({
+        dependencies,
+        edgeRoutes,
+        pending,
+        readOnly,
+        remove,
+        selectedId,
+        taskTitle,
+        t,
+      }),
+    [
+      dependencies,
+      edgeRoutes,
+      pending,
+      readOnly,
+      remove,
+      selectedId,
+      taskTitle,
+      t,
+    ],
+  );
+}
+
 function useDependencySelection(dependencies: Dependency[]) {
   const [requestedId, setSelectedId] = useState<string>();
   const stillPresent = dependencies.some(
@@ -251,10 +309,7 @@ export function FeatureGraph({
   const graphZoom = useRef(initialGraphZoom);
   const connections = useDependencyConnections(readOnly);
   const selection = useDependencySelection(dependencies);
-  const taskTitle = useCallback(
-    (taskId: string) => tasks.find((task) => task.id === taskId)?.title,
-    [tasks],
-  );
+  const taskTitle = useTaskTitle(tasks);
   const { edgeRoutes, nodes, layoutError, layoutPending, retryLayout } =
     useGraphLayout({
       tasks,
@@ -265,7 +320,7 @@ export function FeatureGraph({
       onPreviewDocument,
       readOnly,
     });
-  const edges = buildDependencyEdges({
+  const edges = useDependencyEdges({
     dependencies,
     edgeRoutes,
     pending: connections.pending,
