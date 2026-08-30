@@ -25,13 +25,6 @@
   font-weight: 600;
 }
 
-.graph-status-bar b {
-  margin-left: auto;
-  font-family: var(--font-mono);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-}
-
 .graph-stage {
   position: relative;
   min-height: 0;

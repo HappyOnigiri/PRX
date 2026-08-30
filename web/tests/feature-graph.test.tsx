@@ -619,7 +619,7 @@ describe("FeatureGraph", () => {
       />,
     );
 
-    expect(screen.getByText("1 nodes · 1 links")).toBeInTheDocument();
+    expect(screen.queryByText("1 nodes · 1 links")).not.toBeInTheDocument();
     for (const label of ["Ready", "Review", "Conflict", "Merged"]) {
       expect(screen.queryByText(label)).not.toBeInTheDocument();
     }

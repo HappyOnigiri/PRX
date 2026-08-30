@@ -23,7 +23,6 @@ export const workspace = {
       unarchiveFeature: "Unarchive feature",
       deleteFeature: "Delete feature",
       deleteFeatureConfirm: "Delete {{title}} and every contained task?",
-      graphSummary: "{{nodes}} nodes · {{links}} links",
       graphEmptyTitle: "Draw the first node",
       graphEmptyDetail: "Add an implementation PR or a manual gate.",
       addTaskPlain: "Add task",
@@ -110,7 +109,6 @@ export const workspace = {
       deleteFeature: "フィーチャーを削除",
       deleteFeatureConfirm:
         "{{title}} と含まれるすべてのタスクを削除しますか？",
-      graphSummary: "{{nodes}} ノード · {{links}} リンク",
       graphEmptyTitle: "最初のノードを作成",
       graphEmptyDetail: "実装 PR または手動ゲートを追加してください。",
       addTaskPlain: "タスクを追加",

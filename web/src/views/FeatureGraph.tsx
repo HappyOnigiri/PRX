@@ -386,8 +386,6 @@ export function FeatureGraph({
   return (
     <>
       <GraphStatusBar
-        taskCount={tasks.length}
-        dependencyCount={dependencies.length}
         addingDependency={connections.adding}
         detachingDependency={connections.detaching}
         removingDependency={connections.removing}
@@ -602,16 +600,12 @@ function GraphState({
 }
 
 function GraphStatusBar({
-  taskCount,
-  dependencyCount,
   addingDependency,
   detachingDependency,
   removingDependency,
   readOnly,
   taskTitle,
 }: {
-  taskCount: number;
-  dependencyCount: number;
   addingDependency: boolean;
   detachingDependency: { blocker: string; blocked: string } | undefined;
   removingDependency: boolean;
@@ -644,12 +638,6 @@ function GraphStatusBar({
           {instruction}
         </p>
       )}
-      <b>
-        {t("workspace.graphSummary", {
-          nodes: taskCount,
-          links: dependencyCount,
-        })}
-      </b>
     </div>
   );
 }
