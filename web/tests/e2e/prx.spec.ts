@@ -119,6 +119,8 @@ async function connectTasks(
   blockedTitle: string,
 ) {
   await settleGraph(page);
+  await page.locator(".react-flow__controls-fitview").click();
+  await settleGraph(page);
   const blocker = page.locator(".task-node").filter({ hasText: blockerTitle });
   const blocked = page.locator(".task-node").filter({ hasText: blockedTitle });
   const source = blocker.locator(".react-flow__handle.source");
