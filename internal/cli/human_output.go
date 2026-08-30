@@ -396,6 +396,23 @@ func renderConfig(value config.PublicConfig) humanRenderer {
 	}
 }
 
+// renderConfigValidation keeps a valid configuration a success even when the
+// file carries fields this build does not know, and lists those fields so the
+// reader learns which ones the next write drops.
+func renderConfigValidation(warnings []string) humanRenderer {
+	return func(out io.Writer) error {
+		if _, err := fmt.Fprintln(out, "Configuration is valid."); err != nil {
+			return err
+		}
+		for _, warning := range warnings {
+			if _, err := fmt.Fprintf(out, "Warning: %s\n", warning); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+}
+
 func renderSyncStatus(status domain.GitHubSyncStatus) humanRenderer {
 	return func(out io.Writer) error {
 		lastAttempt := "never"

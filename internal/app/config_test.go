@@ -68,7 +68,8 @@ func TestSyncReportsInvalidGitHubConfig(t *testing.T) {
 	}
 	defer func() { _ = database.Close() }()
 	configPath := filepath.Join(t.TempDir(), "config.yaml")
-	if err := os.WriteFile(configPath, []byte("version: 1\nunknown: true\n"), 0o600); err != nil {
+	invalid := "version: 1\ngithub:\n  hosts:\n    - host: ghe.example.com\n      web_url: http://ghe.example.com\n"
+	if err := os.WriteFile(configPath, []byte(invalid), 0o600); err != nil {
 		t.Fatal(err)
 	}
 	configStore, err := config.NewStore(configPath)

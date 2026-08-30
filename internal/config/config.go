@@ -1,5 +1,7 @@
 // Package config owns the versioned YAML configuration shared by the CLI,
-// server, and GitHub authentication resolver.
+// server, and GitHub authentication resolver. A file written by a newer PRX
+// still loads: its unknown fields are reported as warnings and ignored, while
+// every other decoding failure keeps the configuration from loading.
 package config
 
 import (
