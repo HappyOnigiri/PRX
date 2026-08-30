@@ -632,10 +632,10 @@ function GraphStatusBar({
               taskTitle(detachingDependency.blocked) ??
               detachingDependency.blocked,
           })
-        : t("workspace.flow.connectionInstruction");
+        : undefined;
   return (
     <div className="graph-status-bar">
-      {!readOnly && (
+      {!readOnly && instruction && (
         <p
           className={`graph-connection-help ${addingDependency || removingDependency ? "is-saving" : ""}`}
           aria-live="polite"

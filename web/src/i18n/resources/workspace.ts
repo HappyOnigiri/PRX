@@ -35,8 +35,6 @@ export const workspace = {
         dependencyEdge: "{{blocker}} blocks {{blocked}}",
         dependencyLabel: "{{blocker}} → {{blocked}}",
         removeDependency: "Remove dependency {{blocker}} → {{blocked}}",
-        connectionInstruction:
-          "Add: drag right output → left input. Remove: select a link, then drag either end into empty space or use its remove button.",
         connectionSaving: "Saving dependency…",
         detachInstruction:
           "Drop in empty space to remove {{blocker}} → {{blocked}}.",
@@ -122,8 +120,6 @@ export const workspace = {
         dependencyEdge: "{{blocker}} が {{blocked}} をブロック",
         dependencyLabel: "{{blocker}} → {{blocked}}",
         removeDependency: "{{blocker}} → {{blocked}} の依存を解除",
-        connectionInstruction:
-          "追加: 右の送り口→左の受け口へドラッグ。解除: リンクを選択し、どちらかの端を空白へドラッグするか解除ボタンを使用。",
         connectionSaving: "依存関係を保存しています…",
         detachInstruction:
           "空白にドロップすると {{blocker}} → {{blocked}} の依存を解除します。",
