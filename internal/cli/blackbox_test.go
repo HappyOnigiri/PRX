@@ -70,7 +70,15 @@ func runCLIWithFixture(
 
 func executeCLI(t *testing.T, binary, input string, args ...string) commandOutput {
 	t.Helper()
+	return executeCLIWithEnv(t, binary, input, nil, args...)
+}
+
+func executeCLIWithEnv(t *testing.T, binary, input string, env []string, args ...string) commandOutput {
+	t.Helper()
 	command := exec.CommandContext(context.Background(), binary, args...)
+	if len(env) > 0 {
+		command.Env = append(os.Environ(), env...)
+	}
 	if input != "" {
 		command.Stdin = strings.NewReader(input)
 	}
@@ -781,6 +789,42 @@ func TestBlackBoxResolvedCommandErrorsIncludeCompleteHelp(t *testing.T) {
 			}
 			assertCompactJSON(t, result.stderr)
 		})
+	}
+}
+
+func TestBlackBoxErrorHintDoesNotVaryWithAmbientEnvironment(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "hint.db")
+	hints := make([]string, 0, 2)
+	for _, ambient := range []string{"/first/ambient", "/second/ambient"} {
+		result := executeCLIWithEnv(t, binary, "", []string{
+			"PRX_DB=" + filepath.Join(ambient, "prx.db"),
+			"PRX_CONFIG=" + filepath.Join(ambient, "prx.yaml"),
+		}, "--db", dbPath, "--json", "feature", "missing")
+		if result.exit == 0 || result.stdout != "" {
+			t.Fatalf("result=%+v", result)
+		}
+		failure := decodeFailure(t, []byte(result.stderr), result.stderr)
+		if strings.Contains(failure.Hint, ambient) {
+			t.Fatalf("hint leaked the ambient path %q: %q", ambient, failure.Hint)
+		}
+		hints = append(hints, failure.Hint)
+	}
+	if hints[0] != hints[1] {
+		t.Fatalf("hint varied with the environment\nfirst=%q\nsecond=%q", hints[0], hints[1])
+	}
+}
+
+func TestBlackBoxEnvironmentSuppliesStoragePathWithoutFlag(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "env.db")
+	result := executeCLIWithEnv(t, binary, "", []string{"PRX_DB=" + dbPath},
+		"--json", "feature", "create", "--slug", "from-environment", "--title", "From environment")
+	if result.exit != 0 || result.stderr != "" {
+		t.Fatalf("result=%+v", result)
+	}
+	if _, err := os.Stat(dbPath); err != nil {
+		t.Fatalf("PRX_DB was not used as the storage path: %v", err)
 	}
 }
 

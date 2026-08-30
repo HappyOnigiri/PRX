@@ -53,6 +53,7 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			if err := s.resolveOutputMode(); err != nil {
 				return err
 			}
+			s.applyEnvironmentPaths()
 			if cmd.Name() == "help" || cmd.Name() == "schema-version" || isConfigCommand(cmd) {
 				return nil
 			}
@@ -78,9 +79,9 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	}
 	root.SetOut(out)
 	root.SetErr(errOut)
-	root.PersistentFlags().StringVar(&s.dbPath, "db", os.Getenv("PRX_DB"), "SQLite database path (env: PRX_DB)")
+	root.PersistentFlags().StringVar(&s.dbPath, "db", "", "SQLite database path (env: PRX_DB)")
 	root.PersistentFlags().
-		StringVar(&s.configPath, "config", os.Getenv("PRX_CONFIG"), "YAML configuration path (env: PRX_CONFIG)")
+		StringVar(&s.configPath, "config", "", "YAML configuration path (env: PRX_CONFIG)")
 	root.PersistentFlags().BoolVar(&s.json, "json", false, "force compact JSON responses")
 	root.PersistentFlags().BoolVar(&s.human, "human", false, "force human-readable responses")
 	root.PersistentFlags().StringVar(&s.fixture, "github-fixture", "", "GitHub fixture JSON path, or demo")
@@ -111,6 +112,18 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	root.SetHelpFunc(s.writeHelp)
 	markCommandExecution(root, s)
 	return root, s
+}
+
+// applyEnvironmentPaths resolves the environment fallbacks at run time instead
+// of registering them as flag defaults, because a flag default is printed in
+// the rendered help that failures now carry in their hint.
+func (s *state) applyEnvironmentPaths() {
+	if s.dbPath == "" {
+		s.dbPath = os.Getenv("PRX_DB")
+	}
+	if s.configPath == "" {
+		s.configPath = os.Getenv("PRX_CONFIG")
+	}
 }
 
 func markCommandExecution(command *cobra.Command, s *state) {
