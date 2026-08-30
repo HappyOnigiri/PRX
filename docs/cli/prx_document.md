@@ -1,10 +1,10 @@
 ## prx document
 
-List or manage URL and local Markdown references
+List or manage documents
 
 ### Synopsis
 
-List or manage URL and local Markdown references.
+List or manage URL, local file, and stored Markdown documents.
 
 Alias: doc.
 
@@ -16,13 +16,16 @@ prx document [flags]
 
 ```
 prx document
+prx document --task T-1
 prx doc
 ```
 
 ### Options
 
 ```
-  -h, --help   help for document
+      --feature string   filter by feature ID
+  -h, --help             help for document
+      --task string      filter by task ID
 ```
 
 ### Options inherited from parent commands
@@ -37,6 +40,8 @@ prx doc
 ### SEE ALSO
 
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
-* [prx document add](prx_document_add.md)	 - Add a URL or local Markdown path
+* [prx document add](prx_document_add.md)	 - Add a document
 * [prx document delete](prx_document_delete.md)	 - Delete a document; missing documents return not_found
+* [prx document get](prx_document_get.md)	 - Get one document
+* [prx document update](prx_document_update.md)	 - Update a document
 

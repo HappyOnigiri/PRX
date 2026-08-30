@@ -25,14 +25,13 @@ const inspectorMocks = vi.hoisted(() => ({
   api: {
     updateTask: vi.fn(),
     deleteTask: vi.fn(),
-    getImplementationPlan: vi.fn(),
-    upsertImplementationPlan: vi.fn(),
-    deleteImplementationPlan: vi.fn(),
     attachPR: vi.fn(),
     detachPR: vi.fn(),
     removeDependency: vi.fn(),
     addDocument: vi.fn(),
     deleteDocument: vi.fn(),
+    getDocument: vi.fn(),
+    updateDocument: vi.fn(),
   },
   hookIndex: 0,
   mutations: Array.from({ length: 10 }, () => ({
@@ -107,15 +106,23 @@ describe("TaskInspector", () => {
     const markdown = makeDocument({
       id: "document-md",
       taskId: task.id,
-      kind: DocumentKind.MARKDOWN_PATH,
+      kind: DocumentKind.LOCAL_FILE,
       title: "Delivery plan",
-      value: "docs/delivery.md",
+      locator: "docs/delivery.md",
     });
     const url = makeDocument({
       id: "document-url",
       taskId: task.id,
       kind: DocumentKind.URL,
       title: "Runbook",
+    });
+    const inline = makeDocument({
+      id: "document-inline",
+      taskId: task.id,
+      kind: DocumentKind.MARKDOWN,
+      title: "Inline plan",
+      locator: "",
+      isImplementationPlan: true,
     });
     const onClose = vi.fn();
     const onPreview = vi.fn();
@@ -125,7 +132,7 @@ describe("TaskInspector", () => {
         tasks={[task, blocker]}
         dependencies={[dependency]}
         pullRequest={pullRequest}
-        documents={[markdown, url]}
+        documents={[markdown, url, inline]}
         onPreview={onPreview}
         onClose={onClose}
       />,
@@ -179,7 +186,7 @@ describe("TaskInspector", () => {
     fireEvent.click(screen.getByRole("button", { name: "Detach" }));
     expect(mutationAt(3).mutate).toHaveBeenCalledWith(task.id);
     fireEvent.click(screen.getByRole("button", { name: "Remove dependency" }));
-    expect(mutationAt(6).mutate).toHaveBeenCalledWith({
+    expect(mutationAt(4).mutate).toHaveBeenCalledWith({
       blocker: "task-2",
       blocked: task.id,
     });
@@ -189,28 +196,39 @@ describe("TaskInspector", () => {
     );
     expect(onPreview).toHaveBeenCalledWith(markdown);
     fireEvent.click(screen.getByRole("button", { name: "Delete Runbook" }));
-    expect(mutationAt(8).mutate).toHaveBeenCalledWith("document-url");
+    expect(mutationAt(6).mutate).toHaveBeenCalledWith("document-url");
 
-    const referenceValue = screen.getByPlaceholderText(
-      "https://… or docs/plan.md",
-    );
+    inspectorMocks.api.getDocument.mockResolvedValueOnce({ content: "# Old" });
+    vi.spyOn(window, "prompt").mockReturnValueOnce("# New");
+    fireEvent.click(screen.getByRole("button", { name: "Edit Inline plan" }));
+    await waitFor(() => {
+      expect(mutationAt(7).mutate).toHaveBeenCalledWith({
+        id: "document-inline",
+        source: { case: "markdown", value: "# New" },
+      });
+    });
+
+    const referenceKind = screen.getAllByRole("combobox").at(-1);
+    if (!referenceKind) throw new Error("reference kind select missing");
+    fireEvent.change(referenceKind, {
+      target: { value: String(DocumentKind.LOCAL_FILE) },
+    });
+    const referenceValue = screen.getByPlaceholderText("docs/plan.md");
     fireEvent.change(referenceValue, {
       target: { value: "docs/new.md" },
     });
     fireEvent.change(screen.getByPlaceholderText("Design notes"), {
       target: { value: "New plan" },
     });
-    const referenceKind = screen.getAllByRole("combobox").at(-1);
-    if (!referenceKind) throw new Error("reference kind select missing");
-    fireEvent.change(referenceKind, {
-      target: { value: String(DocumentKind.MARKDOWN_PATH) },
-    });
-    fireEvent.click(screen.getByRole("button", { name: "Add reference" }));
-    expect(mutationAt(7).mutate).toHaveBeenCalledWith({
+    const referenceForm = referenceValue.closest("form");
+    if (!referenceForm) throw new Error("reference form missing");
+    fireEvent.submit(referenceForm);
+    expect(inspectorMocks.api.addDocument).toHaveBeenCalledWith({
       taskId: task.id,
-      kind: DocumentKind.MARKDOWN_PATH,
+      kind: DocumentKind.LOCAL_FILE,
       title: "New plan",
       value: "docs/new.md",
+      isImplementationPlan: false,
     });
 
     vi.spyOn(window, "confirm").mockReturnValue(true);
@@ -287,9 +305,9 @@ describe("TaskInspector", () => {
     });
     const blocker = makeTask({ id: "task-2", title: "Archived blocker" });
     const markdown = makeDocument({
-      kind: DocumentKind.MARKDOWN_PATH,
+      kind: DocumentKind.LOCAL_FILE,
       title: "Decision log",
-      value: "docs/decision.md",
+      locator: "docs/decision.md",
     });
     const onPreview = vi.fn();
     render(

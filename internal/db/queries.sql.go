@@ -76,17 +76,23 @@ func (q *Queries) CompleteGitHubSync(ctx context.Context, arg CompleteGitHubSync
 }
 
 const createDocument = `-- name: CreateDocument :one
-INSERT INTO documents (id, feature_id, task_id, kind, title, value, created_at) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, feature_id, task_id, kind, title, value, created_at
+INSERT INTO documents (
+  id, feature_id, task_id, kind, title, locator, content,
+  is_implementation_plan, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, feature_id, task_id, kind, title, locator, content, is_implementation_plan, created_at, updated_at
 `
 
 type CreateDocumentParams struct {
-	ID        string         `json:"id"`
-	FeatureID sql.NullString `json:"feature_id"`
-	TaskID    sql.NullString `json:"task_id"`
-	Kind      string         `json:"kind"`
-	Title     string         `json:"title"`
-	Value     string         `json:"value"`
-	CreatedAt string         `json:"created_at"`
+	ID                   string         `json:"id"`
+	FeatureID            sql.NullString `json:"feature_id"`
+	TaskID               sql.NullString `json:"task_id"`
+	Kind                 string         `json:"kind"`
+	Title                string         `json:"title"`
+	Locator              sql.NullString `json:"locator"`
+	Content              sql.NullString `json:"content"`
+	IsImplementationPlan int64          `json:"is_implementation_plan"`
+	CreatedAt            string         `json:"created_at"`
+	UpdatedAt            string         `json:"updated_at"`
 }
 
 func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) (Document, error) {
@@ -96,8 +102,11 @@ func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) 
 		arg.TaskID,
 		arg.Kind,
 		arg.Title,
-		arg.Value,
+		arg.Locator,
+		arg.Content,
+		arg.IsImplementationPlan,
 		arg.CreatedAt,
+		arg.UpdatedAt,
 	)
 	var i Document
 	err := row.Scan(
@@ -106,8 +115,11 @@ func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) 
 		&i.TaskID,
 		&i.Kind,
 		&i.Title,
-		&i.Value,
+		&i.Locator,
+		&i.Content,
+		&i.IsImplementationPlan,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -283,34 +295,16 @@ func (q *Queries) DeleteGitHubRepositoryAuthCache(ctx context.Context, arg Delet
 	return result.RowsAffected()
 }
 
-const deleteImplementationPlan = `-- name: DeleteImplementationPlan :execrows
-DELETE FROM implementation_plans WHERE task_id=?
+const deleteImplementationPlanDocument = `-- name: DeleteImplementationPlanDocument :execrows
+DELETE FROM documents WHERE task_id=? AND is_implementation_plan=1
 `
 
-func (q *Queries) DeleteImplementationPlan(ctx context.Context, taskID string) (int64, error) {
-	result, err := q.db.ExecContext(ctx, deleteImplementationPlan, taskID)
+func (q *Queries) DeleteImplementationPlanDocument(ctx context.Context, taskID sql.NullString) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteImplementationPlanDocument, taskID)
 	if err != nil {
 		return 0, err
 	}
 	return result.RowsAffected()
-}
-
-const deleteImplementationPlansForFeature = `-- name: DeleteImplementationPlansForFeature :exec
-DELETE FROM implementation_plans WHERE task_id IN (SELECT id FROM tasks WHERE feature_id=?)
-`
-
-func (q *Queries) DeleteImplementationPlansForFeature(ctx context.Context, featureID string) error {
-	_, err := q.db.ExecContext(ctx, deleteImplementationPlansForFeature, featureID)
-	return err
-}
-
-const deleteImplementationPlansForTask = `-- name: DeleteImplementationPlansForTask :exec
-DELETE FROM implementation_plans WHERE task_id=?
-`
-
-func (q *Queries) DeleteImplementationPlansForTask(ctx context.Context, taskID string) error {
-	_, err := q.db.ExecContext(ctx, deleteImplementationPlansForTask, taskID)
-	return err
 }
 
 const deletePullRequest = `-- name: DeletePullRequest :execrows
@@ -353,7 +347,7 @@ func (q *Queries) DeleteTasksForFeature(ctx context.Context, featureID string) e
 }
 
 const getDocument = `-- name: GetDocument :one
-SELECT id, feature_id, task_id, kind, title, value, created_at FROM documents WHERE id=?
+SELECT id, feature_id, task_id, kind, title, locator, content, is_implementation_plan, created_at, updated_at FROM documents WHERE id=?
 `
 
 func (q *Queries) GetDocument(ctx context.Context, id string) (Document, error) {
@@ -365,8 +359,11 @@ func (q *Queries) GetDocument(ctx context.Context, id string) (Document, error) 
 		&i.TaskID,
 		&i.Kind,
 		&i.Title,
-		&i.Value,
+		&i.Locator,
+		&i.Content,
+		&i.IsImplementationPlan,
 		&i.CreatedAt,
+		&i.UpdatedAt,
 	)
 	return i, err
 }
@@ -476,16 +473,22 @@ func (q *Queries) GetGitHubSyncState(ctx context.Context) (GithubSyncState, erro
 	return i, err
 }
 
-const getImplementationPlan = `-- name: GetImplementationPlan :one
-SELECT task_id, content, created_at, updated_at FROM implementation_plans WHERE task_id=?
+const getImplementationPlanDocument = `-- name: GetImplementationPlanDocument :one
+SELECT id, feature_id, task_id, kind, title, locator, content, is_implementation_plan, created_at, updated_at FROM documents WHERE task_id=? AND is_implementation_plan=1
 `
 
-func (q *Queries) GetImplementationPlan(ctx context.Context, taskID string) (ImplementationPlan, error) {
-	row := q.db.QueryRowContext(ctx, getImplementationPlan, taskID)
-	var i ImplementationPlan
+func (q *Queries) GetImplementationPlanDocument(ctx context.Context, taskID sql.NullString) (Document, error) {
+	row := q.db.QueryRowContext(ctx, getImplementationPlanDocument, taskID)
+	var i Document
 	err := row.Scan(
+		&i.ID,
+		&i.FeatureID,
 		&i.TaskID,
+		&i.Kind,
+		&i.Title,
+		&i.Locator,
 		&i.Content,
+		&i.IsImplementationPlan,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)
@@ -632,26 +635,44 @@ func (q *Queries) ListDependenciesByFeature(ctx context.Context, featureID strin
 }
 
 const listDocuments = `-- name: ListDocuments :many
-SELECT id, feature_id, task_id, kind, title, value, created_at FROM documents ORDER BY created_at, id
+SELECT id, feature_id, task_id, kind, title, locator, NULL AS content,
+  is_implementation_plan, created_at, updated_at
+FROM documents ORDER BY is_implementation_plan DESC, created_at, id
 `
 
-func (q *Queries) ListDocuments(ctx context.Context) ([]Document, error) {
+type ListDocumentsRow struct {
+	ID                   string         `json:"id"`
+	FeatureID            sql.NullString `json:"feature_id"`
+	TaskID               sql.NullString `json:"task_id"`
+	Kind                 string         `json:"kind"`
+	Title                string         `json:"title"`
+	Locator              sql.NullString `json:"locator"`
+	Content              interface{}    `json:"content"`
+	IsImplementationPlan int64          `json:"is_implementation_plan"`
+	CreatedAt            string         `json:"created_at"`
+	UpdatedAt            string         `json:"updated_at"`
+}
+
+func (q *Queries) ListDocuments(ctx context.Context) ([]ListDocumentsRow, error) {
 	rows, err := q.db.QueryContext(ctx, listDocuments)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []Document{}
+	items := []ListDocumentsRow{}
 	for rows.Next() {
-		var i Document
+		var i ListDocumentsRow
 		if err := rows.Scan(
 			&i.ID,
 			&i.FeatureID,
 			&i.TaskID,
 			&i.Kind,
 			&i.Title,
-			&i.Value,
+			&i.Locator,
+			&i.Content,
+			&i.IsImplementationPlan,
 			&i.CreatedAt,
+			&i.UpdatedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -704,18 +725,18 @@ func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
 }
 
 const listImplementationPlanTaskIDs = `-- name: ListImplementationPlanTaskIDs :many
-SELECT task_id FROM implementation_plans ORDER BY task_id
+SELECT task_id FROM documents WHERE is_implementation_plan=1 ORDER BY task_id
 `
 
-func (q *Queries) ListImplementationPlanTaskIDs(ctx context.Context) ([]string, error) {
+func (q *Queries) ListImplementationPlanTaskIDs(ctx context.Context) ([]sql.NullString, error) {
 	rows, err := q.db.QueryContext(ctx, listImplementationPlanTaskIDs)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	items := []string{}
+	items := []sql.NullString{}
 	for rows.Next() {
-		var task_id string
+		var task_id sql.NullString
 		if err := rows.Scan(&task_id); err != nil {
 			return nil, err
 		}
@@ -882,6 +903,47 @@ func (q *Queries) StartGitHubSync(ctx context.Context, arg StartGitHubSyncParams
 	return err
 }
 
+const updateDocument = `-- name: UpdateDocument :one
+UPDATE documents SET kind=?, title=?, locator=?, content=?,
+  is_implementation_plan=?, updated_at=? WHERE id=? RETURNING id, feature_id, task_id, kind, title, locator, content, is_implementation_plan, created_at, updated_at
+`
+
+type UpdateDocumentParams struct {
+	Kind                 string         `json:"kind"`
+	Title                string         `json:"title"`
+	Locator              sql.NullString `json:"locator"`
+	Content              sql.NullString `json:"content"`
+	IsImplementationPlan int64          `json:"is_implementation_plan"`
+	UpdatedAt            string         `json:"updated_at"`
+	ID                   string         `json:"id"`
+}
+
+func (q *Queries) UpdateDocument(ctx context.Context, arg UpdateDocumentParams) (Document, error) {
+	row := q.db.QueryRowContext(ctx, updateDocument,
+		arg.Kind,
+		arg.Title,
+		arg.Locator,
+		arg.Content,
+		arg.IsImplementationPlan,
+		arg.UpdatedAt,
+		arg.ID,
+	)
+	var i Document
+	err := row.Scan(
+		&i.ID,
+		&i.FeatureID,
+		&i.TaskID,
+		&i.Kind,
+		&i.Title,
+		&i.Locator,
+		&i.Content,
+		&i.IsImplementationPlan,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const updateFeature = `-- name: UpdateFeature :one
 UPDATE features SET slug=?, title=?, description=?, status=?, archived=?, updated_at=? WHERE id=? RETURNING id, slug, title, description, status, archived, created_at, updated_at, public_id
 `
@@ -985,31 +1047,49 @@ func (q *Queries) UpsertGitHubRepositoryAuthCache(ctx context.Context, arg Upser
 	return err
 }
 
-const upsertImplementationPlan = `-- name: UpsertImplementationPlan :one
-INSERT INTO implementation_plans (task_id, content, created_at, updated_at)
-VALUES (?, ?, ?, ?)
-ON CONFLICT(task_id) DO UPDATE SET content=excluded.content, updated_at=excluded.updated_at
-RETURNING task_id, content, created_at, updated_at
+const upsertImplementationPlanDocument = `-- name: UpsertImplementationPlanDocument :one
+INSERT INTO documents (
+  id, feature_id, task_id, kind, title, locator, content,
+  is_implementation_plan, created_at, updated_at
+) VALUES (?, NULL, ?, ?, ?, ?, ?, 1, ?, ?)
+ON CONFLICT(task_id) WHERE is_implementation_plan=1 DO UPDATE SET
+  kind=excluded.kind, title=excluded.title, locator=excluded.locator,
+  content=excluded.content, updated_at=excluded.updated_at
+RETURNING id, feature_id, task_id, kind, title, locator, content, is_implementation_plan, created_at, updated_at
 `
 
-type UpsertImplementationPlanParams struct {
-	TaskID    string `json:"task_id"`
-	Content   string `json:"content"`
-	CreatedAt string `json:"created_at"`
-	UpdatedAt string `json:"updated_at"`
+type UpsertImplementationPlanDocumentParams struct {
+	ID        string         `json:"id"`
+	TaskID    sql.NullString `json:"task_id"`
+	Kind      string         `json:"kind"`
+	Title     string         `json:"title"`
+	Locator   sql.NullString `json:"locator"`
+	Content   sql.NullString `json:"content"`
+	CreatedAt string         `json:"created_at"`
+	UpdatedAt string         `json:"updated_at"`
 }
 
-func (q *Queries) UpsertImplementationPlan(ctx context.Context, arg UpsertImplementationPlanParams) (ImplementationPlan, error) {
-	row := q.db.QueryRowContext(ctx, upsertImplementationPlan,
+func (q *Queries) UpsertImplementationPlanDocument(ctx context.Context, arg UpsertImplementationPlanDocumentParams) (Document, error) {
+	row := q.db.QueryRowContext(ctx, upsertImplementationPlanDocument,
+		arg.ID,
 		arg.TaskID,
+		arg.Kind,
+		arg.Title,
+		arg.Locator,
 		arg.Content,
 		arg.CreatedAt,
 		arg.UpdatedAt,
 	)
-	var i ImplementationPlan
+	var i Document
 	err := row.Scan(
+		&i.ID,
+		&i.FeatureID,
 		&i.TaskID,
+		&i.Kind,
+		&i.Title,
+		&i.Locator,
 		&i.Content,
+		&i.IsImplementationPlan,
 		&i.CreatedAt,
 		&i.UpdatedAt,
 	)

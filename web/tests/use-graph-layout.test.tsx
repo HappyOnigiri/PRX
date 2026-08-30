@@ -38,9 +38,9 @@ describe("useGraphLayout", () => {
     const onPreviewDocument = vi.fn();
     const document = makeDocument({
       id: "document-1",
-      kind: 2,
+      kind: 3,
       title: "Plan",
-      value: "docs/plan.md",
+      locator: "docs/plan.md",
     });
     const options = {
       tasks: [makeTask({ assignee: "Ren" })],

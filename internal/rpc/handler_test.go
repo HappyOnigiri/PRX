@@ -54,18 +54,17 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 		connect.NewRequest(
 			&prxv1.AddDocumentRequest{
 				TaskId: task.Msg.GetTask().GetId(),
-				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH,
 				Title:  "Plan",
-				Value:  path,
+				Source: &prxv1.AddDocumentRequest_LocalFile{LocalFile: path},
 			},
 		),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	preview, err := client.ReadMarkdownDocument(
+	preview, err := client.ReadDocumentContent(
 		ctx,
-		connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: document.Msg.GetDocument().GetId()}),
+		connect.NewRequest(&prxv1.ReadDocumentContentRequest{Id: document.Msg.GetDocument().GetId()}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -79,18 +78,17 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 		connect.NewRequest(
 			&prxv1.AddDocumentRequest{
 				TaskId: task.Msg.GetTask().GetId(),
-				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_URL,
 				Title:  "Runbook",
-				Value:  "https://example.com/runbook",
+				Source: &prxv1.AddDocumentRequest_Url{Url: "https://example.com/runbook"},
 			},
 		),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.ReadMarkdownDocument(
+	_, err = client.ReadDocumentContent(
 		ctx,
-		connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: urlDocument.Msg.GetDocument().GetId()}),
+		connect.NewRequest(&prxv1.ReadDocumentContentRequest{Id: urlDocument.Msg.GetDocument().GetId()}),
 	)
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND {
 		t.Fatalf("URL preview code=%s err=%v", got, err)
@@ -101,18 +99,17 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 		connect.NewRequest(
 			&prxv1.AddDocumentRequest{
 				TaskId: task.Msg.GetTask().GetId(),
-				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH,
 				Title:  "Missing",
-				Value:  filepath.Join(t.TempDir(), "missing.md"),
+				Source: &prxv1.AddDocumentRequest_LocalFile{LocalFile: filepath.Join(t.TempDir(), "missing.md")},
 			},
 		),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.ReadMarkdownDocument(
+	_, err = client.ReadDocumentContent(
 		ctx,
-		connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: missingDocument.Msg.GetDocument().GetId()}),
+		connect.NewRequest(&prxv1.ReadDocumentContentRequest{Id: missingDocument.Msg.GetDocument().GetId()}),
 	)
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED {
 		t.Fatalf("missing preview code=%s err=%v", got, err)
@@ -127,18 +124,17 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 		connect.NewRequest(
 			&prxv1.AddDocumentRequest{
 				TaskId: task.Msg.GetTask().GetId(),
-				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_MARKDOWN_PATH,
 				Title:  "Large",
-				Value:  largePath,
+				Source: &prxv1.AddDocumentRequest_LocalFile{LocalFile: largePath},
 			},
 		),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = client.ReadMarkdownDocument(
+	_, err = client.ReadDocumentContent(
 		ctx,
-		connect.NewRequest(&prxv1.ReadMarkdownDocumentRequest{Id: largeDocument.Msg.GetDocument().GetId()}),
+		connect.NewRequest(&prxv1.ReadDocumentContentRequest{Id: largeDocument.Msg.GetDocument().GetId()}),
 	)
 	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE {
 		t.Fatalf("large preview code=%s err=%v", got, err)
@@ -272,30 +268,23 @@ func TestRPCImplementationPlanLifecycle(t *testing.T) {
 		t.Fatal(err)
 	}
 	taskID := task.Msg.GetTask().GetId()
-	_, err = client.GetImplementationPlan(
-		ctx,
-		connect.NewRequest(&prxv1.GetImplementationPlanRequest{TaskId: taskID}),
-	)
-	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND {
-		t.Fatalf("missing plan error=%v", err)
-	}
 	const content = "# RPC plan\n\nKeep it in SQLite.\n"
-	stored, err := client.UpsertImplementationPlan(
+	stored, err := client.AddDocument(
 		ctx,
-		connect.NewRequest(&prxv1.UpsertImplementationPlanRequest{TaskId: taskID, Content: content}),
+		connect.NewRequest(&prxv1.AddDocumentRequest{
+			TaskId: taskID, Source: &prxv1.AddDocumentRequest_Markdown{Markdown: content}, IsImplementationPlan: true,
+		}),
 	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if stored.Msg.GetImplementationPlan().GetContent() != content {
-		t.Fatalf("stored plan=%+v", stored.Msg.GetImplementationPlan())
-	}
-	read, err := client.GetImplementationPlan(
+	planID := stored.Msg.GetDocument().GetId()
+	read, err := client.GetDocument(
 		ctx,
-		connect.NewRequest(&prxv1.GetImplementationPlanRequest{TaskId: taskID}),
+		connect.NewRequest(&prxv1.GetDocumentRequest{Id: planID}),
 	)
-	if err != nil || read.Msg.GetImplementationPlan().GetContent() != content {
-		t.Fatalf("read plan=%+v err=%v", read.Msg.GetImplementationPlan(), err)
+	if err != nil || read.Msg.GetContent() != content || !read.Msg.GetDocument().GetIsImplementationPlan() {
+		t.Fatalf("read plan=%+v err=%v", read.Msg, err)
 	}
 	snapshot, err := client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
 	if err != nil {
@@ -303,32 +292,33 @@ func TestRPCImplementationPlanLifecycle(t *testing.T) {
 	}
 	if len(snapshot.Msg.GetSnapshot().GetTasks()) != 1 ||
 		!snapshot.Msg.GetSnapshot().GetTasks()[0].GetHasImplementationPlan() ||
-		snapshot.Msg.GetSnapshot().GetTasks()[0].GetDisplayState() != prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED {
+		snapshot.Msg.GetSnapshot().GetTasks()[0].GetDisplayState() != prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED {
 		t.Fatalf("snapshot task=%+v", snapshot.Msg.GetSnapshot().GetTasks())
 	}
-	_, err = client.UpsertImplementationPlan(
+	_, err = client.UpdateDocument(
 		ctx,
-		connect.NewRequest(&prxv1.UpsertImplementationPlanRequest{TaskId: taskID, Content: " \n\t"}),
-	)
-	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN {
-		t.Fatalf("blank plan error=%v", err)
-	}
-	_, err = client.UpsertImplementationPlan(
-		ctx,
-		connect.NewRequest(&prxv1.UpsertImplementationPlanRequest{
-			TaskId:  taskID,
-			Content: strings.Repeat("x", (1<<20)+1),
+		connect.NewRequest(&prxv1.UpdateDocumentRequest{
+			Id: planID, Source: &prxv1.UpdateDocumentRequest_Markdown{Markdown: " \n\t"},
 		}),
 	)
-	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE {
+	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT {
+		t.Fatalf("blank plan error=%v", err)
+	}
+	_, err = client.UpdateDocument(
+		ctx,
+		connect.NewRequest(&prxv1.UpdateDocumentRequest{
+			Id: planID, Source: &prxv1.UpdateDocumentRequest_Markdown{Markdown: strings.Repeat("x", (1<<20)+1)},
+		}),
+	)
+	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE {
 		t.Fatalf("large plan error=%v", err)
 	}
-	deleted, err := client.DeleteImplementationPlan(
+	_, err = client.DeleteDocument(
 		ctx,
-		connect.NewRequest(&prxv1.DeleteImplementationPlanRequest{TaskId: taskID}),
+		connect.NewRequest(&prxv1.DeleteDocumentRequest{Id: planID}),
 	)
-	if err != nil || deleted.Msg.GetTaskId() != taskID {
-		t.Fatalf("deleted response=%+v err=%v", deleted.Msg, err)
+	if err != nil {
+		t.Fatalf("delete plan err=%v", err)
 	}
 	snapshot, err = client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
 	if err != nil {
@@ -475,9 +465,8 @@ func TestRPCLifecyclePersistsAndDeletesResources(t *testing.T) {
 		ctx,
 		connect.NewRequest(&prxv1.AddDocumentRequest{
 			FeatureId: featureID,
-			Kind:      prxv1.DocumentKind_DOCUMENT_KIND_URL,
 			Title:     "Deleted document",
-			Value:     "https://example.com/deleted",
+			Source:    &prxv1.AddDocumentRequest_Url{Url: "https://example.com/deleted"},
 		}),
 	)
 	if err != nil {
@@ -487,9 +476,8 @@ func TestRPCLifecyclePersistsAndDeletesResources(t *testing.T) {
 		ctx,
 		connect.NewRequest(&prxv1.AddDocumentRequest{
 			TaskId: failedTask.GetId(),
-			Kind:   prxv1.DocumentKind_DOCUMENT_KIND_URL,
 			Title:  "Cascade document",
-			Value:  "https://example.com/cascade",
+			Source: &prxv1.AddDocumentRequest_Url{Url: "https://example.com/cascade"},
 		}),
 	)
 	if err != nil {
@@ -711,9 +699,8 @@ func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
 		connect.NewRequest(
 			&prxv1.AddDocumentRequest{
 				TaskId: manual.Msg.GetTask().GetId(),
-				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_URL,
 				Title:  "Spec",
-				Value:  "ftp://example.com/spec",
+				Source: &prxv1.AddDocumentRequest_Url{Url: "ftp://example.com/spec"},
 			},
 		),
 	)
@@ -726,9 +713,8 @@ func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
 		connect.NewRequest(
 			&prxv1.AddDocumentRequest{
 				TaskId: manual.Msg.GetTask().GetId(),
-				Kind:   prxv1.DocumentKind_DOCUMENT_KIND_URL,
 				Title:  "Spec",
-				Value:  "  ",
+				Source: &prxv1.AddDocumentRequest_Url{Url: "  "},
 			},
 		),
 	)

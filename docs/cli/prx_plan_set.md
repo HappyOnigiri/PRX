@@ -1,6 +1,6 @@
 ## prx plan set
 
-Create or replace a task's implementation plan
+Create or replace a task's implementation plan document
 
 ```
 prx plan set TASK_ID [flags]
@@ -9,15 +9,18 @@ prx plan set TASK_ID [flags]
 ### Examples
 
 ```
-prx plan set TASK_ID --file plan.md
+prx plan set T-1 --file plan.md
+prx plan set T-1 --url https://example.com/plan
 ```
 
 ### Options
 
 ```
-      --file string   read plan content from a file
-  -h, --help          help for set
-      --stdin         read plan content from standard input
+      --file string         read stored Markdown content from a file
+  -h, --help                help for set
+      --local-file string   store a local plan path
+      --stdin               read stored Markdown content from standard input
+      --url string          store an HTTP or HTTPS plan URL
 ```
 
 ### Options inherited from parent commands
@@ -31,5 +34,5 @@ prx plan set TASK_ID --file plan.md
 
 ### SEE ALSO
 
-* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan
+* [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan document
 

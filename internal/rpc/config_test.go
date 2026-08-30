@@ -229,12 +229,12 @@ func (noopRepository) DeleteTask(context.Context, string, bool) error {
 	return errors.New("not implemented")
 }
 
-func (noopRepository) GetImplementationPlan(context.Context, string) (domain.ImplementationPlan, error) {
-	return domain.ImplementationPlan{}, errors.New("not implemented")
+func (noopRepository) GetImplementationPlan(context.Context, string) (domain.Document, error) {
+	return domain.Document{}, errors.New("not implemented")
 }
 
-func (noopRepository) UpsertImplementationPlan(context.Context, string, string) (domain.ImplementationPlan, error) {
-	return domain.ImplementationPlan{}, errors.New("not implemented")
+func (noopRepository) UpsertImplementationPlan(context.Context, string, domain.Document) (domain.Document, error) {
+	return domain.Document{}, errors.New("not implemented")
 }
 
 func (noopRepository) DeleteImplementationPlan(context.Context, string) error {
@@ -264,11 +264,17 @@ func (noopRepository) CreateDocument(
 	domain.DocumentKind,
 	string,
 	string,
+	string,
+	bool,
 ) (domain.Document, error) {
 	return domain.Document{}, errors.New("not implemented")
 }
 
 func (noopRepository) GetDocument(context.Context, string) (domain.Document, error) {
+	return domain.Document{}, errors.New("not implemented")
+}
+
+func (noopRepository) UpdateDocument(context.Context, domain.Document) (domain.Document, error) {
 	return domain.Document{}, errors.New("not implemented")
 }
 

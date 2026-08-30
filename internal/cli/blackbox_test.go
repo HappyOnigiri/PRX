@@ -495,7 +495,7 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 	if err := json.Unmarshal(taskSnapshot.Data, &taskState); err != nil {
 		t.Fatal(err)
 	}
-	if !taskState.HasPlan || taskState.Display != "designed" || taskState.Status != "auto" {
+	if !taskState.HasPlan || taskState.Display != "not_started" || taskState.Status != "auto" {
 		t.Fatalf("task state=%+v", taskState)
 	}
 	deleted, _, exit := runCLI(t, binary, dbPath, "plan", "delete", taskData.ID)

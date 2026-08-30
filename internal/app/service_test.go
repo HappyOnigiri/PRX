@@ -54,12 +54,12 @@ func (repositoryStub) DeleteTask(context.Context, string, bool) error {
 	return errors.New("unexpected DeleteTask call")
 }
 
-func (repositoryStub) GetImplementationPlan(context.Context, string) (domain.ImplementationPlan, error) {
-	return domain.ImplementationPlan{}, errors.New("unexpected GetImplementationPlan call")
+func (repositoryStub) GetImplementationPlan(context.Context, string) (domain.Document, error) {
+	return domain.Document{}, errors.New("unexpected GetImplementationPlan call")
 }
 
-func (repositoryStub) UpsertImplementationPlan(context.Context, string, string) (domain.ImplementationPlan, error) {
-	return domain.ImplementationPlan{}, errors.New("unexpected UpsertImplementationPlan call")
+func (repositoryStub) UpsertImplementationPlan(context.Context, string, domain.Document) (domain.Document, error) {
+	return domain.Document{}, errors.New("unexpected UpsertImplementationPlan call")
 }
 
 func (repositoryStub) DeleteImplementationPlan(context.Context, string) error {
@@ -89,12 +89,18 @@ func (repositoryStub) CreateDocument(
 	domain.DocumentKind,
 	string,
 	string,
+	string,
+	bool,
 ) (domain.Document, error) {
 	return domain.Document{}, errors.New("unexpected CreateDocument call")
 }
 
 func (repositoryStub) GetDocument(context.Context, string) (domain.Document, error) {
 	return domain.Document{}, errors.New("unexpected GetDocument call")
+}
+
+func (repositoryStub) UpdateDocument(context.Context, domain.Document) (domain.Document, error) {
+	return domain.Document{}, errors.New("unexpected UpdateDocument call")
 }
 
 func (repositoryStub) DeleteDocument(context.Context, string) error {
@@ -240,23 +246,24 @@ func (r *taskRepository) UpdateTask(_ context.Context, task domain.Task) (domain
 
 type planRepository struct {
 	taskRepository
-	plan domain.ImplementationPlan
+	plan domain.Document
 }
 
-func (r *planRepository) GetImplementationPlan(context.Context, string) (domain.ImplementationPlan, error) {
+func (r *planRepository) GetImplementationPlan(context.Context, string) (domain.Document, error) {
 	return r.plan, nil
 }
 
 func (r *planRepository) UpsertImplementationPlan(
 	_ context.Context,
-	taskID, content string,
-) (domain.ImplementationPlan, error) {
-	r.plan = domain.ImplementationPlan{TaskID: taskID, Content: content}
+	taskID string, document domain.Document,
+) (domain.Document, error) {
+	document.TaskID = taskID
+	r.plan = document
 	return r.plan, nil
 }
 
 func (r *planRepository) DeleteImplementationPlan(context.Context, string) error {
-	r.plan = domain.ImplementationPlan{}
+	r.plan = domain.Document{}
 	return nil
 }
 
@@ -369,7 +376,9 @@ func TestImplementationPlanValidationPreservesContent(t *testing.T) {
 	}
 	service := app.New(repository, nil)
 	content := "  # Plan\n\nKeep the surrounding whitespace.  \n"
-	plan, err := service.UpsertImplementationPlan(context.Background(), "task-id", content)
+	plan, err := service.UpsertImplementationPlan(
+		context.Background(), "task-id", domain.Document{Kind: domain.DocumentKindMarkdown, Content: content},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -379,7 +388,7 @@ func TestImplementationPlanValidationPreservesContent(t *testing.T) {
 	if _, err := service.UpsertImplementationPlan(
 		context.Background(),
 		"task-id",
-		" \n\t ",
+		domain.Document{Kind: domain.DocumentKindMarkdown, Content: " \n\t "},
 	); errorCode(
 		t,
 		err,
@@ -389,7 +398,7 @@ func TestImplementationPlanValidationPreservesContent(t *testing.T) {
 	if _, err := service.UpsertImplementationPlan(
 		context.Background(),
 		"task-id",
-		string(make([]byte, (1<<20)+1)),
+		domain.Document{Kind: domain.DocumentKindMarkdown, Content: string(make([]byte, (1<<20)+1))},
 	); errorCode(
 		t,
 		err,
@@ -456,6 +465,8 @@ func TestAddDocumentValidatesWithoutRepository(t *testing.T) {
 				test.kind,
 				"Document",
 				test.value,
+				"",
+				false,
 			)
 			if got := errorCode(t, err); got != test.code {
 				t.Fatalf("error code=%q, want %q", got, test.code)

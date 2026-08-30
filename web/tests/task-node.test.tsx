@@ -10,9 +10,10 @@ describe("TaskNode", () => {
     const onPreview = vi.fn();
     const markdown = {
       id: "doc-md",
-      kind: DocumentKind.MARKDOWN_PATH,
+      kind: DocumentKind.LOCAL_FILE,
       title: "Rollout plan",
-      value: "docs/rollout.md",
+      locator: "docs/rollout.md",
+      isImplementationPlan: true,
     };
     const props = {
       id: "task",
@@ -33,7 +34,8 @@ describe("TaskNode", () => {
             id: "doc-url",
             kind: DocumentKind.URL,
             title: "Runbook",
-            value: "https://example.com/runbook",
+            locator: "https://example.com/runbook",
+            isImplementationPlan: false,
           },
         ],
         incomingPorts: [{ id: "edge-target", top: 44 }],

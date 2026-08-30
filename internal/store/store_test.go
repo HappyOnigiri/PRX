@@ -36,7 +36,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 6 {
+		migrations != 7 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -568,7 +568,7 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	var migrationCount int
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
-		Scan(&migrationCount); err != nil || migrationCount != 6 {
+		Scan(&migrationCount); err != nil || migrationCount != 7 {
 		t.Fatalf("migration count=%d err=%v", migrationCount, err)
 	}
 	var status string
@@ -1168,7 +1168,9 @@ func TestImplementationPlanLifecycleAndCascade(t *testing.T) {
 		t.Fatalf("initial task=%+v", snapshot.Tasks[0])
 	}
 	const content = "# API design\n\nDocument the boundary.\n"
-	plan, err := service.UpsertImplementationPlan(ctx, task.ID, content)
+	plan, err := service.UpsertImplementationPlan(
+		ctx, task.ID, domain.Document{Kind: domain.DocumentKindMarkdown, Content: content},
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1179,11 +1181,40 @@ func TestImplementationPlanLifecycleAndCascade(t *testing.T) {
 	if err != nil || read.Content != content || !read.CreatedAt.Equal(plan.CreatedAt) {
 		t.Fatalf("read plan=%+v err=%v", read, err)
 	}
+	normal, err := service.AddDocument(
+		ctx,
+		"",
+		task.ID,
+		domain.DocumentKindURL,
+		"Reference",
+		"https://example.com/reference",
+		"",
+		false,
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	updatedTitle := "Updated reference"
+	updated, err := service.UpdateDocument(ctx, normal.ID, &updatedTitle, nil, nil)
+	if err != nil || updated.Title != updatedTitle {
+		t.Fatalf("updated document=%+v err=%v", updated, err)
+	}
+	markAsPlan := true
+	if _, err := service.UpdateDocument(
+		ctx,
+		normal.ID,
+		nil,
+		nil,
+		&markAsPlan,
+	); domain.ErrorCode(err) != domain.DomainErrorCodeDuplicateImplementationPlan {
+		t.Fatalf("duplicate plan code=%s err=%v", domain.ErrorCode(err), err)
+	}
 	snapshot, err = service.Snapshot(ctx)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if !snapshot.Tasks[0].HasImplementationPlan || snapshot.Tasks[0].DisplayState != domain.TaskDisplayStateDesigned ||
+	if !snapshot.Tasks[0].HasImplementationPlan ||
+		snapshot.Tasks[0].DisplayState != domain.TaskDisplayStateNotStarted ||
 		!snapshot.Tasks[0].Ready {
 		t.Fatalf("planned task=%+v", snapshot.Tasks[0])
 	}
@@ -1207,7 +1238,9 @@ func TestImplementationPlanLifecycleAndCascade(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := service.UpsertImplementationPlan(ctx, second.ID, "# Keep this plan"); err != nil {
+	if _, err := service.UpsertImplementationPlan(
+		ctx, second.ID, domain.Document{Kind: domain.DocumentKindMarkdown, Content: "# Keep this plan"},
+	); err != nil {
 		t.Fatal(err)
 	}
 	if err := service.DeleteFeature(ctx, feature.ID, true); err != nil {

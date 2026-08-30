@@ -70,7 +70,8 @@ Help succeeds without opening configuration or storage resources.
 Resource commands use their shallow form for routine reads.
 Feature and task commands list without an identifier and show details with one identifier.
 `show` resolves a feature public ID, feature slug, or task public ID when a feature slug conflicts with a mutation command name.
-Dependency, pull-request, and document commands list when invoked without a mutation subcommand.
+Dependency and pull-request commands list when invoked without a mutation subcommand.
+Document commands list without a subcommand and use `document get DOCUMENT_ID` for a detailed read.
 Implementation plans use `plan TASK_ID`, and configuration reads use `config`, `config host`, or `config auth`.
 Mutation operations retain explicit verbs so state-changing intent remains visible.
 
@@ -154,6 +155,15 @@ Manual refreshes continue to return operation-level failures while preserving su
 Large Markdown bodies stay outside snapshots.
 Snapshots carry only the metadata needed for derived state.
 
+Documents use one model for feature and task references.
+Each document stores exactly one source: an HTTP or HTTPS URL, a registered local file path, or inline Markdown.
+Inline Markdown is limited to 1 MiB and is loaded only by a detailed read.
+Snapshots and list operations never include inline bodies.
+
+A task may designate at most one document as its implementation plan.
+The designation is metadata and does not affect display state, readiness, dependency satisfaction, or completion.
+Non-plan documents and feature documents have no application-level count limit.
+
 ## GitHub credential policy
 
 Credential methods are scoped to one normalized host and evaluated in explicit order.
@@ -179,9 +189,10 @@ The server binds to loopback by default.
 Non-loopback exposure requires an explicit listen address.
 Requests must be bound to the configured origin and RPC protocol so another origin cannot drive the local database.
 
-Markdown preview is limited to explicitly registered document paths.
+Local file preview is limited to explicitly registered document paths.
 It must not become a general filesystem reader.
-Markdown preview reads remain bounded.
+Local file reads remain bounded to 1 MiB and must contain valid UTF-8 text.
+URL documents are never fetched by the content-read API.
 
 Production responses use restrictive browser security headers.
 The server implementation owns the current header set and request-validation mechanics.

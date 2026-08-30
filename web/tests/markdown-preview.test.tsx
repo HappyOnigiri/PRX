@@ -6,18 +6,18 @@ import {
   screen,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { readMarkdownDocument } from "../src/api";
+import { readDocumentContent } from "../src/api";
 import { MarkdownPreview } from "../src/views/MarkdownPreview";
 
 vi.mock("../src/api", () => ({
-  readMarkdownDocument: vi.fn(),
+  readDocumentContent: vi.fn(),
 }));
 
 describe("MarkdownPreview", () => {
   const writeText = vi.fn().mockResolvedValue(undefined);
 
   beforeEach(() => {
-    vi.mocked(readMarkdownDocument).mockResolvedValue(
+    vi.mocked(readDocumentContent).mockResolvedValue(
       "# Delivery plan\n\nShip the **API** safely.",
     );
     writeText.mockClear();
@@ -39,7 +39,7 @@ describe("MarkdownPreview", () => {
         document={{
           id: "document-1",
           title: "Delivery plan",
-          value: "docs/delivery.md",
+          locator: "docs/delivery.md",
         }}
         onClose={onClose}
       />,
@@ -61,7 +61,7 @@ describe("MarkdownPreview", () => {
   });
 
   it("shows a read error, retries, and opens Markdown links externally", async () => {
-    vi.mocked(readMarkdownDocument)
+    vi.mocked(readDocumentContent)
       .mockRejectedValueOnce(new Error("file disappeared"))
       .mockResolvedValueOnce("[Runbook](https://example.com/runbook)");
     const { unmount } = render(
@@ -69,7 +69,7 @@ describe("MarkdownPreview", () => {
         document={{
           id: "document-2",
           title: "Runbook",
-          value: "docs/runbook.md",
+          locator: "docs/runbook.md",
         }}
         onClose={vi.fn()}
       />,
@@ -81,7 +81,7 @@ describe("MarkdownPreview", () => {
     fireEvent.click(screen.getByRole("button", { name: "Try again" }));
     const link = await screen.findByRole("link", { name: "Runbook" });
     expect(link).toHaveAttribute("target", "_blank");
-    expect(readMarkdownDocument).toHaveBeenCalledWith("document-2");
+    expect(readDocumentContent).toHaveBeenCalledWith("document-2");
     unmount();
   });
 
@@ -89,7 +89,11 @@ describe("MarkdownPreview", () => {
     writeText.mockRejectedValueOnce(new Error("clipboard denied"));
     render(
       <MarkdownPreview
-        document={{ id: "document-3", title: "Notes", value: "docs/notes.md" }}
+        document={{
+          id: "document-3",
+          title: "Notes",
+          locator: "docs/notes.md",
+        }}
         onClose={vi.fn()}
       />,
     );

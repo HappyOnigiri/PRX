@@ -188,36 +188,42 @@ func (s *Store) UpdateTask(ctx context.Context, task domain.Task) (domain.Task, 
 	return domainTask(value, publicFeatureID(ctx, q, value.FeatureID)), nil
 }
 
-func (s *Store) GetImplementationPlan(ctx context.Context, taskID string) (domain.ImplementationPlan, error) {
+func (s *Store) GetImplementationPlan(ctx context.Context, taskID string) (domain.Document, error) {
 	q := db.New(s.db)
 	task, err := q.GetTaskByPublicID(ctx, taskID)
 	if err != nil {
-		return domain.ImplementationPlan{}, mapNotFound(err, "task", taskID)
+		return domain.Document{}, mapNotFound(err, "task", taskID)
 	}
-	value, err := q.GetImplementationPlan(ctx, task.ID)
-	return domainImplementationPlan(value, task.PublicID), mapNotFound(err, "implementation plan for task", taskID)
+	value, err := q.GetImplementationPlanDocument(ctx, sql.NullString{String: task.ID, Valid: true})
+	return domainDocument(value, nil, map[string]string{task.ID: task.PublicID}),
+		mapNotFound(err, "implementation plan for task", taskID)
 }
 
 func (s *Store) UpsertImplementationPlan(
 	ctx context.Context,
-	taskID, content string,
-) (domain.ImplementationPlan, error) {
+	taskID string,
+	document domain.Document,
+) (domain.Document, error) {
 	q := db.New(s.db)
 	task, err := q.GetTaskByPublicID(ctx, taskID)
 	if err != nil {
-		return domain.ImplementationPlan{}, mapNotFound(err, "task", taskID)
+		return domain.Document{}, mapNotFound(err, "task", taskID)
 	}
 	now := timestamp(s.now())
-	value, err := q.UpsertImplementationPlan(ctx, db.UpsertImplementationPlanParams{
-		TaskID:    task.ID,
-		Content:   content,
+	value, err := q.UpsertImplementationPlanDocument(ctx, db.UpsertImplementationPlanDocumentParams{
+		ID:        uuid.NewString(),
+		TaskID:    sql.NullString{String: task.ID, Valid: true},
+		Kind:      string(document.Kind),
+		Title:     document.Title,
+		Locator:   nullString(document.Locator),
+		Content:   nullString(document.Content),
 		CreatedAt: now,
 		UpdatedAt: now,
 	})
 	if err != nil {
-		return domain.ImplementationPlan{}, err
+		return domain.Document{}, err
 	}
-	return domainImplementationPlan(value, task.PublicID), nil
+	return domainDocument(value, nil, map[string]string{task.ID: task.PublicID}), nil
 }
 
 func (s *Store) DeleteImplementationPlan(ctx context.Context, taskID string) error {
@@ -226,7 +232,7 @@ func (s *Store) DeleteImplementationPlan(ctx context.Context, taskID string) err
 	if err != nil {
 		return mapNotFound(err, "task", taskID)
 	}
-	affected, err := q.DeleteImplementationPlan(ctx, task.ID)
+	affected, err := q.DeleteImplementationPlanDocument(ctx, sql.NullString{String: task.ID, Valid: true})
 	if err != nil {
 		return err
 	}
@@ -348,9 +354,8 @@ func (s *Store) DeleteTask(ctx context.Context, id string, cascade bool) error {
 	if !cascade {
 		var references int
 		query := `SELECT (SELECT COUNT(*) FROM dependencies WHERE blocker_task_id=? OR blocked_task_id=?) + ` +
-			`(SELECT COUNT(*) FROM pull_requests WHERE task_id=?) + (SELECT COUNT(*) FROM documents WHERE task_id=?) + ` +
-			`(SELECT COUNT(*) FROM implementation_plans WHERE task_id=?)`
-		if err := tx.QueryRowContext(ctx, query, storageID, storageID, storageID, storageID, storageID).
+			`(SELECT COUNT(*) FROM pull_requests WHERE task_id=?) + (SELECT COUNT(*) FROM documents WHERE task_id=?)`
+		if err := tx.QueryRowContext(ctx, query, storageID, storageID, storageID, storageID).
 			Scan(&references); err != nil {
 			return err
 		}
@@ -372,9 +377,6 @@ func (s *Store) DeleteTask(ctx context.Context, id string, cascade bool) error {
 			return err
 		}
 		if err := q.DeleteDocumentsForTask(ctx, sql.NullString{String: storageID, Valid: true}); err != nil {
-			return err
-		}
-		if err := q.DeleteImplementationPlansForTask(ctx, storageID); err != nil {
 			return err
 		}
 	}
@@ -400,8 +402,13 @@ func (s *Store) DeleteFeature(ctx context.Context, id string, cascade bool) erro
 	if err != nil {
 		return err
 	}
-	if len(tasks) > 0 && !cascade {
-		return domain.NewError(domain.DomainErrorCodeReferencesExist, "feature has tasks; pass --cascade")
+	var documentCount int
+	if err := tx.QueryRowContext(ctx, `SELECT COUNT(*) FROM documents WHERE feature_id=?`, storageID).
+		Scan(&documentCount); err != nil {
+		return err
+	}
+	if (len(tasks) > 0 || documentCount > 0) && !cascade {
+		return domain.NewError(domain.DomainErrorCodeReferencesExist, "feature has tasks or documents; pass --cascade")
 	}
 	if cascade {
 		if err := q.DeleteDependenciesForFeature(ctx, storageID); err != nil {
@@ -411,9 +418,6 @@ func (s *Store) DeleteFeature(ctx context.Context, id string, cascade bool) erro
 			return err
 		}
 		if err := q.DeleteDocumentsForFeature(ctx, sql.NullString{String: storageID, Valid: true}); err != nil {
-			return err
-		}
-		if err := q.DeleteImplementationPlansForFeature(ctx, storageID); err != nil {
 			return err
 		}
 		if err := q.DeleteTasksForFeature(ctx, storageID); err != nil {
@@ -601,7 +605,8 @@ func (s *Store) CreateDocument(
 	ctx context.Context,
 	featureID, taskID string,
 	kind domain.DocumentKind,
-	title, value string,
+	title, locator, content string,
+	isImplementationPlan bool,
 ) (domain.Document, error) {
 	q := db.New(s.db)
 	featureIDs := map[string]string{}
@@ -623,18 +628,49 @@ func (s *Store) CreateDocument(
 		taskIDs[task.ID] = task.PublicID
 	}
 	params := db.CreateDocumentParams{
-		ID:        uuid.NewString(),
-		FeatureID: nullString(featureID),
-		TaskID:    nullString(taskID),
-		Kind:      string(kind),
-		Title:     title,
-		Value:     value,
-		CreatedAt: timestamp(s.now()),
+		ID:                   uuid.NewString(),
+		FeatureID:            nullString(featureID),
+		TaskID:               nullString(taskID),
+		Kind:                 string(kind),
+		Title:                title,
+		Locator:              nullString(locator),
+		Content:              nullString(content),
+		IsImplementationPlan: boolInt(isImplementationPlan),
+		CreatedAt:            timestamp(s.now()),
+		UpdatedAt:            timestamp(s.now()),
 	}
 	row, err := db.New(s.db).
 		CreateDocument(ctx, params)
 	if err != nil {
-		return domain.Document{}, err
+		return domain.Document{}, mapDocumentConstraint(err)
+	}
+	return domainDocument(row, featureIDs, taskIDs), nil
+}
+
+func (s *Store) UpdateDocument(ctx context.Context, document domain.Document) (domain.Document, error) {
+	q := db.New(s.db)
+	row, err := q.UpdateDocument(ctx, db.UpdateDocumentParams{
+		Kind:                 string(document.Kind),
+		Title:                document.Title,
+		Locator:              nullString(document.Locator),
+		Content:              nullString(document.Content),
+		IsImplementationPlan: boolInt(document.IsImplementationPlan),
+		UpdatedAt:            timestamp(s.now()),
+		ID:                   document.ID,
+	})
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return domain.Document{}, mapNotFound(err, "document", document.ID)
+		}
+		return domain.Document{}, mapDocumentConstraint(err)
+	}
+	featureIDs := map[string]string{}
+	taskIDs := map[string]string{}
+	if row.FeatureID.Valid {
+		featureIDs[row.FeatureID.String] = publicFeatureID(ctx, q, row.FeatureID.String)
+	}
+	if row.TaskID.Valid {
+		taskIDs[row.TaskID.String] = publicTaskID(ctx, q, row.TaskID.String)
 	}
 	return domainDocument(row, featureIDs, taskIDs), nil
 }
@@ -710,7 +746,7 @@ func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 	}
 	planTasks := make(map[string]struct{}, len(planTaskIDs))
 	for _, taskID := range planTaskIDs {
-		planTasks[taskID] = struct{}{}
+		planTasks[taskID.String] = struct{}{}
 	}
 	for i := range result.Tasks {
 		_, result.Tasks[i].HasImplementationPlan = planTasks[result.Tasks[i].StorageID]
@@ -722,9 +758,20 @@ func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 		result.PullRequests[i] = domainPullRequest(row, taskIDs)
 	}
 	for i, row := range docs {
-		result.Documents[i] = domainDocument(row, featureIDs, taskIDs)
+		result.Documents[i] = domainListedDocument(row, featureIDs, taskIDs)
 	}
 	return result, nil
+}
+
+func mapDocumentConstraint(err error) error {
+	if strings.Contains(err.Error(), "documents.task_id") ||
+		strings.Contains(err.Error(), "documents_one_plan_per_task_idx") {
+		return domain.NewError(
+			domain.DomainErrorCodeDuplicateImplementationPlan,
+			"task already has an implementation plan",
+		)
+	}
+	return err
 }
 
 func (s *Store) Validate(ctx context.Context) []string {
