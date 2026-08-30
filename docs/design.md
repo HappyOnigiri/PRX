@@ -118,9 +118,9 @@ Settings follow ownership rather than convenience:
 Persistent mutations and migrations are atomic.
 Configuration writes preserve local secret-file protections and use atomic replacement.
 
-A configuration file written by a newer PRX still loads.
-Its unknown fields are reported as warnings instead of failing the command or the server start, and the next configuration write drops them.
-Every other decoding failure keeps the configuration from loading, so a malformed or ambiguous file is never accepted silently.
+A configuration file using a supported version still loads when it contains unknown fields.
+Those fields are reported as warnings instead of failing the command or the server start, and the next configuration write drops them.
+Unsupported versions and every other decoding failure keep the configuration from loading, so a malformed or ambiguous file is never accepted silently.
 
 Pull-request identity includes the normalized host.
 Repositories with the same owner and name on different GitHub hosts must remain distinct.
