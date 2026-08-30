@@ -96,6 +96,14 @@ func TestNormalizeDefaultsAndRejectsUnsafeValues(t *testing.T) {
 	if err := maximum.SetAutoSyncInterval(int64(^uint64(0) >> 1)); err != nil {
 		t.Fatalf("maximum interval was rejected: %v", err)
 	}
+	// Normalize reads an omitted interval as the default, so 0 must be rejected
+	// here rather than silently becoming 3600.
+	for _, seconds := range []int64{0, -1, MinimumAutoSyncIntervalSeconds - 1} {
+		below := Default()
+		if err := below.SetAutoSyncInterval(seconds); ErrorCodeOf(err) != ErrorCodeInvalid {
+			t.Fatalf("SetAutoSyncInterval(%d) error=%v code=%s", seconds, err, ErrorCodeOf(err))
+		}
+	}
 
 	for _, raw := range []string{
 		"https://ghe.example.com",

@@ -68,7 +68,10 @@ func (s *state) configSyncUpdateCommand() *cobra.Command {
 				return configCommandError(err)
 			}
 			value := map[string]int64{"interval_seconds": settings.GitHub.AutoSyncIntervalSeconds}
-			return s.write(value, renderMessage("Automatic sync interval: %d seconds.", interval))
+			return s.write(value, renderMessage(
+				"Automatic sync interval: %d seconds.",
+				settings.GitHub.AutoSyncIntervalSeconds,
+			))
 		},
 	}
 	command.Flags().Int64Var(&interval, "interval-seconds", 0, "automatic sync interval in seconds (minimum 600)")

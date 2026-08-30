@@ -508,6 +508,15 @@ func (c *Config) ReorderAuthMethods(ids []string) error {
 }
 
 func (c *Config) SetAutoSyncInterval(seconds int64) error {
+	// Normalize reads an omitted interval as the default, which would silently
+	// turn an explicit 0 into 3600 instead of reporting the documented minimum.
+	if seconds < MinimumAutoSyncIntervalSeconds {
+		return newError(
+			ErrorCodeInvalid,
+			"github.auto_sync_interval_seconds must be at least %d",
+			MinimumAutoSyncIntervalSeconds,
+		)
+	}
 	c.GitHub.AutoSyncIntervalSeconds = seconds
 	return c.normalizeInPlace()
 }
