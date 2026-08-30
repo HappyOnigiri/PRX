@@ -198,29 +198,10 @@
   gap: 8px;
 }
 
-.rail-settings {
-  display: grid;
-  gap: 10px;
-  margin: 0 16px 12px;
-}
-
-.language-setting,
-.theme-setting {
-  display: grid;
-  gap: 6px;
-  color: var(--text-3);
-  font-size: var(--text-xs);
-}
-
-.language-setting select,
-.theme-setting select {
-  width: 100%;
+.settings-trigger {
+  width: calc(100% - 32px);
   min-height: 32px;
-  border: 1px solid var(--border-strong);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--text);
-  padding: 4px 8px;
+  margin: 0 16px 12px;
 }
 
 .health {
@@ -283,21 +264,10 @@
     margin: 14px 10px;
   }
 
-  .rail-settings {
+  .settings-trigger {
     align-self: center;
-    display: flex;
-    gap: 6px;
+    width: auto;
     margin: 10px 12px 10px 0;
-  }
-
-  .language-setting span,
-  .theme-setting span {
-    display: none;
-  }
-
-  .language-setting select,
-  .theme-setting select {
-    width: 92px;
   }
 
   .main-stage {
@@ -352,20 +322,10 @@
     padding-inline: 8px;
   }
 
-  .rail-settings {
-    gap: 4px;
-    margin-right: 8px;
-  }
-
-  .language-setting select,
-  .theme-setting select {
-    width: 72px;
-    padding-inline: 6px;
-  }
-
   .settings-trigger {
     width: 32px;
     min-width: 32px;
+    margin-right: 8px;
     padding-inline: 0;
     overflow: hidden;
   }

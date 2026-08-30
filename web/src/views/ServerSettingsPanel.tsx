@@ -1,5 +1,4 @@
 import {
-  Check,
   ChevronDown,
   ChevronUp,
   Pencil,
@@ -8,7 +7,7 @@ import {
   Trash2,
   X,
 } from "lucide-react";
-import { useState, type ReactNode, type SyntheticEvent } from "react";
+import { useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { configMutations } from "../api";
 import {
@@ -94,7 +93,7 @@ function emptyAuthDraft(host = ""): AuthDraft {
   };
 }
 
-export function ServerSettingsDialog({ onClose }: { onClose: () => void }) {
+export function ServerSettingsPanel() {
   const { t } = useTranslation();
   const config = useConfig();
   const hosts = config.data?.hosts ?? [];
@@ -107,14 +106,12 @@ export function ServerSettingsDialog({ onClose }: { onClose: () => void }) {
 
   if (config.isPending) {
     return (
-      <SettingsFrame onClose={onClose} title={t("serverSettings.title")}>
-        <p>{t("serverSettings.loading")}</p>
-      </SettingsFrame>
+      <p className="settings-panel-state">{t("serverSettings.loading")}</p>
     );
   }
 
   return (
-    <SettingsFrame onClose={onClose} title={t("serverSettings.title")}>
+    <>
       <p className="dialog-lead">{t("serverSettings.description")}</p>
       {config.data?.autoSyncIntervalSeconds !== undefined && (
         <AutoSyncSettings interval={config.data.autoSyncIntervalSeconds} />
@@ -127,7 +124,7 @@ export function ServerSettingsDialog({ onClose }: { onClose: () => void }) {
         defaultHost={defaultHost}
       />
       {error && <p className="form-error">{error.message}</p>}
-    </SettingsFrame>
+    </>
   );
 }
 
@@ -766,53 +763,6 @@ function AuthSourceFields({
     );
   }
   return null;
-}
-
-function SettingsFrame({
-  onClose,
-  title,
-  children,
-}: {
-  onClose: () => void;
-  title: string;
-  children: ReactNode;
-}) {
-  const { t } = useTranslation();
-  return (
-    <div className="scrim" role="presentation">
-      <section
-        className="dialog settings-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-label={title}
-      >
-        <header className="settings-dialog-head">
-          <div>
-            <p className="section-label">{t("serverSettings.eyebrow")}</p>
-            <h2>{title}</h2>
-          </div>
-          <IconButton
-            icon={X}
-            label={t("common.close")}
-            variant="secondary"
-            iconOnly
-            type="button"
-            onClick={onClose}
-          />
-        </header>
-        {children}
-        <footer>
-          <IconButton
-            icon={Check}
-            label={t("common.done")}
-            variant="secondary"
-            type="button"
-            onClick={onClose}
-          />
-        </footer>
-      </section>
-    </div>
-  );
 }
 
 function authTypeLabel(type: GithubAuthMethodType): string {

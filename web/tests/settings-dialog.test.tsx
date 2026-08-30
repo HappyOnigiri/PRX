@@ -9,7 +9,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { GithubAuthMethodType } from "../src/gen/prx/v1/prx_pb";
 import { setDisplayLanguage } from "../src/i18n";
-import { ServerSettingsDialog } from "../src/views/ServerSettingsDialog";
+import { SettingsDialog } from "../src/views/SettingsDialog";
 
 const settingsMocks = vi.hoisted(() => {
   const api = {
@@ -108,11 +108,17 @@ vi.mock("../src/hooks", () => ({
   },
 }));
 
-describe("ServerSettingsDialog", () => {
-  afterEach(cleanup);
+describe("SettingsDialog", () => {
+  afterEach(() => {
+    cleanup();
+    vi.restoreAllMocks();
+  });
 
   beforeEach(async () => {
+    localStorage.clear();
     await setDisplayLanguage("en");
+    settingsMocks.config.isPending = false;
+    settingsMocks.config.error = null;
     vi.spyOn(window, "confirm").mockReturnValue(true);
     for (const value of Object.values(settingsMocks.mutations)) {
       value.mutate.mockReset();
@@ -125,10 +131,10 @@ describe("ServerSettingsDialog", () => {
 
   it("submits host changes, reorders credentials, and keeps an omitted inline token", async () => {
     const onClose = vi.fn();
-    render(<ServerSettingsDialog onClose={onClose} />);
+    render(<SettingsDialog onClose={onClose} />);
 
     expect(
-      screen.getByRole("dialog", { name: "Server settings" }),
+      screen.getByRole("dialog", { name: "Settings" }),
     ).toBeInTheDocument();
     expect(screen.getByText(/gith…cret/)).toBeInTheDocument();
     expect(
@@ -286,7 +292,7 @@ describe("ServerSettingsDialog", () => {
   });
 
   it("switches the credential form by source and sends a new inline token", async () => {
-    render(<ServerSettingsDialog onClose={vi.fn()} />);
+    render(<SettingsDialog onClose={vi.fn()} />);
     const authForm = screen
       .getByRole("heading", { name: "Register a credential" })
       .closest("form");
@@ -334,13 +340,56 @@ describe("ServerSettingsDialog", () => {
     });
   });
 
+  it("keeps server drafts mounted while navigating tabs by keyboard", () => {
+    render(<SettingsDialog onClose={vi.fn()} />);
+    const serverTab = screen.getByRole("tab", { name: "Server" });
+    const displayTab = screen.getByRole("tab", { name: "Display" });
+    const hostForm = screen
+      .getByRole("heading", { name: "Register a host" })
+      .closest("form");
+    if (!(hostForm instanceof HTMLFormElement))
+      throw new Error("host form missing");
+    fireEvent.change(within(hostForm).getByLabelText("Host"), {
+      target: { value: "draft.example.com" },
+    });
+
+    fireEvent.keyDown(serverTab, { key: "ArrowRight" });
+    expect(displayTab).toHaveFocus();
+    expect(displayTab).toHaveAttribute("aria-selected", "true");
+    expect(
+      screen.getByRole("combobox", { name: "Display language" }),
+    ).toBeInTheDocument();
+
+    fireEvent.keyDown(displayTab, { key: "Home" });
+    expect(serverTab).toHaveFocus();
+    expect(within(hostForm).getByLabelText("Host")).toHaveValue(
+      "draft.example.com",
+    );
+
+    fireEvent.keyDown(serverTab, { key: "End" });
+    expect(displayTab).toHaveFocus();
+    fireEvent.keyDown(displayTab, { key: "ArrowRight" });
+    expect(serverTab).toHaveFocus();
+  });
+
+  it("keeps display settings available while server settings load", () => {
+    settingsMocks.config.isPending = true;
+    render(<SettingsDialog onClose={vi.fn()} />);
+    expect(screen.getByText("Loading server settings…")).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("tab", { name: "Display" }));
+    expect(
+      screen.getByRole("combobox", { name: "Display language" }),
+    ).toBeInTheDocument();
+  });
+
   // The interval form owns its own mutation, so the dialog's shared error area
   // never sees its failures.
   it("shows why saving the synchronization interval failed", () => {
     settingsMocks.mutations.updateSync.error = new Error(
       "config file is read-only",
     );
-    render(<ServerSettingsDialog onClose={vi.fn()} />);
+    render(<SettingsDialog onClose={vi.fn()} />);
     expect(screen.getByText("config file is read-only")).toBeInTheDocument();
   });
 });

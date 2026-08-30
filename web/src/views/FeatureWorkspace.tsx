@@ -238,7 +238,6 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           <TaskInspector
             task={props.selectedTask}
             tasks={props.tasks}
-            dependencies={props.dependencies}
             pullRequest={props.pullRequests.get(props.selectedTask.id)}
             documents={props.documentsByTask.get(props.selectedTask.id) ?? []}
             readOnly={props.feature.archived}

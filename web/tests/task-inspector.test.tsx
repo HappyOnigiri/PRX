@@ -14,12 +14,7 @@ import {
   TaskStatus,
 } from "../src/gen/prx/v1/prx_pb";
 import { TaskInspector } from "../src/views/TaskInspector";
-import {
-  makeDependency,
-  makeDocument,
-  makePullRequest,
-  makeTask,
-} from "./factories";
+import { makeDocument, makePullRequest, makeTask } from "./factories";
 
 const inspectorMocks = vi.hoisted(() => ({
   hookIndex: 0,
@@ -28,7 +23,6 @@ const inspectorMocks = vi.hoisted(() => ({
     deleteTask: vi.fn(),
     attachPR: vi.fn(),
     detachPR: vi.fn(),
-    removeDependency: vi.fn(),
     addDocument: vi.fn(),
     deleteDocument: vi.fn(),
     getDocument: vi.fn(),
@@ -86,7 +80,7 @@ describe("TaskInspector", () => {
     }
   });
 
-  it("edits a task and manages its pull request, dependencies, and references", async () => {
+  it("edits a task and manages its pull request and references", async () => {
     const task = makeTask({
       title: "Current task",
       scope: "Initial scope",
@@ -99,10 +93,6 @@ describe("TaskInspector", () => {
       },
     });
     const blocker = makeTask({ id: "task-2", title: "Blocker task" });
-    const dependency = makeDependency({
-      blockerTaskId: "task-2",
-      blockedTaskId: task.id,
-    });
     const pullRequest = makePullRequest({
       taskId: task.id,
       stale: true,
@@ -136,7 +126,6 @@ describe("TaskInspector", () => {
       <TaskInspector
         task={task}
         tasks={[task, blocker]}
-        dependencies={[dependency]}
         pullRequest={pullRequest}
         documents={[markdown, url, inline]}
         onPreview={onPreview}
@@ -167,6 +156,12 @@ describe("TaskInspector", () => {
     expect(
       screen.queryByRole("button", { name: /^Add$/ }),
     ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("heading", { name: "Blocked by" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Remove dependency" }),
+    ).not.toBeInTheDocument();
 
     fireEvent.change(screen.getByLabelText("Title"), {
       target: { value: "Updated task" },
@@ -191,18 +186,13 @@ describe("TaskInspector", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Detach" }));
     expect(mutationAt(3).mutate).toHaveBeenCalledWith(task.id);
-    fireEvent.click(screen.getByRole("button", { name: "Remove dependency" }));
-    expect(mutationAt(4).mutate).toHaveBeenCalledWith({
-      blocker: "task-2",
-      blocked: task.id,
-    });
 
     fireEvent.click(
       screen.getByRole("button", { name: "Delivery plandocs/delivery.md" }),
     );
     expect(onPreview).toHaveBeenCalledWith(markdown);
     fireEvent.click(screen.getByRole("button", { name: "Delete Runbook" }));
-    expect(mutationAt(6).mutate).toHaveBeenCalledWith("document-url");
+    expect(mutationAt(5).mutate).toHaveBeenCalledWith("document-url");
 
     inspectorMocks.api.getDocument.mockResolvedValue({
       content: "# Old\n\n- first\n- second",
@@ -271,7 +261,6 @@ describe("TaskInspector", () => {
       <TaskInspector
         task={task}
         tasks={[task]}
-        dependencies={[]}
         pullRequest={undefined}
         documents={[]}
         onPreview={vi.fn()}
@@ -309,14 +298,13 @@ describe("TaskInspector", () => {
       <TaskInspector
         task={task}
         tasks={[task]}
-        dependencies={[]}
         pullRequest={undefined}
         documents={[inline]}
         onPreview={vi.fn()}
         onClose={vi.fn()}
       />
     );
-    mutationAt(8).error = new Error("read failed");
+    mutationAt(7).error = new Error("read failed");
     render(inspector);
 
     expect(screen.getByRole("alert")).toHaveTextContent("read failed");
@@ -329,7 +317,6 @@ describe("TaskInspector", () => {
       <TaskInspector
         task={makeTask()}
         tasks={[makeTask()]}
-        dependencies={[]}
         pullRequest={undefined}
         documents={[]}
         onPreview={vi.fn()}
@@ -364,12 +351,6 @@ describe("TaskInspector", () => {
       <TaskInspector
         task={task}
         tasks={[task, blocker]}
-        dependencies={[
-          makeDependency({
-            blockerTaskId: blocker.id,
-            blockedTaskId: task.id,
-          }),
-        ]}
         pullRequest={makePullRequest({ taskId: task.id })}
         documents={[markdown]}
         onPreview={onPreview}
@@ -380,7 +361,7 @@ describe("TaskInspector", () => {
 
     expect(screen.getByText("Archived task · read-only")).toBeInTheDocument();
     expect(screen.getByText("Historical scope")).toBeInTheDocument();
-    expect(screen.getByText("Archived blocker")).toBeInTheDocument();
+    expect(screen.queryByText("Archived blocker")).not.toBeInTheDocument();
     expect(screen.getByRole("link", { name: "acme/prx #42" })).toHaveAttribute(
       "target",
       "_blank",
