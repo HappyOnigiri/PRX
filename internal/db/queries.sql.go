@@ -217,6 +217,24 @@ func (q *Queries) DeleteFeature(ctx context.Context, id string) error {
 	return err
 }
 
+const deleteGitHubRepositoryAuthCache = `-- name: DeleteGitHubRepositoryAuthCache :execrows
+DELETE FROM github_repository_auth_cache WHERE host=? AND owner=? AND repository=?
+`
+
+type DeleteGitHubRepositoryAuthCacheParams struct {
+	Host       string `json:"host"`
+	Owner      string `json:"owner"`
+	Repository string `json:"repository"`
+}
+
+func (q *Queries) DeleteGitHubRepositoryAuthCache(ctx context.Context, arg DeleteGitHubRepositoryAuthCacheParams) (int64, error) {
+	result, err := q.db.ExecContext(ctx, deleteGitHubRepositoryAuthCache, arg.Host, arg.Owner, arg.Repository)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected()
+}
+
 const deletePullRequest = `-- name: DeletePullRequest :execrows
 DELETE FROM pull_requests WHERE task_id=?
 `
@@ -338,8 +356,31 @@ func (q *Queries) GetFeatureBySlug(ctx context.Context, slug string) (Feature, e
 	return i, err
 }
 
+const getGitHubRepositoryAuthCache = `-- name: GetGitHubRepositoryAuthCache :one
+SELECT host, owner, repository, auth_method_id, last_succeeded_at FROM github_repository_auth_cache WHERE host=? AND owner=? AND repository=?
+`
+
+type GetGitHubRepositoryAuthCacheParams struct {
+	Host       string `json:"host"`
+	Owner      string `json:"owner"`
+	Repository string `json:"repository"`
+}
+
+func (q *Queries) GetGitHubRepositoryAuthCache(ctx context.Context, arg GetGitHubRepositoryAuthCacheParams) (GithubRepositoryAuthCache, error) {
+	row := q.db.QueryRowContext(ctx, getGitHubRepositoryAuthCache, arg.Host, arg.Owner, arg.Repository)
+	var i GithubRepositoryAuthCache
+	err := row.Scan(
+		&i.Host,
+		&i.Owner,
+		&i.Repository,
+		&i.AuthMethodID,
+		&i.LastSucceededAt,
+	)
+	return i, err
+}
+
 const getPullRequestByTask = `-- name: GetPullRequestByTask :one
-SELECT task_id, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale FROM pull_requests WHERE task_id=?
+SELECT task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale FROM pull_requests WHERE task_id=?
 `
 
 func (q *Queries) GetPullRequestByTask(ctx context.Context, taskID string) (PullRequest, error) {
@@ -347,6 +388,7 @@ func (q *Queries) GetPullRequestByTask(ctx context.Context, taskID string) (Pull
 	var i PullRequest
 	err := row.Scan(
 		&i.TaskID,
+		&i.Host,
 		&i.Owner,
 		&i.Repository,
 		&i.Number,
@@ -549,7 +591,7 @@ func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
 }
 
 const listPullRequests = `-- name: ListPullRequests :many
-SELECT task_id, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale FROM pull_requests ORDER BY owner, repository, number
+SELECT task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale FROM pull_requests ORDER BY host, owner, repository, number
 `
 
 func (q *Queries) ListPullRequests(ctx context.Context) ([]PullRequest, error) {
@@ -563,6 +605,7 @@ func (q *Queries) ListPullRequests(ctx context.Context) ([]PullRequest, error) {
 		var i PullRequest
 		if err := rows.Scan(
 			&i.TaskID,
+			&i.Host,
 			&i.Owner,
 			&i.Repository,
 			&i.Number,
@@ -762,18 +805,45 @@ func (q *Queries) UpdateTask(ctx context.Context, arg UpdateTaskParams) (Task, e
 	return i, err
 }
 
+const upsertGitHubRepositoryAuthCache = `-- name: UpsertGitHubRepositoryAuthCache :exec
+INSERT INTO github_repository_auth_cache (host, owner, repository, auth_method_id, last_succeeded_at)
+VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(host, owner, repository) DO UPDATE SET auth_method_id=excluded.auth_method_id,
+last_succeeded_at=excluded.last_succeeded_at
+`
+
+type UpsertGitHubRepositoryAuthCacheParams struct {
+	Host            string `json:"host"`
+	Owner           string `json:"owner"`
+	Repository      string `json:"repository"`
+	AuthMethodID    string `json:"auth_method_id"`
+	LastSucceededAt string `json:"last_succeeded_at"`
+}
+
+func (q *Queries) UpsertGitHubRepositoryAuthCache(ctx context.Context, arg UpsertGitHubRepositoryAuthCacheParams) error {
+	_, err := q.db.ExecContext(ctx, upsertGitHubRepositoryAuthCache,
+		arg.Host,
+		arg.Owner,
+		arg.Repository,
+		arg.AuthMethodID,
+		arg.LastSucceededAt,
+	)
+	return err
+}
+
 const upsertPullRequest = `-- name: UpsertPullRequest :one
-INSERT INTO pull_requests (task_id, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-ON CONFLICT(task_id) DO UPDATE SET owner=excluded.owner, repository=excluded.repository, number=excluded.number,
+INSERT INTO pull_requests (task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(task_id) DO UPDATE SET host=excluded.host, owner=excluded.owner, repository=excluded.repository, number=excluded.number,
 url=excluded.url, node_id=excluded.node_id, author=excluded.author, assignees_json=excluded.assignees_json,
 state=excluded.state, draft=excluded.draft, review_state=excluded.review_state, mergeability=excluded.mergeability,
 github_updated_at=excluded.github_updated_at, last_synced_at=excluded.last_synced_at,
-sync_error=excluded.sync_error, stale=excluded.stale RETURNING task_id, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale
+sync_error=excluded.sync_error, stale=excluded.stale RETURNING task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale
 `
 
 type UpsertPullRequestParams struct {
 	TaskID          string         `json:"task_id"`
+	Host            string         `json:"host"`
 	Owner           string         `json:"owner"`
 	Repository      string         `json:"repository"`
 	Number          int64          `json:"number"`
@@ -794,6 +864,7 @@ type UpsertPullRequestParams struct {
 func (q *Queries) UpsertPullRequest(ctx context.Context, arg UpsertPullRequestParams) (PullRequest, error) {
 	row := q.db.QueryRowContext(ctx, upsertPullRequest,
 		arg.TaskID,
+		arg.Host,
 		arg.Owner,
 		arg.Repository,
 		arg.Number,
@@ -813,6 +884,7 @@ func (q *Queries) UpsertPullRequest(ctx context.Context, arg UpsertPullRequestPa
 	var i PullRequest
 	err := row.Scan(
 		&i.TaskID,
+		&i.Host,
 		&i.Owner,
 		&i.Repository,
 		&i.Number,

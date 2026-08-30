@@ -47,7 +47,7 @@ export function useGraphLayout({
           stale: pr?.stale ?? false,
           pullRequest: pr
             ? {
-                label: `${pr.owner}/${pr.repository} #${String(pr.number)}`,
+                label: `${pr.host && pr.host !== "github.com" ? `${pr.host}/` : ""}${pr.owner}/${pr.repository} #${String(pr.number)}`,
                 url: pr.url,
               }
             : undefined,

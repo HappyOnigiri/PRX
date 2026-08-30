@@ -146,6 +146,7 @@ export const errorKeys = {
   [DomainErrorCode.DUPLICATE_DEPENDENCY]: "error.duplicateDependency",
   [DomainErrorCode.DUPLICATE_PULL_REQUEST]: "error.duplicatePullRequest",
   [DomainErrorCode.GITHUB_AUTH]: "error.githubAuth",
+  [DomainErrorCode.INVALID_CONFIG]: "error.invalidConfig",
   [DomainErrorCode.INVALID_DATABASE]: "error.invalidDatabase",
   [DomainErrorCode.INVALID_DOCUMENT]: "error.invalidDocument",
   [DomainErrorCode.INVALID_DOCUMENT_KIND]: "error.invalidDocumentKind",

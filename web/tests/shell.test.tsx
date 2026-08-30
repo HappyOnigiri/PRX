@@ -44,10 +44,23 @@ vi.mock("@tanstack/react-router", () => ({
   }) => <span className={className}>{children}</span>,
   useNavigate: () => shellMocks.navigate,
 }));
-vi.mock("../src/api", () => ({ mutations: { createFeature: vi.fn() } }));
+vi.mock("../src/api", () => ({
+  mutations: { createFeature: vi.fn() },
+  configMutations: {
+    addHost: vi.fn(),
+    updateHost: vi.fn(),
+    deleteHost: vi.fn(),
+    addAuth: vi.fn(),
+    updateAuth: vi.fn(),
+    deleteAuth: vi.fn(),
+    reorderAuth: vi.fn(),
+  },
+}));
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => ({ data: snapshot, isError: false }),
   useDomainMutation: () => shellMocks.mutation,
+  useConfig: () => ({ data: { hosts: [], authMethods: [] }, isPending: false }),
+  useConfigMutation: () => shellMocks.mutation,
 }));
 
 describe("AppShell", () => {
@@ -127,6 +140,22 @@ describe("AppShell", () => {
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(
       screen.queryByRole("form", { name: "Create feature" }),
+    ).not.toBeInTheDocument();
+  });
+
+  it("opens and closes server settings from the rail", () => {
+    render(
+      <AppShell>
+        <p>Workspace</p>
+      </AppShell>,
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Server settings" }));
+    expect(
+      screen.getByRole("dialog", { name: "Server settings" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    expect(
+      screen.queryByRole("dialog", { name: "Server settings" }),
     ).not.toBeInTheDocument();
   });
 });

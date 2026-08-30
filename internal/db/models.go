@@ -36,6 +36,14 @@ type Feature struct {
 	PublicID    string `json:"public_id"`
 }
 
+type GithubRepositoryAuthCache struct {
+	Host            string `json:"host"`
+	Owner           string `json:"owner"`
+	Repository      string `json:"repository"`
+	AuthMethodID    string `json:"auth_method_id"`
+	LastSucceededAt string `json:"last_succeeded_at"`
+}
+
 type IDSequence struct {
 	Entity    string `json:"entity"`
 	NextValue int64  `json:"next_value"`
@@ -43,6 +51,7 @@ type IDSequence struct {
 
 type PullRequest struct {
 	TaskID          string         `json:"task_id"`
+	Host            string         `json:"host"`
 	Owner           string         `json:"owner"`
 	Repository      string         `json:"repository"`
 	Number          int64          `json:"number"`

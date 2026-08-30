@@ -225,6 +225,7 @@ func domainDocument(
 func domainPullRequest(value db.PullRequest, taskIDs map[string]string) domain.PullRequest {
 	result := domain.PullRequest{
 		TaskID:          taskIDs[value.TaskID],
+		Host:            value.Host,
 		Owner:           value.Owner,
 		Repository:      value.Repository,
 		Number:          value.Number,

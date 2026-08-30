@@ -65,9 +65,9 @@ DELETE FROM dependencies WHERE blocker_task_id=? OR blocked_task_id=?;
 DELETE FROM dependencies WHERE blocker_task_id IN (SELECT id FROM tasks WHERE feature_id=?);
 
 -- name: UpsertPullRequest :one
-INSERT INTO pull_requests (task_id, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-ON CONFLICT(task_id) DO UPDATE SET owner=excluded.owner, repository=excluded.repository, number=excluded.number,
+INSERT INTO pull_requests (task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+ON CONFLICT(task_id) DO UPDATE SET host=excluded.host, owner=excluded.owner, repository=excluded.repository, number=excluded.number,
 url=excluded.url, node_id=excluded.node_id, author=excluded.author, assignees_json=excluded.assignees_json,
 state=excluded.state, draft=excluded.draft, review_state=excluded.review_state, mergeability=excluded.mergeability,
 github_updated_at=excluded.github_updated_at, last_synced_at=excluded.last_synced_at,
@@ -77,7 +77,19 @@ sync_error=excluded.sync_error, stale=excluded.stale RETURNING *;
 SELECT * FROM pull_requests WHERE task_id=?;
 
 -- name: ListPullRequests :many
-SELECT * FROM pull_requests ORDER BY owner, repository, number;
+SELECT * FROM pull_requests ORDER BY host, owner, repository, number;
+
+-- name: GetGitHubRepositoryAuthCache :one
+SELECT * FROM github_repository_auth_cache WHERE host=? AND owner=? AND repository=?;
+
+-- name: UpsertGitHubRepositoryAuthCache :exec
+INSERT INTO github_repository_auth_cache (host, owner, repository, auth_method_id, last_succeeded_at)
+VALUES (?, ?, ?, ?, ?)
+ON CONFLICT(host, owner, repository) DO UPDATE SET auth_method_id=excluded.auth_method_id,
+last_succeeded_at=excluded.last_succeeded_at;
+
+-- name: DeleteGitHubRepositoryAuthCache :execrows
+DELETE FROM github_repository_auth_cache WHERE host=? AND owner=? AND repository=?;
 
 -- name: DeletePullRequest :execrows
 DELETE FROM pull_requests WHERE task_id=?;

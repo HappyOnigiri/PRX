@@ -160,6 +160,7 @@ type Dependency struct {
 
 type PullRequest struct {
 	TaskID          string                  `json:"task_id"`
+	Host            string                  `json:"host"`
 	Owner           string                  `json:"owner"`
 	Repository      string                  `json:"repository"`
 	Number          int64                   `json:"number"`

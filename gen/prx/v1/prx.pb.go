@@ -724,6 +724,8 @@ const (
 	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED DomainErrorCode = 22
 	// DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE means a Markdown preview exceeds the 1 MiB limit.
 	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE DomainErrorCode = 23
+	// DOMAIN_ERROR_CODE_INVALID_CONFIG means the GitHub YAML configuration is invalid.
+	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_CONFIG DomainErrorCode = 24
 )
 
 // Enum value maps for DomainErrorCode.
@@ -752,6 +754,7 @@ var (
 		21: "DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL",
 		22: "DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED",
 		23: "DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE",
+		24: "DOMAIN_ERROR_CODE_INVALID_CONFIG",
 	}
 	DomainErrorCode_value = map[string]int32{
 		"DOMAIN_ERROR_CODE_UNSPECIFIED":                 0,
@@ -777,6 +780,7 @@ var (
 		"DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL":        21,
 		"DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED":        22,
 		"DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE":          23,
+		"DOMAIN_ERROR_CODE_INVALID_CONFIG":              24,
 	}
 )
 
@@ -805,6 +809,67 @@ func (x DomainErrorCode) Number() protoreflect.EnumNumber {
 // Deprecated: Use DomainErrorCode.Descriptor instead.
 func (DomainErrorCode) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{10}
+}
+
+// GitHubAuthMethodType identifies how a GitHub token is obtained.
+type GithubAuthMethodType int32
+
+const (
+	// GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED is never returned and is rejected in requests.
+	GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED GithubAuthMethodType = 0
+	// GITHUB_AUTH_METHOD_TYPE_KEYCHAIN reads a macOS generic password.
+	GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_KEYCHAIN GithubAuthMethodType = 1
+	// GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT reads a configured environment variable.
+	GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT GithubAuthMethodType = 2
+	// GITHUB_AUTH_METHOD_TYPE_INLINE reads a token stored in the YAML file.
+	GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_INLINE GithubAuthMethodType = 3
+	// GITHUB_AUTH_METHOD_TYPE_GH_CLI invokes gh auth token for the host.
+	GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_GH_CLI GithubAuthMethodType = 4
+)
+
+// Enum value maps for GithubAuthMethodType.
+var (
+	GithubAuthMethodType_name = map[int32]string{
+		0: "GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED",
+		1: "GITHUB_AUTH_METHOD_TYPE_KEYCHAIN",
+		2: "GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT",
+		3: "GITHUB_AUTH_METHOD_TYPE_INLINE",
+		4: "GITHUB_AUTH_METHOD_TYPE_GH_CLI",
+	}
+	GithubAuthMethodType_value = map[string]int32{
+		"GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED": 0,
+		"GITHUB_AUTH_METHOD_TYPE_KEYCHAIN":    1,
+		"GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT": 2,
+		"GITHUB_AUTH_METHOD_TYPE_INLINE":      3,
+		"GITHUB_AUTH_METHOD_TYPE_GH_CLI":      4,
+	}
+)
+
+func (x GithubAuthMethodType) Enum() *GithubAuthMethodType {
+	p := new(GithubAuthMethodType)
+	*p = x
+	return p
+}
+
+func (x GithubAuthMethodType) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (GithubAuthMethodType) Descriptor() protoreflect.EnumDescriptor {
+	return file_prx_v1_prx_proto_enumTypes[11].Descriptor()
+}
+
+func (GithubAuthMethodType) Type() protoreflect.EnumType {
+	return &file_prx_v1_prx_proto_enumTypes[11]
+}
+
+func (x GithubAuthMethodType) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use GithubAuthMethodType.Descriptor instead.
+func (GithubAuthMethodType) EnumDescriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{11}
 }
 
 // BlockedReason is the structured reason a planned task is not ready.
@@ -1318,7 +1383,9 @@ type PullRequest struct {
 	// stale indicates that the pull request data may not represent the current GitHub state.
 	Stale bool `protobuf:"varint,16,opt,name=stale,proto3" json:"stale,omitempty"`
 	// display_state is the derived presentation state using the documented priority order.
-	DisplayState  PullRequestDisplayState `protobuf:"varint,17,opt,name=display_state,json=displayState,proto3,enum=prx.v1.PullRequestDisplayState" json:"display_state,omitempty"`
+	DisplayState PullRequestDisplayState `protobuf:"varint,17,opt,name=display_state,json=displayState,proto3,enum=prx.v1.PullRequestDisplayState" json:"display_state,omitempty"`
+	// host is the case-insensitive GitHub or GitHub Enterprise Server host key.
+	Host          string `protobuf:"bytes,18,opt,name=host,proto3" json:"host,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -1470,6 +1537,13 @@ func (x *PullRequest) GetDisplayState() PullRequestDisplayState {
 		return x.DisplayState
 	}
 	return PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED
+}
+
+func (x *PullRequest) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
 }
 
 // Document is a reference attached to exactly one feature or task.
@@ -3142,6 +3216,1261 @@ func (x *ReadMarkdownDocumentResponse) GetContent() string {
 	return ""
 }
 
+// GitHubHost describes one configured GitHub.com or GitHub Enterprise Server host.
+type GitHubHost struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// host is the normalized hostname, optionally including a port.
+	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+	// web_url is the HTTPS web origin used for canonical pull-request URLs.
+	WebUrl string `protobuf:"bytes,2,opt,name=web_url,json=webUrl,proto3" json:"web_url,omitempty"`
+	// api_url is the HTTPS API base URL.
+	ApiUrl string `protobuf:"bytes,3,opt,name=api_url,json=apiUrl,proto3" json:"api_url,omitempty"`
+	// upload_url is the HTTPS upload base URL.
+	UploadUrl     string `protobuf:"bytes,4,opt,name=upload_url,json=uploadUrl,proto3" json:"upload_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitHubHost) Reset() {
+	*x = GitHubHost{}
+	mi := &file_prx_v1_prx_proto_msgTypes[36]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitHubHost) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitHubHost) ProtoMessage() {}
+
+func (x *GitHubHost) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[36]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitHubHost.ProtoReflect.Descriptor instead.
+func (*GitHubHost) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{36}
+}
+
+func (x *GitHubHost) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *GitHubHost) GetWebUrl() string {
+	if x != nil {
+		return x.WebUrl
+	}
+	return ""
+}
+
+func (x *GitHubHost) GetApiUrl() string {
+	if x != nil {
+		return x.ApiUrl
+	}
+	return ""
+}
+
+func (x *GitHubHost) GetUploadUrl() string {
+	if x != nil {
+		return x.UploadUrl
+	}
+	return ""
+}
+
+// GitHubAuthMethod is the public representation of a host-scoped credential.
+// The token itself is never returned by the server.
+type GitHubAuthMethod struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the authentication method and its cache entries.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// host identifies the only GitHub host to which this method may be sent.
+	Host string `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
+	// type identifies the credential source.
+	Type GithubAuthMethodType `protobuf:"varint,3,opt,name=type,proto3,enum=prx.v1.GithubAuthMethodType" json:"type,omitempty"`
+	// account is the Keychain account when type is keychain.
+	Account string `protobuf:"bytes,4,opt,name=account,proto3" json:"account,omitempty"`
+	// service is the Keychain service when type is keychain.
+	Service string `protobuf:"bytes,5,opt,name=service,proto3" json:"service,omitempty"`
+	// variable is the environment variable when type is environment.
+	Variable string `protobuf:"bytes,6,opt,name=variable,proto3" json:"variable,omitempty"`
+	// user selects a gh CLI account when type is gh_cli.
+	User string `protobuf:"bytes,7,opt,name=user,proto3" json:"user,omitempty"`
+	// secret_configured indicates that a credential source is configured.
+	SecretConfigured bool `protobuf:"varint,8,opt,name=secret_configured,json=secretConfigured,proto3" json:"secret_configured,omitempty"`
+	// secret_hint is a short masked hint for inline credentials.
+	SecretHint    string `protobuf:"bytes,9,opt,name=secret_hint,json=secretHint,proto3" json:"secret_hint,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitHubAuthMethod) Reset() {
+	*x = GitHubAuthMethod{}
+	mi := &file_prx_v1_prx_proto_msgTypes[37]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitHubAuthMethod) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitHubAuthMethod) ProtoMessage() {}
+
+func (x *GitHubAuthMethod) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[37]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitHubAuthMethod.ProtoReflect.Descriptor instead.
+func (*GitHubAuthMethod) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{37}
+}
+
+func (x *GitHubAuthMethod) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *GitHubAuthMethod) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *GitHubAuthMethod) GetType() GithubAuthMethodType {
+	if x != nil {
+		return x.Type
+	}
+	return GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED
+}
+
+func (x *GitHubAuthMethod) GetAccount() string {
+	if x != nil {
+		return x.Account
+	}
+	return ""
+}
+
+func (x *GitHubAuthMethod) GetService() string {
+	if x != nil {
+		return x.Service
+	}
+	return ""
+}
+
+func (x *GitHubAuthMethod) GetVariable() string {
+	if x != nil {
+		return x.Variable
+	}
+	return ""
+}
+
+func (x *GitHubAuthMethod) GetUser() string {
+	if x != nil {
+		return x.User
+	}
+	return ""
+}
+
+func (x *GitHubAuthMethod) GetSecretConfigured() bool {
+	if x != nil {
+		return x.SecretConfigured
+	}
+	return false
+}
+
+func (x *GitHubAuthMethod) GetSecretHint() string {
+	if x != nil {
+		return x.SecretHint
+	}
+	return ""
+}
+
+// GitHubConfig is the public, secret-free server configuration.
+type GitHubConfig struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// version is the YAML schema version.
+	Version int32 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	// hosts contains the configured GitHub host boundaries.
+	Hosts []*GitHubHost `protobuf:"bytes,2,rep,name=hosts,proto3" json:"hosts,omitempty"`
+	// auth_methods contains host-scoped credentials in priority order.
+	AuthMethods   []*GitHubAuthMethod `protobuf:"bytes,3,rep,name=auth_methods,json=authMethods,proto3" json:"auth_methods,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GitHubConfig) Reset() {
+	*x = GitHubConfig{}
+	mi := &file_prx_v1_prx_proto_msgTypes[38]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GitHubConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GitHubConfig) ProtoMessage() {}
+
+func (x *GitHubConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[38]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GitHubConfig.ProtoReflect.Descriptor instead.
+func (*GitHubConfig) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{38}
+}
+
+func (x *GitHubConfig) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *GitHubConfig) GetHosts() []*GitHubHost {
+	if x != nil {
+		return x.Hosts
+	}
+	return nil
+}
+
+func (x *GitHubConfig) GetAuthMethods() []*GitHubAuthMethod {
+	if x != nil {
+		return x.AuthMethods
+	}
+	return nil
+}
+
+// GetConfigRequest requests the public GitHub configuration.
+type GetConfigRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetConfigRequest) Reset() {
+	*x = GetConfigRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[39]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetConfigRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetConfigRequest) ProtoMessage() {}
+
+func (x *GetConfigRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[39]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetConfigRequest.ProtoReflect.Descriptor instead.
+func (*GetConfigRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{39}
+}
+
+// GetConfigResponse returns the public GitHub configuration.
+type GetConfigResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// config contains hosts and secret-free authentication metadata.
+	Config        *GitHubConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetConfigResponse) Reset() {
+	*x = GetConfigResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[40]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetConfigResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetConfigResponse) ProtoMessage() {}
+
+func (x *GetConfigResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[40]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetConfigResponse.ProtoReflect.Descriptor instead.
+func (*GetConfigResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{40}
+}
+
+func (x *GetConfigResponse) GetConfig() *GitHubConfig {
+	if x != nil {
+		return x.Config
+	}
+	return nil
+}
+
+// AddGitHubHostRequest adds a GitHub host.
+type AddGitHubHostRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// host is the hostname with optional port.
+	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+	// web_url is optional and defaults from host.
+	WebUrl string `protobuf:"bytes,2,opt,name=web_url,json=webUrl,proto3" json:"web_url,omitempty"`
+	// api_url is optional and defaults from host.
+	ApiUrl string `protobuf:"bytes,3,opt,name=api_url,json=apiUrl,proto3" json:"api_url,omitempty"`
+	// upload_url is optional and defaults from host.
+	UploadUrl     string `protobuf:"bytes,4,opt,name=upload_url,json=uploadUrl,proto3" json:"upload_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddGitHubHostRequest) Reset() {
+	*x = AddGitHubHostRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[41]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddGitHubHostRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddGitHubHostRequest) ProtoMessage() {}
+
+func (x *AddGitHubHostRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[41]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddGitHubHostRequest.ProtoReflect.Descriptor instead.
+func (*AddGitHubHostRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{41}
+}
+
+func (x *AddGitHubHostRequest) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *AddGitHubHostRequest) GetWebUrl() string {
+	if x != nil {
+		return x.WebUrl
+	}
+	return ""
+}
+
+func (x *AddGitHubHostRequest) GetApiUrl() string {
+	if x != nil {
+		return x.ApiUrl
+	}
+	return ""
+}
+
+func (x *AddGitHubHostRequest) GetUploadUrl() string {
+	if x != nil {
+		return x.UploadUrl
+	}
+	return ""
+}
+
+// AddGitHubHostResponse returns the added host.
+type AddGitHubHostResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// host is the normalized host after validation.
+	Host          *GitHubHost `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddGitHubHostResponse) Reset() {
+	*x = AddGitHubHostResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[42]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddGitHubHostResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddGitHubHostResponse) ProtoMessage() {}
+
+func (x *AddGitHubHostResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[42]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddGitHubHostResponse.ProtoReflect.Descriptor instead.
+func (*AddGitHubHostResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{42}
+}
+
+func (x *AddGitHubHostResponse) GetHost() *GitHubHost {
+	if x != nil {
+		return x.Host
+	}
+	return nil
+}
+
+// UpdateGitHubHostRequest updates a host and only the fields that are present.
+type UpdateGitHubHostRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// host identifies the existing host.
+	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+	// new_host changes the host key when present.
+	NewHost *string `protobuf:"bytes,2,opt,name=new_host,json=newHost,proto3,oneof" json:"new_host,omitempty"`
+	// web_url replaces the web URL when present.
+	WebUrl *string `protobuf:"bytes,3,opt,name=web_url,json=webUrl,proto3,oneof" json:"web_url,omitempty"`
+	// api_url replaces the API URL when present.
+	ApiUrl *string `protobuf:"bytes,4,opt,name=api_url,json=apiUrl,proto3,oneof" json:"api_url,omitempty"`
+	// upload_url replaces the upload URL when present.
+	UploadUrl     *string `protobuf:"bytes,5,opt,name=upload_url,json=uploadUrl,proto3,oneof" json:"upload_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateGitHubHostRequest) Reset() {
+	*x = UpdateGitHubHostRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[43]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateGitHubHostRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateGitHubHostRequest) ProtoMessage() {}
+
+func (x *UpdateGitHubHostRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[43]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateGitHubHostRequest.ProtoReflect.Descriptor instead.
+func (*UpdateGitHubHostRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{43}
+}
+
+func (x *UpdateGitHubHostRequest) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *UpdateGitHubHostRequest) GetNewHost() string {
+	if x != nil && x.NewHost != nil {
+		return *x.NewHost
+	}
+	return ""
+}
+
+func (x *UpdateGitHubHostRequest) GetWebUrl() string {
+	if x != nil && x.WebUrl != nil {
+		return *x.WebUrl
+	}
+	return ""
+}
+
+func (x *UpdateGitHubHostRequest) GetApiUrl() string {
+	if x != nil && x.ApiUrl != nil {
+		return *x.ApiUrl
+	}
+	return ""
+}
+
+func (x *UpdateGitHubHostRequest) GetUploadUrl() string {
+	if x != nil && x.UploadUrl != nil {
+		return *x.UploadUrl
+	}
+	return ""
+}
+
+// UpdateGitHubHostResponse returns the updated host.
+type UpdateGitHubHostResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// host is the normalized host after validation.
+	Host          *GitHubHost `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateGitHubHostResponse) Reset() {
+	*x = UpdateGitHubHostResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[44]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateGitHubHostResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateGitHubHostResponse) ProtoMessage() {}
+
+func (x *UpdateGitHubHostResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[44]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateGitHubHostResponse.ProtoReflect.Descriptor instead.
+func (*UpdateGitHubHostResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{44}
+}
+
+func (x *UpdateGitHubHostResponse) GetHost() *GitHubHost {
+	if x != nil {
+		return x.Host
+	}
+	return nil
+}
+
+// DeleteGitHubHostRequest removes a host when no authentication method uses it.
+type DeleteGitHubHostRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// host identifies the host to remove.
+	Host          string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteGitHubHostRequest) Reset() {
+	*x = DeleteGitHubHostRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[45]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteGitHubHostRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteGitHubHostRequest) ProtoMessage() {}
+
+func (x *DeleteGitHubHostRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[45]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteGitHubHostRequest.ProtoReflect.Descriptor instead.
+func (*DeleteGitHubHostRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{45}
+}
+
+func (x *DeleteGitHubHostRequest) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+// DeleteGitHubHostResponse confirms the host was removed.
+type DeleteGitHubHostResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteGitHubHostResponse) Reset() {
+	*x = DeleteGitHubHostResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[46]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteGitHubHostResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteGitHubHostResponse) ProtoMessage() {}
+
+func (x *DeleteGitHubHostResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[46]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteGitHubHostResponse.ProtoReflect.Descriptor instead.
+func (*DeleteGitHubHostResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{46}
+}
+
+// AddGitHubAuthMethodRequest adds one host-scoped authentication method.
+type AddGitHubAuthMethodRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the method.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// host identifies the only host for this method.
+	Host string `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
+	// type identifies the credential source.
+	Type GithubAuthMethodType `protobuf:"varint,3,opt,name=type,proto3,enum=prx.v1.GithubAuthMethodType" json:"type,omitempty"`
+	// account is the Keychain account.
+	Account string `protobuf:"bytes,4,opt,name=account,proto3" json:"account,omitempty"`
+	// service is the Keychain service.
+	Service string `protobuf:"bytes,5,opt,name=service,proto3" json:"service,omitempty"`
+	// variable is the environment variable.
+	Variable string `protobuf:"bytes,6,opt,name=variable,proto3" json:"variable,omitempty"`
+	// user selects a gh CLI account.
+	User string `protobuf:"bytes,7,opt,name=user,proto3" json:"user,omitempty"`
+	// token is write-only and is accepted only for inline credentials.
+	Token         *string `protobuf:"bytes,8,opt,name=token,proto3,oneof" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddGitHubAuthMethodRequest) Reset() {
+	*x = AddGitHubAuthMethodRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[47]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddGitHubAuthMethodRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddGitHubAuthMethodRequest) ProtoMessage() {}
+
+func (x *AddGitHubAuthMethodRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[47]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddGitHubAuthMethodRequest.ProtoReflect.Descriptor instead.
+func (*AddGitHubAuthMethodRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{47}
+}
+
+func (x *AddGitHubAuthMethodRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *AddGitHubAuthMethodRequest) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *AddGitHubAuthMethodRequest) GetType() GithubAuthMethodType {
+	if x != nil {
+		return x.Type
+	}
+	return GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED
+}
+
+func (x *AddGitHubAuthMethodRequest) GetAccount() string {
+	if x != nil {
+		return x.Account
+	}
+	return ""
+}
+
+func (x *AddGitHubAuthMethodRequest) GetService() string {
+	if x != nil {
+		return x.Service
+	}
+	return ""
+}
+
+func (x *AddGitHubAuthMethodRequest) GetVariable() string {
+	if x != nil {
+		return x.Variable
+	}
+	return ""
+}
+
+func (x *AddGitHubAuthMethodRequest) GetUser() string {
+	if x != nil {
+		return x.User
+	}
+	return ""
+}
+
+func (x *AddGitHubAuthMethodRequest) GetToken() string {
+	if x != nil && x.Token != nil {
+		return *x.Token
+	}
+	return ""
+}
+
+// AddGitHubAuthMethodResponse returns secret-free authentication metadata.
+type AddGitHubAuthMethodResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// auth_method is the added method without its token.
+	AuthMethod    *GitHubAuthMethod `protobuf:"bytes,1,opt,name=auth_method,json=authMethod,proto3" json:"auth_method,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *AddGitHubAuthMethodResponse) Reset() {
+	*x = AddGitHubAuthMethodResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[48]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *AddGitHubAuthMethodResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*AddGitHubAuthMethodResponse) ProtoMessage() {}
+
+func (x *AddGitHubAuthMethodResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[48]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use AddGitHubAuthMethodResponse.ProtoReflect.Descriptor instead.
+func (*AddGitHubAuthMethodResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{48}
+}
+
+func (x *AddGitHubAuthMethodResponse) GetAuthMethod() *GitHubAuthMethod {
+	if x != nil {
+		return x.AuthMethod
+	}
+	return nil
+}
+
+// UpdateGitHubAuthMethodRequest updates a method while preserving an omitted token.
+type UpdateGitHubAuthMethodRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the existing method.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// new_id changes the method ID when present.
+	NewId *string `protobuf:"bytes,2,opt,name=new_id,json=newId,proto3,oneof" json:"new_id,omitempty"`
+	// host changes the host when present.
+	Host *string `protobuf:"bytes,3,opt,name=host,proto3,oneof" json:"host,omitempty"`
+	// type changes the source when present.
+	Type *GithubAuthMethodType `protobuf:"varint,4,opt,name=type,proto3,enum=prx.v1.GithubAuthMethodType,oneof" json:"type,omitempty"`
+	// account changes the Keychain account when present.
+	Account *string `protobuf:"bytes,5,opt,name=account,proto3,oneof" json:"account,omitempty"`
+	// service changes the Keychain service when present.
+	Service *string `protobuf:"bytes,6,opt,name=service,proto3,oneof" json:"service,omitempty"`
+	// variable changes the environment variable when present.
+	Variable *string `protobuf:"bytes,7,opt,name=variable,proto3,oneof" json:"variable,omitempty"`
+	// user changes the gh CLI user when present.
+	User *string `protobuf:"bytes,8,opt,name=user,proto3,oneof" json:"user,omitempty"`
+	// token replaces the inline token when present and is never returned.
+	Token         *string `protobuf:"bytes,9,opt,name=token,proto3,oneof" json:"token,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateGitHubAuthMethodRequest) Reset() {
+	*x = UpdateGitHubAuthMethodRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[49]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateGitHubAuthMethodRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateGitHubAuthMethodRequest) ProtoMessage() {}
+
+func (x *UpdateGitHubAuthMethodRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[49]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateGitHubAuthMethodRequest.ProtoReflect.Descriptor instead.
+func (*UpdateGitHubAuthMethodRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{49}
+}
+
+func (x *UpdateGitHubAuthMethodRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateGitHubAuthMethodRequest) GetNewId() string {
+	if x != nil && x.NewId != nil {
+		return *x.NewId
+	}
+	return ""
+}
+
+func (x *UpdateGitHubAuthMethodRequest) GetHost() string {
+	if x != nil && x.Host != nil {
+		return *x.Host
+	}
+	return ""
+}
+
+func (x *UpdateGitHubAuthMethodRequest) GetType() GithubAuthMethodType {
+	if x != nil && x.Type != nil {
+		return *x.Type
+	}
+	return GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED
+}
+
+func (x *UpdateGitHubAuthMethodRequest) GetAccount() string {
+	if x != nil && x.Account != nil {
+		return *x.Account
+	}
+	return ""
+}
+
+func (x *UpdateGitHubAuthMethodRequest) GetService() string {
+	if x != nil && x.Service != nil {
+		return *x.Service
+	}
+	return ""
+}
+
+func (x *UpdateGitHubAuthMethodRequest) GetVariable() string {
+	if x != nil && x.Variable != nil {
+		return *x.Variable
+	}
+	return ""
+}
+
+func (x *UpdateGitHubAuthMethodRequest) GetUser() string {
+	if x != nil && x.User != nil {
+		return *x.User
+	}
+	return ""
+}
+
+func (x *UpdateGitHubAuthMethodRequest) GetToken() string {
+	if x != nil && x.Token != nil {
+		return *x.Token
+	}
+	return ""
+}
+
+// UpdateGitHubAuthMethodResponse returns secret-free authentication metadata.
+type UpdateGitHubAuthMethodResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// auth_method is the updated method without its token.
+	AuthMethod    *GitHubAuthMethod `protobuf:"bytes,1,opt,name=auth_method,json=authMethod,proto3" json:"auth_method,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateGitHubAuthMethodResponse) Reset() {
+	*x = UpdateGitHubAuthMethodResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[50]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateGitHubAuthMethodResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateGitHubAuthMethodResponse) ProtoMessage() {}
+
+func (x *UpdateGitHubAuthMethodResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[50]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateGitHubAuthMethodResponse.ProtoReflect.Descriptor instead.
+func (*UpdateGitHubAuthMethodResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{50}
+}
+
+func (x *UpdateGitHubAuthMethodResponse) GetAuthMethod() *GitHubAuthMethod {
+	if x != nil {
+		return x.AuthMethod
+	}
+	return nil
+}
+
+// DeleteGitHubAuthMethodRequest removes a host-scoped authentication method.
+type DeleteGitHubAuthMethodRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the method to remove.
+	Id            string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteGitHubAuthMethodRequest) Reset() {
+	*x = DeleteGitHubAuthMethodRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[51]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteGitHubAuthMethodRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteGitHubAuthMethodRequest) ProtoMessage() {}
+
+func (x *DeleteGitHubAuthMethodRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[51]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteGitHubAuthMethodRequest.ProtoReflect.Descriptor instead.
+func (*DeleteGitHubAuthMethodRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{51}
+}
+
+func (x *DeleteGitHubAuthMethodRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+// DeleteGitHubAuthMethodResponse confirms the method was removed.
+type DeleteGitHubAuthMethodResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteGitHubAuthMethodResponse) Reset() {
+	*x = DeleteGitHubAuthMethodResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[52]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteGitHubAuthMethodResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteGitHubAuthMethodResponse) ProtoMessage() {}
+
+func (x *DeleteGitHubAuthMethodResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[52]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteGitHubAuthMethodResponse.ProtoReflect.Descriptor instead.
+func (*DeleteGitHubAuthMethodResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{52}
+}
+
+// ReorderGitHubAuthMethodsRequest sets the complete authentication priority.
+type ReorderGitHubAuthMethodsRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// ids contains every configured authentication method exactly once.
+	Ids           []string `protobuf:"bytes,1,rep,name=ids,proto3" json:"ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReorderGitHubAuthMethodsRequest) Reset() {
+	*x = ReorderGitHubAuthMethodsRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[53]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReorderGitHubAuthMethodsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReorderGitHubAuthMethodsRequest) ProtoMessage() {}
+
+func (x *ReorderGitHubAuthMethodsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[53]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReorderGitHubAuthMethodsRequest.ProtoReflect.Descriptor instead.
+func (*ReorderGitHubAuthMethodsRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{53}
+}
+
+func (x *ReorderGitHubAuthMethodsRequest) GetIds() []string {
+	if x != nil {
+		return x.Ids
+	}
+	return nil
+}
+
+// ReorderGitHubAuthMethodsResponse returns the new secret-free priority.
+type ReorderGitHubAuthMethodsResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// auth_methods contains the reordered methods.
+	AuthMethods   []*GitHubAuthMethod `protobuf:"bytes,1,rep,name=auth_methods,json=authMethods,proto3" json:"auth_methods,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ReorderGitHubAuthMethodsResponse) Reset() {
+	*x = ReorderGitHubAuthMethodsResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[54]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ReorderGitHubAuthMethodsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ReorderGitHubAuthMethodsResponse) ProtoMessage() {}
+
+func (x *ReorderGitHubAuthMethodsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[54]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ReorderGitHubAuthMethodsResponse.ProtoReflect.Descriptor instead.
+func (*ReorderGitHubAuthMethodsResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{54}
+}
+
+func (x *ReorderGitHubAuthMethodsResponse) GetAuthMethods() []*GitHubAuthMethod {
+	if x != nil {
+		return x.AuthMethods
+	}
+	return nil
+}
+
+// ValidateConfigRequest validates the YAML configuration.
+type ValidateConfigRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidateConfigRequest) Reset() {
+	*x = ValidateConfigRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[55]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidateConfigRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidateConfigRequest) ProtoMessage() {}
+
+func (x *ValidateConfigRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[55]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidateConfigRequest.ProtoReflect.Descriptor instead.
+func (*ValidateConfigRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{55}
+}
+
+// ValidateConfigResponse reports whether configuration validation succeeded.
+type ValidateConfigResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// valid is true when the configuration can be loaded and used.
+	Valid bool `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
+	// errors contains validation failures when valid is false.
+	Errors        []string `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ValidateConfigResponse) Reset() {
+	*x = ValidateConfigResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[56]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ValidateConfigResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ValidateConfigResponse) ProtoMessage() {}
+
+func (x *ValidateConfigResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[56]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ValidateConfigResponse.ProtoReflect.Descriptor instead.
+func (*ValidateConfigResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{56}
+}
+
+func (x *ValidateConfigResponse) GetValid() bool {
+	if x != nil {
+		return x.Valid
+	}
+	return false
+}
+
+func (x *ValidateConfigResponse) GetErrors() []string {
+	if x != nil {
+		return x.Errors
+	}
+	return nil
+}
+
 // SyncRequest selects pull requests to refresh from GitHub.
 // Empty selectors refresh all pull requests; setting both selectors applies both filters.
 type SyncRequest struct {
@@ -3156,7 +4485,7 @@ type SyncRequest struct {
 
 func (x *SyncRequest) Reset() {
 	*x = SyncRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[36]
+	mi := &file_prx_v1_prx_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3168,7 +4497,7 @@ func (x *SyncRequest) String() string {
 func (*SyncRequest) ProtoMessage() {}
 
 func (x *SyncRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[36]
+	mi := &file_prx_v1_prx_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3181,7 +4510,7 @@ func (x *SyncRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncRequest.ProtoReflect.Descriptor instead.
 func (*SyncRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{36}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *SyncRequest) GetFeatureId() string {
@@ -3211,7 +4540,7 @@ type SyncResponse struct {
 
 func (x *SyncResponse) Reset() {
 	*x = SyncResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[37]
+	mi := &file_prx_v1_prx_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3223,7 +4552,7 @@ func (x *SyncResponse) String() string {
 func (*SyncResponse) ProtoMessage() {}
 
 func (x *SyncResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[37]
+	mi := &file_prx_v1_prx_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3236,7 +4565,7 @@ func (x *SyncResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncResponse.ProtoReflect.Descriptor instead.
 func (*SyncResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{37}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *SyncResponse) GetSucceeded() int32 {
@@ -3262,7 +4591,7 @@ type ValidateRequest struct {
 
 func (x *ValidateRequest) Reset() {
 	*x = ValidateRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[38]
+	mi := &file_prx_v1_prx_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3274,7 +4603,7 @@ func (x *ValidateRequest) String() string {
 func (*ValidateRequest) ProtoMessage() {}
 
 func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[38]
+	mi := &file_prx_v1_prx_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3287,7 +4616,7 @@ func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateRequest.ProtoReflect.Descriptor instead.
 func (*ValidateRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{38}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{59}
 }
 
 // ValidateResponse reports whether database integrity checks passed.
@@ -3303,7 +4632,7 @@ type ValidateResponse struct {
 
 func (x *ValidateResponse) Reset() {
 	*x = ValidateResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[39]
+	mi := &file_prx_v1_prx_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3315,7 +4644,7 @@ func (x *ValidateResponse) String() string {
 func (*ValidateResponse) ProtoMessage() {}
 
 func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[39]
+	mi := &file_prx_v1_prx_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3328,7 +4657,7 @@ func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateResponse.ProtoReflect.Descriptor instead.
 func (*ValidateResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{39}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *ValidateResponse) GetValid() bool {
@@ -3397,7 +4726,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0fblocker_task_id\x18\x01 \x01(\tR\rblockerTaskId\x12&\n" +
 	"\x0fblocked_task_id\x18\x02 \x01(\tR\rblockedTaskId\x12\x1d\n" +
 	"\n" +
-	"created_at\x18\x03 \x01(\tR\tcreatedAt\"\xda\x04\n" +
+	"created_at\x18\x03 \x01(\tR\tcreatedAt\"\xee\x04\n" +
 	"\vPullRequest\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12\x14\n" +
 	"\x05owner\x18\x02 \x01(\tR\x05owner\x12\x1e\n" +
@@ -3419,7 +4748,8 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\n" +
 	"sync_error\x18\x0f \x01(\tR\tsyncError\x12\x14\n" +
 	"\x05stale\x18\x10 \x01(\bR\x05stale\x12D\n" +
-	"\rdisplay_state\x18\x11 \x01(\x0e2\x1f.prx.v1.PullRequestDisplayStateR\fdisplayState\"\xc7\x01\n" +
+	"\rdisplay_state\x18\x11 \x01(\x0e2\x1f.prx.v1.PullRequestDisplayStateR\fdisplayState\x12\x12\n" +
+	"\x04host\x18\x12 \x01(\tR\x04host\"\xc7\x01\n" +
 	"\bDocument\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -3528,7 +4858,105 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x1bReadMarkdownDocumentRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\"8\n" +
 	"\x1cReadMarkdownDocumentResponse\x12\x18\n" +
-	"\acontent\x18\x01 \x01(\tR\acontent\"E\n" +
+	"\acontent\x18\x01 \x01(\tR\acontent\"q\n" +
+	"\n" +
+	"GitHubHost\x12\x12\n" +
+	"\x04host\x18\x01 \x01(\tR\x04host\x12\x17\n" +
+	"\aweb_url\x18\x02 \x01(\tR\x06webUrl\x12\x17\n" +
+	"\aapi_url\x18\x03 \x01(\tR\x06apiUrl\x12\x1d\n" +
+	"\n" +
+	"upload_url\x18\x04 \x01(\tR\tuploadUrl\"\x9a\x02\n" +
+	"\x10GitHubAuthMethod\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04host\x18\x02 \x01(\tR\x04host\x120\n" +
+	"\x04type\x18\x03 \x01(\x0e2\x1c.prx.v1.GithubAuthMethodTypeR\x04type\x12\x18\n" +
+	"\aaccount\x18\x04 \x01(\tR\aaccount\x12\x18\n" +
+	"\aservice\x18\x05 \x01(\tR\aservice\x12\x1a\n" +
+	"\bvariable\x18\x06 \x01(\tR\bvariable\x12\x12\n" +
+	"\x04user\x18\a \x01(\tR\x04user\x12+\n" +
+	"\x11secret_configured\x18\b \x01(\bR\x10secretConfigured\x12\x1f\n" +
+	"\vsecret_hint\x18\t \x01(\tR\n" +
+	"secretHint\"\x8f\x01\n" +
+	"\fGitHubConfig\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\x05R\aversion\x12(\n" +
+	"\x05hosts\x18\x02 \x03(\v2\x12.prx.v1.GitHubHostR\x05hosts\x12;\n" +
+	"\fauth_methods\x18\x03 \x03(\v2\x18.prx.v1.GitHubAuthMethodR\vauthMethods\"\x12\n" +
+	"\x10GetConfigRequest\"A\n" +
+	"\x11GetConfigResponse\x12,\n" +
+	"\x06config\x18\x01 \x01(\v2\x14.prx.v1.GitHubConfigR\x06config\"{\n" +
+	"\x14AddGitHubHostRequest\x12\x12\n" +
+	"\x04host\x18\x01 \x01(\tR\x04host\x12\x17\n" +
+	"\aweb_url\x18\x02 \x01(\tR\x06webUrl\x12\x17\n" +
+	"\aapi_url\x18\x03 \x01(\tR\x06apiUrl\x12\x1d\n" +
+	"\n" +
+	"upload_url\x18\x04 \x01(\tR\tuploadUrl\"?\n" +
+	"\x15AddGitHubHostResponse\x12&\n" +
+	"\x04host\x18\x01 \x01(\v2\x12.prx.v1.GitHubHostR\x04host\"\xe1\x01\n" +
+	"\x17UpdateGitHubHostRequest\x12\x12\n" +
+	"\x04host\x18\x01 \x01(\tR\x04host\x12\x1e\n" +
+	"\bnew_host\x18\x02 \x01(\tH\x00R\anewHost\x88\x01\x01\x12\x1c\n" +
+	"\aweb_url\x18\x03 \x01(\tH\x01R\x06webUrl\x88\x01\x01\x12\x1c\n" +
+	"\aapi_url\x18\x04 \x01(\tH\x02R\x06apiUrl\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"upload_url\x18\x05 \x01(\tH\x03R\tuploadUrl\x88\x01\x01B\v\n" +
+	"\t_new_hostB\n" +
+	"\n" +
+	"\b_web_urlB\n" +
+	"\n" +
+	"\b_api_urlB\r\n" +
+	"\v_upload_url\"B\n" +
+	"\x18UpdateGitHubHostResponse\x12&\n" +
+	"\x04host\x18\x01 \x01(\v2\x12.prx.v1.GitHubHostR\x04host\"-\n" +
+	"\x17DeleteGitHubHostRequest\x12\x12\n" +
+	"\x04host\x18\x01 \x01(\tR\x04host\"\x1a\n" +
+	"\x18DeleteGitHubHostResponse\"\xfb\x01\n" +
+	"\x1aAddGitHubAuthMethodRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04host\x18\x02 \x01(\tR\x04host\x120\n" +
+	"\x04type\x18\x03 \x01(\x0e2\x1c.prx.v1.GithubAuthMethodTypeR\x04type\x12\x18\n" +
+	"\aaccount\x18\x04 \x01(\tR\aaccount\x12\x18\n" +
+	"\aservice\x18\x05 \x01(\tR\aservice\x12\x1a\n" +
+	"\bvariable\x18\x06 \x01(\tR\bvariable\x12\x12\n" +
+	"\x04user\x18\a \x01(\tR\x04user\x12\x19\n" +
+	"\x05token\x18\b \x01(\tH\x00R\x05token\x88\x01\x01B\b\n" +
+	"\x06_token\"X\n" +
+	"\x1bAddGitHubAuthMethodResponse\x129\n" +
+	"\vauth_method\x18\x01 \x01(\v2\x18.prx.v1.GitHubAuthMethodR\n" +
+	"authMethod\"\x83\x03\n" +
+	"\x1dUpdateGitHubAuthMethodRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1a\n" +
+	"\x06new_id\x18\x02 \x01(\tH\x00R\x05newId\x88\x01\x01\x12\x17\n" +
+	"\x04host\x18\x03 \x01(\tH\x01R\x04host\x88\x01\x01\x125\n" +
+	"\x04type\x18\x04 \x01(\x0e2\x1c.prx.v1.GithubAuthMethodTypeH\x02R\x04type\x88\x01\x01\x12\x1d\n" +
+	"\aaccount\x18\x05 \x01(\tH\x03R\aaccount\x88\x01\x01\x12\x1d\n" +
+	"\aservice\x18\x06 \x01(\tH\x04R\aservice\x88\x01\x01\x12\x1f\n" +
+	"\bvariable\x18\a \x01(\tH\x05R\bvariable\x88\x01\x01\x12\x17\n" +
+	"\x04user\x18\b \x01(\tH\x06R\x04user\x88\x01\x01\x12\x19\n" +
+	"\x05token\x18\t \x01(\tH\aR\x05token\x88\x01\x01B\t\n" +
+	"\a_new_idB\a\n" +
+	"\x05_hostB\a\n" +
+	"\x05_typeB\n" +
+	"\n" +
+	"\b_accountB\n" +
+	"\n" +
+	"\b_serviceB\v\n" +
+	"\t_variableB\a\n" +
+	"\x05_userB\b\n" +
+	"\x06_token\"[\n" +
+	"\x1eUpdateGitHubAuthMethodResponse\x129\n" +
+	"\vauth_method\x18\x01 \x01(\v2\x18.prx.v1.GitHubAuthMethodR\n" +
+	"authMethod\"/\n" +
+	"\x1dDeleteGitHubAuthMethodRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\" \n" +
+	"\x1eDeleteGitHubAuthMethodResponse\"3\n" +
+	"\x1fReorderGitHubAuthMethodsRequest\x12\x10\n" +
+	"\x03ids\x18\x01 \x03(\tR\x03ids\"_\n" +
+	" ReorderGitHubAuthMethodsResponse\x12;\n" +
+	"\fauth_methods\x18\x01 \x03(\v2\x18.prx.v1.GitHubAuthMethodR\vauthMethods\"\x17\n" +
+	"\x15ValidateConfigRequest\"F\n" +
+	"\x16ValidateConfigResponse\x12\x14\n" +
+	"\x05valid\x18\x01 \x01(\bR\x05valid\x12\x16\n" +
+	"\x06errors\x18\x02 \x03(\tR\x06errors\"E\n" +
 	"\vSyncRequest\x12\x1d\n" +
 	"\n" +
 	"feature_id\x18\x01 \x01(\tR\tfeatureId\x12\x17\n" +
@@ -3611,7 +5039,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x1fBLOCKED_REASON_CODE_UNSPECIFIED\x10\x00\x122\n" +
 	".BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE\x10\x01\x12%\n" +
 	"!BLOCKED_REASON_CODE_BLOCKER_STALE\x10\x02\x12+\n" +
-	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03*\xb8\a\n" +
+	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03*\xde\a\n" +
 	"\x0fDomainErrorCode\x12!\n" +
 	"\x1dDOMAIN_ERROR_CODE_UNSPECIFIED\x10\x00\x12.\n" +
 	"*DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY\x10\x02\x12\x1b\n" +
@@ -3636,7 +5064,14 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	",DOMAIN_ERROR_CODE_PR_TASK_COMPLETES_ON_MERGE\x10\x14\x12*\n" +
 	"&DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL\x10\x15\x12*\n" +
 	"&DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED\x10\x16\x12(\n" +
-	"$DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE\x10\x172\xd4\t\n" +
+	"$DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE\x10\x17\x12$\n" +
+	" DOMAIN_ERROR_CODE_INVALID_CONFIG\x10\x18*\xd6\x01\n" +
+	"\x14GithubAuthMethodType\x12'\n" +
+	"#GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED\x10\x00\x12$\n" +
+	" GITHUB_AUTH_METHOD_TYPE_KEYCHAIN\x10\x01\x12'\n" +
+	"#GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT\x10\x02\x12\"\n" +
+	"\x1eGITHUB_AUTH_METHOD_TYPE_INLINE\x10\x03\x12\"\n" +
+	"\x1eGITHUB_AUTH_METHOD_TYPE_GH_CLI\x10\x042\x84\x10\n" +
 	"\n" +
 	"PRXService\x12F\n" +
 	"\vGetSnapshot\x12\x1a.prx.v1.GetSnapshotRequest\x1a\x1b.prx.v1.GetSnapshotResponse\x12L\n" +
@@ -3657,7 +5092,16 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0eDeleteDocument\x12\x1d.prx.v1.DeleteDocumentRequest\x1a\x1e.prx.v1.DeleteDocumentResponse\x12a\n" +
 	"\x14ReadMarkdownDocument\x12#.prx.v1.ReadMarkdownDocumentRequest\x1a$.prx.v1.ReadMarkdownDocumentResponse\x121\n" +
 	"\x04Sync\x12\x13.prx.v1.SyncRequest\x1a\x14.prx.v1.SyncResponse\x12=\n" +
-	"\bValidate\x12\x17.prx.v1.ValidateRequest\x1a\x18.prx.v1.ValidateResponseB.Z,github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1b\x06proto3"
+	"\bValidate\x12\x17.prx.v1.ValidateRequest\x1a\x18.prx.v1.ValidateResponse\x12@\n" +
+	"\tGetConfig\x12\x18.prx.v1.GetConfigRequest\x1a\x19.prx.v1.GetConfigResponse\x12L\n" +
+	"\rAddGitHubHost\x12\x1c.prx.v1.AddGitHubHostRequest\x1a\x1d.prx.v1.AddGitHubHostResponse\x12U\n" +
+	"\x10UpdateGitHubHost\x12\x1f.prx.v1.UpdateGitHubHostRequest\x1a .prx.v1.UpdateGitHubHostResponse\x12U\n" +
+	"\x10DeleteGitHubHost\x12\x1f.prx.v1.DeleteGitHubHostRequest\x1a .prx.v1.DeleteGitHubHostResponse\x12^\n" +
+	"\x13AddGitHubAuthMethod\x12\".prx.v1.AddGitHubAuthMethodRequest\x1a#.prx.v1.AddGitHubAuthMethodResponse\x12g\n" +
+	"\x16UpdateGitHubAuthMethod\x12%.prx.v1.UpdateGitHubAuthMethodRequest\x1a&.prx.v1.UpdateGitHubAuthMethodResponse\x12g\n" +
+	"\x16DeleteGitHubAuthMethod\x12%.prx.v1.DeleteGitHubAuthMethodRequest\x1a&.prx.v1.DeleteGitHubAuthMethodResponse\x12m\n" +
+	"\x18ReorderGitHubAuthMethods\x12'.prx.v1.ReorderGitHubAuthMethodsRequest\x1a(.prx.v1.ReorderGitHubAuthMethodsResponse\x12O\n" +
+	"\x0eValidateConfig\x12\x1d.prx.v1.ValidateConfigRequest\x1a\x1e.prx.v1.ValidateConfigResponseB.Z,github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1b\x06proto3"
 
 var (
 	file_prx_v1_prx_proto_rawDescOnce sync.Once
@@ -3671,60 +5115,82 @@ func file_prx_v1_prx_proto_rawDescGZIP() []byte {
 	return file_prx_v1_prx_proto_rawDescData
 }
 
-var file_prx_v1_prx_proto_enumTypes = make([]protoimpl.EnumInfo, 11)
-var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 40)
+var file_prx_v1_prx_proto_enumTypes = make([]protoimpl.EnumInfo, 12)
+var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 61)
 var file_prx_v1_prx_proto_goTypes = []any{
-	(FeatureStatus)(0),                   // 0: prx.v1.FeatureStatus
-	(TaskKind)(0),                        // 1: prx.v1.TaskKind
-	(TaskStatus)(0),                      // 2: prx.v1.TaskStatus
-	(TaskDisplayState)(0),                // 3: prx.v1.TaskDisplayState
-	(PullRequestState)(0),                // 4: prx.v1.PullRequestState
-	(ReviewState)(0),                     // 5: prx.v1.ReviewState
-	(Mergeability)(0),                    // 6: prx.v1.Mergeability
-	(PullRequestDisplayState)(0),         // 7: prx.v1.PullRequestDisplayState
-	(DocumentKind)(0),                    // 8: prx.v1.DocumentKind
-	(BlockedReasonCode)(0),               // 9: prx.v1.BlockedReasonCode
-	(DomainErrorCode)(0),                 // 10: prx.v1.DomainErrorCode
-	(*BlockedReason)(nil),                // 11: prx.v1.BlockedReason
-	(*ErrorDetail)(nil),                  // 12: prx.v1.ErrorDetail
-	(*Feature)(nil),                      // 13: prx.v1.Feature
-	(*Task)(nil),                         // 14: prx.v1.Task
-	(*Dependency)(nil),                   // 15: prx.v1.Dependency
-	(*PullRequest)(nil),                  // 16: prx.v1.PullRequest
-	(*Document)(nil),                     // 17: prx.v1.Document
-	(*Snapshot)(nil),                     // 18: prx.v1.Snapshot
-	(*GetSnapshotRequest)(nil),           // 19: prx.v1.GetSnapshotRequest
-	(*GetSnapshotResponse)(nil),          // 20: prx.v1.GetSnapshotResponse
-	(*CreateFeatureRequest)(nil),         // 21: prx.v1.CreateFeatureRequest
-	(*CreateFeatureResponse)(nil),        // 22: prx.v1.CreateFeatureResponse
-	(*UpdateFeatureRequest)(nil),         // 23: prx.v1.UpdateFeatureRequest
-	(*UpdateFeatureResponse)(nil),        // 24: prx.v1.UpdateFeatureResponse
-	(*DeleteFeatureRequest)(nil),         // 25: prx.v1.DeleteFeatureRequest
-	(*DeleteFeatureResponse)(nil),        // 26: prx.v1.DeleteFeatureResponse
-	(*CreateTaskRequest)(nil),            // 27: prx.v1.CreateTaskRequest
-	(*CreateTaskResponse)(nil),           // 28: prx.v1.CreateTaskResponse
-	(*UpdateTaskRequest)(nil),            // 29: prx.v1.UpdateTaskRequest
-	(*UpdateTaskResponse)(nil),           // 30: prx.v1.UpdateTaskResponse
-	(*DeleteTaskRequest)(nil),            // 31: prx.v1.DeleteTaskRequest
-	(*DeleteTaskResponse)(nil),           // 32: prx.v1.DeleteTaskResponse
-	(*AddDependencyRequest)(nil),         // 33: prx.v1.AddDependencyRequest
-	(*AddDependencyResponse)(nil),        // 34: prx.v1.AddDependencyResponse
-	(*RemoveDependencyRequest)(nil),      // 35: prx.v1.RemoveDependencyRequest
-	(*RemoveDependencyResponse)(nil),     // 36: prx.v1.RemoveDependencyResponse
-	(*AttachPullRequestRequest)(nil),     // 37: prx.v1.AttachPullRequestRequest
-	(*AttachPullRequestResponse)(nil),    // 38: prx.v1.AttachPullRequestResponse
-	(*DetachPullRequestRequest)(nil),     // 39: prx.v1.DetachPullRequestRequest
-	(*DetachPullRequestResponse)(nil),    // 40: prx.v1.DetachPullRequestResponse
-	(*AddDocumentRequest)(nil),           // 41: prx.v1.AddDocumentRequest
-	(*AddDocumentResponse)(nil),          // 42: prx.v1.AddDocumentResponse
-	(*DeleteDocumentRequest)(nil),        // 43: prx.v1.DeleteDocumentRequest
-	(*DeleteDocumentResponse)(nil),       // 44: prx.v1.DeleteDocumentResponse
-	(*ReadMarkdownDocumentRequest)(nil),  // 45: prx.v1.ReadMarkdownDocumentRequest
-	(*ReadMarkdownDocumentResponse)(nil), // 46: prx.v1.ReadMarkdownDocumentResponse
-	(*SyncRequest)(nil),                  // 47: prx.v1.SyncRequest
-	(*SyncResponse)(nil),                 // 48: prx.v1.SyncResponse
-	(*ValidateRequest)(nil),              // 49: prx.v1.ValidateRequest
-	(*ValidateResponse)(nil),             // 50: prx.v1.ValidateResponse
+	(FeatureStatus)(0),                       // 0: prx.v1.FeatureStatus
+	(TaskKind)(0),                            // 1: prx.v1.TaskKind
+	(TaskStatus)(0),                          // 2: prx.v1.TaskStatus
+	(TaskDisplayState)(0),                    // 3: prx.v1.TaskDisplayState
+	(PullRequestState)(0),                    // 4: prx.v1.PullRequestState
+	(ReviewState)(0),                         // 5: prx.v1.ReviewState
+	(Mergeability)(0),                        // 6: prx.v1.Mergeability
+	(PullRequestDisplayState)(0),             // 7: prx.v1.PullRequestDisplayState
+	(DocumentKind)(0),                        // 8: prx.v1.DocumentKind
+	(BlockedReasonCode)(0),                   // 9: prx.v1.BlockedReasonCode
+	(DomainErrorCode)(0),                     // 10: prx.v1.DomainErrorCode
+	(GithubAuthMethodType)(0),                // 11: prx.v1.GithubAuthMethodType
+	(*BlockedReason)(nil),                    // 12: prx.v1.BlockedReason
+	(*ErrorDetail)(nil),                      // 13: prx.v1.ErrorDetail
+	(*Feature)(nil),                          // 14: prx.v1.Feature
+	(*Task)(nil),                             // 15: prx.v1.Task
+	(*Dependency)(nil),                       // 16: prx.v1.Dependency
+	(*PullRequest)(nil),                      // 17: prx.v1.PullRequest
+	(*Document)(nil),                         // 18: prx.v1.Document
+	(*Snapshot)(nil),                         // 19: prx.v1.Snapshot
+	(*GetSnapshotRequest)(nil),               // 20: prx.v1.GetSnapshotRequest
+	(*GetSnapshotResponse)(nil),              // 21: prx.v1.GetSnapshotResponse
+	(*CreateFeatureRequest)(nil),             // 22: prx.v1.CreateFeatureRequest
+	(*CreateFeatureResponse)(nil),            // 23: prx.v1.CreateFeatureResponse
+	(*UpdateFeatureRequest)(nil),             // 24: prx.v1.UpdateFeatureRequest
+	(*UpdateFeatureResponse)(nil),            // 25: prx.v1.UpdateFeatureResponse
+	(*DeleteFeatureRequest)(nil),             // 26: prx.v1.DeleteFeatureRequest
+	(*DeleteFeatureResponse)(nil),            // 27: prx.v1.DeleteFeatureResponse
+	(*CreateTaskRequest)(nil),                // 28: prx.v1.CreateTaskRequest
+	(*CreateTaskResponse)(nil),               // 29: prx.v1.CreateTaskResponse
+	(*UpdateTaskRequest)(nil),                // 30: prx.v1.UpdateTaskRequest
+	(*UpdateTaskResponse)(nil),               // 31: prx.v1.UpdateTaskResponse
+	(*DeleteTaskRequest)(nil),                // 32: prx.v1.DeleteTaskRequest
+	(*DeleteTaskResponse)(nil),               // 33: prx.v1.DeleteTaskResponse
+	(*AddDependencyRequest)(nil),             // 34: prx.v1.AddDependencyRequest
+	(*AddDependencyResponse)(nil),            // 35: prx.v1.AddDependencyResponse
+	(*RemoveDependencyRequest)(nil),          // 36: prx.v1.RemoveDependencyRequest
+	(*RemoveDependencyResponse)(nil),         // 37: prx.v1.RemoveDependencyResponse
+	(*AttachPullRequestRequest)(nil),         // 38: prx.v1.AttachPullRequestRequest
+	(*AttachPullRequestResponse)(nil),        // 39: prx.v1.AttachPullRequestResponse
+	(*DetachPullRequestRequest)(nil),         // 40: prx.v1.DetachPullRequestRequest
+	(*DetachPullRequestResponse)(nil),        // 41: prx.v1.DetachPullRequestResponse
+	(*AddDocumentRequest)(nil),               // 42: prx.v1.AddDocumentRequest
+	(*AddDocumentResponse)(nil),              // 43: prx.v1.AddDocumentResponse
+	(*DeleteDocumentRequest)(nil),            // 44: prx.v1.DeleteDocumentRequest
+	(*DeleteDocumentResponse)(nil),           // 45: prx.v1.DeleteDocumentResponse
+	(*ReadMarkdownDocumentRequest)(nil),      // 46: prx.v1.ReadMarkdownDocumentRequest
+	(*ReadMarkdownDocumentResponse)(nil),     // 47: prx.v1.ReadMarkdownDocumentResponse
+	(*GitHubHost)(nil),                       // 48: prx.v1.GitHubHost
+	(*GitHubAuthMethod)(nil),                 // 49: prx.v1.GitHubAuthMethod
+	(*GitHubConfig)(nil),                     // 50: prx.v1.GitHubConfig
+	(*GetConfigRequest)(nil),                 // 51: prx.v1.GetConfigRequest
+	(*GetConfigResponse)(nil),                // 52: prx.v1.GetConfigResponse
+	(*AddGitHubHostRequest)(nil),             // 53: prx.v1.AddGitHubHostRequest
+	(*AddGitHubHostResponse)(nil),            // 54: prx.v1.AddGitHubHostResponse
+	(*UpdateGitHubHostRequest)(nil),          // 55: prx.v1.UpdateGitHubHostRequest
+	(*UpdateGitHubHostResponse)(nil),         // 56: prx.v1.UpdateGitHubHostResponse
+	(*DeleteGitHubHostRequest)(nil),          // 57: prx.v1.DeleteGitHubHostRequest
+	(*DeleteGitHubHostResponse)(nil),         // 58: prx.v1.DeleteGitHubHostResponse
+	(*AddGitHubAuthMethodRequest)(nil),       // 59: prx.v1.AddGitHubAuthMethodRequest
+	(*AddGitHubAuthMethodResponse)(nil),      // 60: prx.v1.AddGitHubAuthMethodResponse
+	(*UpdateGitHubAuthMethodRequest)(nil),    // 61: prx.v1.UpdateGitHubAuthMethodRequest
+	(*UpdateGitHubAuthMethodResponse)(nil),   // 62: prx.v1.UpdateGitHubAuthMethodResponse
+	(*DeleteGitHubAuthMethodRequest)(nil),    // 63: prx.v1.DeleteGitHubAuthMethodRequest
+	(*DeleteGitHubAuthMethodResponse)(nil),   // 64: prx.v1.DeleteGitHubAuthMethodResponse
+	(*ReorderGitHubAuthMethodsRequest)(nil),  // 65: prx.v1.ReorderGitHubAuthMethodsRequest
+	(*ReorderGitHubAuthMethodsResponse)(nil), // 66: prx.v1.ReorderGitHubAuthMethodsResponse
+	(*ValidateConfigRequest)(nil),            // 67: prx.v1.ValidateConfigRequest
+	(*ValidateConfigResponse)(nil),           // 68: prx.v1.ValidateConfigResponse
+	(*SyncRequest)(nil),                      // 69: prx.v1.SyncRequest
+	(*SyncResponse)(nil),                     // 70: prx.v1.SyncResponse
+	(*ValidateRequest)(nil),                  // 71: prx.v1.ValidateRequest
+	(*ValidateResponse)(nil),                 // 72: prx.v1.ValidateResponse
 }
 var file_prx_v1_prx_proto_depIdxs = []int32{
 	9,  // 0: prx.v1.BlockedReason.code:type_name -> prx.v1.BlockedReasonCode
@@ -3733,70 +5199,99 @@ var file_prx_v1_prx_proto_depIdxs = []int32{
 	1,  // 3: prx.v1.Task.kind:type_name -> prx.v1.TaskKind
 	2,  // 4: prx.v1.Task.status:type_name -> prx.v1.TaskStatus
 	3,  // 5: prx.v1.Task.display_state:type_name -> prx.v1.TaskDisplayState
-	11, // 6: prx.v1.Task.blocked_reason:type_name -> prx.v1.BlockedReason
+	12, // 6: prx.v1.Task.blocked_reason:type_name -> prx.v1.BlockedReason
 	4,  // 7: prx.v1.PullRequest.state:type_name -> prx.v1.PullRequestState
 	5,  // 8: prx.v1.PullRequest.review_state:type_name -> prx.v1.ReviewState
 	6,  // 9: prx.v1.PullRequest.mergeability:type_name -> prx.v1.Mergeability
 	7,  // 10: prx.v1.PullRequest.display_state:type_name -> prx.v1.PullRequestDisplayState
 	8,  // 11: prx.v1.Document.kind:type_name -> prx.v1.DocumentKind
-	13, // 12: prx.v1.Snapshot.features:type_name -> prx.v1.Feature
-	14, // 13: prx.v1.Snapshot.tasks:type_name -> prx.v1.Task
-	15, // 14: prx.v1.Snapshot.dependencies:type_name -> prx.v1.Dependency
-	16, // 15: prx.v1.Snapshot.pull_requests:type_name -> prx.v1.PullRequest
-	17, // 16: prx.v1.Snapshot.documents:type_name -> prx.v1.Document
-	14, // 17: prx.v1.Snapshot.ready_tasks:type_name -> prx.v1.Task
-	14, // 18: prx.v1.Snapshot.review_waiting_tasks:type_name -> prx.v1.Task
-	14, // 19: prx.v1.Snapshot.conflict_tasks:type_name -> prx.v1.Task
-	14, // 20: prx.v1.Snapshot.stale_tasks:type_name -> prx.v1.Task
-	18, // 21: prx.v1.GetSnapshotResponse.snapshot:type_name -> prx.v1.Snapshot
-	13, // 22: prx.v1.CreateFeatureResponse.feature:type_name -> prx.v1.Feature
+	14, // 12: prx.v1.Snapshot.features:type_name -> prx.v1.Feature
+	15, // 13: prx.v1.Snapshot.tasks:type_name -> prx.v1.Task
+	16, // 14: prx.v1.Snapshot.dependencies:type_name -> prx.v1.Dependency
+	17, // 15: prx.v1.Snapshot.pull_requests:type_name -> prx.v1.PullRequest
+	18, // 16: prx.v1.Snapshot.documents:type_name -> prx.v1.Document
+	15, // 17: prx.v1.Snapshot.ready_tasks:type_name -> prx.v1.Task
+	15, // 18: prx.v1.Snapshot.review_waiting_tasks:type_name -> prx.v1.Task
+	15, // 19: prx.v1.Snapshot.conflict_tasks:type_name -> prx.v1.Task
+	15, // 20: prx.v1.Snapshot.stale_tasks:type_name -> prx.v1.Task
+	19, // 21: prx.v1.GetSnapshotResponse.snapshot:type_name -> prx.v1.Snapshot
+	14, // 22: prx.v1.CreateFeatureResponse.feature:type_name -> prx.v1.Feature
 	0,  // 23: prx.v1.UpdateFeatureRequest.status:type_name -> prx.v1.FeatureStatus
-	13, // 24: prx.v1.UpdateFeatureResponse.feature:type_name -> prx.v1.Feature
+	14, // 24: prx.v1.UpdateFeatureResponse.feature:type_name -> prx.v1.Feature
 	1,  // 25: prx.v1.CreateTaskRequest.kind:type_name -> prx.v1.TaskKind
-	14, // 26: prx.v1.CreateTaskResponse.task:type_name -> prx.v1.Task
+	15, // 26: prx.v1.CreateTaskResponse.task:type_name -> prx.v1.Task
 	2,  // 27: prx.v1.UpdateTaskRequest.status:type_name -> prx.v1.TaskStatus
-	14, // 28: prx.v1.UpdateTaskResponse.task:type_name -> prx.v1.Task
-	15, // 29: prx.v1.AddDependencyResponse.dependency:type_name -> prx.v1.Dependency
-	16, // 30: prx.v1.AttachPullRequestResponse.pull_request:type_name -> prx.v1.PullRequest
+	15, // 28: prx.v1.UpdateTaskResponse.task:type_name -> prx.v1.Task
+	16, // 29: prx.v1.AddDependencyResponse.dependency:type_name -> prx.v1.Dependency
+	17, // 30: prx.v1.AttachPullRequestResponse.pull_request:type_name -> prx.v1.PullRequest
 	8,  // 31: prx.v1.AddDocumentRequest.kind:type_name -> prx.v1.DocumentKind
-	17, // 32: prx.v1.AddDocumentResponse.document:type_name -> prx.v1.Document
-	19, // 33: prx.v1.PRXService.GetSnapshot:input_type -> prx.v1.GetSnapshotRequest
-	21, // 34: prx.v1.PRXService.CreateFeature:input_type -> prx.v1.CreateFeatureRequest
-	23, // 35: prx.v1.PRXService.UpdateFeature:input_type -> prx.v1.UpdateFeatureRequest
-	25, // 36: prx.v1.PRXService.DeleteFeature:input_type -> prx.v1.DeleteFeatureRequest
-	27, // 37: prx.v1.PRXService.CreateTask:input_type -> prx.v1.CreateTaskRequest
-	29, // 38: prx.v1.PRXService.UpdateTask:input_type -> prx.v1.UpdateTaskRequest
-	31, // 39: prx.v1.PRXService.DeleteTask:input_type -> prx.v1.DeleteTaskRequest
-	33, // 40: prx.v1.PRXService.AddDependency:input_type -> prx.v1.AddDependencyRequest
-	35, // 41: prx.v1.PRXService.RemoveDependency:input_type -> prx.v1.RemoveDependencyRequest
-	37, // 42: prx.v1.PRXService.AttachPullRequest:input_type -> prx.v1.AttachPullRequestRequest
-	39, // 43: prx.v1.PRXService.DetachPullRequest:input_type -> prx.v1.DetachPullRequestRequest
-	41, // 44: prx.v1.PRXService.AddDocument:input_type -> prx.v1.AddDocumentRequest
-	43, // 45: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
-	45, // 46: prx.v1.PRXService.ReadMarkdownDocument:input_type -> prx.v1.ReadMarkdownDocumentRequest
-	47, // 47: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
-	49, // 48: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
-	20, // 49: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
-	22, // 50: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
-	24, // 51: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
-	26, // 52: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
-	28, // 53: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
-	30, // 54: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
-	32, // 55: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
-	34, // 56: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
-	36, // 57: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
-	38, // 58: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
-	40, // 59: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
-	42, // 60: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
-	44, // 61: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
-	46, // 62: prx.v1.PRXService.ReadMarkdownDocument:output_type -> prx.v1.ReadMarkdownDocumentResponse
-	48, // 63: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
-	50, // 64: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
-	49, // [49:65] is the sub-list for method output_type
-	33, // [33:49] is the sub-list for method input_type
-	33, // [33:33] is the sub-list for extension type_name
-	33, // [33:33] is the sub-list for extension extendee
-	0,  // [0:33] is the sub-list for field type_name
+	18, // 32: prx.v1.AddDocumentResponse.document:type_name -> prx.v1.Document
+	11, // 33: prx.v1.GitHubAuthMethod.type:type_name -> prx.v1.GithubAuthMethodType
+	48, // 34: prx.v1.GitHubConfig.hosts:type_name -> prx.v1.GitHubHost
+	49, // 35: prx.v1.GitHubConfig.auth_methods:type_name -> prx.v1.GitHubAuthMethod
+	50, // 36: prx.v1.GetConfigResponse.config:type_name -> prx.v1.GitHubConfig
+	48, // 37: prx.v1.AddGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
+	48, // 38: prx.v1.UpdateGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
+	11, // 39: prx.v1.AddGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
+	49, // 40: prx.v1.AddGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
+	11, // 41: prx.v1.UpdateGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
+	49, // 42: prx.v1.UpdateGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
+	49, // 43: prx.v1.ReorderGitHubAuthMethodsResponse.auth_methods:type_name -> prx.v1.GitHubAuthMethod
+	20, // 44: prx.v1.PRXService.GetSnapshot:input_type -> prx.v1.GetSnapshotRequest
+	22, // 45: prx.v1.PRXService.CreateFeature:input_type -> prx.v1.CreateFeatureRequest
+	24, // 46: prx.v1.PRXService.UpdateFeature:input_type -> prx.v1.UpdateFeatureRequest
+	26, // 47: prx.v1.PRXService.DeleteFeature:input_type -> prx.v1.DeleteFeatureRequest
+	28, // 48: prx.v1.PRXService.CreateTask:input_type -> prx.v1.CreateTaskRequest
+	30, // 49: prx.v1.PRXService.UpdateTask:input_type -> prx.v1.UpdateTaskRequest
+	32, // 50: prx.v1.PRXService.DeleteTask:input_type -> prx.v1.DeleteTaskRequest
+	34, // 51: prx.v1.PRXService.AddDependency:input_type -> prx.v1.AddDependencyRequest
+	36, // 52: prx.v1.PRXService.RemoveDependency:input_type -> prx.v1.RemoveDependencyRequest
+	38, // 53: prx.v1.PRXService.AttachPullRequest:input_type -> prx.v1.AttachPullRequestRequest
+	40, // 54: prx.v1.PRXService.DetachPullRequest:input_type -> prx.v1.DetachPullRequestRequest
+	42, // 55: prx.v1.PRXService.AddDocument:input_type -> prx.v1.AddDocumentRequest
+	44, // 56: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
+	46, // 57: prx.v1.PRXService.ReadMarkdownDocument:input_type -> prx.v1.ReadMarkdownDocumentRequest
+	69, // 58: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
+	71, // 59: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
+	51, // 60: prx.v1.PRXService.GetConfig:input_type -> prx.v1.GetConfigRequest
+	53, // 61: prx.v1.PRXService.AddGitHubHost:input_type -> prx.v1.AddGitHubHostRequest
+	55, // 62: prx.v1.PRXService.UpdateGitHubHost:input_type -> prx.v1.UpdateGitHubHostRequest
+	57, // 63: prx.v1.PRXService.DeleteGitHubHost:input_type -> prx.v1.DeleteGitHubHostRequest
+	59, // 64: prx.v1.PRXService.AddGitHubAuthMethod:input_type -> prx.v1.AddGitHubAuthMethodRequest
+	61, // 65: prx.v1.PRXService.UpdateGitHubAuthMethod:input_type -> prx.v1.UpdateGitHubAuthMethodRequest
+	63, // 66: prx.v1.PRXService.DeleteGitHubAuthMethod:input_type -> prx.v1.DeleteGitHubAuthMethodRequest
+	65, // 67: prx.v1.PRXService.ReorderGitHubAuthMethods:input_type -> prx.v1.ReorderGitHubAuthMethodsRequest
+	67, // 68: prx.v1.PRXService.ValidateConfig:input_type -> prx.v1.ValidateConfigRequest
+	21, // 69: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
+	23, // 70: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
+	25, // 71: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
+	27, // 72: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
+	29, // 73: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
+	31, // 74: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
+	33, // 75: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
+	35, // 76: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
+	37, // 77: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
+	39, // 78: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
+	41, // 79: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
+	43, // 80: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
+	45, // 81: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
+	47, // 82: prx.v1.PRXService.ReadMarkdownDocument:output_type -> prx.v1.ReadMarkdownDocumentResponse
+	70, // 83: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
+	72, // 84: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
+	52, // 85: prx.v1.PRXService.GetConfig:output_type -> prx.v1.GetConfigResponse
+	54, // 86: prx.v1.PRXService.AddGitHubHost:output_type -> prx.v1.AddGitHubHostResponse
+	56, // 87: prx.v1.PRXService.UpdateGitHubHost:output_type -> prx.v1.UpdateGitHubHostResponse
+	58, // 88: prx.v1.PRXService.DeleteGitHubHost:output_type -> prx.v1.DeleteGitHubHostResponse
+	60, // 89: prx.v1.PRXService.AddGitHubAuthMethod:output_type -> prx.v1.AddGitHubAuthMethodResponse
+	62, // 90: prx.v1.PRXService.UpdateGitHubAuthMethod:output_type -> prx.v1.UpdateGitHubAuthMethodResponse
+	64, // 91: prx.v1.PRXService.DeleteGitHubAuthMethod:output_type -> prx.v1.DeleteGitHubAuthMethodResponse
+	66, // 92: prx.v1.PRXService.ReorderGitHubAuthMethods:output_type -> prx.v1.ReorderGitHubAuthMethodsResponse
+	68, // 93: prx.v1.PRXService.ValidateConfig:output_type -> prx.v1.ValidateConfigResponse
+	69, // [69:94] is the sub-list for method output_type
+	44, // [44:69] is the sub-list for method input_type
+	44, // [44:44] is the sub-list for extension type_name
+	44, // [44:44] is the sub-list for extension extendee
+	0,  // [0:44] is the sub-list for field type_name
 }
 
 func init() { file_prx_v1_prx_proto_init() }
@@ -3806,13 +5301,16 @@ func file_prx_v1_prx_proto_init() {
 	}
 	file_prx_v1_prx_proto_msgTypes[12].OneofWrappers = []any{}
 	file_prx_v1_prx_proto_msgTypes[18].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[43].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[47].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[49].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_prx_v1_prx_proto_rawDesc), len(file_prx_v1_prx_proto_rawDesc)),
-			NumEnums:      11,
-			NumMessages:   40,
+			NumEnums:      12,
+			NumMessages:   61,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

@@ -7,7 +7,7 @@ PRX is a local-first dependency control room for initiatives that span many GitH
 - Go 1.26 or newer
 - The Node.js version is defined in `.tool-versions`, and the pnpm version is defined in the root `package.json` `packageManager`
 - A Chromium browser for Playwright development checks
-- `GITHUB_TOKEN`, `GH_TOKEN`, or an authenticated `gh` CLI for live GitHub synchronization
+- A GitHub credential configured in `config.yaml`, or the historical `GITHUB_TOKEN`, `GH_TOKEN`, or authenticated `gh` CLI fallback for GitHub.com synchronization
 
 `sqlc`, Buf, and Protocol Buffer generators are pinned as Go tool dependencies, and `make lint` installs `golangci-lint` into `bin/` at the version in `.tool-versions`. None of them need global installation. The shipped binary does not require Node.js, pnpm, or `gh` when a token is supplied.
 
@@ -31,7 +31,7 @@ make dev
 
 Open <http://127.0.0.1:7331>, the same URL used by the production server. Vite applies WebUI changes with hot module replacement and proxies RPC requests to the development Go server on port 7332. Air rebuilds and restarts the Go server when Go source files change. Stop any existing `prx serve` process that is using port 7331 before starting the development servers.
 
-The development server uses the same live GitHub authentication as `prx serve`; use `GITHUB_TOKEN`, `GH_TOKEN`, or an authenticated `gh` CLI before starting `make dev`.
+The development server uses the same live GitHub configuration as `prx serve`; use `prx config` or `GITHUB_TOKEN`, `GH_TOKEN`, or an authenticated `gh` CLI before starting `make dev`. Use `--config /path/to/config.yaml` or `PRX_CONFIG` to select a configuration file.
 
 Run `make ci` before handing off a change.
 

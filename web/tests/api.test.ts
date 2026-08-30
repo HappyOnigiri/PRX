@@ -1,10 +1,17 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { getSnapshot, mutations, readMarkdownDocument } from "../src/api";
+import {
+  configMutations,
+  getConfig,
+  getSnapshot,
+  mutations,
+  readMarkdownDocument,
+} from "../src/api";
 import { makeSnapshot } from "./factories";
 
 const apiMocks = vi.hoisted(() => {
   const client = {
     getSnapshot: vi.fn(),
+    getConfig: vi.fn(),
     createFeature: vi.fn(),
     updateFeature: vi.fn(),
     deleteFeature: vi.fn(),
@@ -19,6 +26,14 @@ const apiMocks = vi.hoisted(() => {
     deleteDocument: vi.fn(),
     sync: vi.fn(),
     readMarkdownDocument: vi.fn(),
+    addGitHubHost: vi.fn(),
+    updateGitHubHost: vi.fn(),
+    deleteGitHubHost: vi.fn(),
+    addGitHubAuthMethod: vi.fn(),
+    updateGitHubAuthMethod: vi.fn(),
+    deleteGitHubAuthMethod: vi.fn(),
+    reorderGitHubAuthMethods: vi.fn(),
+    validateConfig: vi.fn(),
   };
   return {
     client,
@@ -51,6 +66,41 @@ describe("RPC API wrappers", () => {
     await expect(getSnapshot()).rejects.toThrow(
       "The server returned an empty snapshot.",
     );
+  });
+
+  it("wraps configuration reads and mutations", async () => {
+    const config = { version: 1 };
+    apiMocks.client.getConfig.mockResolvedValueOnce({ config });
+    await expect(getConfig()).resolves.toBe(config);
+    apiMocks.client.getConfig.mockResolvedValueOnce({ config: undefined });
+    await expect(getConfig()).rejects.toThrow(
+      "The server returned an empty GitHub configuration.",
+    );
+
+    await configMutations.addHost({ host: "ghe.example.com" });
+    await configMutations.updateHost({
+      host: "ghe.example.com",
+      newHost: "ghe.internal",
+    });
+    await configMutations.deleteHost("ghe.internal");
+    await configMutations.addAuth({
+      id: "token",
+      host: "github.com",
+      type: 3,
+      token: "secret",
+    });
+    await configMutations.updateAuth({ id: "token", user: "Mika" });
+    await configMutations.deleteAuth("token");
+    await configMutations.reorderAuth(["token"]);
+    await configMutations.validate();
+    expect(apiMocks.client.addGitHubHost).toHaveBeenCalled();
+    expect(apiMocks.client.updateGitHubHost).toHaveBeenCalled();
+    expect(apiMocks.client.deleteGitHubHost).toHaveBeenCalled();
+    expect(apiMocks.client.addGitHubAuthMethod).toHaveBeenCalled();
+    expect(apiMocks.client.updateGitHubAuthMethod).toHaveBeenCalled();
+    expect(apiMocks.client.deleteGitHubAuthMethod).toHaveBeenCalled();
+    expect(apiMocks.client.reorderGitHubAuthMethods).toHaveBeenCalled();
+    expect(apiMocks.client.validateConfig).toHaveBeenCalled();
   });
 
   it("serializes every mutation request and propagates markdown content", async () => {

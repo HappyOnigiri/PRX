@@ -5,6 +5,7 @@ Manage pull-request dependency roadmaps
 ### Options
 
 ```
+      --config string           YAML configuration path (env: PRX_CONFIG)
       --db string               SQLite database path (env: PRX_DB)
       --github-fixture string   GitHub fixture JSON path, or demo
   -h, --help                    help for prx
@@ -14,6 +15,7 @@ Manage pull-request dependency roadmaps
 
 ### SEE ALSO
 
+* [prx config](prx_config.md)	 - Manage GitHub hosts and authentication
 * [prx conflicts](prx_conflicts.md)	 - List tasks with conflicting pull requests
 * [prx dependency](prx_dependency.md)	 - Manage directed blocker edges
 * [prx document](prx_document.md)	 - Manage URL and local Markdown references
