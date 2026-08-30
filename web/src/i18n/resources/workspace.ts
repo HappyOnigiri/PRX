@@ -39,10 +39,13 @@ export const workspace = {
         keyboardDisabled: "Use the Edit button to open task details.",
         edgeDescription: "An edge connects a blocker to a blocked task.",
         dependencyEdge: "{{blocker}} blocks {{blocked}}",
+        dependencyLabel: "{{blocker}} → {{blocked}}",
+        removeDependency: "Remove dependency {{blocker}} → {{blocked}}",
         connectionInstruction:
-          "Add: drag right output → left input. Remove: select a link, then drag its blocker end into empty space.",
+          "Add: drag right output → left input. Remove: select a link, then drag either end into empty space or use its remove button.",
         connectionSaving: "Saving dependency…",
-        detachInstruction: "Drop in empty space to remove this blocker.",
+        detachInstruction:
+          "Drop in empty space to remove {{blocker}} → {{blocked}}.",
         dependencyRemoving: "Removing dependency…",
         blockerHandle: "Blocker output (drag from here)",
         blockedHandle: "Blocked task input (drop here)",
@@ -129,10 +132,13 @@ export const workspace = {
         edgeDescription:
           "エッジはブロッカーからブロック対象のタスクへ接続します。",
         dependencyEdge: "{{blocker}} が {{blocked}} をブロック",
+        dependencyLabel: "{{blocker}} → {{blocked}}",
+        removeDependency: "{{blocker}} → {{blocked}} の依存を解除",
         connectionInstruction:
-          "追加: 右の送り口→左の受け口へドラッグ。解除: リンクを選択し、ブロッカー側の端を空白へドラッグ。",
+          "追加: 右の送り口→左の受け口へドラッグ。解除: リンクを選択し、どちらかの端を空白へドラッグするか解除ボタンを使用。",
         connectionSaving: "依存関係を保存しています…",
-        detachInstruction: "空白にドロップすると、このブロッカーを解除します。",
+        detachInstruction:
+          "空白にドロップすると {{blocker}} → {{blocked}} の依存を解除します。",
         dependencyRemoving: "依存関係を解除しています…",
         blockerHandle: "ブロッカーの送り口（ここからドラッグ）",
         blockedHandle: "ブロック対象の受け口（ここにドロップ）",

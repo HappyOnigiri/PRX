@@ -1,7 +1,9 @@
+import type { ElkNode } from "elkjs/lib/elk-api.js";
 import ELK from "elkjs/lib/elk-api.js";
 import elkWorkerUrl from "elkjs/lib/elk-worker.min.js?url";
 import { useEffect, useMemo, useState } from "react";
 import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
+import { dependencyEdgeId, type DependencyEdgeRoute } from "./dependencyGraph";
 import { type TaskFlowNode, type TaskNodeDocument } from "./TaskNode";
 
 interface GraphLayoutOptions {
@@ -75,6 +77,95 @@ function buildRawNodes({
   });
 }
 
+type RawNode = ReturnType<typeof buildRawNodes>[number];
+
+function buildLayoutGraph(raw: RawNode[], dependencies: Dependency[]): ElkNode {
+  return {
+    id: "root",
+    layoutOptions: {
+      "elk.algorithm": "layered",
+      "elk.direction": "RIGHT",
+      "elk.edgeRouting": "ORTHOGONAL",
+      "elk.layered.mergeEdges": "false",
+      "elk.spacing.nodeNode": "72",
+      "elk.layered.spacing.nodeNodeBetweenLayers": "110",
+    },
+    children: raw.map(({ id, width, height }) => ({ id, width, height })),
+    edges: dependencies.map((dependency) => ({
+      id: dependencyEdgeId(dependency.blockerTaskId, dependency.blockedTaskId),
+      sources: [dependency.blockerTaskId],
+      targets: [dependency.blockedTaskId],
+    })),
+  };
+}
+
+function readLayout(
+  layout: ElkNode,
+  raw: RawNode[],
+  dependencies: Dependency[],
+) {
+  const positions = new Map(
+    layout.children?.map((child) => [
+      child.id,
+      { x: child.x ?? 0, y: child.y ?? 0 },
+    ]),
+  );
+  const ports = new Map<
+    string,
+    {
+      incoming: { id: string; top: number }[];
+      outgoing: { id: string; top: number }[];
+    }
+  >(raw.map((node) => [node.id, { incoming: [], outgoing: [] }]));
+  const edgeRoutes = new Map<string, DependencyEdgeRoute>();
+
+  for (const dependency of dependencies) {
+    const id = dependencyEdgeId(
+      dependency.blockerTaskId,
+      dependency.blockedTaskId,
+    );
+    const section = layout.edges?.find((edge) => edge.id === id)?.sections?.[0];
+    const sourcePosition = positions.get(dependency.blockerTaskId);
+    const targetPosition = positions.get(dependency.blockedTaskId);
+    if (!section || !sourcePosition || !targetPosition) continue;
+
+    const sourcePortId = `${id}-source`;
+    const targetPortId = `${id}-target`;
+    const route = {
+      points: [
+        section.startPoint,
+        ...(section.bendPoints ?? []),
+        section.endPoint,
+      ],
+      sourcePortId,
+      sourcePortTop: section.startPoint.y - sourcePosition.y,
+      targetPortId,
+      targetPortTop: section.endPoint.y - targetPosition.y,
+    };
+    edgeRoutes.set(id, route);
+    ports.get(dependency.blockerTaskId)?.outgoing.push({
+      id: sourcePortId,
+      top: route.sourcePortTop,
+    });
+    ports.get(dependency.blockedTaskId)?.incoming.push({
+      id: targetPortId,
+      top: route.targetPortTop,
+    });
+  }
+
+  const nodes: TaskFlowNode[] = raw.map((node) => ({
+    ...node,
+    data: {
+      ...node.data,
+      incomingPorts: ports.get(node.id)?.incoming ?? [],
+      outgoingPorts: ports.get(node.id)?.outgoing ?? [],
+    },
+    type: "task",
+    position: positions.get(node.id) ?? { x: 0, y: 0 },
+  }));
+  return { edgeRoutes, nodes };
+}
+
 export function useGraphLayout({
   tasks,
   dependencies,
@@ -85,6 +176,9 @@ export function useGraphLayout({
   readOnly = false,
 }: GraphLayoutOptions) {
   const [nodes, setNodes] = useState<TaskFlowNode[]>([]);
+  const [edgeRoutes, setEdgeRoutes] = useState<
+    Map<string, DependencyEdgeRoute>
+  >(() => new Map());
   // Keep the raw error so changing the display language does not re-run the
   // layout effect and reset the viewport.
   const [layoutError, setLayoutError] = useState<
@@ -121,41 +215,18 @@ export function useGraphLayout({
     const raw = buildRawNodes(layoutRequest);
     const elk = new ELK({ workerUrl: elkWorkerUrl });
     elk
-      .layout({
-        id: "root",
-        layoutOptions: {
-          "elk.algorithm": "layered",
-          "elk.direction": "RIGHT",
-          "elk.spacing.nodeNode": "72",
-          "elk.layered.spacing.nodeNodeBetweenLayers": "110",
-        },
-        children: raw.map(({ id, width, height }) => ({ id, width, height })),
-        edges: layoutRequest.dependencies.map((dep, index) => ({
-          id: String(index),
-          sources: [dep.blockerTaskId],
-          targets: [dep.blockedTaskId],
-        })),
-      })
+      .layout(buildLayoutGraph(raw, layoutRequest.dependencies))
       .then((layout) => {
         if (!current) return;
         setLayoutError(undefined);
-        const positions = new Map(
-          layout.children?.map((child) => [
-            child.id,
-            { x: child.x ?? 0, y: child.y ?? 0 },
-          ]),
-        );
-        setNodes(
-          raw.map((node) => ({
-            ...node,
-            type: "task",
-            position: positions.get(node.id) ?? { x: 0, y: 0 },
-          })),
-        );
+        const result = readLayout(layout, raw, layoutRequest.dependencies);
+        setEdgeRoutes(result.edgeRoutes);
+        setNodes(result.nodes);
         setCompletedLayout(layoutRequest);
       })
       .catch((error: unknown) => {
         if (!current) return;
+        setEdgeRoutes(new Map());
         setLayoutError({
           message: error instanceof Error ? error.message : undefined,
         });
@@ -172,5 +243,5 @@ export function useGraphLayout({
     setLayoutAttempt((attempt) => attempt + 1);
   }
 
-  return { nodes, layoutError, layoutPending, retryLayout };
+  return { edgeRoutes, nodes, layoutError, layoutPending, retryLayout };
 }
