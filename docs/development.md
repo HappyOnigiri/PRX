@@ -39,6 +39,9 @@ The browser test suite owns the current scenario inventory, viewport coverage, a
 Automated tests and demos use deterministic GitHub fixtures instead of live network state.
 The fixture provider implementation and CLI reference own the current fixture schema and available presets.
 
+Browser end-to-end tests start only `prx serve --demo` and use its built-in four-feature, 120-task dataset.
+The large completed feature owns scale checks, while the active showcase owns state, queue, plan, and document scenarios.
+
 Tests that exercise configuration or credential resolution must use isolated temporary configuration.
 They must not depend on the real Keychain, ambient token variables, authenticated `gh` accounts, or GitHub availability.
 

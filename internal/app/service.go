@@ -2,7 +2,6 @@ package app
 
 import (
 	"context"
-	"fmt"
 	"io"
 	"net/url"
 	"os"
@@ -714,86 +713,6 @@ func (s *Service) syncSelected(
 }
 
 func (s *Service) Validate(ctx context.Context) []string { return s.repository.Validate(ctx) }
-
-func (s *Service) SeedDemo(ctx context.Context, slug string, count int) error {
-	if slug == "" {
-		slug = "demo-roadmap"
-	}
-	if count < 1 {
-		count = 8
-	}
-	// Seeding is idempotent: rerunning it reuses whatever already exists so the
-	// command in the README can be repeated without leaving partial data behind.
-	feature, err := s.repository.GetFeatureBySlug(ctx, slug)
-	if err != nil {
-		feature, err = s.CreateFeature(
-			ctx,
-			slug,
-			fmt.Sprintf("Cross-repository launch · %d nodes", count),
-			"A representative branching and merging delivery graph.",
-		)
-		if err != nil {
-			return err
-		}
-	}
-	snapshot, err := s.repository.Snapshot(ctx)
-	if err != nil {
-		return err
-	}
-	existingTasks := map[string]domain.Task{}
-	for _, task := range snapshot.Tasks {
-		if task.FeatureID == feature.ID {
-			existingTasks[task.Title] = task
-		}
-	}
-	linkedTasks := map[string]bool{}
-	for _, pr := range snapshot.PullRequests {
-		linkedTasks[pr.TaskID] = true
-	}
-	existingDeps := map[string]bool{}
-	for _, dep := range snapshot.Dependencies {
-		existingDeps[dep.BlockerTaskID+"→"+dep.BlockedTaskID] = true
-	}
-	tasks := make([]domain.Task, count)
-	for i := 0; i < count; i++ {
-		title := fmt.Sprintf("Delivery slice %02d", i+1)
-		task, ok := existingTasks[title]
-		if !ok {
-			task, err = s.CreateTask(
-				ctx,
-				feature.ID,
-				title,
-				"Implement and verify repository boundary",
-				domain.TaskKindPR,
-				[]string{"Ari", "Mika", "Ren"}[i%3],
-			)
-			if err != nil {
-				return err
-			}
-		}
-		tasks[i] = task
-		if !linkedTasks[task.ID] {
-			if _, err := s.AttachPullRequest(
-				ctx,
-				task.ID,
-				fmt.Sprintf("https://github.com/HappyOnigiri/%s/pull/%d", slug, i+1),
-			); err != nil {
-				return err
-			}
-		}
-	}
-	for i := 1; i < count; i++ {
-		blocker := (i - 1) / 2
-		if existingDeps[tasks[blocker].ID+"→"+tasks[i].ID] {
-			continue
-		}
-		if _, err := s.AddDependency(ctx, tasks[blocker].ID, tasks[i].ID); err != nil {
-			return err
-		}
-	}
-	_, _, err = s.Sync(ctx, feature.ID, "")
-	return err
-}
 
 func oneOf[T comparable](value T, values ...T) bool {
 	for _, candidate := range values {

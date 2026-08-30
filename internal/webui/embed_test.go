@@ -12,10 +12,14 @@ import (
 
 func TestHandlerInjectsVersionIntoIndexAndRouteFallback(t *testing.T) {
 	root := fstest.MapFS{
-		"index.html": &fstest.MapFile{Data: []byte(`<meta name="prx-version" content="__PRX_VERSION__">`)},
-		"app.js":     &fstest.MapFile{Data: []byte("application")},
+		"index.html": &fstest.MapFile{
+			Data: []byte(
+				`<meta name="prx-version" content="__PRX_VERSION__"><meta name="prx-demo" content="__PRX_DEMO__">`,
+			),
+		},
+		"app.js": &fstest.MapFile{Data: []byte("application")},
 	}
-	handler := newHandler(root, `1.2.3&test`)
+	handler := newHandler(root, `1.2.3&test`, true)
 
 	for _, requestPath := range []string{"/", "/features/example"} {
 		response := httptest.NewRecorder()
@@ -27,6 +31,9 @@ func TestHandlerInjectsVersionIntoIndexAndRouteFallback(t *testing.T) {
 		if got := response.Body.String(); !strings.Contains(got, `content="1.2.3&amp;test"`) {
 			t.Fatalf("GET %s body = %q", requestPath, got)
 		}
+		if got := response.Body.String(); !strings.Contains(got, `name="prx-demo" content="true"`) {
+			t.Fatalf("GET %s body = %q", requestPath, got)
+		}
 		if got := response.Header().Get("Content-Security-Policy"); got == "" {
 			t.Fatalf("GET %s has no content security policy", requestPath)
 		}
@@ -35,12 +42,12 @@ func TestHandlerInjectsVersionIntoIndexAndRouteFallback(t *testing.T) {
 
 func TestHandlerServesStaticAsset(t *testing.T) {
 	root := fstest.MapFS{
-		"index.html": &fstest.MapFile{Data: []byte(versionPlaceholder)},
+		"index.html": &fstest.MapFile{Data: []byte(versionPlaceholder + demoPlaceholder)},
 		"app.js":     &fstest.MapFile{Data: []byte("application")},
 	}
 	response := httptest.NewRecorder()
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/app.js", nil)
-	newHandler(root, "1.2.3").ServeHTTP(response, request)
+	newHandler(root, "1.2.3", false).ServeHTTP(response, request)
 
 	if got, want := response.Body.String(), "application"; got != want {
 		t.Fatalf("body = %q, want %q", got, want)
@@ -50,7 +57,7 @@ func TestHandlerServesStaticAsset(t *testing.T) {
 func TestHandlerReportsMissingBuild(t *testing.T) {
 	response := httptest.NewRecorder()
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
-	newHandler(fstest.MapFS{}, "1.2.3").ServeHTTP(response, request)
+	newHandler(fstest.MapFS{}, "1.2.3", false).ServeHTTP(response, request)
 
 	if response.Code != http.StatusServiceUnavailable {
 		t.Fatalf("status = %d", response.Code)

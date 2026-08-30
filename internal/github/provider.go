@@ -273,9 +273,10 @@ func allPages[T any](
 	}
 }
 
-type FixtureProvider struct{ values map[string]fixture }
+type FixtureProvider struct{ values map[string]Fixture }
 
-type fixture struct {
+// Fixture is one pull-request state a fixture file records for a URL.
+type Fixture struct {
 	State        domain.PullRequestState `json:"state"`
 	Draft        bool                    `json:"draft"`
 	ReviewState  domain.ReviewState      `json:"review_state"`
@@ -290,12 +291,12 @@ type fixture struct {
 // halfway through a sync.
 var fixtureFields = []struct {
 	name    string
-	value   func(fixture) string
+	value   func(Fixture) string
 	allowed []string
 }{
 	{
 		"state",
-		func(f fixture) string { return string(f.State) },
+		func(f Fixture) string { return string(f.State) },
 		[]string{
 			string(domain.PullRequestStateOpen),
 			string(domain.PullRequestStateClosed),
@@ -305,7 +306,7 @@ var fixtureFields = []struct {
 	},
 	{
 		"review_state",
-		func(f fixture) string { return string(f.ReviewState) },
+		func(f Fixture) string { return string(f.ReviewState) },
 		[]string{
 			string(domain.ReviewStateNone),
 			string(domain.ReviewStateRequired),
@@ -316,7 +317,7 @@ var fixtureFields = []struct {
 	},
 	{
 		"mergeability",
-		func(f fixture) string { return string(f.Mergeability) },
+		func(f Fixture) string { return string(f.Mergeability) },
 		[]string{
 			string(domain.MergeabilityMergeable),
 			string(domain.MergeabilityConflicting),
@@ -327,13 +328,13 @@ var fixtureFields = []struct {
 
 func NewFixtureProvider(path string) (*FixtureProvider, error) {
 	if path == "demo" {
-		return &FixtureProvider{values: map[string]fixture{}}, nil
+		return &FixtureProvider{values: map[string]Fixture{}}, nil
 	}
 	body, err := os.ReadFile(path)
 	if err != nil {
 		return nil, err
 	}
-	values := map[string]fixture{}
+	values := map[string]Fixture{}
 	if err := json.Unmarshal(body, &values); err != nil {
 		return nil, fmt.Errorf("decode GitHub fixture: %w", err)
 	}
@@ -361,7 +362,7 @@ func NewFixtureProvider(path string) (*FixtureProvider, error) {
 func (p *FixtureProvider) Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error) {
 	value, ok := p.values[current.URL]
 	if !ok {
-		states := []fixture{
+		states := []Fixture{
 			{
 				State:        domain.PullRequestStateOpen,
 				ReviewState:  domain.ReviewStateRequired,

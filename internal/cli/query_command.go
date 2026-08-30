@@ -1,7 +1,6 @@
 package cli
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -150,42 +149,6 @@ func (s *state) validateCommand() *cobra.Command {
 			return s.write(map[string]bool{"valid": true}, renderMessage("Dependency data is valid."))
 		},
 	}
-}
-
-func (s *state) seedCommand() *cobra.Command {
-	var count int
-	var slug string
-	var features int
-	command := &cobra.Command{
-		Use:     "seed",
-		Short:   "Create deterministic demo roadmap data",
-		Example: "prx seed --github-fixture demo --features 100 --tasks 50",
-		Args:    cobra.NoArgs,
-		RunE: func(cmd *cobra.Command, _ []string) error {
-			if features < 1 {
-				return domain.NewError("invalid_seed", "features must be at least 1")
-			}
-			for index := 0; index < features; index++ {
-				featureSlug := slug
-				if features > 1 {
-					featureSlug = fmt.Sprintf("%s-%03d", slug, index+1)
-				}
-				if err := s.service.SeedDemo(cmd.Context(), featureSlug, count); err != nil {
-					return err
-				}
-			}
-			snapshot, err := s.service.Snapshot(cmd.Context())
-			if err != nil {
-				return err
-			}
-			snapshot = normalizeSnapshotCollections(snapshot)
-			return s.write(snapshot, renderSnapshot("Seed completed", snapshot))
-		},
-	}
-	command.Flags().IntVar(&count, "tasks", 8, "number of demo tasks")
-	command.Flags().StringVar(&slug, "slug", "demo-roadmap", "feature slug")
-	command.Flags().IntVar(&features, "features", 1, "number of demo features")
-	return command
 }
 
 func queueLabel(name string) string {

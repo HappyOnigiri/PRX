@@ -126,6 +126,11 @@ A configuration file using a supported version still loads when it contains unkn
 Those fields are reported as warnings instead of failing the command or the server start, and the next configuration write drops them.
 Unsupported versions and every other decoding failure keep the configuration from loading, so a malformed or ambiguous file is never accepted silently.
 
+`prx serve --demo` creates a new temporary database, configuration, and Markdown document set for each server process.
+It never reads or writes the normal database and configuration paths, including paths supplied through environment variables.
+The temporary environment is removed after a normal shutdown and is never reused after an abnormal shutdown.
+All demo mutations remain available until that process exits so the WebUI behaves like the normal application.
+
 Pull-request identity includes the normalized host.
 Repositories with the same owner and name on different GitHub hosts must remain distinct.
 
@@ -222,6 +227,10 @@ Controls keep a visible label when an icon cannot communicate the target, result
 Pointer interactions retain a keyboard-accessible alternative.
 
 Current screens, components, gestures, and control placement belong to the WebUI implementation and its tests.
+
+Demo mode is injected through the served HTML metadata rather than RPC or domain state.
+The WebUI keeps a non-dismissible bilingual reset warning at the top of every demo screen.
+Browser-local language, theme, and zoom preferences remain outside the temporary demo environment.
 
 ## Trade-offs
 

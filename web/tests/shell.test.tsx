@@ -70,6 +70,11 @@ vi.mock("../src/hooks", () => ({
 
 describe("AppShell", () => {
   afterEach(cleanup);
+  // isDemoMode reads the document directly, so a meta left behind by a failed
+  // assertion would render every later case in demo mode.
+  afterEach(() => {
+    document.querySelector('meta[name="prx-demo"]')?.remove();
+  });
   beforeEach(async () => {
     localStorage.clear();
     await setDisplayLanguage("en");
@@ -112,6 +117,24 @@ describe("AppShell", () => {
       target: { value: "dark" },
     });
     expect(document.documentElement.dataset["theme"]).toBe("dark");
+  });
+
+  it("keeps the demo reset warning visible and identifies temporary storage", () => {
+    const meta = document.createElement("meta");
+    meta.name = "prx-demo";
+    meta.content = "true";
+    document.head.append(meta);
+
+    render(
+      <AppShell>
+        <p>Workspace</p>
+      </AppShell>,
+    );
+
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "DEMO — Changes reset on restart / 変更は再起動時にリセットされます",
+    );
+    expect(screen.getByText("Temporary demo database")).toBeInTheDocument();
   });
 
   it("creates a feature, navigates to it, and supports cancellation", async () => {

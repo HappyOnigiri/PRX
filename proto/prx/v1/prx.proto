@@ -197,8 +197,8 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_INVALID_PARENT = 11;
   // DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL means the pull request URL cannot be parsed.
   DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL = 12;
-  // DOMAIN_ERROR_CODE_INVALID_SEED means seed parameters are invalid.
-  DOMAIN_ERROR_CODE_INVALID_SEED = 13;
+  reserved 13;
+  reserved "DOMAIN_ERROR_CODE_INVALID_SEED";
   // DOMAIN_ERROR_CODE_INVALID_SLUG means a feature slug does not meet its format rules.
   DOMAIN_ERROR_CODE_INVALID_SLUG = 14;
   // DOMAIN_ERROR_CODE_INVALID_STATUS means a feature or task status is unsupported.

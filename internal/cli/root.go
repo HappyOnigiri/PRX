@@ -9,6 +9,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/spf13/cobra"
@@ -28,13 +29,28 @@ type state struct {
 	configPath   string
 	json         bool
 	fixture      string
+	demo         bool
 	out          io.Writer
 	errOut       io.Writer
 	runStarted   bool
 	openService  OpenService
 	service      Service
 	closer       io.Closer
+	closeOnce    sync.Once
+	closeErr     error
 	standardHelp func(*cobra.Command, []string)
+}
+
+// closeService releases what opening the service reserved. A demo reserves a
+// temporary directory, and Cobra skips its post-run hooks once a command
+// returns an error, so this has to be reachable from the failing path too.
+func (s *state) closeService() error {
+	s.closeOnce.Do(func() {
+		if s.closer != nil {
+			s.closeErr = s.closer.Close()
+		}
+	})
+	return s.closeErr
 }
 
 func NewRoot(out, errOut io.Writer, openService OpenService) *cobra.Command {
@@ -51,11 +67,26 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		SilenceErrors: true,
 		SilenceUsage:  true,
 		PersistentPreRunE: func(cmd *cobra.Command, _ []string) error {
-			s.applyEnvironmentPaths()
+			if s.demo {
+				for _, name := range []string{"db", "config", "github-fixture"} {
+					if cmd.Flags().Changed(name) {
+						return fmt.Errorf("--demo cannot be used with --%s", name)
+					}
+				}
+				s.dbPath = ""
+				s.configPath = ""
+				s.fixture = ""
+			} else {
+				s.applyEnvironmentPaths()
+			}
 			if cmd.Name() == "help" || cmd.Name() == "schema-version" {
 				return nil
 			}
-			s.warnAboutConfiguration()
+			// A demo never reads the normal configuration, so warning about it
+			// would report a file the demo run does not use.
+			if !s.demo {
+				s.warnAboutConfiguration()
+			}
 			if isConfigCommand(cmd) {
 				return nil
 			}
@@ -65,13 +96,18 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			}
 			openContext := config.WithPath(baseContext, s.configPath)
 			live := cmd.Name() == "serve" || cmd.Name() == "sync"
-			service, closer, err := s.openService(openContext, s.dbPath, s.fixture, live)
+			service, closer, err := s.openService(openContext, ServiceOptions{
+				DatabasePath: s.dbPath,
+				FixturePath:  s.fixture,
+				Live:         live,
+				Demo:         s.demo,
+			})
 			if err != nil {
 				return domain.NewError(domain.DomainErrorCodeInternal, "%s", err)
 			}
 			s.service = service
 			s.closer = closer
-			if !isAutomaticSyncExcluded(cmd) && service != nil {
+			if !s.demo && !isAutomaticSyncExcluded(cmd) && service != nil {
 				// The per-request client timeout does not bound the whole run, so
 				// an unreachable host would otherwise block an ordinary command
 				// for as long as its credential lookups and requests take.
@@ -82,9 +118,7 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			return nil
 		},
 		PersistentPostRun: func(_ *cobra.Command, _ []string) {
-			if s.closer != nil {
-				_ = s.closer.Close()
-			}
+			_ = s.closeService()
 		},
 	}
 	root.SetOut(out)
@@ -114,7 +148,6 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		s.queueCommand("stale"),
 		s.syncCommand(),
 		s.validateCommand(),
-		s.seedCommand(),
 		s.serveCommand(),
 	)
 	s.standardHelp = root.HelpFunc()
@@ -201,7 +234,7 @@ func isConfigCommand(command *cobra.Command) bool {
 
 func isAutomaticSyncExcluded(command *cobra.Command) bool {
 	for current := command; current != nil; current = current.Parent() {
-		if current.Name() == "sync" || current.Name() == "seed" {
+		if current.Name() == "sync" {
 			return true
 		}
 	}
@@ -211,8 +244,14 @@ func isAutomaticSyncExcluded(command *cobra.Command) bool {
 // Execute runs the CLI and formats any error according to the parsed --json
 // flag. Deciding that from os.Args would miss --json=true and would misread a
 // flag value that happens to be the literal string.
-func Execute(ctx context.Context, args []string, out, errOut io.Writer, openService OpenService) error {
+func Execute(
+	ctx context.Context,
+	args []string,
+	out, errOut io.Writer,
+	openService OpenService,
+) (err error) {
 	root, s := newRootWithState(out, errOut, openService)
+	defer func() { err = errors.Join(err, s.closeService()) }()
 	s.preScanOutputFlags(root, args)
 	root.SetArgs(args)
 	failedCommand, err := root.ExecuteContextC(ctx)

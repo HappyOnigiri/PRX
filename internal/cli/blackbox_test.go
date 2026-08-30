@@ -1373,25 +1373,6 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertDirectObjectKeys(t, runDB("feature", "delete", deletableFeatureID, "--cascade"), "deleted")
-
-	seedDB := filepath.Join(root, "seed.db")
-	seedConfig := filepath.Join(root, "seed-config.yaml")
-	seed := executeCLI(
-		t,
-		binary,
-		"",
-		"--db",
-		seedDB,
-		"--config",
-		seedConfig,
-		"--json",
-		"seed",
-		"--features",
-		"1",
-		"--tasks",
-		"1",
-	)
-	assertDirectObject(t, assertNormalSuccess(t, seed, "features", "tasks"), "features", "tasks")
 }
 
 func TestBlackBoxSchemaVersionDoesNotOpenStorage(t *testing.T) {

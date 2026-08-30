@@ -1,12 +1,42 @@
 .app-shell {
+  --demo-offset: 0px;
+
   min-height: 100vh;
   display: grid;
   grid-template-columns: 248px minmax(0, 1fr);
 }
 
+.app-shell[data-demo] {
+  --demo-offset: 36px;
+
+  padding-top: var(--demo-offset);
+}
+
+.demo-banner {
+  position: fixed;
+  inset: 0 0 auto;
+  z-index: 50;
+  height: var(--demo-offset);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-bottom: 2px solid var(--status-conflict);
+  background: var(--surface);
+  color: var(--status-conflict);
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-align: center;
+}
+
+.demo-banner-compact {
+  display: none;
+}
+
 .rail {
   position: fixed;
-  inset: 0 auto 0 0;
+  inset: var(--demo-offset) auto 0 0;
   z-index: 30;
   width: 248px;
   display: flex;
@@ -207,7 +237,7 @@
 .main-stage {
   grid-column: 2;
   min-width: 0;
-  min-height: 100vh;
+  min-height: calc(100vh - var(--demo-offset));
 }
 
 @media (width <= 900px) {
@@ -217,6 +247,7 @@
 
   .rail {
     position: relative;
+    inset: auto;
     width: 100%;
     height: auto;
     min-height: 0;
@@ -270,7 +301,24 @@
   }
 
   .main-stage {
-    min-height: calc(100vh - 60px);
+    min-height: calc(100vh - 60px - var(--demo-offset));
+  }
+}
+
+@media (width <= 400px) {
+  .app-shell[data-demo] {
+    --demo-offset: 52px;
+  }
+
+  .demo-banner-full {
+    display: none;
+  }
+
+  .demo-banner-compact {
+    display: flex;
+    flex-direction: column;
+    font-size: 11px;
+    line-height: 1.3;
   }
 }
 
