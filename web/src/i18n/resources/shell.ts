@@ -1,12 +1,24 @@
 export const shell = {
   en: {
     app: { title: "PRX — Dependency control" },
-    language: { label: "Display language", en: "English", ja: "日本語" },
-    theme: {
-      label: "Display theme",
-      system: "System",
-      light: "Light",
-      dark: "Dark",
+    settings: {
+      open: "Settings",
+      title: "Settings",
+      tabs: { server: "Server", display: "Display" },
+      display: {
+        description:
+          "Choose how PRX appears in this browser. Changes apply immediately.",
+        language: {
+          label: "Display language",
+          description: "Language used for interface text and labels.",
+          options: { en: "English", ja: "日本語" },
+        },
+        theme: {
+          label: "Display theme",
+          description: "Color scheme used for PRX in this browser.",
+          options: { system: "System", light: "Light", dark: "Dark" },
+        },
+      },
     },
     nav: {
       dashboard: "PRX dashboard",
@@ -21,9 +33,6 @@ export const shell = {
       temporaryDemoDatabase: "Temporary demo database",
     },
     serverSettings: {
-      open: "Server settings",
-      eyebrow: "GitHub access",
-      title: "Server settings",
       description:
         "Register GitHub hosts and choose the credential order used on the next sync.",
       loading: "Loading server settings…",
@@ -79,12 +88,28 @@ export const shell = {
   },
   ja: {
     app: { title: "PRX — 依存関係コントロール" },
-    language: { label: "表示言語", en: "English", ja: "日本語" },
-    theme: {
-      label: "表示テーマ",
-      system: "システム",
-      light: "ライト",
-      dark: "ダーク",
+    settings: {
+      open: "設定",
+      title: "設定",
+      tabs: { server: "サーバー", display: "表示" },
+      display: {
+        description:
+          "このブラウザーでのPRXの表示を選択します。変更はすぐに反映されます。",
+        language: {
+          label: "表示言語",
+          description: "画面の文言とラベルに使う言語です。",
+          options: { en: "English", ja: "日本語" },
+        },
+        theme: {
+          label: "表示テーマ",
+          description: "このブラウザーでのPRXに使う配色です。",
+          options: {
+            system: "システム",
+            light: "ライト",
+            dark: "ダーク",
+          },
+        },
+      },
     },
     nav: {
       dashboard: "PRX ダッシュボード",
@@ -99,9 +124,6 @@ export const shell = {
       temporaryDemoDatabase: "一時デモ DB",
     },
     serverSettings: {
-      open: "サーバー設定",
-      eyebrow: "GitHubアクセス",
-      title: "サーバー設定",
       description:
         "GitHubホストを登録し、次回同期で使う認証の優先順を選択します。",
       loading: "サーバー設定を読み込んでいます…",

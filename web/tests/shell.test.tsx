@@ -90,7 +90,7 @@ describe("AppShell", () => {
     shellMocks.mutation.error = null;
   });
 
-  it("shows active features and persists language and theme selections", async () => {
+  it("shows active features and changes display settings from Settings", async () => {
     render(
       <AppShell>
         <p>Workspace</p>
@@ -108,7 +108,17 @@ describe("AppShell", () => {
     expect(screen.getByText(`v${appVersion()}`)).toBeInTheDocument();
     expect(screen.queryByText("GitHub sync")).not.toBeInTheDocument();
     expect(shellMocks.autoSync).toHaveBeenCalledWith(true);
+    expect(screen.queryByRole("combobox")).not.toBeInTheDocument();
 
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
+    expect(screen.getByRole("tab", { name: "Server" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    expect(
+      screen.queryByRole("combobox", { name: "Display language" }),
+    ).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("tab", { name: "Display" }));
     fireEvent.change(
       screen.getByRole("combobox", { name: "Display language" }),
       {
@@ -118,10 +128,18 @@ describe("AppShell", () => {
     await waitFor(() => {
       expect(document.documentElement.lang).toBe("ja");
     });
+    expect(screen.getByRole("dialog", { name: "設定" })).toBeInTheDocument();
+    expect(screen.getByRole("tab", { name: "表示" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
     fireEvent.change(screen.getByRole("combobox", { name: "表示テーマ" }), {
       target: { value: "dark" },
     });
     expect(document.documentElement.dataset["theme"]).toBe("dark");
+    expect(
+      JSON.parse(localStorage.getItem("prx.webui.settings") ?? "{}"),
+    ).toEqual({ language: "ja", theme: "dark" });
   });
 
   it("keeps the demo reset warning visible and identifies temporary storage", () => {
@@ -180,19 +198,19 @@ describe("AppShell", () => {
     ).not.toBeInTheDocument();
   });
 
-  it("opens and closes server settings from the rail", () => {
+  it("opens and closes Settings from the rail", () => {
     render(
       <AppShell>
         <p>Workspace</p>
       </AppShell>,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Server settings" }));
+    fireEvent.click(screen.getByRole("button", { name: "Settings" }));
     expect(
-      screen.getByRole("dialog", { name: "Server settings" }),
+      screen.getByRole("dialog", { name: "Settings" }),
     ).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Done" }));
     expect(
-      screen.queryByRole("dialog", { name: "Server settings" }),
+      screen.queryByRole("dialog", { name: "Settings" }),
     ).not.toBeInTheDocument();
   });
 });

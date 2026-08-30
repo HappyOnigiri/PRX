@@ -1,11 +1,7 @@
 import { Trash2, X } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
-import {
-  type Dependency,
-  type PullRequest,
-  type Task,
-} from "../gen/prx/v1/prx_pb";
+import { type PullRequest, type Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import {
   blockedReasonLabel,
@@ -15,7 +11,6 @@ import {
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
-import { DependencySection } from "./TaskInspectorDependencies";
 import { PullRequestSection } from "./TaskInspectorPullRequest";
 import { ReferencesSection } from "./TaskInspectorReferences";
 import { TaskInspectorTaskForm } from "./TaskInspectorTaskForm";
@@ -24,7 +19,6 @@ import { type TaskNodeDocument } from "./TaskNode";
 export interface TaskInspectorProps {
   task: Task;
   tasks: Task[];
-  dependencies: Dependency[];
   pullRequest: PullRequest | undefined;
   documents: TaskNodeDocument[];
   onPreview: (document: TaskNodeDocument) => void;
@@ -57,7 +51,6 @@ function TaskInspectorHeader({
 export function TaskInspector({
   task,
   tasks,
-  dependencies,
   pullRequest,
   documents,
   onPreview,
@@ -92,12 +85,6 @@ export function TaskInspector({
       <PullRequestSection
         taskId={task.id}
         pullRequest={pullRequest}
-        readOnly={readOnly}
-      />
-      <DependencySection
-        taskId={task.id}
-        tasks={tasks}
-        dependencies={dependencies}
         readOnly={readOnly}
       />
       <ReferencesSection

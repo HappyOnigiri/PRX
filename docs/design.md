@@ -222,6 +222,11 @@ Navigation and inspection should preserve that context instead of replacing it w
 Business state and credentials stay on the server.
 Language, theme, zoom, and similar presentation-only preferences may remain browser-local.
 
+Persistent WebUI preferences use the Settings dialog as their single change entry point.
+Other screens and navigation do not duplicate controls for those preferences.
+Preferences adjusted frequently during work may remain at their point of use.
+Graph zoom is the current example of this exception.
+
 State colors are reserved for state communication rather than decoration.
 Identifiers and counts may use monospace, while normal content prioritizes readability in English and Japanese.
 Nonessential motion respects the reduced-motion preference.
