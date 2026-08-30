@@ -29,6 +29,16 @@ test.afterEach(() => {
   expect(browserErrors, browserErrors.join("\n")).toEqual([]);
 });
 
+async function openDisplaySettings(page: Page, language: "en" | "ja" = "en") {
+  const labels =
+    language === "en"
+      ? { button: "Settings", dialog: "Settings", tab: "Display" }
+      : { button: "設定", dialog: "設定", tab: "表示" };
+  await page.getByRole("button", { name: labels.button }).click();
+  await expect(page.getByRole("dialog", { name: labels.dialog })).toBeVisible();
+  await page.getByRole("tab", { name: labels.tab }).click();
+}
+
 test("keeps the bilingual demo reset warning visible", async ({ page }) => {
   await page.goto("/");
   const banner = page.getByRole("status");
@@ -36,10 +46,12 @@ test("keeps the bilingual demo reset warning visible", async ({ page }) => {
   await expect(banner).toContainText("Changes reset on restart");
   await expect(banner).toContainText("変更は再起動時にリセットされます");
 
+  await openDisplaySettings(page);
   await page.getByLabel("Display theme").selectOption("dark");
   await expect(banner).toBeVisible();
   await page.getByLabel("Display language").selectOption("ja");
   await expect(banner).toBeVisible();
+  await page.getByRole("button", { name: "完了" }).click();
 
   await page.setViewportSize({ width: 320, height: 720 });
   await page.evaluate(() => {
@@ -92,12 +104,14 @@ test("switches the display language and restores it from Local Storage", async (
   page,
 }) => {
   await page.goto("/");
+  await openDisplaySettings(page);
   await page.getByLabel("Display language").selectOption("ja");
   await expect(
     page.getByRole("heading", { name: /いま動かせるタスク/ }),
   ).toBeVisible();
   await expect(page.locator("html")).toHaveAttribute("lang", "ja");
   await page.reload();
+  await openDisplaySettings(page, "ja");
   await expect(page.getByLabel("表示言語")).toHaveValue("ja");
   await expect(
     page.getByRole("heading", { name: /いま動かせるタスク/ }),
@@ -115,6 +129,7 @@ test("follows the system theme unless the user selects an override", async ({
 
   await page.emulateMedia({ colorScheme: "no-preference" });
   await page.goto("/");
+  await openDisplaySettings(page);
   await expect(page.getByLabel("Display theme")).toHaveValue("system");
   await expect(root).not.toHaveAttribute("data-theme");
   await expect.poll(background).toBe("rgb(245, 246, 248)");
@@ -126,6 +141,7 @@ test("follows the system theme unless the user selects an override", async ({
   await expect(root).toHaveAttribute("data-theme", "light");
   await expect.poll(background).toBe("rgb(245, 246, 248)");
   await page.reload();
+  await openDisplaySettings(page);
   await expect(page.getByLabel("Display theme")).toHaveValue("light");
   await expect.poll(background).toBe("rgb(245, 246, 248)");
 
@@ -741,6 +757,28 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
     page.getByRole("link", { name: /Archived features/ }),
   ).toBeVisible();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
+  await openDisplaySettings(page);
+  await page.getByLabel("Display language").selectOption("ja");
+  const settingsDialog = page.getByRole("dialog", { name: "設定" });
+  await expect(settingsDialog).toBeVisible();
+  await expect(page.getByRole("tab", { name: "表示" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+  for (const control of await settingsDialog.getByRole("combobox").all()) {
+    const bounds = await control.boundingBox();
+    expect(bounds).not.toBeNull();
+    if (bounds) {
+      expect(bounds.x).toBeGreaterThanOrEqual(0);
+      expect(bounds.x + bounds.width).toBeLessThanOrEqual(320);
+    }
+  }
+  await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
+  await page.getByLabel("表示言語").selectOption("en");
+  await page
+    .getByRole("dialog", { name: "Settings" })
+    .getByRole("button", { name: "Done" })
+    .click();
   await page
     .getByRole("link", { name: /Delivery control showcase/ })
     .first()
