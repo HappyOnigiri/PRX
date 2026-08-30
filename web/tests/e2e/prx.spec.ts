@@ -50,6 +50,35 @@ test("keeps the bilingual demo reset warning visible", async ({ page }) => {
   await expect(banner).toContainText("再起動でリセット");
 });
 
+// The demo banner takes its height from the viewport, so a workspace still
+// sized to the full viewport pushes its own bottom edge — the graph canvas and
+// its zoom controls — off screen.
+test("keeps the demo workspace inside the viewport", async ({ page }) => {
+  const overflow = () =>
+    page.evaluate(() => {
+      const root = document.scrollingElement ?? document.documentElement;
+      const workspace = document.querySelector(".workspace");
+      return {
+        page: root.scrollHeight - window.innerHeight,
+        workspace: workspace
+          ? workspace.getBoundingClientRect().bottom - window.innerHeight
+          : Number.NaN,
+      };
+    });
+  await page.goto("/");
+  await page
+    .getByRole("link", { name: /Delivery control showcase/ })
+    .first()
+    .click();
+  await expect(page.getByRole("status")).toBeVisible();
+  await expect(page.getByTestId("feature-graph")).toBeVisible();
+  expect(await overflow()).toEqual({ page: 0, workspace: 0 });
+
+  await page.setViewportSize({ width: 320, height: 720 });
+  await expect(page.getByTestId("feature-graph")).toBeVisible();
+  expect(await overflow()).toEqual({ page: 0, workspace: 0 });
+});
+
 test("switches the display language and restores it from Local Storage", async ({
   page,
 }) => {

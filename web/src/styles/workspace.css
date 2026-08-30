@@ -1,5 +1,5 @@
 .workspace {
-  height: 100vh;
+  height: calc(100vh - var(--demo-offset, 0px));
   display: grid;
   grid-template-rows: 56px minmax(0, 1fr);
   overflow: hidden;
@@ -82,7 +82,7 @@
 
 @media (width <= 900px) {
   .workspace {
-    height: calc(100vh - 60px);
+    height: calc(100vh - 60px - var(--demo-offset, 0px));
   }
 
   .workspace-head {
