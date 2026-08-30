@@ -36,7 +36,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 4 {
+		migrations != 5 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -68,6 +68,61 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	err = database.DB().QueryRowContext(ctx, `SELECT name FROM sqlite_master WHERE name='should_rollback'`).Scan(&name)
 	if !errors.Is(err, sql.ErrNoRows) {
 		t.Fatalf("failed migration left a table: name=%q err=%v", name, err)
+	}
+}
+
+func TestPublicIDsAreTypedAndStorageIDsStayInternal(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "public-ids", "Public IDs", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondFeature, err := service.CreateFeature(ctx, "public-ids-2", "Public IDs 2", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	firstTask, err := service.CreateTask(ctx, feature.ID, "First", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	secondTask, err := service.CreateTask(ctx, feature.ID, "Second", "", domain.TaskKindManual, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if feature.ID != "F-1" || secondFeature.ID != "F-2" {
+		t.Fatalf("feature IDs=%q,%q, want F-1,F-2", feature.ID, secondFeature.ID)
+	}
+	if firstTask.ID != "T-1" || secondTask.ID != "T-2" {
+		t.Fatalf("task IDs=%q,%q, want T-1,T-2", firstTask.ID, secondTask.ID)
+	}
+	if feature.StorageID == "" || feature.StorageID == feature.ID ||
+		firstTask.StorageID == "" || firstTask.StorageID == firstTask.ID {
+		t.Fatalf("storage IDs were not kept separate: feature=%+v task=%+v", feature, firstTask)
+	}
+	if firstTask.FeatureID != feature.ID || firstTask.StorageFeatureID != feature.StorageID {
+		t.Fatalf(
+			"task parent IDs=%q,%q, want public=%q storage=%q",
+			firstTask.FeatureID,
+			firstTask.StorageFeatureID,
+			feature.ID,
+			feature.StorageID,
+		)
+	}
+	snapshot, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.Features) != 2 || len(snapshot.Tasks) != 2 {
+		t.Fatalf("snapshot counts features=%d tasks=%d", len(snapshot.Features), len(snapshot.Tasks))
+	}
+	for _, task := range snapshot.Tasks {
+		if task.ID != firstTask.ID && task.ID != secondTask.ID {
+			t.Fatalf("snapshot exposed unexpected task ID %q", task.ID)
+		}
+		if task.FeatureID != feature.ID {
+			t.Fatalf("snapshot exposed unexpected feature ID %q", task.FeatureID)
+		}
 	}
 }
 
@@ -424,7 +479,7 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	var migrationCount int
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
-		Scan(&migrationCount); err != nil || migrationCount != 4 {
+		Scan(&migrationCount); err != nil || migrationCount != 5 {
 		t.Fatalf("migration count=%d err=%v", migrationCount, err)
 	}
 	var status string
@@ -433,11 +488,11 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 		Scan(&status); err != nil || status != "auto" {
 		t.Fatalf("task status=%q err=%v, want auto", status, err)
 	}
-	plan, err := database.GetImplementationPlan(ctx, "task")
+	plan, err := database.GetImplementationPlan(ctx, "T-1")
 	if err != nil || plan.Content != "# Keep this plan" {
 		t.Fatalf("implementation plan=%+v err=%v", plan, err)
 	}
-	pullRequest, err := database.GetPullRequest(ctx, "task")
+	pullRequest, err := database.GetPullRequest(ctx, "T-1")
 	if err != nil || pullRequest.Host != "ghe.example.com" {
 		t.Fatalf("pull request=%+v err=%v, want host preserved", pullRequest, err)
 	}
@@ -502,7 +557,7 @@ func TestMigrationAddsGitHubHostAndHostScopedUniqueness(t *testing.T) {
 		`INSERT INTO pull_requests (task_id, owner, repository, number, url,
 			state, review_state, mergeability, stale)
 			VALUES (?, ?, ?, ?, ?, 'open', 'none', 'unknown', 1)`,
-		firstTask.ID,
+		firstTask.StorageID,
 		"Acme",
 		"API",
 		42,
@@ -882,7 +937,7 @@ func TestSnapshotSurvivesOrphanedTask(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := database.DB().
-		ExecContext(ctx, `UPDATE tasks SET feature_id = 'missing-feature' WHERE id = ?`, orphan.ID); err != nil {
+		ExecContext(ctx, `UPDATE tasks SET feature_id = 'missing-feature' WHERE id = ?`, orphan.StorageID); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := database.DB().ExecContext(ctx, `PRAGMA foreign_keys = ON`); err != nil {
@@ -953,6 +1008,55 @@ func TestTaskStatusOverridesAndAutomaticPRState(t *testing.T) {
 		if task.DisplayState != "merged" {
 			t.Fatalf("PR task display state=%q, want merged", task.DisplayState)
 		}
+	}
+}
+
+func TestSyncByTaskID(t *testing.T) {
+	_, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "targeted-sync", "Targeted sync", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	target, err := service.CreateTask(ctx, feature.ID, "Target", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	other, err := service.CreateTask(ctx, feature.ID, "Other", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	for index, task := range []domain.Task{target, other} {
+		if _, err := service.AttachPullRequest(
+			ctx,
+			task.ID,
+			fmt.Sprintf("https://github.com/acme/api/pull/%d", index+1),
+		); err != nil {
+			t.Fatal(err)
+		}
+	}
+	succeeded, failed, err := service.Sync(ctx, "", target.ID)
+	if err != nil || succeeded != 1 || failed != 0 {
+		t.Fatalf("targeted sync succeeded=%d failed=%d err=%v", succeeded, failed, err)
+	}
+	snapshot, err := service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, pullRequest := range snapshot.PullRequests {
+		switch pullRequest.TaskID {
+		case target.ID:
+			if pullRequest.Stale || pullRequest.LastSyncedAt == nil {
+				t.Fatalf("target pull request was not refreshed: %+v", pullRequest)
+			}
+		case other.ID:
+			if !pullRequest.Stale || pullRequest.LastSyncedAt != nil {
+				t.Fatalf("other pull request was unexpectedly refreshed: %+v", pullRequest)
+			}
+		}
+	}
+	if _, _, err := service.Sync(ctx, "", "missing-task"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		t.Fatalf("missing task sync code=%s err=%v", domain.ErrorCode(err), err)
 	}
 }
 
@@ -1105,7 +1209,6 @@ func TestSyncKeepsPartialCoreStateAndUsesItForDependencies(t *testing.T) {
 }
 
 func timePtr(value time.Time) *time.Time { return &value }
-
 func TestInMemoryDatabaseIsSharedAcrossConcurrentCallers(t *testing.T) {
 	ctx := context.Background()
 	database, err := store.Open(ctx, ":memory:")

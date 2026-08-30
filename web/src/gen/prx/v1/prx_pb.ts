@@ -75,7 +75,8 @@ export const ErrorDetailSchema: GenMessage<ErrorDetail> = /*@__PURE__*/
  */
 export type Feature = Message<"prx.v1.Feature"> & {
   /**
-   * id is the stable identifier of the feature.
+   * id is the public stable identifier of the feature in the form F-<number>.
+   * The storage UUID is internal and is never exposed through this API.
    *
    * @generated from field: string id = 1;
    */
@@ -180,14 +181,15 @@ export const FeatureSchema: GenMessage<Feature> = /*@__PURE__*/
  */
 export type Task = Message<"prx.v1.Task"> & {
   /**
-   * id is the stable identifier of the task.
+   * id is the public stable identifier of the task in the form T-<number>.
+   * The storage UUID is internal and is never exposed through this API.
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * feature_id identifies the feature that owns the task.
+   * feature_id identifies the owning feature by its public F-<number> ID.
    *
    * @generated from field: string feature_id = 2;
    */
@@ -327,14 +329,14 @@ export const ImplementationPlanSchema: GenMessage<ImplementationPlan> = /*@__PUR
  */
 export type Dependency = Message<"prx.v1.Dependency"> & {
   /**
-   * blocker_task_id identifies the task that must be satisfied first.
+   * blocker_task_id identifies the task by its public T-<number> ID.
    *
    * @generated from field: string blocker_task_id = 1;
    */
   blockerTaskId: string;
 
   /**
-   * blocked_task_id identifies the task that depends on the blocker.
+   * blocked_task_id identifies the task by its public T-<number> ID.
    *
    * @generated from field: string blocked_task_id = 2;
    */
@@ -362,7 +364,7 @@ export const DependencySchema: GenMessage<Dependency> = /*@__PURE__*/
  */
 export type PullRequest = Message<"prx.v1.PullRequest"> & {
   /**
-   * task_id identifies the task linked to the pull request.
+   * task_id identifies the linked task by its public T-<number> ID.
    *
    * @generated from field: string task_id = 1;
    */
@@ -509,14 +511,14 @@ export type Document = Message<"prx.v1.Document"> & {
   id: string;
 
   /**
-   * feature_id identifies the parent feature when the document is feature-scoped.
+   * feature_id identifies the parent feature by its public F-<number> ID when the document is feature-scoped.
    *
    * @generated from field: string feature_id = 2;
    */
   featureId: string;
 
   /**
-   * task_id identifies the parent task when the document is task-scoped.
+   * task_id identifies the parent task by its public T-<number> ID when the document is task-scoped.
    *
    * @generated from field: string task_id = 3;
    */
@@ -2168,14 +2170,14 @@ export const ValidateConfigResponseSchema: GenMessage<ValidateConfigResponse> = 
  */
 export type SyncRequest = Message<"prx.v1.SyncRequest"> & {
   /**
-   * feature_id selects pull requests belonging to the feature identified by ID or slug.
+   * feature_id selects pull requests belonging to the feature identified by public ID or slug.
    *
    * @generated from field: string feature_id = 1;
    */
   featureId: string;
 
   /**
-   * task_id selects the pull request attached to this task.
+   * task_id selects the pull request attached to this task's public ID.
    *
    * @generated from field: string task_id = 2;
    */

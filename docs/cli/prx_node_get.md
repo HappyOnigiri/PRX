@@ -1,15 +1,16 @@
-## prx feature get
+## prx node get
 
-Show a feature by ID or slug
+Show a feature or task by its public ID
 
 ```
-prx feature get FEATURE_ID_OR_SLUG [flags]
+prx node get NODE_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx feature get F-1 --json
+prx node get F-1 --json
+prx node get T-1 --json
 ```
 
 ### Options
@@ -29,5 +30,5 @@ prx feature get F-1 --json
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - Manage features
+* [prx node](prx_node.md)	 - Inspect feature and task nodes
 

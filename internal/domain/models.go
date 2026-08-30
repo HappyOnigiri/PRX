@@ -104,6 +104,7 @@ const (
 
 type Feature struct {
 	ID                 string        `json:"id"`
+	StorageID          string        `json:"-"`
 	Slug               string        `json:"slug"`
 	Title              string        `json:"title"`
 	Description        string        `json:"description"`
@@ -120,7 +121,9 @@ type Feature struct {
 
 type Task struct {
 	ID                    string            `json:"id"`
+	StorageID             string            `json:"-"`
 	FeatureID             string            `json:"feature_id"`
+	StorageFeatureID      string            `json:"-"`
 	Title                 string            `json:"title"`
 	Scope                 string            `json:"scope"`
 	Kind                  TaskKind          `json:"kind"`

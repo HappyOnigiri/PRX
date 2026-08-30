@@ -9,6 +9,7 @@ import type {
   Task,
 } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
+import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { EditFeatureDialog } from "./EditFeatureDialog";
 import { FeatureGraph } from "./FeatureGraph";
@@ -173,6 +174,10 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           title={props.feature.description || t("workspace.noDescription")}
         >
           <h1>{props.feature.title}</h1>
+          <CopyableIdentifier
+            label={t("common.featureId")}
+            value={props.feature.id}
+          />
           <p className="eyebrow">
             {t("workspace.eyebrow", { slug: props.feature.slug })}
           </p>

@@ -11,6 +11,7 @@ import {
   taskDisplayStateLabel,
   taskDisplayStateToken,
 } from "../i18n/domain";
+import { CopyableIdentifier } from "./CopyableIdentifier";
 import { MutationError } from "./MutationError";
 import { DependencySection } from "./TaskInspectorDependencies";
 import { ImplementationPlanSection } from "./TaskInspectorImplementationPlan";
@@ -29,6 +30,28 @@ export interface TaskInspectorProps {
   onClose: () => void;
 }
 
+function TaskInspectorHeader({
+  task,
+  onClose,
+}: Pick<TaskInspectorProps, "task" | "onClose">) {
+  const { t } = useTranslation();
+  return (
+    <header>
+      <div className="inspector-heading">
+        <h2>{task.title}</h2>
+        <CopyableIdentifier label={t("common.taskId")} value={task.id} />
+      </div>
+      <button
+        className="icon-button"
+        aria-label={t("inspector.close")}
+        onClick={onClose}
+      >
+        ×
+      </button>
+    </header>
+  );
+}
+
 export function TaskInspector({
   task,
   tasks,
@@ -43,16 +66,7 @@ export function TaskInspector({
 
   return (
     <aside className="inspector" aria-label={t("inspector.label")}>
-      <header>
-        <h2>{task.title}</h2>
-        <button
-          className="icon-button"
-          aria-label={t("inspector.close")}
-          onClick={onClose}
-        >
-          ×
-        </button>
-      </header>
+      <TaskInspectorHeader task={task} onClose={onClose} />
       <div
         className={`inspector-state state-${taskDisplayStateToken(task.displayState)}`}
       >

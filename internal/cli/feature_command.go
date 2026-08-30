@@ -63,7 +63,7 @@ func (s *state) featureGetCommand() *cobra.Command {
 	return &cobra.Command{
 		Use:     "get FEATURE_ID_OR_SLUG",
 		Short:   "Show a feature by ID or slug",
-		Example: "prx feature get checkout --json",
+		Example: "prx feature get F-1 --json",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.ResolveFeature(cmd.Context(), args[0])

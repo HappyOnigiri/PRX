@@ -1,9 +1,15 @@
 -- name: CreateFeature :one
-INSERT INTO features (id, slug, title, description, status, archived, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+INSERT INTO features (id, public_id, slug, title, description, status, archived, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+
+-- name: IncrementIDSequence :one
+UPDATE id_sequences SET next_value = next_value + 1 WHERE entity = ? RETURNING next_value;
 
 -- name: GetFeature :one
 SELECT * FROM features WHERE id = ?;
+
+-- name: GetFeatureByPublicID :one
+SELECT * FROM features WHERE public_id = ?;
 
 -- name: GetFeatureBySlug :one
 SELECT * FROM features WHERE slug = ?;
@@ -18,11 +24,14 @@ UPDATE features SET slug=?, title=?, description=?, status=?, archived=?, update
 DELETE FROM features WHERE id=?;
 
 -- name: CreateTask :one
-INSERT INTO tasks (id, feature_id, title, scope, kind, status, assignee, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+INSERT INTO tasks (id, public_id, feature_id, title, scope, kind, status, assignee, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
 
 -- name: GetTask :one
 SELECT * FROM tasks WHERE id=?;
+
+-- name: GetTaskByPublicID :one
+SELECT * FROM tasks WHERE public_id=?;
 
 -- name: ListTasks :many
 SELECT * FROM tasks ORDER BY created_at, id;

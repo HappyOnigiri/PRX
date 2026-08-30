@@ -95,7 +95,7 @@ func (s *state) syncCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "sync",
 		Short:   "Refresh GitHub state for pull-request tasks",
-		Example: "prx sync --feature checkout --json",
+		Example: "prx sync --feature FEATURE_ID --json\nprx sync --task TASK_ID --json",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			succeeded, failed, err := s.service.Sync(cmd.Context(), feature, task)
