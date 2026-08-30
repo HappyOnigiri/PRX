@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"math"
+	"time"
 
 	"github.com/google/uuid"
 
@@ -75,11 +76,15 @@ func (s *Service) SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus,
 	}
 	if loadErr != nil {
 		runError := configDomainError(loadErr).Error()
-		recorded, completeErr := repository.CompleteGitHubSync(ctx, runID, s.now().UTC(), 0, 0, runError)
+		recordContext, cancel := recordingContext(ctx)
+		defer cancel()
+		recorded, completeErr := repository.CompleteGitHubSync(
+			recordContext, runID, s.now().UTC(), 0, 0, runError,
+		)
 		if completeErr != nil {
 			return true, domain.GitHubSyncStatus{}, completeErr
 		}
-		status, statusErr := repository.GitHubSyncState(ctx)
+		status, statusErr := repository.GitHubSyncState(recordContext)
 		return recorded, syncStatus(interval, status), statusErr
 	}
 
@@ -88,10 +93,15 @@ func (s *Service) SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus,
 	if syncErr != nil {
 		runError = syncErr.Error()
 	}
+	// The refresh may have ended because the caller went away, and the outcome
+	// still has to be recorded: otherwise the acquired attempt holds the
+	// interval with no explanation of what stopped it.
+	recordContext, cancel := recordingContext(ctx)
+	defer cancel()
 	recorded, completeErr := repository.CompleteGitHubSync(
-		ctx, runID, s.now().UTC(), succeeded, failed, runError,
+		recordContext, runID, s.now().UTC(), succeeded, failed, runError,
 	)
-	status, statusErr := repository.GitHubSyncState(ctx)
+	status, statusErr := repository.GitHubSyncState(recordContext)
 	if completeErr != nil {
 		return true, syncStatus(interval, status), completeErr
 	}
@@ -104,6 +114,14 @@ func (s *Service) SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus,
 	// never acquired the interval, because the status read back is another run's.
 	return recorded, syncStatus(interval, status), nil
 }
+
+// recordingContext detaches the run-status write from the cancellation that may
+// have ended the refresh itself, while still bounding how long the write waits.
+func recordingContext(ctx context.Context) (context.Context, context.CancelFunc) {
+	return context.WithTimeout(context.WithoutCancel(ctx), syncRecordTimeout)
+}
+
+const syncRecordTimeout = 5 * time.Second
 
 func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded, failed int, err error) {
 	repository, recordsState := s.repository.(GitHubSyncStateRepository)
@@ -124,8 +142,10 @@ func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded
 		if err != nil {
 			runError = err.Error()
 		}
+		recordContext, cancel := recordingContext(ctx)
+		defer cancel()
 		if _, completeErr := repository.CompleteGitHubSync(
-			ctx, runID, s.now().UTC(), succeeded, failed, runError,
+			recordContext, runID, s.now().UTC(), succeeded, failed, runError,
 		); completeErr != nil {
 			return succeeded, failed, errors.Join(err, completeErr)
 		}

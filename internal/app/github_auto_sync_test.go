@@ -134,6 +134,65 @@ func TestTargetedManualSyncLeavesTheAutomaticIntervalAndStatusUntouched(t *testi
 	}
 }
 
+// The refresh may end because the caller went away. Recording the outcome must
+// survive that, or the acquired attempt would hold the interval with nothing to
+// explain what stopped it.
+func TestAutomaticSyncRecordsTheRunAfterTheCallerCancels(t *testing.T) {
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	configStore, err := config.NewStore(filepath.Join(t.TempDir(), "config.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := configStore.Save(config.Default()); err != nil {
+		t.Fatal(err)
+	}
+	database, err := store.Open(context.Background(), filepath.Join(t.TempDir(), "cancelled.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = database.Close() }()
+	service := app.NewWithConfig(database, cancellingProvider{cancel: cancel}, configStore)
+
+	feature, err := service.CreateFeature(context.Background(), "cancelled", "Cancelled", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := service.CreateTask(context.Background(), feature.ID, "PR", "", domain.TaskKindPR, "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := service.AttachPullRequest(
+		context.Background(), task.ID, "https://github.com/acme/api/pull/1",
+	); err != nil {
+		t.Fatal(err)
+	}
+
+	ran, _, err := service.SyncIfDue(ctx)
+	if err != nil || !ran {
+		t.Fatalf("cancelled automatic sync ran=%v err=%v", ran, err)
+	}
+	status, err := service.SyncStatus(context.Background())
+	if err != nil {
+		t.Fatal(err)
+	}
+	if status.LastUpdatedAt == nil || status.Error == "" {
+		t.Fatalf("cancelled run was not recorded: status=%+v", status)
+	}
+}
+
+// cancellingProvider ends the caller's context the way a disconnected RPC or an
+// interrupted command does, while the refresh is still running.
+type cancellingProvider struct{ cancel context.CancelFunc }
+
+func (p cancellingProvider) Fetch(
+	_ context.Context,
+	current domain.PullRequest,
+) (domain.PullRequest, error) {
+	p.cancel()
+	return current, context.Canceled
+}
+
 func newAutoSyncTestService(t *testing.T) (*app.Service, *store.Store) {
 	t.Helper()
 	ctx := context.Background()
