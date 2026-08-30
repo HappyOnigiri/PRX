@@ -24,14 +24,24 @@ Package dependencies follow the same direction: `internal/domain` and `internal/
 - `internal/config`: versioned YAML settings, secure atomic writes, and public secret-free views.
 - `internal/app`: use cases shared by CLI and RPC.
 - `internal/github`: host-configured REST provider, credential resolver, error classification, and deterministic fixtures.
-- `internal/cli`: non-interactive Cobra surface and stable JSON envelopes.
+- `internal/cli`: Cobra surface with deterministic human output and stable JSON responses.
 - `internal/rpc`: ConnectRPC translation only.
 - `internal/webui`: embedded Vite production assets.
 - `web`: React application, generated API types, tests, and Playwright scenarios.
 
 ## CLI contract
 
-Every mutation is non-interactive so that people and coding agents drive the same surface. `--json` emits a versioned envelope; stdout then carries JSON only, and warnings and server logs go to stderr, so output can be piped without filtering. Operating on data that does not exist — removing a dependency, detaching a pull request, deleting a document, or deleting an implementation plan — fails with `not_found` instead of reporting success, so a caller cannot mistake a typo for a completed change. Feature and task deletion refuses to remove referenced data unless `--cascade` is supplied. Implementation plans are managed by `prx implementation-plan get|set|delete`; `set` reads exactly one of a file or stdin and returns the stored plan.
+Every response-producing CLI command uses response contract version `1`. With neither output flag set, stdout connected to a TTY selects deterministic human-readable output; a pipe, redirect, regular file, buffer, CI process, or other non-TTY stdout selects machine-readable JSON. `--json` forces JSON and `--human` forces human output regardless of stdout, while enabling both is a `usage_error`; explicitly false flags return to automatic selection. The selection is made from the actual stdout once per invocation and is reused for success and failure.
+
+A successful JSON command returns its data object directly as one-line compact JSON with a trailing newline and no `schema_version`, `ok`, or `data` envelope. Existing object payloads keep their fields, while collection responses use named fields: `features`, `tasks`, `dependencies`, `pull_requests`, `documents`, `ready_tasks`, `review_waiting_tasks`, `conflict_tasks`, `stale_tasks`, `hosts`, or `auth_methods` as appropriate. Empty collections are `[]`, never `null`. JSON stdout contains no prose, color, borders, or logs, and successful stderr is empty except for warnings and continuous server logs that belong there.
+
+A failed JSON command leaves stdout empty and writes `{"error":{"code":"...","message":"..."}}` as one-line compact JSON to stderr. Domain failures retain their existing code and message, configuration failures retain their domain mapping, CLI syntax failures use `usage_error`, and unexpected failures use `internal`. A failed human command also leaves stdout empty and writes `Error: <message>` to stderr. All failures return a non-zero exit code.
+
+Human list commands use fixed-column, uncolored tables and explicitly report empty collections. Resource retrieval uses labeled details, mutations use concise completion messages, and graph, snapshot, seed, configuration, synchronization, and implementation-plan commands use purpose-specific summaries or sections. Human fields and columns do not vary with terminal width or environment, and authentication output exposes only whether a secret is configured, never its value.
+
+Help, completion, `--version`, and the continuous logs of `serve` are not data responses. `prx schema-version` does not open SQLite, YAML configuration, or GitHub credentials; it emits `Schema version: 1` in human mode and only `{"schema_version":"1"}` in JSON mode. This version covers both successful JSON data objects and the JSON error contract.
+
+Every mutation is non-interactive so that people and coding agents drive the same surface. Operating on data that does not exist — removing a dependency, detaching a pull request, deleting a document, or deleting an implementation plan — fails with `not_found` instead of reporting success, so a caller cannot mistake a typo for a completed change. Feature and task deletion refuses to remove referenced data unless `--cascade` is supplied. Implementation plans are managed by `prx implementation-plan get|set|delete`; `set` reads exactly one of a file or stdin and returns the stored plan. A partial GitHub synchronization remains a successful command with `failed > 0` and preserved per-pull-request `sync_error` fields; the stderr error object is reserved for failure of the command itself.
 
 Feature and task public IDs are typed, monotonically allocated values in the forms `F-<number>` and `T-<number>`. They are accepted by the corresponding CLI operations and by `prx node get NODE_ID`, which returns the matching feature or task object. The UUIDs used for SQLite relationships are storage details and are not exposed to CLI, RPC, or WebUI users.
 

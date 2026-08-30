@@ -19,7 +19,7 @@ func (s *state) documentCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(doc)
+			return s.write(doc, renderMessage("Added document %s.", doc.ID))
 		},
 	}
 	add.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
@@ -37,7 +37,7 @@ func (s *state) documentCommand() *cobra.Command {
 			if err := s.service.DeleteDocument(cmd.Context(), args[0]); err != nil {
 				return err
 			}
-			return s.write(map[string]string{"deleted": args[0]})
+			return s.write(map[string]string{"deleted": args[0]}, renderMessage("Deleted document %s.", args[0]))
 		},
 	}
 	list := &cobra.Command{
@@ -50,7 +50,8 @@ func (s *state) documentCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(snapshot.Documents)
+			documents := nonNilSlice(snapshot.Documents)
+			return s.write(map[string]any{"documents": documents}, renderDocumentList(documents))
 		},
 	}
 	command.AddCommand(add, deleteCmd, list)

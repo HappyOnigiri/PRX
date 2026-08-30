@@ -21,7 +21,7 @@ func (s *state) implementationPlanCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			return s.write(value, renderImplementationPlan(value))
 		},
 	}
 
@@ -57,7 +57,7 @@ func (s *state) implementationPlanCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value)
+			return s.write(value, renderMessage("Set implementation plan for task %s.", value.TaskID))
 		},
 	}
 	set.Flags().StringVar(&file, "file", "", "read plan content from a file")
@@ -72,7 +72,10 @@ func (s *state) implementationPlanCommand() *cobra.Command {
 			if err := s.service.DeleteImplementationPlan(cmd.Context(), args[0]); err != nil {
 				return err
 			}
-			return s.write(map[string]string{"deleted": args[0]})
+			return s.write(
+				map[string]string{"deleted": args[0]},
+				renderMessage("Deleted implementation plan for task %s.", args[0]),
+			)
 		},
 	}
 
