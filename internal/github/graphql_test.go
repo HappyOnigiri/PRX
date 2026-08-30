@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"regexp"
+	"strings"
 	"sync/atomic"
 	"testing"
 
@@ -99,6 +100,69 @@ func TestLiveProviderFetchBatchChunksAndPaginatesConnections(t *testing.T) {
 	}
 	if len(result.PullRequests) != len(values) || len(result.PullRequests["task-00"].Assignees) != 2 {
 		t.Fatalf("batch result count=%d first=%+v", len(result.PullRequests), result.PullRequests["task-00"])
+	}
+}
+
+// A proxy or GitHub Enterprise deployment may answer the GraphQL endpoint with
+// a permission or method error while REST still serves pull requests, so the
+// fallback must not be limited to 404.
+func TestLiveProviderFetchBatchFallsBackToRESTOnAnyGraphQLHTTPError(t *testing.T) {
+	for name, status := range map[string]int{
+		"forbidden":          http.StatusForbidden,
+		"unauthorized":       http.StatusUnauthorized,
+		"method not allowed": http.StatusMethodNotAllowed,
+	} {
+		t.Run(name, func(t *testing.T) {
+			var restRequests atomic.Int32
+			server := httptest.NewTLSServer(http.HandlerFunc(
+				func(writer http.ResponseWriter, request *http.Request) {
+					if request.URL.Path == "/graphql" {
+						writer.WriteHeader(status)
+						_, _ = writer.Write([]byte(`{"message":"blocked"}`))
+						return
+					}
+					restRequests.Add(1)
+					writeRESTPullRequestResponse(t, writer, request)
+				},
+			))
+			defer server.Close()
+			provider, err := NewLiveProvider(context.Background(), LiveProviderOptions{
+				Token:      "test-token",
+				APIURL:     server.URL + "/api/v3/",
+				GraphQLURL: server.URL + "/graphql",
+				HTTPClient: server.Client(),
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			result, err := provider.FetchBatch(context.Background(), []domain.PullRequest{
+				{TaskID: "first", Owner: "acme", Repository: "api", Number: 1},
+			})
+			if err != nil {
+				t.Fatal(err)
+			}
+			if restRequests.Load() == 0 {
+				t.Fatal("GraphQL failure did not fall back to REST")
+			}
+			if result.PullRequests["first"].Author != "octocat" || result.Errors["first"] != nil {
+				t.Fatalf("fallback result=%+v err=%v", result.PullRequests["first"], result.Errors["first"])
+			}
+		})
+	}
+}
+
+func writeRESTPullRequestResponse(t *testing.T, writer http.ResponseWriter, request *http.Request) {
+	t.Helper()
+	writer.Header().Set("Content-Type", "application/json")
+	switch {
+	case strings.HasSuffix(request.URL.Path, "/reviews"):
+		_, _ = writer.Write([]byte(`[]`))
+	case strings.HasSuffix(request.URL.Path, "/requested_reviewers"):
+		_, _ = writer.Write([]byte(`{"users":[],"teams":[]}`))
+	default:
+		_, _ = writer.Write([]byte(`{"node_id":"PR_node","state":"open","merged":false,` +
+			`"draft":false,"mergeable":true,"updated_at":"2026-01-01T00:00:00Z",` +
+			`"user":{"login":"octocat"},"assignees":[]}`))
 	}
 }
 
