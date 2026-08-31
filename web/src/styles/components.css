@@ -387,6 +387,129 @@
   overflow: hidden;
 }
 
+.document-dialog {
+  height: min(760px, calc(100dvh - 40px));
+  width: min(860px, 100%);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.document-dialog-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.dialog .document-dialog-title-field {
+  flex: 0 0 auto;
+  margin-bottom: 16px;
+}
+
+.document-tabs {
+  display: flex;
+  flex: 0 0 auto;
+  overflow-x: auto;
+  border-bottom: 1px solid var(--border);
+}
+
+.document-tab {
+  min-height: 44px;
+  min-width: 148px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  border-radius: 0;
+  background: transparent;
+  color: var(--text-2);
+  padding-inline: 18px;
+}
+
+.document-tab:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.document-tab:active {
+  transform: none;
+}
+
+.document-tab[aria-selected="true"] {
+  border-bottom-color: var(--accent);
+  color: var(--text);
+  font-weight: 600;
+}
+
+.document-tab-panel {
+  min-height: 0;
+  flex: 1 1 auto;
+  overflow-y: auto;
+  padding: 24px 2px 4px;
+}
+
+.document-tab-panel[hidden] {
+  display: none;
+}
+
+.document-tab-panel > label {
+  max-width: 680px;
+}
+
+.document-tab-panel-markdown,
+.document-markdown-field {
+  height: 100%;
+}
+
+.dialog .document-markdown-field {
+  max-width: none;
+  margin: 0;
+}
+
+.dialog .document-markdown-field textarea {
+  min-height: 280px;
+  flex: 1 1 auto;
+  resize: none;
+  font-family: var(--font-mono);
+  line-height: 1.55;
+}
+
+.document-file-actions {
+  min-height: 38px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.document-picker-status {
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.dialog .document-plan-toggle {
+  min-height: 36px;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: row;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 0;
+  color: var(--text);
+}
+
+.dialog .document-plan-toggle input {
+  min-height: 16px;
+  width: 16px;
+}
+
+.document-dialog > footer {
+  flex: 0 0 auto;
+}
+
 .settings-dialog-head {
   display: flex;
   align-items: flex-start;
@@ -402,6 +525,10 @@
   max-width: 64ch;
   margin: 0 0 20px;
   color: var(--text-2);
+}
+
+.document-dialog-head .dialog-lead {
+  margin: 6px 0 0;
 }
 
 .settings-tabs {
@@ -675,5 +802,34 @@
     grid-template-columns: 1fr;
     gap: 10px;
     padding-block: 14px;
+  }
+
+  .scrim.document-dialog-scrim {
+    padding: 8px;
+  }
+
+  .document-dialog {
+    height: calc(100dvh - 16px);
+    padding: 16px;
+  }
+
+  .document-tab {
+    flex: 1 1 0;
+    min-width: max-content;
+    padding-inline: 10px;
+  }
+
+  .document-dialog > footer {
+    flex-direction: column-reverse;
+  }
+
+  .document-dialog > footer .icon-button {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .document-file-actions {
+    align-items: flex-start;
+    flex-direction: column;
   }
 }

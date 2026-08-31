@@ -13,6 +13,7 @@ interface GraphLayoutOptions {
   documentsByTask: Map<string, TaskNodeDocument[]>;
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
+  onAddDocument?: (taskId: string, trigger: HTMLButtonElement) => void;
   readOnly?: boolean;
 }
 
@@ -31,6 +32,7 @@ function isSameLayoutRequest(
     completed.documentsByTask === requested.documentsByTask &&
     completed.onEditTask === requested.onEditTask &&
     completed.onPreviewDocument === requested.onPreviewDocument &&
+    completed.onAddDocument === requested.onAddDocument &&
     completed.readOnly === requested.readOnly &&
     completed.attempt === requested.attempt
   );
@@ -42,12 +44,13 @@ function buildRawNodes({
   documentsByTask,
   onEditTask,
   onPreviewDocument,
+  onAddDocument,
   readOnly = false,
 }: GraphLayoutOptions) {
   return tasks.map((task) => {
     const pr = pullRequests.get(task.id);
     const documents = documentsByTask.get(task.id) ?? [];
-    const assetCount = documents.length + (pr ? 1 : 0);
+    const assetCount = documents.length + (pr ? 1 : 0) + (readOnly ? 0 : 1);
     const hasSyncError = Boolean(pr?.syncError);
     return {
       id: task.id,
@@ -72,6 +75,9 @@ function buildRawNodes({
           onEditTask(task.id);
         },
         onPreview: onPreviewDocument,
+        onAddReference: (trigger: HTMLButtonElement) => {
+          onAddDocument?.(task.id, trigger);
+        },
       },
     };
   });
@@ -174,6 +180,7 @@ export function useGraphLayout({
   documentsByTask,
   onEditTask,
   onPreviewDocument,
+  onAddDocument,
   readOnly = false,
 }: GraphLayoutOptions) {
   const [nodes, setNodes] = useState<TaskFlowNode[]>([]);
@@ -195,6 +202,7 @@ export function useGraphLayout({
       documentsByTask,
       onEditTask,
       onPreviewDocument,
+      ...(onAddDocument ? { onAddDocument } : {}),
       readOnly,
       attempt: layoutAttempt,
     }),
@@ -205,6 +213,7 @@ export function useGraphLayout({
       documentsByTask,
       onEditTask,
       onPreviewDocument,
+      onAddDocument,
       readOnly,
       layoutAttempt,
     ],

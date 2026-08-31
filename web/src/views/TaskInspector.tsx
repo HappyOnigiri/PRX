@@ -92,7 +92,6 @@ export function TaskInspector({
         readOnly={readOnly}
       />
       <ReferencesSection
-        taskId={task.id}
         documents={documents}
         onPreview={onPreview}
         readOnly={readOnly}

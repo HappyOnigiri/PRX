@@ -321,6 +321,15 @@
   background: var(--surface-2);
 }
 
+.node-asset-add {
+  color: var(--text-2);
+}
+
+.node-asset-add span,
+.node-asset-add svg {
+  color: var(--accent);
+}
+
 .node-asset span {
   color: var(--text-3);
   font-family: var(--font-mono);

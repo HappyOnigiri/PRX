@@ -212,6 +212,12 @@ It must not become a general filesystem reader.
 Local file reads remain bounded to 1 MiB and must contain valid UTF-8 text.
 URL documents are never fetched by the content-read API.
 
+The WebUI may ask the local server to open an operating-system file chooser.
+The chooser returns only a selected absolute path and does not read or register the file.
+Only one chooser may be open at a time.
+Cancellation is a normal result, while unavailable native helpers leave manual path entry available.
+The RPC remains subject to the same Host, Origin, and Connect protocol checks as every mutation.
+
 Production responses use restrictive browser security headers.
 The server implementation owns the current header set and request-validation mechanics.
 

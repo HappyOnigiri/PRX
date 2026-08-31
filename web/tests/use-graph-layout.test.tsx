@@ -36,6 +36,7 @@ describe("useGraphLayout", () => {
     });
     const onEditTask = vi.fn();
     const onPreviewDocument = vi.fn();
+    const onAddDocument = vi.fn();
     const document = makeDocument({
       id: "document-1",
       kind: 3,
@@ -49,6 +50,7 @@ describe("useGraphLayout", () => {
       documentsByTask: new Map([["task-1", [document]]]),
       onEditTask,
       onPreviewDocument,
+      onAddDocument,
     };
     const { result, unmount } = renderHook(() => useGraphLayout(options));
 
@@ -73,6 +75,9 @@ describe("useGraphLayout", () => {
     });
     node?.data.onEdit();
     expect(onEditTask).toHaveBeenCalledWith("task-1");
+    const trigger = globalThis.document.createElement("button");
+    node?.data.onAddReference?.(trigger);
+    expect(onAddDocument).toHaveBeenCalledWith("task-1", trigger);
     expect(layoutMocks.layout).toHaveBeenCalledWith(
       expect.objectContaining({
         edges: [

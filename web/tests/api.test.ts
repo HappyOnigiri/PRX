@@ -6,6 +6,7 @@ import {
   getSyncStatus,
   mutations,
   readDocumentContent,
+  selectLocalFile,
   syncIfDue,
 } from "../src/api";
 import { makeSnapshot } from "./factories";
@@ -32,6 +33,7 @@ const apiMocks = vi.hoisted(() => {
     deleteDocument: vi.fn(),
     sync: vi.fn(),
     readDocumentContent: vi.fn(),
+    selectLocalFile: vi.fn(),
     addGitHubHost: vi.fn(),
     updateGitHubHost: vi.fn(),
     deleteGitHubHost: vi.fn(),
@@ -125,6 +127,18 @@ describe("RPC API wrappers", () => {
       status,
     });
     await expect(syncIfDue()).resolves.toEqual({ ran: false, status });
+  });
+
+  it("requests a native local file selection", async () => {
+    apiMocks.client.selectLocalFile.mockResolvedValueOnce({
+      path: "/tmp/plan.md",
+      canceled: false,
+    });
+    await expect(selectLocalFile()).resolves.toEqual({
+      path: "/tmp/plan.md",
+      canceled: false,
+    });
+    expect(apiMocks.client.selectLocalFile).toHaveBeenCalledOnce();
   });
 
   it("serializes every mutation request and propagates markdown content", async () => {

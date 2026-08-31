@@ -1,4 +1,4 @@
-import { Check, Eye, Pencil, Plus, Trash2, X } from "lucide-react";
+import { Check, Eye, Pencil, Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
@@ -11,8 +11,6 @@ import { MutationError } from "./MutationError";
 import { type TaskNodeDocument } from "./TaskNode";
 
 interface ReferencesSectionProps {
-  featureId?: string;
-  taskId?: string;
   documents: TaskNodeDocument[];
   onPreview: (document: TaskNodeDocument) => void;
   readOnly?: boolean;
@@ -20,19 +18,14 @@ interface ReferencesSectionProps {
 }
 
 export function ReferencesSection({
-  featureId,
-  taskId,
   documents,
   onPreview,
   readOnly = false,
   compact = false,
 }: ReferencesSectionProps) {
   const { t } = useTranslation();
-  const addDocument = useDomainMutation(mutations.addDocument);
-  const deleteDocument = useDomainMutation(mutations.deleteDocument);
   const updateDocument = useDomainMutation(mutations.updateDocument);
   const getDocument = useDomainMutation(mutations.getDocument);
-  const [selectedKind, setSelectedKind] = useState(DocumentKind.URL);
   const [editing, setEditing] = useState<{
     id: string;
     content: string;
@@ -78,59 +71,17 @@ export function ReferencesSection({
             key={document.id}
             document={document}
             onPreview={onPreview}
-            onDelete={(id) => {
-              deleteDocument.mutate(id);
-            }}
             onEdit={editMarkdown}
-            readOnly={readOnly}
+            canEdit={!readOnly}
+            canDelete={false}
           />
         ),
       )}
-      {documents.length === 0 && readOnly && (
+      {documents.length === 0 && (
         <p className="read-only-empty">{t("inspector.noReferences")}</p>
       )}
       {!readOnly && (
-        <form
-          className="stack-form"
-          onSubmit={(event) => {
-            event.preventDefault();
-            const form = new FormData(event.currentTarget);
-            const kind = Number(form.get("kind"));
-            const input: Parameters<typeof mutations.addDocument>[0] = {
-              kind,
-              title: formValue(form, "title"),
-              value: formValue(form, "value"),
-              isImplementationPlan:
-                taskId !== undefined && form.get("implementationPlan") === "on",
-            };
-            if (featureId !== undefined) input.featureId = featureId;
-            if (taskId !== undefined) input.taskId = taskId;
-            addDocument.mutate(input);
-          }}
-        >
-          <DocumentSourceFields
-            kind={selectedKind}
-            compact={compact}
-            onKindChange={setSelectedKind}
-          />
-          {taskId && (
-            <label className="document-plan-toggle">
-              <input name="implementationPlan" type="checkbox" />
-              {t("inspector.implementationPlan")}
-            </label>
-          )}
-          <IconButton
-            icon={Plus}
-            label={t("inspector.addReference")}
-            variant="primary"
-            type="submit"
-          />
-        </form>
-      )}
-      {!readOnly && (
         <>
-          <MutationError error={addDocument.error} />
-          <MutationError error={deleteDocument.error} />
           <MutationError error={updateDocument.error} />
           <MutationError error={getDocument.error} />
         </>
@@ -187,106 +138,20 @@ export function MarkdownEditForm({
   );
 }
 
-export function DocumentSourceFields({
-  kind,
-  compact,
-  labelled = false,
-  onKindChange,
-}: {
-  kind: DocumentKind;
-  compact: boolean;
-  labelled?: boolean;
-  onKindChange: (kind: DocumentKind) => void;
-}) {
-  const { t } = useTranslation();
-  const kindSelect = (
-    <select
-      name="kind"
-      value={kind}
-      onChange={(event) => {
-        onKindChange(Number(event.currentTarget.value));
-      }}
-    >
-      <option value={DocumentKind.URL}>
-        {documentKindLabel(DocumentKind.URL, t)}
-      </option>
-      <option value={DocumentKind.LOCAL_FILE}>
-        {documentKindLabel(DocumentKind.LOCAL_FILE, t)}
-      </option>
-      <option value={DocumentKind.MARKDOWN}>
-        {documentKindLabel(DocumentKind.MARKDOWN, t)}
-      </option>
-    </select>
-  );
-  const titleInput = (
-    <input name="title" placeholder={t("inspector.designNotes")} />
-  );
-  const valueInput =
-    kind === DocumentKind.MARKDOWN ? (
-      <textarea
-        name="value"
-        required
-        rows={compact ? 2 : 4}
-        placeholder={t("inspector.referenceMarkdown")}
-      />
-    ) : (
-      <input
-        name="value"
-        required
-        type={kind === DocumentKind.URL ? "url" : "text"}
-        placeholder={
-          kind === DocumentKind.URL
-            ? t("inspector.referenceUrl")
-            : t("inspector.referencePath")
-        }
-      />
-    );
-
-  if (labelled)
-    return (
-      <>
-        <div className="form-row">
-          <label>
-            {t("inspector.referenceKind")}
-            {kindSelect}
-          </label>
-          <label>
-            {t("inspector.referenceTitle")}
-            {titleInput}
-          </label>
-        </div>
-        <label>
-          {kind === DocumentKind.MARKDOWN
-            ? t("inspector.referenceContent")
-            : t("inspector.referenceLocation")}
-          {valueInput}
-        </label>
-      </>
-    );
-
-  return (
-    <>
-      <div className="form-row">
-        {kindSelect}
-        {titleInput}
-      </div>
-      {valueInput}
-    </>
-  );
-}
-
 export function DocumentRow({
   document,
   onPreview,
   onDelete,
   onEdit,
-  readOnly,
+  canEdit,
+  canDelete,
 }: {
   document: TaskNodeDocument;
   onPreview: (document: TaskNodeDocument) => void;
-  onDelete: (id: string) => void;
+  onDelete?: (id: string) => void;
   onEdit: (document: TaskNodeDocument) => void;
-  readOnly: boolean;
+  canEdit: boolean;
+  canDelete: boolean;
 }) {
   const { t } = useTranslation();
   const title = document.title || documentKindLabel(document.kind, t);
@@ -316,9 +181,9 @@ export function DocumentRow({
           <Eye aria-hidden="true" focusable="false" size={14} />
         </button>
       )}
-      {!readOnly && (
+      {(canEdit || canDelete) && (
         <>
-          {document.kind === DocumentKind.MARKDOWN && (
+          {canEdit && document.kind === DocumentKind.MARKDOWN && (
             <IconButton
               icon={Pencil}
               label={t("inspector.editReference", { title })}
@@ -330,18 +195,20 @@ export function DocumentRow({
               }}
             />
           )}
-          <IconButton
-            icon={Trash2}
-            label={t("inspector.deleteReference", {
-              title: document.title || t("inspector.referenceFallback"),
-            })}
-            variant="danger"
-            size="compact"
-            iconOnly
-            onClick={() => {
-              onDelete(document.id);
-            }}
-          />
+          {canDelete && (
+            <IconButton
+              icon={Trash2}
+              label={t("inspector.deleteReference", {
+                title: document.title || t("inspector.referenceFallback"),
+              })}
+              variant="danger"
+              size="compact"
+              iconOnly
+              onClick={() => {
+                onDelete?.(document.id);
+              }}
+            />
+          )}
         </>
       )}
     </div>

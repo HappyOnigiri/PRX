@@ -307,6 +307,7 @@ interface FeatureGraphProps {
   documentsByTask: Map<string, TaskNodeDocument[]>;
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
+  onAddDocument?: (taskId: string, trigger: HTMLButtonElement) => void;
   onCreateTask: () => void;
   readOnly?: boolean;
 }
@@ -318,6 +319,7 @@ export function FeatureGraph({
   documentsByTask,
   onEditTask,
   onPreviewDocument,
+  onAddDocument,
   onCreateTask,
   readOnly = false,
 }: FeatureGraphProps) {
@@ -337,6 +339,7 @@ export function FeatureGraph({
       documentsByTask,
       onEditTask,
       onPreviewDocument,
+      ...(onAddDocument ? { onAddDocument } : {}),
       readOnly,
     });
   const measuredRoutes = useMeasuredEdgeRoutes(edgeRoutes);

@@ -662,6 +662,17 @@ message ReadDocumentContentResponse {
   string content = 1;
 }
 
+// SelectLocalFileRequest asks the PRX server to open its native file chooser.
+message SelectLocalFileRequest {}
+
+// SelectLocalFileResponse returns the selected server-local absolute path.
+message SelectLocalFileResponse {
+  // path is the selected absolute path and is empty when the user cancels.
+  string path = 1;
+  // canceled distinguishes cancellation from a selected path.
+  bool canceled = 2;
+}
+
 // GitHubHost describes one configured GitHub.com or GitHub Enterprise Server host.
 message GitHubHost {
   // host is the normalized hostname, optionally including a port.
@@ -972,6 +983,8 @@ service PRXService {
   rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
   // ReadDocumentContent reads bounded UTF-8 content for a local file or stored Markdown document.
   rpc ReadDocumentContent(ReadDocumentContentRequest) returns (ReadDocumentContentResponse);
+  // SelectLocalFile opens a native file chooser on the PRX server without registering a document.
+  rpc SelectLocalFile(SelectLocalFileRequest) returns (SelectLocalFileResponse);
   // Sync refreshes selected pull requests from GitHub and records successes and failures independently.
   rpc Sync(SyncRequest) returns (SyncResponse);
   // GetGitHubSyncStatus returns automatic synchronization diagnostics.

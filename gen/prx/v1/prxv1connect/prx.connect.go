@@ -75,6 +75,9 @@ const (
 	// PRXServiceReadDocumentContentProcedure is the fully-qualified name of the PRXService's
 	// ReadDocumentContent RPC.
 	PRXServiceReadDocumentContentProcedure = "/prx.v1.PRXService/ReadDocumentContent"
+	// PRXServiceSelectLocalFileProcedure is the fully-qualified name of the PRXService's
+	// SelectLocalFile RPC.
+	PRXServiceSelectLocalFileProcedure = "/prx.v1.PRXService/SelectLocalFile"
 	// PRXServiceSyncProcedure is the fully-qualified name of the PRXService's Sync RPC.
 	PRXServiceSyncProcedure = "/prx.v1.PRXService/Sync"
 	// PRXServiceGetGitHubSyncStatusProcedure is the fully-qualified name of the PRXService's
@@ -150,6 +153,8 @@ type PRXServiceClient interface {
 	DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error)
 	// ReadDocumentContent reads bounded UTF-8 content for a local file or stored Markdown document.
 	ReadDocumentContent(context.Context, *connect.Request[v1.ReadDocumentContentRequest]) (*connect.Response[v1.ReadDocumentContentResponse], error)
+	// SelectLocalFile opens a native file chooser on the PRX server without registering a document.
+	SelectLocalFile(context.Context, *connect.Request[v1.SelectLocalFileRequest]) (*connect.Response[v1.SelectLocalFileResponse], error)
 	// Sync refreshes selected pull requests from GitHub and records successes and failures independently.
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
 	// GetGitHubSyncStatus returns automatic synchronization diagnostics.
@@ -287,6 +292,12 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(pRXServiceMethods.ByName("ReadDocumentContent")),
 			connect.WithClientOptions(opts...),
 		),
+		selectLocalFile: connect.NewClient[v1.SelectLocalFileRequest, v1.SelectLocalFileResponse](
+			httpClient,
+			baseURL+PRXServiceSelectLocalFileProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("SelectLocalFile")),
+			connect.WithClientOptions(opts...),
+		),
 		sync: connect.NewClient[v1.SyncRequest, v1.SyncResponse](
 			httpClient,
 			baseURL+PRXServiceSyncProcedure,
@@ -392,6 +403,7 @@ type pRXServiceClient struct {
 	updateDocument           *connect.Client[v1.UpdateDocumentRequest, v1.UpdateDocumentResponse]
 	deleteDocument           *connect.Client[v1.DeleteDocumentRequest, v1.DeleteDocumentResponse]
 	readDocumentContent      *connect.Client[v1.ReadDocumentContentRequest, v1.ReadDocumentContentResponse]
+	selectLocalFile          *connect.Client[v1.SelectLocalFileRequest, v1.SelectLocalFileResponse]
 	sync                     *connect.Client[v1.SyncRequest, v1.SyncResponse]
 	getGitHubSyncStatus      *connect.Client[v1.GetGitHubSyncStatusRequest, v1.GetGitHubSyncStatusResponse]
 	syncGitHubIfDue          *connect.Client[v1.SyncGitHubIfDueRequest, v1.SyncGitHubIfDueResponse]
@@ -486,6 +498,11 @@ func (c *pRXServiceClient) DeleteDocument(ctx context.Context, req *connect.Requ
 // ReadDocumentContent calls prx.v1.PRXService.ReadDocumentContent.
 func (c *pRXServiceClient) ReadDocumentContent(ctx context.Context, req *connect.Request[v1.ReadDocumentContentRequest]) (*connect.Response[v1.ReadDocumentContentResponse], error) {
 	return c.readDocumentContent.CallUnary(ctx, req)
+}
+
+// SelectLocalFile calls prx.v1.PRXService.SelectLocalFile.
+func (c *pRXServiceClient) SelectLocalFile(ctx context.Context, req *connect.Request[v1.SelectLocalFileRequest]) (*connect.Response[v1.SelectLocalFileResponse], error) {
+	return c.selectLocalFile.CallUnary(ctx, req)
 }
 
 // Sync calls prx.v1.PRXService.Sync.
@@ -592,6 +609,8 @@ type PRXServiceHandler interface {
 	DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error)
 	// ReadDocumentContent reads bounded UTF-8 content for a local file or stored Markdown document.
 	ReadDocumentContent(context.Context, *connect.Request[v1.ReadDocumentContentRequest]) (*connect.Response[v1.ReadDocumentContentResponse], error)
+	// SelectLocalFile opens a native file chooser on the PRX server without registering a document.
+	SelectLocalFile(context.Context, *connect.Request[v1.SelectLocalFileRequest]) (*connect.Response[v1.SelectLocalFileResponse], error)
 	// Sync refreshes selected pull requests from GitHub and records successes and failures independently.
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
 	// GetGitHubSyncStatus returns automatic synchronization diagnostics.
@@ -725,6 +744,12 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(pRXServiceMethods.ByName("ReadDocumentContent")),
 		connect.WithHandlerOptions(opts...),
 	)
+	pRXServiceSelectLocalFileHandler := connect.NewUnaryHandler(
+		PRXServiceSelectLocalFileProcedure,
+		svc.SelectLocalFile,
+		connect.WithSchema(pRXServiceMethods.ByName("SelectLocalFile")),
+		connect.WithHandlerOptions(opts...),
+	)
 	pRXServiceSyncHandler := connect.NewUnaryHandler(
 		PRXServiceSyncProcedure,
 		svc.Sync,
@@ -843,6 +868,8 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceDeleteDocumentHandler.ServeHTTP(w, r)
 		case PRXServiceReadDocumentContentProcedure:
 			pRXServiceReadDocumentContentHandler.ServeHTTP(w, r)
+		case PRXServiceSelectLocalFileProcedure:
+			pRXServiceSelectLocalFileHandler.ServeHTTP(w, r)
 		case PRXServiceSyncProcedure:
 			pRXServiceSyncHandler.ServeHTTP(w, r)
 		case PRXServiceGetGitHubSyncStatusProcedure:
@@ -942,6 +969,10 @@ func (UnimplementedPRXServiceHandler) DeleteDocument(context.Context, *connect.R
 
 func (UnimplementedPRXServiceHandler) ReadDocumentContent(context.Context, *connect.Request[v1.ReadDocumentContentRequest]) (*connect.Response[v1.ReadDocumentContentResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.ReadDocumentContent is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) SelectLocalFile(context.Context, *connect.Request[v1.SelectLocalFileRequest]) (*connect.Response[v1.SelectLocalFileResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.SelectLocalFile is not implemented"))
 }
 
 func (UnimplementedPRXServiceHandler) Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error) {

@@ -1,24 +1,12 @@
-import { ChevronDown, Plus, X } from "lucide-react";
-import {
-  useEffect,
-  useId,
-  useRef,
-  useState,
-  type RefObject,
-  type SyntheticEvent,
-} from "react";
+import { ChevronDown, Plus } from "lucide-react";
+import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
-import { formValue } from "../form";
-import { DocumentKind } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
+import { AddDocumentDialog } from "./AddDocumentDialog";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
-import {
-  DocumentRow,
-  DocumentSourceFields,
-  MarkdownEditForm,
-} from "./TaskInspectorReferences";
+import { DocumentRow, MarkdownEditForm } from "./TaskInspectorReferences";
 import type { TaskNodeDocument } from "./TaskNode";
 
 interface FeatureReferencesProps {
@@ -40,6 +28,7 @@ export function FeatureReferences({
   const getDocument = useDomainMutation(mutations.getDocument);
   const [open, setOpen] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [addTrigger, setAddTrigger] = useState<HTMLElement | null>(null);
   const [editing, setEditing] = useState<{
     id: string;
     content: string;
@@ -132,14 +121,15 @@ export function FeatureReferences({
           onAdd={() => {
             setOpen(false);
             setEditing(null);
+            setAddTrigger(triggerRef.current);
             setShowAddDialog(true);
           }}
         />
       )}
       {showAddDialog && (
-        <AddFeatureReferenceDialog
+        <AddDocumentDialog
           featureId={featureId}
-          triggerRef={triggerRef}
+          trigger={addTrigger}
           onClose={() => {
             setShowAddDialog(false);
           }}
@@ -203,7 +193,8 @@ function FeatureReferencesPanel({
               onPreview={onPreview}
               onDelete={onDelete}
               onEdit={onEdit}
-              readOnly={readOnly}
+              canEdit={!readOnly}
+              canDelete={!readOnly}
             />
           ),
         )}
@@ -225,113 +216,5 @@ function FeatureReferencesPanel({
         </div>
       )}
     </section>
-  );
-}
-
-function AddFeatureReferenceDialog({
-  featureId,
-  triggerRef,
-  onClose,
-}: {
-  featureId: string;
-  triggerRef: RefObject<HTMLButtonElement | null>;
-  onClose: () => void;
-}) {
-  const { t } = useTranslation();
-  const addDocument = useDomainMutation(mutations.addDocument);
-  const [selectedKind, setSelectedKind] = useState(DocumentKind.URL);
-  const titleId = useId();
-  const dialogRef = useRef<HTMLFormElement>(null);
-
-  useEffect(() => {
-    const trigger = triggerRef.current;
-    dialogRef.current?.querySelector("select")?.focus();
-    return () => {
-      window.setTimeout(() => {
-        trigger?.focus();
-      });
-    };
-  }, [triggerRef]);
-
-  async function submitReference(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    try {
-      await addDocument.mutateAsync({
-        featureId,
-        kind: Number(form.get("kind")),
-        title: formValue(form, "title"),
-        value: formValue(form, "value"),
-      });
-    } catch {
-      return;
-    }
-    onClose();
-  }
-
-  return (
-    <div
-      className="scrim feature-reference-scrim"
-      role="presentation"
-      onKeyDown={(event) => {
-        if (event.key === "Escape" && !addDocument.isPending) onClose();
-        if (event.key !== "Tab") return;
-        const focusable = Array.from(
-          dialogRef.current?.querySelectorAll<HTMLElement>(
-            "button:not(:disabled), input:not(:disabled), select:not(:disabled), textarea:not(:disabled), a[href]",
-          ) ?? [],
-        );
-        if (focusable.length === 0) {
-          event.preventDefault();
-          return;
-        }
-        const first = focusable[0];
-        const last = focusable.at(-1);
-        if (!first || !last) return;
-        if (event.shiftKey && document.activeElement === first) {
-          event.preventDefault();
-          last.focus();
-        } else if (!event.shiftKey && document.activeElement === last) {
-          event.preventDefault();
-          first.focus();
-        }
-      }}
-    >
-      <form
-        ref={dialogRef}
-        className="dialog feature-reference-dialog"
-        role="dialog"
-        aria-modal="true"
-        aria-labelledby={titleId}
-        onSubmit={submitReference}
-      >
-        <header>
-          <h2 id={titleId}>{t("workspace.addReferenceTitle")}</h2>
-        </header>
-        <DocumentSourceFields
-          kind={selectedKind}
-          compact={false}
-          labelled
-          onKindChange={setSelectedKind}
-        />
-        <MutationError error={addDocument.error} />
-        <footer>
-          <IconButton
-            icon={X}
-            label={t("common.cancel")}
-            variant="secondary"
-            disabled={addDocument.isPending}
-            onClick={onClose}
-          />
-          <IconButton
-            icon={Plus}
-            label={t("workspace.addReference")}
-            variant="primary"
-            type="submit"
-            disabled={addDocument.isPending}
-          />
-        </footer>
-      </form>
-    </div>
   );
 }
