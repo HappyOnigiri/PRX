@@ -255,9 +255,12 @@ describe("FeatureWorkspace", () => {
     expect(
       screen.getByRole("heading", { name: "Payments rollout" }),
     ).toBeInTheDocument();
-    expect(
-      screen.getByRole("button", { name: "Copy Feature ID" }),
-    ).toBeInTheDocument();
+    const featureIdButton = screen.getByRole("button", {
+      name: "Copy Feature ID",
+    });
+    expect(featureIdButton).toHaveTextContent("feature-1");
+    expect(featureIdButton.querySelector("svg")).not.toBeInTheDocument();
+    expect(screen.queryByText("Feature ID")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "References" })).toHaveAttribute(
       "aria-expanded",
       "false",

@@ -66,4 +66,24 @@ describe("CopyableIdentifier", () => {
     });
     expect(screen.queryByText("Copy failed")).not.toBeInTheDocument();
   });
+
+  it("uses the identifier itself as the copy control", async () => {
+    render(
+      <CopyableIdentifier label="Task ID" value="T-42" valueOnly={true} />,
+    );
+
+    expect(screen.queryByText("Task ID")).not.toBeInTheDocument();
+    const copyButton = screen.getByRole("button", { name: "Copy Task ID" });
+    expect(copyButton).toHaveTextContent("T-42");
+    expect(copyButton.querySelector("svg")).not.toBeInTheDocument();
+
+    fireEvent.click(copyButton);
+    await act(async () => {
+      await Promise.resolve();
+    });
+
+    expect(writeText).toHaveBeenCalledWith("T-42");
+    expect(copyButton).toHaveClass("is-copied");
+    expect(copyButton).toHaveAccessibleName("Copied");
+  });
 });

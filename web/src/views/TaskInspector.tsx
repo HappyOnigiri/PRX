@@ -35,7 +35,11 @@ function TaskInspectorHeader({
     <header>
       <div className="inspector-heading">
         <h2>{task.title}</h2>
-        <CopyableIdentifier label={t("common.taskId")} value={task.id} />
+        <CopyableIdentifier
+          label={t("common.taskId")}
+          value={task.id}
+          valueOnly
+        />
       </div>
       <IconButton
         icon={X}

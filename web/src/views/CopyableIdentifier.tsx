@@ -8,9 +8,11 @@ type CopyStatus = "copied" | "failed";
 export function CopyableIdentifier({
   label,
   value,
+  valueOnly = false,
 }: {
   label: string;
   value: string;
+  valueOnly?: boolean;
 }) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<CopyStatus>();
@@ -30,6 +32,31 @@ export function CopyableIdentifier({
   const copyLabel = t("common.copyIdentifier", { label });
   const isCopied = status === "copied";
   const Icon = isCopied ? Check : Copy;
+
+  if (valueOnly) {
+    return (
+      <span className="copyable-identifier is-value-only">
+        <button
+          type="button"
+          className={`copyable-identifier-value-button${isCopied ? " is-copied" : ""}`}
+          aria-label={isCopied ? t("common.copied") : copyLabel}
+          title={copyLabel}
+          onClick={() => void copyIdentifier()}
+        >
+          <code className="copyable-identifier-value" title={value}>
+            {value}
+          </code>
+        </button>
+        <span
+          className="copyable-identifier-status is-visually-hidden"
+          aria-live="polite"
+        >
+          {status === "failed" && t("common.copyFailed")}
+        </span>
+      </span>
+    );
+  }
+
   return (
     <span className="copyable-identifier">
       <span className="copyable-identifier-label">{label}</span>

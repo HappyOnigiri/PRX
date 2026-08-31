@@ -192,6 +192,7 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           <CopyableIdentifier
             label={t("common.featureId")}
             value={props.feature.id}
+            valueOnly
           />
           <p className="eyebrow">
             {t("workspace.eyebrow", { slug: props.feature.slug })}
