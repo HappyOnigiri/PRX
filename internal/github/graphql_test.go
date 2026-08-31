@@ -103,6 +103,92 @@ func TestLiveProviderFetchBatchChunksAndPaginatesConnections(t *testing.T) {
 	}
 }
 
+func TestLiveProviderFetchBatchSkipsPaginationForTerminalPullRequests(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		requests.Add(1)
+		query := decodeGraphQLQuery(t, request)
+		if regexp.MustCompile(`node\(id:`).MatchString(query) {
+			t.Errorf("terminal pull request triggered a connection page: %s", query)
+			writer.WriteHeader(http.StatusInternalServerError)
+			return
+		}
+		data := graphQLDataForQuery(query)
+		pull := data["r0"].(map[string]any)["p0"].(map[string]any)
+		pull["state"] = "CLOSED"
+		pull["assignees"] = nil
+		pull["latestReviews"] = nil
+		pull["reviewRequests"] = nil
+		pull["mergeable"] = nil
+		writeGraphQLResponse(t, writer, map[string]any{
+			"data": data,
+			"errors": []any{map[string]any{
+				"message": "review metadata unavailable",
+				"path":    []any{"r0", "p0", "latestReviews"},
+			}},
+		})
+	}))
+	defer server.Close()
+	provider := newGraphQLTestProvider(t, server)
+	result, err := provider.FetchBatch(context.Background(), []domain.PullRequest{{
+		TaskID: "terminal", Owner: "acme", Repository: "api", Number: 7,
+		Assignees: []string{"known-assignee"}, ReviewState: domain.ReviewStateApproved,
+		Mergeability: domain.MergeabilityConflicting,
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if requests.Load() != 1 {
+		t.Fatalf("GraphQL requests=%d, want 1", requests.Load())
+	}
+	if got := result.PullRequests["terminal"]; got.State != domain.PullRequestStateClosed ||
+		got.Stale || got.SyncError != "" || got.ReviewState != domain.ReviewStateApproved ||
+		got.Mergeability != domain.MergeabilityConflicting ||
+		len(got.Assignees) != 1 || got.Assignees[0] != "known-assignee" || len(result.Errors) != 0 {
+		t.Fatalf("terminal result=%+v errors=%v partial=%v", got, result.Errors, result.PartialPullRequests)
+	}
+}
+
+func TestLiveProviderFetchBatchPreservesPartialPullRequestOnPaginationError(t *testing.T) {
+	var requests atomic.Int32
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		requests.Add(1)
+		query := decodeGraphQLQuery(t, request)
+		if regexp.MustCompile(`node\(id:`).MatchString(query) {
+			writeGraphQLResponse(t, writer, map[string]any{
+				"errors": []any{map[string]any{"message": "review metadata unavailable"}},
+			})
+			return
+		}
+		data := graphQLDataForQuery(query)
+		pull := data["r0"].(map[string]any)["p0"].(map[string]any)
+		pull["assignees"] = map[string]any{
+			"nodes":    []any{map[string]any{"login": "octocat"}},
+			"pageInfo": map[string]any{"hasNextPage": true, "endCursor": "assignee-cursor"},
+		}
+		writeGraphQLResponse(t, writer, map[string]any{"data": data})
+	}))
+	defer server.Close()
+	provider := newGraphQLTestProvider(t, server)
+	result, err := provider.FetchBatch(context.Background(), []domain.PullRequest{{
+		TaskID: "partial", Owner: "acme", Repository: "api", Number: 8,
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	partial := result.PartialPullRequests["partial"]
+	if requests.Load() != 2 || partial.Author != "octocat" ||
+		result.Errors["partial"] == nil || len(result.PullRequests) != 0 {
+		t.Fatalf(
+			"partial result=%+v errors=%v pulls=%v requests=%d",
+			partial,
+			result.Errors,
+			result.PullRequests,
+			requests.Load(),
+		)
+	}
+}
+
 // A proxy or GitHub Enterprise deployment may answer the GraphQL endpoint with
 // a permission or method error while REST still serves pull requests, so the
 // fallback must not be limited to 404.

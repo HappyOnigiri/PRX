@@ -2,6 +2,7 @@ package app
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/http/httptest"
@@ -479,6 +480,38 @@ func TestSyncLiveBatchesRepositoriesOnTheSameHost(t *testing.T) {
 	}
 	if server.count("/api/graphql", "shared-token") != 1 {
 		t.Fatalf("GraphQL batch requests=%+v", server.requests)
+	}
+}
+
+func TestPersistSyncResultDoesNotCountTerminalPartialFailure(t *testing.T) {
+	ctx := context.Background()
+	service, database, snapshot, taskFeatures := newSyncService(t)
+	current := addSyncPullRequest(
+		t, database, &snapshot, taskFeatures, "github.com", "acme", "api", 42,
+	)
+	current.State = domain.PullRequestStateOpen
+	current.SyncError = "previous error"
+	current.Stale = false
+	if _, err := database.UpsertPullRequest(ctx, current); err != nil {
+		t.Fatal(err)
+	}
+	partial := current
+	partial.State = domain.PullRequestStateMerged
+	partial.NodeID = "merged-node"
+	succeeded, failed, err := service.persistSyncResult(ctx, []domain.PullRequest{current}, repositorySyncResult{
+		partials: map[string]domain.PullRequest{current.TaskID: partial},
+		failures: map[string]error{current.TaskID: errors.New("review metadata unavailable")},
+	})
+	if err != nil || succeeded != 0 || failed != 0 {
+		t.Fatalf("persist result=(%d, %d, %v)", succeeded, failed, err)
+	}
+	stored, err := database.GetPullRequest(ctx, current.TaskID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if stored.State != domain.PullRequestStateMerged || stored.NodeID != "merged-node" ||
+		stored.SyncError != "" || !stored.Stale || stored.LastSyncedAt == nil {
+		t.Fatalf("stored terminal partial=%+v", stored)
 	}
 }
 

@@ -78,8 +78,9 @@ func (p *LiveProvider) FetchBatch(
 	current []domain.PullRequest,
 ) (BatchResult, error) {
 	result := BatchResult{
-		PullRequests: make(map[string]domain.PullRequest, len(current)),
-		Errors:       make(map[string]error),
+		PullRequests:        make(map[string]domain.PullRequest, len(current)),
+		PartialPullRequests: make(map[string]domain.PullRequest),
+		Errors:              make(map[string]error),
 	}
 	for start := 0; start < len(current); start += graphQLBatchSize {
 		end := min(start+graphQLBatchSize, len(current))
@@ -96,6 +97,9 @@ func (p *LiveProvider) FetchBatch(
 		for taskID, value := range chunk.PullRequests {
 			result.PullRequests[taskID] = value
 		}
+		for taskID, value := range chunk.PartialPullRequests {
+			result.PartialPullRequests[taskID] = value
+		}
 		for taskID, itemErr := range chunk.Errors {
 			result.Errors[taskID] = itemErr
 		}
@@ -108,12 +112,14 @@ func (p *LiveProvider) fetchRESTBatch(
 	current []domain.PullRequest,
 ) (BatchResult, error) {
 	result := BatchResult{
-		PullRequests: make(map[string]domain.PullRequest, len(current)),
-		Errors:       make(map[string]error),
+		PullRequests:        make(map[string]domain.PullRequest, len(current)),
+		PartialPullRequests: make(map[string]domain.PullRequest),
+		Errors:              make(map[string]error),
 	}
 	for _, value := range current {
 		updated, err := p.Fetch(ctx, value)
 		if err != nil {
+			result.PartialPullRequests[value.TaskID] = updated
 			result.Errors[value.TaskID] = err
 			continue
 		}
@@ -133,20 +139,21 @@ func (p *LiveProvider) fetchGraphQLChunk(
 		return BatchResult{}, graphQLHTTPError(status, err)
 	}
 	result := BatchResult{
-		PullRequests: make(map[string]domain.PullRequest, len(items)),
-		Errors:       make(map[string]error),
+		PullRequests:        make(map[string]domain.PullRequest, len(items)),
+		PartialPullRequests: make(map[string]domain.PullRequest),
+		Errors:              make(map[string]error),
 	}
 	itemErrors, globalError := mapGraphQLErrors(response.Errors, items)
 	if globalError != nil {
 		return result, globalError
 	}
 	for _, item := range items {
-		if itemErr := itemErrors[item.current.TaskID]; itemErr != nil {
-			result.Errors[item.current.TaskID] = itemErr
-			continue
-		}
 		repositoryBody := response.Data[item.repositoryAlias]
 		if len(repositoryBody) == 0 || bytes.Equal(repositoryBody, []byte("null")) {
+			if itemErr := itemErrors[item.current.TaskID]; itemErr != nil {
+				result.Errors[item.current.TaskID] = itemErr
+				continue
+			}
 			result.Errors[item.current.TaskID] = providerGraphQLError(
 				ErrorClassNotFound,
 				"repository was not found or is not visible",
@@ -159,6 +166,10 @@ func (p *LiveProvider) fetchGraphQLChunk(
 		}
 		pullBody := repository[item.pullAlias]
 		if len(pullBody) == 0 || bytes.Equal(pullBody, []byte("null")) {
+			if itemErr := itemErrors[item.current.TaskID]; itemErr != nil {
+				result.Errors[item.current.TaskID] = itemErr
+				continue
+			}
 			result.Errors[item.current.TaskID] = providerGraphQLError(
 				ErrorClassOther,
 				fmt.Sprintf(
@@ -174,8 +185,14 @@ func (p *LiveProvider) fetchGraphQLChunk(
 		if err := json.Unmarshal(pullBody, &pullRequest); err != nil {
 			return result, fmt.Errorf("decode GraphQL pull request: %w", err)
 		}
-		if err := p.completeGraphQLConnections(ctx, &pullRequest); err != nil {
-			result.Errors[item.current.TaskID] = err
+		itemErr := itemErrors[item.current.TaskID]
+		if itemErr != nil && terminalGraphQLPullRequest(pullRequest) {
+			updated, err := domainPullRequestCoreFromGraphQL(item.current, pullRequest)
+			if err != nil {
+				result.Errors[item.current.TaskID] = err
+				continue
+			}
+			result.PullRequests[item.current.TaskID] = updated
 			continue
 		}
 		updated, err := domainPullRequestFromGraphQL(item.current, pullRequest)
@@ -183,9 +200,77 @@ func (p *LiveProvider) fetchGraphQLChunk(
 			result.Errors[item.current.TaskID] = err
 			continue
 		}
+		if itemErr != nil {
+			result.PartialPullRequests[item.current.TaskID] = updated
+			result.Errors[item.current.TaskID] = itemErr
+			continue
+		}
+		if !terminalGraphQLPullRequest(pullRequest) {
+			if err := p.completeGraphQLConnections(ctx, &pullRequest); err != nil {
+				result.PartialPullRequests[item.current.TaskID] = updated
+				result.Errors[item.current.TaskID] = err
+				continue
+			}
+			updated, err = domainPullRequestFromGraphQL(item.current, pullRequest)
+			if err != nil {
+				result.Errors[item.current.TaskID] = err
+				continue
+			}
+		}
 		result.PullRequests[item.current.TaskID] = updated
 	}
 	return result, nil
+}
+
+func terminalGraphQLPullRequest(value graphQLPullRequest) bool {
+	return value.Merged || strings.EqualFold(value.State, "closed")
+}
+
+func domainPullRequestCoreFromGraphQL(
+	current domain.PullRequest,
+	value graphQLPullRequest,
+) (domain.PullRequest, error) {
+	updatedAt, err := time.Parse(time.RFC3339, value.UpdatedAt)
+	if err != nil {
+		return current, fmt.Errorf("parse GitHub updatedAt: %w", err)
+	}
+	state := current.State
+	if value.State != "" {
+		state = domain.PullRequestState(strings.ToLower(value.State))
+		if state != domain.PullRequestStateOpen && state != domain.PullRequestStateClosed &&
+			state != domain.PullRequestStateMerged {
+			state = domain.PullRequestStateUnknown
+		}
+	}
+	if value.Merged {
+		state = domain.PullRequestStateMerged
+	}
+	if value.ID != "" {
+		current.NodeID = value.ID
+	}
+	if value.Author != nil {
+		current.Author = value.Author.Login
+	}
+	if value.Assignees.Nodes != nil {
+		assignees := make([]string, 0, len(value.Assignees.Nodes))
+		for _, assignee := range value.Assignees.Nodes {
+			assignees = append(assignees, assignee.Login)
+		}
+		current.Assignees = assignees
+	}
+	if value.Mergeable != "" {
+		mergeability := domain.Mergeability(strings.ToLower(value.Mergeable))
+		if mergeability == domain.MergeabilityMergeable || mergeability == domain.MergeabilityConflicting {
+			current.Mergeability = mergeability
+		} else {
+			current.Mergeability = domain.MergeabilityUnknown
+		}
+	}
+	current.State = state
+	current.Draft = value.IsDraft
+	githubUpdatedAt := updatedAt.UTC()
+	current.GitHubUpdatedAt = &githubUpdatedAt
+	return markPullRequestSynced(current), nil
 }
 
 type graphQLConnection struct {

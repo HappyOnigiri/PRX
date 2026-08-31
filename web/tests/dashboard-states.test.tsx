@@ -7,6 +7,7 @@ import { Dashboard } from "../src/views/Dashboard";
 import {
   makeFeature,
   makeGitHubSyncStatus,
+  makePullRequest,
   makeSnapshot,
   makeTask,
 } from "./factories";
@@ -53,8 +54,21 @@ vi.mock("../src/api", () => ({
   mutations: dashboardMocks.api,
 }));
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ children }: { children: ReactNode }) => (
-    <a href="#test">{children}</a>
+  Link: ({
+    children,
+    className,
+    search,
+  }: {
+    children: ReactNode;
+    className?: string;
+    search?: { q: string };
+  }) => (
+    <a
+      href={search ? `/tasks?q=${encodeURIComponent(search.q)}` : "#test"}
+      className={className}
+    >
+      {children}
+    </a>
   ),
 }));
 
@@ -120,6 +134,12 @@ describe("Dashboard states", () => {
       featureId: "archived",
       title: "Archived task",
     });
+    const syncErrorTask = makeTask({
+      id: "sync-error-task",
+      featureId: "active",
+      title: "Sync error task",
+      ready: false,
+    });
     dashboardMocks.state.isPending = false;
     dashboardMocks.state.data = makeSnapshot({
       features: [
@@ -130,7 +150,11 @@ describe("Dashboard states", () => {
           archived: true,
         }),
       ],
-      tasks: [activeTask, archivedTask],
+      tasks: [activeTask, archivedTask, syncErrorTask],
+      pullRequests: [
+        makePullRequest({ taskId: syncErrorTask.id, syncError: "offline" }),
+        makePullRequest({ taskId: archivedTask.id, syncError: "offline" }),
+      ],
       readyTasks: [activeTask, archivedTask],
       reviewWaitingTasks: [archivedTask],
       conflictTasks: [archivedTask],
@@ -150,8 +174,12 @@ describe("Dashboard states", () => {
     expect(container.querySelector(".queue-conflict > span")).toHaveTextContent(
       "0",
     );
-    expect(container.querySelector(".queue-stale > span")).toHaveTextContent(
-      "0",
+    expect(
+      container.querySelector(".queue-sync-error > span"),
+    ).toHaveTextContent("1");
+    expect(screen.getByRole("link", { name: /Sync errors/ })).toHaveAttribute(
+      "href",
+      "/tasks?q=github-status%3Aerror",
     );
     expect(screen.getByText("Active graph")).toBeInTheDocument();
     expect(screen.queryByText("Archived graph")).not.toBeInTheDocument();

@@ -12,6 +12,7 @@ import "./styles/graph.css";
 import "./styles/markdown-preview.css";
 import "./styles/shell.css";
 import "./styles/task-inspector.css";
+import "./styles/task-search.css";
 import "./styles/theme.css";
 import "./styles/workspace.css";
 import "./theme";
