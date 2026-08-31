@@ -31,7 +31,7 @@ export const workspace = {
       retryLayout: "Retry layout",
       flow: {
         nodeDescription:
-          "Use the links to open references, or the Edit button to edit this task.",
+          "Select the task ID to copy it, links to open references, or the Edit button to edit this task.",
         keyboardDisabled: "Use the Edit button to open task details.",
         edgeDescription: "An edge connects a blocker to a blocked task.",
         dependencyEdge: "{{blocker}} blocks {{blocked}}",
@@ -117,7 +117,7 @@ export const workspace = {
       retryLayout: "配置を再試行",
       flow: {
         nodeDescription:
-          "参照資料はリンクから開き、タスクの変更は編集ボタンから行います。",
+          "タスクIDはクリックしてコピーし、参照資料はリンクから、タスクの変更は編集ボタンから行います。",
         keyboardDisabled: "編集ボタンからタスクの詳細を開きます。",
         edgeDescription:
           "エッジはブロッカーからブロック対象のタスクへ接続します。",
