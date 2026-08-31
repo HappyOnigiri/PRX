@@ -2,7 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { RefreshCw, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
-import type { Feature } from "../gen/prx/v1/prx_pb";
+import type { Feature, Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
 import { formatError } from "../i18n/domain";
 import { useAutoSyncStatus } from "../sync-status";
@@ -39,6 +39,8 @@ const queueNames = [
     "github-status:error",
   ],
 ] as const;
+const alwaysVisibleQueueKeys = new Set(["readyTasks", "reviewWaitingTasks"]);
+type ProjectedQueues = Record<(typeof queueNames)[number][0], Task[]>;
 
 export function Dashboard() {
   const { t } = useTranslation();
@@ -93,25 +95,7 @@ export function Dashboard() {
           <SyncStatus />
         </div>
       </header>
-      <section
-        className="queue-strip"
-        aria-label={t("dashboard.roadmapStatus")}
-      >
-        {queueNames.map(([key, className, title, detail, query]) => (
-          <Link
-            key={key}
-            to="/tasks"
-            search={{ q: query }}
-            className={`queue-meter ${className}`}
-          >
-            <span>{projected[key].length}</span>
-            <div>
-              <h2>{t(title)}</h2>
-              <p>{t(detail)}</p>
-            </div>
-          </Link>
-        ))}
-      </section>
+      <QueueStrip projected={projected} />
       <div className="dashboard-grid">
         <section className="ready-board">
           <header>
@@ -155,6 +139,33 @@ export function Dashboard() {
         <FeatureBoard features={features} />
       </div>
     </div>
+  );
+}
+
+function QueueStrip({ projected }: { projected: ProjectedQueues }) {
+  const { t } = useTranslation();
+  return (
+    <section className="queue-strip" aria-label={t("dashboard.roadmapStatus")}>
+      {queueNames
+        .filter(
+          ([key]) =>
+            alwaysVisibleQueueKeys.has(key) || projected[key].length > 0,
+        )
+        .map(([key, className, title, detail, query]) => (
+          <Link
+            key={key}
+            to="/tasks"
+            search={{ q: query }}
+            className={`queue-meter ${className}`}
+          >
+            <span>{projected[key].length}</span>
+            <div>
+              <h2>{t(title)}</h2>
+              <p>{t(detail)}</p>
+            </div>
+          </Link>
+        ))}
+    </section>
   );
 }
 

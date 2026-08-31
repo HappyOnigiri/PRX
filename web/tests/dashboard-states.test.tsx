@@ -117,7 +117,7 @@ describe("Dashboard states", () => {
       conflictTasks: [],
       staleTasks: [],
     });
-    renderDashboard();
+    const { container } = renderDashboard();
 
     expect(
       screen.getByRole("heading", { name: "No task is ready yet" }),
@@ -125,6 +125,10 @@ describe("Dashboard states", () => {
     expect(
       screen.getByRole("heading", { name: "No features yet" }),
     ).toBeInTheDocument();
+    expect(container.querySelector(".queue-conflict")).not.toBeInTheDocument();
+    expect(
+      container.querySelector(".queue-sync-error"),
+    ).not.toBeInTheDocument();
   });
 
   it("projects every overview count and queue from active features", () => {
@@ -140,6 +144,12 @@ describe("Dashboard states", () => {
       title: "Sync error task",
       ready: false,
     });
+    const conflictTask = makeTask({
+      id: "conflict-task",
+      featureId: "active",
+      title: "Conflict task",
+      ready: false,
+    });
     dashboardMocks.state.isPending = false;
     dashboardMocks.state.data = makeSnapshot({
       features: [
@@ -150,14 +160,14 @@ describe("Dashboard states", () => {
           archived: true,
         }),
       ],
-      tasks: [activeTask, archivedTask, syncErrorTask],
+      tasks: [activeTask, archivedTask, syncErrorTask, conflictTask],
       pullRequests: [
         makePullRequest({ taskId: syncErrorTask.id, syncError: "offline" }),
         makePullRequest({ taskId: archivedTask.id, syncError: "offline" }),
       ],
       readyTasks: [activeTask, archivedTask],
       reviewWaitingTasks: [archivedTask],
-      conflictTasks: [archivedTask],
+      conflictTasks: [archivedTask, conflictTask],
       staleTasks: [archivedTask],
     });
     const { container } = renderDashboard();
@@ -172,7 +182,7 @@ describe("Dashboard states", () => {
       container.querySelector(".queue-review-waiting > span"),
     ).toHaveTextContent("0");
     expect(container.querySelector(".queue-conflict > span")).toHaveTextContent(
-      "0",
+      "1",
     );
     expect(
       container.querySelector(".queue-sync-error > span"),
