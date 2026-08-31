@@ -34,7 +34,10 @@ export const dashboard = {
         ready: { title: "Ready now", detail: "Dependencies cleared" },
         review: { title: "Review line", detail: "Waiting on people" },
         conflicts: { title: "Conflicts", detail: "Needs intervention" },
-        stale: { title: "Stale signal", detail: "Refresh GitHub data" },
+        syncError: {
+          title: "Sync errors",
+          detail: "Needs GitHub attention",
+        },
       },
     },
     archived: {
@@ -89,7 +92,10 @@ export const dashboard = {
         ready: { title: "着手可能", detail: "依存関係を解消済み" },
         review: { title: "レビュー待ち", detail: "レビュー担当者の対応待ち" },
         conflicts: { title: "コンフリクト", detail: "対応が必要" },
-        stale: { title: "情報が古い", detail: "GitHub データの更新が必要" },
+        syncError: {
+          title: "同期エラー",
+          detail: "GitHub の対応が必要",
+        },
       },
     },
     archived: {

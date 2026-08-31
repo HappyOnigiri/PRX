@@ -896,7 +896,8 @@ message SyncRequest {
 message SyncResponse {
   // succeeded is the number of pull requests refreshed successfully.
   int32 succeeded = 1;
-  // failed is the number of pull requests that retained stale data after a refresh error.
+  // failed is the number of pull requests with an actionable refresh error.
+  // Known closed or merged pull requests with an unavailable refresh are not counted.
   int32 failed = 2;
 }
 
@@ -910,7 +911,8 @@ message GitHubSyncStatus {
   optional string last_updated_at = 3;
   // succeeded is the number of items refreshed by the latest completed run.
   int32 succeeded = 4;
-  // failed is the number of items left stale by the latest completed run.
+  // failed is the number of items with an actionable refresh error after the latest completed run.
+  // Known closed or merged pull requests with an unavailable refresh are not counted.
   int32 failed = 5;
   // error is the latest run-level failure, when present.
   string error = 6;

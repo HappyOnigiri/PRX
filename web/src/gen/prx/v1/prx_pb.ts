@@ -2325,7 +2325,8 @@ export type SyncResponse = Message<"prx.v1.SyncResponse"> & {
   succeeded: number;
 
   /**
-   * failed is the number of pull requests that retained stale data after a refresh error.
+   * failed is the number of pull requests with an actionable refresh error.
+   * Known closed or merged pull requests with an unavailable refresh are not counted.
    *
    * @generated from field: int32 failed = 2;
    */
@@ -2374,7 +2375,8 @@ export type GitHubSyncStatus = Message<"prx.v1.GitHubSyncStatus"> & {
   succeeded: number;
 
   /**
-   * failed is the number of items left stale by the latest completed run.
+   * failed is the number of items with an actionable refresh error after the latest completed run.
+   * Known closed or merged pull requests with an unavailable refresh are not counted.
    *
    * @generated from field: int32 failed = 5;
    */

@@ -5130,7 +5130,8 @@ type SyncResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// succeeded is the number of pull requests refreshed successfully.
 	Succeeded int32 `protobuf:"varint,1,opt,name=succeeded,proto3" json:"succeeded,omitempty"`
-	// failed is the number of pull requests that retained stale data after a refresh error.
+	// failed is the number of pull requests with an actionable refresh error.
+	// Known closed or merged pull requests with an unavailable refresh are not counted.
 	Failed        int32 `protobuf:"varint,2,opt,name=failed,proto3" json:"failed,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5191,7 +5192,8 @@ type GitHubSyncStatus struct {
 	LastUpdatedAt *string `protobuf:"bytes,3,opt,name=last_updated_at,json=lastUpdatedAt,proto3,oneof" json:"last_updated_at,omitempty"`
 	// succeeded is the number of items refreshed by the latest completed run.
 	Succeeded int32 `protobuf:"varint,4,opt,name=succeeded,proto3" json:"succeeded,omitempty"`
-	// failed is the number of items left stale by the latest completed run.
+	// failed is the number of items with an actionable refresh error after the latest completed run.
+	// Known closed or merged pull requests with an unavailable refresh are not counted.
 	Failed int32 `protobuf:"varint,5,opt,name=failed,proto3" json:"failed,omitempty"`
 	// error is the latest run-level failure, when present.
 	Error         string `protobuf:"bytes,6,opt,name=error,proto3" json:"error,omitempty"`

@@ -424,7 +424,11 @@ func TestSyncPersistsProviderPartialResultOnError(t *testing.T) {
 	partial := initial
 	partial.State = domain.PullRequestStateOpen
 	partial.NodeID = "new-node"
-	repository := &syncRepository{snapshot: domain.Snapshot{PullRequests: []domain.PullRequest{initial}}}
+	repository := &syncRepository{snapshot: domain.Snapshot{
+		Features:     []domain.Feature{{ID: "feature-id"}},
+		Tasks:        []domain.Task{{ID: "task-id", FeatureID: "feature-id"}},
+		PullRequests: []domain.PullRequest{initial},
+	}}
 	service := app.New(repository, syncProvider{updated: partial, err: errors.New("review failed")})
 	if succeeded, failed, err := service.Sync(
 		context.Background(),
@@ -437,6 +441,61 @@ func TestSyncPersistsProviderPartialResultOnError(t *testing.T) {
 	if repository.updated.State != domain.PullRequestStateOpen || repository.updated.NodeID != "new-node" ||
 		repository.updated.SyncError != "review failed" || !repository.updated.Stale {
 		t.Fatalf("persisted partial result=%+v", repository.updated)
+	}
+}
+
+func TestSyncDoesNotCountKnownTerminalProviderFailure(t *testing.T) {
+	for name, test := range map[string]struct {
+		storedState  domain.PullRequestState
+		partialState domain.PullRequestState
+		wantState    domain.PullRequestState
+		wantFailed   int
+		wantError    string
+	}{
+		"stored terminal state": {
+			storedState:  domain.PullRequestStateMerged,
+			partialState: domain.PullRequestStateUnknown,
+			wantState:    domain.PullRequestStateMerged,
+		},
+		"partial terminal state": {
+			storedState:  domain.PullRequestStateOpen,
+			partialState: domain.PullRequestStateClosed,
+			wantState:    domain.PullRequestStateClosed,
+		},
+		"partial non-terminal state takes precedence": {
+			storedState:  domain.PullRequestStateMerged,
+			partialState: domain.PullRequestStateOpen,
+			wantState:    domain.PullRequestStateOpen,
+			wantFailed:   1,
+			wantError:    "GitHub metadata unavailable",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			initial := domain.PullRequest{
+				TaskID: "task-id", State: test.storedState,
+				SyncError: "previous error", Stale: false,
+			}
+			partial := initial
+			partial.State = test.partialState
+			repository := &syncRepository{snapshot: domain.Snapshot{
+				Features:     []domain.Feature{{ID: "feature-id"}},
+				Tasks:        []domain.Task{{ID: "task-id", FeatureID: "feature-id"}},
+				PullRequests: []domain.PullRequest{initial},
+			}}
+			service := app.New(repository, syncProvider{
+				updated: partial,
+				err:     errors.New("GitHub metadata unavailable"),
+			})
+			succeeded, failed, err := service.Sync(context.Background(), "", "")
+			if err != nil || succeeded != 0 || failed != test.wantFailed {
+				t.Fatalf("sync result=(%d, %d, %v)", succeeded, failed, err)
+			}
+			if repository.updated.State != test.wantState ||
+				repository.updated.SyncError != test.wantError || !repository.updated.Stale ||
+				repository.updated.LastSyncedAt == nil {
+				t.Fatalf("persisted terminal failure=%+v", repository.updated)
+			}
+		})
 	}
 }
 

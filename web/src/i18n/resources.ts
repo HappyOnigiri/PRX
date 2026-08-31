@@ -6,6 +6,7 @@ import { errors } from "./resources/errors";
 import { inspector } from "./resources/inspector";
 import { markdownPreview } from "./resources/markdown-preview";
 import { shell } from "./resources/shell";
+import { tasks } from "./resources/tasks";
 import { workspace } from "./resources/workspace";
 
 export const resources = {
@@ -20,6 +21,7 @@ export const resources = {
       ...inspector.en,
       ...domain.en,
       ...errors.en,
+      ...tasks.en,
     },
   },
   ja: {
@@ -33,6 +35,7 @@ export const resources = {
       ...inspector.ja,
       ...domain.ja,
       ...errors.ja,
+      ...tasks.ja,
     },
   },
 } as const;
