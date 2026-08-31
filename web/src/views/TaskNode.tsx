@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { DocumentKind, type TaskDisplayState } from "../gen/prx/v1/prx_pb";
 import { taskDisplayStateLabel, taskDisplayStateToken } from "../i18n/domain";
+import { CopyableIdentifier } from "./CopyableIdentifier";
 import { IconButton } from "./IconButton";
 
 export interface TaskNodeDocument {
@@ -131,19 +132,22 @@ export function TaskNode({
           <i />
           {taskDisplayStateLabel(data.state, t)}
         </div>
-        <IconButton
-          icon={data.readOnly ? Eye : Pencil}
-          label={
-            data.readOnly
-              ? t("workspace.viewTask", { title: data.title })
-              : t("workspace.editTask", { title: data.title })
-          }
-          variant="secondary"
-          size="compact"
-          iconOnly
-          className="node-edit nodrag nopan"
-          onClick={data.onEdit}
-        />
+        <div className="task-node-actions nodrag nowheel nopan">
+          <CopyableIdentifier label={t("common.taskId")} value={id} valueOnly />
+          <IconButton
+            icon={data.readOnly ? Eye : Pencil}
+            label={
+              data.readOnly
+                ? t("workspace.viewTask", { title: data.title })
+                : t("workspace.editTask", { title: data.title })
+            }
+            variant="secondary"
+            size="compact"
+            iconOnly
+            className="node-edit"
+            onClick={data.onEdit}
+          />
+        </div>
       </div>
       <h3>{data.title}</h3>
       {data.syncError && (

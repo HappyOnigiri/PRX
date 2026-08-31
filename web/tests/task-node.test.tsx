@@ -1,13 +1,18 @@
-import { fireEvent, render, screen } from "@testing-library/react";
+import { act, fireEvent, render, screen } from "@testing-library/react";
 import { ReactFlowProvider, type NodeProps } from "@xyflow/react";
 import { describe, expect, it, vi } from "vitest";
 import { DocumentKind, TaskDisplayState } from "../src/gen/prx/v1/prx_pb";
 import { TaskNode, type TaskFlowNode } from "../src/views/TaskNode";
 
 describe("TaskNode", () => {
-  it("shows an assignee and reflects ready and stale state without badges", () => {
+  it("shows and copies the task ID alongside the assignee", async () => {
     const onEdit = vi.fn();
     const onPreview = vi.fn();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: { writeText },
+    });
     const markdown = {
       id: "doc-md",
       kind: DocumentKind.LOCAL_FILE,
@@ -16,7 +21,7 @@ describe("TaskNode", () => {
       isImplementationPlan: true,
     };
     const props = {
-      id: "task",
+      id: "T-42",
       data: {
         title: "Merge billing schema",
         assignee: "Ren",
@@ -60,6 +65,19 @@ describe("TaskNode", () => {
         <TaskNode {...props} />
       </ReactFlowProvider>,
     );
+    const taskIdButton = screen.getByRole("button", { name: "Copy Task ID" });
+    expect(taskIdButton).toHaveTextContent("T-42");
+    expect(taskIdButton.querySelector("svg")).not.toBeInTheDocument();
+    const taskActions = container.querySelector(".task-node-actions");
+    expect(taskActions).toHaveClass("nodrag", "nopan");
+    expect(taskActions?.firstElementChild).toContainElement(taskIdButton);
+    await act(async () => {
+      fireEvent.click(taskIdButton);
+      await Promise.resolve();
+    });
+    expect(writeText).toHaveBeenCalledWith("T-42");
+    expect(taskIdButton).toHaveClass("is-copied");
+    expect(taskIdButton).toHaveAccessibleName("Copied");
     expect(screen.getByText("Merge billing schema")).toBeInTheDocument();
     expect(screen.getByText("Ren")).toBeInTheDocument();
     expect(screen.queryByText("READY")).not.toBeInTheDocument();
