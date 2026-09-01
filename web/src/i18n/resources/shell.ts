@@ -34,8 +34,6 @@ export const shell = {
       activeCircuits: "Active circuits",
       newFeature: "New feature",
       serverUnavailable: "Server unavailable",
-      localDatabaseOnline: "Local database online",
-      temporaryDemoDatabase: "Temporary demo database",
     },
     serverSettings: {
       description:
@@ -130,8 +128,6 @@ export const shell = {
       activeCircuits: "進行中のフィーチャー",
       newFeature: "フィーチャーを作成",
       serverUnavailable: "サーバーに接続できません",
-      localDatabaseOnline: "ローカルデータベース接続中",
-      temporaryDemoDatabase: "一時デモ DB",
     },
     serverSettings: {
       description:

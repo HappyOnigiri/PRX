@@ -106,16 +106,14 @@ function AppShellLayout({ children }: { children: ReactNode }) {
             setShowSettings(true);
           }}
         />
-        <div className="rail-foot">
-          <span className="rail-health">
-            <span className={snapshot.isError ? "health bad" : "health"} />
-            {snapshot.isError
-              ? t("nav.serverUnavailable")
-              : demo
-                ? t("nav.temporaryDemoDatabase")
-                : t("nav.localDatabaseOnline")}
-          </span>
-        </div>
+        {snapshot.isError && (
+          <div className="rail-foot">
+            <span className="rail-health">
+              <span className="health bad" />
+              {t("nav.serverUnavailable")}
+            </span>
+          </div>
+        )}
       </aside>
       <main className="main-stage">{children}</main>
       {showCreate && (
