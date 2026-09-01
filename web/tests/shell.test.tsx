@@ -106,6 +106,8 @@ describe("AppShell", () => {
     );
     expect(screen.getByText("Workspace")).toBeInTheDocument();
     expect(screen.getByText(`v${appVersion()}`)).toBeInTheDocument();
+    expect(screen.queryByText("Local database online")).not.toBeInTheDocument();
+    expect(document.querySelector(".rail-foot")).not.toBeInTheDocument();
     expect(screen.queryByText("Dependency control")).not.toBeInTheDocument();
     expect(screen.queryByText("GitHub sync")).not.toBeInTheDocument();
     expect(shellMocks.autoSync).toHaveBeenCalledWith(true);
@@ -158,7 +160,10 @@ describe("AppShell", () => {
     expect(screen.getByRole("status")).toHaveTextContent(
       "DEMO — Changes reset on restart / 変更は再起動時にリセットされます",
     );
-    expect(screen.getByText("Temporary demo database")).toBeInTheDocument();
+    expect(
+      screen.queryByText("Temporary demo database"),
+    ).not.toBeInTheDocument();
+    expect(document.querySelector(".rail-foot")).not.toBeInTheDocument();
   });
 
   it("creates a feature, navigates to it, and supports cancellation", async () => {
