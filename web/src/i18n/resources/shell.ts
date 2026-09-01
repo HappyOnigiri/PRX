@@ -1,6 +1,6 @@
 export const shell = {
   en: {
-    app: { title: "PRX — Dependency control" },
+    app: { title: "PRX" },
     settings: {
       open: "Settings",
       title: "Settings",
@@ -90,7 +90,7 @@ export const shell = {
     },
   },
   ja: {
-    app: { title: "PRX — 依存関係コントロール" },
+    app: { title: "PRX" },
     settings: {
       open: "設定",
       title: "設定",
