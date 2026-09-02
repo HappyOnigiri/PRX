@@ -15,16 +15,19 @@ func (s *state) featureCommand() *cobra.Command {
 		Example: "prx feature\nprx feature F-1\nprx f checkout\nprx show create",
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			if len(args) == 1 {
-				value, err := s.service.ResolveFeature(cmd.Context(), args[0])
-				if err != nil {
-					return err
-				}
-				return s.write(value, renderFeatureDetail(value))
-			}
+			// Both forms read the snapshot so the derived status and the task
+			// counts are the ones the server computes, matching prx task.
 			value, err := s.service.Snapshot(cmd.Context())
 			if err != nil {
 				return err
+			}
+			if len(args) == 1 {
+				for _, feature := range value.Features {
+					if feature.ID == args[0] || feature.Slug == args[0] {
+						return s.write(feature, renderFeatureDetail(feature))
+					}
+				}
+				return domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", args[0])
 			}
 			features := nonNilSlice(value.Features)
 			return s.write(map[string]any{"features": features}, renderFeatureList(features))
@@ -90,7 +93,7 @@ func (s *state) featureUpdateCommand() *cobra.Command {
 	command.Flags().StringVar(&slug, "slug", "", "new slug")
 	command.Flags().StringVar(&title, "title", "", "new title")
 	command.Flags().StringVar(&description, "description", "", "new description")
-	command.Flags().StringVar(&status, "status", "", "active, paused, completed, or cancelled")
+	command.Flags().StringVar(&status, "status", "", "auto, active, paused, completed, or cancelled")
 	command.Flags().BoolVar(&archived, "archived", false, "archive (true) or unarchive (false) the feature")
 	return command
 }

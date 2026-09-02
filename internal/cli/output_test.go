@@ -143,7 +143,10 @@ func configAuthFixture() config.PublicAuthMethod {
 }
 
 func TestHumanTablesAreDeterministic(t *testing.T) {
-	feature := domain.Feature{ID: "F-1", Slug: "checkout", Status: domain.FeatureStatusActive, Title: "Checkout"}
+	feature := domain.Feature{
+		ID: "F-1", Slug: "checkout", Status: domain.FeatureStatusAuto,
+		DisplayStatus: domain.FeatureStatusCompleted, Title: "Checkout",
+	}
 	var first, second bytes.Buffer
 	for _, out := range []*bytes.Buffer{&first, &second} {
 		if err := renderFeatureList([]domain.Feature{feature})(out); err != nil {
@@ -155,6 +158,28 @@ func TestHumanTablesAreDeterministic(t *testing.T) {
 	}
 	if !strings.Contains(first.String(), "ID") || !strings.Contains(first.String(), "F-1") {
 		t.Fatalf("table output = %q", first.String())
+	}
+	// The list column presents the derived status, matching the task list.
+	if !strings.Contains(first.String(), "completed") || strings.Contains(first.String(), "auto") {
+		t.Fatalf("feature table status column = %q", first.String())
+	}
+}
+
+// The detail view shows both values so a reader can tell an automatic
+// completion from one someone selected.
+func TestFeatureDetailShowsStoredAndDerivedStatus(t *testing.T) {
+	var out bytes.Buffer
+	feature := domain.Feature{
+		ID: "F-1", Slug: "checkout", Title: "Checkout", Status: domain.FeatureStatusAuto,
+		DisplayStatus: domain.FeatureStatusCompleted, TaskCount: 2, FinishedCount: 2,
+	}
+	if err := renderFeatureDetail(feature)(&out); err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"Status", "auto", "Display status", "completed", "Finished"} {
+		if !strings.Contains(out.String(), want) {
+			t.Fatalf("feature detail omitted %q: %q", want, out.String())
+		}
 	}
 }
 

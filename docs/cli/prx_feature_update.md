@@ -19,7 +19,7 @@ prx feature update checkout --archived=false
       --description string   new description
   -h, --help                 help for update
       --slug string          new slug
-      --status string        active, paused, completed, or cancelled
+      --status string        auto, active, paused, completed, or cancelled
       --title string         new title
 ```
 
