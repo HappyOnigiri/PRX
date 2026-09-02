@@ -7,11 +7,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"io/fs"
 	"os"
 	"path/filepath"
-	"sort"
-	"strconv"
 	"strings"
 	"time"
 
@@ -25,8 +22,11 @@ import (
 var migrations embed.FS
 
 type Store struct {
-	db  *sql.DB
-	now func() time.Time
+	db *sql.DB
+	// path is the location Open resolved, kept so diagnostics can report which
+	// database a process actually opened.
+	path string
+	now  func() time.Time
 }
 
 const publicIDsMigration = 5
@@ -74,7 +74,7 @@ func Open(ctx context.Context, path string) (*Store, error) {
 		database.SetMaxOpenConns(8)
 		database.SetMaxIdleConns(4)
 	}
-	store := &Store{db: database, now: func() time.Time { return time.Now().UTC() }}
+	store := &Store{db: database, path: path, now: func() time.Time { return time.Now().UTC() }}
 	if err := store.migrate(ctx); err != nil {
 		_ = database.Close()
 		return nil, err
@@ -95,20 +95,12 @@ func (s *Store) migrate(ctx context.Context) error {
 	if err := s.repairMigrationVersionCollisions(ctx); err != nil {
 		return fmt.Errorf("repair migration metadata: %w", err)
 	}
-	entries, err := fs.ReadDir(migrations, "migrations")
+	files, err := migrationFiles()
 	if err != nil {
-		return fmt.Errorf("read migrations: %w", err)
+		return err
 	}
-	sort.Slice(entries, func(i, j int) bool { return entries[i].Name() < entries[j].Name() })
-	for _, entry := range entries {
-		if entry.IsDir() || !strings.HasSuffix(entry.Name(), ".sql") {
-			continue
-		}
-		prefix, _, _ := strings.Cut(entry.Name(), "_")
-		version, err := strconv.Atoi(prefix)
-		if err != nil {
-			return fmt.Errorf("invalid migration name %q", entry.Name())
-		}
+	for _, file := range files {
+		version := file.version
 		var exists int
 		if err := s.db.QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations WHERE version=?`, version).
 			Scan(&exists); err != nil {
@@ -117,7 +109,7 @@ func (s *Store) migrate(ctx context.Context) error {
 		if exists > 0 {
 			continue
 		}
-		body, err := migrations.ReadFile("migrations/" + entry.Name())
+		body, err := migrations.ReadFile("migrations/" + file.name)
 		if err != nil {
 			return err
 		}
@@ -135,10 +127,10 @@ func (s *Store) migrate(ctx context.Context) error {
 		}
 		if err != nil {
 			_ = tx.Rollback()
-			return fmt.Errorf("apply migration %s: %w", entry.Name(), err)
+			return fmt.Errorf("apply migration %s: %w", file.name, err)
 		}
 		if err := tx.Commit(); err != nil {
-			return fmt.Errorf("commit migration %s: %w", entry.Name(), err)
+			return fmt.Errorf("commit migration %s: %w", file.name, err)
 		}
 	}
 	return nil

@@ -7,6 +7,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync/atomic"
 	"time"
 	"unicode/utf8"
 
@@ -103,6 +104,12 @@ type Service struct {
 	provider    githubprovider.Provider
 	configStore *config.Store
 	now         func() time.Time
+	// processInfo is written once while the service is wired and read only by
+	// the diagnostic report.
+	processInfo ProcessInfo
+	// serveEndpoint is the only mutable field: the listen address is known after
+	// the listener is bound, and HTTP handlers read it afterwards.
+	serveEndpoint atomic.Pointer[serveEndpoint]
 }
 
 func New(repository Repository, provider githubprovider.Provider) *Service {
