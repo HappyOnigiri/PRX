@@ -1,17 +1,23 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Plus, Settings, X } from "lucide-react";
-import { useState, type ReactNode, type SyntheticEvent } from "react";
+import {
+  useEffect,
+  useState,
+  type ReactNode,
+  type SyntheticEvent,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
 import { isDemoMode } from "./demo";
 import {
-  isActiveFeature,
-  isArchivedFeature,
-  isCompletedFeature,
+  featureCategories,
+  featureCategoryById,
+  featureCategoryForPath,
 } from "./feature-status";
 import { formValue } from "./form";
 import { useAutoSync, useDomainMutation, useSnapshot } from "./hooks";
 import { formatError } from "./i18n/domain";
+import { readFeatureCategory, writeFeatureCategory } from "./i18n/settings";
 import { AutoSyncStatusContext } from "./sync-status";
 import { appVersion } from "./version";
 import { IconButton } from "./views/IconButton";
@@ -31,11 +37,9 @@ function AppShellLayout({ children }: { children: ReactNode }) {
   const snapshot = useSnapshot();
   const [showCreate, setShowCreate] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const activeCount = snapshot.data?.features.filter(isActiveFeature).length;
-  const completedCount =
-    snapshot.data?.features.filter(isCompletedFeature).length;
-  const archivedCount =
-    snapshot.data?.features.filter(isArchivedFeature).length;
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const features = snapshot.data?.features;
+  const selected = useSelectedFeatureCategory(pathname);
   const demo = isDemoMode();
   return (
     <div className="app-shell" data-demo={demo || undefined}>
@@ -61,19 +65,28 @@ function AppShellLayout({ children }: { children: ReactNode }) {
         </Link>
         <nav aria-label={t("nav.features")}>
           <Link to="/" className="nav-link">
-            {t("nav.overview")} <span>{activeCount ?? "—"}</span>
-          </Link>
-          <Link to="/completed" className="nav-link">
-            {t("nav.completedFeatures")} <span>{completedCount ?? "—"}</span>
-          </Link>
-          <Link to="/archived" className="nav-link">
-            {t("nav.archivedFeatures")} <span>{archivedCount ?? "—"}</span>
+            {t("nav.overview")}
           </Link>
           <Link to="/tasks" search={{ q: "" }} className="nav-link">
             {t("nav.taskSearch")}
           </Link>
-          <div className="nav-caption">{t("nav.activeCircuits")}</div>
-          {snapshot.data?.features.filter(isActiveFeature).map((feature) => (
+          <hr className="nav-divider" />
+          {featureCategories.map((category) => (
+            <Link
+              key={category.id}
+              to={category.path}
+              className="nav-link"
+              // The selection is the sidebar's own, not the matched route, so
+              // it is marked here rather than through activeProps.
+              data-active={category.id === selected.id || undefined}
+              aria-current={category.id === selected.id ? "page" : undefined}
+            >
+              {t(category.navLabelKey)}{" "}
+              <span>{features?.filter(category.select).length ?? "—"}</span>
+            </Link>
+          ))}
+          <hr className="nav-divider" />
+          {features?.filter(selected.select).map((feature) => (
             <Link
               key={feature.id}
               to="/features/$featureId"
@@ -137,6 +150,21 @@ function AppShellLayout({ children }: { children: ReactNode }) {
       )}
     </div>
   );
+}
+
+// The sidebar keeps its own selection so that the overview, task search, and
+// the feature workspaces do not move it. Opening a category's own list page is
+// the one navigation that adopts a category, whether it came from the sidebar,
+// a shared link, or browser history, and that route is also what records it.
+// Navigating always re-renders the shell, so the stored value is in place
+// before the next route reads it and no copy has to live in component state.
+function useSelectedFeatureCategory(pathname: string) {
+  const routeCategory = featureCategoryForPath(pathname);
+  const routeCategoryId = routeCategory?.id;
+  useEffect(() => {
+    if (routeCategoryId) writeFeatureCategory(routeCategoryId);
+  }, [routeCategoryId]);
+  return routeCategory ?? featureCategoryById(readFeatureCategory());
 }
 
 function RailSettings({ onOpenSettings }: { onOpenSettings: () => void }) {

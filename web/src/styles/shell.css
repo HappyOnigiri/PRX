@@ -105,11 +105,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-.nav-caption {
-  margin: 20px 10px 6px;
-  color: var(--text-3);
-  font-size: var(--text-xs);
-  font-weight: 500;
+.nav-divider {
+  height: 1px;
+  margin: 8px 10px;
+  border: 0;
+  background: var(--border);
 }
 
 .feature-link {
@@ -140,6 +140,22 @@
 .feature-link[data-active] {
   background: var(--surface-2);
   color: var(--text);
+}
+
+/* Only one category is selected at a time, so it needs a mark that hover
+   cannot produce. The bar keeps the row's box unchanged so the horizontal
+   header at narrow widths does not reflow when the selection moves. */
+.nav-link[data-active] {
+  position: relative;
+}
+
+.nav-link[data-active]::before {
+  content: "";
+  position: absolute;
+  inset: 6px auto 6px 0;
+  width: 2px;
+  border-radius: 0 2px 2px 0;
+  background: var(--accent);
 }
 
 .pulse {
@@ -228,7 +244,6 @@
     overflow-x: auto;
   }
 
-  .nav-caption,
   .feature-link b,
   .rail-foot {
     display: none;
@@ -237,6 +252,21 @@
   .nav-link,
   .feature-link {
     flex: 0 0 auto;
+  }
+
+  .nav-divider {
+    flex: 0 0 auto;
+    align-self: stretch;
+    width: 1px;
+    height: auto;
+    margin: 6px 4px;
+  }
+
+  .nav-link[data-active]::before {
+    inset: auto 6px 0;
+    width: auto;
+    height: 2px;
+    border-radius: 2px 2px 0 0;
   }
 
   .rail-action {

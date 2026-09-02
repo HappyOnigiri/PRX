@@ -702,14 +702,20 @@ test("archives and safely deletes a feature", async ({ page }) => {
     .getByRole("button", { name: "Archive feature" })
     .click();
   await expect(page.getByText("Archived · read-only")).toBeVisible();
+  // The rail holds the category the user selected, so archiving from the
+  // workspace drops the feature out of the list it is showing.
+  const rail = page.getByRole("navigation", { name: "Features" });
   await expect(
-    page.getByRole("navigation", { name: "Features" }).getByText(title),
-  ).toHaveCount(0);
+    rail.getByRole("link", { name: /Active features/ }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(rail.getByText(title)).toHaveCount(0);
   await page.getByRole("link", { name: /Archived features/ }).click();
   await expect(
     page.getByRole("heading", { name: "Archived features", exact: true }),
   ).toBeVisible();
-  await page.getByText(title).click();
+  // Selecting the category lists the feature in the rail too, so open the one
+  // on the page.
+  await page.locator(".feature-list").getByText(title).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toHaveCount(
     0,
   );
@@ -724,9 +730,11 @@ test("archives and safely deletes a feature", async ({ page }) => {
   await page.getByRole("button", { name: "Manage feature" }).click();
   await page.getByRole("button", { name: "Restore feature" }).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toBeVisible();
-  await expect(
-    page.getByRole("navigation", { name: "Features" }).getByText(title),
-  ).toHaveCount(1);
+  // Restoring returns the feature to the working set, which the rail shows
+  // once that category is selected again.
+  await page.getByRole("link", { name: /Active features/ }).click();
+  await expect(rail.getByText(title)).toHaveCount(1);
+  await page.locator(".feature-list").getByText(title).click();
 
   await page.getByRole("button", { name: "Edit feature" }).click();
   await page.getByRole("button", { name: "Archive feature" }).click();

@@ -5,6 +5,7 @@ import {
   Outlet,
 } from "@tanstack/react-router";
 import { AppShell } from "./shell";
+import { ActiveFeatures } from "./views/ActiveFeatures";
 import { ArchivedFeatures } from "./views/ArchivedFeatures";
 import { CompletedFeatures } from "./views/CompletedFeatures";
 import { Dashboard } from "./views/Dashboard";
@@ -28,6 +29,11 @@ const featureRoute = createRoute({
   path: "/features/$featureId",
   component: FeatureWorkspace,
 });
+const activeRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/active",
+  component: ActiveFeatures,
+});
 const archivedRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/archived",
@@ -48,6 +54,7 @@ const taskSearchRoute = createRoute({
 });
 const routeTree = rootRoute.addChildren([
   indexRoute,
+  activeRoute,
   archivedRoute,
   completedRoute,
   taskSearchRoute,
