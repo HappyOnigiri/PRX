@@ -883,6 +883,100 @@ func (GithubAuthMethodType) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{11}
 }
 
+// DebugProblemCode identifies a problem the diagnostic report detected.
+// Every member is a stable public identifier that callers may branch on.
+type DebugProblemCode int32
+
+const (
+	// DEBUG_PROBLEM_CODE_UNSPECIFIED is never returned by the server; it is the unmapped fallback.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_UNSPECIFIED DebugProblemCode = 0
+	// DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE means the database could not be opened.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE DebugProblemCode = 1
+	// DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY means the database was migrated by a newer PRX.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY DebugProblemCode = 2
+	// DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE means the database file exists but cannot be written.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE DebugProblemCode = 3
+	// DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS means stored dependency data failed validation.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS DebugProblemCode = 4
+	// DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE means the YAML configuration could not be loaded.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE DebugProblemCode = 5
+	// DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN means the configuration file is readable by others.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN DebugProblemCode = 6
+	// DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS means the configuration contains fields PRX ignores.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS DebugProblemCode = 7
+	// DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST means a host with pull requests has no credential.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST DebugProblemCode = 8
+	// DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR means the latest recorded synchronization run failed.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR DebugProblemCode = 9
+	// DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE means the automatic interval expired well before the report.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE DebugProblemCode = 10
+	// DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED means pull requests exist but no run ever completed.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED DebugProblemCode = 11
+	// DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE means at least one pull request holds stale state.
+	DebugProblemCode_DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE DebugProblemCode = 12
+)
+
+// Enum value maps for DebugProblemCode.
+var (
+	DebugProblemCode_name = map[int32]string{
+		0:  "DEBUG_PROBLEM_CODE_UNSPECIFIED",
+		1:  "DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE",
+		2:  "DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY",
+		3:  "DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE",
+		4:  "DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS",
+		5:  "DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE",
+		6:  "DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN",
+		7:  "DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS",
+		8:  "DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST",
+		9:  "DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR",
+		10: "DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE",
+		11: "DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED",
+		12: "DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE",
+	}
+	DebugProblemCode_value = map[string]int32{
+		"DEBUG_PROBLEM_CODE_UNSPECIFIED":                    0,
+		"DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE":            1,
+		"DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY": 2,
+		"DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE":          3,
+		"DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS":      4,
+		"DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE":              5,
+		"DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN":    6,
+		"DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS":          7,
+		"DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST":        8,
+		"DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR":          9,
+		"DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE":            10,
+		"DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED":    11,
+		"DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE":            12,
+	}
+)
+
+func (x DebugProblemCode) Enum() *DebugProblemCode {
+	p := new(DebugProblemCode)
+	*p = x
+	return p
+}
+
+func (x DebugProblemCode) String() string {
+	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
+}
+
+func (DebugProblemCode) Descriptor() protoreflect.EnumDescriptor {
+	return file_prx_v1_prx_proto_enumTypes[12].Descriptor()
+}
+
+func (DebugProblemCode) Type() protoreflect.EnumType {
+	return &file_prx_v1_prx_proto_enumTypes[12]
+}
+
+func (x DebugProblemCode) Number() protoreflect.EnumNumber {
+	return protoreflect.EnumNumber(x)
+}
+
+// Deprecated: Use DebugProblemCode.Descriptor instead.
+func (DebugProblemCode) EnumDescriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{12}
+}
+
 // BlockedReason is the structured reason a task is not ready.
 type BlockedReason struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -5565,6 +5659,1646 @@ func (x *ValidateResponse) GetErrors() []string {
 	return nil
 }
 
+// DebugProblem is one detected diagnostic problem together with its evidence.
+type DebugProblem struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// code identifies the detected problem.
+	Code DebugProblemCode `protobuf:"varint,1,opt,name=code,proto3,enum=prx.v1.DebugProblemCode" json:"code,omitempty"`
+	// target names the file, host, or repository the problem was detected on.
+	Target string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
+	// evidence is the observed value that triggered the detection.
+	Evidence string `protobuf:"bytes,3,opt,name=evidence,proto3" json:"evidence,omitempty"`
+	// next_command is the command whose output explains the problem in full.
+	NextCommand   string `protobuf:"bytes,4,opt,name=next_command,json=nextCommand,proto3" json:"next_command,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugProblem) Reset() {
+	*x = DebugProblem{}
+	mi := &file_prx_v1_prx_proto_msgTypes[74]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugProblem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugProblem) ProtoMessage() {}
+
+func (x *DebugProblem) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[74]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugProblem.ProtoReflect.Descriptor instead.
+func (*DebugProblem) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{74}
+}
+
+func (x *DebugProblem) GetCode() DebugProblemCode {
+	if x != nil {
+		return x.Code
+	}
+	return DebugProblemCode_DEBUG_PROBLEM_CODE_UNSPECIFIED
+}
+
+func (x *DebugProblem) GetTarget() string {
+	if x != nil {
+		return x.Target
+	}
+	return ""
+}
+
+func (x *DebugProblem) GetEvidence() string {
+	if x != nil {
+		return x.Evidence
+	}
+	return ""
+}
+
+func (x *DebugProblem) GetNextCommand() string {
+	if x != nil {
+		return x.NextCommand
+	}
+	return ""
+}
+
+// DebugBuild describes the running PRX build.
+type DebugBuild struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// version is the PRX version, carrying a -dev suffix on an unstamped development build.
+	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
+	// development is true when the build is not a stamped release.
+	Development bool `protobuf:"varint,2,opt,name=development,proto3" json:"development,omitempty"`
+	// go_version is the Go toolchain version the binary reports.
+	GoVersion string `protobuf:"bytes,3,opt,name=go_version,json=goVersion,proto3" json:"go_version,omitempty"`
+	// os is the operating system the binary was built for.
+	Os string `protobuf:"bytes,4,opt,name=os,proto3" json:"os,omitempty"`
+	// arch is the architecture the binary was built for.
+	Arch          string `protobuf:"bytes,5,opt,name=arch,proto3" json:"arch,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugBuild) Reset() {
+	*x = DebugBuild{}
+	mi := &file_prx_v1_prx_proto_msgTypes[75]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugBuild) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugBuild) ProtoMessage() {}
+
+func (x *DebugBuild) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[75]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugBuild.ProtoReflect.Descriptor instead.
+func (*DebugBuild) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{75}
+}
+
+func (x *DebugBuild) GetVersion() string {
+	if x != nil {
+		return x.Version
+	}
+	return ""
+}
+
+func (x *DebugBuild) GetDevelopment() bool {
+	if x != nil {
+		return x.Development
+	}
+	return false
+}
+
+func (x *DebugBuild) GetGoVersion() string {
+	if x != nil {
+		return x.GoVersion
+	}
+	return ""
+}
+
+func (x *DebugBuild) GetOs() string {
+	if x != nil {
+		return x.Os
+	}
+	return ""
+}
+
+func (x *DebugBuild) GetArch() string {
+	if x != nil {
+		return x.Arch
+	}
+	return ""
+}
+
+// DebugRuntime describes the process that produced the report.
+type DebugRuntime struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// mode is cli for a command invocation and serve for the local server.
+	Mode string `protobuf:"bytes,1,opt,name=mode,proto3" json:"mode,omitempty"`
+	// demo is true while the process uses the temporary demo environment.
+	Demo bool `protobuf:"varint,2,opt,name=demo,proto3" json:"demo,omitempty"`
+	// github_fixture is true while GitHub reads come from a fixture file.
+	GithubFixture bool `protobuf:"varint,3,opt,name=github_fixture,json=githubFixture,proto3" json:"github_fixture,omitempty"`
+	// generated_at is the report time in RFC 3339 UTC format.
+	GeneratedAt string `protobuf:"bytes,4,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
+	// time_zone is the local time zone name of the process.
+	TimeZone string `protobuf:"bytes,5,opt,name=time_zone,json=timeZone,proto3" json:"time_zone,omitempty"`
+	// listen_address is the address the server accepted, and is empty outside serve mode.
+	ListenAddress string `protobuf:"bytes,6,opt,name=listen_address,json=listenAddress,proto3" json:"listen_address,omitempty"`
+	// started_at is the server start time in RFC 3339 UTC format, and is empty outside serve mode.
+	StartedAt string `protobuf:"bytes,7,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
+	// uptime_seconds is how long the server has been listening, and is zero outside serve mode.
+	UptimeSeconds int64 `protobuf:"varint,8,opt,name=uptime_seconds,json=uptimeSeconds,proto3" json:"uptime_seconds,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugRuntime) Reset() {
+	*x = DebugRuntime{}
+	mi := &file_prx_v1_prx_proto_msgTypes[76]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugRuntime) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugRuntime) ProtoMessage() {}
+
+func (x *DebugRuntime) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[76]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugRuntime.ProtoReflect.Descriptor instead.
+func (*DebugRuntime) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{76}
+}
+
+func (x *DebugRuntime) GetMode() string {
+	if x != nil {
+		return x.Mode
+	}
+	return ""
+}
+
+func (x *DebugRuntime) GetDemo() bool {
+	if x != nil {
+		return x.Demo
+	}
+	return false
+}
+
+func (x *DebugRuntime) GetGithubFixture() bool {
+	if x != nil {
+		return x.GithubFixture
+	}
+	return false
+}
+
+func (x *DebugRuntime) GetGeneratedAt() string {
+	if x != nil {
+		return x.GeneratedAt
+	}
+	return ""
+}
+
+func (x *DebugRuntime) GetTimeZone() string {
+	if x != nil {
+		return x.TimeZone
+	}
+	return ""
+}
+
+func (x *DebugRuntime) GetListenAddress() string {
+	if x != nil {
+		return x.ListenAddress
+	}
+	return ""
+}
+
+func (x *DebugRuntime) GetStartedAt() string {
+	if x != nil {
+		return x.StartedAt
+	}
+	return ""
+}
+
+func (x *DebugRuntime) GetUptimeSeconds() int64 {
+	if x != nil {
+		return x.UptimeSeconds
+	}
+	return 0
+}
+
+// DebugEnvironmentVariable reports whether one PRX-relevant variable is set, never its value.
+type DebugEnvironmentVariable struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// name is the environment variable name.
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// set is true when the variable holds a non-empty value.
+	Set           bool `protobuf:"varint,2,opt,name=set,proto3" json:"set,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugEnvironmentVariable) Reset() {
+	*x = DebugEnvironmentVariable{}
+	mi := &file_prx_v1_prx_proto_msgTypes[77]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugEnvironmentVariable) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugEnvironmentVariable) ProtoMessage() {}
+
+func (x *DebugEnvironmentVariable) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[77]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugEnvironmentVariable.ProtoReflect.Descriptor instead.
+func (*DebugEnvironmentVariable) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{77}
+}
+
+func (x *DebugEnvironmentVariable) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DebugEnvironmentVariable) GetSet() bool {
+	if x != nil {
+		return x.Set
+	}
+	return false
+}
+
+// DebugPaths reports the resolved file locations and the ambient environment that selected them.
+type DebugPaths struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// database_path is the resolved SQLite path, shortened to ~ under the home directory, or demo.
+	DatabasePath string `protobuf:"bytes,1,opt,name=database_path,json=databasePath,proto3" json:"database_path,omitempty"`
+	// database_path_source is flag, env, default, or demo.
+	DatabasePathSource string `protobuf:"bytes,2,opt,name=database_path_source,json=databasePathSource,proto3" json:"database_path_source,omitempty"`
+	// database_file_exists is true when the resolved database path is an existing file.
+	DatabaseFileExists bool `protobuf:"varint,3,opt,name=database_file_exists,json=databaseFileExists,proto3" json:"database_file_exists,omitempty"`
+	// config_path is the resolved YAML path, shortened to ~ under the home directory, or demo.
+	ConfigPath string `protobuf:"bytes,4,opt,name=config_path,json=configPath,proto3" json:"config_path,omitempty"`
+	// config_path_source is flag, env, default, or demo.
+	ConfigPathSource string `protobuf:"bytes,5,opt,name=config_path_source,json=configPathSource,proto3" json:"config_path_source,omitempty"`
+	// config_file_exists is true when the resolved configuration path is an existing file.
+	ConfigFileExists bool `protobuf:"varint,6,opt,name=config_file_exists,json=configFileExists,proto3" json:"config_file_exists,omitempty"`
+	// config_permissions is the octal permission mode of the configuration file, when it exists.
+	ConfigPermissions string `protobuf:"bytes,7,opt,name=config_permissions,json=configPermissions,proto3" json:"config_permissions,omitempty"`
+	// environment_variables lists the PRX-relevant variables and whether each is set.
+	EnvironmentVariables []*DebugEnvironmentVariable `protobuf:"bytes,8,rep,name=environment_variables,json=environmentVariables,proto3" json:"environment_variables,omitempty"`
+	unknownFields        protoimpl.UnknownFields
+	sizeCache            protoimpl.SizeCache
+}
+
+func (x *DebugPaths) Reset() {
+	*x = DebugPaths{}
+	mi := &file_prx_v1_prx_proto_msgTypes[78]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugPaths) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugPaths) ProtoMessage() {}
+
+func (x *DebugPaths) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[78]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugPaths.ProtoReflect.Descriptor instead.
+func (*DebugPaths) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{78}
+}
+
+func (x *DebugPaths) GetDatabasePath() string {
+	if x != nil {
+		return x.DatabasePath
+	}
+	return ""
+}
+
+func (x *DebugPaths) GetDatabasePathSource() string {
+	if x != nil {
+		return x.DatabasePathSource
+	}
+	return ""
+}
+
+func (x *DebugPaths) GetDatabaseFileExists() bool {
+	if x != nil {
+		return x.DatabaseFileExists
+	}
+	return false
+}
+
+func (x *DebugPaths) GetConfigPath() string {
+	if x != nil {
+		return x.ConfigPath
+	}
+	return ""
+}
+
+func (x *DebugPaths) GetConfigPathSource() string {
+	if x != nil {
+		return x.ConfigPathSource
+	}
+	return ""
+}
+
+func (x *DebugPaths) GetConfigFileExists() bool {
+	if x != nil {
+		return x.ConfigFileExists
+	}
+	return false
+}
+
+func (x *DebugPaths) GetConfigPermissions() string {
+	if x != nil {
+		return x.ConfigPermissions
+	}
+	return ""
+}
+
+func (x *DebugPaths) GetEnvironmentVariables() []*DebugEnvironmentVariable {
+	if x != nil {
+		return x.EnvironmentVariables
+	}
+	return nil
+}
+
+// DebugConfigHost is the host boundary as the report presents it.
+type DebugConfigHost struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// host is the normalized GitHub host key.
+	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+	// api_url is the REST endpoint used for the host.
+	ApiUrl string `protobuf:"bytes,2,opt,name=api_url,json=apiUrl,proto3" json:"api_url,omitempty"`
+	// graphql_url is the GraphQL endpoint used for the host.
+	GraphqlUrl    string `protobuf:"bytes,3,opt,name=graphql_url,json=graphqlUrl,proto3" json:"graphql_url,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugConfigHost) Reset() {
+	*x = DebugConfigHost{}
+	mi := &file_prx_v1_prx_proto_msgTypes[79]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugConfigHost) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugConfigHost) ProtoMessage() {}
+
+func (x *DebugConfigHost) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[79]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugConfigHost.ProtoReflect.Descriptor instead.
+func (*DebugConfigHost) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{79}
+}
+
+func (x *DebugConfigHost) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *DebugConfigHost) GetApiUrl() string {
+	if x != nil {
+		return x.ApiUrl
+	}
+	return ""
+}
+
+func (x *DebugConfigHost) GetGraphqlUrl() string {
+	if x != nil {
+		return x.GraphqlUrl
+	}
+	return ""
+}
+
+// DebugConfigAuthMethod is a credential method without any secret material.
+type DebugConfigAuthMethod struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id is the configured method identifier.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// host is the normalized host the method is scoped to.
+	Host string `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
+	// type is the credential source name.
+	Type string `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	// secret_configured is true when the method has a usable secret source.
+	SecretConfigured bool `protobuf:"varint,4,opt,name=secret_configured,json=secretConfigured,proto3" json:"secret_configured,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *DebugConfigAuthMethod) Reset() {
+	*x = DebugConfigAuthMethod{}
+	mi := &file_prx_v1_prx_proto_msgTypes[80]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugConfigAuthMethod) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugConfigAuthMethod) ProtoMessage() {}
+
+func (x *DebugConfigAuthMethod) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[80]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugConfigAuthMethod.ProtoReflect.Descriptor instead.
+func (*DebugConfigAuthMethod) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{80}
+}
+
+func (x *DebugConfigAuthMethod) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *DebugConfigAuthMethod) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *DebugConfigAuthMethod) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *DebugConfigAuthMethod) GetSecretConfigured() bool {
+	if x != nil {
+		return x.SecretConfigured
+	}
+	return false
+}
+
+// DebugConfig reports the loaded configuration without secret material.
+type DebugConfig struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// version is the configuration file version.
+	Version int32 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
+	// valid is true when the configuration loaded successfully.
+	Valid bool `protobuf:"varint,2,opt,name=valid,proto3" json:"valid,omitempty"`
+	// errors contains the load failure when valid is false.
+	Errors []string `protobuf:"bytes,3,rep,name=errors,proto3" json:"errors,omitempty"`
+	// warnings contains recoverable problems such as unknown fields.
+	Warnings []string `protobuf:"bytes,4,rep,name=warnings,proto3" json:"warnings,omitempty"`
+	// hosts lists the configured host boundaries.
+	Hosts []*DebugConfigHost `protobuf:"bytes,5,rep,name=hosts,proto3" json:"hosts,omitempty"`
+	// auth_methods lists the credential methods in evaluation order.
+	AuthMethods []*DebugConfigAuthMethod `protobuf:"bytes,6,rep,name=auth_methods,json=authMethods,proto3" json:"auth_methods,omitempty"`
+	// auto_sync_interval_seconds is the configured automatic refresh interval.
+	AutoSyncIntervalSeconds int64 `protobuf:"varint,7,opt,name=auto_sync_interval_seconds,json=autoSyncIntervalSeconds,proto3" json:"auto_sync_interval_seconds,omitempty"`
+	unknownFields           protoimpl.UnknownFields
+	sizeCache               protoimpl.SizeCache
+}
+
+func (x *DebugConfig) Reset() {
+	*x = DebugConfig{}
+	mi := &file_prx_v1_prx_proto_msgTypes[81]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugConfig) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugConfig) ProtoMessage() {}
+
+func (x *DebugConfig) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[81]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugConfig.ProtoReflect.Descriptor instead.
+func (*DebugConfig) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{81}
+}
+
+func (x *DebugConfig) GetVersion() int32 {
+	if x != nil {
+		return x.Version
+	}
+	return 0
+}
+
+func (x *DebugConfig) GetValid() bool {
+	if x != nil {
+		return x.Valid
+	}
+	return false
+}
+
+func (x *DebugConfig) GetErrors() []string {
+	if x != nil {
+		return x.Errors
+	}
+	return nil
+}
+
+func (x *DebugConfig) GetWarnings() []string {
+	if x != nil {
+		return x.Warnings
+	}
+	return nil
+}
+
+func (x *DebugConfig) GetHosts() []*DebugConfigHost {
+	if x != nil {
+		return x.Hosts
+	}
+	return nil
+}
+
+func (x *DebugConfig) GetAuthMethods() []*DebugConfigAuthMethod {
+	if x != nil {
+		return x.AuthMethods
+	}
+	return nil
+}
+
+func (x *DebugConfig) GetAutoSyncIntervalSeconds() int64 {
+	if x != nil {
+		return x.AutoSyncIntervalSeconds
+	}
+	return 0
+}
+
+// DebugDatabaseFile reports the on-disk state of the SQLite database.
+type DebugDatabaseFile struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// applicable is false for an in-memory or DSN-style database that has no single file.
+	Applicable bool `protobuf:"varint,1,opt,name=applicable,proto3" json:"applicable,omitempty"`
+	// size_bytes is the size of the main database file.
+	SizeBytes int64 `protobuf:"varint,2,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
+	// wal_present is true when a write-ahead log file exists beside the database.
+	WalPresent bool `protobuf:"varint,3,opt,name=wal_present,json=walPresent,proto3" json:"wal_present,omitempty"`
+	// wal_size_bytes is the size of the write-ahead log file when it exists.
+	WalSizeBytes int64 `protobuf:"varint,4,opt,name=wal_size_bytes,json=walSizeBytes,proto3" json:"wal_size_bytes,omitempty"`
+	// shm_present is true when a shared-memory file exists beside the database.
+	ShmPresent bool `protobuf:"varint,5,opt,name=shm_present,json=shmPresent,proto3" json:"shm_present,omitempty"`
+	// writable is true when the database file could be opened for writing.
+	Writable bool `protobuf:"varint,6,opt,name=writable,proto3" json:"writable,omitempty"`
+	// write_error explains why the database file could not be opened for writing.
+	WriteError    string `protobuf:"bytes,7,opt,name=write_error,json=writeError,proto3" json:"write_error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugDatabaseFile) Reset() {
+	*x = DebugDatabaseFile{}
+	mi := &file_prx_v1_prx_proto_msgTypes[82]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugDatabaseFile) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugDatabaseFile) ProtoMessage() {}
+
+func (x *DebugDatabaseFile) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[82]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugDatabaseFile.ProtoReflect.Descriptor instead.
+func (*DebugDatabaseFile) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{82}
+}
+
+func (x *DebugDatabaseFile) GetApplicable() bool {
+	if x != nil {
+		return x.Applicable
+	}
+	return false
+}
+
+func (x *DebugDatabaseFile) GetSizeBytes() int64 {
+	if x != nil {
+		return x.SizeBytes
+	}
+	return 0
+}
+
+func (x *DebugDatabaseFile) GetWalPresent() bool {
+	if x != nil {
+		return x.WalPresent
+	}
+	return false
+}
+
+func (x *DebugDatabaseFile) GetWalSizeBytes() int64 {
+	if x != nil {
+		return x.WalSizeBytes
+	}
+	return 0
+}
+
+func (x *DebugDatabaseFile) GetShmPresent() bool {
+	if x != nil {
+		return x.ShmPresent
+	}
+	return false
+}
+
+func (x *DebugDatabaseFile) GetWritable() bool {
+	if x != nil {
+		return x.Writable
+	}
+	return false
+}
+
+func (x *DebugDatabaseFile) GetWriteError() string {
+	if x != nil {
+		return x.WriteError
+	}
+	return ""
+}
+
+// DebugStorage reports schema state and database integrity.
+type DebugStorage struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// applied_schema_version is the highest migration version recorded in the database.
+	AppliedSchemaVersion int32 `protobuf:"varint,1,opt,name=applied_schema_version,json=appliedSchemaVersion,proto3" json:"applied_schema_version,omitempty"`
+	// embedded_schema_version is the highest migration version this binary carries.
+	EmbeddedSchemaVersion int32 `protobuf:"varint,2,opt,name=embedded_schema_version,json=embeddedSchemaVersion,proto3" json:"embedded_schema_version,omitempty"`
+	// integrity_valid is true when dependency-data validation found no errors.
+	IntegrityValid bool `protobuf:"varint,3,opt,name=integrity_valid,json=integrityValid,proto3" json:"integrity_valid,omitempty"`
+	// integrity_errors contains the validation errors when integrity_valid is false.
+	IntegrityErrors []string `protobuf:"bytes,4,rep,name=integrity_errors,json=integrityErrors,proto3" json:"integrity_errors,omitempty"`
+	// database_file reports the on-disk state of the database.
+	DatabaseFile *DebugDatabaseFile `protobuf:"bytes,5,opt,name=database_file,json=databaseFile,proto3" json:"database_file,omitempty"`
+	// cli_schema_version is the CLI response schema version this binary emits.
+	CliSchemaVersion string `protobuf:"bytes,6,opt,name=cli_schema_version,json=cliSchemaVersion,proto3" json:"cli_schema_version,omitempty"`
+	// error explains why storage diagnostics are unavailable.
+	Error         string `protobuf:"bytes,7,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugStorage) Reset() {
+	*x = DebugStorage{}
+	mi := &file_prx_v1_prx_proto_msgTypes[83]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugStorage) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugStorage) ProtoMessage() {}
+
+func (x *DebugStorage) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[83]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugStorage.ProtoReflect.Descriptor instead.
+func (*DebugStorage) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{83}
+}
+
+func (x *DebugStorage) GetAppliedSchemaVersion() int32 {
+	if x != nil {
+		return x.AppliedSchemaVersion
+	}
+	return 0
+}
+
+func (x *DebugStorage) GetEmbeddedSchemaVersion() int32 {
+	if x != nil {
+		return x.EmbeddedSchemaVersion
+	}
+	return 0
+}
+
+func (x *DebugStorage) GetIntegrityValid() bool {
+	if x != nil {
+		return x.IntegrityValid
+	}
+	return false
+}
+
+func (x *DebugStorage) GetIntegrityErrors() []string {
+	if x != nil {
+		return x.IntegrityErrors
+	}
+	return nil
+}
+
+func (x *DebugStorage) GetDatabaseFile() *DebugDatabaseFile {
+	if x != nil {
+		return x.DatabaseFile
+	}
+	return nil
+}
+
+func (x *DebugStorage) GetCliSchemaVersion() string {
+	if x != nil {
+		return x.CliSchemaVersion
+	}
+	return ""
+}
+
+func (x *DebugStorage) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+// DebugCount is one named count in a breakdown.
+type DebugCount struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// name is the value the count belongs to.
+	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	// count is the number of records carrying that value.
+	Count         int32 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugCount) Reset() {
+	*x = DebugCount{}
+	mi := &file_prx_v1_prx_proto_msgTypes[84]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugCount) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugCount) ProtoMessage() {}
+
+func (x *DebugCount) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[84]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugCount.ProtoReflect.Descriptor instead.
+func (*DebugCount) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{84}
+}
+
+func (x *DebugCount) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *DebugCount) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+// DebugData reports stored record counts and their breakdowns.
+type DebugData struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// features is the number of stored features.
+	Features int32 `protobuf:"varint,1,opt,name=features,proto3" json:"features,omitempty"`
+	// tasks is the number of stored tasks.
+	Tasks int32 `protobuf:"varint,2,opt,name=tasks,proto3" json:"tasks,omitempty"`
+	// dependencies is the number of stored dependency edges.
+	Dependencies int32 `protobuf:"varint,3,opt,name=dependencies,proto3" json:"dependencies,omitempty"`
+	// pull_requests is the number of attached pull requests.
+	PullRequests int32 `protobuf:"varint,4,opt,name=pull_requests,json=pullRequests,proto3" json:"pull_requests,omitempty"`
+	// documents is the number of registered documents.
+	Documents int32 `protobuf:"varint,5,opt,name=documents,proto3" json:"documents,omitempty"`
+	// feature_statuses breaks features down by presented status.
+	FeatureStatuses []*DebugCount `protobuf:"bytes,6,rep,name=feature_statuses,json=featureStatuses,proto3" json:"feature_statuses,omitempty"`
+	// task_display_states breaks tasks down by presented state.
+	TaskDisplayStates []*DebugCount `protobuf:"bytes,7,rep,name=task_display_states,json=taskDisplayStates,proto3" json:"task_display_states,omitempty"`
+	// task_kinds breaks tasks down by kind.
+	TaskKinds []*DebugCount `protobuf:"bytes,8,rep,name=task_kinds,json=taskKinds,proto3" json:"task_kinds,omitempty"`
+	// pull_request_display_states breaks pull requests down by presented state.
+	PullRequestDisplayStates []*DebugCount `protobuf:"bytes,9,rep,name=pull_request_display_states,json=pullRequestDisplayStates,proto3" json:"pull_request_display_states,omitempty"`
+	// pull_request_hosts breaks pull requests down by normalized host.
+	PullRequestHosts []*DebugCount `protobuf:"bytes,10,rep,name=pull_request_hosts,json=pullRequestHosts,proto3" json:"pull_request_hosts,omitempty"`
+	// document_kinds breaks documents down by source kind.
+	DocumentKinds []*DebugCount `protobuf:"bytes,11,rep,name=document_kinds,json=documentKinds,proto3" json:"document_kinds,omitempty"`
+	// error explains why the stored data could not be counted.
+	Error         string `protobuf:"bytes,12,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugData) Reset() {
+	*x = DebugData{}
+	mi := &file_prx_v1_prx_proto_msgTypes[85]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugData) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugData) ProtoMessage() {}
+
+func (x *DebugData) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[85]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugData.ProtoReflect.Descriptor instead.
+func (*DebugData) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{85}
+}
+
+func (x *DebugData) GetFeatures() int32 {
+	if x != nil {
+		return x.Features
+	}
+	return 0
+}
+
+func (x *DebugData) GetTasks() int32 {
+	if x != nil {
+		return x.Tasks
+	}
+	return 0
+}
+
+func (x *DebugData) GetDependencies() int32 {
+	if x != nil {
+		return x.Dependencies
+	}
+	return 0
+}
+
+func (x *DebugData) GetPullRequests() int32 {
+	if x != nil {
+		return x.PullRequests
+	}
+	return 0
+}
+
+func (x *DebugData) GetDocuments() int32 {
+	if x != nil {
+		return x.Documents
+	}
+	return 0
+}
+
+func (x *DebugData) GetFeatureStatuses() []*DebugCount {
+	if x != nil {
+		return x.FeatureStatuses
+	}
+	return nil
+}
+
+func (x *DebugData) GetTaskDisplayStates() []*DebugCount {
+	if x != nil {
+		return x.TaskDisplayStates
+	}
+	return nil
+}
+
+func (x *DebugData) GetTaskKinds() []*DebugCount {
+	if x != nil {
+		return x.TaskKinds
+	}
+	return nil
+}
+
+func (x *DebugData) GetPullRequestDisplayStates() []*DebugCount {
+	if x != nil {
+		return x.PullRequestDisplayStates
+	}
+	return nil
+}
+
+func (x *DebugData) GetPullRequestHosts() []*DebugCount {
+	if x != nil {
+		return x.PullRequestHosts
+	}
+	return nil
+}
+
+func (x *DebugData) GetDocumentKinds() []*DebugCount {
+	if x != nil {
+		return x.DocumentKinds
+	}
+	return nil
+}
+
+func (x *DebugData) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+// DebugSyncFailure counts synchronization failures within one host or repository.
+type DebugSyncFailure struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// scope is the host or the host, owner, and repository the failures belong to.
+	Scope string `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
+	// count is the number of failing pull requests in that scope.
+	Count         int32 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugSyncFailure) Reset() {
+	*x = DebugSyncFailure{}
+	mi := &file_prx_v1_prx_proto_msgTypes[86]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugSyncFailure) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugSyncFailure) ProtoMessage() {}
+
+func (x *DebugSyncFailure) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[86]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugSyncFailure.ProtoReflect.Descriptor instead.
+func (*DebugSyncFailure) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{86}
+}
+
+func (x *DebugSyncFailure) GetScope() string {
+	if x != nil {
+		return x.Scope
+	}
+	return ""
+}
+
+func (x *DebugSyncFailure) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+// DebugErrorGroup is one representative synchronization error and the tasks it affected.
+type DebugErrorGroup struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// message is the representative error text, truncated when very long.
+	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
+	// count is the number of pull requests whose error shares this shape.
+	Count int32 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
+	// task_ids lists a bounded sample of the affected task IDs.
+	TaskIds []string `protobuf:"bytes,3,rep,name=task_ids,json=taskIds,proto3" json:"task_ids,omitempty"`
+	// total_task_count is how many tasks the group covers, including those not listed.
+	TotalTaskCount int32 `protobuf:"varint,4,opt,name=total_task_count,json=totalTaskCount,proto3" json:"total_task_count,omitempty"`
+	unknownFields  protoimpl.UnknownFields
+	sizeCache      protoimpl.SizeCache
+}
+
+func (x *DebugErrorGroup) Reset() {
+	*x = DebugErrorGroup{}
+	mi := &file_prx_v1_prx_proto_msgTypes[87]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugErrorGroup) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugErrorGroup) ProtoMessage() {}
+
+func (x *DebugErrorGroup) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[87]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugErrorGroup.ProtoReflect.Descriptor instead.
+func (*DebugErrorGroup) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{87}
+}
+
+func (x *DebugErrorGroup) GetMessage() string {
+	if x != nil {
+		return x.Message
+	}
+	return ""
+}
+
+func (x *DebugErrorGroup) GetCount() int32 {
+	if x != nil {
+		return x.Count
+	}
+	return 0
+}
+
+func (x *DebugErrorGroup) GetTaskIds() []string {
+	if x != nil {
+		return x.TaskIds
+	}
+	return nil
+}
+
+func (x *DebugErrorGroup) GetTotalTaskCount() int32 {
+	if x != nil {
+		return x.TotalTaskCount
+	}
+	return 0
+}
+
+// DebugAuthCacheEntry records which credential last succeeded for one repository.
+type DebugAuthCacheEntry struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// host is the normalized GitHub host.
+	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
+	// owner is the repository owner.
+	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
+	// repository is the repository name.
+	Repository string `protobuf:"bytes,3,opt,name=repository,proto3" json:"repository,omitempty"`
+	// auth_method_id is the credential method that last succeeded.
+	AuthMethodId string `protobuf:"bytes,4,opt,name=auth_method_id,json=authMethodId,proto3" json:"auth_method_id,omitempty"`
+	// last_succeeded_at is when that credential last succeeded, in RFC 3339 UTC format.
+	LastSucceededAt string `protobuf:"bytes,5,opt,name=last_succeeded_at,json=lastSucceededAt,proto3" json:"last_succeeded_at,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *DebugAuthCacheEntry) Reset() {
+	*x = DebugAuthCacheEntry{}
+	mi := &file_prx_v1_prx_proto_msgTypes[88]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugAuthCacheEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugAuthCacheEntry) ProtoMessage() {}
+
+func (x *DebugAuthCacheEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[88]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugAuthCacheEntry.ProtoReflect.Descriptor instead.
+func (*DebugAuthCacheEntry) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{88}
+}
+
+func (x *DebugAuthCacheEntry) GetHost() string {
+	if x != nil {
+		return x.Host
+	}
+	return ""
+}
+
+func (x *DebugAuthCacheEntry) GetOwner() string {
+	if x != nil {
+		return x.Owner
+	}
+	return ""
+}
+
+func (x *DebugAuthCacheEntry) GetRepository() string {
+	if x != nil {
+		return x.Repository
+	}
+	return ""
+}
+
+func (x *DebugAuthCacheEntry) GetAuthMethodId() string {
+	if x != nil {
+		return x.AuthMethodId
+	}
+	return ""
+}
+
+func (x *DebugAuthCacheEntry) GetLastSucceededAt() string {
+	if x != nil {
+		return x.LastSucceededAt
+	}
+	return ""
+}
+
+// DebugGitHubSync reports synchronization state and the failures behind it.
+type DebugGitHubSync struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// status is the persisted process-wide synchronization status.
+	Status *GitHubSyncStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
+	// next_run_at is when the interval next expires, in RFC 3339 UTC format.
+	NextRunAt string `protobuf:"bytes,2,opt,name=next_run_at,json=nextRunAt,proto3" json:"next_run_at,omitempty"`
+	// due is true when the interval has already expired.
+	Due bool `protobuf:"varint,3,opt,name=due,proto3" json:"due,omitempty"`
+	// seconds_since_last_update is how long ago the last run completed.
+	SecondsSinceLastUpdate int64 `protobuf:"varint,4,opt,name=seconds_since_last_update,json=secondsSinceLastUpdate,proto3" json:"seconds_since_last_update,omitempty"`
+	// stale_pull_requests is the number of pull requests holding stale state.
+	StalePullRequests int32 `protobuf:"varint,5,opt,name=stale_pull_requests,json=stalePullRequests,proto3" json:"stale_pull_requests,omitempty"`
+	// failed_pull_requests is the number of pull requests carrying a refresh error.
+	FailedPullRequests int32 `protobuf:"varint,6,opt,name=failed_pull_requests,json=failedPullRequests,proto3" json:"failed_pull_requests,omitempty"`
+	// host_failures breaks refresh errors down by host.
+	HostFailures []*DebugSyncFailure `protobuf:"bytes,7,rep,name=host_failures,json=hostFailures,proto3" json:"host_failures,omitempty"`
+	// repository_failures breaks refresh errors down by repository, bounded in size.
+	RepositoryFailures []*DebugSyncFailure `protobuf:"bytes,8,rep,name=repository_failures,json=repositoryFailures,proto3" json:"repository_failures,omitempty"`
+	// omitted_repository_failures is how many repository rows the size limit dropped.
+	OmittedRepositoryFailures int32 `protobuf:"varint,9,opt,name=omitted_repository_failures,json=omittedRepositoryFailures,proto3" json:"omitted_repository_failures,omitempty"`
+	// error_groups lists representative refresh errors, bounded in size.
+	ErrorGroups []*DebugErrorGroup `protobuf:"bytes,10,rep,name=error_groups,json=errorGroups,proto3" json:"error_groups,omitempty"`
+	// omitted_error_groups is how many error groups the size limit dropped.
+	OmittedErrorGroups int32 `protobuf:"varint,11,opt,name=omitted_error_groups,json=omittedErrorGroups,proto3" json:"omitted_error_groups,omitempty"`
+	// auth_cache lists the credential that last succeeded per repository, bounded in size.
+	AuthCache []*DebugAuthCacheEntry `protobuf:"bytes,12,rep,name=auth_cache,json=authCache,proto3" json:"auth_cache,omitempty"`
+	// omitted_auth_cache_entries is how many cache rows the size limit dropped.
+	OmittedAuthCacheEntries int32 `protobuf:"varint,13,opt,name=omitted_auth_cache_entries,json=omittedAuthCacheEntries,proto3" json:"omitted_auth_cache_entries,omitempty"`
+	// error explains why synchronization diagnostics are unavailable.
+	Error         string `protobuf:"bytes,14,opt,name=error,proto3" json:"error,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugGitHubSync) Reset() {
+	*x = DebugGitHubSync{}
+	mi := &file_prx_v1_prx_proto_msgTypes[89]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugGitHubSync) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugGitHubSync) ProtoMessage() {}
+
+func (x *DebugGitHubSync) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[89]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugGitHubSync.ProtoReflect.Descriptor instead.
+func (*DebugGitHubSync) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{89}
+}
+
+func (x *DebugGitHubSync) GetStatus() *GitHubSyncStatus {
+	if x != nil {
+		return x.Status
+	}
+	return nil
+}
+
+func (x *DebugGitHubSync) GetNextRunAt() string {
+	if x != nil {
+		return x.NextRunAt
+	}
+	return ""
+}
+
+func (x *DebugGitHubSync) GetDue() bool {
+	if x != nil {
+		return x.Due
+	}
+	return false
+}
+
+func (x *DebugGitHubSync) GetSecondsSinceLastUpdate() int64 {
+	if x != nil {
+		return x.SecondsSinceLastUpdate
+	}
+	return 0
+}
+
+func (x *DebugGitHubSync) GetStalePullRequests() int32 {
+	if x != nil {
+		return x.StalePullRequests
+	}
+	return 0
+}
+
+func (x *DebugGitHubSync) GetFailedPullRequests() int32 {
+	if x != nil {
+		return x.FailedPullRequests
+	}
+	return 0
+}
+
+func (x *DebugGitHubSync) GetHostFailures() []*DebugSyncFailure {
+	if x != nil {
+		return x.HostFailures
+	}
+	return nil
+}
+
+func (x *DebugGitHubSync) GetRepositoryFailures() []*DebugSyncFailure {
+	if x != nil {
+		return x.RepositoryFailures
+	}
+	return nil
+}
+
+func (x *DebugGitHubSync) GetOmittedRepositoryFailures() int32 {
+	if x != nil {
+		return x.OmittedRepositoryFailures
+	}
+	return 0
+}
+
+func (x *DebugGitHubSync) GetErrorGroups() []*DebugErrorGroup {
+	if x != nil {
+		return x.ErrorGroups
+	}
+	return nil
+}
+
+func (x *DebugGitHubSync) GetOmittedErrorGroups() int32 {
+	if x != nil {
+		return x.OmittedErrorGroups
+	}
+	return 0
+}
+
+func (x *DebugGitHubSync) GetAuthCache() []*DebugAuthCacheEntry {
+	if x != nil {
+		return x.AuthCache
+	}
+	return nil
+}
+
+func (x *DebugGitHubSync) GetOmittedAuthCacheEntries() int32 {
+	if x != nil {
+		return x.OmittedAuthCacheEntries
+	}
+	return 0
+}
+
+func (x *DebugGitHubSync) GetError() string {
+	if x != nil {
+		return x.Error
+	}
+	return ""
+}
+
+// DebugReport is the whole diagnostic report, with detected problems first.
+type DebugReport struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// problems lists the detected problems in reporting order.
+	Problems []*DebugProblem `protobuf:"bytes,1,rep,name=problems,proto3" json:"problems,omitempty"`
+	// build describes the running PRX build.
+	Build *DebugBuild `protobuf:"bytes,2,opt,name=build,proto3" json:"build,omitempty"`
+	// runtime describes the process that produced the report.
+	Runtime *DebugRuntime `protobuf:"bytes,3,opt,name=runtime,proto3" json:"runtime,omitempty"`
+	// paths reports resolved file locations and the ambient environment.
+	Paths *DebugPaths `protobuf:"bytes,4,opt,name=paths,proto3" json:"paths,omitempty"`
+	// config reports the loaded configuration without secret material.
+	Config *DebugConfig `protobuf:"bytes,5,opt,name=config,proto3" json:"config,omitempty"`
+	// storage reports schema state and database integrity.
+	Storage *DebugStorage `protobuf:"bytes,6,opt,name=storage,proto3" json:"storage,omitempty"`
+	// records reports stored record counts and their breakdowns.
+	// It is not named data so a JSON reader never mistakes the section for a response envelope.
+	Records *DebugData `protobuf:"bytes,7,opt,name=records,proto3" json:"records,omitempty"`
+	// github_sync reports synchronization state and the failures behind it.
+	GithubSync    *DebugGitHubSync `protobuf:"bytes,8,opt,name=github_sync,json=githubSync,proto3" json:"github_sync,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DebugReport) Reset() {
+	*x = DebugReport{}
+	mi := &file_prx_v1_prx_proto_msgTypes[90]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DebugReport) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DebugReport) ProtoMessage() {}
+
+func (x *DebugReport) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[90]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DebugReport.ProtoReflect.Descriptor instead.
+func (*DebugReport) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{90}
+}
+
+func (x *DebugReport) GetProblems() []*DebugProblem {
+	if x != nil {
+		return x.Problems
+	}
+	return nil
+}
+
+func (x *DebugReport) GetBuild() *DebugBuild {
+	if x != nil {
+		return x.Build
+	}
+	return nil
+}
+
+func (x *DebugReport) GetRuntime() *DebugRuntime {
+	if x != nil {
+		return x.Runtime
+	}
+	return nil
+}
+
+func (x *DebugReport) GetPaths() *DebugPaths {
+	if x != nil {
+		return x.Paths
+	}
+	return nil
+}
+
+func (x *DebugReport) GetConfig() *DebugConfig {
+	if x != nil {
+		return x.Config
+	}
+	return nil
+}
+
+func (x *DebugReport) GetStorage() *DebugStorage {
+	if x != nil {
+		return x.Storage
+	}
+	return nil
+}
+
+func (x *DebugReport) GetRecords() *DebugData {
+	if x != nil {
+		return x.Records
+	}
+	return nil
+}
+
+func (x *DebugReport) GetGithubSync() *DebugGitHubSync {
+	if x != nil {
+		return x.GithubSync
+	}
+	return nil
+}
+
+// GetDebugReportRequest asks the server for a diagnostic report.
+type GetDebugReportRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDebugReportRequest) Reset() {
+	*x = GetDebugReportRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[91]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDebugReportRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDebugReportRequest) ProtoMessage() {}
+
+func (x *GetDebugReportRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[91]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDebugReportRequest.ProtoReflect.Descriptor instead.
+func (*GetDebugReportRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{91}
+}
+
+// GetDebugReportResponse returns the diagnostic report and its rendered text.
+type GetDebugReportResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// report contains the structured diagnostic sections.
+	Report *DebugReport `protobuf:"bytes,1,opt,name=report,proto3" json:"report,omitempty"`
+	// text is the rendered report, identical to the text `prx debug` prints.
+	Text          string `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetDebugReportResponse) Reset() {
+	*x = GetDebugReportResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[92]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetDebugReportResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetDebugReportResponse) ProtoMessage() {}
+
+func (x *GetDebugReportResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[92]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetDebugReportResponse.ProtoReflect.Descriptor instead.
+func (*GetDebugReportResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{92}
+}
+
+func (x *GetDebugReportResponse) GetReport() *DebugReport {
+	if x != nil {
+		return x.Report
+	}
+	return nil
+}
+
+func (x *GetDebugReportResponse) GetText() string {
+	if x != nil {
+		return x.Text
+	}
+	return ""
+}
+
 var File_prx_v1_prx_proto protoreflect.FileDescriptor
 
 const file_prx_v1_prx_proto_rawDesc = "" +
@@ -5919,7 +7653,150 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0fValidateRequest\"@\n" +
 	"\x10ValidateResponse\x12\x14\n" +
 	"\x05valid\x18\x01 \x01(\bR\x05valid\x12\x16\n" +
-	"\x06errors\x18\x02 \x03(\tR\x06errors*\xba\x01\n" +
+	"\x06errors\x18\x02 \x03(\tR\x06errors\"\x93\x01\n" +
+	"\fDebugProblem\x12,\n" +
+	"\x04code\x18\x01 \x01(\x0e2\x18.prx.v1.DebugProblemCodeR\x04code\x12\x16\n" +
+	"\x06target\x18\x02 \x01(\tR\x06target\x12\x1a\n" +
+	"\bevidence\x18\x03 \x01(\tR\bevidence\x12!\n" +
+	"\fnext_command\x18\x04 \x01(\tR\vnextCommand\"\x8b\x01\n" +
+	"\n" +
+	"DebugBuild\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\tR\aversion\x12 \n" +
+	"\vdevelopment\x18\x02 \x01(\bR\vdevelopment\x12\x1d\n" +
+	"\n" +
+	"go_version\x18\x03 \x01(\tR\tgoVersion\x12\x0e\n" +
+	"\x02os\x18\x04 \x01(\tR\x02os\x12\x12\n" +
+	"\x04arch\x18\x05 \x01(\tR\x04arch\"\x8a\x02\n" +
+	"\fDebugRuntime\x12\x12\n" +
+	"\x04mode\x18\x01 \x01(\tR\x04mode\x12\x12\n" +
+	"\x04demo\x18\x02 \x01(\bR\x04demo\x12%\n" +
+	"\x0egithub_fixture\x18\x03 \x01(\bR\rgithubFixture\x12!\n" +
+	"\fgenerated_at\x18\x04 \x01(\tR\vgeneratedAt\x12\x1b\n" +
+	"\ttime_zone\x18\x05 \x01(\tR\btimeZone\x12%\n" +
+	"\x0elisten_address\x18\x06 \x01(\tR\rlistenAddress\x12\x1d\n" +
+	"\n" +
+	"started_at\x18\a \x01(\tR\tstartedAt\x12%\n" +
+	"\x0euptime_seconds\x18\b \x01(\x03R\ruptimeSeconds\"@\n" +
+	"\x18DebugEnvironmentVariable\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x10\n" +
+	"\x03set\x18\x02 \x01(\bR\x03set\"\x98\x03\n" +
+	"\n" +
+	"DebugPaths\x12#\n" +
+	"\rdatabase_path\x18\x01 \x01(\tR\fdatabasePath\x120\n" +
+	"\x14database_path_source\x18\x02 \x01(\tR\x12databasePathSource\x120\n" +
+	"\x14database_file_exists\x18\x03 \x01(\bR\x12databaseFileExists\x12\x1f\n" +
+	"\vconfig_path\x18\x04 \x01(\tR\n" +
+	"configPath\x12,\n" +
+	"\x12config_path_source\x18\x05 \x01(\tR\x10configPathSource\x12,\n" +
+	"\x12config_file_exists\x18\x06 \x01(\bR\x10configFileExists\x12-\n" +
+	"\x12config_permissions\x18\a \x01(\tR\x11configPermissions\x12U\n" +
+	"\x15environment_variables\x18\b \x03(\v2 .prx.v1.DebugEnvironmentVariableR\x14environmentVariables\"_\n" +
+	"\x0fDebugConfigHost\x12\x12\n" +
+	"\x04host\x18\x01 \x01(\tR\x04host\x12\x17\n" +
+	"\aapi_url\x18\x02 \x01(\tR\x06apiUrl\x12\x1f\n" +
+	"\vgraphql_url\x18\x03 \x01(\tR\n" +
+	"graphqlUrl\"|\n" +
+	"\x15DebugConfigAuthMethod\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04host\x18\x02 \x01(\tR\x04host\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\tR\x04type\x12+\n" +
+	"\x11secret_configured\x18\x04 \x01(\bR\x10secretConfigured\"\x9f\x02\n" +
+	"\vDebugConfig\x12\x18\n" +
+	"\aversion\x18\x01 \x01(\x05R\aversion\x12\x14\n" +
+	"\x05valid\x18\x02 \x01(\bR\x05valid\x12\x16\n" +
+	"\x06errors\x18\x03 \x03(\tR\x06errors\x12\x1a\n" +
+	"\bwarnings\x18\x04 \x03(\tR\bwarnings\x12-\n" +
+	"\x05hosts\x18\x05 \x03(\v2\x17.prx.v1.DebugConfigHostR\x05hosts\x12@\n" +
+	"\fauth_methods\x18\x06 \x03(\v2\x1d.prx.v1.DebugConfigAuthMethodR\vauthMethods\x12;\n" +
+	"\x1aauto_sync_interval_seconds\x18\a \x01(\x03R\x17autoSyncIntervalSeconds\"\xf7\x01\n" +
+	"\x11DebugDatabaseFile\x12\x1e\n" +
+	"\n" +
+	"applicable\x18\x01 \x01(\bR\n" +
+	"applicable\x12\x1d\n" +
+	"\n" +
+	"size_bytes\x18\x02 \x01(\x03R\tsizeBytes\x12\x1f\n" +
+	"\vwal_present\x18\x03 \x01(\bR\n" +
+	"walPresent\x12$\n" +
+	"\x0ewal_size_bytes\x18\x04 \x01(\x03R\fwalSizeBytes\x12\x1f\n" +
+	"\vshm_present\x18\x05 \x01(\bR\n" +
+	"shmPresent\x12\x1a\n" +
+	"\bwritable\x18\x06 \x01(\bR\bwritable\x12\x1f\n" +
+	"\vwrite_error\x18\a \x01(\tR\n" +
+	"writeError\"\xd4\x02\n" +
+	"\fDebugStorage\x124\n" +
+	"\x16applied_schema_version\x18\x01 \x01(\x05R\x14appliedSchemaVersion\x126\n" +
+	"\x17embedded_schema_version\x18\x02 \x01(\x05R\x15embeddedSchemaVersion\x12'\n" +
+	"\x0fintegrity_valid\x18\x03 \x01(\bR\x0eintegrityValid\x12)\n" +
+	"\x10integrity_errors\x18\x04 \x03(\tR\x0fintegrityErrors\x12>\n" +
+	"\rdatabase_file\x18\x05 \x01(\v2\x19.prx.v1.DebugDatabaseFileR\fdatabaseFile\x12,\n" +
+	"\x12cli_schema_version\x18\x06 \x01(\tR\x10cliSchemaVersion\x12\x14\n" +
+	"\x05error\x18\a \x01(\tR\x05error\"6\n" +
+	"\n" +
+	"DebugCount\x12\x12\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\"\xc0\x04\n" +
+	"\tDebugData\x12\x1a\n" +
+	"\bfeatures\x18\x01 \x01(\x05R\bfeatures\x12\x14\n" +
+	"\x05tasks\x18\x02 \x01(\x05R\x05tasks\x12\"\n" +
+	"\fdependencies\x18\x03 \x01(\x05R\fdependencies\x12#\n" +
+	"\rpull_requests\x18\x04 \x01(\x05R\fpullRequests\x12\x1c\n" +
+	"\tdocuments\x18\x05 \x01(\x05R\tdocuments\x12=\n" +
+	"\x10feature_statuses\x18\x06 \x03(\v2\x12.prx.v1.DebugCountR\x0ffeatureStatuses\x12B\n" +
+	"\x13task_display_states\x18\a \x03(\v2\x12.prx.v1.DebugCountR\x11taskDisplayStates\x121\n" +
+	"\n" +
+	"task_kinds\x18\b \x03(\v2\x12.prx.v1.DebugCountR\ttaskKinds\x12Q\n" +
+	"\x1bpull_request_display_states\x18\t \x03(\v2\x12.prx.v1.DebugCountR\x18pullRequestDisplayStates\x12@\n" +
+	"\x12pull_request_hosts\x18\n" +
+	" \x03(\v2\x12.prx.v1.DebugCountR\x10pullRequestHosts\x129\n" +
+	"\x0edocument_kinds\x18\v \x03(\v2\x12.prx.v1.DebugCountR\rdocumentKinds\x12\x14\n" +
+	"\x05error\x18\f \x01(\tR\x05error\">\n" +
+	"\x10DebugSyncFailure\x12\x14\n" +
+	"\x05scope\x18\x01 \x01(\tR\x05scope\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\"\x86\x01\n" +
+	"\x0fDebugErrorGroup\x12\x18\n" +
+	"\amessage\x18\x01 \x01(\tR\amessage\x12\x14\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\x12\x19\n" +
+	"\btask_ids\x18\x03 \x03(\tR\ataskIds\x12(\n" +
+	"\x10total_task_count\x18\x04 \x01(\x05R\x0etotalTaskCount\"\xb1\x01\n" +
+	"\x13DebugAuthCacheEntry\x12\x12\n" +
+	"\x04host\x18\x01 \x01(\tR\x04host\x12\x14\n" +
+	"\x05owner\x18\x02 \x01(\tR\x05owner\x12\x1e\n" +
+	"\n" +
+	"repository\x18\x03 \x01(\tR\n" +
+	"repository\x12$\n" +
+	"\x0eauth_method_id\x18\x04 \x01(\tR\fauthMethodId\x12*\n" +
+	"\x11last_succeeded_at\x18\x05 \x01(\tR\x0flastSucceededAt\"\xd9\x05\n" +
+	"\x0fDebugGitHubSync\x120\n" +
+	"\x06status\x18\x01 \x01(\v2\x18.prx.v1.GitHubSyncStatusR\x06status\x12\x1e\n" +
+	"\vnext_run_at\x18\x02 \x01(\tR\tnextRunAt\x12\x10\n" +
+	"\x03due\x18\x03 \x01(\bR\x03due\x129\n" +
+	"\x19seconds_since_last_update\x18\x04 \x01(\x03R\x16secondsSinceLastUpdate\x12.\n" +
+	"\x13stale_pull_requests\x18\x05 \x01(\x05R\x11stalePullRequests\x120\n" +
+	"\x14failed_pull_requests\x18\x06 \x01(\x05R\x12failedPullRequests\x12=\n" +
+	"\rhost_failures\x18\a \x03(\v2\x18.prx.v1.DebugSyncFailureR\fhostFailures\x12I\n" +
+	"\x13repository_failures\x18\b \x03(\v2\x18.prx.v1.DebugSyncFailureR\x12repositoryFailures\x12>\n" +
+	"\x1bomitted_repository_failures\x18\t \x01(\x05R\x19omittedRepositoryFailures\x12:\n" +
+	"\ferror_groups\x18\n" +
+	" \x03(\v2\x17.prx.v1.DebugErrorGroupR\verrorGroups\x120\n" +
+	"\x14omitted_error_groups\x18\v \x01(\x05R\x12omittedErrorGroups\x12:\n" +
+	"\n" +
+	"auth_cache\x18\f \x03(\v2\x1b.prx.v1.DebugAuthCacheEntryR\tauthCache\x12;\n" +
+	"\x1aomitted_auth_cache_entries\x18\r \x01(\x05R\x17omittedAuthCacheEntries\x12\x14\n" +
+	"\x05error\x18\x0e \x01(\tR\x05error\"\x87\x03\n" +
+	"\vDebugReport\x120\n" +
+	"\bproblems\x18\x01 \x03(\v2\x14.prx.v1.DebugProblemR\bproblems\x12(\n" +
+	"\x05build\x18\x02 \x01(\v2\x12.prx.v1.DebugBuildR\x05build\x12.\n" +
+	"\aruntime\x18\x03 \x01(\v2\x14.prx.v1.DebugRuntimeR\aruntime\x12(\n" +
+	"\x05paths\x18\x04 \x01(\v2\x12.prx.v1.DebugPathsR\x05paths\x12+\n" +
+	"\x06config\x18\x05 \x01(\v2\x13.prx.v1.DebugConfigR\x06config\x12.\n" +
+	"\astorage\x18\x06 \x01(\v2\x14.prx.v1.DebugStorageR\astorage\x12+\n" +
+	"\arecords\x18\a \x01(\v2\x11.prx.v1.DebugDataR\arecords\x128\n" +
+	"\vgithub_sync\x18\b \x01(\v2\x17.prx.v1.DebugGitHubSyncR\n" +
+	"githubSync\"\x17\n" +
+	"\x15GetDebugReportRequest\"Y\n" +
+	"\x16GetDebugReportResponse\x12+\n" +
+	"\x06report\x18\x01 \x01(\v2\x13.prx.v1.DebugReportR\x06report\x12\x12\n" +
+	"\x04text\x18\x02 \x01(\tR\x04text*\xba\x01\n" +
 	"\rFeatureStatus\x12\x1e\n" +
 	"\x1aFEATURE_STATUS_UNSPECIFIED\x10\x00\x12\x19\n" +
 	"\x15FEATURE_STATUS_ACTIVE\x10\x01\x12\x19\n" +
@@ -6025,7 +7902,22 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	" GITHUB_AUTH_METHOD_TYPE_KEYCHAIN\x10\x01\x12'\n" +
 	"#GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT\x10\x02\x12\"\n" +
 	"\x1eGITHUB_AUTH_METHOD_TYPE_INLINE\x10\x03\x12\"\n" +
-	"\x1eGITHUB_AUTH_METHOD_TYPE_GH_CLI\x10\x042\x8b\x14\n" +
+	"\x1eGITHUB_AUTH_METHOD_TYPE_GH_CLI\x10\x04*\xef\x04\n" +
+	"\x10DebugProblemCode\x12\"\n" +
+	"\x1eDEBUG_PROBLEM_CODE_UNSPECIFIED\x10\x00\x12*\n" +
+	"&DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE\x10\x01\x125\n" +
+	"1DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY\x10\x02\x12,\n" +
+	"(DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE\x10\x03\x120\n" +
+	",DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS\x10\x04\x12(\n" +
+	"$DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE\x10\x05\x122\n" +
+	".DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN\x10\x06\x12,\n" +
+	"(DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS\x10\a\x12.\n" +
+	"*DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST\x10\b\x12,\n" +
+	"(DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR\x10\t\x12*\n" +
+	"&DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE\x10\n" +
+	"\x122\n" +
+	".DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED\x10\v\x12*\n" +
+	"&DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE\x10\f2\xdc\x14\n" +
 	"\n" +
 	"PRXService\x12F\n" +
 	"\vGetSnapshot\x12\x1a.prx.v1.GetSnapshotRequest\x1a\x1b.prx.v1.GetSnapshotResponse\x12L\n" +
@@ -6051,7 +7943,8 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x04Sync\x12\x13.prx.v1.SyncRequest\x1a\x14.prx.v1.SyncResponse\x12^\n" +
 	"\x13GetGitHubSyncStatus\x12\".prx.v1.GetGitHubSyncStatusRequest\x1a#.prx.v1.GetGitHubSyncStatusResponse\x12R\n" +
 	"\x0fSyncGitHubIfDue\x12\x1e.prx.v1.SyncGitHubIfDueRequest\x1a\x1f.prx.v1.SyncGitHubIfDueResponse\x12=\n" +
-	"\bValidate\x12\x17.prx.v1.ValidateRequest\x1a\x18.prx.v1.ValidateResponse\x12@\n" +
+	"\bValidate\x12\x17.prx.v1.ValidateRequest\x1a\x18.prx.v1.ValidateResponse\x12O\n" +
+	"\x0eGetDebugReport\x12\x1d.prx.v1.GetDebugReportRequest\x1a\x1e.prx.v1.GetDebugReportResponse\x12@\n" +
 	"\tGetConfig\x12\x18.prx.v1.GetConfigRequest\x1a\x19.prx.v1.GetConfigResponse\x12g\n" +
 	"\x16UpdateGitHubSyncConfig\x12%.prx.v1.UpdateGitHubSyncConfigRequest\x1a&.prx.v1.UpdateGitHubSyncConfigResponse\x12L\n" +
 	"\rAddGitHubHost\x12\x1c.prx.v1.AddGitHubHostRequest\x1a\x1d.prx.v1.AddGitHubHostResponse\x12U\n" +
@@ -6075,8 +7968,8 @@ func file_prx_v1_prx_proto_rawDescGZIP() []byte {
 	return file_prx_v1_prx_proto_rawDescData
 }
 
-var file_prx_v1_prx_proto_enumTypes = make([]protoimpl.EnumInfo, 12)
-var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 74)
+var file_prx_v1_prx_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
+var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 93)
 var file_prx_v1_prx_proto_goTypes = []any{
 	(FeatureStatus)(0),                       // 0: prx.v1.FeatureStatus
 	(TaskKind)(0),                            // 1: prx.v1.TaskKind
@@ -6090,198 +7983,245 @@ var file_prx_v1_prx_proto_goTypes = []any{
 	(BlockedReasonCode)(0),                   // 9: prx.v1.BlockedReasonCode
 	(DomainErrorCode)(0),                     // 10: prx.v1.DomainErrorCode
 	(GithubAuthMethodType)(0),                // 11: prx.v1.GithubAuthMethodType
-	(*BlockedReason)(nil),                    // 12: prx.v1.BlockedReason
-	(*ErrorDetail)(nil),                      // 13: prx.v1.ErrorDetail
-	(*Feature)(nil),                          // 14: prx.v1.Feature
-	(*Task)(nil),                             // 15: prx.v1.Task
-	(*Dependency)(nil),                       // 16: prx.v1.Dependency
-	(*PullRequest)(nil),                      // 17: prx.v1.PullRequest
-	(*Document)(nil),                         // 18: prx.v1.Document
-	(*Snapshot)(nil),                         // 19: prx.v1.Snapshot
-	(*GetSnapshotRequest)(nil),               // 20: prx.v1.GetSnapshotRequest
-	(*GetSnapshotResponse)(nil),              // 21: prx.v1.GetSnapshotResponse
-	(*CreateFeatureRequest)(nil),             // 22: prx.v1.CreateFeatureRequest
-	(*CreateFeatureResponse)(nil),            // 23: prx.v1.CreateFeatureResponse
-	(*UpdateFeatureRequest)(nil),             // 24: prx.v1.UpdateFeatureRequest
-	(*UpdateFeatureResponse)(nil),            // 25: prx.v1.UpdateFeatureResponse
-	(*DeleteFeatureRequest)(nil),             // 26: prx.v1.DeleteFeatureRequest
-	(*DeleteFeatureResponse)(nil),            // 27: prx.v1.DeleteFeatureResponse
-	(*CreateTaskRequest)(nil),                // 28: prx.v1.CreateTaskRequest
-	(*CreateTaskResponse)(nil),               // 29: prx.v1.CreateTaskResponse
-	(*UpdateTaskRequest)(nil),                // 30: prx.v1.UpdateTaskRequest
-	(*UpdateTaskResponse)(nil),               // 31: prx.v1.UpdateTaskResponse
-	(*DeleteTaskRequest)(nil),                // 32: prx.v1.DeleteTaskRequest
-	(*DeleteTaskResponse)(nil),               // 33: prx.v1.DeleteTaskResponse
-	(*AddDependencyRequest)(nil),             // 34: prx.v1.AddDependencyRequest
-	(*AddDependencyResponse)(nil),            // 35: prx.v1.AddDependencyResponse
-	(*RemoveDependencyRequest)(nil),          // 36: prx.v1.RemoveDependencyRequest
-	(*RemoveDependencyResponse)(nil),         // 37: prx.v1.RemoveDependencyResponse
-	(*AttachPullRequestRequest)(nil),         // 38: prx.v1.AttachPullRequestRequest
-	(*AttachPullRequestResponse)(nil),        // 39: prx.v1.AttachPullRequestResponse
-	(*DetachPullRequestRequest)(nil),         // 40: prx.v1.DetachPullRequestRequest
-	(*DetachPullRequestResponse)(nil),        // 41: prx.v1.DetachPullRequestResponse
-	(*AddDocumentRequest)(nil),               // 42: prx.v1.AddDocumentRequest
-	(*AddDocumentResponse)(nil),              // 43: prx.v1.AddDocumentResponse
-	(*GetDocumentRequest)(nil),               // 44: prx.v1.GetDocumentRequest
-	(*GetDocumentResponse)(nil),              // 45: prx.v1.GetDocumentResponse
-	(*UpdateDocumentRequest)(nil),            // 46: prx.v1.UpdateDocumentRequest
-	(*UpdateDocumentResponse)(nil),           // 47: prx.v1.UpdateDocumentResponse
-	(*DeleteDocumentRequest)(nil),            // 48: prx.v1.DeleteDocumentRequest
-	(*DeleteDocumentResponse)(nil),           // 49: prx.v1.DeleteDocumentResponse
-	(*ReadDocumentContentRequest)(nil),       // 50: prx.v1.ReadDocumentContentRequest
-	(*ReadDocumentContentResponse)(nil),      // 51: prx.v1.ReadDocumentContentResponse
-	(*SelectLocalFileRequest)(nil),           // 52: prx.v1.SelectLocalFileRequest
-	(*SelectLocalFileResponse)(nil),          // 53: prx.v1.SelectLocalFileResponse
-	(*GitHubHost)(nil),                       // 54: prx.v1.GitHubHost
-	(*GitHubAuthMethod)(nil),                 // 55: prx.v1.GitHubAuthMethod
-	(*GitHubConfig)(nil),                     // 56: prx.v1.GitHubConfig
-	(*GetConfigRequest)(nil),                 // 57: prx.v1.GetConfigRequest
-	(*GetConfigResponse)(nil),                // 58: prx.v1.GetConfigResponse
-	(*UpdateGitHubSyncConfigRequest)(nil),    // 59: prx.v1.UpdateGitHubSyncConfigRequest
-	(*UpdateGitHubSyncConfigResponse)(nil),   // 60: prx.v1.UpdateGitHubSyncConfigResponse
-	(*AddGitHubHostRequest)(nil),             // 61: prx.v1.AddGitHubHostRequest
-	(*AddGitHubHostResponse)(nil),            // 62: prx.v1.AddGitHubHostResponse
-	(*UpdateGitHubHostRequest)(nil),          // 63: prx.v1.UpdateGitHubHostRequest
-	(*UpdateGitHubHostResponse)(nil),         // 64: prx.v1.UpdateGitHubHostResponse
-	(*DeleteGitHubHostRequest)(nil),          // 65: prx.v1.DeleteGitHubHostRequest
-	(*DeleteGitHubHostResponse)(nil),         // 66: prx.v1.DeleteGitHubHostResponse
-	(*AddGitHubAuthMethodRequest)(nil),       // 67: prx.v1.AddGitHubAuthMethodRequest
-	(*AddGitHubAuthMethodResponse)(nil),      // 68: prx.v1.AddGitHubAuthMethodResponse
-	(*UpdateGitHubAuthMethodRequest)(nil),    // 69: prx.v1.UpdateGitHubAuthMethodRequest
-	(*UpdateGitHubAuthMethodResponse)(nil),   // 70: prx.v1.UpdateGitHubAuthMethodResponse
-	(*DeleteGitHubAuthMethodRequest)(nil),    // 71: prx.v1.DeleteGitHubAuthMethodRequest
-	(*DeleteGitHubAuthMethodResponse)(nil),   // 72: prx.v1.DeleteGitHubAuthMethodResponse
-	(*ReorderGitHubAuthMethodsRequest)(nil),  // 73: prx.v1.ReorderGitHubAuthMethodsRequest
-	(*ReorderGitHubAuthMethodsResponse)(nil), // 74: prx.v1.ReorderGitHubAuthMethodsResponse
-	(*ValidateConfigRequest)(nil),            // 75: prx.v1.ValidateConfigRequest
-	(*ValidateConfigResponse)(nil),           // 76: prx.v1.ValidateConfigResponse
-	(*SyncRequest)(nil),                      // 77: prx.v1.SyncRequest
-	(*SyncResponse)(nil),                     // 78: prx.v1.SyncResponse
-	(*GitHubSyncStatus)(nil),                 // 79: prx.v1.GitHubSyncStatus
-	(*GetGitHubSyncStatusRequest)(nil),       // 80: prx.v1.GetGitHubSyncStatusRequest
-	(*GetGitHubSyncStatusResponse)(nil),      // 81: prx.v1.GetGitHubSyncStatusResponse
-	(*SyncGitHubIfDueRequest)(nil),           // 82: prx.v1.SyncGitHubIfDueRequest
-	(*SyncGitHubIfDueResponse)(nil),          // 83: prx.v1.SyncGitHubIfDueResponse
-	(*ValidateRequest)(nil),                  // 84: prx.v1.ValidateRequest
-	(*ValidateResponse)(nil),                 // 85: prx.v1.ValidateResponse
+	(DebugProblemCode)(0),                    // 12: prx.v1.DebugProblemCode
+	(*BlockedReason)(nil),                    // 13: prx.v1.BlockedReason
+	(*ErrorDetail)(nil),                      // 14: prx.v1.ErrorDetail
+	(*Feature)(nil),                          // 15: prx.v1.Feature
+	(*Task)(nil),                             // 16: prx.v1.Task
+	(*Dependency)(nil),                       // 17: prx.v1.Dependency
+	(*PullRequest)(nil),                      // 18: prx.v1.PullRequest
+	(*Document)(nil),                         // 19: prx.v1.Document
+	(*Snapshot)(nil),                         // 20: prx.v1.Snapshot
+	(*GetSnapshotRequest)(nil),               // 21: prx.v1.GetSnapshotRequest
+	(*GetSnapshotResponse)(nil),              // 22: prx.v1.GetSnapshotResponse
+	(*CreateFeatureRequest)(nil),             // 23: prx.v1.CreateFeatureRequest
+	(*CreateFeatureResponse)(nil),            // 24: prx.v1.CreateFeatureResponse
+	(*UpdateFeatureRequest)(nil),             // 25: prx.v1.UpdateFeatureRequest
+	(*UpdateFeatureResponse)(nil),            // 26: prx.v1.UpdateFeatureResponse
+	(*DeleteFeatureRequest)(nil),             // 27: prx.v1.DeleteFeatureRequest
+	(*DeleteFeatureResponse)(nil),            // 28: prx.v1.DeleteFeatureResponse
+	(*CreateTaskRequest)(nil),                // 29: prx.v1.CreateTaskRequest
+	(*CreateTaskResponse)(nil),               // 30: prx.v1.CreateTaskResponse
+	(*UpdateTaskRequest)(nil),                // 31: prx.v1.UpdateTaskRequest
+	(*UpdateTaskResponse)(nil),               // 32: prx.v1.UpdateTaskResponse
+	(*DeleteTaskRequest)(nil),                // 33: prx.v1.DeleteTaskRequest
+	(*DeleteTaskResponse)(nil),               // 34: prx.v1.DeleteTaskResponse
+	(*AddDependencyRequest)(nil),             // 35: prx.v1.AddDependencyRequest
+	(*AddDependencyResponse)(nil),            // 36: prx.v1.AddDependencyResponse
+	(*RemoveDependencyRequest)(nil),          // 37: prx.v1.RemoveDependencyRequest
+	(*RemoveDependencyResponse)(nil),         // 38: prx.v1.RemoveDependencyResponse
+	(*AttachPullRequestRequest)(nil),         // 39: prx.v1.AttachPullRequestRequest
+	(*AttachPullRequestResponse)(nil),        // 40: prx.v1.AttachPullRequestResponse
+	(*DetachPullRequestRequest)(nil),         // 41: prx.v1.DetachPullRequestRequest
+	(*DetachPullRequestResponse)(nil),        // 42: prx.v1.DetachPullRequestResponse
+	(*AddDocumentRequest)(nil),               // 43: prx.v1.AddDocumentRequest
+	(*AddDocumentResponse)(nil),              // 44: prx.v1.AddDocumentResponse
+	(*GetDocumentRequest)(nil),               // 45: prx.v1.GetDocumentRequest
+	(*GetDocumentResponse)(nil),              // 46: prx.v1.GetDocumentResponse
+	(*UpdateDocumentRequest)(nil),            // 47: prx.v1.UpdateDocumentRequest
+	(*UpdateDocumentResponse)(nil),           // 48: prx.v1.UpdateDocumentResponse
+	(*DeleteDocumentRequest)(nil),            // 49: prx.v1.DeleteDocumentRequest
+	(*DeleteDocumentResponse)(nil),           // 50: prx.v1.DeleteDocumentResponse
+	(*ReadDocumentContentRequest)(nil),       // 51: prx.v1.ReadDocumentContentRequest
+	(*ReadDocumentContentResponse)(nil),      // 52: prx.v1.ReadDocumentContentResponse
+	(*SelectLocalFileRequest)(nil),           // 53: prx.v1.SelectLocalFileRequest
+	(*SelectLocalFileResponse)(nil),          // 54: prx.v1.SelectLocalFileResponse
+	(*GitHubHost)(nil),                       // 55: prx.v1.GitHubHost
+	(*GitHubAuthMethod)(nil),                 // 56: prx.v1.GitHubAuthMethod
+	(*GitHubConfig)(nil),                     // 57: prx.v1.GitHubConfig
+	(*GetConfigRequest)(nil),                 // 58: prx.v1.GetConfigRequest
+	(*GetConfigResponse)(nil),                // 59: prx.v1.GetConfigResponse
+	(*UpdateGitHubSyncConfigRequest)(nil),    // 60: prx.v1.UpdateGitHubSyncConfigRequest
+	(*UpdateGitHubSyncConfigResponse)(nil),   // 61: prx.v1.UpdateGitHubSyncConfigResponse
+	(*AddGitHubHostRequest)(nil),             // 62: prx.v1.AddGitHubHostRequest
+	(*AddGitHubHostResponse)(nil),            // 63: prx.v1.AddGitHubHostResponse
+	(*UpdateGitHubHostRequest)(nil),          // 64: prx.v1.UpdateGitHubHostRequest
+	(*UpdateGitHubHostResponse)(nil),         // 65: prx.v1.UpdateGitHubHostResponse
+	(*DeleteGitHubHostRequest)(nil),          // 66: prx.v1.DeleteGitHubHostRequest
+	(*DeleteGitHubHostResponse)(nil),         // 67: prx.v1.DeleteGitHubHostResponse
+	(*AddGitHubAuthMethodRequest)(nil),       // 68: prx.v1.AddGitHubAuthMethodRequest
+	(*AddGitHubAuthMethodResponse)(nil),      // 69: prx.v1.AddGitHubAuthMethodResponse
+	(*UpdateGitHubAuthMethodRequest)(nil),    // 70: prx.v1.UpdateGitHubAuthMethodRequest
+	(*UpdateGitHubAuthMethodResponse)(nil),   // 71: prx.v1.UpdateGitHubAuthMethodResponse
+	(*DeleteGitHubAuthMethodRequest)(nil),    // 72: prx.v1.DeleteGitHubAuthMethodRequest
+	(*DeleteGitHubAuthMethodResponse)(nil),   // 73: prx.v1.DeleteGitHubAuthMethodResponse
+	(*ReorderGitHubAuthMethodsRequest)(nil),  // 74: prx.v1.ReorderGitHubAuthMethodsRequest
+	(*ReorderGitHubAuthMethodsResponse)(nil), // 75: prx.v1.ReorderGitHubAuthMethodsResponse
+	(*ValidateConfigRequest)(nil),            // 76: prx.v1.ValidateConfigRequest
+	(*ValidateConfigResponse)(nil),           // 77: prx.v1.ValidateConfigResponse
+	(*SyncRequest)(nil),                      // 78: prx.v1.SyncRequest
+	(*SyncResponse)(nil),                     // 79: prx.v1.SyncResponse
+	(*GitHubSyncStatus)(nil),                 // 80: prx.v1.GitHubSyncStatus
+	(*GetGitHubSyncStatusRequest)(nil),       // 81: prx.v1.GetGitHubSyncStatusRequest
+	(*GetGitHubSyncStatusResponse)(nil),      // 82: prx.v1.GetGitHubSyncStatusResponse
+	(*SyncGitHubIfDueRequest)(nil),           // 83: prx.v1.SyncGitHubIfDueRequest
+	(*SyncGitHubIfDueResponse)(nil),          // 84: prx.v1.SyncGitHubIfDueResponse
+	(*ValidateRequest)(nil),                  // 85: prx.v1.ValidateRequest
+	(*ValidateResponse)(nil),                 // 86: prx.v1.ValidateResponse
+	(*DebugProblem)(nil),                     // 87: prx.v1.DebugProblem
+	(*DebugBuild)(nil),                       // 88: prx.v1.DebugBuild
+	(*DebugRuntime)(nil),                     // 89: prx.v1.DebugRuntime
+	(*DebugEnvironmentVariable)(nil),         // 90: prx.v1.DebugEnvironmentVariable
+	(*DebugPaths)(nil),                       // 91: prx.v1.DebugPaths
+	(*DebugConfigHost)(nil),                  // 92: prx.v1.DebugConfigHost
+	(*DebugConfigAuthMethod)(nil),            // 93: prx.v1.DebugConfigAuthMethod
+	(*DebugConfig)(nil),                      // 94: prx.v1.DebugConfig
+	(*DebugDatabaseFile)(nil),                // 95: prx.v1.DebugDatabaseFile
+	(*DebugStorage)(nil),                     // 96: prx.v1.DebugStorage
+	(*DebugCount)(nil),                       // 97: prx.v1.DebugCount
+	(*DebugData)(nil),                        // 98: prx.v1.DebugData
+	(*DebugSyncFailure)(nil),                 // 99: prx.v1.DebugSyncFailure
+	(*DebugErrorGroup)(nil),                  // 100: prx.v1.DebugErrorGroup
+	(*DebugAuthCacheEntry)(nil),              // 101: prx.v1.DebugAuthCacheEntry
+	(*DebugGitHubSync)(nil),                  // 102: prx.v1.DebugGitHubSync
+	(*DebugReport)(nil),                      // 103: prx.v1.DebugReport
+	(*GetDebugReportRequest)(nil),            // 104: prx.v1.GetDebugReportRequest
+	(*GetDebugReportResponse)(nil),           // 105: prx.v1.GetDebugReportResponse
 }
 var file_prx_v1_prx_proto_depIdxs = []int32{
-	9,  // 0: prx.v1.BlockedReason.code:type_name -> prx.v1.BlockedReasonCode
-	10, // 1: prx.v1.ErrorDetail.code:type_name -> prx.v1.DomainErrorCode
-	0,  // 2: prx.v1.Feature.status:type_name -> prx.v1.FeatureStatus
-	0,  // 3: prx.v1.Feature.display_status:type_name -> prx.v1.FeatureStatus
-	1,  // 4: prx.v1.Task.kind:type_name -> prx.v1.TaskKind
-	2,  // 5: prx.v1.Task.status:type_name -> prx.v1.TaskStatus
-	3,  // 6: prx.v1.Task.display_state:type_name -> prx.v1.TaskDisplayState
-	12, // 7: prx.v1.Task.blocked_reason:type_name -> prx.v1.BlockedReason
-	4,  // 8: prx.v1.PullRequest.state:type_name -> prx.v1.PullRequestState
-	5,  // 9: prx.v1.PullRequest.review_state:type_name -> prx.v1.ReviewState
-	6,  // 10: prx.v1.PullRequest.mergeability:type_name -> prx.v1.Mergeability
-	7,  // 11: prx.v1.PullRequest.display_state:type_name -> prx.v1.PullRequestDisplayState
-	8,  // 12: prx.v1.Document.kind:type_name -> prx.v1.DocumentKind
-	14, // 13: prx.v1.Snapshot.features:type_name -> prx.v1.Feature
-	15, // 14: prx.v1.Snapshot.tasks:type_name -> prx.v1.Task
-	16, // 15: prx.v1.Snapshot.dependencies:type_name -> prx.v1.Dependency
-	17, // 16: prx.v1.Snapshot.pull_requests:type_name -> prx.v1.PullRequest
-	18, // 17: prx.v1.Snapshot.documents:type_name -> prx.v1.Document
-	15, // 18: prx.v1.Snapshot.ready_tasks:type_name -> prx.v1.Task
-	15, // 19: prx.v1.Snapshot.review_waiting_tasks:type_name -> prx.v1.Task
-	15, // 20: prx.v1.Snapshot.conflict_tasks:type_name -> prx.v1.Task
-	15, // 21: prx.v1.Snapshot.stale_tasks:type_name -> prx.v1.Task
-	19, // 22: prx.v1.GetSnapshotResponse.snapshot:type_name -> prx.v1.Snapshot
-	14, // 23: prx.v1.CreateFeatureResponse.feature:type_name -> prx.v1.Feature
-	0,  // 24: prx.v1.UpdateFeatureRequest.status:type_name -> prx.v1.FeatureStatus
-	14, // 25: prx.v1.UpdateFeatureResponse.feature:type_name -> prx.v1.Feature
-	1,  // 26: prx.v1.CreateTaskRequest.kind:type_name -> prx.v1.TaskKind
-	15, // 27: prx.v1.CreateTaskResponse.task:type_name -> prx.v1.Task
-	2,  // 28: prx.v1.UpdateTaskRequest.status:type_name -> prx.v1.TaskStatus
-	15, // 29: prx.v1.UpdateTaskResponse.task:type_name -> prx.v1.Task
-	16, // 30: prx.v1.AddDependencyResponse.dependency:type_name -> prx.v1.Dependency
-	17, // 31: prx.v1.AttachPullRequestResponse.pull_request:type_name -> prx.v1.PullRequest
-	18, // 32: prx.v1.AddDocumentResponse.document:type_name -> prx.v1.Document
-	18, // 33: prx.v1.GetDocumentResponse.document:type_name -> prx.v1.Document
-	18, // 34: prx.v1.UpdateDocumentResponse.document:type_name -> prx.v1.Document
-	11, // 35: prx.v1.GitHubAuthMethod.type:type_name -> prx.v1.GithubAuthMethodType
-	54, // 36: prx.v1.GitHubConfig.hosts:type_name -> prx.v1.GitHubHost
-	55, // 37: prx.v1.GitHubConfig.auth_methods:type_name -> prx.v1.GitHubAuthMethod
-	56, // 38: prx.v1.GetConfigResponse.config:type_name -> prx.v1.GitHubConfig
-	56, // 39: prx.v1.UpdateGitHubSyncConfigResponse.config:type_name -> prx.v1.GitHubConfig
-	54, // 40: prx.v1.AddGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
-	54, // 41: prx.v1.UpdateGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
-	11, // 42: prx.v1.AddGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
-	55, // 43: prx.v1.AddGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
-	11, // 44: prx.v1.UpdateGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
-	55, // 45: prx.v1.UpdateGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
-	55, // 46: prx.v1.ReorderGitHubAuthMethodsResponse.auth_methods:type_name -> prx.v1.GitHubAuthMethod
-	79, // 47: prx.v1.GetGitHubSyncStatusResponse.status:type_name -> prx.v1.GitHubSyncStatus
-	79, // 48: prx.v1.SyncGitHubIfDueResponse.status:type_name -> prx.v1.GitHubSyncStatus
-	20, // 49: prx.v1.PRXService.GetSnapshot:input_type -> prx.v1.GetSnapshotRequest
-	22, // 50: prx.v1.PRXService.CreateFeature:input_type -> prx.v1.CreateFeatureRequest
-	24, // 51: prx.v1.PRXService.UpdateFeature:input_type -> prx.v1.UpdateFeatureRequest
-	26, // 52: prx.v1.PRXService.DeleteFeature:input_type -> prx.v1.DeleteFeatureRequest
-	28, // 53: prx.v1.PRXService.CreateTask:input_type -> prx.v1.CreateTaskRequest
-	30, // 54: prx.v1.PRXService.UpdateTask:input_type -> prx.v1.UpdateTaskRequest
-	32, // 55: prx.v1.PRXService.DeleteTask:input_type -> prx.v1.DeleteTaskRequest
-	34, // 56: prx.v1.PRXService.AddDependency:input_type -> prx.v1.AddDependencyRequest
-	36, // 57: prx.v1.PRXService.RemoveDependency:input_type -> prx.v1.RemoveDependencyRequest
-	38, // 58: prx.v1.PRXService.AttachPullRequest:input_type -> prx.v1.AttachPullRequestRequest
-	40, // 59: prx.v1.PRXService.DetachPullRequest:input_type -> prx.v1.DetachPullRequestRequest
-	42, // 60: prx.v1.PRXService.AddDocument:input_type -> prx.v1.AddDocumentRequest
-	44, // 61: prx.v1.PRXService.GetDocument:input_type -> prx.v1.GetDocumentRequest
-	46, // 62: prx.v1.PRXService.UpdateDocument:input_type -> prx.v1.UpdateDocumentRequest
-	48, // 63: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
-	50, // 64: prx.v1.PRXService.ReadDocumentContent:input_type -> prx.v1.ReadDocumentContentRequest
-	52, // 65: prx.v1.PRXService.SelectLocalFile:input_type -> prx.v1.SelectLocalFileRequest
-	77, // 66: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
-	80, // 67: prx.v1.PRXService.GetGitHubSyncStatus:input_type -> prx.v1.GetGitHubSyncStatusRequest
-	82, // 68: prx.v1.PRXService.SyncGitHubIfDue:input_type -> prx.v1.SyncGitHubIfDueRequest
-	84, // 69: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
-	57, // 70: prx.v1.PRXService.GetConfig:input_type -> prx.v1.GetConfigRequest
-	59, // 71: prx.v1.PRXService.UpdateGitHubSyncConfig:input_type -> prx.v1.UpdateGitHubSyncConfigRequest
-	61, // 72: prx.v1.PRXService.AddGitHubHost:input_type -> prx.v1.AddGitHubHostRequest
-	63, // 73: prx.v1.PRXService.UpdateGitHubHost:input_type -> prx.v1.UpdateGitHubHostRequest
-	65, // 74: prx.v1.PRXService.DeleteGitHubHost:input_type -> prx.v1.DeleteGitHubHostRequest
-	67, // 75: prx.v1.PRXService.AddGitHubAuthMethod:input_type -> prx.v1.AddGitHubAuthMethodRequest
-	69, // 76: prx.v1.PRXService.UpdateGitHubAuthMethod:input_type -> prx.v1.UpdateGitHubAuthMethodRequest
-	71, // 77: prx.v1.PRXService.DeleteGitHubAuthMethod:input_type -> prx.v1.DeleteGitHubAuthMethodRequest
-	73, // 78: prx.v1.PRXService.ReorderGitHubAuthMethods:input_type -> prx.v1.ReorderGitHubAuthMethodsRequest
-	75, // 79: prx.v1.PRXService.ValidateConfig:input_type -> prx.v1.ValidateConfigRequest
-	21, // 80: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
-	23, // 81: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
-	25, // 82: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
-	27, // 83: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
-	29, // 84: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
-	31, // 85: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
-	33, // 86: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
-	35, // 87: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
-	37, // 88: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
-	39, // 89: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
-	41, // 90: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
-	43, // 91: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
-	45, // 92: prx.v1.PRXService.GetDocument:output_type -> prx.v1.GetDocumentResponse
-	47, // 93: prx.v1.PRXService.UpdateDocument:output_type -> prx.v1.UpdateDocumentResponse
-	49, // 94: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
-	51, // 95: prx.v1.PRXService.ReadDocumentContent:output_type -> prx.v1.ReadDocumentContentResponse
-	53, // 96: prx.v1.PRXService.SelectLocalFile:output_type -> prx.v1.SelectLocalFileResponse
-	78, // 97: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
-	81, // 98: prx.v1.PRXService.GetGitHubSyncStatus:output_type -> prx.v1.GetGitHubSyncStatusResponse
-	83, // 99: prx.v1.PRXService.SyncGitHubIfDue:output_type -> prx.v1.SyncGitHubIfDueResponse
-	85, // 100: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
-	58, // 101: prx.v1.PRXService.GetConfig:output_type -> prx.v1.GetConfigResponse
-	60, // 102: prx.v1.PRXService.UpdateGitHubSyncConfig:output_type -> prx.v1.UpdateGitHubSyncConfigResponse
-	62, // 103: prx.v1.PRXService.AddGitHubHost:output_type -> prx.v1.AddGitHubHostResponse
-	64, // 104: prx.v1.PRXService.UpdateGitHubHost:output_type -> prx.v1.UpdateGitHubHostResponse
-	66, // 105: prx.v1.PRXService.DeleteGitHubHost:output_type -> prx.v1.DeleteGitHubHostResponse
-	68, // 106: prx.v1.PRXService.AddGitHubAuthMethod:output_type -> prx.v1.AddGitHubAuthMethodResponse
-	70, // 107: prx.v1.PRXService.UpdateGitHubAuthMethod:output_type -> prx.v1.UpdateGitHubAuthMethodResponse
-	72, // 108: prx.v1.PRXService.DeleteGitHubAuthMethod:output_type -> prx.v1.DeleteGitHubAuthMethodResponse
-	74, // 109: prx.v1.PRXService.ReorderGitHubAuthMethods:output_type -> prx.v1.ReorderGitHubAuthMethodsResponse
-	76, // 110: prx.v1.PRXService.ValidateConfig:output_type -> prx.v1.ValidateConfigResponse
-	80, // [80:111] is the sub-list for method output_type
-	49, // [49:80] is the sub-list for method input_type
-	49, // [49:49] is the sub-list for extension type_name
-	49, // [49:49] is the sub-list for extension extendee
-	0,  // [0:49] is the sub-list for field type_name
+	9,   // 0: prx.v1.BlockedReason.code:type_name -> prx.v1.BlockedReasonCode
+	10,  // 1: prx.v1.ErrorDetail.code:type_name -> prx.v1.DomainErrorCode
+	0,   // 2: prx.v1.Feature.status:type_name -> prx.v1.FeatureStatus
+	0,   // 3: prx.v1.Feature.display_status:type_name -> prx.v1.FeatureStatus
+	1,   // 4: prx.v1.Task.kind:type_name -> prx.v1.TaskKind
+	2,   // 5: prx.v1.Task.status:type_name -> prx.v1.TaskStatus
+	3,   // 6: prx.v1.Task.display_state:type_name -> prx.v1.TaskDisplayState
+	13,  // 7: prx.v1.Task.blocked_reason:type_name -> prx.v1.BlockedReason
+	4,   // 8: prx.v1.PullRequest.state:type_name -> prx.v1.PullRequestState
+	5,   // 9: prx.v1.PullRequest.review_state:type_name -> prx.v1.ReviewState
+	6,   // 10: prx.v1.PullRequest.mergeability:type_name -> prx.v1.Mergeability
+	7,   // 11: prx.v1.PullRequest.display_state:type_name -> prx.v1.PullRequestDisplayState
+	8,   // 12: prx.v1.Document.kind:type_name -> prx.v1.DocumentKind
+	15,  // 13: prx.v1.Snapshot.features:type_name -> prx.v1.Feature
+	16,  // 14: prx.v1.Snapshot.tasks:type_name -> prx.v1.Task
+	17,  // 15: prx.v1.Snapshot.dependencies:type_name -> prx.v1.Dependency
+	18,  // 16: prx.v1.Snapshot.pull_requests:type_name -> prx.v1.PullRequest
+	19,  // 17: prx.v1.Snapshot.documents:type_name -> prx.v1.Document
+	16,  // 18: prx.v1.Snapshot.ready_tasks:type_name -> prx.v1.Task
+	16,  // 19: prx.v1.Snapshot.review_waiting_tasks:type_name -> prx.v1.Task
+	16,  // 20: prx.v1.Snapshot.conflict_tasks:type_name -> prx.v1.Task
+	16,  // 21: prx.v1.Snapshot.stale_tasks:type_name -> prx.v1.Task
+	20,  // 22: prx.v1.GetSnapshotResponse.snapshot:type_name -> prx.v1.Snapshot
+	15,  // 23: prx.v1.CreateFeatureResponse.feature:type_name -> prx.v1.Feature
+	0,   // 24: prx.v1.UpdateFeatureRequest.status:type_name -> prx.v1.FeatureStatus
+	15,  // 25: prx.v1.UpdateFeatureResponse.feature:type_name -> prx.v1.Feature
+	1,   // 26: prx.v1.CreateTaskRequest.kind:type_name -> prx.v1.TaskKind
+	16,  // 27: prx.v1.CreateTaskResponse.task:type_name -> prx.v1.Task
+	2,   // 28: prx.v1.UpdateTaskRequest.status:type_name -> prx.v1.TaskStatus
+	16,  // 29: prx.v1.UpdateTaskResponse.task:type_name -> prx.v1.Task
+	17,  // 30: prx.v1.AddDependencyResponse.dependency:type_name -> prx.v1.Dependency
+	18,  // 31: prx.v1.AttachPullRequestResponse.pull_request:type_name -> prx.v1.PullRequest
+	19,  // 32: prx.v1.AddDocumentResponse.document:type_name -> prx.v1.Document
+	19,  // 33: prx.v1.GetDocumentResponse.document:type_name -> prx.v1.Document
+	19,  // 34: prx.v1.UpdateDocumentResponse.document:type_name -> prx.v1.Document
+	11,  // 35: prx.v1.GitHubAuthMethod.type:type_name -> prx.v1.GithubAuthMethodType
+	55,  // 36: prx.v1.GitHubConfig.hosts:type_name -> prx.v1.GitHubHost
+	56,  // 37: prx.v1.GitHubConfig.auth_methods:type_name -> prx.v1.GitHubAuthMethod
+	57,  // 38: prx.v1.GetConfigResponse.config:type_name -> prx.v1.GitHubConfig
+	57,  // 39: prx.v1.UpdateGitHubSyncConfigResponse.config:type_name -> prx.v1.GitHubConfig
+	55,  // 40: prx.v1.AddGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
+	55,  // 41: prx.v1.UpdateGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
+	11,  // 42: prx.v1.AddGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
+	56,  // 43: prx.v1.AddGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
+	11,  // 44: prx.v1.UpdateGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
+	56,  // 45: prx.v1.UpdateGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
+	56,  // 46: prx.v1.ReorderGitHubAuthMethodsResponse.auth_methods:type_name -> prx.v1.GitHubAuthMethod
+	80,  // 47: prx.v1.GetGitHubSyncStatusResponse.status:type_name -> prx.v1.GitHubSyncStatus
+	80,  // 48: prx.v1.SyncGitHubIfDueResponse.status:type_name -> prx.v1.GitHubSyncStatus
+	12,  // 49: prx.v1.DebugProblem.code:type_name -> prx.v1.DebugProblemCode
+	90,  // 50: prx.v1.DebugPaths.environment_variables:type_name -> prx.v1.DebugEnvironmentVariable
+	92,  // 51: prx.v1.DebugConfig.hosts:type_name -> prx.v1.DebugConfigHost
+	93,  // 52: prx.v1.DebugConfig.auth_methods:type_name -> prx.v1.DebugConfigAuthMethod
+	95,  // 53: prx.v1.DebugStorage.database_file:type_name -> prx.v1.DebugDatabaseFile
+	97,  // 54: prx.v1.DebugData.feature_statuses:type_name -> prx.v1.DebugCount
+	97,  // 55: prx.v1.DebugData.task_display_states:type_name -> prx.v1.DebugCount
+	97,  // 56: prx.v1.DebugData.task_kinds:type_name -> prx.v1.DebugCount
+	97,  // 57: prx.v1.DebugData.pull_request_display_states:type_name -> prx.v1.DebugCount
+	97,  // 58: prx.v1.DebugData.pull_request_hosts:type_name -> prx.v1.DebugCount
+	97,  // 59: prx.v1.DebugData.document_kinds:type_name -> prx.v1.DebugCount
+	80,  // 60: prx.v1.DebugGitHubSync.status:type_name -> prx.v1.GitHubSyncStatus
+	99,  // 61: prx.v1.DebugGitHubSync.host_failures:type_name -> prx.v1.DebugSyncFailure
+	99,  // 62: prx.v1.DebugGitHubSync.repository_failures:type_name -> prx.v1.DebugSyncFailure
+	100, // 63: prx.v1.DebugGitHubSync.error_groups:type_name -> prx.v1.DebugErrorGroup
+	101, // 64: prx.v1.DebugGitHubSync.auth_cache:type_name -> prx.v1.DebugAuthCacheEntry
+	87,  // 65: prx.v1.DebugReport.problems:type_name -> prx.v1.DebugProblem
+	88,  // 66: prx.v1.DebugReport.build:type_name -> prx.v1.DebugBuild
+	89,  // 67: prx.v1.DebugReport.runtime:type_name -> prx.v1.DebugRuntime
+	91,  // 68: prx.v1.DebugReport.paths:type_name -> prx.v1.DebugPaths
+	94,  // 69: prx.v1.DebugReport.config:type_name -> prx.v1.DebugConfig
+	96,  // 70: prx.v1.DebugReport.storage:type_name -> prx.v1.DebugStorage
+	98,  // 71: prx.v1.DebugReport.records:type_name -> prx.v1.DebugData
+	102, // 72: prx.v1.DebugReport.github_sync:type_name -> prx.v1.DebugGitHubSync
+	103, // 73: prx.v1.GetDebugReportResponse.report:type_name -> prx.v1.DebugReport
+	21,  // 74: prx.v1.PRXService.GetSnapshot:input_type -> prx.v1.GetSnapshotRequest
+	23,  // 75: prx.v1.PRXService.CreateFeature:input_type -> prx.v1.CreateFeatureRequest
+	25,  // 76: prx.v1.PRXService.UpdateFeature:input_type -> prx.v1.UpdateFeatureRequest
+	27,  // 77: prx.v1.PRXService.DeleteFeature:input_type -> prx.v1.DeleteFeatureRequest
+	29,  // 78: prx.v1.PRXService.CreateTask:input_type -> prx.v1.CreateTaskRequest
+	31,  // 79: prx.v1.PRXService.UpdateTask:input_type -> prx.v1.UpdateTaskRequest
+	33,  // 80: prx.v1.PRXService.DeleteTask:input_type -> prx.v1.DeleteTaskRequest
+	35,  // 81: prx.v1.PRXService.AddDependency:input_type -> prx.v1.AddDependencyRequest
+	37,  // 82: prx.v1.PRXService.RemoveDependency:input_type -> prx.v1.RemoveDependencyRequest
+	39,  // 83: prx.v1.PRXService.AttachPullRequest:input_type -> prx.v1.AttachPullRequestRequest
+	41,  // 84: prx.v1.PRXService.DetachPullRequest:input_type -> prx.v1.DetachPullRequestRequest
+	43,  // 85: prx.v1.PRXService.AddDocument:input_type -> prx.v1.AddDocumentRequest
+	45,  // 86: prx.v1.PRXService.GetDocument:input_type -> prx.v1.GetDocumentRequest
+	47,  // 87: prx.v1.PRXService.UpdateDocument:input_type -> prx.v1.UpdateDocumentRequest
+	49,  // 88: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
+	51,  // 89: prx.v1.PRXService.ReadDocumentContent:input_type -> prx.v1.ReadDocumentContentRequest
+	53,  // 90: prx.v1.PRXService.SelectLocalFile:input_type -> prx.v1.SelectLocalFileRequest
+	78,  // 91: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
+	81,  // 92: prx.v1.PRXService.GetGitHubSyncStatus:input_type -> prx.v1.GetGitHubSyncStatusRequest
+	83,  // 93: prx.v1.PRXService.SyncGitHubIfDue:input_type -> prx.v1.SyncGitHubIfDueRequest
+	85,  // 94: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
+	104, // 95: prx.v1.PRXService.GetDebugReport:input_type -> prx.v1.GetDebugReportRequest
+	58,  // 96: prx.v1.PRXService.GetConfig:input_type -> prx.v1.GetConfigRequest
+	60,  // 97: prx.v1.PRXService.UpdateGitHubSyncConfig:input_type -> prx.v1.UpdateGitHubSyncConfigRequest
+	62,  // 98: prx.v1.PRXService.AddGitHubHost:input_type -> prx.v1.AddGitHubHostRequest
+	64,  // 99: prx.v1.PRXService.UpdateGitHubHost:input_type -> prx.v1.UpdateGitHubHostRequest
+	66,  // 100: prx.v1.PRXService.DeleteGitHubHost:input_type -> prx.v1.DeleteGitHubHostRequest
+	68,  // 101: prx.v1.PRXService.AddGitHubAuthMethod:input_type -> prx.v1.AddGitHubAuthMethodRequest
+	70,  // 102: prx.v1.PRXService.UpdateGitHubAuthMethod:input_type -> prx.v1.UpdateGitHubAuthMethodRequest
+	72,  // 103: prx.v1.PRXService.DeleteGitHubAuthMethod:input_type -> prx.v1.DeleteGitHubAuthMethodRequest
+	74,  // 104: prx.v1.PRXService.ReorderGitHubAuthMethods:input_type -> prx.v1.ReorderGitHubAuthMethodsRequest
+	76,  // 105: prx.v1.PRXService.ValidateConfig:input_type -> prx.v1.ValidateConfigRequest
+	22,  // 106: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
+	24,  // 107: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
+	26,  // 108: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
+	28,  // 109: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
+	30,  // 110: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
+	32,  // 111: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
+	34,  // 112: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
+	36,  // 113: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
+	38,  // 114: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
+	40,  // 115: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
+	42,  // 116: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
+	44,  // 117: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
+	46,  // 118: prx.v1.PRXService.GetDocument:output_type -> prx.v1.GetDocumentResponse
+	48,  // 119: prx.v1.PRXService.UpdateDocument:output_type -> prx.v1.UpdateDocumentResponse
+	50,  // 120: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
+	52,  // 121: prx.v1.PRXService.ReadDocumentContent:output_type -> prx.v1.ReadDocumentContentResponse
+	54,  // 122: prx.v1.PRXService.SelectLocalFile:output_type -> prx.v1.SelectLocalFileResponse
+	79,  // 123: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
+	82,  // 124: prx.v1.PRXService.GetGitHubSyncStatus:output_type -> prx.v1.GetGitHubSyncStatusResponse
+	84,  // 125: prx.v1.PRXService.SyncGitHubIfDue:output_type -> prx.v1.SyncGitHubIfDueResponse
+	86,  // 126: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
+	105, // 127: prx.v1.PRXService.GetDebugReport:output_type -> prx.v1.GetDebugReportResponse
+	59,  // 128: prx.v1.PRXService.GetConfig:output_type -> prx.v1.GetConfigResponse
+	61,  // 129: prx.v1.PRXService.UpdateGitHubSyncConfig:output_type -> prx.v1.UpdateGitHubSyncConfigResponse
+	63,  // 130: prx.v1.PRXService.AddGitHubHost:output_type -> prx.v1.AddGitHubHostResponse
+	65,  // 131: prx.v1.PRXService.UpdateGitHubHost:output_type -> prx.v1.UpdateGitHubHostResponse
+	67,  // 132: prx.v1.PRXService.DeleteGitHubHost:output_type -> prx.v1.DeleteGitHubHostResponse
+	69,  // 133: prx.v1.PRXService.AddGitHubAuthMethod:output_type -> prx.v1.AddGitHubAuthMethodResponse
+	71,  // 134: prx.v1.PRXService.UpdateGitHubAuthMethod:output_type -> prx.v1.UpdateGitHubAuthMethodResponse
+	73,  // 135: prx.v1.PRXService.DeleteGitHubAuthMethod:output_type -> prx.v1.DeleteGitHubAuthMethodResponse
+	75,  // 136: prx.v1.PRXService.ReorderGitHubAuthMethods:output_type -> prx.v1.ReorderGitHubAuthMethodsResponse
+	77,  // 137: prx.v1.PRXService.ValidateConfig:output_type -> prx.v1.ValidateConfigResponse
+	106, // [106:138] is the sub-list for method output_type
+	74,  // [74:106] is the sub-list for method input_type
+	74,  // [74:74] is the sub-list for extension type_name
+	74,  // [74:74] is the sub-list for extension extendee
+	0,   // [0:74] is the sub-list for field type_name
 }
 
 func init() { file_prx_v1_prx_proto_init() }
@@ -6310,8 +8250,8 @@ func file_prx_v1_prx_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_prx_v1_prx_proto_rawDesc), len(file_prx_v1_prx_proto_rawDesc)),
-			NumEnums:      12,
-			NumMessages:   74,
+			NumEnums:      13,
+			NumMessages:   93,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
