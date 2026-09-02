@@ -195,14 +195,12 @@ func (s *Service) createCompletedDemo(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
+	// Every task carries a merged pull request, so the feature keeps its
+	// automatic status and demonstrates the derived completion itself.
 	for index := 1; index < len(largeTasks); index++ {
 		if _, err := s.AddDependency(ctx, largeTasks[(index-1)/2].ID, largeTasks[index].ID); err != nil {
 			return err
 		}
-	}
-	completedStatus := domain.FeatureStatusCompleted
-	if _, err := s.UpdateFeature(ctx, completed.ID, nil, nil, nil, &completedStatus, nil); err != nil {
-		return err
 	}
 	return nil
 }

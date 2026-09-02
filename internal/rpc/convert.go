@@ -20,6 +20,8 @@ func protoFeature(v domain.Feature) *prxv1.Feature {
 		ReviewWaitingCount: int32(v.ReviewWaitingCount),
 		ConflictCount:      int32(v.ConflictCount),
 		MergedCount:        int32(v.MergedCount),
+		DisplayStatus:      protoFeatureStatus(v.DisplayStatus),
+		FinishedCount:      int32(v.FinishedCount),
 	}
 }
 
@@ -125,6 +127,8 @@ func protoSnapshot(v domain.Snapshot) *prxv1.Snapshot {
 
 func protoFeatureStatus(value domain.FeatureStatus) prxv1.FeatureStatus {
 	switch value {
+	case domain.FeatureStatusAuto:
+		return prxv1.FeatureStatus_FEATURE_STATUS_AUTO
 	case domain.FeatureStatusActive:
 		return prxv1.FeatureStatus_FEATURE_STATUS_ACTIVE
 	case domain.FeatureStatusPaused:
@@ -146,6 +150,8 @@ func domainFeatureStatus(value *prxv1.FeatureStatus) (*domain.FeatureStatus, err
 	}
 	var result domain.FeatureStatus
 	switch *value {
+	case prxv1.FeatureStatus_FEATURE_STATUS_AUTO:
+		result = domain.FeatureStatusAuto
 	case prxv1.FeatureStatus_FEATURE_STATUS_ACTIVE:
 		result = domain.FeatureStatusActive
 	case prxv1.FeatureStatus_FEATURE_STATUS_PAUSED:

@@ -12,6 +12,7 @@ export const domain = {
       unknown: "Unknown",
     },
     featureStatus: {
+      auto: "Automatic",
       active: "Active",
       paused: "Paused",
       completed: "Completed",
@@ -60,6 +61,7 @@ export const domain = {
       unknown: "不明",
     },
     featureStatus: {
+      auto: "自動判定",
       active: "進行中",
       paused: "一時停止",
       completed: "完了",

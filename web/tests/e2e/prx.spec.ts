@@ -754,12 +754,14 @@ test("archives and safely deletes a feature", async ({ page }) => {
   await expect(page.getByText(title)).toHaveCount(0);
 });
 
-for (const { title, size } of [
-  { title: "Delivery control showcase", size: 13 },
-  { title: "Completed 100-task program", size: 100 },
+// The 100-task program has every task finished, so the automatic status moves
+// it off the overview and onto the completed list.
+for (const { title, size, from } of [
+  { title: "Delivery control showcase", size: 13, from: "/" },
+  { title: "Completed 100-task program", size: 100, from: "/completed" },
 ]) {
   test(`renders and inspects the ${size}-node graph`, async ({ page }) => {
-    await page.goto("/");
+    await page.goto(from);
     await page
       .getByRole("link", {
         name: new RegExp(title),
@@ -849,9 +851,10 @@ test("keeps the user's graph zoom across features and reloads", async ({
   await expect.poll(() => graphZoom(page)).toBeLessThan(1);
   const savedZoom = await graphZoom(page);
 
+  await page.getByRole("link", { name: /Completed features/ }).click();
   await page
-    .getByRole("navigation", { name: "Features" })
-    .getByText("Completed 100-task program")
+    .getByRole("link", { name: /Completed 100-task program/ })
+    .first()
     .click();
   await expect(page.locator(".task-node")).toHaveCount(100, {
     timeout: 25_000,

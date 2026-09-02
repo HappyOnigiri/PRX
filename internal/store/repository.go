@@ -57,13 +57,15 @@ func (s *Store) CreateFeature(ctx context.Context, slug, title, description stri
 		return domain.Feature{}, err
 	}
 	now := timestamp(s.now())
+	status, statusAuto := storedFeatureStatus(domain.FeatureStatusAuto)
 	params := db.CreateFeatureParams{
 		ID:          uuid.NewString(),
 		PublicID:    publicID,
 		Slug:        slug,
 		Title:       title,
 		Description: description,
-		Status:      string(domain.FeatureStatusActive),
+		Status:      status,
+		StatusAuto:  statusAuto,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -96,11 +98,13 @@ func (s *Store) UpdateFeature(ctx context.Context, feature domain.Feature) (doma
 		}
 		storageID = value.ID
 	}
+	status, statusAuto := storedFeatureStatus(feature.Status)
 	params := db.UpdateFeatureParams{
 		Slug:        feature.Slug,
 		Title:       feature.Title,
 		Description: feature.Description,
-		Status:      string(feature.Status),
+		Status:      status,
+		StatusAuto:  statusAuto,
 		Archived:    boolInt(feature.Archived),
 		UpdatedAt:   timestamp(s.now()),
 		ID:          storageID,

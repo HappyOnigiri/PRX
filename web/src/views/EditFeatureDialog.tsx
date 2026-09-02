@@ -2,6 +2,7 @@ import { Archive, ArchiveRestore, Save, Trash2, X } from "lucide-react";
 import { useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import { unfinishedTaskCount } from "../feature-status";
 import { formValue } from "../form";
 import { FeatureStatus, type Feature } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
@@ -16,7 +17,11 @@ interface EditFeatureDialogProps {
   onDeleted: () => void;
 }
 
-type Confirmation = "archive" | "delete";
+type Confirmation = "archive" | "complete" | "delete";
+
+// The confirmation replaces the submit, so the values the form held when it was
+// submitted are kept until the person confirms or cancels.
+type FeatureUpdate = Parameters<typeof mutations.updateFeature>[0];
 
 export function EditFeatureDialog({
   feature,
@@ -24,42 +29,45 @@ export function EditFeatureDialog({
   onDeleted,
 }: EditFeatureDialogProps) {
   const [confirmation, setConfirmation] = useState<Confirmation>();
+  const [pendingUpdate, setPendingUpdate] = useState<FeatureUpdate>();
   const updateFeature = useDomainMutation(mutations.updateFeature);
   const deleteFeature = useDomainMutation(mutations.deleteFeature);
+  const unfinished = unfinishedTaskCount(feature);
+
+  async function applyUpdate(update: FeatureUpdate) {
+    try {
+      await updateFeature.mutateAsync(update);
+    } catch {
+      return;
+    }
+    onClose();
+  }
 
   async function submitFeature(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
-    try {
-      await updateFeature.mutateAsync({
-        id: feature.id,
-        slug: formValue(form, "slug"),
-        title: formValue(form, "title"),
-        description: formValue(form, "description"),
-        status: Number(form.get("status")),
-      });
-    } catch {
+    const status: FeatureStatus = Number(form.get("status"));
+    const update: FeatureUpdate = {
+      id: feature.id,
+      slug: formValue(form, "slug"),
+      title: formValue(form, "title"),
+      description: formValue(form, "description"),
+      status,
+    };
+    if (status === FeatureStatus.COMPLETED && unfinished > 0) {
+      setPendingUpdate(update);
+      setConfirmation("complete");
       return;
     }
-    onClose();
+    await applyUpdate(update);
   }
 
   async function archiveFeature() {
-    try {
-      await updateFeature.mutateAsync({ id: feature.id, archived: true });
-    } catch {
-      return;
-    }
-    onClose();
+    await applyUpdate({ id: feature.id, archived: true });
   }
 
   async function restoreFeature() {
-    try {
-      await updateFeature.mutateAsync({ id: feature.id, archived: false });
-    } catch {
-      return;
-    }
-    onClose();
+    await applyUpdate({ id: feature.id, archived: false });
   }
 
   async function removeFeature() {
@@ -99,15 +107,20 @@ export function EditFeatureDialog({
       <LifecycleConfirmation
         confirmation={confirmation}
         feature={feature}
+        unfinished={unfinished}
         updatePending={updateFeature.isPending}
         deletePending={deleteFeature.isPending}
         updateError={updateFeature.error}
         deleteError={deleteFeature.error}
         onCancel={() => {
           setConfirmation(undefined);
+          setPendingUpdate(undefined);
         }}
         onArchive={() => {
           void archiveFeature();
+        }}
+        onComplete={() => {
+          if (pendingUpdate) void applyUpdate(pendingUpdate);
         }}
         onDelete={() => {
           void removeFeature();
@@ -173,7 +186,7 @@ function ArchivedFeatureDialog({
         </div>
         <div>
           <dt>{t("common.status")}</dt>
-          <dd>{featureStatusLabel(feature.status, t)}</dd>
+          <dd>{featureStatusLabel(feature.displayStatus, t)}</dd>
         </div>
       </dl>
       <MutationError error={updateError} />
@@ -232,6 +245,7 @@ function ActiveFeatureDialog({
         {t("common.status")}
         <select name="status" defaultValue={feature.status}>
           {[
+            FeatureStatus.AUTO,
             FeatureStatus.ACTIVE,
             FeatureStatus.PAUSED,
             FeatureStatus.COMPLETED,
@@ -273,22 +287,26 @@ function ActiveFeatureDialog({
 function LifecycleConfirmation({
   confirmation,
   feature,
+  unfinished,
   updatePending,
   deletePending,
   updateError,
   deleteError,
   onCancel,
   onArchive,
+  onComplete,
   onDelete,
 }: {
   confirmation: Confirmation | undefined;
   feature: Feature;
+  unfinished: number;
   updatePending: boolean;
   deletePending: boolean;
   updateError: Error | null;
   deleteError: Error | null;
   onCancel: () => void;
   onArchive: () => void;
+  onComplete: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
@@ -303,6 +321,20 @@ function LifecycleConfirmation({
         error={updateError}
         onCancel={onCancel}
         onConfirm={onArchive}
+      />
+    );
+  if (confirmation === "complete")
+    return (
+      <ConfirmationDialog
+        title={t("featureEdit.completeTitle", { title: feature.title })}
+        description={t("featureEdit.completeDescription", {
+          count: unfinished,
+        })}
+        confirmLabel={t("featureEdit.confirmComplete")}
+        pending={updatePending}
+        error={updateError}
+        onCancel={onCancel}
+        onConfirm={onComplete}
       />
     );
   return (

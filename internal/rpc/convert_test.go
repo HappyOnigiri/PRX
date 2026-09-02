@@ -16,6 +16,7 @@ func TestProtoFeatureStatusMapsEveryKnownValue(t *testing.T) {
 		value domain.FeatureStatus
 		want  prxv1.FeatureStatus
 	}{
+		{"auto", domain.FeatureStatusAuto, prxv1.FeatureStatus_FEATURE_STATUS_AUTO},
 		{"active", domain.FeatureStatusActive, prxv1.FeatureStatus_FEATURE_STATUS_ACTIVE},
 		{"paused", domain.FeatureStatusPaused, prxv1.FeatureStatus_FEATURE_STATUS_PAUSED},
 		{"completed", domain.FeatureStatusCompleted, prxv1.FeatureStatus_FEATURE_STATUS_COMPLETED},
@@ -27,6 +28,36 @@ func TestProtoFeatureStatusMapsEveryKnownValue(t *testing.T) {
 				t.Fatalf("protoFeatureStatus(%q)=%s, want %s", test.value, got, test.want)
 			}
 		})
+	}
+}
+
+// The derived status and the finished count leave the server together, so a
+// client can label the feature and explain what is left without recounting the
+// tasks itself.
+func TestProtoFeatureCarriesTheDerivedStatusAndFinishedCount(t *testing.T) {
+	got := protoFeature(domain.Feature{
+		ID:            "F-1",
+		Status:        domain.FeatureStatusAuto,
+		DisplayStatus: domain.FeatureStatusCompleted,
+		TaskCount:     3,
+		FinishedCount: 3,
+	})
+	if got.GetStatus() != prxv1.FeatureStatus_FEATURE_STATUS_AUTO ||
+		got.GetDisplayStatus() != prxv1.FeatureStatus_FEATURE_STATUS_COMPLETED ||
+		got.GetFinishedCount() != 3 {
+		t.Fatalf("converted feature=%+v", got)
+	}
+}
+
+func TestDomainFeatureStatusAcceptsAutoAndRejectsUnknownValues(t *testing.T) {
+	auto := prxv1.FeatureStatus_FEATURE_STATUS_AUTO
+	got, err := domainFeatureStatus(&auto)
+	if err != nil || got == nil || *got != domain.FeatureStatusAuto {
+		t.Fatalf("domainFeatureStatus(auto)=%v err=%v", got, err)
+	}
+	unknown := prxv1.FeatureStatus(999)
+	if _, err := domainFeatureStatus(&unknown); domain.ErrorCode(err) != domain.DomainErrorCodeInvalidStatus {
+		t.Fatalf("domainFeatureStatus(unknown) err=%v", err)
 	}
 }
 

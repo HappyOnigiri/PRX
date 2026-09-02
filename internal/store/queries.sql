@@ -1,6 +1,7 @@
 -- name: CreateFeature :one
-INSERT INTO features (id, public_id, slug, title, description, status, archived, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+INSERT INTO features (
+  id, public_id, slug, title, description, status, status_auto, archived, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
 
 -- name: IncrementIDSequence :one
 UPDATE id_sequences SET next_value = next_value + 1 WHERE entity = ? RETURNING next_value;
@@ -18,7 +19,9 @@ SELECT * FROM features WHERE slug = ?;
 SELECT * FROM features ORDER BY archived, updated_at DESC, slug;
 
 -- name: UpdateFeature :one
-UPDATE features SET slug=?, title=?, description=?, status=?, archived=?, updated_at=? WHERE id=? RETURNING *;
+UPDATE features
+SET slug=?, title=?, description=?, status=?, status_auto=?, archived=?, updated_at=?
+WHERE id=? RETURNING *;
 
 -- name: DeleteFeature :exec
 DELETE FROM features WHERE id=?;

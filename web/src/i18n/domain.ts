@@ -22,6 +22,7 @@ export function taskStatusLabel(value: TaskStatus, t: TFunction): string {
 }
 
 export const featureStatusKeys = {
+  [FeatureStatus.AUTO]: "featureStatus.auto",
   [FeatureStatus.ACTIVE]: "featureStatus.active",
   [FeatureStatus.PAUSED]: "featureStatus.paused",
   [FeatureStatus.COMPLETED]: "featureStatus.completed",

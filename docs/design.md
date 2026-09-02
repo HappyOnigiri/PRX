@@ -102,6 +102,11 @@ Manual task-state overrides take precedence over automatic derivation.
 Dependency satisfaction uses raw completion semantics rather than display labels.
 Presentation flags such as review, conflict, or staleness do not silently redefine completion.
 
+A feature's presented status follows the same two-layer rule as a task's.
+Its stored status defaults to automatic, and an automatic feature is presented as completed once it owns at least one task and every one of them is finished.
+A stored status other than automatic is a manual decision and is presented unchanged, so a feature returned to active work stays active while its tasks remain finished.
+A feature has no separate derived vocabulary: the derived value is a stored status without the automatic member.
+
 Stale synchronization data preserves the last known state and remains visibly marked as stale.
 An external failure must not rewrite known state as unknown.
 
@@ -159,7 +164,10 @@ The interval defaults to 3600 seconds and cannot be lower than 600 seconds.
 SQLite records the latest attempt and completion, and atomically grants one caller the right to run an expired refresh.
 
 Automatic and unscoped manual refreshes include pull requests from active features only.
-Explicit feature or task refreshes may still maintain archived history.
+A feature presented as completed leaves those refreshes for the same reason an archived one does.
+Explicit feature or task refreshes may still maintain archived and completed history.
+A completed feature therefore keeps its recorded pull-request state even when GitHub changes it.
+An automatically completed feature does not return to active work on its own; changing its status or its tasks does that.
 Merged and closed pull requests remain eligible so state changes and prior errors can be detected.
 Only a refresh that covers every eligible pull request records a run and resets the interval; one narrowed to a feature or task leaves the recorded run status untouched.
 When a refresh fails after a closed or merged state is known, that state is preserved, SyncError is cleared, Stale is set, and the item is excluded from failed counts.

@@ -1,7 +1,7 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Snapshot } from "../src/gen/prx/v1/prx_pb";
+import { FeatureStatus, type Snapshot } from "../src/gen/prx/v1/prx_pb";
 import { AutoSyncStatusContext, type AutoSyncStatus } from "../src/sync-status";
 import { Dashboard } from "../src/views/Dashboard";
 import {
@@ -149,6 +149,11 @@ describe("Dashboard states", () => {
       title: "Conflict task",
       ready: false,
     });
+    const completedTask = makeTask({
+      id: "completed-task",
+      featureId: "completed",
+      title: "Completed graph task",
+    });
     dashboardMocks.state.isPending = false;
     dashboardMocks.state.data = makeSnapshot({
       features: [
@@ -158,15 +163,28 @@ describe("Dashboard states", () => {
           title: "Archived graph",
           archived: true,
         }),
+        makeFeature({
+          id: "completed",
+          title: "Completed graph",
+          displayStatus: FeatureStatus.COMPLETED,
+          taskCount: 1,
+          finishedCount: 1,
+        }),
       ],
-      tasks: [activeTask, archivedTask, syncErrorTask, conflictTask],
+      tasks: [
+        activeTask,
+        archivedTask,
+        syncErrorTask,
+        conflictTask,
+        completedTask,
+      ],
       pullRequests: [
         makePullRequest({ taskId: syncErrorTask.id, syncError: "offline" }),
         makePullRequest({ taskId: archivedTask.id, syncError: "offline" }),
       ],
-      readyTasks: [activeTask, archivedTask],
+      readyTasks: [activeTask, archivedTask, completedTask],
       reviewWaitingTasks: [archivedTask],
-      conflictTasks: [archivedTask, conflictTask],
+      conflictTasks: [archivedTask, conflictTask, completedTask],
       staleTasks: [archivedTask],
     });
     const { container } = renderDashboard();
@@ -193,6 +211,8 @@ describe("Dashboard states", () => {
     expect(screen.getByText("Active graph")).toBeInTheDocument();
     expect(screen.queryByText("Archived graph")).not.toBeInTheDocument();
     expect(screen.queryByText("Archived task")).not.toBeInTheDocument();
+    expect(screen.queryByText("Completed graph")).not.toBeInTheDocument();
+    expect(screen.queryByText("Completed graph task")).not.toBeInTheDocument();
   });
 
   it("starts a full GitHub sync from the dashboard", () => {

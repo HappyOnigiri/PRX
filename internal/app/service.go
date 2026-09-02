@@ -166,6 +166,7 @@ func (s *Service) UpdateFeature(
 	}
 	if !oneOf(
 		feature.Status,
+		domain.FeatureStatusAuto,
 		domain.FeatureStatusActive,
 		domain.FeatureStatusPaused,
 		domain.FeatureStatusCompleted,
@@ -572,6 +573,13 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 	if err != nil {
 		return domain.Snapshot{}, err
 	}
+	return deriveSnapshot(snapshot), nil
+}
+
+// deriveSnapshot turns a stored snapshot into the derived one every caller
+// needs. Synchronization shares it with the read path so the feature statuses
+// it selects on are the same ones clients see.
+func deriveSnapshot(snapshot domain.Snapshot) domain.Snapshot {
 	snapshot.Tasks = domain.Derive(snapshot.Tasks, snapshot.Dependencies, snapshot.PullRequests)
 	taskIndex := map[string]int{}
 	for i, task := range snapshot.Tasks {
@@ -619,8 +627,15 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 		if task.DisplayState == domain.TaskDisplayStateMerged {
 			feature.MergedCount++
 		}
+		if domain.IsTaskFinished(task.DisplayState) {
+			feature.FinishedCount++
+		}
 	}
-	return snapshot, nil
+	for i := range snapshot.Features {
+		feature := &snapshot.Features[i]
+		feature.DisplayStatus = domain.FeatureDisplayStatus(feature.Status, feature.TaskCount, feature.FinishedCount)
+	}
+	return snapshot
 }
 
 func (s *Service) syncSelected(
@@ -631,10 +646,11 @@ func (s *Service) syncSelected(
 	if s.provider == nil && s.configStore == nil {
 		return 0, 0, domain.NewError(domain.DomainErrorCodeGitHubAuth, "GitHub provider is not configured")
 	}
-	snapshot, err := s.repository.Snapshot(ctx)
+	stored, err := s.repository.Snapshot(ctx)
 	if err != nil {
 		return 0, 0, err
 	}
+	snapshot := deriveSnapshot(stored)
 	featureResolved := ""
 	if featureID != "" {
 		feature, err := s.ResolveFeature(ctx, featureID)
@@ -652,9 +668,13 @@ func (s *Service) syncSelected(
 	for _, task := range snapshot.Tasks {
 		taskFeature[task.ID] = task.FeatureID
 	}
+	// A completed feature leaves automatic and unscoped manual refreshes for the
+	// same reason an archived one does: its pull requests are no longer part of
+	// the work in flight. An explicit feature or task keeps maintaining them.
 	activeFeatures := map[string]bool{}
 	for _, feature := range snapshot.Features {
-		activeFeatures[feature.ID] = !feature.Archived
+		activeFeatures[feature.ID] = !feature.Archived &&
+			feature.DisplayStatus != domain.FeatureStatusCompleted
 	}
 	allFeatures := featureID == "" && taskID == ""
 	eligible := snapshot.PullRequests[:0]

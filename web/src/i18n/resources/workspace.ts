@@ -79,6 +79,10 @@ export const workspace = {
       archiveDescription:
         "It will leave Overview and Active circuits, and its workspace will become read-only until restored.",
       confirmArchive: "Archive feature",
+      completeTitle: "Complete {{title}}?",
+      completeDescription:
+        "{{count}} of its tasks are still unfinished. It will leave Overview and Active circuits and stop being refreshed from GitHub.",
+      confirmComplete: "Complete feature",
       deleteTitle: "Delete {{title}}?",
       deleteDescription:
         "This permanently deletes the feature and its {{count}} tasks, including dependencies, pull requests, references, and implementation plans. This cannot be undone.",
@@ -166,6 +170,10 @@ export const workspace = {
       archiveDescription:
         "概要と進行中のフィーチャーから外れ、復元するまでワークスペースが読み取り専用になります。",
       confirmArchive: "アーカイブする",
+      completeTitle: "{{title}} を完了にしますか？",
+      completeDescription:
+        "未完了のタスクが {{count}} 件あります。概要と進行中のフィーチャーから外れ、GitHub の自動更新の対象からも外れます。",
+      confirmComplete: "完了にする",
       deleteTitle: "{{title}} を削除しますか？",
       deleteDescription:
         "フィーチャーと {{count}} 件のタスクに加え、依存関係、プルリクエスト、参照資料、実装プランを完全に削除します。この操作は取り消せません。",
