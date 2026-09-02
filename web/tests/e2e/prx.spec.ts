@@ -702,14 +702,19 @@ test("archives and safely deletes a feature", async ({ page }) => {
     .getByRole("button", { name: "Archive feature" })
     .click();
   await expect(page.getByText("Archived · read-only")).toBeVisible();
+  // The rail follows the feature into its new category instead of dropping it,
+  // so the archived row becomes the single selected one.
+  const rail = page.getByRole("navigation", { name: "Features" });
   await expect(
-    page.getByRole("navigation", { name: "Features" }).getByText(title),
-  ).toHaveCount(0);
+    rail.getByRole("link", { name: /Archived features/ }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(rail.getByText(title)).toHaveCount(1);
   await page.getByRole("link", { name: /Archived features/ }).click();
   await expect(
     page.getByRole("heading", { name: "Archived features", exact: true }),
   ).toBeVisible();
-  await page.getByText(title).click();
+  // The rail lists the same archived feature, so open the one on the page.
+  await page.locator(".feature-list").getByText(title).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toHaveCount(
     0,
   );
@@ -725,8 +730,9 @@ test("archives and safely deletes a feature", async ({ page }) => {
   await page.getByRole("button", { name: "Restore feature" }).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toBeVisible();
   await expect(
-    page.getByRole("navigation", { name: "Features" }).getByText(title),
-  ).toHaveCount(1);
+    rail.getByRole("link", { name: /Active features/ }),
+  ).toHaveAttribute("aria-current", "page");
+  await expect(rail.getByText(title)).toHaveCount(1);
 
   await page.getByRole("button", { name: "Edit feature" }).click();
   await page.getByRole("button", { name: "Archive feature" }).click();

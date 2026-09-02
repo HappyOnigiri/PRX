@@ -1,14 +1,10 @@
-import { Link, useNavigate } from "@tanstack/react-router";
+import { Link, useLocation, useNavigate } from "@tanstack/react-router";
 import { Plus, Settings, X } from "lucide-react";
 import { useState, type ReactNode, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
 import { isDemoMode } from "./demo";
-import {
-  isActiveFeature,
-  isArchivedFeature,
-  isCompletedFeature,
-} from "./feature-status";
+import { featureCategories, selectedFeatureCategory } from "./feature-status";
 import { formValue } from "./form";
 import { useAutoSync, useDomainMutation, useSnapshot } from "./hooks";
 import { formatError } from "./i18n/domain";
@@ -31,11 +27,9 @@ function AppShellLayout({ children }: { children: ReactNode }) {
   const snapshot = useSnapshot();
   const [showCreate, setShowCreate] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const activeCount = snapshot.data?.features.filter(isActiveFeature).length;
-  const completedCount =
-    snapshot.data?.features.filter(isCompletedFeature).length;
-  const archivedCount =
-    snapshot.data?.features.filter(isArchivedFeature).length;
+  const pathname = useLocation({ select: (location) => location.pathname });
+  const features = snapshot.data?.features;
+  const selected = selectedFeatureCategory(pathname, features);
   const demo = isDemoMode();
   return (
     <div className="app-shell" data-demo={demo || undefined}>
@@ -61,19 +55,28 @@ function AppShellLayout({ children }: { children: ReactNode }) {
         </Link>
         <nav aria-label={t("nav.features")}>
           <Link to="/" className="nav-link">
-            {t("nav.overview")} <span>{activeCount ?? "—"}</span>
+            {t("nav.overview")}
           </Link>
-          <Link to="/completed" className="nav-link">
-            {t("nav.completedFeatures")} <span>{completedCount ?? "—"}</span>
-          </Link>
-          <Link to="/archived" className="nav-link">
-            {t("nav.archivedFeatures")} <span>{archivedCount ?? "—"}</span>
-          </Link>
+          <hr className="nav-divider" />
+          {featureCategories.map((category) => (
+            <Link
+              key={category.id}
+              to={category.path}
+              className="nav-link"
+              // The selection follows the derived category rather than the
+              // matched route, so a feature workspace keeps its category lit.
+              data-active={category.id === selected.id || undefined}
+              aria-current={category.id === selected.id ? "page" : undefined}
+            >
+              {t(category.navLabelKey)}{" "}
+              <span>{features?.filter(category.select).length ?? "—"}</span>
+            </Link>
+          ))}
+          <hr className="nav-divider" />
           <Link to="/tasks" search={{ q: "" }} className="nav-link">
             {t("nav.taskSearch")}
           </Link>
-          <div className="nav-caption">{t("nav.activeCircuits")}</div>
-          {snapshot.data?.features.filter(isActiveFeature).map((feature) => (
+          {features?.filter(selected.select).map((feature) => (
             <Link
               key={feature.id}
               to="/features/$featureId"

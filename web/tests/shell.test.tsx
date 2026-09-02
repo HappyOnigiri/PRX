@@ -15,6 +15,7 @@ import { makeFeature, makeSnapshot } from "./factories";
 
 const shellMocks = vi.hoisted(() => ({
   navigate: vi.fn().mockResolvedValue(undefined),
+  pathname: "/",
   mutation: {
     mutateAsync: vi.fn(),
     isPending: false,
@@ -58,6 +59,11 @@ vi.mock("@tanstack/react-router", () => ({
     className?: string;
   }) => <span className={className}>{children}</span>,
   useNavigate: () => shellMocks.navigate,
+  useLocation: ({
+    select,
+  }: {
+    select: (location: { pathname: string }) => unknown;
+  }) => select({ pathname: shellMocks.pathname }),
 }));
 vi.mock("../src/api", () => ({
   mutations: { createFeature: vi.fn() },
@@ -110,7 +116,10 @@ describe("AppShell", () => {
     expect(screen.getByText("Conflict feature")).toBeInTheDocument();
     expect(screen.queryByText("Archived feature")).not.toBeInTheDocument();
     expect(screen.queryByText("Completed feature")).not.toBeInTheDocument();
-    expect(screen.getByText(/Overview/)).toHaveTextContent("Overview 2");
+    expect(screen.getByText("Overview")).toBeInTheDocument();
+    expect(screen.getByText(/Active features/)).toHaveTextContent(
+      "Active features 2",
+    );
     expect(screen.getByText(/Completed features/)).toHaveTextContent(
       "Completed features 1",
     );
