@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   configMutations,
   getConfig,
+  getDebugReport,
   getSnapshot,
   getSyncStatus,
   mutations,
@@ -16,6 +17,7 @@ const apiMocks = vi.hoisted(() => {
     getSnapshot: vi.fn(),
     getConfig: vi.fn(),
     getGitHubSyncStatus: vi.fn(),
+    getDebugReport: vi.fn(),
     syncGitHubIfDue: vi.fn(),
     createFeature: vi.fn(),
     updateFeature: vi.fn(),
@@ -113,6 +115,23 @@ describe("RPC API wrappers", () => {
     expect(apiMocks.client.validateConfig).toHaveBeenCalled();
     expect(apiMocks.client.updateGitHubSyncConfig).toHaveBeenCalledWith(
       expect.objectContaining({ intervalSeconds: 600n }),
+    );
+  });
+
+  it("returns the debug report with its rendered text", async () => {
+    const report = { problems: [] };
+    apiMocks.client.getDebugReport.mockResolvedValueOnce({
+      report,
+      text: "PRX diagnostic report\n",
+    });
+    await expect(getDebugReport()).resolves.toEqual({
+      report,
+      text: "PRX diagnostic report\n",
+    });
+
+    apiMocks.client.getDebugReport.mockResolvedValueOnce({ report: undefined });
+    await expect(getDebugReport()).rejects.toThrow(
+      "The server returned an empty debug report.",
     );
   });
 

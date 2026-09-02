@@ -74,6 +74,18 @@ const settingsMocks = vi.hoisted(() => {
       isPending: false,
       error: null as Error | null,
     },
+    debugReport: {
+      data: {
+        report: {
+          problems: [],
+          runtime: { generatedAt: "2026-09-03T04:05:06Z" },
+        },
+        text: "PRX diagnostic report\n",
+      },
+      isError: false,
+      error: null as Error | null,
+      refetch: vi.fn(),
+    },
     mutations: {
       addHost: mutation(),
       updateHost: mutation(),
@@ -90,6 +102,8 @@ const settingsMocks = vi.hoisted(() => {
 vi.mock("../src/api", () => ({ configMutations: settingsMocks.api }));
 vi.mock("../src/hooks", () => ({
   useConfig: () => settingsMocks.config,
+  useDebugReport: () => settingsMocks.debugReport,
+  useQueryDiagnostics: () => [{ name: "snapshot", state: "success, idle" }],
   useConfigMutation: (mutation: unknown) => {
     const entries: [
       unknown,
@@ -395,6 +409,8 @@ describe("SettingsDialog", () => {
     expect(licensesTab).toHaveFocus();
     fireEvent.keyDown(licensesTab, { key: "ArrowRight" });
     expect(serverTab).toHaveFocus();
+    fireEvent.keyDown(serverTab, { key: "ArrowLeft" });
+    expect(licensesTab).toHaveFocus();
   });
 
   it("lists bundled OSS packages and their licenses", async () => {

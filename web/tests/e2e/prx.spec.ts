@@ -209,6 +209,29 @@ test("keeps the Settings dialog size while switching tabs", async ({
   expect(await dialog.boundingBox()).toEqual(serverBounds);
 });
 
+// The debug panel is the only one that mounts on demand, and collecting its
+// report reads the database and the configuration file. This proves the whole
+// path works in a real browser and that opening the dialog alone does not.
+test("collects a diagnostic report when the debug tab is opened", async ({
+  page,
+}) => {
+  const debugRequests: string[] = [];
+  page.on("request", (request) => {
+    if (request.url().includes("GetDebugReport"))
+      debugRequests.push(request.url());
+  });
+  await page.goto("/");
+  await page.getByRole("button", { name: "Settings" }).click();
+  await expect(page.getByRole("dialog", { name: "Settings" })).toBeVisible();
+  expect(debugRequests).toHaveLength(0);
+
+  await page.getByRole("tab", { name: "Debug" }).click();
+  const panel = page.getByRole("tabpanel", { name: "Debug" });
+  await expect(panel.getByText("PRX diagnostic report")).toBeVisible();
+  await expect(panel.getByText(/mode: serve/)).toBeVisible();
+  expect(debugRequests).toHaveLength(1);
+});
+
 test("follows the system theme unless the user selects an override", async ({
   page,
 }) => {

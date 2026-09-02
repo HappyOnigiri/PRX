@@ -17,6 +17,7 @@ import {
   DetachPullRequestRequestSchema,
   DocumentKind,
   GetConfigRequestSchema,
+  GetDebugReportRequestSchema,
   GetDocumentRequestSchema,
   GetGitHubSyncStatusRequestSchema,
   GetSnapshotRequestSchema,
@@ -34,6 +35,7 @@ import {
   UpdateGitHubSyncConfigRequestSchema,
   UpdateTaskRequestSchema,
   ValidateConfigRequestSchema,
+  type DebugReport,
   type FeatureStatus,
   type GithubAuthMethodType,
   type GitHubConfig,
@@ -58,6 +60,20 @@ export async function getConfig(): Promise<GitHubConfig> {
   if (!response.config)
     throw new Error("The server returned an empty GitHub configuration.");
   return response.config;
+}
+
+// The report and its rendered text arrive together so the WebUI can display the
+// sections while copying exactly the text `prx debug` prints.
+export async function getDebugReport(): Promise<{
+  report: DebugReport;
+  text: string;
+}> {
+  const response = await client.getDebugReport(
+    create(GetDebugReportRequestSchema),
+  );
+  if (!response.report)
+    throw new Error("The server returned an empty debug report.");
+  return { report: response.report, text: response.text };
 }
 
 export async function getSyncStatus(): Promise<GitHubSyncStatus> {

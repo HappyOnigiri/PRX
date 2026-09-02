@@ -2,6 +2,7 @@ import { ConnectError } from "@connectrpc/connect";
 import type { TFunction } from "i18next";
 import {
   BlockedReasonCode,
+  DebugProblemCode,
   DocumentKind,
   DomainErrorCode,
   ErrorDetailSchema,
@@ -133,6 +134,39 @@ export function blockedReasonLabel(
       title,
     });
   return t(blockedReasonKeys[reason.code]);
+}
+
+export const debugProblemKeys = {
+  [DebugProblemCode.UNSPECIFIED]: "debugProblem.unknown",
+  [DebugProblemCode.STORAGE_UNAVAILABLE]: "debugProblem.storageUnavailable",
+  [DebugProblemCode.SCHEMA_VERSION_AHEAD_OF_BINARY]:
+    "debugProblem.schemaVersionAheadOfBinary",
+  [DebugProblemCode.DATABASE_NOT_WRITABLE]: "debugProblem.databaseNotWritable",
+  [DebugProblemCode.DATABASE_INTEGRITY_ERRORS]:
+    "debugProblem.databaseIntegrityErrors",
+  [DebugProblemCode.CONFIG_UNREADABLE]: "debugProblem.configUnreadable",
+  [DebugProblemCode.CONFIG_PERMISSIONS_TOO_OPEN]:
+    "debugProblem.configPermissionsTooOpen",
+  [DebugProblemCode.CONFIG_UNKNOWN_FIELDS]: "debugProblem.configUnknownFields",
+  [DebugProblemCode.NO_AUTH_METHOD_FOR_HOST]:
+    "debugProblem.noAuthMethodForHost",
+  [DebugProblemCode.GITHUB_SYNC_RUN_ERROR]: "debugProblem.githubSyncRunError",
+  [DebugProblemCode.GITHUB_SYNC_OVERDUE]: "debugProblem.githubSyncOverdue",
+  [DebugProblemCode.GITHUB_SYNC_NEVER_COMPLETED]:
+    "debugProblem.githubSyncNeverCompleted",
+  [DebugProblemCode.PULL_REQUESTS_STALE]: "debugProblem.pullRequestsStale",
+} as const satisfies Record<DebugProblemCode, string>;
+
+// A report from a newer server may carry a code this bundle does not know, so
+// an unmapped value falls back to the generic label instead of rendering a
+// missing translation key.
+export function debugProblemLabel(
+  value: DebugProblemCode,
+  t: TFunction,
+): string {
+  const known =
+    value in debugProblemKeys ? value : DebugProblemCode.UNSPECIFIED;
+  return t(debugProblemKeys[known]);
 }
 
 export const errorKeys = {
