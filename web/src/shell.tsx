@@ -67,6 +67,9 @@ function AppShellLayout({ children }: { children: ReactNode }) {
           <Link to="/" className="nav-link">
             {t("nav.overview")}
           </Link>
+          <Link to="/tasks" search={{ q: "" }} className="nav-link">
+            {t("nav.taskSearch")}
+          </Link>
           <hr className="nav-divider" />
           {featureCategories.map((category) => (
             <Link
@@ -83,9 +86,6 @@ function AppShellLayout({ children }: { children: ReactNode }) {
             </Link>
           ))}
           <hr className="nav-divider" />
-          <Link to="/tasks" search={{ q: "" }} className="nav-link">
-            {t("nav.taskSearch")}
-          </Link>
           {features?.filter(selected.select).map((feature) => (
             <Link
               key={feature.id}
