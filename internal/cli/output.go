@@ -13,7 +13,10 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-const SchemaVersion = "2"
+// SchemaVersion is the CLI response schema version. The diagnostic report has
+// to state the same value from a package the CLI cannot be imported into, so the
+// constant itself lives in the domain.
+const SchemaVersion = domain.CLIResponseSchemaVersion
 
 type humanRenderer func(io.Writer) error
 

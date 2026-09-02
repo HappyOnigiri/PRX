@@ -1191,6 +1191,15 @@ func TestBlackBoxDefaultTextOutputCoversResourcesAndSummaries(t *testing.T) {
 			t.Fatalf("sync status omitted %q: %s", value, syncStatus.stdout)
 		}
 	}
+	debugReport := run("debug")
+	for _, value := range []string{
+		"PRX diagnostic report", "problems:", "build:", "runtime:", "paths:", "config:", "storage:",
+		"records:", "github_sync:", "cli_schema_version: 2",
+	} {
+		if !strings.Contains(debugReport.stdout, value) {
+			t.Fatalf("debug omitted %q: %s", value, debugReport.stdout)
+		}
+	}
 	syncRead := run("config", "sync")
 	if syncRead.stdout != "Automatic sync interval: 3600 seconds.\n" {
 		t.Fatalf("config sync output=%q", syncRead.stdout)
@@ -1606,6 +1615,18 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 		"failed",
 	)
 	assertDirectObjectKeys(t, runDB("validate"), "valid")
+	assertDirectObjectKeys(
+		t,
+		runDB("debug"),
+		"problems",
+		"build",
+		"runtime",
+		"paths",
+		"config",
+		"storage",
+		"records",
+		"github_sync",
+	)
 
 	assertDirectObjectKeys(t, runDB("document", "delete", documentID), "deleted")
 	assertDirectObjectKeys(t, runDB("plan", "delete", taskAID), "deleted")
@@ -1903,5 +1924,82 @@ func TestConfigUnknownFieldsWarnWithoutFailing(t *testing.T) {
 	clean := executeCLI(t, binary, "", "--db", dbPath, "--config", quiet, "config", "validate")
 	if clean.exit != 0 || clean.stderr != "" || clean.stdout != "Configuration is valid.\n" {
 		t.Fatalf("known config stdout=%q stderr=%q exit=%d", clean.stdout, clean.stderr, clean.exit)
+	}
+}
+
+// TestBlackBoxDebugRunsWithoutStorageAndWithoutRefreshing proves the diagnostic
+// command works exactly where it is needed. A database path that cannot be
+// opened still produces a report, and running it twice leaves the recorded
+// synchronization status untouched, so the failure a user was asked to send is
+// still there when they send it.
+func TestBlackBoxDebugRunsWithoutStorageAndWithoutRefreshing(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	configPath := filepath.Join(root, "config.yaml")
+
+	brokenPath := filepath.Join(root, "not-a-directory", "prx.db")
+	if err := os.WriteFile(filepath.Join(root, "not-a-directory"), []byte("x"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	broken := executeCLI(t, binary, "", "--db", brokenPath, "--config", configPath, "--json", "debug")
+	if broken.exit != 0 {
+		t.Fatalf("debug failed on a broken database: stdout=%q stderr=%q exit=%d",
+			broken.stdout, broken.stderr, broken.exit)
+	}
+	assertCompactJSON(t, broken.stdout)
+	brokenReport := decodeObject(t, []byte(broken.stdout), broken.stdout)
+	assertDirectObjectKeys(t, brokenReport, "problems", "build", "runtime", "paths", "config", "storage",
+		"records", "github_sync")
+	if !strings.Contains(string(brokenReport["storage"]), "\"error\"") {
+		t.Fatalf("storage section did not report the failure: %s", brokenReport["storage"])
+	}
+	if !strings.Contains(string(brokenReport["problems"]), "storage_unavailable") {
+		t.Fatalf("problems=%s", brokenReport["problems"])
+	}
+
+	dbPath := filepath.Join(root, "debug.db")
+	base := []string{"--db", dbPath, "--config", configPath, "--json"}
+	before := executeCLI(t, binary, "", append(base, "sync", "status")...)
+	if before.exit != 0 {
+		t.Fatalf("sync status failed: stderr=%q exit=%d", before.stderr, before.exit)
+	}
+	for range 2 {
+		result := executeCLI(t, binary, "", append(base, "debug")...)
+		if result.exit != 0 || result.stderr != "" {
+			t.Fatalf("debug failed: stdout=%q stderr=%q exit=%d", result.stdout, result.stderr, result.exit)
+		}
+	}
+	after := executeCLI(t, binary, "", append(base, "sync", "status")...)
+	if after.stdout != before.stdout {
+		t.Fatalf("debug changed the recorded sync status:\nbefore=%s\nafter=%s", before.stdout, after.stdout)
+	}
+}
+
+// TestBlackBoxDebugKeepsCredentialsOutOfItsReport pairs with the configuration
+// output rules: the report names the credential method and never its secret.
+func TestBlackBoxDebugKeepsCredentialsOutOfItsReport(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "secret.db")
+	configPath := filepath.Join(root, "config.yaml")
+	body := "version: 1\ngithub:\n  hosts:\n    - host: github.com\n" +
+		"  auth_methods:\n    - id: inline\n      host: github.com\n      type: inline\n" +
+		"      token: github_pat_debug_secret\n"
+	if err := os.WriteFile(configPath, []byte(body), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	base := []string{"--db", dbPath, "--config", configPath}
+
+	for _, args := range [][]string{{"debug"}, {"debug", "--json"}} {
+		result := executeCLI(t, binary, "", append(base, args...)...)
+		if result.exit != 0 {
+			t.Fatalf("%v failed: stderr=%q exit=%d", args, result.stderr, result.exit)
+		}
+		if strings.Contains(result.stdout, "github_pat_debug_secret") {
+			t.Fatalf("%v disclosed the inline token: %s", args, result.stdout)
+		}
+		if !strings.Contains(result.stdout, "inline") {
+			t.Fatalf("%v omitted the credential method: %s", args, result.stdout)
+		}
 	}
 }

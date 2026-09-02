@@ -22,6 +22,13 @@ func newOpenService(_ io.Writer) cli.OpenService {
 		fixturePath := options.FixturePath
 		configPath := config.PathFromContext(ctx)
 		var temporaryRoot string
+		// The default location is resolved here rather than inside the store so
+		// a failed open can still report which database was attempted.
+		if dbPath == "" && !options.Demo {
+			if resolved, resolveErr := store.DefaultPath(); resolveErr == nil {
+				dbPath = resolved
+			}
+		}
 		if options.Demo {
 			var err error
 			temporaryRoot, err = os.MkdirTemp("", "prx-demo-")
@@ -42,7 +49,7 @@ func newOpenService(_ io.Writer) cli.OpenService {
 			if temporaryRoot != "" {
 				_ = os.RemoveAll(temporaryRoot)
 			}
-			return nil, nil, err
+			return nil, nil, &cli.ServiceOpenError{DatabasePath: dbPath, Err: err}
 		}
 		closer := &serviceCloser{database: database, temporaryRoot: temporaryRoot}
 
@@ -69,6 +76,14 @@ func newOpenService(_ io.Writer) cli.OpenService {
 			}
 		}
 		service := app.NewWithConfig(database, provider, configStore)
+		service.SetProcessInfo(app.ProcessInfo{
+			Mode:               "cli",
+			Demo:               options.Demo,
+			GitHubFixture:      fixturePath != "",
+			DatabasePath:       dbPath,
+			DatabasePathSource: options.DatabasePathSource,
+			ConfigPathSource:   options.ConfigPathSource,
+		})
 		if options.Demo {
 			markdownPath := filepath.Join(temporaryRoot, "walkthrough.md")
 			if err := service.InitializeDemo(ctx, markdownPath); err != nil {
