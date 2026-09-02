@@ -32,6 +32,21 @@ export const dashboard = {
         },
       },
     },
+    completed: {
+      loadingTitle: "Loading completed features…",
+      loadingDetail: "Reading finished work from the local database.",
+      errorTitle: "Completed features could not be loaded",
+      eyebrow: "Finished work",
+      title: "Completed features",
+      description:
+        "Features whose tasks are all finished. Change the status to return one to active work.",
+      featureCount: "completed features",
+      listLabel: "Completed feature list",
+      emptyTitle: "No completed features",
+      emptyDetail:
+        "A feature appears here once every one of its tasks is finished, or when you set its status to completed.",
+      progress: "{{merged}}/{{total}} merged",
+    },
     archived: {
       loadingTitle: "Loading archived features…",
       loadingDetail: "Reading feature history from the local database.",
@@ -81,6 +96,21 @@ export const dashboard = {
           detail: "GitHub の対応が必要",
         },
       },
+    },
+    completed: {
+      loadingTitle: "完了済みフィーチャーを読み込んでいます…",
+      loadingDetail: "ローカルデータベースから完了した作業を確認しています。",
+      errorTitle: "完了済みフィーチャーを読み込めませんでした",
+      eyebrow: "完了した作業",
+      title: "完了済み",
+      description:
+        "タスクがすべて終了したフィーチャーです。ステータスを変更すると進行中へ戻せます。",
+      featureCount: "件の完了",
+      listLabel: "完了済みフィーチャー一覧",
+      emptyTitle: "完了済みフィーチャーはありません",
+      emptyDetail:
+        "タスクがすべて終了したフィーチャー、またはステータスを完了にしたフィーチャーがここへ表示されます。",
+      progress: "{{merged}}/{{total}} マージ済み",
     },
     archived: {
       loadingTitle: "アーカイブ済みフィーチャーを読み込んでいます…",

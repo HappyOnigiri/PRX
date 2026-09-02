@@ -24,9 +24,11 @@ const featureDefaults = {
   id: "feature-1",
   slug: "payments",
   title: "Payments rollout",
-  status: FeatureStatus.ACTIVE,
+  status: FeatureStatus.AUTO,
+  displayStatus: FeatureStatus.ACTIVE,
   taskCount: 1,
   readyCount: 1,
+  finishedCount: 0,
 } satisfies MessageInitShape<typeof FeatureSchema>;
 
 const taskDefaults = {

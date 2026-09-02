@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { RefreshCw, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import { isActiveFeature } from "../feature-status";
 import type { Feature, Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
 import { formatError } from "../i18n/domain";
@@ -60,7 +61,7 @@ export function Dashboard() {
         action={() => void refetch()}
       />
     );
-  const features = data.features.filter((feature) => !feature.archived);
+  const features = data.features.filter(isActiveFeature);
   const featureIds = new Set(features.map((feature) => feature.id));
   const syncErrorTaskIds = new Set(
     filterTaskSearchResults(data, {

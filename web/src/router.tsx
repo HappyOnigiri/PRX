@@ -6,6 +6,7 @@ import {
 } from "@tanstack/react-router";
 import { AppShell } from "./shell";
 import { ArchivedFeatures } from "./views/ArchivedFeatures";
+import { CompletedFeatures } from "./views/CompletedFeatures";
 import { Dashboard } from "./views/Dashboard";
 import { FeatureWorkspace } from "./views/FeatureWorkspace";
 import { TaskSearch } from "./views/TaskSearch";
@@ -32,6 +33,11 @@ const archivedRoute = createRoute({
   path: "/archived",
   component: ArchivedFeatures,
 });
+const completedRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/completed",
+  component: CompletedFeatures,
+});
 const taskSearchRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/tasks",
@@ -43,6 +49,7 @@ const taskSearchRoute = createRoute({
 const routeTree = rootRoute.addChildren([
   indexRoute,
   archivedRoute,
+  completedRoute,
   taskSearchRoute,
   featureRoute,
 ]);

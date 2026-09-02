@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { FeatureStatus } from "../src/gen/prx/v1/prx_pb";
 import { setDisplayLanguage } from "../src/i18n";
 import { AppShell } from "../src/shell";
 import { appVersion } from "../src/version";
@@ -37,6 +38,14 @@ const snapshot = makeSnapshot({
       readyCount: 0,
     }),
     makeFeature({ id: "archived", title: "Archived feature", archived: true }),
+    makeFeature({
+      id: "completed",
+      title: "Completed feature",
+      displayStatus: FeatureStatus.COMPLETED,
+      taskCount: 2,
+      finishedCount: 2,
+      readyCount: 0,
+    }),
   ],
 });
 
@@ -100,7 +109,11 @@ describe("AppShell", () => {
     expect(screen.getByText("Active feature")).toBeInTheDocument();
     expect(screen.getByText("Conflict feature")).toBeInTheDocument();
     expect(screen.queryByText("Archived feature")).not.toBeInTheDocument();
+    expect(screen.queryByText("Completed feature")).not.toBeInTheDocument();
     expect(screen.getByText(/Overview/)).toHaveTextContent("Overview 2");
+    expect(screen.getByText(/Completed features/)).toHaveTextContent(
+      "Completed features 1",
+    );
     expect(screen.getByText(/Archived features/)).toHaveTextContent(
       "Archived features 1",
     );

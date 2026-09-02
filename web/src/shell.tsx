@@ -4,6 +4,11 @@ import { useState, type ReactNode, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
 import { isDemoMode } from "./demo";
+import {
+  isActiveFeature,
+  isArchivedFeature,
+  isCompletedFeature,
+} from "./feature-status";
 import { formValue } from "./form";
 import { useAutoSync, useDomainMutation, useSnapshot } from "./hooks";
 import { formatError } from "./i18n/domain";
@@ -26,12 +31,11 @@ function AppShellLayout({ children }: { children: ReactNode }) {
   const snapshot = useSnapshot();
   const [showCreate, setShowCreate] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const activeCount = snapshot.data?.features.filter(
-    (feature) => !feature.archived,
-  ).length;
-  const archivedCount = snapshot.data?.features.filter(
-    (feature) => feature.archived,
-  ).length;
+  const activeCount = snapshot.data?.features.filter(isActiveFeature).length;
+  const completedCount =
+    snapshot.data?.features.filter(isCompletedFeature).length;
+  const archivedCount =
+    snapshot.data?.features.filter(isArchivedFeature).length;
   const demo = isDemoMode();
   return (
     <div className="app-shell" data-demo={demo || undefined}>
@@ -59,6 +63,9 @@ function AppShellLayout({ children }: { children: ReactNode }) {
           <Link to="/" className="nav-link">
             {t("nav.overview")} <span>{activeCount ?? "—"}</span>
           </Link>
+          <Link to="/completed" className="nav-link">
+            {t("nav.completedFeatures")} <span>{completedCount ?? "—"}</span>
+          </Link>
           <Link to="/archived" className="nav-link">
             {t("nav.archivedFeatures")} <span>{archivedCount ?? "—"}</span>
           </Link>
@@ -66,31 +73,29 @@ function AppShellLayout({ children }: { children: ReactNode }) {
             {t("nav.taskSearch")}
           </Link>
           <div className="nav-caption">{t("nav.activeCircuits")}</div>
-          {snapshot.data?.features
-            .filter((f) => !f.archived)
-            .map((feature) => (
-              <Link
-                key={feature.id}
-                to="/features/$featureId"
-                params={{ featureId: feature.id }}
-                className="feature-link"
-                activeProps={{ "data-active": true }}
-              >
-                <i
-                  className={
-                    feature.conflictCount
-                      ? "pulse conflict"
-                      : feature.readyCount
-                        ? "pulse ready"
-                        : "pulse"
-                  }
-                />
-                <span>{feature.title}</span>
-                <b>
-                  {feature.mergedCount}/{feature.taskCount}
-                </b>
-              </Link>
-            ))}
+          {snapshot.data?.features.filter(isActiveFeature).map((feature) => (
+            <Link
+              key={feature.id}
+              to="/features/$featureId"
+              params={{ featureId: feature.id }}
+              className="feature-link"
+              activeProps={{ "data-active": true }}
+            >
+              <i
+                className={
+                  feature.conflictCount
+                    ? "pulse conflict"
+                    : feature.readyCount
+                      ? "pulse ready"
+                      : "pulse"
+                }
+              />
+              <span>{feature.title}</span>
+              <b>
+                {feature.mergedCount}/{feature.taskCount}
+              </b>
+            </Link>
+          ))}
         </nav>
         <IconButton
           icon={Plus}

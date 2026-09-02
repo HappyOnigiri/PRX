@@ -106,6 +106,81 @@ describe("EditFeatureDialog", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it("confirms completing a feature whose tasks are unfinished", async () => {
+    const onClose = vi.fn();
+    render(
+      <EditFeatureDialog
+        feature={makeFeature({
+          title: "Payments",
+          status: FeatureStatus.AUTO,
+          taskCount: 4,
+          finishedCount: 1,
+        })}
+        onClose={onClose}
+        onDeleted={vi.fn()}
+      />,
+    );
+    expect(screen.getByRole("combobox")).toHaveValue(
+      String(FeatureStatus.AUTO),
+    );
+    expect(
+      screen.getByRole("option", { name: "Automatic" }),
+    ).toBeInTheDocument();
+
+    fireEvent.change(screen.getByRole("combobox"), {
+      target: { value: String(FeatureStatus.COMPLETED) },
+    });
+    fireEvent.submit(screen.getByRole("form", { name: "Edit feature" }));
+    expect(mutationAt(0).mutateAsync).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("dialog", { name: "Complete Payments?" }),
+    ).toHaveTextContent("3 of its tasks are still unfinished");
+
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(
+      screen.queryByRole("dialog", { name: "Complete Payments?" }),
+    ).not.toBeInTheDocument();
+    expect(mutationAt(0).mutateAsync).not.toHaveBeenCalled();
+
+    fireEvent.submit(screen.getByRole("form", { name: "Edit feature" }));
+    fireEvent.click(screen.getByRole("button", { name: "Complete feature" }));
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalledOnce();
+    });
+    expect(mutationAt(0).mutateAsync).toHaveBeenCalledWith({
+      id: "feature-1",
+      slug: "payments",
+      title: "Payments",
+      description: "",
+      status: FeatureStatus.COMPLETED,
+    });
+  });
+
+  it("completes a fully finished feature without a confirmation", async () => {
+    const onClose = vi.fn();
+    render(
+      <EditFeatureDialog
+        feature={makeFeature({ taskCount: 2, finishedCount: 2 })}
+        onClose={onClose}
+        onDeleted={vi.fn()}
+      />,
+    );
+    fireEvent.change(screen.getByRole("combobox"), {
+      target: { value: String(FeatureStatus.COMPLETED) },
+    });
+    fireEvent.submit(screen.getByRole("form", { name: "Edit feature" }));
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalledOnce();
+    });
+    expect(mutationAt(0).mutateAsync).toHaveBeenCalledWith({
+      id: "feature-1",
+      slug: "payments",
+      title: "Payments rollout",
+      description: "",
+      status: FeatureStatus.COMPLETED,
+    });
+  });
+
   it("confirms archive in-app and supports cancellation, Escape, and failure", async () => {
     const onClose = vi.fn();
     mutationAt(0).error = new Error("archive failed");
