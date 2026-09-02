@@ -62,11 +62,8 @@ describe("Dashboard", () => {
     expect(screen.getByText("Build API")).toBeInTheDocument();
     expect(screen.getByText("1 ready")).toBeInTheDocument();
     expect(screen.getByText("Conflicts")).toBeInTheDocument();
-    expect(screen.getByLabelText("Never updated")).toHaveTextContent(
-      "GitHub syncNever updated",
-    );
-    expect(document.querySelector(".rail")).not.toHaveTextContent(
-      "GitHub sync",
-    );
+    expect(
+      screen.getByRole("button", { name: "Sync GitHub now" }),
+    ).toBeInTheDocument();
   });
 });

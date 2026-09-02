@@ -5,7 +5,6 @@ import {
   DocumentSchema,
   FeatureSchema,
   FeatureStatus,
-  GitHubSyncStatusSchema,
   PullRequestDisplayState,
   PullRequestSchema,
   SnapshotSchema,
@@ -16,7 +15,6 @@ import {
   type Dependency,
   type Document,
   type Feature,
-  type GitHubSyncStatus,
   type PullRequest,
   type Snapshot,
   type Task,
@@ -102,10 +100,4 @@ export function makeSnapshot(
     tasks: [makeTask()],
     ...overrides,
   });
-}
-
-export function makeGitHubSyncStatus(
-  overrides: MessageInitShape<typeof GitHubSyncStatusSchema> = {},
-): GitHubSyncStatus {
-  return create(GitHubSyncStatusSchema, overrides);
 }

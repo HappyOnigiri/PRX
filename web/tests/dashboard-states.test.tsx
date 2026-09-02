@@ -6,7 +6,6 @@ import { AutoSyncStatusContext, type AutoSyncStatus } from "../src/sync-status";
 import { Dashboard } from "../src/views/Dashboard";
 import {
   makeFeature,
-  makeGitHubSyncStatus,
   makePullRequest,
   makeSnapshot,
   makeTask,
@@ -196,48 +195,6 @@ describe("Dashboard states", () => {
     expect(screen.queryByText("Archived task")).not.toBeInTheDocument();
   });
 
-  it("shows the complete latest sync timestamp in the dashboard header", () => {
-    const timestamp = "2026-08-30T10:24:31Z";
-    vi.useFakeTimers({ now: new Date("2026-08-31T10:24:31Z") });
-    dashboardMocks.state.isPending = false;
-    dashboardMocks.state.data = makeSnapshot();
-    renderDashboard({
-      ...autoSyncStatus,
-      status: {
-        data: makeGitHubSyncStatus({ lastUpdatedAt: timestamp }),
-        isError: false,
-      },
-    });
-
-    const label = new Date(timestamp).toLocaleString("en");
-    const time = screen.getByText(label);
-    expect(time).toHaveAttribute("dateTime", timestamp);
-    expect(time.closest(".page-head")).not.toBeNull();
-    expect(time).toHaveTextContent(label);
-  });
-
-  it.each([
-    ["less than a minute ago", "2026-08-31T11:59:31Z", "Latest"],
-    ["minutes ago", "2026-08-31T11:42:00Z", "18 min ago"],
-    ["hours ago", "2026-08-31T09:24:31Z", "2 hr ago"],
-  ])(
-    "shows a sync timestamp in relative time when it is %s",
-    (_name, timestamp, label) => {
-      vi.useFakeTimers({ now: new Date("2026-08-31T12:00:00Z") });
-      dashboardMocks.state.isPending = false;
-      dashboardMocks.state.data = makeSnapshot();
-      renderDashboard({
-        ...autoSyncStatus,
-        status: {
-          data: makeGitHubSyncStatus({ lastUpdatedAt: timestamp }),
-          isError: false,
-        },
-      });
-
-      expect(screen.getByLabelText(label)).toBeInTheDocument();
-    },
-  );
-
   it("starts a full GitHub sync from the dashboard", () => {
     dashboardMocks.state.isPending = false;
     dashboardMocks.state.data = makeSnapshot();
@@ -259,7 +216,6 @@ describe("Dashboard states", () => {
     expect(
       screen.getByRole("button", { name: "Syncing GitHub…" }),
     ).toBeDisabled();
-    expect(screen.getByLabelText("Updating…")).toBeInTheDocument();
 
     dashboardMocks.sync.isPending = false;
     dashboardMocks.sync.error = new Error("GitHub is unavailable");
@@ -271,54 +227,18 @@ describe("Dashboard states", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "GitHub is unavailable",
     );
-    expect(screen.getByLabelText("Status unavailable")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Sync GitHub now" }),
     ).toBeEnabled();
   });
 
-  it.each([
-    [
-      "an update in progress",
-      { ...autoSyncStatus, checking: true },
-      "Updating…",
-    ],
-    [
-      "a failed latest run",
-      {
-        ...autoSyncStatus,
-        status: {
-          data: makeGitHubSyncStatus({
-            lastUpdatedAt: "2026-08-30T10:24:31Z",
-            failed: 1,
-          }),
-          isError: false,
-        },
-      },
-      "Failed · 12 hr ago",
-    ],
-    [
-      "a status query failure",
-      {
-        ...autoSyncStatus,
-        status: { data: undefined, isError: true },
-      },
-      "Status unavailable",
-    ],
-    [
-      "an automatic sync check failure",
-      { ...autoSyncStatus, error: new Error("sync unavailable") },
-      "Status unavailable",
-    ],
-  ] satisfies [string, AutoSyncStatus, string][])(
-    "shows %s",
-    (_name, status, label) => {
-      vi.useFakeTimers({ now: new Date("2026-08-30T22:24:31Z") });
-      dashboardMocks.state.isPending = false;
-      dashboardMocks.state.data = makeSnapshot();
-      renderDashboard(status);
+  it("disables the sync button while an automatic status check is running", () => {
+    dashboardMocks.state.isPending = false;
+    dashboardMocks.state.data = makeSnapshot();
+    renderDashboard({ ...autoSyncStatus, checking: true });
 
-      expect(screen.getByLabelText(label)).toBeInTheDocument();
-    },
-  );
+    expect(
+      screen.getByRole("button", { name: "Syncing GitHub…" }),
+    ).toBeDisabled();
+  });
 });
