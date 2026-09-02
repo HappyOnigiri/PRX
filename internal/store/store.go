@@ -323,18 +323,34 @@ func nullableTime(value sql.NullString) *time.Time {
 	return &t
 }
 
+// domainFeature folds the two stored columns back into the single status the
+// rest of the application uses. The status column is only meaningful while
+// status_auto is 0; the automatic mode normalizes it to 'active' because the
+// column's CHECK constraint predates the automatic value.
 func domainFeature(value db.Feature) domain.Feature {
+	status := domain.FeatureStatus(value.Status)
+	if value.StatusAuto != 0 {
+		status = domain.FeatureStatusAuto
+	}
 	return domain.Feature{
 		ID:          value.PublicID,
 		StorageID:   value.ID,
 		Slug:        value.Slug,
 		Title:       value.Title,
 		Description: value.Description,
-		Status:      domain.FeatureStatus(value.Status),
+		Status:      status,
 		Archived:    value.Archived != 0,
 		CreatedAt:   parseTime(value.CreatedAt),
 		UpdatedAt:   parseTime(value.UpdatedAt),
 	}
+}
+
+// storedFeatureStatus splits the domain status into the stored pair.
+func storedFeatureStatus(status domain.FeatureStatus) (column string, auto int64) {
+	if status == domain.FeatureStatusAuto {
+		return string(domain.FeatureStatusActive), 1
+	}
+	return string(status), 0
 }
 
 func publicFeatureIDs(values []db.Feature) map[string]string {

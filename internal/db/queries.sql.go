@@ -125,8 +125,9 @@ func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) 
 }
 
 const createFeature = `-- name: CreateFeature :one
-INSERT INTO features (id, public_id, slug, title, description, status, archived, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, slug, title, description, status, archived, created_at, updated_at, public_id
+INSERT INTO features (
+  id, public_id, slug, title, description, status, status_auto, archived, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto
 `
 
 type CreateFeatureParams struct {
@@ -136,6 +137,7 @@ type CreateFeatureParams struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Status      string `json:"status"`
+	StatusAuto  int64  `json:"status_auto"`
 	Archived    int64  `json:"archived"`
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
@@ -149,6 +151,7 @@ func (q *Queries) CreateFeature(ctx context.Context, arg CreateFeatureParams) (F
 		arg.Title,
 		arg.Description,
 		arg.Status,
+		arg.StatusAuto,
 		arg.Archived,
 		arg.CreatedAt,
 		arg.UpdatedAt,
@@ -164,6 +167,7 @@ func (q *Queries) CreateFeature(ctx context.Context, arg CreateFeatureParams) (F
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.PublicID,
+		&i.StatusAuto,
 	)
 	return i, err
 }
@@ -369,7 +373,7 @@ func (q *Queries) GetDocument(ctx context.Context, id string) (Document, error) 
 }
 
 const getFeature = `-- name: GetFeature :one
-SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id FROM features WHERE id = ?
+SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto FROM features WHERE id = ?
 `
 
 func (q *Queries) GetFeature(ctx context.Context, id string) (Feature, error) {
@@ -385,12 +389,13 @@ func (q *Queries) GetFeature(ctx context.Context, id string) (Feature, error) {
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.PublicID,
+		&i.StatusAuto,
 	)
 	return i, err
 }
 
 const getFeatureByPublicID = `-- name: GetFeatureByPublicID :one
-SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id FROM features WHERE public_id = ?
+SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto FROM features WHERE public_id = ?
 `
 
 func (q *Queries) GetFeatureByPublicID(ctx context.Context, publicID string) (Feature, error) {
@@ -406,12 +411,13 @@ func (q *Queries) GetFeatureByPublicID(ctx context.Context, publicID string) (Fe
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.PublicID,
+		&i.StatusAuto,
 	)
 	return i, err
 }
 
 const getFeatureBySlug = `-- name: GetFeatureBySlug :one
-SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id FROM features WHERE slug = ?
+SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto FROM features WHERE slug = ?
 `
 
 func (q *Queries) GetFeatureBySlug(ctx context.Context, slug string) (Feature, error) {
@@ -427,6 +433,7 @@ func (q *Queries) GetFeatureBySlug(ctx context.Context, slug string) (Feature, e
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.PublicID,
+		&i.StatusAuto,
 	)
 	return i, err
 }
@@ -688,7 +695,7 @@ func (q *Queries) ListDocuments(ctx context.Context) ([]ListDocumentsRow, error)
 }
 
 const listFeatures = `-- name: ListFeatures :many
-SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id FROM features ORDER BY archived, updated_at DESC, slug
+SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto FROM features ORDER BY archived, updated_at DESC, slug
 `
 
 func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
@@ -710,6 +717,7 @@ func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
 			&i.CreatedAt,
 			&i.UpdatedAt,
 			&i.PublicID,
+			&i.StatusAuto,
 		); err != nil {
 			return nil, err
 		}
@@ -959,7 +967,9 @@ func (q *Queries) UpdateDocument(ctx context.Context, arg UpdateDocumentParams) 
 }
 
 const updateFeature = `-- name: UpdateFeature :one
-UPDATE features SET slug=?, title=?, description=?, status=?, archived=?, updated_at=? WHERE id=? RETURNING id, slug, title, description, status, archived, created_at, updated_at, public_id
+UPDATE features
+SET slug=?, title=?, description=?, status=?, status_auto=?, archived=?, updated_at=?
+WHERE id=? RETURNING id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto
 `
 
 type UpdateFeatureParams struct {
@@ -967,6 +977,7 @@ type UpdateFeatureParams struct {
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Status      string `json:"status"`
+	StatusAuto  int64  `json:"status_auto"`
 	Archived    int64  `json:"archived"`
 	UpdatedAt   string `json:"updated_at"`
 	ID          string `json:"id"`
@@ -978,6 +989,7 @@ func (q *Queries) UpdateFeature(ctx context.Context, arg UpdateFeatureParams) (F
 		arg.Title,
 		arg.Description,
 		arg.Status,
+		arg.StatusAuto,
 		arg.Archived,
 		arg.UpdatedAt,
 		arg.ID,
@@ -993,6 +1005,7 @@ func (q *Queries) UpdateFeature(ctx context.Context, arg UpdateFeatureParams) (F
 		&i.CreatedAt,
 		&i.UpdatedAt,
 		&i.PublicID,
+		&i.StatusAuto,
 	)
 	return i, err
 }

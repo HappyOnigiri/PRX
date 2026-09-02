@@ -312,7 +312,7 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if feature.Msg.GetFeature().GetStatus() != prxv1.FeatureStatus_FEATURE_STATUS_ACTIVE {
+	if feature.Msg.GetFeature().GetStatus() != prxv1.FeatureStatus_FEATURE_STATUS_AUTO {
 		t.Fatalf("feature status=%s", feature.Msg.GetFeature().GetStatus())
 	}
 	a, err := client.CreateTask(

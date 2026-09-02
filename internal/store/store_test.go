@@ -37,7 +37,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 7 {
+		migrations != 8 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -313,6 +313,21 @@ func TestLegacyTaskStatusMigrationPreservesRelatedRows(t *testing.T) {
 		_ = legacy.Close()
 		t.Fatal(err)
 	}
+	// A person chose each of these statuses, so the automatic mode must not
+	// claim them while the default active feature above moves onto derivation.
+	// They are created later so the migrated public IDs keep their order.
+	const later = "2026-08-31T00:00:00Z"
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO features(id, slug, title, status, created_at, updated_at)
+      VALUES('paused-feature', 'legacy-paused', 'Legacy paused', 'paused', ?, ?),
+            ('completed-feature', 'legacy-completed', 'Legacy completed', 'completed', ?, ?),
+            ('cancelled-feature', 'legacy-cancelled', 'Legacy cancelled', 'cancelled', ?, ?)`,
+		later, later, later, later, later, later,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
 	legacyStatuses := []struct {
 		id, kind, status string
 	}{
@@ -533,6 +548,21 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 		_ = legacy.Close()
 		t.Fatal(err)
 	}
+	// A person chose each of these statuses, so the automatic mode must not
+	// claim them while the default active feature above moves onto derivation.
+	// They are created later so the migrated public IDs keep their order.
+	const later = "2026-08-31T00:00:00Z"
+	if _, err := legacy.ExecContext(
+		ctx,
+		`INSERT INTO features(id, slug, title, status, created_at, updated_at)
+      VALUES('paused-feature', 'legacy-paused', 'Legacy paused', 'paused', ?, ?),
+            ('completed-feature', 'legacy-completed', 'Legacy completed', 'completed', ?, ?),
+            ('cancelled-feature', 'legacy-cancelled', 'Legacy cancelled', 'cancelled', ?, ?)`,
+		later, later, later, later, later, later,
+	); err != nil {
+		_ = legacy.Close()
+		t.Fatal(err)
+	}
 	if _, err := legacy.ExecContext(
 		ctx,
 		`INSERT INTO tasks(id, feature_id, title, kind, status, created_at, updated_at)
@@ -584,7 +614,7 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	var migrationCount int
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
-		Scan(&migrationCount); err != nil || migrationCount != 7 {
+		Scan(&migrationCount); err != nil || migrationCount != 8 {
 		t.Fatalf("migration count=%d err=%v", migrationCount, err)
 	}
 	var status string
@@ -592,6 +622,17 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 		QueryRowContext(ctx, `SELECT status FROM tasks WHERE id='task'`).
 		Scan(&status); err != nil || status != "auto" {
 		t.Fatalf("task status=%q err=%v, want auto", status, err)
+	}
+	for slug, want := range map[string]domain.FeatureStatus{
+		"legacy":           domain.FeatureStatusAuto,
+		"legacy-paused":    domain.FeatureStatusPaused,
+		"legacy-completed": domain.FeatureStatusCompleted,
+		"legacy-cancelled": domain.FeatureStatusCancelled,
+	} {
+		feature, err := database.GetFeatureBySlug(ctx, slug)
+		if err != nil || feature.Status != want {
+			t.Fatalf("migrated feature %q status=%q err=%v, want %q", slug, feature.Status, err, want)
+		}
 	}
 	plan, err := database.GetImplementationPlan(ctx, "T-1")
 	if err != nil || plan.Content != "# Keep this plan" {
@@ -1005,6 +1046,60 @@ func TestArchiveRoundTrip(t *testing.T) {
 	}
 }
 
+// The stored status lives in two columns, so every status has to survive a
+// write and a read, and the automatic mode has to normalize the status column
+// whose CHECK constraint does not know the automatic value.
+func TestFeatureStatusRoundTripKeepsTheStoredColumnsConsistent(t *testing.T) {
+	database, service := openTestService(t)
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, "status-columns", "Status columns", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if feature.Status != domain.FeatureStatusAuto {
+		t.Fatalf("created status=%q, want %q", feature.Status, domain.FeatureStatusAuto)
+	}
+	for _, test := range []struct {
+		status     domain.FeatureStatus
+		wantColumn string
+		wantAuto   int64
+	}{
+		{domain.FeatureStatusPaused, "paused", 0},
+		{domain.FeatureStatusCompleted, "completed", 0},
+		{domain.FeatureStatusCancelled, "cancelled", 0},
+		{domain.FeatureStatusActive, "active", 0},
+		{domain.FeatureStatusAuto, "active", 1},
+	} {
+		t.Run(string(test.status), func(t *testing.T) {
+			status := test.status
+			updated, err := service.UpdateFeature(ctx, feature.ID, nil, nil, nil, &status, nil)
+			if err != nil {
+				t.Fatal(err)
+			}
+			if updated.Status != test.status {
+				t.Fatalf("updated status=%q, want %q", updated.Status, test.status)
+			}
+			reread, err := database.GetFeature(ctx, feature.ID)
+			if err != nil || reread.Status != test.status {
+				t.Fatalf("reread status=%q err=%v, want %q", reread.Status, err, test.status)
+			}
+			var column string
+			var auto int64
+			if err := database.DB().QueryRowContext(
+				ctx,
+				`SELECT status, status_auto FROM features WHERE public_id = ?`,
+				feature.ID,
+			).Scan(&column, &auto); err != nil {
+				t.Fatal(err)
+			}
+			if column != test.wantColumn || auto != test.wantAuto {
+				t.Fatalf("stored status=%q status_auto=%d, want %q and %d",
+					column, auto, test.wantColumn, test.wantAuto)
+			}
+		})
+	}
+}
+
 func TestConcurrentDependencyWritesDoNotLock(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
@@ -1070,10 +1165,15 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 		t.Fatalf("features=%d tasks=%d, want 4 and 120", len(snapshot.Features), len(snapshot.Tasks))
 	}
 	statuses := map[domain.FeatureStatus]bool{}
+	displayStatuses := map[domain.FeatureStatus]bool{}
 	featuresBySlug := map[string]domain.Feature{}
 	for _, feature := range snapshot.Features {
 		statuses[feature.Status] = true
+		displayStatuses[feature.DisplayStatus] = true
 		featuresBySlug[feature.Slug] = feature
+	}
+	if !statuses[domain.FeatureStatusAuto] {
+		t.Error("no demo feature keeps the automatic status")
 	}
 	for _, status := range []domain.FeatureStatus{
 		domain.FeatureStatusActive,
@@ -1081,9 +1181,17 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 		domain.FeatureStatusCompleted,
 		domain.FeatureStatusCancelled,
 	} {
-		if !statuses[status] {
-			t.Errorf("missing feature status %q", status)
+		if !displayStatuses[status] {
+			t.Errorf("missing feature display status %q", status)
 		}
+	}
+	// The 100-task program reaches completion from its merged pull requests
+	// alone, so the demo exercises the derivation rather than a manual status.
+	completedProgram := featuresBySlug["completed-program"]
+	if completedProgram.Status != domain.FeatureStatusAuto ||
+		completedProgram.DisplayStatus != domain.FeatureStatusCompleted ||
+		completedProgram.FinishedCount != completedProgram.TaskCount {
+		t.Errorf("completed program status=%+v", completedProgram)
 	}
 	displayStates := map[domain.TaskDisplayState]bool{}
 	for _, task := range snapshot.Tasks {

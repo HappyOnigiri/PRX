@@ -37,6 +37,7 @@ type Feature struct {
 	CreatedAt   string `json:"created_at"`
 	UpdatedAt   string `json:"updated_at"`
 	PublicID    string `json:"public_id"`
+	StatusAuto  int64  `json:"status_auto"`
 }
 
 type GithubRepositoryAuthCache struct {

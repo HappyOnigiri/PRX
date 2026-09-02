@@ -4,7 +4,8 @@ package prx.v1;
 
 option go_package = "github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1";
 
-// FeatureStatus is the lifecycle state of a feature.
+// FeatureStatus is the stored lifecycle state of a feature. Every value other
+// than auto is a manual override that takes precedence over derivation.
 enum FeatureStatus {
   // FEATURE_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
   FEATURE_STATUS_UNSPECIFIED = 0;
@@ -16,6 +17,9 @@ enum FeatureStatus {
   FEATURE_STATUS_COMPLETED = 3;
   // FEATURE_STATUS_CANCELLED means the feature will not be completed.
   FEATURE_STATUS_CANCELLED = 4;
+  // FEATURE_STATUS_AUTO is the default of a new feature and presents the
+  // feature as completed once it has tasks and every one of them is finished.
+  FEATURE_STATUS_AUTO = 5;
 }
 
 // TaskKind identifies whether a task is tracked with a pull request or a manual gate.
@@ -271,7 +275,7 @@ message Feature {
   string title = 3;
   // description explains the feature's scope or goal.
   string description = 4;
-  // status is the feature's lifecycle state.
+  // status is the feature's stored lifecycle state.
   FeatureStatus status = 5;
   // archived separates the feature from active WebUI views and queues.
   bool archived = 6;
@@ -289,6 +293,11 @@ message Feature {
   int32 conflict_count = 12;
   // merged_count is the number of tasks whose pull requests are merged.
   int32 merged_count = 13;
+  // display_status is the status presented for the feature. Snapshot reads derive it and never
+  // report AUTO; responses that echo the stored feature alone leave it UNSPECIFIED.
+  FeatureStatus display_status = 14;
+  // finished_count is the number of tasks the automatic completion rule counts as finished.
+  int32 finished_count = 15;
 }
 
 // Task is a unit of work belonging to a feature.

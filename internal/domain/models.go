@@ -5,6 +5,7 @@ import "time"
 type FeatureStatus string
 
 const (
+	FeatureStatusAuto      FeatureStatus = "auto"
 	FeatureStatusActive    FeatureStatus = "active"
 	FeatureStatusPaused    FeatureStatus = "paused"
 	FeatureStatusCompleted FeatureStatus = "completed"
@@ -109,6 +110,7 @@ type Feature struct {
 	Title              string        `json:"title"`
 	Description        string        `json:"description"`
 	Status             FeatureStatus `json:"status"`
+	DisplayStatus      FeatureStatus `json:"display_status"`
 	Archived           bool          `json:"archived"`
 	CreatedAt          time.Time     `json:"created_at"`
 	UpdatedAt          time.Time     `json:"updated_at"`
@@ -117,6 +119,7 @@ type Feature struct {
 	ReviewWaitingCount int           `json:"review_waiting_count,omitempty"`
 	ConflictCount      int           `json:"conflict_count,omitempty"`
 	MergedCount        int           `json:"merged_count,omitempty"`
+	FinishedCount      int           `json:"finished_count,omitempty"`
 }
 
 type Task struct {
