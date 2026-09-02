@@ -63,7 +63,7 @@ describe("Dashboard", () => {
     expect(screen.getByText("1 ready")).toBeInTheDocument();
     expect(screen.getByText("Conflicts")).toBeInTheDocument();
     expect(
-      screen.getByRole("button", { name: "Sync GitHub now" }),
+      screen.getByRole("button", { name: "Sync GitHub" }),
     ).toBeInTheDocument();
   });
 });

@@ -106,7 +106,7 @@ test("shows GitHub sync diagnostics and runs a full refresh", async ({
   await page.goto("/");
   await expect(page.locator(".page-head .dashboard-sync")).toBeVisible();
   await expect(page.locator(".rail .dashboard-sync")).toHaveCount(0);
-  const syncButton = page.getByRole("button", { name: "Sync GitHub now" });
+  const syncButton = page.getByRole("button", { name: "Sync GitHub" });
   await expect(syncButton).toBeEnabled();
   const syncResponse = page.waitForResponse(
     (response) =>
@@ -874,7 +874,7 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
   await expect(page.locator(".page-head .dashboard-sync")).toBeVisible();
   await expect(page.locator(".rail .dashboard-sync")).toHaveCount(0);
   const dashboardSyncButton = page.getByRole("button", {
-    name: "Sync GitHub now",
+    name: "Sync GitHub",
   });
   await expect(dashboardSyncButton).toBeVisible();
   const dashboardSyncBounds = await dashboardSyncButton.boundingBox();

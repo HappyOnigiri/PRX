@@ -200,7 +200,7 @@ describe("Dashboard states", () => {
     dashboardMocks.state.data = makeSnapshot();
     renderDashboard();
 
-    fireEvent.click(screen.getByRole("button", { name: "Sync GitHub now" }));
+    fireEvent.click(screen.getByRole("button", { name: "Sync GitHub" }));
     expect(dashboardMocks.sync.mutate).toHaveBeenCalledOnce();
     expect(dashboardMocks.sync.mutate).toHaveBeenCalledWith(undefined);
     expect(dashboardMocks.api.sync).toHaveBeenCalledOnce();
@@ -227,9 +227,7 @@ describe("Dashboard states", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "GitHub is unavailable",
     );
-    expect(
-      screen.getByRole("button", { name: "Sync GitHub now" }),
-    ).toBeEnabled();
+    expect(screen.getByRole("button", { name: "Sync GitHub" })).toBeEnabled();
   });
 
   it("disables the sync button while an automatic status check is running", () => {
