@@ -252,6 +252,7 @@ Pointer interactions retain a keyboard-accessible alternative.
 
 Current screens, components, gestures, and control placement belong to the WebUI implementation and its tests.
 Task search operates over the current Snapshot in the browser; its q query stays in the URL so reload, history, and sharing reproduce the view.
+The feature category the navigation presents is derived from the current URL for the same reason, rather than stored as browser state.
 
 Demo mode is injected through the served HTML metadata rather than RPC or domain state.
 The WebUI keeps a non-dismissible bilingual reset warning at the top of every demo screen.
