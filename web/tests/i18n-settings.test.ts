@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   detectDisplayLanguage,
+  readFeatureCategory,
   readGraphZoom,
   readThemePreference,
   readWebUISettings,
   resolveThemePreference,
   webUISettingsKey,
   writeDisplayLanguage,
+  writeFeatureCategory,
   writeGraphZoom,
   writeThemePreference,
 } from "../src/i18n/settings";
@@ -46,11 +48,24 @@ describe("WebUI settings", () => {
     writeThemePreference("dark");
     writeGraphZoom(0.64);
     writeDisplayLanguage("ja");
+    writeFeatureCategory("archived");
     expect(readWebUISettings()).toEqual({
       language: "ja",
       graphZoom: 0.64,
       theme: "dark",
+      featureCategory: "archived",
     });
+  });
+
+  it("restores the sidebar category and defaults to the working set", () => {
+    expect(readFeatureCategory()).toBe("active");
+    writeFeatureCategory("completed");
+    expect(readFeatureCategory()).toBe("completed");
+    localStorage.setItem(
+      webUISettingsKey,
+      JSON.stringify({ featureCategory: "everything" }),
+    );
+    expect(readFeatureCategory()).toBe("active");
   });
 
   it("uses the default graph zoom when the saved value is invalid", () => {

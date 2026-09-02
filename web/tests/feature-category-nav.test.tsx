@@ -2,6 +2,7 @@ import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FeatureStatus } from "../src/gen/prx/v1/prx_pb";
+import { webUISettingsKey } from "../src/i18n/settings";
 import { router } from "../src/router";
 import { makeFeature, makeSnapshot } from "./factories";
 
@@ -46,7 +47,7 @@ vi.mock("../src/hooks", () => ({
 }));
 
 // The graph runs ELK in a Web Worker that jsdom does not provide, and the
-// workspace is only here to prove which category its feature selects.
+// workspace is only here to prove that it leaves the selection alone.
 vi.mock("../src/views/FeatureGraph", () => ({
   FeatureGraph: () => <div />,
 }));
@@ -65,6 +66,13 @@ function selectedCategories(): (string | null)[] {
   );
 }
 
+function storedCategory(): unknown {
+  const value = localStorage.getItem(webUISettingsKey);
+  return value === null
+    ? undefined
+    : (JSON.parse(value) as { featureCategory?: unknown }).featureCategory;
+}
+
 // The router is a module singleton whose load only settles once per file, so
 // every step runs inside one mounted tree instead of remounting per case.
 describe("Feature category navigation", () => {
@@ -75,10 +83,9 @@ describe("Feature category navigation", () => {
     await router.load();
   });
 
-  it("moves the single selection, the rail list, and the page together", async () => {
+  it("moves one selection with the category routes and holds it elsewhere", async () => {
     render(<RouterProvider router={router} />);
 
-    // The overview is not a category, so the working set stays selected.
     expect(selectedCategories()).toEqual([expect.stringContaining("Active")]);
     expect(railFeatureTitles()).toEqual(["Open payments"]);
 
@@ -94,6 +101,7 @@ describe("Feature category navigation", () => {
       document.querySelector('.rail .nav-link[aria-current="page"]'),
     ).toHaveTextContent("Completed features");
     expect(railFeatureTitles()).toEqual(["Finished payments"]);
+    expect(storedCategory()).toBe("completed");
 
     fireEvent.click(screen.getByRole("link", { name: /Archived features/ }));
     expect(
@@ -101,23 +109,17 @@ describe("Feature category navigation", () => {
     ).toBeInTheDocument();
     expect(selectedCategories()).toEqual([expect.stringContaining("Archived")]);
     expect(railFeatureTitles()).toEqual(["Historical payments"]);
+    expect(storedCategory()).toBe("archived");
 
-    fireEvent.click(screen.getByRole("link", { name: /Active features/ }));
+    fireEvent.click(screen.getByRole("link", { name: /Completed features/ }));
     expect(
-      await screen.findByRole("heading", { name: "Active features" }),
+      await screen.findByRole("heading", { name: "Completed features" }),
     ).toBeInTheDocument();
-    expect(router.state.location.pathname).toBe("/active");
-    expect(selectedCategories()).toEqual([expect.stringContaining("Active")]);
-    expect(railFeatureTitles()).toEqual(["Open payments"]);
 
-    // A feature workspace keeps the category of the feature it has open, and
-    // any other route falls back to the working set.
-    await router.navigate({
-      to: "/features/$featureId",
-      params: { featureId: "completed" },
-    });
+    // The overview is a screen, not a category, so it leaves the rail alone.
+    fireEvent.click(screen.getByRole("link", { name: "Overview" }));
     expect(
-      await screen.findByRole("heading", { name: "Finished payments" }),
+      await screen.findByRole("heading", { name: /What can move/ }),
     ).toBeInTheDocument();
     expect(selectedCategories()).toEqual([
       expect.stringContaining("Completed"),
@@ -126,7 +128,22 @@ describe("Feature category navigation", () => {
 
     await router.navigate({ to: "/tasks", search: { q: "" } });
     expect(await screen.findByRole("search")).toBeInTheDocument();
-    expect(selectedCategories()).toEqual([expect.stringContaining("Active")]);
-    expect(railFeatureTitles()).toEqual(["Open payments"]);
+    expect(selectedCategories()).toEqual([
+      expect.stringContaining("Completed"),
+    ]);
+
+    // A workspace holds the selection too, whichever category its feature is in.
+    await router.navigate({
+      to: "/features/$featureId",
+      params: { featureId: "active" },
+    });
+    expect(
+      await screen.findByRole("heading", { name: "Open payments" }),
+    ).toBeInTheDocument();
+    expect(selectedCategories()).toEqual([
+      expect.stringContaining("Completed"),
+    ]);
+    expect(railFeatureTitles()).toEqual(["Finished payments"]);
+    expect(storedCategory()).toBe("completed");
   });
 });

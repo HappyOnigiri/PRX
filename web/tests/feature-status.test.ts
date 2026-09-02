@@ -1,7 +1,8 @@
 import { describe, expect, it } from "vitest";
 import {
   featureCategories,
-  selectedFeatureCategory,
+  featureCategoryById,
+  featureCategoryForPath,
 } from "../src/feature-status";
 import { FeatureStatus } from "../src/gen/prx/v1/prx_pb";
 import { makeFeature } from "./factories";
@@ -44,43 +45,27 @@ describe("featureCategories", () => {
       ["archived", "archived and completed"],
     ]);
   });
+
+  it("looks a category up by the identifier that was stored", () => {
+    expect(featureCategoryById("completed").path).toBe("/completed");
+    expect(featureCategoryById("archived").navLabelKey).toBe(
+      "nav.archivedFeatures",
+    );
+  });
 });
 
-describe("selectedFeatureCategory", () => {
-  it("selects the category a list route presents", () => {
-    expect(selectedFeatureCategory("/active", features).id).toBe("active");
-    expect(selectedFeatureCategory("/completed", features).id).toBe(
-      "completed",
-    );
-    expect(selectedFeatureCategory("/archived", features).id).toBe("archived");
-    expect(selectedFeatureCategory("/archived/", features).id).toBe("archived");
+describe("featureCategoryForPath", () => {
+  it("reports the category a list route presents", () => {
+    expect(featureCategoryForPath("/active")?.id).toBe("active");
+    expect(featureCategoryForPath("/completed")?.id).toBe("completed");
+    expect(featureCategoryForPath("/archived")?.id).toBe("archived");
+    expect(featureCategoryForPath("/archived/")?.id).toBe("archived");
   });
 
-  it("selects the category the open feature belongs to", () => {
-    expect(selectedFeatureCategory("/features/active", features).id).toBe(
-      "active",
-    );
-    expect(selectedFeatureCategory("/features/completed", features).id).toBe(
-      "completed",
-    );
-    expect(selectedFeatureCategory("/features/archived", features).id).toBe(
-      "archived",
-    );
-    expect(
-      selectedFeatureCategory("/features/archived%20and%20completed", features)
-        .id,
-    ).toBe("archived");
-  });
-
-  it("falls back to the working set outside the category routes", () => {
-    expect(selectedFeatureCategory("/", features).id).toBe("active");
-    expect(selectedFeatureCategory("/tasks", features).id).toBe("active");
-    expect(selectedFeatureCategory("/nowhere", features).id).toBe("active");
-    expect(selectedFeatureCategory("/features/unknown", features).id).toBe(
-      "active",
-    );
-    expect(selectedFeatureCategory("/features/archived", undefined).id).toBe(
-      "active",
-    );
+  it("reports nothing for the routes that present something else", () => {
+    expect(featureCategoryForPath("/")).toBeUndefined();
+    expect(featureCategoryForPath("/tasks")).toBeUndefined();
+    expect(featureCategoryForPath("/features/completed")).toBeUndefined();
+    expect(featureCategoryForPath("/nowhere")).toBeUndefined();
   });
 });

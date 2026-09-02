@@ -26,7 +26,8 @@ export function unfinishedTaskCount(feature: Feature): number {
 // Every feature belongs to exactly one category. The identifier doubles as the
 // translation namespace of the category's list page, so the sidebar, the route
 // table, and the pages all read the same wording from one definition.
-export type FeatureCategoryId = "active" | "completed" | "archived";
+export const featureCategoryIds = ["active", "completed", "archived"] as const;
+export type FeatureCategoryId = (typeof featureCategoryIds)[number];
 
 export interface FeatureCategory {
   id: FeatureCategoryId;
@@ -35,58 +36,40 @@ export interface FeatureCategory {
   select: (feature: Feature) => boolean;
 }
 
-const activeCategory: FeatureCategory = {
-  id: "active",
-  path: "/active",
-  navLabelKey: "nav.activeFeatures",
-  select: isActiveFeature,
-};
-const completedCategory: FeatureCategory = {
-  id: "completed",
-  path: "/completed",
-  navLabelKey: "nav.completedFeatures",
-  select: isCompletedFeature,
-};
-const archivedCategory: FeatureCategory = {
-  id: "archived",
-  path: "/archived",
-  navLabelKey: "nav.archivedFeatures",
-  select: isArchivedFeature,
+const categoriesById: Record<FeatureCategoryId, FeatureCategory> = {
+  active: {
+    id: "active",
+    path: "/active",
+    navLabelKey: "nav.activeFeatures",
+    select: isActiveFeature,
+  },
+  completed: {
+    id: "completed",
+    path: "/completed",
+    navLabelKey: "nav.completedFeatures",
+    select: isCompletedFeature,
+  },
+  archived: {
+    id: "archived",
+    path: "/archived",
+    navLabelKey: "nav.archivedFeatures",
+    select: isArchivedFeature,
+  },
 };
 
-export const featureCategories: readonly FeatureCategory[] = [
-  activeCategory,
-  completedCategory,
-  archivedCategory,
-];
+export const featureCategories: readonly FeatureCategory[] =
+  featureCategoryIds.map((id) => categoriesById[id]);
 
-// Archiving wins over completion because an archived feature leaves the
-// working set entirely, which is the same order the list pages select in.
-function featureCategoryOf(feature: Feature): FeatureCategory {
-  if (isArchivedFeature(feature)) return archivedCategory;
-  if (isCompletedFeature(feature)) return completedCategory;
-  return activeCategory;
+export function featureCategoryById(id: FeatureCategoryId): FeatureCategory {
+  return categoriesById[id];
 }
 
-const featureDetailPrefix = "/features/";
-
-// selectedFeatureCategory derives the sidebar selection from the current URL
-// so that reload, history, and sharing reproduce it without stored state. A
-// feature workspace selects the category its feature belongs to; anything else
-// falls back to the working set, which is also what an unloaded snapshot shows.
-export function selectedFeatureCategory(
+// featureCategoryForPath reports the category a route presents, and nothing
+// for the routes that present something else. The sidebar keeps its own
+// selection on those, so the overview and task search leave it untouched.
+export function featureCategoryForPath(
   pathname: string,
-  features: readonly Feature[] | undefined,
-): FeatureCategory {
+): FeatureCategory | undefined {
   const path = pathname.length > 1 ? pathname.replace(/\/+$/, "") : pathname;
-  const category = featureCategories.find((entry) => entry.path === path);
-  if (category) return category;
-  if (path.startsWith(featureDetailPrefix)) {
-    const featureId = decodeURIComponent(
-      path.slice(featureDetailPrefix.length),
-    );
-    const feature = features?.find((entry) => entry.id === featureId);
-    if (feature) return featureCategoryOf(feature);
-  }
-  return activeCategory;
+  return featureCategories.find((entry) => entry.path === path);
 }
