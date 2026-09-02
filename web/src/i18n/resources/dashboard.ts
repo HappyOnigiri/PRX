@@ -32,6 +32,21 @@ export const dashboard = {
         },
       },
     },
+    active: {
+      loadingTitle: "Loading the working set…",
+      loadingDetail: "Reading features still in flight from the local graph.",
+      errorTitle: "The working set could not be loaded",
+      eyebrow: "Features in flight",
+      title: "Active features",
+      description:
+        "Every feature with unfinished tasks. One leaves this list when its tasks all finish or you archive it.",
+      featureCount: "active features",
+      listLabel: "Active feature list",
+      emptyTitle: "Nothing is in flight",
+      emptyDetail:
+        "Draw a new feature, or return a completed one to active work, to fill this list.",
+      progress: "{{merged}}/{{total}} merged",
+    },
     completed: {
       loadingTitle: "Loading completed features…",
       loadingDetail: "Reading finished work from the local database.",
@@ -96,6 +111,21 @@ export const dashboard = {
           detail: "GitHub の対応が必要",
         },
       },
+    },
+    active: {
+      loadingTitle: "進行中の作業を読み込んでいます…",
+      loadingDetail: "ローカルグラフから進行中のフィーチャーを確認しています。",
+      errorTitle: "進行中の作業を読み込めませんでした",
+      eyebrow: "進行中のフィーチャー",
+      title: "進行中",
+      description:
+        "終了していないタスクが残るフィーチャーです。タスクがすべて終了するかアーカイブすると、この一覧から外れます。",
+      featureCount: "件の進行中",
+      listLabel: "進行中フィーチャー一覧",
+      emptyTitle: "進行中のフィーチャーはありません",
+      emptyDetail:
+        "フィーチャーを作成するか、完了済みフィーチャーを進行中へ戻すとここへ表示されます。",
+      progress: "{{merged}}/{{total}} マージ済み",
     },
     completed: {
       loadingTitle: "完了済みフィーチャーを読み込んでいます…",
