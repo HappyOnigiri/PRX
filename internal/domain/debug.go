@@ -222,11 +222,13 @@ type DebugCount struct {
 
 // DebugData reports stored record counts and their breakdowns.
 type DebugData struct {
+	Projects                 int          `json:"projects"`
 	Features                 int          `json:"features"`
 	Tasks                    int          `json:"tasks"`
 	Dependencies             int          `json:"dependencies"`
 	PullRequests             int          `json:"pull_requests"`
 	Documents                int          `json:"documents"`
+	ProjectStates            []DebugCount `json:"project_states"`
 	FeatureStatuses          []DebugCount `json:"feature_statuses"`
 	TaskDisplayStates        []DebugCount `json:"task_display_states"`
 	TaskKinds                []DebugCount `json:"task_kinds"`
@@ -407,12 +409,18 @@ func NewDebugStorage(input DebugStorageInput) DebugStorage {
 // rest of the application reads, so a reported count always matches what a
 // caller can list.
 func NewDebugData(snapshot Snapshot) DebugData {
+	projects := newDebugTally()
 	features := newDebugTally()
 	taskStates := newDebugTally()
 	taskKinds := newDebugTally()
 	pullRequestStates := newDebugTally()
 	pullRequestHosts := newDebugTally()
 	documentKinds := newDebugTally()
+	// An archived project makes every feature under it read-only, so the reader
+	// needs the archived count to explain a refused write.
+	for _, project := range snapshot.Projects {
+		projects.add(debugProjectState(project.Archived))
+	}
 	for _, feature := range snapshot.Features {
 		features.add(string(feature.DisplayStatus))
 	}
@@ -428,11 +436,13 @@ func NewDebugData(snapshot Snapshot) DebugData {
 		documentKinds.add(string(document.Kind))
 	}
 	return DebugData{
+		Projects:                 len(snapshot.Projects),
 		Features:                 len(snapshot.Features),
 		Tasks:                    len(snapshot.Tasks),
 		Dependencies:             len(snapshot.Dependencies),
 		PullRequests:             len(snapshot.PullRequests),
 		Documents:                len(snapshot.Documents),
+		ProjectStates:            projects.counts(),
 		FeatureStatuses:          features.counts(),
 		TaskDisplayStates:        taskStates.counts(),
 		TaskKinds:                taskKinds.counts(),
@@ -747,6 +757,15 @@ func newDebugTally() *debugTally {
 }
 
 func (t *debugTally) add(name string) { t.counted[name]++ }
+
+// debugProjectState names the only state a project has, because a project is
+// outside the two-layer status rule features and tasks share.
+func debugProjectState(archived bool) string {
+	if archived {
+		return "archived"
+	}
+	return "active"
+}
 
 // counts orders by descending count and then by name, so equal counts still
 // produce one deterministic order.

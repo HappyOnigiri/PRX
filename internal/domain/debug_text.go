@@ -133,11 +133,13 @@ func writeDebugData(out *debugText, data DebugData) {
 	if data.Error != "" {
 		out.field("error", data.Error)
 	}
+	out.field("projects", strconv.Itoa(data.Projects))
 	out.field("features", strconv.Itoa(data.Features))
 	out.field("tasks", strconv.Itoa(data.Tasks))
 	out.field("dependencies", strconv.Itoa(data.Dependencies))
 	out.field("pull_requests", strconv.Itoa(data.PullRequests))
 	out.field("documents", strconv.Itoa(data.Documents))
+	writeDebugCounts(out, "project_states", data.ProjectStates)
 	writeDebugCounts(out, "feature_statuses", data.FeatureStatuses)
 	writeDebugCounts(out, "task_display_states", data.TaskDisplayStates)
 	writeDebugCounts(out, "task_kinds", data.TaskKinds)

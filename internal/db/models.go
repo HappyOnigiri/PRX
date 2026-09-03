@@ -16,6 +16,7 @@ type Dependency struct {
 
 type Document struct {
 	ID                   string         `json:"id"`
+	ProjectID            sql.NullString `json:"project_id"`
 	FeatureID            sql.NullString `json:"feature_id"`
 	TaskID               sql.NullString `json:"task_id"`
 	Kind                 string         `json:"kind"`
@@ -28,16 +29,17 @@ type Document struct {
 }
 
 type Feature struct {
-	ID          string `json:"id"`
-	Slug        string `json:"slug"`
-	Title       string `json:"title"`
-	Description string `json:"description"`
-	Status      string `json:"status"`
-	Archived    int64  `json:"archived"`
-	CreatedAt   string `json:"created_at"`
-	UpdatedAt   string `json:"updated_at"`
-	PublicID    string `json:"public_id"`
-	StatusAuto  int64  `json:"status_auto"`
+	ID          string         `json:"id"`
+	Slug        string         `json:"slug"`
+	Title       string         `json:"title"`
+	Description string         `json:"description"`
+	Status      string         `json:"status"`
+	Archived    int64          `json:"archived"`
+	CreatedAt   string         `json:"created_at"`
+	UpdatedAt   string         `json:"updated_at"`
+	PublicID    string         `json:"public_id"`
+	StatusAuto  int64          `json:"status_auto"`
+	ProjectID   sql.NullString `json:"project_id"`
 }
 
 type GithubRepositoryAuthCache struct {
@@ -61,6 +63,17 @@ type GithubSyncState struct {
 type IDSequence struct {
 	Entity    string `json:"entity"`
 	NextValue int64  `json:"next_value"`
+}
+
+type Project struct {
+	ID          string `json:"id"`
+	PublicID    string `json:"public_id"`
+	Slug        string `json:"slug"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Archived    int64  `json:"archived"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
 }
 
 type PullRequest struct {

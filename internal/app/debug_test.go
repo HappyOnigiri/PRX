@@ -46,7 +46,15 @@ func newDebugService(t *testing.T) (*app.Service, string, string) {
 func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 	ctx := context.Background()
 	service, databasePath, configPath := newDebugService(t)
-	feature, err := service.CreateFeature(ctx, "checkout", "Checkout", "")
+	project, err := service.CreateProject(ctx, "payments", "Payments", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	archived := true
+	if _, err := service.UpdateProject(ctx, project.ID, domain.ProjectUpdate{Archived: &archived}); err != nil {
+		t.Fatal(err)
+	}
+	feature, err := service.CreateFeature(ctx, "checkout", "Checkout", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -83,6 +91,12 @@ func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 		t.Fatalf("database file=%+v", report.Storage.DatabaseFile)
 	}
 	if report.Records.Features != 1 || report.Records.Tasks != 1 || report.Records.PullRequests != 1 {
+		t.Fatalf("records=%+v", report.Records)
+	}
+	// A refused write is explained by the archived project it landed in, so the
+	// report has to carry the project count and its state.
+	if report.Records.Projects != 1 ||
+		len(report.Records.ProjectStates) != 1 || report.Records.ProjectStates[0].Name != "archived" {
 		t.Fatalf("records=%+v", report.Records)
 	}
 	if !report.Config.Valid || len(report.Config.Hosts) != 1 {

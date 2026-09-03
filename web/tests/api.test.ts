@@ -19,6 +19,9 @@ const apiMocks = vi.hoisted(() => {
     getGitHubSyncStatus: vi.fn(),
     getDebugReport: vi.fn(),
     syncGitHubIfDue: vi.fn(),
+    createProject: vi.fn(),
+    updateProject: vi.fn(),
+    deleteProject: vi.fn(),
     createFeature: vi.fn(),
     updateFeature: vi.fn(),
     deleteFeature: vi.fn(),
@@ -160,17 +163,46 @@ describe("RPC API wrappers", () => {
     expect(apiMocks.client.selectLocalFile).toHaveBeenCalledOnce();
   });
 
+  it("serializes every project mutation and always cascades a delete", async () => {
+    await mutations.createProject({
+      slug: "delivery",
+      title: "Delivery platform",
+      description: "Shared work",
+    });
+    expect(apiMocks.client.createProject).toHaveBeenCalledWith(
+      expect.objectContaining({
+        slug: "delivery",
+        title: "Delivery platform",
+        description: "Shared work",
+      }),
+    );
+
+    await mutations.updateProject({ id: "P-1", archived: true });
+    expect(apiMocks.client.updateProject).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "P-1", archived: true }),
+    );
+
+    // The cascade releases the project's features instead of deleting them, so
+    // it is the only form the WebUI sends.
+    await mutations.deleteProject("P-1");
+    expect(apiMocks.client.deleteProject).toHaveBeenCalledWith(
+      expect.objectContaining({ id: "P-1", cascade: true }),
+    );
+  });
+
   it("serializes every mutation request and propagates markdown content", async () => {
     await mutations.createFeature({
       slug: "release",
       title: "Release",
       description: "Ship it",
+      projectId: "P-1",
     });
     expect(apiMocks.client.createFeature).toHaveBeenCalledWith(
       expect.objectContaining({
         slug: "release",
         title: "Release",
         description: "Ship it",
+        projectId: "P-1",
       }),
     );
 
@@ -272,6 +304,19 @@ describe("RPC API wrappers", () => {
           case: "url",
           value: "https://example.com/runbook",
         },
+      }),
+    );
+    await mutations.addDocument({
+      projectId: "P-1",
+      kind: 1,
+      title: "Charter",
+      value: "https://example.com/charter",
+    });
+    expect(apiMocks.client.addDocument).toHaveBeenCalledWith(
+      expect.objectContaining({
+        projectId: "P-1",
+        title: "Charter",
+        source: { case: "url", value: "https://example.com/charter" },
       }),
     );
     await mutations.getDocument("document-1");

@@ -144,8 +144,22 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		StringVar(&s.configPath, "config", "", "YAML configuration path (env: PRX_CONFIG)")
 	root.PersistentFlags().BoolVar(&s.json, "json", false, "output JSON")
 	root.PersistentFlags().StringVar(&s.fixture, "github-fixture", "", "GitHub fixture JSON path, or demo")
+	s.addCommands(root)
+	s.standardHelp = root.HelpFunc()
+	root.SetHelpFunc(s.writeHelp)
+	root.SetHelpCommand(s.helpCommand(root))
+	markCommandExecution(root, s)
+	return root, s
+}
+
+// addCommands holds every command registration so building the root command
+// stays readable. The two calls group the resource commands and the
+// whole-repository commands for a reader of this file only: the rendered help
+// sorts commands by name, so the registration order carries no meaning there.
+func (s *state) addCommands(root *cobra.Command) {
 	root.AddCommand(
 		s.schemaVersionCommand(),
+		s.projectCommand(),
 		s.featureCommand(),
 		s.taskCommand(),
 		s.showCommand(),
@@ -167,11 +181,6 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		s.debugCommand(),
 		s.serveCommand(),
 	)
-	s.standardHelp = root.HelpFunc()
-	root.SetHelpFunc(s.writeHelp)
-	root.SetHelpCommand(s.helpCommand(root))
-	markCommandExecution(root, s)
-	return root, s
 }
 
 // helpCommand replaces the default help command, which prints its own message

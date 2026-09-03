@@ -733,6 +733,8 @@ const (
 	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT DomainErrorCode = 27
 	// DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN means the task already has a plan document.
 	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN DomainErrorCode = 28
+	// DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY means the write targets an archived project or feature.
+	DomainErrorCode_DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY DomainErrorCode = 29
 )
 
 // Enum value maps for DomainErrorCode.
@@ -764,6 +766,7 @@ var (
 		26: "DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE",
 		27: "DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT",
 		28: "DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN",
+		29: "DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY",
 	}
 	DomainErrorCode_value = map[string]int32{
 		"DOMAIN_ERROR_CODE_UNSPECIFIED":                   0,
@@ -792,6 +795,7 @@ var (
 		"DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE": 26,
 		"DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT":             27,
 		"DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN": 28,
+		"DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY":            29,
 	}
 )
 
@@ -1087,6 +1091,108 @@ func (x *ErrorDetail) GetPath() []string {
 	return nil
 }
 
+// Project is a container that groups features and their shared documents.
+// Its only state is whether it is archived; it has no derived status.
+type Project struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id is the public stable identifier of the project in the form P-<number>.
+	// The storage UUID is internal and is never exposed through this API.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// slug is the lowercase, hyphenated identifier used by CLI commands.
+	Slug string `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
+	// title is the human-readable project name.
+	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
+	// description explains what the project groups.
+	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
+	// archived makes the project and every feature in it read-only.
+	Archived bool `protobuf:"varint,5,opt,name=archived,proto3" json:"archived,omitempty"`
+	// created_at is the creation time in RFC 3339 format.
+	CreatedAt string `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	// updated_at is the last update time in RFC 3339 format.
+	UpdatedAt     string `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *Project) Reset() {
+	*x = Project{}
+	mi := &file_prx_v1_prx_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *Project) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*Project) ProtoMessage() {}
+
+func (x *Project) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use Project.ProtoReflect.Descriptor instead.
+func (*Project) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *Project) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *Project) GetSlug() string {
+	if x != nil {
+		return x.Slug
+	}
+	return ""
+}
+
+func (x *Project) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *Project) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+func (x *Project) GetArchived() bool {
+	if x != nil {
+		return x.Archived
+	}
+	return false
+}
+
+func (x *Project) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *Project) GetUpdatedAt() string {
+	if x != nil {
+		return x.UpdatedAt
+	}
+	return ""
+}
+
 // Feature is a roadmap unit that owns tasks and dependency graphs.
 type Feature struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1122,13 +1228,20 @@ type Feature struct {
 	DisplayStatus FeatureStatus `protobuf:"varint,14,opt,name=display_status,json=displayStatus,proto3,enum=prx.v1.FeatureStatus" json:"display_status,omitempty"`
 	// finished_count is the number of tasks the automatic completion rule counts as finished.
 	FinishedCount int32 `protobuf:"varint,15,opt,name=finished_count,json=finishedCount,proto3" json:"finished_count,omitempty"`
+	// project_id identifies the owning project by its public P-<number> ID, and is empty when unaffiliated.
+	ProjectId string `protobuf:"bytes,16,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	// read_only is derived: the feature is archived, or its project is. Clients present read-only
+	// state from this value instead of combining the feature's own flag with its project's.
+	// Every response that carries a feature derives it, including the ones that echo a single
+	// stored feature, so a caller never has to know which read it came from.
+	ReadOnly      bool `protobuf:"varint,17,opt,name=read_only,json=readOnly,proto3" json:"read_only,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Feature) Reset() {
 	*x = Feature{}
-	mi := &file_prx_v1_prx_proto_msgTypes[2]
+	mi := &file_prx_v1_prx_proto_msgTypes[3]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1140,7 +1253,7 @@ func (x *Feature) String() string {
 func (*Feature) ProtoMessage() {}
 
 func (x *Feature) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[2]
+	mi := &file_prx_v1_prx_proto_msgTypes[3]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1153,7 +1266,7 @@ func (x *Feature) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Feature.ProtoReflect.Descriptor instead.
 func (*Feature) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{2}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{3}
 }
 
 func (x *Feature) GetId() string {
@@ -1261,6 +1374,20 @@ func (x *Feature) GetFinishedCount() int32 {
 	return 0
 }
 
+func (x *Feature) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
+func (x *Feature) GetReadOnly() bool {
+	if x != nil {
+		return x.ReadOnly
+	}
+	return false
+}
+
 // Task is a unit of work belonging to a feature.
 type Task struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1297,7 +1424,7 @@ type Task struct {
 
 func (x *Task) Reset() {
 	*x = Task{}
-	mi := &file_prx_v1_prx_proto_msgTypes[3]
+	mi := &file_prx_v1_prx_proto_msgTypes[4]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1309,7 +1436,7 @@ func (x *Task) String() string {
 func (*Task) ProtoMessage() {}
 
 func (x *Task) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[3]
+	mi := &file_prx_v1_prx_proto_msgTypes[4]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1322,7 +1449,7 @@ func (x *Task) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Task.ProtoReflect.Descriptor instead.
 func (*Task) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{3}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{4}
 }
 
 func (x *Task) GetId() string {
@@ -1431,7 +1558,7 @@ type Dependency struct {
 
 func (x *Dependency) Reset() {
 	*x = Dependency{}
-	mi := &file_prx_v1_prx_proto_msgTypes[4]
+	mi := &file_prx_v1_prx_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1443,7 +1570,7 @@ func (x *Dependency) String() string {
 func (*Dependency) ProtoMessage() {}
 
 func (x *Dependency) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[4]
+	mi := &file_prx_v1_prx_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1456,7 +1583,7 @@ func (x *Dependency) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Dependency.ProtoReflect.Descriptor instead.
 func (*Dependency) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{4}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *Dependency) GetBlockerTaskId() string {
@@ -1525,7 +1652,7 @@ type PullRequest struct {
 
 func (x *PullRequest) Reset() {
 	*x = PullRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[5]
+	mi := &file_prx_v1_prx_proto_msgTypes[6]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1537,7 +1664,7 @@ func (x *PullRequest) String() string {
 func (*PullRequest) ProtoMessage() {}
 
 func (x *PullRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[5]
+	mi := &file_prx_v1_prx_proto_msgTypes[6]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1550,7 +1677,7 @@ func (x *PullRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use PullRequest.ProtoReflect.Descriptor instead.
 func (*PullRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{5}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{6}
 }
 
 func (x *PullRequest) GetTaskId() string {
@@ -1679,7 +1806,7 @@ func (x *PullRequest) GetHost() string {
 	return ""
 }
 
-// Document is a reference attached to exactly one feature or task.
+// Document is a reference attached to exactly one project, feature, or task.
 type Document struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// id is the stable identifier of the document reference.
@@ -1699,14 +1826,16 @@ type Document struct {
 	// is_implementation_plan marks the task's single plan document.
 	IsImplementationPlan bool `protobuf:"varint,8,opt,name=is_implementation_plan,json=isImplementationPlan,proto3" json:"is_implementation_plan,omitempty"`
 	// updated_at is the last update time in RFC 3339 format.
-	UpdatedAt     string `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	UpdatedAt string `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
+	// project_id identifies the parent project by its public P-<number> ID when the document is project-scoped.
+	ProjectId     string `protobuf:"bytes,10,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Document) Reset() {
 	*x = Document{}
-	mi := &file_prx_v1_prx_proto_msgTypes[6]
+	mi := &file_prx_v1_prx_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1718,7 +1847,7 @@ func (x *Document) String() string {
 func (*Document) ProtoMessage() {}
 
 func (x *Document) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[6]
+	mi := &file_prx_v1_prx_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1731,7 +1860,7 @@ func (x *Document) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Document.ProtoReflect.Descriptor instead.
 func (*Document) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{6}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{7}
 }
 
 func (x *Document) GetId() string {
@@ -1797,6 +1926,13 @@ func (x *Document) GetUpdatedAt() string {
 	return ""
 }
 
+func (x *Document) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
 // Snapshot is the complete normalized dataset plus derived task queues.
 type Snapshot struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -1817,14 +1953,16 @@ type Snapshot struct {
 	// conflict_tasks contains tasks whose pull requests have merge conflicts.
 	ConflictTasks []*Task `protobuf:"bytes,8,rep,name=conflict_tasks,json=conflictTasks,proto3" json:"conflict_tasks,omitempty"`
 	// stale_tasks contains tasks whose pull request data is stale or has a sync error.
-	StaleTasks    []*Task `protobuf:"bytes,9,rep,name=stale_tasks,json=staleTasks,proto3" json:"stale_tasks,omitempty"`
+	StaleTasks []*Task `protobuf:"bytes,9,rep,name=stale_tasks,json=staleTasks,proto3" json:"stale_tasks,omitempty"`
+	// projects contains all stored projects.
+	Projects      []*Project `protobuf:"bytes,10,rep,name=projects,proto3" json:"projects,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *Snapshot) Reset() {
 	*x = Snapshot{}
-	mi := &file_prx_v1_prx_proto_msgTypes[7]
+	mi := &file_prx_v1_prx_proto_msgTypes[8]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1836,7 +1974,7 @@ func (x *Snapshot) String() string {
 func (*Snapshot) ProtoMessage() {}
 
 func (x *Snapshot) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[7]
+	mi := &file_prx_v1_prx_proto_msgTypes[8]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1849,7 +1987,7 @@ func (x *Snapshot) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Snapshot.ProtoReflect.Descriptor instead.
 func (*Snapshot) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{7}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{8}
 }
 
 func (x *Snapshot) GetFeatures() []*Feature {
@@ -1915,6 +2053,13 @@ func (x *Snapshot) GetStaleTasks() []*Task {
 	return nil
 }
 
+func (x *Snapshot) GetProjects() []*Project {
+	if x != nil {
+		return x.Projects
+	}
+	return nil
+}
+
 // GetSnapshotRequest requests the current normalized dataset and derived queues.
 type GetSnapshotRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
@@ -1924,7 +2069,7 @@ type GetSnapshotRequest struct {
 
 func (x *GetSnapshotRequest) Reset() {
 	*x = GetSnapshotRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[8]
+	mi := &file_prx_v1_prx_proto_msgTypes[9]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1936,7 +2081,7 @@ func (x *GetSnapshotRequest) String() string {
 func (*GetSnapshotRequest) ProtoMessage() {}
 
 func (x *GetSnapshotRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[8]
+	mi := &file_prx_v1_prx_proto_msgTypes[9]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1949,7 +2094,7 @@ func (x *GetSnapshotRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSnapshotRequest.ProtoReflect.Descriptor instead.
 func (*GetSnapshotRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{8}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{9}
 }
 
 // GetSnapshotResponse returns the requested application snapshot.
@@ -1963,7 +2108,7 @@ type GetSnapshotResponse struct {
 
 func (x *GetSnapshotResponse) Reset() {
 	*x = GetSnapshotResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[9]
+	mi := &file_prx_v1_prx_proto_msgTypes[10]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -1975,7 +2120,7 @@ func (x *GetSnapshotResponse) String() string {
 func (*GetSnapshotResponse) ProtoMessage() {}
 
 func (x *GetSnapshotResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[9]
+	mi := &file_prx_v1_prx_proto_msgTypes[10]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1988,7 +2133,7 @@ func (x *GetSnapshotResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetSnapshotResponse.ProtoReflect.Descriptor instead.
 func (*GetSnapshotResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{9}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{10}
 }
 
 func (x *GetSnapshotResponse) GetSnapshot() *Snapshot {
@@ -1996,6 +2141,339 @@ func (x *GetSnapshotResponse) GetSnapshot() *Snapshot {
 		return x.Snapshot
 	}
 	return nil
+}
+
+// CreateProjectRequest contains the required and descriptive values for a project.
+type CreateProjectRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// slug is the lowercase, hyphenated project identifier.
+	Slug string `protobuf:"bytes,1,opt,name=slug,proto3" json:"slug,omitempty"`
+	// title is the required human-readable project name.
+	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
+	// description is optional explanatory text for the project.
+	Description   string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateProjectRequest) Reset() {
+	*x = CreateProjectRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[11]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateProjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateProjectRequest) ProtoMessage() {}
+
+func (x *CreateProjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[11]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateProjectRequest.ProtoReflect.Descriptor instead.
+func (*CreateProjectRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{11}
+}
+
+func (x *CreateProjectRequest) GetSlug() string {
+	if x != nil {
+		return x.Slug
+	}
+	return ""
+}
+
+func (x *CreateProjectRequest) GetTitle() string {
+	if x != nil {
+		return x.Title
+	}
+	return ""
+}
+
+func (x *CreateProjectRequest) GetDescription() string {
+	if x != nil {
+		return x.Description
+	}
+	return ""
+}
+
+// CreateProjectResponse returns the newly created project.
+type CreateProjectResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// project is the created project with its generated identifier and timestamps.
+	Project       *Project `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *CreateProjectResponse) Reset() {
+	*x = CreateProjectResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateProjectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateProjectResponse) ProtoMessage() {}
+
+func (x *CreateProjectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateProjectResponse.ProtoReflect.Descriptor instead.
+func (*CreateProjectResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *CreateProjectResponse) GetProject() *Project {
+	if x != nil {
+		return x.Project
+	}
+	return nil
+}
+
+// UpdateProjectRequest updates only the supplied project fields.
+// An unset optional field is unchanged, while an empty string requests clearing a string field.
+type UpdateProjectRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the project to update by public ID or slug.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// slug is unchanged when unset; an empty string requests clearing it.
+	Slug *string `protobuf:"bytes,2,opt,name=slug,proto3,oneof" json:"slug,omitempty"`
+	// title is unchanged when unset; an empty string requests clearing it.
+	Title *string `protobuf:"bytes,3,opt,name=title,proto3,oneof" json:"title,omitempty"`
+	// description is unchanged when unset; an empty string clears it.
+	Description *string `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
+	// archived is unchanged when unset; a supplied value explicitly sets it.
+	// Clearing it is the only update an archived project accepts.
+	Archived      *bool `protobuf:"varint,5,opt,name=archived,proto3,oneof" json:"archived,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProjectRequest) Reset() {
+	*x = UpdateProjectRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[13]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProjectRequest) ProtoMessage() {}
+
+func (x *UpdateProjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[13]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProjectRequest.ProtoReflect.Descriptor instead.
+func (*UpdateProjectRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{13}
+}
+
+func (x *UpdateProjectRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateProjectRequest) GetSlug() string {
+	if x != nil && x.Slug != nil {
+		return *x.Slug
+	}
+	return ""
+}
+
+func (x *UpdateProjectRequest) GetTitle() string {
+	if x != nil && x.Title != nil {
+		return *x.Title
+	}
+	return ""
+}
+
+func (x *UpdateProjectRequest) GetDescription() string {
+	if x != nil && x.Description != nil {
+		return *x.Description
+	}
+	return ""
+}
+
+func (x *UpdateProjectRequest) GetArchived() bool {
+	if x != nil && x.Archived != nil {
+		return *x.Archived
+	}
+	return false
+}
+
+// UpdateProjectResponse returns the updated project.
+type UpdateProjectResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// project is the project after applying the requested updates.
+	Project       *Project `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateProjectResponse) Reset() {
+	*x = UpdateProjectResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateProjectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateProjectResponse) ProtoMessage() {}
+
+func (x *UpdateProjectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateProjectResponse.ProtoReflect.Descriptor instead.
+func (*UpdateProjectResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *UpdateProjectResponse) GetProject() *Project {
+	if x != nil {
+		return x.Project
+	}
+	return nil
+}
+
+// DeleteProjectRequest requests deletion of a project.
+type DeleteProjectRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// id identifies the project to delete by public ID or slug.
+	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	// cascade deletes the project's own documents and releases its features
+	// instead of failing; contained features are never deleted.
+	Cascade       bool `protobuf:"varint,2,opt,name=cascade,proto3" json:"cascade,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteProjectRequest) Reset() {
+	*x = DeleteProjectRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[15]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteProjectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteProjectRequest) ProtoMessage() {}
+
+func (x *DeleteProjectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[15]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteProjectRequest.ProtoReflect.Descriptor instead.
+func (*DeleteProjectRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{15}
+}
+
+func (x *DeleteProjectRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *DeleteProjectRequest) GetCascade() bool {
+	if x != nil {
+		return x.Cascade
+	}
+	return false
+}
+
+// DeleteProjectResponse confirms that the project was deleted.
+type DeleteProjectResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteProjectResponse) Reset() {
+	*x = DeleteProjectResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteProjectResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteProjectResponse) ProtoMessage() {}
+
+func (x *DeleteProjectResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteProjectResponse.ProtoReflect.Descriptor instead.
+func (*DeleteProjectResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{16}
 }
 
 // CreateFeatureRequest contains the required and descriptive values for a feature.
@@ -2006,14 +2484,16 @@ type CreateFeatureRequest struct {
 	// title is the required human-readable feature name.
 	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	// description is optional explanatory text for the feature.
-	Description   string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
+	// project_id assigns the feature to a project by public ID or slug; an empty value leaves it unaffiliated.
+	ProjectId     string `protobuf:"bytes,4,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateFeatureRequest) Reset() {
 	*x = CreateFeatureRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[10]
+	mi := &file_prx_v1_prx_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2025,7 +2505,7 @@ func (x *CreateFeatureRequest) String() string {
 func (*CreateFeatureRequest) ProtoMessage() {}
 
 func (x *CreateFeatureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[10]
+	mi := &file_prx_v1_prx_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2038,7 +2518,7 @@ func (x *CreateFeatureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateFeatureRequest.ProtoReflect.Descriptor instead.
 func (*CreateFeatureRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{10}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *CreateFeatureRequest) GetSlug() string {
@@ -2062,6 +2542,13 @@ func (x *CreateFeatureRequest) GetDescription() string {
 	return ""
 }
 
+func (x *CreateFeatureRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
 // CreateFeatureResponse returns the newly created feature.
 type CreateFeatureResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -2073,7 +2560,7 @@ type CreateFeatureResponse struct {
 
 func (x *CreateFeatureResponse) Reset() {
 	*x = CreateFeatureResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[11]
+	mi := &file_prx_v1_prx_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2085,7 +2572,7 @@ func (x *CreateFeatureResponse) String() string {
 func (*CreateFeatureResponse) ProtoMessage() {}
 
 func (x *CreateFeatureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[11]
+	mi := &file_prx_v1_prx_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2098,7 +2585,7 @@ func (x *CreateFeatureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateFeatureResponse.ProtoReflect.Descriptor instead.
 func (*CreateFeatureResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{11}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *CreateFeatureResponse) GetFeature() *Feature {
@@ -2123,14 +2610,18 @@ type UpdateFeatureRequest struct {
 	// status is unchanged when unset; a supplied value replaces it.
 	Status *FeatureStatus `protobuf:"varint,5,opt,name=status,proto3,enum=prx.v1.FeatureStatus,oneof" json:"status,omitempty"`
 	// archived is unchanged when unset; a supplied value explicitly sets it.
-	Archived      *bool `protobuf:"varint,6,opt,name=archived,proto3,oneof" json:"archived,omitempty"`
+	// Clearing it is the only update an archived feature accepts.
+	Archived *bool `protobuf:"varint,6,opt,name=archived,proto3,oneof" json:"archived,omitempty"`
+	// project_id is unchanged when unset; a public ID or slug reassigns the
+	// feature, and an empty string removes it from its project.
+	ProjectId     *string `protobuf:"bytes,7,opt,name=project_id,json=projectId,proto3,oneof" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdateFeatureRequest) Reset() {
 	*x = UpdateFeatureRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[12]
+	mi := &file_prx_v1_prx_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2142,7 +2633,7 @@ func (x *UpdateFeatureRequest) String() string {
 func (*UpdateFeatureRequest) ProtoMessage() {}
 
 func (x *UpdateFeatureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[12]
+	mi := &file_prx_v1_prx_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2155,7 +2646,7 @@ func (x *UpdateFeatureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateFeatureRequest.ProtoReflect.Descriptor instead.
 func (*UpdateFeatureRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{12}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{19}
 }
 
 func (x *UpdateFeatureRequest) GetId() string {
@@ -2200,6 +2691,13 @@ func (x *UpdateFeatureRequest) GetArchived() bool {
 	return false
 }
 
+func (x *UpdateFeatureRequest) GetProjectId() string {
+	if x != nil && x.ProjectId != nil {
+		return *x.ProjectId
+	}
+	return ""
+}
+
 // UpdateFeatureResponse returns the updated feature.
 type UpdateFeatureResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -2211,7 +2709,7 @@ type UpdateFeatureResponse struct {
 
 func (x *UpdateFeatureResponse) Reset() {
 	*x = UpdateFeatureResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[13]
+	mi := &file_prx_v1_prx_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2223,7 +2721,7 @@ func (x *UpdateFeatureResponse) String() string {
 func (*UpdateFeatureResponse) ProtoMessage() {}
 
 func (x *UpdateFeatureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[13]
+	mi := &file_prx_v1_prx_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2236,7 +2734,7 @@ func (x *UpdateFeatureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateFeatureResponse.ProtoReflect.Descriptor instead.
 func (*UpdateFeatureResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{13}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *UpdateFeatureResponse) GetFeature() *Feature {
@@ -2259,7 +2757,7 @@ type DeleteFeatureRequest struct {
 
 func (x *DeleteFeatureRequest) Reset() {
 	*x = DeleteFeatureRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[14]
+	mi := &file_prx_v1_prx_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2271,7 +2769,7 @@ func (x *DeleteFeatureRequest) String() string {
 func (*DeleteFeatureRequest) ProtoMessage() {}
 
 func (x *DeleteFeatureRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[14]
+	mi := &file_prx_v1_prx_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2284,7 +2782,7 @@ func (x *DeleteFeatureRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFeatureRequest.ProtoReflect.Descriptor instead.
 func (*DeleteFeatureRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{14}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *DeleteFeatureRequest) GetId() string {
@@ -2310,7 +2808,7 @@ type DeleteFeatureResponse struct {
 
 func (x *DeleteFeatureResponse) Reset() {
 	*x = DeleteFeatureResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[15]
+	mi := &file_prx_v1_prx_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2322,7 +2820,7 @@ func (x *DeleteFeatureResponse) String() string {
 func (*DeleteFeatureResponse) ProtoMessage() {}
 
 func (x *DeleteFeatureResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[15]
+	mi := &file_prx_v1_prx_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2335,7 +2833,7 @@ func (x *DeleteFeatureResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteFeatureResponse.ProtoReflect.Descriptor instead.
 func (*DeleteFeatureResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{15}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{22}
 }
 
 // CreateTaskRequest contains the values for a task within a feature.
@@ -2357,7 +2855,7 @@ type CreateTaskRequest struct {
 
 func (x *CreateTaskRequest) Reset() {
 	*x = CreateTaskRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[16]
+	mi := &file_prx_v1_prx_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2369,7 +2867,7 @@ func (x *CreateTaskRequest) String() string {
 func (*CreateTaskRequest) ProtoMessage() {}
 
 func (x *CreateTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[16]
+	mi := &file_prx_v1_prx_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2382,7 +2880,7 @@ func (x *CreateTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTaskRequest.ProtoReflect.Descriptor instead.
 func (*CreateTaskRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{16}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *CreateTaskRequest) GetFeatureId() string {
@@ -2431,7 +2929,7 @@ type CreateTaskResponse struct {
 
 func (x *CreateTaskResponse) Reset() {
 	*x = CreateTaskResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[17]
+	mi := &file_prx_v1_prx_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2443,7 +2941,7 @@ func (x *CreateTaskResponse) String() string {
 func (*CreateTaskResponse) ProtoMessage() {}
 
 func (x *CreateTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[17]
+	mi := &file_prx_v1_prx_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2456,7 +2954,7 @@ func (x *CreateTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTaskResponse.ProtoReflect.Descriptor instead.
 func (*CreateTaskResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{17}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *CreateTaskResponse) GetTask() *Task {
@@ -2486,7 +2984,7 @@ type UpdateTaskRequest struct {
 
 func (x *UpdateTaskRequest) Reset() {
 	*x = UpdateTaskRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[18]
+	mi := &file_prx_v1_prx_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2498,7 +2996,7 @@ func (x *UpdateTaskRequest) String() string {
 func (*UpdateTaskRequest) ProtoMessage() {}
 
 func (x *UpdateTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[18]
+	mi := &file_prx_v1_prx_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2511,7 +3009,7 @@ func (x *UpdateTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTaskRequest.ProtoReflect.Descriptor instead.
 func (*UpdateTaskRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{18}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{25}
 }
 
 func (x *UpdateTaskRequest) GetId() string {
@@ -2560,7 +3058,7 @@ type UpdateTaskResponse struct {
 
 func (x *UpdateTaskResponse) Reset() {
 	*x = UpdateTaskResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[19]
+	mi := &file_prx_v1_prx_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2572,7 +3070,7 @@ func (x *UpdateTaskResponse) String() string {
 func (*UpdateTaskResponse) ProtoMessage() {}
 
 func (x *UpdateTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[19]
+	mi := &file_prx_v1_prx_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2585,7 +3083,7 @@ func (x *UpdateTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateTaskResponse.ProtoReflect.Descriptor instead.
 func (*UpdateTaskResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{19}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *UpdateTaskResponse) GetTask() *Task {
@@ -2608,7 +3106,7 @@ type DeleteTaskRequest struct {
 
 func (x *DeleteTaskRequest) Reset() {
 	*x = DeleteTaskRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[20]
+	mi := &file_prx_v1_prx_proto_msgTypes[27]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2620,7 +3118,7 @@ func (x *DeleteTaskRequest) String() string {
 func (*DeleteTaskRequest) ProtoMessage() {}
 
 func (x *DeleteTaskRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[20]
+	mi := &file_prx_v1_prx_proto_msgTypes[27]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2633,7 +3131,7 @@ func (x *DeleteTaskRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTaskRequest.ProtoReflect.Descriptor instead.
 func (*DeleteTaskRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{20}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{27}
 }
 
 func (x *DeleteTaskRequest) GetId() string {
@@ -2659,7 +3157,7 @@ type DeleteTaskResponse struct {
 
 func (x *DeleteTaskResponse) Reset() {
 	*x = DeleteTaskResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[21]
+	mi := &file_prx_v1_prx_proto_msgTypes[28]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2671,7 +3169,7 @@ func (x *DeleteTaskResponse) String() string {
 func (*DeleteTaskResponse) ProtoMessage() {}
 
 func (x *DeleteTaskResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[21]
+	mi := &file_prx_v1_prx_proto_msgTypes[28]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2684,7 +3182,7 @@ func (x *DeleteTaskResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteTaskResponse.ProtoReflect.Descriptor instead.
 func (*DeleteTaskResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{21}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{28}
 }
 
 // AddDependencyRequest creates a same-feature dependency edge.
@@ -2700,7 +3198,7 @@ type AddDependencyRequest struct {
 
 func (x *AddDependencyRequest) Reset() {
 	*x = AddDependencyRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[22]
+	mi := &file_prx_v1_prx_proto_msgTypes[29]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2712,7 +3210,7 @@ func (x *AddDependencyRequest) String() string {
 func (*AddDependencyRequest) ProtoMessage() {}
 
 func (x *AddDependencyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[22]
+	mi := &file_prx_v1_prx_proto_msgTypes[29]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2725,7 +3223,7 @@ func (x *AddDependencyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDependencyRequest.ProtoReflect.Descriptor instead.
 func (*AddDependencyRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{22}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{29}
 }
 
 func (x *AddDependencyRequest) GetBlockerTaskId() string {
@@ -2753,7 +3251,7 @@ type AddDependencyResponse struct {
 
 func (x *AddDependencyResponse) Reset() {
 	*x = AddDependencyResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[23]
+	mi := &file_prx_v1_prx_proto_msgTypes[30]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2765,7 +3263,7 @@ func (x *AddDependencyResponse) String() string {
 func (*AddDependencyResponse) ProtoMessage() {}
 
 func (x *AddDependencyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[23]
+	mi := &file_prx_v1_prx_proto_msgTypes[30]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2778,7 +3276,7 @@ func (x *AddDependencyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDependencyResponse.ProtoReflect.Descriptor instead.
 func (*AddDependencyResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{23}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{30}
 }
 
 func (x *AddDependencyResponse) GetDependency() *Dependency {
@@ -2801,7 +3299,7 @@ type RemoveDependencyRequest struct {
 
 func (x *RemoveDependencyRequest) Reset() {
 	*x = RemoveDependencyRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[24]
+	mi := &file_prx_v1_prx_proto_msgTypes[31]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2813,7 +3311,7 @@ func (x *RemoveDependencyRequest) String() string {
 func (*RemoveDependencyRequest) ProtoMessage() {}
 
 func (x *RemoveDependencyRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[24]
+	mi := &file_prx_v1_prx_proto_msgTypes[31]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2826,7 +3324,7 @@ func (x *RemoveDependencyRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveDependencyRequest.ProtoReflect.Descriptor instead.
 func (*RemoveDependencyRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{24}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{31}
 }
 
 func (x *RemoveDependencyRequest) GetBlockerTaskId() string {
@@ -2852,7 +3350,7 @@ type RemoveDependencyResponse struct {
 
 func (x *RemoveDependencyResponse) Reset() {
 	*x = RemoveDependencyResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[25]
+	mi := &file_prx_v1_prx_proto_msgTypes[32]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2864,7 +3362,7 @@ func (x *RemoveDependencyResponse) String() string {
 func (*RemoveDependencyResponse) ProtoMessage() {}
 
 func (x *RemoveDependencyResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[25]
+	mi := &file_prx_v1_prx_proto_msgTypes[32]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2877,7 +3375,7 @@ func (x *RemoveDependencyResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use RemoveDependencyResponse.ProtoReflect.Descriptor instead.
 func (*RemoveDependencyResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{25}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{32}
 }
 
 // AttachPullRequestRequest links a GitHub pull request to a pull-request task.
@@ -2893,7 +3391,7 @@ type AttachPullRequestRequest struct {
 
 func (x *AttachPullRequestRequest) Reset() {
 	*x = AttachPullRequestRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[26]
+	mi := &file_prx_v1_prx_proto_msgTypes[33]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2905,7 +3403,7 @@ func (x *AttachPullRequestRequest) String() string {
 func (*AttachPullRequestRequest) ProtoMessage() {}
 
 func (x *AttachPullRequestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[26]
+	mi := &file_prx_v1_prx_proto_msgTypes[33]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2918,7 +3416,7 @@ func (x *AttachPullRequestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttachPullRequestRequest.ProtoReflect.Descriptor instead.
 func (*AttachPullRequestRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{26}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{33}
 }
 
 func (x *AttachPullRequestRequest) GetTaskId() string {
@@ -2946,7 +3444,7 @@ type AttachPullRequestResponse struct {
 
 func (x *AttachPullRequestResponse) Reset() {
 	*x = AttachPullRequestResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[27]
+	mi := &file_prx_v1_prx_proto_msgTypes[34]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -2958,7 +3456,7 @@ func (x *AttachPullRequestResponse) String() string {
 func (*AttachPullRequestResponse) ProtoMessage() {}
 
 func (x *AttachPullRequestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[27]
+	mi := &file_prx_v1_prx_proto_msgTypes[34]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -2971,7 +3469,7 @@ func (x *AttachPullRequestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AttachPullRequestResponse.ProtoReflect.Descriptor instead.
 func (*AttachPullRequestResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{27}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{34}
 }
 
 func (x *AttachPullRequestResponse) GetPullRequest() *PullRequest {
@@ -2992,7 +3490,7 @@ type DetachPullRequestRequest struct {
 
 func (x *DetachPullRequestRequest) Reset() {
 	*x = DetachPullRequestRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[28]
+	mi := &file_prx_v1_prx_proto_msgTypes[35]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3004,7 +3502,7 @@ func (x *DetachPullRequestRequest) String() string {
 func (*DetachPullRequestRequest) ProtoMessage() {}
 
 func (x *DetachPullRequestRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[28]
+	mi := &file_prx_v1_prx_proto_msgTypes[35]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3017,7 +3515,7 @@ func (x *DetachPullRequestRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DetachPullRequestRequest.ProtoReflect.Descriptor instead.
 func (*DetachPullRequestRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{28}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{35}
 }
 
 func (x *DetachPullRequestRequest) GetTaskId() string {
@@ -3036,7 +3534,7 @@ type DetachPullRequestResponse struct {
 
 func (x *DetachPullRequestResponse) Reset() {
 	*x = DetachPullRequestResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[29]
+	mi := &file_prx_v1_prx_proto_msgTypes[36]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3048,7 +3546,7 @@ func (x *DetachPullRequestResponse) String() string {
 func (*DetachPullRequestResponse) ProtoMessage() {}
 
 func (x *DetachPullRequestResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[29]
+	mi := &file_prx_v1_prx_proto_msgTypes[36]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3061,15 +3559,15 @@ func (x *DetachPullRequestResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DetachPullRequestResponse.ProtoReflect.Descriptor instead.
 func (*DetachPullRequestResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{29}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{36}
 }
 
 // AddDocumentRequest registers one document source under exactly one parent.
 type AddDocumentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// feature_id identifies the parent feature when task_id is empty.
+	// feature_id identifies the parent feature when project_id and task_id are empty.
 	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	// task_id identifies the parent task when feature_id is empty.
+	// task_id identifies the parent task when project_id and feature_id are empty.
 	TaskId string `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	// title is the human-readable document label.
 	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
@@ -3083,13 +3581,15 @@ type AddDocumentRequest struct {
 	Source isAddDocumentRequest_Source `protobuf_oneof:"source"`
 	// is_implementation_plan marks this task document as its plan.
 	IsImplementationPlan bool `protobuf:"varint,7,opt,name=is_implementation_plan,json=isImplementationPlan,proto3" json:"is_implementation_plan,omitempty"`
-	unknownFields        protoimpl.UnknownFields
-	sizeCache            protoimpl.SizeCache
+	// project_id identifies the parent project when feature_id and task_id are empty.
+	ProjectId     string `protobuf:"bytes,8,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *AddDocumentRequest) Reset() {
 	*x = AddDocumentRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[30]
+	mi := &file_prx_v1_prx_proto_msgTypes[37]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3101,7 +3601,7 @@ func (x *AddDocumentRequest) String() string {
 func (*AddDocumentRequest) ProtoMessage() {}
 
 func (x *AddDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[30]
+	mi := &file_prx_v1_prx_proto_msgTypes[37]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3114,7 +3614,7 @@ func (x *AddDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDocumentRequest.ProtoReflect.Descriptor instead.
 func (*AddDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{30}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{37}
 }
 
 func (x *AddDocumentRequest) GetFeatureId() string {
@@ -3179,6 +3679,13 @@ func (x *AddDocumentRequest) GetIsImplementationPlan() bool {
 	return false
 }
 
+func (x *AddDocumentRequest) GetProjectId() string {
+	if x != nil {
+		return x.ProjectId
+	}
+	return ""
+}
+
 type isAddDocumentRequest_Source interface {
 	isAddDocumentRequest_Source()
 }
@@ -3215,7 +3722,7 @@ type AddDocumentResponse struct {
 
 func (x *AddDocumentResponse) Reset() {
 	*x = AddDocumentResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[31]
+	mi := &file_prx_v1_prx_proto_msgTypes[38]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3227,7 +3734,7 @@ func (x *AddDocumentResponse) String() string {
 func (*AddDocumentResponse) ProtoMessage() {}
 
 func (x *AddDocumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[31]
+	mi := &file_prx_v1_prx_proto_msgTypes[38]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3240,7 +3747,7 @@ func (x *AddDocumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddDocumentResponse.ProtoReflect.Descriptor instead.
 func (*AddDocumentResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{31}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{38}
 }
 
 func (x *AddDocumentResponse) GetDocument() *Document {
@@ -3261,7 +3768,7 @@ type GetDocumentRequest struct {
 
 func (x *GetDocumentRequest) Reset() {
 	*x = GetDocumentRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[32]
+	mi := &file_prx_v1_prx_proto_msgTypes[39]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3273,7 +3780,7 @@ func (x *GetDocumentRequest) String() string {
 func (*GetDocumentRequest) ProtoMessage() {}
 
 func (x *GetDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[32]
+	mi := &file_prx_v1_prx_proto_msgTypes[39]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3286,7 +3793,7 @@ func (x *GetDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDocumentRequest.ProtoReflect.Descriptor instead.
 func (*GetDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{32}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{39}
 }
 
 func (x *GetDocumentRequest) GetId() string {
@@ -3309,7 +3816,7 @@ type GetDocumentResponse struct {
 
 func (x *GetDocumentResponse) Reset() {
 	*x = GetDocumentResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[33]
+	mi := &file_prx_v1_prx_proto_msgTypes[40]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3321,7 +3828,7 @@ func (x *GetDocumentResponse) String() string {
 func (*GetDocumentResponse) ProtoMessage() {}
 
 func (x *GetDocumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[33]
+	mi := &file_prx_v1_prx_proto_msgTypes[40]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3334,7 +3841,7 @@ func (x *GetDocumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDocumentResponse.ProtoReflect.Descriptor instead.
 func (*GetDocumentResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{33}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{40}
 }
 
 func (x *GetDocumentResponse) GetDocument() *Document {
@@ -3374,7 +3881,7 @@ type UpdateDocumentRequest struct {
 
 func (x *UpdateDocumentRequest) Reset() {
 	*x = UpdateDocumentRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[34]
+	mi := &file_prx_v1_prx_proto_msgTypes[41]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3386,7 +3893,7 @@ func (x *UpdateDocumentRequest) String() string {
 func (*UpdateDocumentRequest) ProtoMessage() {}
 
 func (x *UpdateDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[34]
+	mi := &file_prx_v1_prx_proto_msgTypes[41]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3399,7 +3906,7 @@ func (x *UpdateDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDocumentRequest.ProtoReflect.Descriptor instead.
 func (*UpdateDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{34}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{41}
 }
 
 func (x *UpdateDocumentRequest) GetId() string {
@@ -3493,7 +4000,7 @@ type UpdateDocumentResponse struct {
 
 func (x *UpdateDocumentResponse) Reset() {
 	*x = UpdateDocumentResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[35]
+	mi := &file_prx_v1_prx_proto_msgTypes[42]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3505,7 +4012,7 @@ func (x *UpdateDocumentResponse) String() string {
 func (*UpdateDocumentResponse) ProtoMessage() {}
 
 func (x *UpdateDocumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[35]
+	mi := &file_prx_v1_prx_proto_msgTypes[42]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3518,7 +4025,7 @@ func (x *UpdateDocumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateDocumentResponse.ProtoReflect.Descriptor instead.
 func (*UpdateDocumentResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{35}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{42}
 }
 
 func (x *UpdateDocumentResponse) GetDocument() *Document {
@@ -3539,7 +4046,7 @@ type DeleteDocumentRequest struct {
 
 func (x *DeleteDocumentRequest) Reset() {
 	*x = DeleteDocumentRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[36]
+	mi := &file_prx_v1_prx_proto_msgTypes[43]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3551,7 +4058,7 @@ func (x *DeleteDocumentRequest) String() string {
 func (*DeleteDocumentRequest) ProtoMessage() {}
 
 func (x *DeleteDocumentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[36]
+	mi := &file_prx_v1_prx_proto_msgTypes[43]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3564,7 +4071,7 @@ func (x *DeleteDocumentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDocumentRequest.ProtoReflect.Descriptor instead.
 func (*DeleteDocumentRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{36}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{43}
 }
 
 func (x *DeleteDocumentRequest) GetId() string {
@@ -3583,7 +4090,7 @@ type DeleteDocumentResponse struct {
 
 func (x *DeleteDocumentResponse) Reset() {
 	*x = DeleteDocumentResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[37]
+	mi := &file_prx_v1_prx_proto_msgTypes[44]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3595,7 +4102,7 @@ func (x *DeleteDocumentResponse) String() string {
 func (*DeleteDocumentResponse) ProtoMessage() {}
 
 func (x *DeleteDocumentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[37]
+	mi := &file_prx_v1_prx_proto_msgTypes[44]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3608,7 +4115,7 @@ func (x *DeleteDocumentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteDocumentResponse.ProtoReflect.Descriptor instead.
 func (*DeleteDocumentResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{37}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{44}
 }
 
 // ReadDocumentContentRequest identifies a registered document to read.
@@ -3622,7 +4129,7 @@ type ReadDocumentContentRequest struct {
 
 func (x *ReadDocumentContentRequest) Reset() {
 	*x = ReadDocumentContentRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[38]
+	mi := &file_prx_v1_prx_proto_msgTypes[45]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3634,7 +4141,7 @@ func (x *ReadDocumentContentRequest) String() string {
 func (*ReadDocumentContentRequest) ProtoMessage() {}
 
 func (x *ReadDocumentContentRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[38]
+	mi := &file_prx_v1_prx_proto_msgTypes[45]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3647,7 +4154,7 @@ func (x *ReadDocumentContentRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReadDocumentContentRequest.ProtoReflect.Descriptor instead.
 func (*ReadDocumentContentRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{38}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{45}
 }
 
 func (x *ReadDocumentContentRequest) GetId() string {
@@ -3668,7 +4175,7 @@ type ReadDocumentContentResponse struct {
 
 func (x *ReadDocumentContentResponse) Reset() {
 	*x = ReadDocumentContentResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[39]
+	mi := &file_prx_v1_prx_proto_msgTypes[46]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3680,7 +4187,7 @@ func (x *ReadDocumentContentResponse) String() string {
 func (*ReadDocumentContentResponse) ProtoMessage() {}
 
 func (x *ReadDocumentContentResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[39]
+	mi := &file_prx_v1_prx_proto_msgTypes[46]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3693,7 +4200,7 @@ func (x *ReadDocumentContentResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReadDocumentContentResponse.ProtoReflect.Descriptor instead.
 func (*ReadDocumentContentResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{39}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{46}
 }
 
 func (x *ReadDocumentContentResponse) GetContent() string {
@@ -3712,7 +4219,7 @@ type SelectLocalFileRequest struct {
 
 func (x *SelectLocalFileRequest) Reset() {
 	*x = SelectLocalFileRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[40]
+	mi := &file_prx_v1_prx_proto_msgTypes[47]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3724,7 +4231,7 @@ func (x *SelectLocalFileRequest) String() string {
 func (*SelectLocalFileRequest) ProtoMessage() {}
 
 func (x *SelectLocalFileRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[40]
+	mi := &file_prx_v1_prx_proto_msgTypes[47]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3737,7 +4244,7 @@ func (x *SelectLocalFileRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SelectLocalFileRequest.ProtoReflect.Descriptor instead.
 func (*SelectLocalFileRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{40}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{47}
 }
 
 // SelectLocalFileResponse returns the selected server-local absolute path.
@@ -3753,7 +4260,7 @@ type SelectLocalFileResponse struct {
 
 func (x *SelectLocalFileResponse) Reset() {
 	*x = SelectLocalFileResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[41]
+	mi := &file_prx_v1_prx_proto_msgTypes[48]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3765,7 +4272,7 @@ func (x *SelectLocalFileResponse) String() string {
 func (*SelectLocalFileResponse) ProtoMessage() {}
 
 func (x *SelectLocalFileResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[41]
+	mi := &file_prx_v1_prx_proto_msgTypes[48]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3778,7 +4285,7 @@ func (x *SelectLocalFileResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SelectLocalFileResponse.ProtoReflect.Descriptor instead.
 func (*SelectLocalFileResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{41}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{48}
 }
 
 func (x *SelectLocalFileResponse) GetPath() string {
@@ -3814,7 +4321,7 @@ type GitHubHost struct {
 
 func (x *GitHubHost) Reset() {
 	*x = GitHubHost{}
-	mi := &file_prx_v1_prx_proto_msgTypes[42]
+	mi := &file_prx_v1_prx_proto_msgTypes[49]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3826,7 +4333,7 @@ func (x *GitHubHost) String() string {
 func (*GitHubHost) ProtoMessage() {}
 
 func (x *GitHubHost) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[42]
+	mi := &file_prx_v1_prx_proto_msgTypes[49]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3839,7 +4346,7 @@ func (x *GitHubHost) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GitHubHost.ProtoReflect.Descriptor instead.
 func (*GitHubHost) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{42}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{49}
 }
 
 func (x *GitHubHost) GetHost() string {
@@ -3905,7 +4412,7 @@ type GitHubAuthMethod struct {
 
 func (x *GitHubAuthMethod) Reset() {
 	*x = GitHubAuthMethod{}
-	mi := &file_prx_v1_prx_proto_msgTypes[43]
+	mi := &file_prx_v1_prx_proto_msgTypes[50]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -3917,7 +4424,7 @@ func (x *GitHubAuthMethod) String() string {
 func (*GitHubAuthMethod) ProtoMessage() {}
 
 func (x *GitHubAuthMethod) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[43]
+	mi := &file_prx_v1_prx_proto_msgTypes[50]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -3930,7 +4437,7 @@ func (x *GitHubAuthMethod) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GitHubAuthMethod.ProtoReflect.Descriptor instead.
 func (*GitHubAuthMethod) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{43}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{50}
 }
 
 func (x *GitHubAuthMethod) GetId() string {
@@ -4013,7 +4520,7 @@ type GitHubConfig struct {
 
 func (x *GitHubConfig) Reset() {
 	*x = GitHubConfig{}
-	mi := &file_prx_v1_prx_proto_msgTypes[44]
+	mi := &file_prx_v1_prx_proto_msgTypes[51]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4025,7 +4532,7 @@ func (x *GitHubConfig) String() string {
 func (*GitHubConfig) ProtoMessage() {}
 
 func (x *GitHubConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[44]
+	mi := &file_prx_v1_prx_proto_msgTypes[51]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4038,7 +4545,7 @@ func (x *GitHubConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GitHubConfig.ProtoReflect.Descriptor instead.
 func (*GitHubConfig) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{44}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{51}
 }
 
 func (x *GitHubConfig) GetVersion() int32 {
@@ -4078,7 +4585,7 @@ type GetConfigRequest struct {
 
 func (x *GetConfigRequest) Reset() {
 	*x = GetConfigRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[45]
+	mi := &file_prx_v1_prx_proto_msgTypes[52]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4090,7 +4597,7 @@ func (x *GetConfigRequest) String() string {
 func (*GetConfigRequest) ProtoMessage() {}
 
 func (x *GetConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[45]
+	mi := &file_prx_v1_prx_proto_msgTypes[52]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4103,7 +4610,7 @@ func (x *GetConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConfigRequest.ProtoReflect.Descriptor instead.
 func (*GetConfigRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{45}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{52}
 }
 
 // GetConfigResponse returns the public GitHub configuration.
@@ -4117,7 +4624,7 @@ type GetConfigResponse struct {
 
 func (x *GetConfigResponse) Reset() {
 	*x = GetConfigResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[46]
+	mi := &file_prx_v1_prx_proto_msgTypes[53]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4129,7 +4636,7 @@ func (x *GetConfigResponse) String() string {
 func (*GetConfigResponse) ProtoMessage() {}
 
 func (x *GetConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[46]
+	mi := &file_prx_v1_prx_proto_msgTypes[53]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4142,7 +4649,7 @@ func (x *GetConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetConfigResponse.ProtoReflect.Descriptor instead.
 func (*GetConfigResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{46}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{53}
 }
 
 func (x *GetConfigResponse) GetConfig() *GitHubConfig {
@@ -4163,7 +4670,7 @@ type UpdateGitHubSyncConfigRequest struct {
 
 func (x *UpdateGitHubSyncConfigRequest) Reset() {
 	*x = UpdateGitHubSyncConfigRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[47]
+	mi := &file_prx_v1_prx_proto_msgTypes[54]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4175,7 +4682,7 @@ func (x *UpdateGitHubSyncConfigRequest) String() string {
 func (*UpdateGitHubSyncConfigRequest) ProtoMessage() {}
 
 func (x *UpdateGitHubSyncConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[47]
+	mi := &file_prx_v1_prx_proto_msgTypes[54]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4188,7 +4695,7 @@ func (x *UpdateGitHubSyncConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGitHubSyncConfigRequest.ProtoReflect.Descriptor instead.
 func (*UpdateGitHubSyncConfigRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{47}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{54}
 }
 
 func (x *UpdateGitHubSyncConfigRequest) GetIntervalSeconds() int64 {
@@ -4209,7 +4716,7 @@ type UpdateGitHubSyncConfigResponse struct {
 
 func (x *UpdateGitHubSyncConfigResponse) Reset() {
 	*x = UpdateGitHubSyncConfigResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[48]
+	mi := &file_prx_v1_prx_proto_msgTypes[55]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4221,7 +4728,7 @@ func (x *UpdateGitHubSyncConfigResponse) String() string {
 func (*UpdateGitHubSyncConfigResponse) ProtoMessage() {}
 
 func (x *UpdateGitHubSyncConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[48]
+	mi := &file_prx_v1_prx_proto_msgTypes[55]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4234,7 +4741,7 @@ func (x *UpdateGitHubSyncConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGitHubSyncConfigResponse.ProtoReflect.Descriptor instead.
 func (*UpdateGitHubSyncConfigResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{48}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{55}
 }
 
 func (x *UpdateGitHubSyncConfigResponse) GetConfig() *GitHubConfig {
@@ -4263,7 +4770,7 @@ type AddGitHubHostRequest struct {
 
 func (x *AddGitHubHostRequest) Reset() {
 	*x = AddGitHubHostRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[49]
+	mi := &file_prx_v1_prx_proto_msgTypes[56]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4275,7 +4782,7 @@ func (x *AddGitHubHostRequest) String() string {
 func (*AddGitHubHostRequest) ProtoMessage() {}
 
 func (x *AddGitHubHostRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[49]
+	mi := &file_prx_v1_prx_proto_msgTypes[56]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4288,7 +4795,7 @@ func (x *AddGitHubHostRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddGitHubHostRequest.ProtoReflect.Descriptor instead.
 func (*AddGitHubHostRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{49}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{56}
 }
 
 func (x *AddGitHubHostRequest) GetHost() string {
@@ -4337,7 +4844,7 @@ type AddGitHubHostResponse struct {
 
 func (x *AddGitHubHostResponse) Reset() {
 	*x = AddGitHubHostResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[50]
+	mi := &file_prx_v1_prx_proto_msgTypes[57]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4349,7 +4856,7 @@ func (x *AddGitHubHostResponse) String() string {
 func (*AddGitHubHostResponse) ProtoMessage() {}
 
 func (x *AddGitHubHostResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[50]
+	mi := &file_prx_v1_prx_proto_msgTypes[57]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4362,7 +4869,7 @@ func (x *AddGitHubHostResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddGitHubHostResponse.ProtoReflect.Descriptor instead.
 func (*AddGitHubHostResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{50}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{57}
 }
 
 func (x *AddGitHubHostResponse) GetHost() *GitHubHost {
@@ -4393,7 +4900,7 @@ type UpdateGitHubHostRequest struct {
 
 func (x *UpdateGitHubHostRequest) Reset() {
 	*x = UpdateGitHubHostRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[51]
+	mi := &file_prx_v1_prx_proto_msgTypes[58]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4405,7 +4912,7 @@ func (x *UpdateGitHubHostRequest) String() string {
 func (*UpdateGitHubHostRequest) ProtoMessage() {}
 
 func (x *UpdateGitHubHostRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[51]
+	mi := &file_prx_v1_prx_proto_msgTypes[58]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4418,7 +4925,7 @@ func (x *UpdateGitHubHostRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGitHubHostRequest.ProtoReflect.Descriptor instead.
 func (*UpdateGitHubHostRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{51}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{58}
 }
 
 func (x *UpdateGitHubHostRequest) GetHost() string {
@@ -4474,7 +4981,7 @@ type UpdateGitHubHostResponse struct {
 
 func (x *UpdateGitHubHostResponse) Reset() {
 	*x = UpdateGitHubHostResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[52]
+	mi := &file_prx_v1_prx_proto_msgTypes[59]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4486,7 +4993,7 @@ func (x *UpdateGitHubHostResponse) String() string {
 func (*UpdateGitHubHostResponse) ProtoMessage() {}
 
 func (x *UpdateGitHubHostResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[52]
+	mi := &file_prx_v1_prx_proto_msgTypes[59]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4499,7 +5006,7 @@ func (x *UpdateGitHubHostResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGitHubHostResponse.ProtoReflect.Descriptor instead.
 func (*UpdateGitHubHostResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{52}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{59}
 }
 
 func (x *UpdateGitHubHostResponse) GetHost() *GitHubHost {
@@ -4520,7 +5027,7 @@ type DeleteGitHubHostRequest struct {
 
 func (x *DeleteGitHubHostRequest) Reset() {
 	*x = DeleteGitHubHostRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[53]
+	mi := &file_prx_v1_prx_proto_msgTypes[60]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4532,7 +5039,7 @@ func (x *DeleteGitHubHostRequest) String() string {
 func (*DeleteGitHubHostRequest) ProtoMessage() {}
 
 func (x *DeleteGitHubHostRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[53]
+	mi := &file_prx_v1_prx_proto_msgTypes[60]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4545,7 +5052,7 @@ func (x *DeleteGitHubHostRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteGitHubHostRequest.ProtoReflect.Descriptor instead.
 func (*DeleteGitHubHostRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{53}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{60}
 }
 
 func (x *DeleteGitHubHostRequest) GetHost() string {
@@ -4564,7 +5071,7 @@ type DeleteGitHubHostResponse struct {
 
 func (x *DeleteGitHubHostResponse) Reset() {
 	*x = DeleteGitHubHostResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[54]
+	mi := &file_prx_v1_prx_proto_msgTypes[61]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4576,7 +5083,7 @@ func (x *DeleteGitHubHostResponse) String() string {
 func (*DeleteGitHubHostResponse) ProtoMessage() {}
 
 func (x *DeleteGitHubHostResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[54]
+	mi := &file_prx_v1_prx_proto_msgTypes[61]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4589,7 +5096,7 @@ func (x *DeleteGitHubHostResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteGitHubHostResponse.ProtoReflect.Descriptor instead.
 func (*DeleteGitHubHostResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{54}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{61}
 }
 
 // AddGitHubAuthMethodRequest adds one host-scoped authentication method.
@@ -4617,7 +5124,7 @@ type AddGitHubAuthMethodRequest struct {
 
 func (x *AddGitHubAuthMethodRequest) Reset() {
 	*x = AddGitHubAuthMethodRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[55]
+	mi := &file_prx_v1_prx_proto_msgTypes[62]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4629,7 +5136,7 @@ func (x *AddGitHubAuthMethodRequest) String() string {
 func (*AddGitHubAuthMethodRequest) ProtoMessage() {}
 
 func (x *AddGitHubAuthMethodRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[55]
+	mi := &file_prx_v1_prx_proto_msgTypes[62]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4642,7 +5149,7 @@ func (x *AddGitHubAuthMethodRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddGitHubAuthMethodRequest.ProtoReflect.Descriptor instead.
 func (*AddGitHubAuthMethodRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{55}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{62}
 }
 
 func (x *AddGitHubAuthMethodRequest) GetId() string {
@@ -4712,7 +5219,7 @@ type AddGitHubAuthMethodResponse struct {
 
 func (x *AddGitHubAuthMethodResponse) Reset() {
 	*x = AddGitHubAuthMethodResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[56]
+	mi := &file_prx_v1_prx_proto_msgTypes[63]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4724,7 +5231,7 @@ func (x *AddGitHubAuthMethodResponse) String() string {
 func (*AddGitHubAuthMethodResponse) ProtoMessage() {}
 
 func (x *AddGitHubAuthMethodResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[56]
+	mi := &file_prx_v1_prx_proto_msgTypes[63]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4737,7 +5244,7 @@ func (x *AddGitHubAuthMethodResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use AddGitHubAuthMethodResponse.ProtoReflect.Descriptor instead.
 func (*AddGitHubAuthMethodResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{56}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{63}
 }
 
 func (x *AddGitHubAuthMethodResponse) GetAuthMethod() *GitHubAuthMethod {
@@ -4774,7 +5281,7 @@ type UpdateGitHubAuthMethodRequest struct {
 
 func (x *UpdateGitHubAuthMethodRequest) Reset() {
 	*x = UpdateGitHubAuthMethodRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[57]
+	mi := &file_prx_v1_prx_proto_msgTypes[64]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4786,7 +5293,7 @@ func (x *UpdateGitHubAuthMethodRequest) String() string {
 func (*UpdateGitHubAuthMethodRequest) ProtoMessage() {}
 
 func (x *UpdateGitHubAuthMethodRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[57]
+	mi := &file_prx_v1_prx_proto_msgTypes[64]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4799,7 +5306,7 @@ func (x *UpdateGitHubAuthMethodRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGitHubAuthMethodRequest.ProtoReflect.Descriptor instead.
 func (*UpdateGitHubAuthMethodRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{57}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{64}
 }
 
 func (x *UpdateGitHubAuthMethodRequest) GetId() string {
@@ -4876,7 +5383,7 @@ type UpdateGitHubAuthMethodResponse struct {
 
 func (x *UpdateGitHubAuthMethodResponse) Reset() {
 	*x = UpdateGitHubAuthMethodResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[58]
+	mi := &file_prx_v1_prx_proto_msgTypes[65]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4888,7 +5395,7 @@ func (x *UpdateGitHubAuthMethodResponse) String() string {
 func (*UpdateGitHubAuthMethodResponse) ProtoMessage() {}
 
 func (x *UpdateGitHubAuthMethodResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[58]
+	mi := &file_prx_v1_prx_proto_msgTypes[65]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4901,7 +5408,7 @@ func (x *UpdateGitHubAuthMethodResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UpdateGitHubAuthMethodResponse.ProtoReflect.Descriptor instead.
 func (*UpdateGitHubAuthMethodResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{58}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{65}
 }
 
 func (x *UpdateGitHubAuthMethodResponse) GetAuthMethod() *GitHubAuthMethod {
@@ -4922,7 +5429,7 @@ type DeleteGitHubAuthMethodRequest struct {
 
 func (x *DeleteGitHubAuthMethodRequest) Reset() {
 	*x = DeleteGitHubAuthMethodRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[59]
+	mi := &file_prx_v1_prx_proto_msgTypes[66]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4934,7 +5441,7 @@ func (x *DeleteGitHubAuthMethodRequest) String() string {
 func (*DeleteGitHubAuthMethodRequest) ProtoMessage() {}
 
 func (x *DeleteGitHubAuthMethodRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[59]
+	mi := &file_prx_v1_prx_proto_msgTypes[66]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4947,7 +5454,7 @@ func (x *DeleteGitHubAuthMethodRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteGitHubAuthMethodRequest.ProtoReflect.Descriptor instead.
 func (*DeleteGitHubAuthMethodRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{59}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{66}
 }
 
 func (x *DeleteGitHubAuthMethodRequest) GetId() string {
@@ -4966,7 +5473,7 @@ type DeleteGitHubAuthMethodResponse struct {
 
 func (x *DeleteGitHubAuthMethodResponse) Reset() {
 	*x = DeleteGitHubAuthMethodResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[60]
+	mi := &file_prx_v1_prx_proto_msgTypes[67]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -4978,7 +5485,7 @@ func (x *DeleteGitHubAuthMethodResponse) String() string {
 func (*DeleteGitHubAuthMethodResponse) ProtoMessage() {}
 
 func (x *DeleteGitHubAuthMethodResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[60]
+	mi := &file_prx_v1_prx_proto_msgTypes[67]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -4991,7 +5498,7 @@ func (x *DeleteGitHubAuthMethodResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DeleteGitHubAuthMethodResponse.ProtoReflect.Descriptor instead.
 func (*DeleteGitHubAuthMethodResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{60}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{67}
 }
 
 // ReorderGitHubAuthMethodsRequest sets the complete authentication priority.
@@ -5005,7 +5512,7 @@ type ReorderGitHubAuthMethodsRequest struct {
 
 func (x *ReorderGitHubAuthMethodsRequest) Reset() {
 	*x = ReorderGitHubAuthMethodsRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[61]
+	mi := &file_prx_v1_prx_proto_msgTypes[68]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5017,7 +5524,7 @@ func (x *ReorderGitHubAuthMethodsRequest) String() string {
 func (*ReorderGitHubAuthMethodsRequest) ProtoMessage() {}
 
 func (x *ReorderGitHubAuthMethodsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[61]
+	mi := &file_prx_v1_prx_proto_msgTypes[68]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5030,7 +5537,7 @@ func (x *ReorderGitHubAuthMethodsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReorderGitHubAuthMethodsRequest.ProtoReflect.Descriptor instead.
 func (*ReorderGitHubAuthMethodsRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{61}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{68}
 }
 
 func (x *ReorderGitHubAuthMethodsRequest) GetIds() []string {
@@ -5051,7 +5558,7 @@ type ReorderGitHubAuthMethodsResponse struct {
 
 func (x *ReorderGitHubAuthMethodsResponse) Reset() {
 	*x = ReorderGitHubAuthMethodsResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[62]
+	mi := &file_prx_v1_prx_proto_msgTypes[69]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5063,7 +5570,7 @@ func (x *ReorderGitHubAuthMethodsResponse) String() string {
 func (*ReorderGitHubAuthMethodsResponse) ProtoMessage() {}
 
 func (x *ReorderGitHubAuthMethodsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[62]
+	mi := &file_prx_v1_prx_proto_msgTypes[69]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5076,7 +5583,7 @@ func (x *ReorderGitHubAuthMethodsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ReorderGitHubAuthMethodsResponse.ProtoReflect.Descriptor instead.
 func (*ReorderGitHubAuthMethodsResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{62}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{69}
 }
 
 func (x *ReorderGitHubAuthMethodsResponse) GetAuthMethods() []*GitHubAuthMethod {
@@ -5095,7 +5602,7 @@ type ValidateConfigRequest struct {
 
 func (x *ValidateConfigRequest) Reset() {
 	*x = ValidateConfigRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[63]
+	mi := &file_prx_v1_prx_proto_msgTypes[70]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5107,7 +5614,7 @@ func (x *ValidateConfigRequest) String() string {
 func (*ValidateConfigRequest) ProtoMessage() {}
 
 func (x *ValidateConfigRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[63]
+	mi := &file_prx_v1_prx_proto_msgTypes[70]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5120,7 +5627,7 @@ func (x *ValidateConfigRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateConfigRequest.ProtoReflect.Descriptor instead.
 func (*ValidateConfigRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{63}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{70}
 }
 
 // ValidateConfigResponse reports whether configuration validation succeeded.
@@ -5139,7 +5646,7 @@ type ValidateConfigResponse struct {
 
 func (x *ValidateConfigResponse) Reset() {
 	*x = ValidateConfigResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[64]
+	mi := &file_prx_v1_prx_proto_msgTypes[71]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5151,7 +5658,7 @@ func (x *ValidateConfigResponse) String() string {
 func (*ValidateConfigResponse) ProtoMessage() {}
 
 func (x *ValidateConfigResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[64]
+	mi := &file_prx_v1_prx_proto_msgTypes[71]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5164,7 +5671,7 @@ func (x *ValidateConfigResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateConfigResponse.ProtoReflect.Descriptor instead.
 func (*ValidateConfigResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{64}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{71}
 }
 
 func (x *ValidateConfigResponse) GetValid() bool {
@@ -5202,7 +5709,7 @@ type SyncRequest struct {
 
 func (x *SyncRequest) Reset() {
 	*x = SyncRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[65]
+	mi := &file_prx_v1_prx_proto_msgTypes[72]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5214,7 +5721,7 @@ func (x *SyncRequest) String() string {
 func (*SyncRequest) ProtoMessage() {}
 
 func (x *SyncRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[65]
+	mi := &file_prx_v1_prx_proto_msgTypes[72]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5227,7 +5734,7 @@ func (x *SyncRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncRequest.ProtoReflect.Descriptor instead.
 func (*SyncRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{65}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{72}
 }
 
 func (x *SyncRequest) GetFeatureId() string {
@@ -5258,7 +5765,7 @@ type SyncResponse struct {
 
 func (x *SyncResponse) Reset() {
 	*x = SyncResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[66]
+	mi := &file_prx_v1_prx_proto_msgTypes[73]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5270,7 +5777,7 @@ func (x *SyncResponse) String() string {
 func (*SyncResponse) ProtoMessage() {}
 
 func (x *SyncResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[66]
+	mi := &file_prx_v1_prx_proto_msgTypes[73]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5283,7 +5790,7 @@ func (x *SyncResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncResponse.ProtoReflect.Descriptor instead.
 func (*SyncResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{66}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{73}
 }
 
 func (x *SyncResponse) GetSucceeded() int32 {
@@ -5322,7 +5829,7 @@ type GitHubSyncStatus struct {
 
 func (x *GitHubSyncStatus) Reset() {
 	*x = GitHubSyncStatus{}
-	mi := &file_prx_v1_prx_proto_msgTypes[67]
+	mi := &file_prx_v1_prx_proto_msgTypes[74]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5334,7 +5841,7 @@ func (x *GitHubSyncStatus) String() string {
 func (*GitHubSyncStatus) ProtoMessage() {}
 
 func (x *GitHubSyncStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[67]
+	mi := &file_prx_v1_prx_proto_msgTypes[74]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5347,7 +5854,7 @@ func (x *GitHubSyncStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GitHubSyncStatus.ProtoReflect.Descriptor instead.
 func (*GitHubSyncStatus) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{67}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{74}
 }
 
 func (x *GitHubSyncStatus) GetIntervalSeconds() int64 {
@@ -5401,7 +5908,7 @@ type GetGitHubSyncStatusRequest struct {
 
 func (x *GetGitHubSyncStatusRequest) Reset() {
 	*x = GetGitHubSyncStatusRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[68]
+	mi := &file_prx_v1_prx_proto_msgTypes[75]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5413,7 +5920,7 @@ func (x *GetGitHubSyncStatusRequest) String() string {
 func (*GetGitHubSyncStatusRequest) ProtoMessage() {}
 
 func (x *GetGitHubSyncStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[68]
+	mi := &file_prx_v1_prx_proto_msgTypes[75]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5426,7 +5933,7 @@ func (x *GetGitHubSyncStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGitHubSyncStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetGitHubSyncStatusRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{68}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{75}
 }
 
 // GetGitHubSyncStatusResponse returns the persisted synchronization status.
@@ -5440,7 +5947,7 @@ type GetGitHubSyncStatusResponse struct {
 
 func (x *GetGitHubSyncStatusResponse) Reset() {
 	*x = GetGitHubSyncStatusResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[69]
+	mi := &file_prx_v1_prx_proto_msgTypes[76]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5452,7 +5959,7 @@ func (x *GetGitHubSyncStatusResponse) String() string {
 func (*GetGitHubSyncStatusResponse) ProtoMessage() {}
 
 func (x *GetGitHubSyncStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[69]
+	mi := &file_prx_v1_prx_proto_msgTypes[76]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5465,7 +5972,7 @@ func (x *GetGitHubSyncStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGitHubSyncStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetGitHubSyncStatusResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{69}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{76}
 }
 
 func (x *GetGitHubSyncStatusResponse) GetStatus() *GitHubSyncStatus {
@@ -5484,7 +5991,7 @@ type SyncGitHubIfDueRequest struct {
 
 func (x *SyncGitHubIfDueRequest) Reset() {
 	*x = SyncGitHubIfDueRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[70]
+	mi := &file_prx_v1_prx_proto_msgTypes[77]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5496,7 +6003,7 @@ func (x *SyncGitHubIfDueRequest) String() string {
 func (*SyncGitHubIfDueRequest) ProtoMessage() {}
 
 func (x *SyncGitHubIfDueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[70]
+	mi := &file_prx_v1_prx_proto_msgTypes[77]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5509,7 +6016,7 @@ func (x *SyncGitHubIfDueRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncGitHubIfDueRequest.ProtoReflect.Descriptor instead.
 func (*SyncGitHubIfDueRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{70}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{77}
 }
 
 // SyncGitHubIfDueResponse reports whether this caller claimed a run and the resulting status.
@@ -5525,7 +6032,7 @@ type SyncGitHubIfDueResponse struct {
 
 func (x *SyncGitHubIfDueResponse) Reset() {
 	*x = SyncGitHubIfDueResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[71]
+	mi := &file_prx_v1_prx_proto_msgTypes[78]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5537,7 +6044,7 @@ func (x *SyncGitHubIfDueResponse) String() string {
 func (*SyncGitHubIfDueResponse) ProtoMessage() {}
 
 func (x *SyncGitHubIfDueResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[71]
+	mi := &file_prx_v1_prx_proto_msgTypes[78]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5550,7 +6057,7 @@ func (x *SyncGitHubIfDueResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncGitHubIfDueResponse.ProtoReflect.Descriptor instead.
 func (*SyncGitHubIfDueResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{71}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{78}
 }
 
 func (x *SyncGitHubIfDueResponse) GetRan() bool {
@@ -5576,7 +6083,7 @@ type ValidateRequest struct {
 
 func (x *ValidateRequest) Reset() {
 	*x = ValidateRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[72]
+	mi := &file_prx_v1_prx_proto_msgTypes[79]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5588,7 +6095,7 @@ func (x *ValidateRequest) String() string {
 func (*ValidateRequest) ProtoMessage() {}
 
 func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[72]
+	mi := &file_prx_v1_prx_proto_msgTypes[79]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5601,7 +6108,7 @@ func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateRequest.ProtoReflect.Descriptor instead.
 func (*ValidateRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{72}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{79}
 }
 
 // ValidateResponse reports whether database integrity checks passed.
@@ -5617,7 +6124,7 @@ type ValidateResponse struct {
 
 func (x *ValidateResponse) Reset() {
 	*x = ValidateResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[73]
+	mi := &file_prx_v1_prx_proto_msgTypes[80]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5629,7 +6136,7 @@ func (x *ValidateResponse) String() string {
 func (*ValidateResponse) ProtoMessage() {}
 
 func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[73]
+	mi := &file_prx_v1_prx_proto_msgTypes[80]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5642,7 +6149,7 @@ func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateResponse.ProtoReflect.Descriptor instead.
 func (*ValidateResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{73}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{80}
 }
 
 func (x *ValidateResponse) GetValid() bool {
@@ -5676,7 +6183,7 @@ type DebugProblem struct {
 
 func (x *DebugProblem) Reset() {
 	*x = DebugProblem{}
-	mi := &file_prx_v1_prx_proto_msgTypes[74]
+	mi := &file_prx_v1_prx_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5688,7 +6195,7 @@ func (x *DebugProblem) String() string {
 func (*DebugProblem) ProtoMessage() {}
 
 func (x *DebugProblem) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[74]
+	mi := &file_prx_v1_prx_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5701,7 +6208,7 @@ func (x *DebugProblem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugProblem.ProtoReflect.Descriptor instead.
 func (*DebugProblem) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{74}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *DebugProblem) GetCode() DebugProblemCode {
@@ -5751,7 +6258,7 @@ type DebugBuild struct {
 
 func (x *DebugBuild) Reset() {
 	*x = DebugBuild{}
-	mi := &file_prx_v1_prx_proto_msgTypes[75]
+	mi := &file_prx_v1_prx_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5763,7 +6270,7 @@ func (x *DebugBuild) String() string {
 func (*DebugBuild) ProtoMessage() {}
 
 func (x *DebugBuild) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[75]
+	mi := &file_prx_v1_prx_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5776,7 +6283,7 @@ func (x *DebugBuild) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugBuild.ProtoReflect.Descriptor instead.
 func (*DebugBuild) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{75}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{82}
 }
 
 func (x *DebugBuild) GetVersion() string {
@@ -5839,7 +6346,7 @@ type DebugRuntime struct {
 
 func (x *DebugRuntime) Reset() {
 	*x = DebugRuntime{}
-	mi := &file_prx_v1_prx_proto_msgTypes[76]
+	mi := &file_prx_v1_prx_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5851,7 +6358,7 @@ func (x *DebugRuntime) String() string {
 func (*DebugRuntime) ProtoMessage() {}
 
 func (x *DebugRuntime) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[76]
+	mi := &file_prx_v1_prx_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5864,7 +6371,7 @@ func (x *DebugRuntime) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugRuntime.ProtoReflect.Descriptor instead.
 func (*DebugRuntime) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{76}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{83}
 }
 
 func (x *DebugRuntime) GetMode() string {
@@ -5936,7 +6443,7 @@ type DebugEnvironmentVariable struct {
 
 func (x *DebugEnvironmentVariable) Reset() {
 	*x = DebugEnvironmentVariable{}
-	mi := &file_prx_v1_prx_proto_msgTypes[77]
+	mi := &file_prx_v1_prx_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -5948,7 +6455,7 @@ func (x *DebugEnvironmentVariable) String() string {
 func (*DebugEnvironmentVariable) ProtoMessage() {}
 
 func (x *DebugEnvironmentVariable) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[77]
+	mi := &file_prx_v1_prx_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -5961,7 +6468,7 @@ func (x *DebugEnvironmentVariable) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugEnvironmentVariable.ProtoReflect.Descriptor instead.
 func (*DebugEnvironmentVariable) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{77}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{84}
 }
 
 func (x *DebugEnvironmentVariable) GetName() string {
@@ -6003,7 +6510,7 @@ type DebugPaths struct {
 
 func (x *DebugPaths) Reset() {
 	*x = DebugPaths{}
-	mi := &file_prx_v1_prx_proto_msgTypes[78]
+	mi := &file_prx_v1_prx_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6015,7 +6522,7 @@ func (x *DebugPaths) String() string {
 func (*DebugPaths) ProtoMessage() {}
 
 func (x *DebugPaths) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[78]
+	mi := &file_prx_v1_prx_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6028,7 +6535,7 @@ func (x *DebugPaths) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugPaths.ProtoReflect.Descriptor instead.
 func (*DebugPaths) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{78}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{85}
 }
 
 func (x *DebugPaths) GetDatabasePath() string {
@@ -6102,7 +6609,7 @@ type DebugConfigHost struct {
 
 func (x *DebugConfigHost) Reset() {
 	*x = DebugConfigHost{}
-	mi := &file_prx_v1_prx_proto_msgTypes[79]
+	mi := &file_prx_v1_prx_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6114,7 +6621,7 @@ func (x *DebugConfigHost) String() string {
 func (*DebugConfigHost) ProtoMessage() {}
 
 func (x *DebugConfigHost) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[79]
+	mi := &file_prx_v1_prx_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6127,7 +6634,7 @@ func (x *DebugConfigHost) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugConfigHost.ProtoReflect.Descriptor instead.
 func (*DebugConfigHost) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{79}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{86}
 }
 
 func (x *DebugConfigHost) GetHost() string {
@@ -6168,7 +6675,7 @@ type DebugConfigAuthMethod struct {
 
 func (x *DebugConfigAuthMethod) Reset() {
 	*x = DebugConfigAuthMethod{}
-	mi := &file_prx_v1_prx_proto_msgTypes[80]
+	mi := &file_prx_v1_prx_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6180,7 +6687,7 @@ func (x *DebugConfigAuthMethod) String() string {
 func (*DebugConfigAuthMethod) ProtoMessage() {}
 
 func (x *DebugConfigAuthMethod) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[80]
+	mi := &file_prx_v1_prx_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6193,7 +6700,7 @@ func (x *DebugConfigAuthMethod) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugConfigAuthMethod.ProtoReflect.Descriptor instead.
 func (*DebugConfigAuthMethod) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{80}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{87}
 }
 
 func (x *DebugConfigAuthMethod) GetId() string {
@@ -6247,7 +6754,7 @@ type DebugConfig struct {
 
 func (x *DebugConfig) Reset() {
 	*x = DebugConfig{}
-	mi := &file_prx_v1_prx_proto_msgTypes[81]
+	mi := &file_prx_v1_prx_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6259,7 +6766,7 @@ func (x *DebugConfig) String() string {
 func (*DebugConfig) ProtoMessage() {}
 
 func (x *DebugConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[81]
+	mi := &file_prx_v1_prx_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6272,7 +6779,7 @@ func (x *DebugConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugConfig.ProtoReflect.Descriptor instead.
 func (*DebugConfig) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{81}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{88}
 }
 
 func (x *DebugConfig) GetVersion() int32 {
@@ -6347,7 +6854,7 @@ type DebugDatabaseFile struct {
 
 func (x *DebugDatabaseFile) Reset() {
 	*x = DebugDatabaseFile{}
-	mi := &file_prx_v1_prx_proto_msgTypes[82]
+	mi := &file_prx_v1_prx_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6359,7 +6866,7 @@ func (x *DebugDatabaseFile) String() string {
 func (*DebugDatabaseFile) ProtoMessage() {}
 
 func (x *DebugDatabaseFile) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[82]
+	mi := &file_prx_v1_prx_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6372,7 +6879,7 @@ func (x *DebugDatabaseFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugDatabaseFile.ProtoReflect.Descriptor instead.
 func (*DebugDatabaseFile) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{82}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{89}
 }
 
 func (x *DebugDatabaseFile) GetApplicable() bool {
@@ -6447,7 +6954,7 @@ type DebugStorage struct {
 
 func (x *DebugStorage) Reset() {
 	*x = DebugStorage{}
-	mi := &file_prx_v1_prx_proto_msgTypes[83]
+	mi := &file_prx_v1_prx_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6459,7 +6966,7 @@ func (x *DebugStorage) String() string {
 func (*DebugStorage) ProtoMessage() {}
 
 func (x *DebugStorage) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[83]
+	mi := &file_prx_v1_prx_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6472,7 +6979,7 @@ func (x *DebugStorage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugStorage.ProtoReflect.Descriptor instead.
 func (*DebugStorage) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{83}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{90}
 }
 
 func (x *DebugStorage) GetAppliedSchemaVersion() int32 {
@@ -6537,7 +7044,7 @@ type DebugCount struct {
 
 func (x *DebugCount) Reset() {
 	*x = DebugCount{}
-	mi := &file_prx_v1_prx_proto_msgTypes[84]
+	mi := &file_prx_v1_prx_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6549,7 +7056,7 @@ func (x *DebugCount) String() string {
 func (*DebugCount) ProtoMessage() {}
 
 func (x *DebugCount) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[84]
+	mi := &file_prx_v1_prx_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6562,7 +7069,7 @@ func (x *DebugCount) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugCount.ProtoReflect.Descriptor instead.
 func (*DebugCount) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{84}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{91}
 }
 
 func (x *DebugCount) GetName() string {
@@ -6605,14 +7112,18 @@ type DebugData struct {
 	// document_kinds breaks documents down by source kind.
 	DocumentKinds []*DebugCount `protobuf:"bytes,11,rep,name=document_kinds,json=documentKinds,proto3" json:"document_kinds,omitempty"`
 	// error explains why the stored data could not be counted.
-	Error         string `protobuf:"bytes,12,opt,name=error,proto3" json:"error,omitempty"`
+	Error string `protobuf:"bytes,12,opt,name=error,proto3" json:"error,omitempty"`
+	// projects is the number of stored projects.
+	Projects int32 `protobuf:"varint,13,opt,name=projects,proto3" json:"projects,omitempty"`
+	// project_states breaks projects down by their only state, active or archived.
+	ProjectStates []*DebugCount `protobuf:"bytes,14,rep,name=project_states,json=projectStates,proto3" json:"project_states,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *DebugData) Reset() {
 	*x = DebugData{}
-	mi := &file_prx_v1_prx_proto_msgTypes[85]
+	mi := &file_prx_v1_prx_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6624,7 +7135,7 @@ func (x *DebugData) String() string {
 func (*DebugData) ProtoMessage() {}
 
 func (x *DebugData) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[85]
+	mi := &file_prx_v1_prx_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6637,7 +7148,7 @@ func (x *DebugData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugData.ProtoReflect.Descriptor instead.
 func (*DebugData) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{85}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{92}
 }
 
 func (x *DebugData) GetFeatures() int32 {
@@ -6724,6 +7235,20 @@ func (x *DebugData) GetError() string {
 	return ""
 }
 
+func (x *DebugData) GetProjects() int32 {
+	if x != nil {
+		return x.Projects
+	}
+	return 0
+}
+
+func (x *DebugData) GetProjectStates() []*DebugCount {
+	if x != nil {
+		return x.ProjectStates
+	}
+	return nil
+}
+
 // DebugSyncFailure counts synchronization failures within one host or repository.
 type DebugSyncFailure struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -6737,7 +7262,7 @@ type DebugSyncFailure struct {
 
 func (x *DebugSyncFailure) Reset() {
 	*x = DebugSyncFailure{}
-	mi := &file_prx_v1_prx_proto_msgTypes[86]
+	mi := &file_prx_v1_prx_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6749,7 +7274,7 @@ func (x *DebugSyncFailure) String() string {
 func (*DebugSyncFailure) ProtoMessage() {}
 
 func (x *DebugSyncFailure) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[86]
+	mi := &file_prx_v1_prx_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6762,7 +7287,7 @@ func (x *DebugSyncFailure) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugSyncFailure.ProtoReflect.Descriptor instead.
 func (*DebugSyncFailure) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{86}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{93}
 }
 
 func (x *DebugSyncFailure) GetScope() string {
@@ -6796,7 +7321,7 @@ type DebugErrorGroup struct {
 
 func (x *DebugErrorGroup) Reset() {
 	*x = DebugErrorGroup{}
-	mi := &file_prx_v1_prx_proto_msgTypes[87]
+	mi := &file_prx_v1_prx_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6808,7 +7333,7 @@ func (x *DebugErrorGroup) String() string {
 func (*DebugErrorGroup) ProtoMessage() {}
 
 func (x *DebugErrorGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[87]
+	mi := &file_prx_v1_prx_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6821,7 +7346,7 @@ func (x *DebugErrorGroup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugErrorGroup.ProtoReflect.Descriptor instead.
 func (*DebugErrorGroup) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{87}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{94}
 }
 
 func (x *DebugErrorGroup) GetMessage() string {
@@ -6871,7 +7396,7 @@ type DebugAuthCacheEntry struct {
 
 func (x *DebugAuthCacheEntry) Reset() {
 	*x = DebugAuthCacheEntry{}
-	mi := &file_prx_v1_prx_proto_msgTypes[88]
+	mi := &file_prx_v1_prx_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6883,7 +7408,7 @@ func (x *DebugAuthCacheEntry) String() string {
 func (*DebugAuthCacheEntry) ProtoMessage() {}
 
 func (x *DebugAuthCacheEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[88]
+	mi := &file_prx_v1_prx_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6896,7 +7421,7 @@ func (x *DebugAuthCacheEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugAuthCacheEntry.ProtoReflect.Descriptor instead.
 func (*DebugAuthCacheEntry) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{88}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{95}
 }
 
 func (x *DebugAuthCacheEntry) GetHost() string {
@@ -6971,7 +7496,7 @@ type DebugGitHubSync struct {
 
 func (x *DebugGitHubSync) Reset() {
 	*x = DebugGitHubSync{}
-	mi := &file_prx_v1_prx_proto_msgTypes[89]
+	mi := &file_prx_v1_prx_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6983,7 +7508,7 @@ func (x *DebugGitHubSync) String() string {
 func (*DebugGitHubSync) ProtoMessage() {}
 
 func (x *DebugGitHubSync) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[89]
+	mi := &file_prx_v1_prx_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6996,7 +7521,7 @@ func (x *DebugGitHubSync) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugGitHubSync.ProtoReflect.Descriptor instead.
 func (*DebugGitHubSync) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{89}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{96}
 }
 
 func (x *DebugGitHubSync) GetStatus() *GitHubSyncStatus {
@@ -7123,7 +7648,7 @@ type DebugReport struct {
 
 func (x *DebugReport) Reset() {
 	*x = DebugReport{}
-	mi := &file_prx_v1_prx_proto_msgTypes[90]
+	mi := &file_prx_v1_prx_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7135,7 +7660,7 @@ func (x *DebugReport) String() string {
 func (*DebugReport) ProtoMessage() {}
 
 func (x *DebugReport) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[90]
+	mi := &file_prx_v1_prx_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7148,7 +7673,7 @@ func (x *DebugReport) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugReport.ProtoReflect.Descriptor instead.
 func (*DebugReport) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{90}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{97}
 }
 
 func (x *DebugReport) GetProblems() []*DebugProblem {
@@ -7216,7 +7741,7 @@ type GetDebugReportRequest struct {
 
 func (x *GetDebugReportRequest) Reset() {
 	*x = GetDebugReportRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[91]
+	mi := &file_prx_v1_prx_proto_msgTypes[98]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7228,7 +7753,7 @@ func (x *GetDebugReportRequest) String() string {
 func (*GetDebugReportRequest) ProtoMessage() {}
 
 func (x *GetDebugReportRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[91]
+	mi := &file_prx_v1_prx_proto_msgTypes[98]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7241,7 +7766,7 @@ func (x *GetDebugReportRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDebugReportRequest.ProtoReflect.Descriptor instead.
 func (*GetDebugReportRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{91}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{98}
 }
 
 // GetDebugReportResponse returns the diagnostic report and its rendered text.
@@ -7257,7 +7782,7 @@ type GetDebugReportResponse struct {
 
 func (x *GetDebugReportResponse) Reset() {
 	*x = GetDebugReportResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[92]
+	mi := &file_prx_v1_prx_proto_msgTypes[99]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7269,7 +7794,7 @@ func (x *GetDebugReportResponse) String() string {
 func (*GetDebugReportResponse) ProtoMessage() {}
 
 func (x *GetDebugReportResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[92]
+	mi := &file_prx_v1_prx_proto_msgTypes[99]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7282,7 +7807,7 @@ func (x *GetDebugReportResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDebugReportResponse.ProtoReflect.Descriptor instead.
 func (*GetDebugReportResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{92}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{99}
 }
 
 func (x *GetDebugReportResponse) GetReport() *DebugReport {
@@ -7309,7 +7834,17 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0fblocker_task_id\x18\x02 \x01(\tR\rblockerTaskId\"N\n" +
 	"\vErrorDetail\x12+\n" +
 	"\x04code\x18\x01 \x01(\x0e2\x17.prx.v1.DomainErrorCodeR\x04code\x12\x12\n" +
-	"\x04path\x18\x02 \x03(\tR\x04path\"\x8f\x04\n" +
+	"\x04path\x18\x02 \x03(\tR\x04path\"\xbf\x01\n" +
+	"\aProject\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04slug\x18\x02 \x01(\tR\x04slug\x12\x14\n" +
+	"\x05title\x18\x03 \x01(\tR\x05title\x12 \n" +
+	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\x1a\n" +
+	"\barchived\x18\x05 \x01(\bR\barchived\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x06 \x01(\tR\tcreatedAt\x12\x1d\n" +
+	"\n" +
+	"updated_at\x18\a \x01(\tR\tupdatedAt\"\xcb\x04\n" +
 	"\aFeature\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04slug\x18\x02 \x01(\tR\x04slug\x12\x14\n" +
@@ -7330,7 +7865,10 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0econflict_count\x18\f \x01(\x05R\rconflictCount\x12!\n" +
 	"\fmerged_count\x18\r \x01(\x05R\vmergedCount\x12<\n" +
 	"\x0edisplay_status\x18\x0e \x01(\x0e2\x15.prx.v1.FeatureStatusR\rdisplayStatus\x12%\n" +
-	"\x0efinished_count\x18\x0f \x01(\x05R\rfinishedCount\"\xd8\x03\n" +
+	"\x0efinished_count\x18\x0f \x01(\x05R\rfinishedCount\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x10 \x01(\tR\tprojectId\x12\x1b\n" +
+	"\tread_only\x18\x11 \x01(\bR\breadOnly\"\xd8\x03\n" +
 	"\x04Task\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -7377,7 +7915,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"sync_error\x18\x0f \x01(\tR\tsyncError\x12\x14\n" +
 	"\x05stale\x18\x10 \x01(\bR\x05stale\x12D\n" +
 	"\rdisplay_state\x18\x11 \x01(\x0e2\x1f.prx.v1.PullRequestDisplayStateR\fdisplayState\x12\x12\n" +
-	"\x04host\x18\x12 \x01(\tR\x04host\"\xa0\x02\n" +
+	"\x04host\x18\x12 \x01(\tR\x04host\"\xbf\x02\n" +
 	"\bDocument\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -7390,7 +7928,10 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"created_at\x18\a \x01(\tR\tcreatedAt\x124\n" +
 	"\x16is_implementation_plan\x18\b \x01(\bR\x14isImplementationPlan\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\t \x01(\tR\tupdatedAt\"\xd0\x03\n" +
+	"updated_at\x18\t \x01(\tR\tupdatedAt\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\n" +
+	" \x01(\tR\tprojectId\"\xfd\x03\n" +
 	"\bSnapshot\x12+\n" +
 	"\bfeatures\x18\x01 \x03(\v2\x0f.prx.v1.FeatureR\bfeatures\x12\"\n" +
 	"\x05tasks\x18\x02 \x03(\v2\f.prx.v1.TaskR\x05tasks\x126\n" +
@@ -7402,28 +7943,57 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x14review_waiting_tasks\x18\a \x03(\v2\f.prx.v1.TaskR\x12reviewWaitingTasks\x123\n" +
 	"\x0econflict_tasks\x18\b \x03(\v2\f.prx.v1.TaskR\rconflictTasks\x12-\n" +
 	"\vstale_tasks\x18\t \x03(\v2\f.prx.v1.TaskR\n" +
-	"staleTasks\"\x14\n" +
+	"staleTasks\x12+\n" +
+	"\bprojects\x18\n" +
+	" \x03(\v2\x0f.prx.v1.ProjectR\bprojects\"\x14\n" +
 	"\x12GetSnapshotRequest\"C\n" +
 	"\x13GetSnapshotResponse\x12,\n" +
 	"\bsnapshot\x18\x01 \x01(\v2\x10.prx.v1.SnapshotR\bsnapshot\"b\n" +
-	"\x14CreateFeatureRequest\x12\x12\n" +
+	"\x14CreateProjectRequest\x12\x12\n" +
 	"\x04slug\x18\x01 \x01(\tR\x04slug\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\"B\n" +
+	"\x15CreateProjectResponse\x12)\n" +
+	"\aproject\x18\x01 \x01(\v2\x0f.prx.v1.ProjectR\aproject\"\xd2\x01\n" +
+	"\x14UpdateProjectRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
+	"\x04slug\x18\x02 \x01(\tH\x00R\x04slug\x88\x01\x01\x12\x19\n" +
+	"\x05title\x18\x03 \x01(\tH\x01R\x05title\x88\x01\x01\x12%\n" +
+	"\vdescription\x18\x04 \x01(\tH\x02R\vdescription\x88\x01\x01\x12\x1f\n" +
+	"\barchived\x18\x05 \x01(\bH\x03R\barchived\x88\x01\x01B\a\n" +
+	"\x05_slugB\b\n" +
+	"\x06_titleB\x0e\n" +
+	"\f_descriptionB\v\n" +
+	"\t_archived\"B\n" +
+	"\x15UpdateProjectResponse\x12)\n" +
+	"\aproject\x18\x01 \x01(\v2\x0f.prx.v1.ProjectR\aproject\"@\n" +
+	"\x14DeleteProjectRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
+	"\acascade\x18\x02 \x01(\bR\acascade\"\x17\n" +
+	"\x15DeleteProjectResponse\"\x81\x01\n" +
+	"\x14CreateFeatureRequest\x12\x12\n" +
+	"\x04slug\x18\x01 \x01(\tR\x04slug\x12\x14\n" +
+	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\x04 \x01(\tR\tprojectId\"B\n" +
 	"\x15CreateFeatureResponse\x12)\n" +
-	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"\x91\x02\n" +
+	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"\xc4\x02\n" +
 	"\x14UpdateFeatureRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
 	"\x04slug\x18\x02 \x01(\tH\x00R\x04slug\x88\x01\x01\x12\x19\n" +
 	"\x05title\x18\x03 \x01(\tH\x01R\x05title\x88\x01\x01\x12%\n" +
 	"\vdescription\x18\x04 \x01(\tH\x02R\vdescription\x88\x01\x01\x122\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x15.prx.v1.FeatureStatusH\x03R\x06status\x88\x01\x01\x12\x1f\n" +
-	"\barchived\x18\x06 \x01(\bH\x04R\barchived\x88\x01\x01B\a\n" +
+	"\barchived\x18\x06 \x01(\bH\x04R\barchived\x88\x01\x01\x12\"\n" +
+	"\n" +
+	"project_id\x18\a \x01(\tH\x05R\tprojectId\x88\x01\x01B\a\n" +
 	"\x05_slugB\b\n" +
 	"\x06_titleB\x0e\n" +
 	"\f_descriptionB\t\n" +
 	"\a_statusB\v\n" +
-	"\t_archived\"B\n" +
+	"\t_archivedB\r\n" +
+	"\v_project_id\"B\n" +
 	"\x15UpdateFeatureResponse\x12)\n" +
 	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"@\n" +
 	"\x14DeleteFeatureRequest\x12\x0e\n" +
@@ -7473,7 +8043,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\fpull_request\x18\x01 \x01(\v2\x13.prx.v1.PullRequestR\vpullRequest\"3\n" +
 	"\x18DetachPullRequestRequest\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\"\x1b\n" +
-	"\x19DetachPullRequestResponse\"\xf5\x01\n" +
+	"\x19DetachPullRequestResponse\"\x94\x02\n" +
 	"\x12AddDocumentRequest\x12\x1d\n" +
 	"\n" +
 	"feature_id\x18\x01 \x01(\tR\tfeatureId\x12\x17\n" +
@@ -7483,7 +8053,9 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\n" +
 	"local_file\x18\x05 \x01(\tH\x00R\tlocalFile\x12\x1c\n" +
 	"\bmarkdown\x18\x06 \x01(\tH\x00R\bmarkdown\x124\n" +
-	"\x16is_implementation_plan\x18\a \x01(\bR\x14isImplementationPlanB\b\n" +
+	"\x16is_implementation_plan\x18\a \x01(\bR\x14isImplementationPlan\x12\x1d\n" +
+	"\n" +
+	"project_id\x18\b \x01(\tR\tprojectIdB\b\n" +
 	"\x06source\"C\n" +
 	"\x13AddDocumentResponse\x12,\n" +
 	"\bdocument\x18\x01 \x01(\v2\x10.prx.v1.DocumentR\bdocument\"$\n" +
@@ -7734,7 +8306,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\n" +
 	"DebugCount\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\x05R\x05count\"\xc0\x04\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\"\x97\x05\n" +
 	"\tDebugData\x12\x1a\n" +
 	"\bfeatures\x18\x01 \x01(\x05R\bfeatures\x12\x14\n" +
 	"\x05tasks\x18\x02 \x01(\x05R\x05tasks\x12\"\n" +
@@ -7749,7 +8321,9 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x12pull_request_hosts\x18\n" +
 	" \x03(\v2\x12.prx.v1.DebugCountR\x10pullRequestHosts\x129\n" +
 	"\x0edocument_kinds\x18\v \x03(\v2\x12.prx.v1.DebugCountR\rdocumentKinds\x12\x14\n" +
-	"\x05error\x18\f \x01(\tR\x05error\">\n" +
+	"\x05error\x18\f \x01(\tR\x05error\x12\x1a\n" +
+	"\bprojects\x18\r \x01(\x05R\bprojects\x129\n" +
+	"\x0eproject_states\x18\x0e \x03(\v2\x12.prx.v1.DebugCountR\rprojectStates\">\n" +
 	"\x10DebugSyncFailure\x12\x14\n" +
 	"\x05scope\x18\x01 \x01(\tR\x05scope\x12\x14\n" +
 	"\x05count\x18\x02 \x01(\x05R\x05count\"\x86\x01\n" +
@@ -7868,7 +8442,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x11BlockedReasonCode\x12#\n" +
 	"\x1fBLOCKED_REASON_CODE_UNSPECIFIED\x10\x00\x122\n" +
 	".BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE\x10\x01\x12+\n" +
-	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03\"\x04\b\x02\x10\x02*\xfa\b\n" +
+	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03\"\x04\b\x02\x10\x02*\xa4\t\n" +
 	"\x0fDomainErrorCode\x12!\n" +
 	"\x1dDOMAIN_ERROR_CODE_UNSPECIFIED\x10\x00\x12.\n" +
 	"*DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY\x10\x02\x12\x1b\n" +
@@ -7896,7 +8470,8 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"-DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN\x10\x19\x123\n" +
 	"/DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE\x10\x1a\x12'\n" +
 	"#DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT\x10\x1b\x123\n" +
-	"/DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN\x10\x1c\"\x04\b\r\x10\r\"\x04\b\x14\x10\x14*\x1eDOMAIN_ERROR_CODE_INVALID_SEED*\xd6\x01\n" +
+	"/DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN\x10\x1c\x12(\n" +
+	"$DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY\x10\x1d\"\x04\b\r\x10\r\"\x04\b\x14\x10\x14*\x1eDOMAIN_ERROR_CODE_INVALID_SEED*\xd6\x01\n" +
 	"\x14GithubAuthMethodType\x12'\n" +
 	"#GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED\x10\x00\x12$\n" +
 	" GITHUB_AUTH_METHOD_TYPE_KEYCHAIN\x10\x01\x12'\n" +
@@ -7917,10 +8492,13 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"&DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE\x10\n" +
 	"\x122\n" +
 	".DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED\x10\v\x12*\n" +
-	"&DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE\x10\f2\xdc\x14\n" +
+	"&DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE\x10\f2\xc6\x16\n" +
 	"\n" +
 	"PRXService\x12F\n" +
 	"\vGetSnapshot\x12\x1a.prx.v1.GetSnapshotRequest\x1a\x1b.prx.v1.GetSnapshotResponse\x12L\n" +
+	"\rCreateProject\x12\x1c.prx.v1.CreateProjectRequest\x1a\x1d.prx.v1.CreateProjectResponse\x12L\n" +
+	"\rUpdateProject\x12\x1c.prx.v1.UpdateProjectRequest\x1a\x1d.prx.v1.UpdateProjectResponse\x12L\n" +
+	"\rDeleteProject\x12\x1c.prx.v1.DeleteProjectRequest\x1a\x1d.prx.v1.DeleteProjectResponse\x12L\n" +
 	"\rCreateFeature\x12\x1c.prx.v1.CreateFeatureRequest\x1a\x1d.prx.v1.CreateFeatureResponse\x12L\n" +
 	"\rUpdateFeature\x12\x1c.prx.v1.UpdateFeatureRequest\x1a\x1d.prx.v1.UpdateFeatureResponse\x12L\n" +
 	"\rDeleteFeature\x12\x1c.prx.v1.DeleteFeatureRequest\x1a\x1d.prx.v1.DeleteFeatureResponse\x12C\n" +
@@ -7969,7 +8547,7 @@ func file_prx_v1_prx_proto_rawDescGZIP() []byte {
 }
 
 var file_prx_v1_prx_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
-var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 93)
+var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 100)
 var file_prx_v1_prx_proto_goTypes = []any{
 	(FeatureStatus)(0),                       // 0: prx.v1.FeatureStatus
 	(TaskKind)(0),                            // 1: prx.v1.TaskKind
@@ -7986,97 +8564,104 @@ var file_prx_v1_prx_proto_goTypes = []any{
 	(DebugProblemCode)(0),                    // 12: prx.v1.DebugProblemCode
 	(*BlockedReason)(nil),                    // 13: prx.v1.BlockedReason
 	(*ErrorDetail)(nil),                      // 14: prx.v1.ErrorDetail
-	(*Feature)(nil),                          // 15: prx.v1.Feature
-	(*Task)(nil),                             // 16: prx.v1.Task
-	(*Dependency)(nil),                       // 17: prx.v1.Dependency
-	(*PullRequest)(nil),                      // 18: prx.v1.PullRequest
-	(*Document)(nil),                         // 19: prx.v1.Document
-	(*Snapshot)(nil),                         // 20: prx.v1.Snapshot
-	(*GetSnapshotRequest)(nil),               // 21: prx.v1.GetSnapshotRequest
-	(*GetSnapshotResponse)(nil),              // 22: prx.v1.GetSnapshotResponse
-	(*CreateFeatureRequest)(nil),             // 23: prx.v1.CreateFeatureRequest
-	(*CreateFeatureResponse)(nil),            // 24: prx.v1.CreateFeatureResponse
-	(*UpdateFeatureRequest)(nil),             // 25: prx.v1.UpdateFeatureRequest
-	(*UpdateFeatureResponse)(nil),            // 26: prx.v1.UpdateFeatureResponse
-	(*DeleteFeatureRequest)(nil),             // 27: prx.v1.DeleteFeatureRequest
-	(*DeleteFeatureResponse)(nil),            // 28: prx.v1.DeleteFeatureResponse
-	(*CreateTaskRequest)(nil),                // 29: prx.v1.CreateTaskRequest
-	(*CreateTaskResponse)(nil),               // 30: prx.v1.CreateTaskResponse
-	(*UpdateTaskRequest)(nil),                // 31: prx.v1.UpdateTaskRequest
-	(*UpdateTaskResponse)(nil),               // 32: prx.v1.UpdateTaskResponse
-	(*DeleteTaskRequest)(nil),                // 33: prx.v1.DeleteTaskRequest
-	(*DeleteTaskResponse)(nil),               // 34: prx.v1.DeleteTaskResponse
-	(*AddDependencyRequest)(nil),             // 35: prx.v1.AddDependencyRequest
-	(*AddDependencyResponse)(nil),            // 36: prx.v1.AddDependencyResponse
-	(*RemoveDependencyRequest)(nil),          // 37: prx.v1.RemoveDependencyRequest
-	(*RemoveDependencyResponse)(nil),         // 38: prx.v1.RemoveDependencyResponse
-	(*AttachPullRequestRequest)(nil),         // 39: prx.v1.AttachPullRequestRequest
-	(*AttachPullRequestResponse)(nil),        // 40: prx.v1.AttachPullRequestResponse
-	(*DetachPullRequestRequest)(nil),         // 41: prx.v1.DetachPullRequestRequest
-	(*DetachPullRequestResponse)(nil),        // 42: prx.v1.DetachPullRequestResponse
-	(*AddDocumentRequest)(nil),               // 43: prx.v1.AddDocumentRequest
-	(*AddDocumentResponse)(nil),              // 44: prx.v1.AddDocumentResponse
-	(*GetDocumentRequest)(nil),               // 45: prx.v1.GetDocumentRequest
-	(*GetDocumentResponse)(nil),              // 46: prx.v1.GetDocumentResponse
-	(*UpdateDocumentRequest)(nil),            // 47: prx.v1.UpdateDocumentRequest
-	(*UpdateDocumentResponse)(nil),           // 48: prx.v1.UpdateDocumentResponse
-	(*DeleteDocumentRequest)(nil),            // 49: prx.v1.DeleteDocumentRequest
-	(*DeleteDocumentResponse)(nil),           // 50: prx.v1.DeleteDocumentResponse
-	(*ReadDocumentContentRequest)(nil),       // 51: prx.v1.ReadDocumentContentRequest
-	(*ReadDocumentContentResponse)(nil),      // 52: prx.v1.ReadDocumentContentResponse
-	(*SelectLocalFileRequest)(nil),           // 53: prx.v1.SelectLocalFileRequest
-	(*SelectLocalFileResponse)(nil),          // 54: prx.v1.SelectLocalFileResponse
-	(*GitHubHost)(nil),                       // 55: prx.v1.GitHubHost
-	(*GitHubAuthMethod)(nil),                 // 56: prx.v1.GitHubAuthMethod
-	(*GitHubConfig)(nil),                     // 57: prx.v1.GitHubConfig
-	(*GetConfigRequest)(nil),                 // 58: prx.v1.GetConfigRequest
-	(*GetConfigResponse)(nil),                // 59: prx.v1.GetConfigResponse
-	(*UpdateGitHubSyncConfigRequest)(nil),    // 60: prx.v1.UpdateGitHubSyncConfigRequest
-	(*UpdateGitHubSyncConfigResponse)(nil),   // 61: prx.v1.UpdateGitHubSyncConfigResponse
-	(*AddGitHubHostRequest)(nil),             // 62: prx.v1.AddGitHubHostRequest
-	(*AddGitHubHostResponse)(nil),            // 63: prx.v1.AddGitHubHostResponse
-	(*UpdateGitHubHostRequest)(nil),          // 64: prx.v1.UpdateGitHubHostRequest
-	(*UpdateGitHubHostResponse)(nil),         // 65: prx.v1.UpdateGitHubHostResponse
-	(*DeleteGitHubHostRequest)(nil),          // 66: prx.v1.DeleteGitHubHostRequest
-	(*DeleteGitHubHostResponse)(nil),         // 67: prx.v1.DeleteGitHubHostResponse
-	(*AddGitHubAuthMethodRequest)(nil),       // 68: prx.v1.AddGitHubAuthMethodRequest
-	(*AddGitHubAuthMethodResponse)(nil),      // 69: prx.v1.AddGitHubAuthMethodResponse
-	(*UpdateGitHubAuthMethodRequest)(nil),    // 70: prx.v1.UpdateGitHubAuthMethodRequest
-	(*UpdateGitHubAuthMethodResponse)(nil),   // 71: prx.v1.UpdateGitHubAuthMethodResponse
-	(*DeleteGitHubAuthMethodRequest)(nil),    // 72: prx.v1.DeleteGitHubAuthMethodRequest
-	(*DeleteGitHubAuthMethodResponse)(nil),   // 73: prx.v1.DeleteGitHubAuthMethodResponse
-	(*ReorderGitHubAuthMethodsRequest)(nil),  // 74: prx.v1.ReorderGitHubAuthMethodsRequest
-	(*ReorderGitHubAuthMethodsResponse)(nil), // 75: prx.v1.ReorderGitHubAuthMethodsResponse
-	(*ValidateConfigRequest)(nil),            // 76: prx.v1.ValidateConfigRequest
-	(*ValidateConfigResponse)(nil),           // 77: prx.v1.ValidateConfigResponse
-	(*SyncRequest)(nil),                      // 78: prx.v1.SyncRequest
-	(*SyncResponse)(nil),                     // 79: prx.v1.SyncResponse
-	(*GitHubSyncStatus)(nil),                 // 80: prx.v1.GitHubSyncStatus
-	(*GetGitHubSyncStatusRequest)(nil),       // 81: prx.v1.GetGitHubSyncStatusRequest
-	(*GetGitHubSyncStatusResponse)(nil),      // 82: prx.v1.GetGitHubSyncStatusResponse
-	(*SyncGitHubIfDueRequest)(nil),           // 83: prx.v1.SyncGitHubIfDueRequest
-	(*SyncGitHubIfDueResponse)(nil),          // 84: prx.v1.SyncGitHubIfDueResponse
-	(*ValidateRequest)(nil),                  // 85: prx.v1.ValidateRequest
-	(*ValidateResponse)(nil),                 // 86: prx.v1.ValidateResponse
-	(*DebugProblem)(nil),                     // 87: prx.v1.DebugProblem
-	(*DebugBuild)(nil),                       // 88: prx.v1.DebugBuild
-	(*DebugRuntime)(nil),                     // 89: prx.v1.DebugRuntime
-	(*DebugEnvironmentVariable)(nil),         // 90: prx.v1.DebugEnvironmentVariable
-	(*DebugPaths)(nil),                       // 91: prx.v1.DebugPaths
-	(*DebugConfigHost)(nil),                  // 92: prx.v1.DebugConfigHost
-	(*DebugConfigAuthMethod)(nil),            // 93: prx.v1.DebugConfigAuthMethod
-	(*DebugConfig)(nil),                      // 94: prx.v1.DebugConfig
-	(*DebugDatabaseFile)(nil),                // 95: prx.v1.DebugDatabaseFile
-	(*DebugStorage)(nil),                     // 96: prx.v1.DebugStorage
-	(*DebugCount)(nil),                       // 97: prx.v1.DebugCount
-	(*DebugData)(nil),                        // 98: prx.v1.DebugData
-	(*DebugSyncFailure)(nil),                 // 99: prx.v1.DebugSyncFailure
-	(*DebugErrorGroup)(nil),                  // 100: prx.v1.DebugErrorGroup
-	(*DebugAuthCacheEntry)(nil),              // 101: prx.v1.DebugAuthCacheEntry
-	(*DebugGitHubSync)(nil),                  // 102: prx.v1.DebugGitHubSync
-	(*DebugReport)(nil),                      // 103: prx.v1.DebugReport
-	(*GetDebugReportRequest)(nil),            // 104: prx.v1.GetDebugReportRequest
-	(*GetDebugReportResponse)(nil),           // 105: prx.v1.GetDebugReportResponse
+	(*Project)(nil),                          // 15: prx.v1.Project
+	(*Feature)(nil),                          // 16: prx.v1.Feature
+	(*Task)(nil),                             // 17: prx.v1.Task
+	(*Dependency)(nil),                       // 18: prx.v1.Dependency
+	(*PullRequest)(nil),                      // 19: prx.v1.PullRequest
+	(*Document)(nil),                         // 20: prx.v1.Document
+	(*Snapshot)(nil),                         // 21: prx.v1.Snapshot
+	(*GetSnapshotRequest)(nil),               // 22: prx.v1.GetSnapshotRequest
+	(*GetSnapshotResponse)(nil),              // 23: prx.v1.GetSnapshotResponse
+	(*CreateProjectRequest)(nil),             // 24: prx.v1.CreateProjectRequest
+	(*CreateProjectResponse)(nil),            // 25: prx.v1.CreateProjectResponse
+	(*UpdateProjectRequest)(nil),             // 26: prx.v1.UpdateProjectRequest
+	(*UpdateProjectResponse)(nil),            // 27: prx.v1.UpdateProjectResponse
+	(*DeleteProjectRequest)(nil),             // 28: prx.v1.DeleteProjectRequest
+	(*DeleteProjectResponse)(nil),            // 29: prx.v1.DeleteProjectResponse
+	(*CreateFeatureRequest)(nil),             // 30: prx.v1.CreateFeatureRequest
+	(*CreateFeatureResponse)(nil),            // 31: prx.v1.CreateFeatureResponse
+	(*UpdateFeatureRequest)(nil),             // 32: prx.v1.UpdateFeatureRequest
+	(*UpdateFeatureResponse)(nil),            // 33: prx.v1.UpdateFeatureResponse
+	(*DeleteFeatureRequest)(nil),             // 34: prx.v1.DeleteFeatureRequest
+	(*DeleteFeatureResponse)(nil),            // 35: prx.v1.DeleteFeatureResponse
+	(*CreateTaskRequest)(nil),                // 36: prx.v1.CreateTaskRequest
+	(*CreateTaskResponse)(nil),               // 37: prx.v1.CreateTaskResponse
+	(*UpdateTaskRequest)(nil),                // 38: prx.v1.UpdateTaskRequest
+	(*UpdateTaskResponse)(nil),               // 39: prx.v1.UpdateTaskResponse
+	(*DeleteTaskRequest)(nil),                // 40: prx.v1.DeleteTaskRequest
+	(*DeleteTaskResponse)(nil),               // 41: prx.v1.DeleteTaskResponse
+	(*AddDependencyRequest)(nil),             // 42: prx.v1.AddDependencyRequest
+	(*AddDependencyResponse)(nil),            // 43: prx.v1.AddDependencyResponse
+	(*RemoveDependencyRequest)(nil),          // 44: prx.v1.RemoveDependencyRequest
+	(*RemoveDependencyResponse)(nil),         // 45: prx.v1.RemoveDependencyResponse
+	(*AttachPullRequestRequest)(nil),         // 46: prx.v1.AttachPullRequestRequest
+	(*AttachPullRequestResponse)(nil),        // 47: prx.v1.AttachPullRequestResponse
+	(*DetachPullRequestRequest)(nil),         // 48: prx.v1.DetachPullRequestRequest
+	(*DetachPullRequestResponse)(nil),        // 49: prx.v1.DetachPullRequestResponse
+	(*AddDocumentRequest)(nil),               // 50: prx.v1.AddDocumentRequest
+	(*AddDocumentResponse)(nil),              // 51: prx.v1.AddDocumentResponse
+	(*GetDocumentRequest)(nil),               // 52: prx.v1.GetDocumentRequest
+	(*GetDocumentResponse)(nil),              // 53: prx.v1.GetDocumentResponse
+	(*UpdateDocumentRequest)(nil),            // 54: prx.v1.UpdateDocumentRequest
+	(*UpdateDocumentResponse)(nil),           // 55: prx.v1.UpdateDocumentResponse
+	(*DeleteDocumentRequest)(nil),            // 56: prx.v1.DeleteDocumentRequest
+	(*DeleteDocumentResponse)(nil),           // 57: prx.v1.DeleteDocumentResponse
+	(*ReadDocumentContentRequest)(nil),       // 58: prx.v1.ReadDocumentContentRequest
+	(*ReadDocumentContentResponse)(nil),      // 59: prx.v1.ReadDocumentContentResponse
+	(*SelectLocalFileRequest)(nil),           // 60: prx.v1.SelectLocalFileRequest
+	(*SelectLocalFileResponse)(nil),          // 61: prx.v1.SelectLocalFileResponse
+	(*GitHubHost)(nil),                       // 62: prx.v1.GitHubHost
+	(*GitHubAuthMethod)(nil),                 // 63: prx.v1.GitHubAuthMethod
+	(*GitHubConfig)(nil),                     // 64: prx.v1.GitHubConfig
+	(*GetConfigRequest)(nil),                 // 65: prx.v1.GetConfigRequest
+	(*GetConfigResponse)(nil),                // 66: prx.v1.GetConfigResponse
+	(*UpdateGitHubSyncConfigRequest)(nil),    // 67: prx.v1.UpdateGitHubSyncConfigRequest
+	(*UpdateGitHubSyncConfigResponse)(nil),   // 68: prx.v1.UpdateGitHubSyncConfigResponse
+	(*AddGitHubHostRequest)(nil),             // 69: prx.v1.AddGitHubHostRequest
+	(*AddGitHubHostResponse)(nil),            // 70: prx.v1.AddGitHubHostResponse
+	(*UpdateGitHubHostRequest)(nil),          // 71: prx.v1.UpdateGitHubHostRequest
+	(*UpdateGitHubHostResponse)(nil),         // 72: prx.v1.UpdateGitHubHostResponse
+	(*DeleteGitHubHostRequest)(nil),          // 73: prx.v1.DeleteGitHubHostRequest
+	(*DeleteGitHubHostResponse)(nil),         // 74: prx.v1.DeleteGitHubHostResponse
+	(*AddGitHubAuthMethodRequest)(nil),       // 75: prx.v1.AddGitHubAuthMethodRequest
+	(*AddGitHubAuthMethodResponse)(nil),      // 76: prx.v1.AddGitHubAuthMethodResponse
+	(*UpdateGitHubAuthMethodRequest)(nil),    // 77: prx.v1.UpdateGitHubAuthMethodRequest
+	(*UpdateGitHubAuthMethodResponse)(nil),   // 78: prx.v1.UpdateGitHubAuthMethodResponse
+	(*DeleteGitHubAuthMethodRequest)(nil),    // 79: prx.v1.DeleteGitHubAuthMethodRequest
+	(*DeleteGitHubAuthMethodResponse)(nil),   // 80: prx.v1.DeleteGitHubAuthMethodResponse
+	(*ReorderGitHubAuthMethodsRequest)(nil),  // 81: prx.v1.ReorderGitHubAuthMethodsRequest
+	(*ReorderGitHubAuthMethodsResponse)(nil), // 82: prx.v1.ReorderGitHubAuthMethodsResponse
+	(*ValidateConfigRequest)(nil),            // 83: prx.v1.ValidateConfigRequest
+	(*ValidateConfigResponse)(nil),           // 84: prx.v1.ValidateConfigResponse
+	(*SyncRequest)(nil),                      // 85: prx.v1.SyncRequest
+	(*SyncResponse)(nil),                     // 86: prx.v1.SyncResponse
+	(*GitHubSyncStatus)(nil),                 // 87: prx.v1.GitHubSyncStatus
+	(*GetGitHubSyncStatusRequest)(nil),       // 88: prx.v1.GetGitHubSyncStatusRequest
+	(*GetGitHubSyncStatusResponse)(nil),      // 89: prx.v1.GetGitHubSyncStatusResponse
+	(*SyncGitHubIfDueRequest)(nil),           // 90: prx.v1.SyncGitHubIfDueRequest
+	(*SyncGitHubIfDueResponse)(nil),          // 91: prx.v1.SyncGitHubIfDueResponse
+	(*ValidateRequest)(nil),                  // 92: prx.v1.ValidateRequest
+	(*ValidateResponse)(nil),                 // 93: prx.v1.ValidateResponse
+	(*DebugProblem)(nil),                     // 94: prx.v1.DebugProblem
+	(*DebugBuild)(nil),                       // 95: prx.v1.DebugBuild
+	(*DebugRuntime)(nil),                     // 96: prx.v1.DebugRuntime
+	(*DebugEnvironmentVariable)(nil),         // 97: prx.v1.DebugEnvironmentVariable
+	(*DebugPaths)(nil),                       // 98: prx.v1.DebugPaths
+	(*DebugConfigHost)(nil),                  // 99: prx.v1.DebugConfigHost
+	(*DebugConfigAuthMethod)(nil),            // 100: prx.v1.DebugConfigAuthMethod
+	(*DebugConfig)(nil),                      // 101: prx.v1.DebugConfig
+	(*DebugDatabaseFile)(nil),                // 102: prx.v1.DebugDatabaseFile
+	(*DebugStorage)(nil),                     // 103: prx.v1.DebugStorage
+	(*DebugCount)(nil),                       // 104: prx.v1.DebugCount
+	(*DebugData)(nil),                        // 105: prx.v1.DebugData
+	(*DebugSyncFailure)(nil),                 // 106: prx.v1.DebugSyncFailure
+	(*DebugErrorGroup)(nil),                  // 107: prx.v1.DebugErrorGroup
+	(*DebugAuthCacheEntry)(nil),              // 108: prx.v1.DebugAuthCacheEntry
+	(*DebugGitHubSync)(nil),                  // 109: prx.v1.DebugGitHubSync
+	(*DebugReport)(nil),                      // 110: prx.v1.DebugReport
+	(*GetDebugReportRequest)(nil),            // 111: prx.v1.GetDebugReportRequest
+	(*GetDebugReportResponse)(nil),           // 112: prx.v1.GetDebugReportResponse
 }
 var file_prx_v1_prx_proto_depIdxs = []int32{
 	9,   // 0: prx.v1.BlockedReason.code:type_name -> prx.v1.BlockedReasonCode
@@ -8092,136 +8677,146 @@ var file_prx_v1_prx_proto_depIdxs = []int32{
 	6,   // 10: prx.v1.PullRequest.mergeability:type_name -> prx.v1.Mergeability
 	7,   // 11: prx.v1.PullRequest.display_state:type_name -> prx.v1.PullRequestDisplayState
 	8,   // 12: prx.v1.Document.kind:type_name -> prx.v1.DocumentKind
-	15,  // 13: prx.v1.Snapshot.features:type_name -> prx.v1.Feature
-	16,  // 14: prx.v1.Snapshot.tasks:type_name -> prx.v1.Task
-	17,  // 15: prx.v1.Snapshot.dependencies:type_name -> prx.v1.Dependency
-	18,  // 16: prx.v1.Snapshot.pull_requests:type_name -> prx.v1.PullRequest
-	19,  // 17: prx.v1.Snapshot.documents:type_name -> prx.v1.Document
-	16,  // 18: prx.v1.Snapshot.ready_tasks:type_name -> prx.v1.Task
-	16,  // 19: prx.v1.Snapshot.review_waiting_tasks:type_name -> prx.v1.Task
-	16,  // 20: prx.v1.Snapshot.conflict_tasks:type_name -> prx.v1.Task
-	16,  // 21: prx.v1.Snapshot.stale_tasks:type_name -> prx.v1.Task
-	20,  // 22: prx.v1.GetSnapshotResponse.snapshot:type_name -> prx.v1.Snapshot
-	15,  // 23: prx.v1.CreateFeatureResponse.feature:type_name -> prx.v1.Feature
-	0,   // 24: prx.v1.UpdateFeatureRequest.status:type_name -> prx.v1.FeatureStatus
-	15,  // 25: prx.v1.UpdateFeatureResponse.feature:type_name -> prx.v1.Feature
-	1,   // 26: prx.v1.CreateTaskRequest.kind:type_name -> prx.v1.TaskKind
-	16,  // 27: prx.v1.CreateTaskResponse.task:type_name -> prx.v1.Task
-	2,   // 28: prx.v1.UpdateTaskRequest.status:type_name -> prx.v1.TaskStatus
-	16,  // 29: prx.v1.UpdateTaskResponse.task:type_name -> prx.v1.Task
-	17,  // 30: prx.v1.AddDependencyResponse.dependency:type_name -> prx.v1.Dependency
-	18,  // 31: prx.v1.AttachPullRequestResponse.pull_request:type_name -> prx.v1.PullRequest
-	19,  // 32: prx.v1.AddDocumentResponse.document:type_name -> prx.v1.Document
-	19,  // 33: prx.v1.GetDocumentResponse.document:type_name -> prx.v1.Document
-	19,  // 34: prx.v1.UpdateDocumentResponse.document:type_name -> prx.v1.Document
-	11,  // 35: prx.v1.GitHubAuthMethod.type:type_name -> prx.v1.GithubAuthMethodType
-	55,  // 36: prx.v1.GitHubConfig.hosts:type_name -> prx.v1.GitHubHost
-	56,  // 37: prx.v1.GitHubConfig.auth_methods:type_name -> prx.v1.GitHubAuthMethod
-	57,  // 38: prx.v1.GetConfigResponse.config:type_name -> prx.v1.GitHubConfig
-	57,  // 39: prx.v1.UpdateGitHubSyncConfigResponse.config:type_name -> prx.v1.GitHubConfig
-	55,  // 40: prx.v1.AddGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
-	55,  // 41: prx.v1.UpdateGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
-	11,  // 42: prx.v1.AddGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
-	56,  // 43: prx.v1.AddGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
-	11,  // 44: prx.v1.UpdateGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
-	56,  // 45: prx.v1.UpdateGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
-	56,  // 46: prx.v1.ReorderGitHubAuthMethodsResponse.auth_methods:type_name -> prx.v1.GitHubAuthMethod
-	80,  // 47: prx.v1.GetGitHubSyncStatusResponse.status:type_name -> prx.v1.GitHubSyncStatus
-	80,  // 48: prx.v1.SyncGitHubIfDueResponse.status:type_name -> prx.v1.GitHubSyncStatus
-	12,  // 49: prx.v1.DebugProblem.code:type_name -> prx.v1.DebugProblemCode
-	90,  // 50: prx.v1.DebugPaths.environment_variables:type_name -> prx.v1.DebugEnvironmentVariable
-	92,  // 51: prx.v1.DebugConfig.hosts:type_name -> prx.v1.DebugConfigHost
-	93,  // 52: prx.v1.DebugConfig.auth_methods:type_name -> prx.v1.DebugConfigAuthMethod
-	95,  // 53: prx.v1.DebugStorage.database_file:type_name -> prx.v1.DebugDatabaseFile
-	97,  // 54: prx.v1.DebugData.feature_statuses:type_name -> prx.v1.DebugCount
-	97,  // 55: prx.v1.DebugData.task_display_states:type_name -> prx.v1.DebugCount
-	97,  // 56: prx.v1.DebugData.task_kinds:type_name -> prx.v1.DebugCount
-	97,  // 57: prx.v1.DebugData.pull_request_display_states:type_name -> prx.v1.DebugCount
-	97,  // 58: prx.v1.DebugData.pull_request_hosts:type_name -> prx.v1.DebugCount
-	97,  // 59: prx.v1.DebugData.document_kinds:type_name -> prx.v1.DebugCount
-	80,  // 60: prx.v1.DebugGitHubSync.status:type_name -> prx.v1.GitHubSyncStatus
-	99,  // 61: prx.v1.DebugGitHubSync.host_failures:type_name -> prx.v1.DebugSyncFailure
-	99,  // 62: prx.v1.DebugGitHubSync.repository_failures:type_name -> prx.v1.DebugSyncFailure
-	100, // 63: prx.v1.DebugGitHubSync.error_groups:type_name -> prx.v1.DebugErrorGroup
-	101, // 64: prx.v1.DebugGitHubSync.auth_cache:type_name -> prx.v1.DebugAuthCacheEntry
-	87,  // 65: prx.v1.DebugReport.problems:type_name -> prx.v1.DebugProblem
-	88,  // 66: prx.v1.DebugReport.build:type_name -> prx.v1.DebugBuild
-	89,  // 67: prx.v1.DebugReport.runtime:type_name -> prx.v1.DebugRuntime
-	91,  // 68: prx.v1.DebugReport.paths:type_name -> prx.v1.DebugPaths
-	94,  // 69: prx.v1.DebugReport.config:type_name -> prx.v1.DebugConfig
-	96,  // 70: prx.v1.DebugReport.storage:type_name -> prx.v1.DebugStorage
-	98,  // 71: prx.v1.DebugReport.records:type_name -> prx.v1.DebugData
-	102, // 72: prx.v1.DebugReport.github_sync:type_name -> prx.v1.DebugGitHubSync
-	103, // 73: prx.v1.GetDebugReportResponse.report:type_name -> prx.v1.DebugReport
-	21,  // 74: prx.v1.PRXService.GetSnapshot:input_type -> prx.v1.GetSnapshotRequest
-	23,  // 75: prx.v1.PRXService.CreateFeature:input_type -> prx.v1.CreateFeatureRequest
-	25,  // 76: prx.v1.PRXService.UpdateFeature:input_type -> prx.v1.UpdateFeatureRequest
-	27,  // 77: prx.v1.PRXService.DeleteFeature:input_type -> prx.v1.DeleteFeatureRequest
-	29,  // 78: prx.v1.PRXService.CreateTask:input_type -> prx.v1.CreateTaskRequest
-	31,  // 79: prx.v1.PRXService.UpdateTask:input_type -> prx.v1.UpdateTaskRequest
-	33,  // 80: prx.v1.PRXService.DeleteTask:input_type -> prx.v1.DeleteTaskRequest
-	35,  // 81: prx.v1.PRXService.AddDependency:input_type -> prx.v1.AddDependencyRequest
-	37,  // 82: prx.v1.PRXService.RemoveDependency:input_type -> prx.v1.RemoveDependencyRequest
-	39,  // 83: prx.v1.PRXService.AttachPullRequest:input_type -> prx.v1.AttachPullRequestRequest
-	41,  // 84: prx.v1.PRXService.DetachPullRequest:input_type -> prx.v1.DetachPullRequestRequest
-	43,  // 85: prx.v1.PRXService.AddDocument:input_type -> prx.v1.AddDocumentRequest
-	45,  // 86: prx.v1.PRXService.GetDocument:input_type -> prx.v1.GetDocumentRequest
-	47,  // 87: prx.v1.PRXService.UpdateDocument:input_type -> prx.v1.UpdateDocumentRequest
-	49,  // 88: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
-	51,  // 89: prx.v1.PRXService.ReadDocumentContent:input_type -> prx.v1.ReadDocumentContentRequest
-	53,  // 90: prx.v1.PRXService.SelectLocalFile:input_type -> prx.v1.SelectLocalFileRequest
-	78,  // 91: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
-	81,  // 92: prx.v1.PRXService.GetGitHubSyncStatus:input_type -> prx.v1.GetGitHubSyncStatusRequest
-	83,  // 93: prx.v1.PRXService.SyncGitHubIfDue:input_type -> prx.v1.SyncGitHubIfDueRequest
-	85,  // 94: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
-	104, // 95: prx.v1.PRXService.GetDebugReport:input_type -> prx.v1.GetDebugReportRequest
-	58,  // 96: prx.v1.PRXService.GetConfig:input_type -> prx.v1.GetConfigRequest
-	60,  // 97: prx.v1.PRXService.UpdateGitHubSyncConfig:input_type -> prx.v1.UpdateGitHubSyncConfigRequest
-	62,  // 98: prx.v1.PRXService.AddGitHubHost:input_type -> prx.v1.AddGitHubHostRequest
-	64,  // 99: prx.v1.PRXService.UpdateGitHubHost:input_type -> prx.v1.UpdateGitHubHostRequest
-	66,  // 100: prx.v1.PRXService.DeleteGitHubHost:input_type -> prx.v1.DeleteGitHubHostRequest
-	68,  // 101: prx.v1.PRXService.AddGitHubAuthMethod:input_type -> prx.v1.AddGitHubAuthMethodRequest
-	70,  // 102: prx.v1.PRXService.UpdateGitHubAuthMethod:input_type -> prx.v1.UpdateGitHubAuthMethodRequest
-	72,  // 103: prx.v1.PRXService.DeleteGitHubAuthMethod:input_type -> prx.v1.DeleteGitHubAuthMethodRequest
-	74,  // 104: prx.v1.PRXService.ReorderGitHubAuthMethods:input_type -> prx.v1.ReorderGitHubAuthMethodsRequest
-	76,  // 105: prx.v1.PRXService.ValidateConfig:input_type -> prx.v1.ValidateConfigRequest
-	22,  // 106: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
-	24,  // 107: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
-	26,  // 108: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
-	28,  // 109: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
-	30,  // 110: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
-	32,  // 111: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
-	34,  // 112: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
-	36,  // 113: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
-	38,  // 114: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
-	40,  // 115: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
-	42,  // 116: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
-	44,  // 117: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
-	46,  // 118: prx.v1.PRXService.GetDocument:output_type -> prx.v1.GetDocumentResponse
-	48,  // 119: prx.v1.PRXService.UpdateDocument:output_type -> prx.v1.UpdateDocumentResponse
-	50,  // 120: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
-	52,  // 121: prx.v1.PRXService.ReadDocumentContent:output_type -> prx.v1.ReadDocumentContentResponse
-	54,  // 122: prx.v1.PRXService.SelectLocalFile:output_type -> prx.v1.SelectLocalFileResponse
-	79,  // 123: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
-	82,  // 124: prx.v1.PRXService.GetGitHubSyncStatus:output_type -> prx.v1.GetGitHubSyncStatusResponse
-	84,  // 125: prx.v1.PRXService.SyncGitHubIfDue:output_type -> prx.v1.SyncGitHubIfDueResponse
-	86,  // 126: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
-	105, // 127: prx.v1.PRXService.GetDebugReport:output_type -> prx.v1.GetDebugReportResponse
-	59,  // 128: prx.v1.PRXService.GetConfig:output_type -> prx.v1.GetConfigResponse
-	61,  // 129: prx.v1.PRXService.UpdateGitHubSyncConfig:output_type -> prx.v1.UpdateGitHubSyncConfigResponse
-	63,  // 130: prx.v1.PRXService.AddGitHubHost:output_type -> prx.v1.AddGitHubHostResponse
-	65,  // 131: prx.v1.PRXService.UpdateGitHubHost:output_type -> prx.v1.UpdateGitHubHostResponse
-	67,  // 132: prx.v1.PRXService.DeleteGitHubHost:output_type -> prx.v1.DeleteGitHubHostResponse
-	69,  // 133: prx.v1.PRXService.AddGitHubAuthMethod:output_type -> prx.v1.AddGitHubAuthMethodResponse
-	71,  // 134: prx.v1.PRXService.UpdateGitHubAuthMethod:output_type -> prx.v1.UpdateGitHubAuthMethodResponse
-	73,  // 135: prx.v1.PRXService.DeleteGitHubAuthMethod:output_type -> prx.v1.DeleteGitHubAuthMethodResponse
-	75,  // 136: prx.v1.PRXService.ReorderGitHubAuthMethods:output_type -> prx.v1.ReorderGitHubAuthMethodsResponse
-	77,  // 137: prx.v1.PRXService.ValidateConfig:output_type -> prx.v1.ValidateConfigResponse
-	106, // [106:138] is the sub-list for method output_type
-	74,  // [74:106] is the sub-list for method input_type
-	74,  // [74:74] is the sub-list for extension type_name
-	74,  // [74:74] is the sub-list for extension extendee
-	0,   // [0:74] is the sub-list for field type_name
+	16,  // 13: prx.v1.Snapshot.features:type_name -> prx.v1.Feature
+	17,  // 14: prx.v1.Snapshot.tasks:type_name -> prx.v1.Task
+	18,  // 15: prx.v1.Snapshot.dependencies:type_name -> prx.v1.Dependency
+	19,  // 16: prx.v1.Snapshot.pull_requests:type_name -> prx.v1.PullRequest
+	20,  // 17: prx.v1.Snapshot.documents:type_name -> prx.v1.Document
+	17,  // 18: prx.v1.Snapshot.ready_tasks:type_name -> prx.v1.Task
+	17,  // 19: prx.v1.Snapshot.review_waiting_tasks:type_name -> prx.v1.Task
+	17,  // 20: prx.v1.Snapshot.conflict_tasks:type_name -> prx.v1.Task
+	17,  // 21: prx.v1.Snapshot.stale_tasks:type_name -> prx.v1.Task
+	15,  // 22: prx.v1.Snapshot.projects:type_name -> prx.v1.Project
+	21,  // 23: prx.v1.GetSnapshotResponse.snapshot:type_name -> prx.v1.Snapshot
+	15,  // 24: prx.v1.CreateProjectResponse.project:type_name -> prx.v1.Project
+	15,  // 25: prx.v1.UpdateProjectResponse.project:type_name -> prx.v1.Project
+	16,  // 26: prx.v1.CreateFeatureResponse.feature:type_name -> prx.v1.Feature
+	0,   // 27: prx.v1.UpdateFeatureRequest.status:type_name -> prx.v1.FeatureStatus
+	16,  // 28: prx.v1.UpdateFeatureResponse.feature:type_name -> prx.v1.Feature
+	1,   // 29: prx.v1.CreateTaskRequest.kind:type_name -> prx.v1.TaskKind
+	17,  // 30: prx.v1.CreateTaskResponse.task:type_name -> prx.v1.Task
+	2,   // 31: prx.v1.UpdateTaskRequest.status:type_name -> prx.v1.TaskStatus
+	17,  // 32: prx.v1.UpdateTaskResponse.task:type_name -> prx.v1.Task
+	18,  // 33: prx.v1.AddDependencyResponse.dependency:type_name -> prx.v1.Dependency
+	19,  // 34: prx.v1.AttachPullRequestResponse.pull_request:type_name -> prx.v1.PullRequest
+	20,  // 35: prx.v1.AddDocumentResponse.document:type_name -> prx.v1.Document
+	20,  // 36: prx.v1.GetDocumentResponse.document:type_name -> prx.v1.Document
+	20,  // 37: prx.v1.UpdateDocumentResponse.document:type_name -> prx.v1.Document
+	11,  // 38: prx.v1.GitHubAuthMethod.type:type_name -> prx.v1.GithubAuthMethodType
+	62,  // 39: prx.v1.GitHubConfig.hosts:type_name -> prx.v1.GitHubHost
+	63,  // 40: prx.v1.GitHubConfig.auth_methods:type_name -> prx.v1.GitHubAuthMethod
+	64,  // 41: prx.v1.GetConfigResponse.config:type_name -> prx.v1.GitHubConfig
+	64,  // 42: prx.v1.UpdateGitHubSyncConfigResponse.config:type_name -> prx.v1.GitHubConfig
+	62,  // 43: prx.v1.AddGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
+	62,  // 44: prx.v1.UpdateGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
+	11,  // 45: prx.v1.AddGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
+	63,  // 46: prx.v1.AddGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
+	11,  // 47: prx.v1.UpdateGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
+	63,  // 48: prx.v1.UpdateGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
+	63,  // 49: prx.v1.ReorderGitHubAuthMethodsResponse.auth_methods:type_name -> prx.v1.GitHubAuthMethod
+	87,  // 50: prx.v1.GetGitHubSyncStatusResponse.status:type_name -> prx.v1.GitHubSyncStatus
+	87,  // 51: prx.v1.SyncGitHubIfDueResponse.status:type_name -> prx.v1.GitHubSyncStatus
+	12,  // 52: prx.v1.DebugProblem.code:type_name -> prx.v1.DebugProblemCode
+	97,  // 53: prx.v1.DebugPaths.environment_variables:type_name -> prx.v1.DebugEnvironmentVariable
+	99,  // 54: prx.v1.DebugConfig.hosts:type_name -> prx.v1.DebugConfigHost
+	100, // 55: prx.v1.DebugConfig.auth_methods:type_name -> prx.v1.DebugConfigAuthMethod
+	102, // 56: prx.v1.DebugStorage.database_file:type_name -> prx.v1.DebugDatabaseFile
+	104, // 57: prx.v1.DebugData.feature_statuses:type_name -> prx.v1.DebugCount
+	104, // 58: prx.v1.DebugData.task_display_states:type_name -> prx.v1.DebugCount
+	104, // 59: prx.v1.DebugData.task_kinds:type_name -> prx.v1.DebugCount
+	104, // 60: prx.v1.DebugData.pull_request_display_states:type_name -> prx.v1.DebugCount
+	104, // 61: prx.v1.DebugData.pull_request_hosts:type_name -> prx.v1.DebugCount
+	104, // 62: prx.v1.DebugData.document_kinds:type_name -> prx.v1.DebugCount
+	104, // 63: prx.v1.DebugData.project_states:type_name -> prx.v1.DebugCount
+	87,  // 64: prx.v1.DebugGitHubSync.status:type_name -> prx.v1.GitHubSyncStatus
+	106, // 65: prx.v1.DebugGitHubSync.host_failures:type_name -> prx.v1.DebugSyncFailure
+	106, // 66: prx.v1.DebugGitHubSync.repository_failures:type_name -> prx.v1.DebugSyncFailure
+	107, // 67: prx.v1.DebugGitHubSync.error_groups:type_name -> prx.v1.DebugErrorGroup
+	108, // 68: prx.v1.DebugGitHubSync.auth_cache:type_name -> prx.v1.DebugAuthCacheEntry
+	94,  // 69: prx.v1.DebugReport.problems:type_name -> prx.v1.DebugProblem
+	95,  // 70: prx.v1.DebugReport.build:type_name -> prx.v1.DebugBuild
+	96,  // 71: prx.v1.DebugReport.runtime:type_name -> prx.v1.DebugRuntime
+	98,  // 72: prx.v1.DebugReport.paths:type_name -> prx.v1.DebugPaths
+	101, // 73: prx.v1.DebugReport.config:type_name -> prx.v1.DebugConfig
+	103, // 74: prx.v1.DebugReport.storage:type_name -> prx.v1.DebugStorage
+	105, // 75: prx.v1.DebugReport.records:type_name -> prx.v1.DebugData
+	109, // 76: prx.v1.DebugReport.github_sync:type_name -> prx.v1.DebugGitHubSync
+	110, // 77: prx.v1.GetDebugReportResponse.report:type_name -> prx.v1.DebugReport
+	22,  // 78: prx.v1.PRXService.GetSnapshot:input_type -> prx.v1.GetSnapshotRequest
+	24,  // 79: prx.v1.PRXService.CreateProject:input_type -> prx.v1.CreateProjectRequest
+	26,  // 80: prx.v1.PRXService.UpdateProject:input_type -> prx.v1.UpdateProjectRequest
+	28,  // 81: prx.v1.PRXService.DeleteProject:input_type -> prx.v1.DeleteProjectRequest
+	30,  // 82: prx.v1.PRXService.CreateFeature:input_type -> prx.v1.CreateFeatureRequest
+	32,  // 83: prx.v1.PRXService.UpdateFeature:input_type -> prx.v1.UpdateFeatureRequest
+	34,  // 84: prx.v1.PRXService.DeleteFeature:input_type -> prx.v1.DeleteFeatureRequest
+	36,  // 85: prx.v1.PRXService.CreateTask:input_type -> prx.v1.CreateTaskRequest
+	38,  // 86: prx.v1.PRXService.UpdateTask:input_type -> prx.v1.UpdateTaskRequest
+	40,  // 87: prx.v1.PRXService.DeleteTask:input_type -> prx.v1.DeleteTaskRequest
+	42,  // 88: prx.v1.PRXService.AddDependency:input_type -> prx.v1.AddDependencyRequest
+	44,  // 89: prx.v1.PRXService.RemoveDependency:input_type -> prx.v1.RemoveDependencyRequest
+	46,  // 90: prx.v1.PRXService.AttachPullRequest:input_type -> prx.v1.AttachPullRequestRequest
+	48,  // 91: prx.v1.PRXService.DetachPullRequest:input_type -> prx.v1.DetachPullRequestRequest
+	50,  // 92: prx.v1.PRXService.AddDocument:input_type -> prx.v1.AddDocumentRequest
+	52,  // 93: prx.v1.PRXService.GetDocument:input_type -> prx.v1.GetDocumentRequest
+	54,  // 94: prx.v1.PRXService.UpdateDocument:input_type -> prx.v1.UpdateDocumentRequest
+	56,  // 95: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
+	58,  // 96: prx.v1.PRXService.ReadDocumentContent:input_type -> prx.v1.ReadDocumentContentRequest
+	60,  // 97: prx.v1.PRXService.SelectLocalFile:input_type -> prx.v1.SelectLocalFileRequest
+	85,  // 98: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
+	88,  // 99: prx.v1.PRXService.GetGitHubSyncStatus:input_type -> prx.v1.GetGitHubSyncStatusRequest
+	90,  // 100: prx.v1.PRXService.SyncGitHubIfDue:input_type -> prx.v1.SyncGitHubIfDueRequest
+	92,  // 101: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
+	111, // 102: prx.v1.PRXService.GetDebugReport:input_type -> prx.v1.GetDebugReportRequest
+	65,  // 103: prx.v1.PRXService.GetConfig:input_type -> prx.v1.GetConfigRequest
+	67,  // 104: prx.v1.PRXService.UpdateGitHubSyncConfig:input_type -> prx.v1.UpdateGitHubSyncConfigRequest
+	69,  // 105: prx.v1.PRXService.AddGitHubHost:input_type -> prx.v1.AddGitHubHostRequest
+	71,  // 106: prx.v1.PRXService.UpdateGitHubHost:input_type -> prx.v1.UpdateGitHubHostRequest
+	73,  // 107: prx.v1.PRXService.DeleteGitHubHost:input_type -> prx.v1.DeleteGitHubHostRequest
+	75,  // 108: prx.v1.PRXService.AddGitHubAuthMethod:input_type -> prx.v1.AddGitHubAuthMethodRequest
+	77,  // 109: prx.v1.PRXService.UpdateGitHubAuthMethod:input_type -> prx.v1.UpdateGitHubAuthMethodRequest
+	79,  // 110: prx.v1.PRXService.DeleteGitHubAuthMethod:input_type -> prx.v1.DeleteGitHubAuthMethodRequest
+	81,  // 111: prx.v1.PRXService.ReorderGitHubAuthMethods:input_type -> prx.v1.ReorderGitHubAuthMethodsRequest
+	83,  // 112: prx.v1.PRXService.ValidateConfig:input_type -> prx.v1.ValidateConfigRequest
+	23,  // 113: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
+	25,  // 114: prx.v1.PRXService.CreateProject:output_type -> prx.v1.CreateProjectResponse
+	27,  // 115: prx.v1.PRXService.UpdateProject:output_type -> prx.v1.UpdateProjectResponse
+	29,  // 116: prx.v1.PRXService.DeleteProject:output_type -> prx.v1.DeleteProjectResponse
+	31,  // 117: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
+	33,  // 118: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
+	35,  // 119: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
+	37,  // 120: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
+	39,  // 121: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
+	41,  // 122: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
+	43,  // 123: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
+	45,  // 124: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
+	47,  // 125: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
+	49,  // 126: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
+	51,  // 127: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
+	53,  // 128: prx.v1.PRXService.GetDocument:output_type -> prx.v1.GetDocumentResponse
+	55,  // 129: prx.v1.PRXService.UpdateDocument:output_type -> prx.v1.UpdateDocumentResponse
+	57,  // 130: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
+	59,  // 131: prx.v1.PRXService.ReadDocumentContent:output_type -> prx.v1.ReadDocumentContentResponse
+	61,  // 132: prx.v1.PRXService.SelectLocalFile:output_type -> prx.v1.SelectLocalFileResponse
+	86,  // 133: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
+	89,  // 134: prx.v1.PRXService.GetGitHubSyncStatus:output_type -> prx.v1.GetGitHubSyncStatusResponse
+	91,  // 135: prx.v1.PRXService.SyncGitHubIfDue:output_type -> prx.v1.SyncGitHubIfDueResponse
+	93,  // 136: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
+	112, // 137: prx.v1.PRXService.GetDebugReport:output_type -> prx.v1.GetDebugReportResponse
+	66,  // 138: prx.v1.PRXService.GetConfig:output_type -> prx.v1.GetConfigResponse
+	68,  // 139: prx.v1.PRXService.UpdateGitHubSyncConfig:output_type -> prx.v1.UpdateGitHubSyncConfigResponse
+	70,  // 140: prx.v1.PRXService.AddGitHubHost:output_type -> prx.v1.AddGitHubHostResponse
+	72,  // 141: prx.v1.PRXService.UpdateGitHubHost:output_type -> prx.v1.UpdateGitHubHostResponse
+	74,  // 142: prx.v1.PRXService.DeleteGitHubHost:output_type -> prx.v1.DeleteGitHubHostResponse
+	76,  // 143: prx.v1.PRXService.AddGitHubAuthMethod:output_type -> prx.v1.AddGitHubAuthMethodResponse
+	78,  // 144: prx.v1.PRXService.UpdateGitHubAuthMethod:output_type -> prx.v1.UpdateGitHubAuthMethodResponse
+	80,  // 145: prx.v1.PRXService.DeleteGitHubAuthMethod:output_type -> prx.v1.DeleteGitHubAuthMethodResponse
+	82,  // 146: prx.v1.PRXService.ReorderGitHubAuthMethods:output_type -> prx.v1.ReorderGitHubAuthMethodsResponse
+	84,  // 147: prx.v1.PRXService.ValidateConfig:output_type -> prx.v1.ValidateConfigResponse
+	113, // [113:148] is the sub-list for method output_type
+	78,  // [78:113] is the sub-list for method input_type
+	78,  // [78:78] is the sub-list for extension type_name
+	78,  // [78:78] is the sub-list for extension extendee
+	0,   // [0:78] is the sub-list for field type_name
 }
 
 func init() { file_prx_v1_prx_proto_init() }
@@ -8229,29 +8824,30 @@ func file_prx_v1_prx_proto_init() {
 	if File_prx_v1_prx_proto != nil {
 		return
 	}
-	file_prx_v1_prx_proto_msgTypes[12].OneofWrappers = []any{}
-	file_prx_v1_prx_proto_msgTypes[18].OneofWrappers = []any{}
-	file_prx_v1_prx_proto_msgTypes[30].OneofWrappers = []any{
+	file_prx_v1_prx_proto_msgTypes[13].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[19].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[25].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[37].OneofWrappers = []any{
 		(*AddDocumentRequest_Url)(nil),
 		(*AddDocumentRequest_LocalFile)(nil),
 		(*AddDocumentRequest_Markdown)(nil),
 	}
-	file_prx_v1_prx_proto_msgTypes[34].OneofWrappers = []any{
+	file_prx_v1_prx_proto_msgTypes[41].OneofWrappers = []any{
 		(*UpdateDocumentRequest_Url)(nil),
 		(*UpdateDocumentRequest_LocalFile)(nil),
 		(*UpdateDocumentRequest_Markdown)(nil),
 	}
-	file_prx_v1_prx_proto_msgTypes[51].OneofWrappers = []any{}
-	file_prx_v1_prx_proto_msgTypes[55].OneofWrappers = []any{}
-	file_prx_v1_prx_proto_msgTypes[57].OneofWrappers = []any{}
-	file_prx_v1_prx_proto_msgTypes[67].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[58].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[62].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[64].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[74].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_prx_v1_prx_proto_rawDesc), len(file_prx_v1_prx_proto_rawDesc)),
 			NumEnums:      13,
-			NumMessages:   93,
+			NumMessages:   100,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

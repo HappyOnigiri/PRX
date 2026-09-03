@@ -1,4 +1,4 @@
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useNavigate, useParams } from "@tanstack/react-router";
 import { ArrowLeft, Pencil, Plus, RefreshCw } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
@@ -6,16 +6,18 @@ import { mutations } from "../api";
 import type {
   Dependency,
   Feature,
+  Project,
   PullRequest,
+  Snapshot,
   Task,
 } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
 import { AddDocumentDialog } from "./AddDocumentDialog";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
+import { DocumentReferences } from "./DocumentReferences";
 import { EditFeatureDialog } from "./EditFeatureDialog";
 import { FeatureGraph } from "./FeatureGraph";
-import { FeatureReferences } from "./FeatureReferences";
 import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { TaskInspector } from "./TaskInspector";
@@ -38,38 +40,14 @@ export function FeatureWorkspace() {
   const [documentTarget, setDocumentTarget] = useState<DocumentTarget>();
   const data = snapshot.data;
   const feature = data?.features.find((item) => item.id === featureId);
-  const tasks = useMemo(
-    () => data?.tasks.filter((task) => task.featureId === featureId) ?? [],
-    [data, featureId],
-  );
-  const taskIds = useMemo(() => new Set(tasks.map((task) => task.id)), [tasks]);
-  const dependencies = useMemo(
-    () =>
-      data?.dependencies.filter((dependency) =>
-        taskIds.has(dependency.blockerTaskId),
-      ) ?? [],
-    [data, taskIds],
-  );
-  const pullRequests = useMemo(
-    () => new Map(data?.pullRequests.map((pr) => [pr.taskId, pr]) ?? []),
-    [data],
-  );
-  const documentsByTask = useMemo(() => {
-    const result = new Map<string, TaskNodeDocument[]>();
-    for (const document of data?.documents ?? []) {
-      if (!document.taskId) continue;
-      const documents = result.get(document.taskId) ?? [];
-      documents.push(document);
-      result.set(document.taskId, documents);
-    }
-    return result;
-  }, [data]);
-  const featureDocuments = useMemo(
-    () =>
-      (data?.documents.filter((document) => document.featureId === featureId) ??
-        []) as TaskNodeDocument[],
-    [data, featureId],
-  );
+  const project = data?.projects.find((item) => item.id === feature?.projectId);
+  const {
+    tasks,
+    dependencies,
+    pullRequests,
+    documentsByTask,
+    featureDocuments,
+  } = useFeatureWorkspaceData(data, featureId);
   const openTaskDialog = useCallback(() => {
     setShowTask(true);
   }, []);
@@ -106,6 +84,8 @@ export function FeatureWorkspace() {
     <WorkspaceContent
       feature={feature}
       featureId={featureId}
+      project={project}
+      projects={data.projects}
       tasks={tasks}
       dependencies={dependencies}
       pullRequests={pullRequests}
@@ -143,15 +123,68 @@ export function FeatureWorkspace() {
         setShowFeatureEdit(false);
       }}
       onFeatureDeleted={() => {
-        void navigate({ to: feature.archived ? "/archived" : "/" });
+        void navigate({ to: feature.readOnly ? "/archived" : "/" });
       }}
     />
   );
 }
 
+// The workspace narrows one snapshot to a single feature. Keeping the memos
+// together lets the component itself stay about rendering and state.
+function useFeatureWorkspaceData(
+  data: Snapshot | undefined,
+  featureId: string,
+) {
+  const tasks = useMemo(
+    () => data?.tasks.filter((task) => task.featureId === featureId) ?? [],
+    [data, featureId],
+  );
+  const taskIds = useMemo(() => new Set(tasks.map((task) => task.id)), [tasks]);
+  const dependencies = useMemo(
+    () =>
+      data?.dependencies.filter((dependency) =>
+        taskIds.has(dependency.blockerTaskId),
+      ) ?? [],
+    [data, taskIds],
+  );
+  const pullRequests = useMemo(
+    () => new Map(data?.pullRequests.map((pr) => [pr.taskId, pr]) ?? []),
+    [data],
+  );
+  const documentsByTask = useMemo(() => {
+    const result = new Map<string, TaskNodeDocument[]>();
+    for (const document of data?.documents ?? []) {
+      if (!document.taskId) continue;
+      const documents = result.get(document.taskId) ?? [];
+      documents.push(document);
+      result.set(document.taskId, documents);
+    }
+    return result;
+  }, [data]);
+  // A document with no feature carries an empty ID rather than an absent one,
+  // so the comparison has to reject the empty value.
+  const featureDocuments = useMemo(
+    () =>
+      data?.documents.filter(
+        (document) =>
+          document.featureId !== "" && document.featureId === featureId,
+      ) ?? [],
+    [data, featureId],
+  );
+  return {
+    tasks,
+    dependencies,
+    pullRequests,
+    documentsByTask,
+    featureDocuments,
+  };
+}
+
 interface WorkspaceContentProps {
   feature: Feature;
   featureId: string;
+  project: Project | undefined;
+  projects: Project[];
   tasks: Task[];
   dependencies: Dependency[];
   pullRequests: Map<string, PullRequest>;
@@ -178,73 +211,13 @@ interface WorkspaceContentProps {
 }
 
 function WorkspaceContent(props: WorkspaceContentProps) {
-  const { t } = useTranslation();
+  // The server decides read-only, so the workspace never combines the
+  // feature's own archived flag with the state of its project.
+  const readOnly = props.feature.readOnly;
   return (
-    <div
-      className={props.feature.archived ? "workspace is-archived" : "workspace"}
-    >
-      <header className="workspace-head">
-        <div
-          className="workspace-title"
-          title={props.feature.description || t("workspace.noDescription")}
-        >
-          <h1>{props.feature.title}</h1>
-          <CopyableIdentifier
-            label={t("common.featureId")}
-            value={props.feature.id}
-            valueOnly
-          />
-          <p className="eyebrow">
-            {t("workspace.eyebrow", { slug: props.feature.slug })}
-          </p>
-        </div>
-        <div className="workspace-actions">
-          <FeatureReferences
-            featureId={props.featureId}
-            documents={props.featureDocuments}
-            onPreview={props.onPreviewDocument}
-            readOnly={props.feature.archived}
-          />
-          {!props.feature.archived && (
-            <IconButton
-              icon={RefreshCw}
-              label={
-                props.syncPending
-                  ? t("workspace.syncing")
-                  : t("workspace.syncGithub")
-              }
-              variant="secondary"
-              onClick={props.onSync}
-              disabled={props.syncPending}
-            />
-          )}
-          {!props.feature.archived && (
-            <IconButton
-              icon={Plus}
-              label={t("workspace.addTask")}
-              variant="primary"
-              onClick={props.onCreateTask}
-            />
-          )}
-          <IconButton
-            icon={Pencil}
-            label={
-              props.feature.archived
-                ? t("workspace.manageFeature")
-                : t("workspace.editFeature")
-            }
-            variant="secondary"
-            iconOnly
-            onClick={props.onEditFeature}
-          />
-        </div>
-      </header>
-      {props.feature.archived && (
-        <div className="archived-notice" role="status">
-          <strong>{t("workspace.archivedLabel")}</strong>
-          <span>{t("workspace.archivedDetail")}</span>
-        </div>
-      )}
+    <div className={readOnly ? "workspace is-archived" : "workspace"}>
+      <FeatureWorkspaceHead props={props} readOnly={readOnly} />
+      {readOnly && <ArchivedNotice project={props.project} />}
       <div className="workspace-body">
         <FeatureGraph
           tasks={props.tasks}
@@ -255,7 +228,7 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           onPreviewDocument={props.onPreviewDocument}
           onAddDocument={props.onAddDocument}
           onCreateTask={props.onCreateTask}
-          readOnly={props.feature.archived}
+          readOnly={readOnly}
         />
         {props.selectedTask && (
           <TaskInspector
@@ -263,13 +236,117 @@ function WorkspaceContent(props: WorkspaceContentProps) {
             tasks={props.tasks}
             pullRequest={props.pullRequests.get(props.selectedTask.id)}
             documents={props.documentsByTask.get(props.selectedTask.id) ?? []}
-            readOnly={props.feature.archived}
+            readOnly={readOnly}
             onPreview={props.onPreviewDocument}
             onClose={props.onCloseInspector}
           />
         )}
       </div>
       <WorkspaceOverlays props={props} />
+    </div>
+  );
+}
+
+function FeatureWorkspaceHead({
+  props,
+  readOnly,
+}: {
+  props: WorkspaceContentProps;
+  readOnly: boolean;
+}) {
+  const { t } = useTranslation();
+  return (
+    <header className="workspace-head">
+      <div
+        className="workspace-title"
+        title={props.feature.description || t("workspace.noDescription")}
+      >
+        <h1>{props.feature.title}</h1>
+        <CopyableIdentifier
+          label={t("common.featureId")}
+          value={props.feature.id}
+          valueOnly
+        />
+        <p className="eyebrow">
+          {t("workspace.eyebrow", { slug: props.feature.slug })}
+          {props.project && (
+            <>
+              {" · "}
+              <Link
+                to="/projects/$projectId"
+                params={{ projectId: props.project.id }}
+                className="workspace-project-link"
+              >
+                {props.project.title}
+              </Link>
+            </>
+          )}
+        </p>
+      </div>
+      <div className="workspace-actions">
+        <DocumentReferences
+          parent={{ featureId: props.featureId }}
+          documents={props.featureDocuments}
+          onPreview={props.onPreviewDocument}
+          readOnly={readOnly}
+        />
+        {!readOnly && (
+          <IconButton
+            icon={RefreshCw}
+            label={
+              props.syncPending
+                ? t("workspace.syncing")
+                : t("workspace.syncGithub")
+            }
+            variant="secondary"
+            onClick={props.onSync}
+            disabled={props.syncPending}
+          />
+        )}
+        {!readOnly && (
+          <IconButton
+            icon={Plus}
+            label={t("workspace.addTask")}
+            variant="primary"
+            onClick={props.onCreateTask}
+          />
+        )}
+        <IconButton
+          icon={Pencil}
+          label={
+            readOnly ? t("workspace.manageFeature") : t("workspace.editFeature")
+          }
+          variant="secondary"
+          iconOnly
+          onClick={props.onEditFeature}
+        />
+      </div>
+    </header>
+  );
+}
+
+// A feature can be read-only for two reasons, and the remedy differs: restore
+// the feature, or activate the project it belongs to. The notice says which,
+// and an archived project decides even when the feature is archived too:
+// restoring the feature alone would leave it read-only.
+function ArchivedNotice({ project }: { project: Project | undefined }) {
+  const { t } = useTranslation();
+  if (project?.archived)
+    return (
+      <div className="archived-notice" role="status">
+        <strong>{t("workspace.projectArchivedLabel")}</strong>
+        <span>
+          {t("workspace.projectArchivedDetail", { title: project.title })}
+        </span>
+        <Link to="/projects/$projectId" params={{ projectId: project.id }}>
+          {t("workspace.openProject")}
+        </Link>
+      </div>
+    );
+  return (
+    <div className="archived-notice" role="status">
+      <strong>{t("workspace.archivedLabel")}</strong>
+      <span>{t("workspace.archivedDetail")}</span>
     </div>
   );
 }
@@ -300,6 +377,7 @@ function WorkspaceOverlays({ props }: { props: WorkspaceContentProps }) {
       {props.showFeatureEdit && (
         <EditFeatureDialog
           feature={props.feature}
+          projects={props.projects}
           onClose={props.onCloseFeatureEdit}
           onDeleted={props.onFeatureDeleted}
         />

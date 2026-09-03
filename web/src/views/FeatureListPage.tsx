@@ -1,10 +1,10 @@
-import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { FeatureCategoryId } from "../feature-status";
 import type { Feature } from "../gen/prx/v1/prx_pb";
 import { useSnapshot } from "../hooks";
-import { featureStatusLabel, formatError } from "../i18n/domain";
+import { formatError } from "../i18n/domain";
 import { StateMessage } from "./Dashboard";
+import { FeatureListRow } from "./FeatureListRow";
 
 // Each feature category presents the same rows with the same progress and
 // status, so they share one page and differ only in which features they select
@@ -35,6 +35,9 @@ export function FeatureListPage({ namespace, select }: FeatureListPageProps) {
     );
 
   const features = data.features.filter(select);
+  const projectTitles = new Map(
+    data.projects.map((project) => [project.id, project.title]),
+  );
   return (
     <div className="dashboard feature-list-page">
       <header className="page-head">
@@ -59,31 +62,15 @@ export function FeatureListPage({ namespace, select }: FeatureListPageProps) {
           </div>
         ) : (
           features.map((feature) => (
-            <Link
+            <FeatureListRow
               key={feature.id}
-              to="/features/$featureId"
-              params={{ featureId: feature.id }}
-              className="feature-list-row"
-            >
-              <div className="feature-list-row-title">
-                <b>{feature.title}</b>
-                <small>{feature.slug}</small>
-              </div>
-              <div className="progress-track" aria-hidden="true">
-                <i
-                  style={{
-                    width: `${feature.taskCount ? (feature.mergedCount / feature.taskCount) * 100 : 0}%`,
-                  }}
-                />
-              </div>
-              <span>
-                {t(`${namespace}.progress`, {
-                  merged: feature.mergedCount,
-                  total: feature.taskCount,
-                })}
-              </span>
-              <strong>{featureStatusLabel(feature.displayStatus, t)}</strong>
-            </Link>
+              feature={feature}
+              progressLabel={t(`${namespace}.progress`, {
+                merged: feature.mergedCount,
+                total: feature.taskCount,
+              })}
+              projectTitle={projectTitles.get(feature.projectId)}
+            />
           ))
         )}
       </section>

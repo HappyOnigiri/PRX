@@ -3,7 +3,7 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FeatureStatus, type Snapshot } from "../src/gen/prx/v1/prx_pb";
 import { ActiveFeatures } from "../src/views/ActiveFeatures";
-import { makeFeature, makeSnapshot } from "./factories";
+import { makeFeature, makeProject, makeSnapshot } from "./factories";
 
 const activeMocks = vi.hoisted(() => ({
   state: {
@@ -35,10 +35,12 @@ describe("ActiveFeatures", () => {
   it("shows only the features still in flight", () => {
     activeMocks.state.isPending = false;
     activeMocks.state.data = makeSnapshot({
+      projects: [makeProject({ id: "P-1", title: "Delivery platform" })],
       features: [
         makeFeature({
           slug: "open-payments",
           title: "Open payments",
+          projectId: "P-1",
           taskCount: 5,
           mergedCount: 2,
         }),
@@ -64,6 +66,11 @@ describe("ActiveFeatures", () => {
     expect(screen.queryByText("Historical payments")).not.toBeInTheDocument();
     expect(screen.getByText("2/5 merged")).toBeInTheDocument();
     expect(screen.getByText("Active")).toBeInTheDocument();
+    // The row names the owning project so the list stays readable without a
+    // column of its own.
+    expect(
+      screen.getByText("open-payments · Delivery platform"),
+    ).toBeInTheDocument();
   });
 
   it("shows a dedicated empty state", () => {

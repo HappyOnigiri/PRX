@@ -2,6 +2,8 @@ export const errors = {
   en: {
     error: {
       unknown: "An unknown domain error occurred.",
+      archivedReadOnly:
+        "Archived projects and features are read-only. Activate it before making changes.",
       crossFeatureDependency:
         "Tasks in different features cannot be connected.",
       cycle: "This dependency would create a cycle: {{path}}",
@@ -39,6 +41,8 @@ export const errors = {
   ja: {
     error: {
       unknown: "不明なドメインエラーが発生しました。",
+      archivedReadOnly:
+        "アーカイブ済みのプロジェクトとフィーチャーは読み取り専用です。変更する前にアクティブに戻してください。",
       crossFeatureDependency: "異なるフィーチャーのタスクは接続できません。",
       cycle: "この依存関係を追加すると循環します: {{path}}",
       duplicateDependency: "この依存関係はすでに存在します。",

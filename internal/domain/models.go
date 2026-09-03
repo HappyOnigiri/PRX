@@ -103,13 +103,53 @@ const (
 	BlockedReasonCodeWaitingForBlocker        BlockedReasonCode = "waiting_for_blocker"
 )
 
+// Project groups features. Membership is optional, and a project's only state
+// is whether it is archived: it has no two-layer status the way a feature does.
+type Project struct {
+	ID          string    `json:"id"`
+	StorageID   string    `json:"-"`
+	Slug        string    `json:"slug"`
+	Title       string    `json:"title"`
+	Description string    `json:"description"`
+	Archived    bool      `json:"archived"`
+	CreatedAt   time.Time `json:"created_at"`
+	UpdatedAt   time.Time `json:"updated_at"`
+}
+
+// ProjectUpdate carries every field a project update may change. A nil pointer
+// means the field was omitted; an empty string is a request to clear it.
+// Collecting them in one comparable value is what lets the archive barrier ask
+// whether a request changes anything but Archived without naming each field.
+type ProjectUpdate struct {
+	Slug        *string
+	Title       *string
+	Description *string
+	Archived    *bool
+}
+
+// FeatureUpdate carries every field a feature update may change, with the same
+// pointer convention and the same reason for being one value as ProjectUpdate.
+type FeatureUpdate struct {
+	Slug        *string
+	Title       *string
+	Description *string
+	Status      *FeatureStatus
+	Archived    *bool
+	ProjectID   *string
+}
+
 type Feature struct {
-	ID                 string        `json:"id"`
-	StorageID          string        `json:"-"`
-	Slug               string        `json:"slug"`
-	Title              string        `json:"title"`
-	Description        string        `json:"description"`
-	Status             FeatureStatus `json:"status"`
+	ID          string        `json:"id"`
+	StorageID   string        `json:"-"`
+	ProjectID   string        `json:"project_id,omitempty"`
+	Slug        string        `json:"slug"`
+	Title       string        `json:"title"`
+	Description string        `json:"description"`
+	Status      FeatureStatus `json:"status"`
+	// ReadOnly is derived: the feature is archived, or the project it belongs to
+	// is. Clients present read-only state from this value instead of combining
+	// the feature's own flag with its project's.
+	ReadOnly           bool          `json:"read_only"`
 	DisplayStatus      FeatureStatus `json:"display_status"`
 	Archived           bool          `json:"archived"`
 	CreatedAt          time.Time     `json:"created_at"`
@@ -186,8 +226,30 @@ type GitHubSyncStatus struct {
 	Error           string     `json:"error,omitempty"`
 }
 
+// DocumentParent names the single owner of a document. Exactly one field may
+// carry a value; Count lets callers reject the other combinations without
+// spelling the condition out at each call site. Passing the three identifiers
+// as one value also keeps them from being swapped at a call site.
+type DocumentParent struct {
+	ProjectID string
+	FeatureID string
+	TaskID    string
+}
+
+// Count reports how many parents the value names.
+func (p DocumentParent) Count() int {
+	count := 0
+	for _, value := range []string{p.ProjectID, p.FeatureID, p.TaskID} {
+		if value != "" {
+			count++
+		}
+	}
+	return count
+}
+
 type Document struct {
 	ID                   string       `json:"id"`
+	ProjectID            string       `json:"project_id,omitempty"`
 	FeatureID            string       `json:"feature_id,omitempty"`
 	TaskID               string       `json:"task_id,omitempty"`
 	Kind                 DocumentKind `json:"kind"`
@@ -200,6 +262,7 @@ type Document struct {
 }
 
 type Snapshot struct {
+	Projects           []Project     `json:"projects"`
 	Features           []Feature     `json:"features"`
 	Tasks              []Task        `json:"tasks"`
 	Dependencies       []Dependency  `json:"dependencies"`

@@ -10,6 +10,7 @@ prx feature update FEATURE_ID_OR_SLUG [flags]
 
 ```
 prx feature update checkout --archived=false
+prx feature update checkout --project=
 ```
 
 ### Options
@@ -18,6 +19,7 @@ prx feature update checkout --archived=false
       --archived             archive (true) or unarchive (false) the feature
       --description string   new description
   -h, --help                 help for update
+      --project string       project ID or slug; an empty value leaves the project
       --slug string          new slug
       --status string        auto, active, paused, completed, or cancelled
       --title string         new title

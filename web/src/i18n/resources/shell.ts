@@ -48,7 +48,9 @@ export const shell = {
     },
     nav: {
       dashboard: "PRX dashboard",
-      features: "Features",
+      primary: "PRX navigation",
+      projects: "Projects",
+      newProject: "New project",
       overview: "Overview",
       activeFeatures: "Active features",
       completedFeatures: "Completed features",
@@ -164,7 +166,9 @@ export const shell = {
     },
     nav: {
       dashboard: "PRX ダッシュボード",
-      features: "フィーチャー",
+      primary: "PRX ナビゲーション",
+      projects: "プロジェクト",
+      newProject: "プロジェクトを作成",
       overview: "概要",
       activeFeatures: "進行中",
       completedFeatures: "完了済み",

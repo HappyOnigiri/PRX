@@ -10,6 +10,8 @@ import { ArchivedFeatures } from "./views/ArchivedFeatures";
 import { CompletedFeatures } from "./views/CompletedFeatures";
 import { Dashboard } from "./views/Dashboard";
 import { FeatureWorkspace } from "./views/FeatureWorkspace";
+import { ProjectListPage } from "./views/ProjectListPage";
+import { ProjectWorkspace } from "./views/ProjectWorkspace";
 import { TaskSearch } from "./views/TaskSearch";
 
 const rootRoute = createRootRoute({
@@ -44,6 +46,21 @@ const completedRoute = createRoute({
   path: "/completed",
   component: CompletedFeatures,
 });
+const projectsRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/projects",
+  // The archive toggle stays in the URL so reload, history, and a shared link
+  // reproduce the view instead of depending on browser-local state.
+  validateSearch: (search: Record<string, unknown>) => ({
+    archived: search["archived"] === true || search["archived"] === "true",
+  }),
+  component: ProjectListPage,
+});
+const projectRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/projects/$projectId",
+  component: ProjectWorkspace,
+});
 const taskSearchRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/tasks",
@@ -59,6 +76,8 @@ const routeTree = rootRoute.addChildren([
   completedRoute,
   taskSearchRoute,
   featureRoute,
+  projectsRoute,
+  projectRoute,
 ]);
 
 export const router = createRouter({ routeTree });

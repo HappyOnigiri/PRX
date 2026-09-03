@@ -172,6 +172,7 @@ export function debugProblemLabel(
 export const errorKeys = {
   [DomainErrorCode.UNSPECIFIED]: "error.unknown",
   [DomainErrorCode.CROSS_FEATURE_DEPENDENCY]: "error.crossFeatureDependency",
+  [DomainErrorCode.ARCHIVED_READ_ONLY]: "error.archivedReadOnly",
   [DomainErrorCode.CYCLE]: "error.cycle",
   [DomainErrorCode.DOCUMENT_READ_FAILED]: "error.documentReadFailed",
   [DomainErrorCode.DOCUMENT_TOO_LARGE]: "error.documentTooLarge",

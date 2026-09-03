@@ -1,0 +1,78 @@
+/* A project row carries no progress bar, so it uses three columns where a
+   feature row uses four. */
+.project-list-page {
+  max-width: 1180px;
+}
+
+.project-list-row {
+  grid-template-columns: minmax(180px, 1fr) auto auto;
+}
+
+.project-list-actions {
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: end;
+}
+
+/* The sidebar project rows share the feature row's box but have no status dot
+   or count, so the single title column fills the row. Naming both classes
+   raises the specificity above the .feature-link track list in shell.css,
+   which main.tsx loads after this file and would otherwise win: the title
+   would land in the 8px dot column and be clipped to its first character. */
+.feature-link.project-link {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.project-body {
+  display: block;
+  padding: 0 24px 28px;
+  overflow: auto;
+}
+
+.project-section-head {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 12px 18px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
+
+.project-section-head h2 {
+  font-size: var(--text-md);
+  font-weight: 600;
+}
+
+.project-section-head span {
+  color: var(--text-3);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.workspace-project-link {
+  color: var(--text-2);
+  text-decoration: underline;
+}
+
+.workspace-project-link:hover,
+.workspace-project-link:focus-visible {
+  color: var(--text);
+}
+
+.archived-notice a {
+  flex: 0 0 auto;
+  color: var(--text);
+  text-decoration: underline;
+}
+
+@media (width <= 720px) {
+  .project-list-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  .project-body {
+    padding-inline: 12px;
+  }
+}

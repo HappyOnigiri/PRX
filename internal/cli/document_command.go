@@ -15,38 +15,32 @@ type documentSourceFlags struct {
 }
 
 func (s *state) documentCommand() *cobra.Command {
-	var featureFilter, taskFilter string
+	var projectFilter, featureFilter, taskFilter string
 	command := &cobra.Command{
 		Use:     "document",
 		Aliases: []string{"doc"},
 		Short:   "List or manage documents",
 		Long:    "List or manage URL, local file, and stored Markdown documents.\n\nAlias: doc.",
-		Example: "prx document\nprx document --task T-1\nprx doc",
+		Example: "prx document\nprx document --task T-1\nprx document --project P-1\nprx doc",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			snapshot, err := s.service.Snapshot(cmd.Context())
 			if err != nil {
 				return err
 			}
-			featureID := featureFilter
-			if featureFilter != "" {
-				feature, err := s.service.ResolveFeature(cmd.Context(), featureFilter)
-				if err != nil {
-					return err
-				}
-				featureID = feature.ID
-			}
-			if taskFilter != "" {
-				if err := requireTask(snapshot, taskFilter); err != nil {
-					return err
-				}
+			parent, err := s.resolveDocumentFilter(cmd, snapshot, projectFilter, featureFilter, taskFilter)
+			if err != nil {
+				return err
 			}
 			documents := make([]domain.Document, 0, len(snapshot.Documents))
 			for _, document := range snapshot.Documents {
-				if featureID != "" && document.FeatureID != featureID {
+				if parent.ProjectID != "" && document.ProjectID != parent.ProjectID {
 					continue
 				}
-				if taskFilter != "" && document.TaskID != taskFilter {
+				if parent.FeatureID != "" && document.FeatureID != parent.FeatureID {
+					continue
+				}
+				if parent.TaskID != "" && document.TaskID != parent.TaskID {
 					continue
 				}
 				documents = append(documents, document)
@@ -54,6 +48,7 @@ func (s *state) documentCommand() *cobra.Command {
 			return s.write(map[string]any{"documents": documents}, renderDocumentList(documents))
 		},
 	}
+	command.Flags().StringVar(&projectFilter, "project", "", "filter by project ID or slug")
 	command.Flags().StringVar(&featureFilter, "feature", "", "filter by feature ID or slug")
 	command.Flags().StringVar(&taskFilter, "task", "", "filter by task ID")
 
@@ -66,14 +61,47 @@ func (s *state) documentCommand() *cobra.Command {
 	return command
 }
 
+// resolveDocumentFilter turns the list filters into public identifiers, so the
+// listing compares against the same values the snapshot carries.
+func (s *state) resolveDocumentFilter(
+	cmd *cobra.Command,
+	snapshot domain.Snapshot,
+	projectFilter, featureFilter, taskFilter string,
+) (domain.DocumentParent, error) {
+	parent := domain.DocumentParent{TaskID: taskFilter}
+	if projectFilter != "" {
+		project, err := s.service.ResolveProject(cmd.Context(), projectFilter)
+		if err != nil {
+			return domain.DocumentParent{}, err
+		}
+		parent.ProjectID = project.ID
+	}
+	if featureFilter != "" {
+		feature, err := s.service.ResolveFeature(cmd.Context(), featureFilter)
+		if err != nil {
+			return domain.DocumentParent{}, err
+		}
+		parent.FeatureID = feature.ID
+	}
+	if taskFilter != "" {
+		if err := requireTask(snapshot, taskFilter); err != nil {
+			return domain.DocumentParent{}, err
+		}
+	}
+	return parent, nil
+}
+
 func (s *state) documentAddCommand() *cobra.Command {
 	var title string
 	var implementationPlan bool
 	var source documentSourceFlags
 	command := &cobra.Command{
-		Use:   "add FEATURE_ID_OR_SLUG_OR_TASK_ID",
-		Short: "Add a document",
+		Use:   "add PROJECT_OR_FEATURE_OR_TASK",
+		Short: "Add a document to a project, a feature, or a task",
+		Long: "Add a document to a project, a feature, or a task.\n\n" +
+			"The operand is a public project, feature, or task ID, or a feature or project slug.",
 		Example: "prx document add T-1 --url https://example.com\n" +
+			"prx document add P-1 --url https://example.com\n" +
 			"prx document add checkout --markdown-file notes.md",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -81,16 +109,18 @@ func (s *state) documentAddCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			parent, err := s.service.GetNode(cmd.Context(), args[0])
+			node, err := s.service.GetNode(cmd.Context(), args[0])
 			if err != nil {
 				return err
 			}
-			var feature, task string
-			switch node := parent.(type) {
+			var parent domain.DocumentParent
+			switch typed := node.(type) {
+			case domain.Project:
+				parent.ProjectID = typed.ID
 			case domain.Feature:
-				feature = node.ID
+				parent.FeatureID = typed.ID
 			case domain.Task:
-				task = node.ID
+				parent.TaskID = typed.ID
 			default:
 				return domain.NewError(
 					domain.DomainErrorCodeInvalidParent,
@@ -100,8 +130,7 @@ func (s *state) documentAddCommand() *cobra.Command {
 			}
 			doc, err := s.service.AddDocument(
 				cmd.Context(),
-				feature,
-				task,
+				parent,
 				document.Kind,
 				title,
 				document.Locator,

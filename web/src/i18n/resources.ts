@@ -5,6 +5,7 @@ import { domain } from "./resources/domain";
 import { errors } from "./resources/errors";
 import { inspector } from "./resources/inspector";
 import { markdownPreview } from "./resources/markdown-preview";
+import { project } from "./resources/project";
 import { shell } from "./resources/shell";
 import { tasks } from "./resources/tasks";
 import { workspace } from "./resources/workspace";
@@ -22,6 +23,7 @@ export const resources = {
       ...domain.en,
       ...errors.en,
       ...tasks.en,
+      ...project.en,
     },
   },
   ja: {
@@ -36,6 +38,7 @@ export const resources = {
       ...domain.ja,
       ...errors.ja,
       ...tasks.ja,
+      ...project.ja,
     },
   },
 } as const;

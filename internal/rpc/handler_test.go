@@ -936,3 +936,124 @@ func errorDetailCode(t *testing.T, err error) prxv1.DomainErrorCode {
 	}
 	return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
 }
+
+// The project RPCs carry the whole life cycle: creation, archiving through
+// UpdateProject, membership visible on the feature, and deletion.
+func TestRPCProjectLifecycleAndArchiveEnforcement(t *testing.T) {
+	ctx := context.Background()
+	client := newTestClient(t)
+	project, err := client.CreateProject(
+		ctx,
+		connect.NewRequest(&prxv1.CreateProjectRequest{
+			Slug: "payments", Title: "Payments platform", Description: "Shared work",
+		}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	projectID := project.Msg.GetProject().GetId()
+	if projectID != "P-1" || project.Msg.GetProject().GetArchived() {
+		t.Fatalf("project=%+v", project.Msg.GetProject())
+	}
+	feature, err := client.CreateFeature(
+		ctx,
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "checkout", Title: "Checkout", ProjectId: projectID}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	featureID := feature.Msg.GetFeature().GetId()
+	if feature.Msg.GetFeature().GetProjectId() != projectID {
+		t.Fatalf("feature=%+v", feature.Msg.GetFeature())
+	}
+	archived := true
+	updated, err := client.UpdateProject(
+		ctx,
+		connect.NewRequest(&prxv1.UpdateProjectRequest{Id: projectID, Archived: &archived}),
+	)
+	if err != nil || !updated.Msg.GetProject().GetArchived() {
+		t.Fatalf("archived project=%+v err=%v", updated.Msg.GetProject(), err)
+	}
+	snapshot, err := client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	projects := snapshot.Msg.GetSnapshot().GetProjects()
+	if len(projects) != 1 || !projects[0].GetArchived() {
+		t.Fatalf("snapshot projects=%+v", projects)
+	}
+	snapshotFeature := snapshot.Msg.GetSnapshot().GetFeatures()[0]
+	if snapshotFeature.GetArchived() || !snapshotFeature.GetReadOnly() {
+		t.Fatalf("snapshot feature=%+v, want read-only but not archived", snapshotFeature)
+	}
+	_, err = client.CreateTask(
+		ctx,
+		connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: featureID, Title: "Blocked by the archive"}),
+	)
+	if connect.CodeOf(err) != connect.CodeFailedPrecondition ||
+		errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY {
+		t.Fatalf("write inside archived project code=%s err=%v", connect.CodeOf(err), err)
+	}
+	if _, err := client.DeleteProject(
+		ctx,
+		connect.NewRequest(&prxv1.DeleteProjectRequest{Id: projectID}),
+	); connect.CodeOf(err) != connect.CodeFailedPrecondition {
+		t.Fatalf("delete without cascade code=%s err=%v", connect.CodeOf(err), err)
+	}
+	if _, err := client.DeleteProject(
+		ctx,
+		connect.NewRequest(&prxv1.DeleteProjectRequest{Id: projectID, Cascade: true}),
+	); err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err = client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.Msg.GetSnapshot().GetProjects()) != 0 ||
+		snapshot.Msg.GetSnapshot().GetFeatures()[0].GetProjectId() != "" {
+		t.Fatalf("snapshot after the cascade=%+v", snapshot.Msg.GetSnapshot())
+	}
+}
+
+// A project document uses the same one-parent rule as a feature or task one.
+func TestRPCProjectDocumentUsesTheSharedDocumentModel(t *testing.T) {
+	ctx := context.Background()
+	client := newTestClient(t)
+	project, err := client.CreateProject(
+		ctx,
+		connect.NewRequest(&prxv1.CreateProjectRequest{Slug: "payments", Title: "Payments"}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	projectID := project.Msg.GetProject().GetId()
+	document, err := client.AddDocument(
+		ctx,
+		connect.NewRequest(&prxv1.AddDocumentRequest{
+			ProjectId: projectID,
+			Title:     "Charter",
+			Source:    &prxv1.AddDocumentRequest_Url{Url: "https://example.com/charter"},
+		}),
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if document.Msg.GetDocument().GetProjectId() != projectID ||
+		document.Msg.GetDocument().GetFeatureId() != "" || document.Msg.GetDocument().GetTaskId() != "" {
+		t.Fatalf("document=%+v", document.Msg.GetDocument())
+	}
+	_, err = client.AddDocument(
+		ctx,
+		connect.NewRequest(&prxv1.AddDocumentRequest{
+			ProjectId: projectID,
+			Title:     "Plan",
+			Source:    &prxv1.AddDocumentRequest_Url{Url: "https://example.com/plan"},
+
+			IsImplementationPlan: true,
+		}),
+	)
+	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT {
+		t.Fatalf("project plan document err=%v", err)
+	}
+}

@@ -727,7 +727,7 @@ test("archives and safely deletes a feature", async ({ page }) => {
   await expect(page.getByText("Archived · read-only")).toBeVisible();
   // The rail holds the category the user selected, so archiving from the
   // workspace drops the feature out of the list it is showing.
-  const rail = page.getByRole("navigation", { name: "Features" });
+  const rail = page.getByRole("navigation", { name: "PRX navigation" });
   await expect(
     rail.getByRole("link", { name: /Active features/ }),
   ).toHaveAttribute("aria-current", "page");

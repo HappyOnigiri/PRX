@@ -18,6 +18,60 @@ func renderMessage(format string, args ...any) humanRenderer {
 	}
 }
 
+func renderProjectList(projects []domain.Project) humanRenderer {
+	return func(out io.Writer) error { return writeProjectTable(out, projects) }
+}
+
+func writeProjectTable(out io.Writer, projects []domain.Project) error {
+	if len(projects) == 0 {
+		_, err := fmt.Fprintln(out, "No projects found.")
+		return err
+	}
+	return writeTable(out, []string{"ID", "SLUG", "ARCHIVED", "TITLE"}, func(table *tabwriter.Writer) {
+		for _, project := range projects {
+			writeRow(table, project.ID, project.Slug, yesNo(project.Archived), project.Title)
+		}
+	})
+}
+
+// renderProjectFields is the project on its own. `show` uses it because it
+// resolves one record without reading the snapshot the contents come from.
+func renderProjectFields(project domain.Project) humanRenderer {
+	return func(out io.Writer) error {
+		return writeFields(out, [][2]string{
+			{"ID", project.ID},
+			{"Slug", project.Slug},
+			{"Title", project.Title},
+			{"Description", displayValue(project.Description)},
+			{"Archived", yesNo(project.Archived)},
+			{"Created", formatTime(project.CreatedAt)},
+			{"Updated", formatTime(project.UpdatedAt)},
+		})
+	}
+}
+
+func renderProjectDetail(
+	project domain.Project,
+	features []domain.Feature,
+	documents []domain.Document,
+) humanRenderer {
+	return func(out io.Writer) error {
+		if err := renderProjectFields(project)(out); err != nil {
+			return err
+		}
+		if _, err := fmt.Fprintln(out, "\nFeatures"); err != nil {
+			return err
+		}
+		if err := writeFeatureTable(out, features); err != nil {
+			return err
+		}
+		if _, err := fmt.Fprintln(out, "\nDocuments"); err != nil {
+			return err
+		}
+		return writeDocumentTable(out, documents)
+	}
+}
+
 func renderFeatureList(features []domain.Feature) humanRenderer {
 	return func(out io.Writer) error { return writeFeatureTable(out, features) }
 }
@@ -29,15 +83,17 @@ func writeFeatureTable(out io.Writer, features []domain.Feature) error {
 	}
 	return writeTable(
 		out,
-		[]string{"ID", "SLUG", "STATUS", "ARCHIVED", "TASKS", "TITLE"},
+		[]string{"ID", "SLUG", "PROJECT", "STATUS", "ARCHIVED", "READ-ONLY", "TASKS", "TITLE"},
 		func(table *tabwriter.Writer) {
 			for _, feature := range features {
 				writeRow(
 					table,
 					feature.ID,
 					feature.Slug,
+					displayValue(feature.ProjectID),
 					feature.DisplayStatus,
 					yesNo(feature.Archived),
+					yesNo(feature.ReadOnly),
 					feature.TaskCount,
 					feature.Title,
 				)
@@ -51,11 +107,13 @@ func renderFeatureDetail(feature domain.Feature) humanRenderer {
 		return writeFields(out, [][2]string{
 			{"ID", feature.ID},
 			{"Slug", feature.Slug},
+			{"Project", displayValue(feature.ProjectID)},
 			{"Title", feature.Title},
 			{"Description", displayValue(feature.Description)},
 			{"Status", string(feature.Status)},
 			{"Display status", string(feature.DisplayStatus)},
 			{"Archived", yesNo(feature.Archived)},
+			{"Read-only", yesNo(feature.ReadOnly)},
 			{"Tasks", fmt.Sprint(feature.TaskCount)},
 			{"Ready", fmt.Sprint(feature.ReadyCount)},
 			{"Reviews", fmt.Sprint(feature.ReviewWaitingCount)},
@@ -118,6 +176,8 @@ func renderTaskDetail(task domain.Task) humanRenderer {
 
 func renderNode(value any) humanRenderer {
 	switch typed := value.(type) {
+	case domain.Project:
+		return renderProjectFields(typed)
 	case domain.Feature:
 		return renderFeatureDetail(typed)
 	case domain.Task:
@@ -175,12 +235,13 @@ func writeDocumentTable(out io.Writer, documents []domain.Document) error {
 	}
 	return writeTable(
 		out,
-		[]string{"ID", "FEATURE", "TASK", "KIND", "PLAN", "TITLE", "LOCATOR"},
+		[]string{"ID", "PROJECT", "FEATURE", "TASK", "KIND", "PLAN", "TITLE", "LOCATOR"},
 		func(table *tabwriter.Writer) {
 			for _, document := range documents {
 				writeRow(
 					table,
 					document.ID,
+					displayValue(document.ProjectID),
 					displayValue(document.FeatureID),
 					displayValue(document.TaskID),
 					document.Kind,
@@ -197,6 +258,7 @@ func renderDocumentDetail(document domain.Document) humanRenderer {
 	return func(out io.Writer) error {
 		if err := writeFields(out, [][2]string{
 			{"ID", document.ID},
+			{"Project", displayValue(document.ProjectID)},
 			{"Feature", displayValue(document.FeatureID)},
 			{"Task", displayValue(document.TaskID)},
 			{"Kind", string(document.Kind)},
@@ -283,9 +345,10 @@ func renderSnapshot(prefix string, snapshot domain.Snapshot) humanRenderer {
 	return func(out io.Writer) error {
 		if _, err := fmt.Fprintf(
 			out,
-			"%s: %d features, %d tasks, %d dependencies, %d pull requests, %d documents.\n"+
-				"Queues: %d ready, %d waiting for review, %d conflicts, %d stale.\n\nFeatures\n",
+			"%s: %d projects, %d features, %d tasks, %d dependencies, %d pull requests, %d documents.\n"+
+				"Queues: %d ready, %d waiting for review, %d conflicts, %d stale.\n\nProjects\n",
 			prefix,
+			len(snapshot.Projects),
 			len(snapshot.Features),
 			len(snapshot.Tasks),
 			len(snapshot.Dependencies),
@@ -298,6 +361,12 @@ func renderSnapshot(prefix string, snapshot domain.Snapshot) humanRenderer {
 			len(snapshot.ConflictTasks),
 			len(snapshot.StaleTasks),
 		); err != nil {
+			return err
+		}
+		if err := writeProjectTable(out, snapshot.Projects); err != nil {
+			return err
+		}
+		if _, err := fmt.Fprintln(out, "\nFeatures"); err != nil {
 			return err
 		}
 		if err := writeFeatureTable(out, snapshot.Features); err != nil {

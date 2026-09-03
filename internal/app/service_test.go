@@ -11,7 +11,27 @@ import (
 
 type repositoryStub struct{}
 
-func (repositoryStub) CreateFeature(context.Context, string, string, string) (domain.Feature, error) {
+func (repositoryStub) CreateProject(context.Context, string, string, string) (domain.Project, error) {
+	return domain.Project{}, errors.New("unexpected CreateProject call")
+}
+
+func (repositoryStub) UpdateProject(context.Context, domain.Project) (domain.Project, error) {
+	return domain.Project{}, errors.New("unexpected UpdateProject call")
+}
+
+func (repositoryStub) GetProject(_ context.Context, id string) (domain.Project, error) {
+	return domain.Project{}, domain.NewError(domain.DomainErrorCodeNotFound, "project %q was not found", id)
+}
+
+func (repositoryStub) GetProjectBySlug(_ context.Context, slug string) (domain.Project, error) {
+	return domain.Project{}, domain.NewError(domain.DomainErrorCodeNotFound, "project %q was not found", slug)
+}
+
+func (repositoryStub) DeleteProject(context.Context, string, bool) error {
+	return errors.New("unexpected DeleteProject call")
+}
+
+func (repositoryStub) CreateFeature(context.Context, string, string, string, string) (domain.Feature, error) {
 	return domain.Feature{}, errors.New("unexpected CreateFeature call")
 }
 
@@ -84,8 +104,7 @@ func (repositoryStub) DeletePullRequest(context.Context, string) error {
 
 func (repositoryStub) CreateDocument(
 	context.Context,
-	string,
-	string,
+	domain.DocumentParent,
 	domain.DocumentKind,
 	string,
 	string,
@@ -130,10 +149,16 @@ func (r *featureRepository) GetFeature(context.Context, string) (domain.Feature,
 type taskRepository struct {
 	repositoryStub
 	task domain.Task
+	// feature is the owner the read-only guard reads before every task write.
+	feature domain.Feature
 }
 
 func (r *taskRepository) GetTask(context.Context, string) (domain.Task, error) {
 	return r.task, nil
+}
+
+func (r *taskRepository) GetFeature(context.Context, string) (domain.Feature, error) {
+	return r.feature, nil
 }
 
 type featureSlugRepository struct {
@@ -306,7 +331,7 @@ type createFeatureRepository struct {
 
 func (r *createFeatureRepository) CreateFeature(
 	_ context.Context,
-	slug, title, description string,
+	slug, title, description, _ string,
 ) (domain.Feature, error) {
 	r.gotSlug = slug
 	r.gotTitle = title
@@ -326,7 +351,7 @@ func TestCreateFeatureValidatesBeforeRepository(t *testing.T) {
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			service := app.New(repositoryStub{}, nil)
-			_, err := service.CreateFeature(context.Background(), test.slug, test.title, "")
+			_, err := service.CreateFeature(context.Background(), test.slug, test.title, "", "")
 			if got := errorCode(t, err); got != test.code {
 				t.Fatalf("error code=%q, want %q", got, test.code)
 			}
@@ -338,7 +363,7 @@ func TestCreateFeatureNormalizesBeforeRepository(t *testing.T) {
 	repository := &createFeatureRepository{}
 	service := app.New(repository, nil)
 
-	_, err := service.CreateFeature(context.Background(), "  Release-API  ", "  Release API  ", "  Description  ")
+	_, err := service.CreateFeature(context.Background(), "  Release-API  ", "  Release API  ", "  Description  ", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -501,37 +526,68 @@ func TestSyncDoesNotCountKnownTerminalProviderFailure(t *testing.T) {
 
 func TestAddDocumentValidatesWithoutRepository(t *testing.T) {
 	for _, test := range []struct {
-		name      string
-		featureID string
-		taskID    string
-		kind      domain.DocumentKind
-		value     string
-		code      domain.DomainErrorCode
+		name   string
+		parent domain.DocumentParent
+		kind   domain.DocumentKind
+		value  string
+		plan   bool
+		code   domain.DomainErrorCode
 	}{
 		{name: "missing parent", kind: "url", value: "https://example.com", code: "invalid_parent"},
 		{
-			name:      "two parents",
-			featureID: "feature-id",
-			taskID:    "task-id",
-			kind:      "url",
-			value:     "https://example.com",
-			code:      "invalid_parent",
+			name:   "two parents",
+			parent: domain.DocumentParent{FeatureID: "feature-id", TaskID: "task-id"},
+			kind:   "url",
+			value:  "https://example.com",
+			code:   "invalid_parent",
 		},
-		{name: "unknown kind", taskID: "task-id", kind: "file", value: "docs/plan.md", code: "invalid_document_kind"},
-		{name: "missing value", taskID: "task-id", kind: "url", value: "  ", code: "invalid_document"},
-		{name: "invalid URL", taskID: "task-id", kind: "url", value: "ftp://example.com", code: "invalid_document_url"},
+		{
+			name:   "three parents",
+			parent: domain.DocumentParent{ProjectID: "P-1", FeatureID: "feature-id", TaskID: "task-id"},
+			kind:   "url",
+			value:  "https://example.com",
+			code:   "invalid_parent",
+		},
+		{
+			name:   "unknown kind",
+			parent: domain.DocumentParent{TaskID: "task-id"},
+			kind:   "file",
+			value:  "docs/plan.md",
+			code:   "invalid_document_kind",
+		},
+		{
+			name:   "missing value",
+			parent: domain.DocumentParent{TaskID: "task-id"},
+			kind:   "url",
+			value:  "  ",
+			code:   "invalid_document",
+		},
+		{
+			name:   "invalid URL",
+			parent: domain.DocumentParent{TaskID: "task-id"},
+			kind:   "url",
+			value:  "ftp://example.com",
+			code:   "invalid_document_url",
+		},
+		{
+			name:   "project document as implementation plan",
+			parent: domain.DocumentParent{ProjectID: "P-1"},
+			kind:   "url",
+			value:  "https://example.com",
+			plan:   true,
+			code:   "invalid_parent",
+		},
 	} {
 		t.Run(test.name, func(t *testing.T) {
 			service := app.New(repositoryStub{}, nil)
 			_, err := service.AddDocument(
 				context.Background(),
-				test.featureID,
-				test.taskID,
+				test.parent,
 				test.kind,
 				"Document",
 				test.value,
 				"",
-				false,
+				test.plan,
 			)
 			if got := errorCode(t, err); got != test.code {
 				t.Fatalf("error code=%q, want %q", got, test.code)

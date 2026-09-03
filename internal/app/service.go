@@ -27,7 +27,13 @@ const (
 // opening SQLite and leaves alternative persistence implementations free to
 // satisfy the same use cases.
 type Repository interface {
-	CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error)
+	CreateProject(ctx context.Context, slug, title, description string) (domain.Project, error)
+	UpdateProject(ctx context.Context, project domain.Project) (domain.Project, error)
+	GetProject(ctx context.Context, id string) (domain.Project, error)
+	GetProjectBySlug(ctx context.Context, slug string) (domain.Project, error)
+	DeleteProject(ctx context.Context, id string, cascade bool) error
+
+	CreateFeature(ctx context.Context, slug, title, description, projectID string) (domain.Feature, error)
 	UpdateFeature(ctx context.Context, feature domain.Feature) (domain.Feature, error)
 	GetFeature(ctx context.Context, id string) (domain.Feature, error)
 	GetFeatureBySlug(ctx context.Context, slug string) (domain.Feature, error)
@@ -55,7 +61,7 @@ type Repository interface {
 
 	CreateDocument(
 		ctx context.Context,
-		featureID, taskID string,
+		parent domain.DocumentParent,
 		kind domain.DocumentKind,
 		title, locator, content string,
 		isImplementationPlan bool,
@@ -125,7 +131,12 @@ func NewWithConfig(repository Repository, provider githubprovider.Provider, conf
 
 func (s *Service) ConfigStore() *config.Store { return s.configStore }
 
-func (s *Service) CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error) {
+// CreateFeature accepts an optional project membership. An empty projectID
+// leaves the feature unaffiliated, which is the normal case.
+func (s *Service) CreateFeature(
+	ctx context.Context,
+	slug, title, description, projectID string,
+) (domain.Feature, error) {
 	slug = strings.TrimSpace(strings.ToLower(slug))
 	title = strings.TrimSpace(title)
 	if !slugPattern.MatchString(slug) {
@@ -137,36 +148,55 @@ func (s *Service) CreateFeature(ctx context.Context, slug, title, description st
 	if title == "" {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "feature title is required")
 	}
-	return s.repository.CreateFeature(ctx, slug, title, strings.TrimSpace(description))
+	resolvedProject, err := s.resolveProjectAssignment(ctx, strings.TrimSpace(projectID))
+	if err != nil {
+		return domain.Feature{}, err
+	}
+	created, err := s.repository.CreateFeature(ctx, slug, title, strings.TrimSpace(description), resolvedProject)
+	if err != nil {
+		return domain.Feature{}, err
+	}
+	return s.withReadOnly(ctx, created)
 }
 
 // UpdateFeature applies every field the caller supplied. A nil pointer means the
-// field was omitted; an empty string is a request to clear it.
+// field was omitted; an empty string is a request to clear it. A nil ProjectID
+// leaves the membership alone, and an empty one detaches the feature.
 func (s *Service) UpdateFeature(
 	ctx context.Context,
 	id string,
-	slug, title, description *string,
-	status *domain.FeatureStatus,
-	archived *bool,
+	update domain.FeatureUpdate,
 ) (domain.Feature, error) {
 	feature, err := s.ResolveFeature(ctx, id)
 	if err != nil {
 		return domain.Feature{}, err
 	}
-	if slug != nil {
-		feature.Slug = strings.TrimSpace(strings.ToLower(*slug))
+	if !archivedFeatureFlagOnly(update) {
+		if err := s.guardFeature(ctx, feature); err != nil {
+			return domain.Feature{}, err
+		}
 	}
-	if title != nil {
-		feature.Title = strings.TrimSpace(*title)
+	if update.ProjectID != nil {
+		resolvedProject, err := s.resolveProjectAssignment(ctx, strings.TrimSpace(*update.ProjectID))
+		if err != nil {
+			return domain.Feature{}, err
+		}
+		feature.ProjectID = resolvedProject
 	}
-	if description != nil {
-		feature.Description = *description
+	if update.Slug != nil {
+		feature.Slug = strings.TrimSpace(strings.ToLower(*update.Slug))
 	}
-	if status != nil && *status != "" {
-		feature.Status = *status
+	if update.Title != nil {
+		feature.Title = strings.TrimSpace(*update.Title)
 	}
-	if archived != nil {
-		feature.Archived = *archived
+	if update.Description != nil {
+		feature.Description = *update.Description
+	}
+	if update.Status != nil && *update.Status != "" {
+		feature.Status = *update.Status
+	}
+	if update.Archived != nil {
+		feature.Archived = *update.Archived
 	}
 	if !slugPattern.MatchString(feature.Slug) {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidSlug, "invalid feature slug")
@@ -181,23 +211,29 @@ func (s *Service) UpdateFeature(
 	) {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid feature status")
 	}
-	return s.repository.UpdateFeature(ctx, feature)
+	updated, err := s.repository.UpdateFeature(ctx, feature)
+	if err != nil {
+		return domain.Feature{}, err
+	}
+	return s.withReadOnly(ctx, updated)
 }
 
 // ResolveFeature only falls through to the next lookup when the previous one
 // reported a missing row, so a storage failure such as a locked database keeps
-// its own cause instead of being reported as a missing feature.
+// its own cause instead of being reported as a missing feature. The resolved
+// feature carries the derived ReadOnly flag, so a caller that reports a single
+// feature publishes the same value a snapshot read would.
 func (s *Service) ResolveFeature(ctx context.Context, idOrSlug string) (domain.Feature, error) {
 	feature, err := s.repository.GetFeature(ctx, idOrSlug)
 	if err == nil {
-		return feature, nil
+		return s.withReadOnly(ctx, feature)
 	}
 	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		return domain.Feature{}, err
 	}
 	feature, err = s.repository.GetFeatureBySlug(ctx, idOrSlug)
 	if err == nil {
-		return feature, nil
+		return s.withReadOnly(ctx, feature)
 	}
 	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		return domain.Feature{}, err
@@ -205,11 +241,20 @@ func (s *Service) ResolveFeature(ctx context.Context, idOrSlug string) (domain.F
 	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", idOrSlug)
 }
 
-// GetNode resolves a public feature ID or slug or a public task ID without
-// exposing the storage UUID or requiring callers to choose the resource first.
+// GetNode resolves a public project, feature, or task ID, a feature slug, or a
+// project slug, without exposing the storage UUID or requiring callers to
+// choose the resource first. A slug is looked up as a feature before a project,
+// so the two independent slug namespaces resolve predictably when they collide.
 func (s *Service) GetNode(ctx context.Context, id string) (any, error) {
 	if strings.HasPrefix(id, "T-") {
 		return s.repository.GetTask(ctx, id)
+	}
+	if strings.HasPrefix(id, "P-") {
+		project, err := s.ResolveProject(ctx, id)
+		if err != nil {
+			return nil, err
+		}
+		return project, nil
 	}
 	feature, err := s.ResolveFeature(ctx, id)
 	if err == nil {
@@ -218,9 +263,18 @@ func (s *Service) GetNode(ctx context.Context, id string) (any, error) {
 	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		return nil, err
 	}
-	return nil, domain.NewError(domain.DomainErrorCodeNotFound, "feature or task %q was not found", id)
+	project, err := s.ResolveProject(ctx, id)
+	if err == nil {
+		return project, nil
+	}
+	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+		return nil, err
+	}
+	return nil, domain.NewError(domain.DomainErrorCodeNotFound, "project, feature, or task %q was not found", id)
 }
 
+// DeleteFeature is deliberately unguarded: discarding archived work is one of
+// the operations the read-only barrier lets through.
 func (s *Service) DeleteFeature(ctx context.Context, id string, cascade bool) error {
 	feature, err := s.ResolveFeature(ctx, id)
 	if err != nil {
@@ -237,6 +291,9 @@ func (s *Service) CreateTask(
 ) (domain.Task, error) {
 	feature, err := s.ResolveFeature(ctx, featureID)
 	if err != nil {
+		return domain.Task{}, err
+	}
+	if err := s.guardFeature(ctx, feature); err != nil {
 		return domain.Task{}, err
 	}
 	title = strings.TrimSpace(title)
@@ -263,6 +320,9 @@ func (s *Service) UpdateTask(
 ) (domain.Task, error) {
 	task, err := s.repository.GetTask(ctx, id)
 	if err != nil {
+		return domain.Task{}, err
+	}
+	if err := s.guardTask(ctx, task); err != nil {
 		return domain.Task{}, err
 	}
 	if title != nil {
@@ -294,6 +354,9 @@ func (s *Service) UpdateTask(
 }
 
 func (s *Service) DeleteTask(ctx context.Context, id string, cascade bool) error {
+	if err := s.guardTaskID(ctx, id); err != nil {
+		return err
+	}
 	return s.repository.DeleteTask(ctx, id, cascade)
 }
 
@@ -309,10 +372,11 @@ func (s *Service) UpsertImplementationPlan(
 	taskID string,
 	document domain.Document,
 ) (domain.Document, error) {
-	if _, err := s.repository.GetTask(ctx, taskID); err != nil {
+	if err := s.guardTaskID(ctx, taskID); err != nil {
 		return domain.Document{}, err
 	}
 	document.TaskID = taskID
+	document.ProjectID = ""
 	document.FeatureID = ""
 	document.IsImplementationPlan = true
 	if err := validateDocumentSource(&document, true); err != nil {
@@ -322,23 +386,34 @@ func (s *Service) UpsertImplementationPlan(
 }
 
 func (s *Service) DeleteImplementationPlan(ctx context.Context, taskID string) error {
-	if _, err := s.repository.GetTask(ctx, taskID); err != nil {
+	if err := s.guardTaskID(ctx, taskID); err != nil {
 		return err
 	}
 	return s.repository.DeleteImplementationPlan(ctx, taskID)
 }
 
+// AddDependency guards the blocker only: the repository rejects edges that
+// cross features, so both endpoints share one feature and one read-only state.
 func (s *Service) AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error) {
+	if err := s.guardTaskID(ctx, blocker); err != nil {
+		return domain.Dependency{}, err
+	}
 	return s.repository.AddDependency(ctx, blocker, blocked)
 }
 
 func (s *Service) RemoveDependency(ctx context.Context, blocker, blocked string) error {
+	if err := s.guardTaskID(ctx, blocker); err != nil {
+		return err
+	}
 	return s.repository.RemoveDependency(ctx, blocker, blocked)
 }
 
 func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) (domain.PullRequest, error) {
 	task, err := s.repository.GetTask(ctx, taskID)
 	if err != nil {
+		return domain.PullRequest{}, err
+	}
+	if err := s.guardTask(ctx, task); err != nil {
 		return domain.PullRequest{}, err
 	}
 	if task.Kind != domain.TaskKindPR {
@@ -388,60 +463,89 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 }
 
 func (s *Service) DetachPullRequest(ctx context.Context, taskID string) error {
+	if err := s.guardTaskID(ctx, taskID); err != nil {
+		return err
+	}
 	return s.repository.DeletePullRequest(ctx, taskID)
 }
 
 func (s *Service) AddDocument(
 	ctx context.Context,
-	featureID, taskID string,
+	parent domain.DocumentParent,
 	kind domain.DocumentKind,
 	title, locator, content string,
 	isImplementationPlan bool,
 ) (domain.Document, error) {
-	if (featureID == "") == (taskID == "") {
+	if parent.Count() != 1 {
 		return domain.Document{}, domain.NewError(
 			domain.DomainErrorCodeInvalidParent,
-			"set exactly one of feature_id or task_id",
+			"set exactly one of project_id, feature_id, or task_id",
 		)
 	}
 	document := domain.Document{
-		FeatureID: featureID, TaskID: taskID, Kind: kind, Title: strings.TrimSpace(title),
+		ProjectID: parent.ProjectID, FeatureID: parent.FeatureID, TaskID: parent.TaskID,
+		Kind: kind, Title: strings.TrimSpace(title),
 		Locator: locator, Content: content, IsImplementationPlan: isImplementationPlan,
 	}
 	if err := validateDocumentSource(&document, false); err != nil {
 		return domain.Document{}, err
 	}
-	if isImplementationPlan && featureID != "" {
+	if isImplementationPlan && parent.TaskID == "" {
 		return domain.Document{}, domain.NewError(
 			domain.DomainErrorCodeInvalidParent,
-			"feature documents cannot be implementation plans",
+			"only task documents can be implementation plans",
 		)
 	}
-	if featureID != "" {
-		feature, err := s.ResolveFeature(ctx, featureID)
-		if err != nil {
-			return domain.Document{}, err
-		}
-		featureID = feature.ID
-	}
-	if taskID != "" {
-		if _, err := s.repository.GetTask(ctx, taskID); err != nil {
-			return domain.Document{}, err
-		}
-		if isImplementationPlan {
-			if _, err := s.repository.GetImplementationPlan(ctx, taskID); err == nil {
-				return domain.Document{}, domain.NewError(
-					domain.DomainErrorCodeDuplicateImplementationPlan,
-					"task %q already has an implementation plan", taskID,
-				)
-			} else if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
-				return domain.Document{}, err
-			}
-		}
+	resolved, err := s.resolveDocumentParent(ctx, parent, isImplementationPlan)
+	if err != nil {
+		return domain.Document{}, err
 	}
 	return s.repository.CreateDocument(
-		ctx, featureID, taskID, document.Kind, document.Title, document.Locator, document.Content, isImplementationPlan,
+		ctx, resolved, document.Kind, document.Title, document.Locator, document.Content, isImplementationPlan,
 	)
+}
+
+// resolveDocumentParent checks that the named parent exists and accepts writes,
+// and returns it with its public identifier normalized from any slug given.
+func (s *Service) resolveDocumentParent(
+	ctx context.Context,
+	parent domain.DocumentParent,
+	isImplementationPlan bool,
+) (domain.DocumentParent, error) {
+	switch {
+	case parent.ProjectID != "":
+		project, err := s.ResolveProject(ctx, parent.ProjectID)
+		if err != nil {
+			return domain.DocumentParent{}, err
+		}
+		if err := s.guardProject(project); err != nil {
+			return domain.DocumentParent{}, err
+		}
+		return domain.DocumentParent{ProjectID: project.ID}, nil
+	case parent.FeatureID != "":
+		feature, err := s.ResolveFeature(ctx, parent.FeatureID)
+		if err != nil {
+			return domain.DocumentParent{}, err
+		}
+		if err := s.guardFeature(ctx, feature); err != nil {
+			return domain.DocumentParent{}, err
+		}
+		return domain.DocumentParent{FeatureID: feature.ID}, nil
+	}
+	if err := s.guardTaskID(ctx, parent.TaskID); err != nil {
+		return domain.DocumentParent{}, err
+	}
+	if isImplementationPlan {
+		if _, err := s.repository.GetImplementationPlan(ctx, parent.TaskID); err == nil {
+			return domain.DocumentParent{}, domain.NewError(
+				domain.DomainErrorCodeDuplicateImplementationPlan,
+				"task %q already has an implementation plan", parent.TaskID,
+			)
+		} else if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+			return domain.DocumentParent{}, err
+		}
+	}
+	return domain.DocumentParent{TaskID: parent.TaskID}, nil
 }
 
 func (s *Service) GetDocument(ctx context.Context, id string) (domain.Document, error) {
@@ -459,6 +563,9 @@ func (s *Service) UpdateDocument(
 	if err != nil {
 		return domain.Document{}, err
 	}
+	if err := s.guardDocument(ctx, document); err != nil {
+		return domain.Document{}, err
+	}
 	if title != nil {
 		document.Title = strings.TrimSpace(*title)
 	}
@@ -473,7 +580,7 @@ func (s *Service) UpdateDocument(
 	if document.IsImplementationPlan && document.TaskID == "" {
 		return domain.Document{}, domain.NewError(
 			domain.DomainErrorCodeInvalidParent,
-			"feature documents cannot be implementation plans",
+			"only task documents can be implementation plans",
 		)
 	}
 	if err := validateDocumentSource(&document, false); err != nil {
@@ -495,6 +602,13 @@ func (s *Service) UpdateDocument(
 }
 
 func (s *Service) DeleteDocument(ctx context.Context, id string) error {
+	document, err := s.repository.GetDocument(ctx, id)
+	if err != nil {
+		return err
+	}
+	if err := s.guardDocument(ctx, document); err != nil {
+		return err
+	}
 	return s.repository.DeleteDocument(ctx, id)
 }
 
@@ -638,9 +752,16 @@ func deriveSnapshot(snapshot domain.Snapshot) domain.Snapshot {
 			feature.FinishedCount++
 		}
 	}
+	archivedProjects := map[string]bool{}
+	for _, project := range snapshot.Projects {
+		archivedProjects[project.ID] = project.Archived
+	}
 	for i := range snapshot.Features {
 		feature := &snapshot.Features[i]
 		feature.DisplayStatus = domain.FeatureDisplayStatus(feature.Status, feature.TaskCount, feature.FinishedCount)
+		// Archiving a project reaches its features, and this is the only place
+		// that combines the two flags: clients read ReadOnly and never redo it.
+		feature.ReadOnly = feature.Archived || archivedProjects[feature.ProjectID]
 	}
 	return snapshot
 }
@@ -678,9 +799,11 @@ func (s *Service) syncSelected(
 	// A completed feature leaves automatic and unscoped manual refreshes for the
 	// same reason an archived one does: its pull requests are no longer part of
 	// the work in flight. An explicit feature or task keeps maintaining them.
+	// ReadOnly covers a feature archived on its own and one inside an archived
+	// project, so both leave those refreshes together.
 	activeFeatures := map[string]bool{}
 	for _, feature := range snapshot.Features {
-		activeFeatures[feature.ID] = !feature.Archived &&
+		activeFeatures[feature.ID] = !feature.ReadOnly &&
 			feature.DisplayStatus != domain.FeatureStatusCompleted
 	}
 	allFeatures := featureID == "" && taskID == ""

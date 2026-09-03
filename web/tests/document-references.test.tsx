@@ -9,7 +9,7 @@ import {
 import type { ComponentProps, PropsWithChildren } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DocumentKind } from "../src/gen/prx/v1/prx_pb";
-import { FeatureReferences } from "../src/views/FeatureReferences";
+import { DocumentReferences } from "../src/views/DocumentReferences";
 import { makeDocument } from "./factories";
 
 const apiMocks = vi.hoisted(() => ({
@@ -26,7 +26,7 @@ vi.mock("../src/api", () => ({
 }));
 
 function renderReferences(
-  props: Partial<ComponentProps<typeof FeatureReferences>> = {},
+  props: Partial<ComponentProps<typeof DocumentReferences>> = {},
 ) {
   const queryClient = new QueryClient({
     defaultOptions: {
@@ -41,8 +41,8 @@ function renderReferences(
   }
   const onPreview = vi.fn();
   const result = render(
-    <FeatureReferences
-      featureId="feature-1"
+    <DocumentReferences
+      parent={{ featureId: "feature-1" }}
       documents={[
         makeDocument({
           id: "url-doc",
@@ -76,7 +76,7 @@ function renderReferences(
   return { ...result, onPreview };
 }
 
-describe("FeatureReferences", () => {
+describe("DocumentReferences", () => {
   beforeEach(() => {
     apiMocks.addDocument.mockReset().mockResolvedValue({});
     apiMocks.deleteDocument.mockReset().mockResolvedValue({});

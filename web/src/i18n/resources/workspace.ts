@@ -20,6 +20,10 @@ export const workspace = {
       archivedLabel: "Archived · read-only",
       archivedDetail:
         "This graph stays available for reference. Restore the feature to edit or sync it.",
+      projectArchivedLabel: "Project archived · read-only",
+      projectArchivedDetail:
+        "This feature is read-only because {{title}} is archived. Activate the project to edit or sync it.",
+      openProject: "Open project",
       archiveFeature: "Archive feature",
       unarchiveFeature: "Unarchive feature",
       deleteFeature: "Delete feature",
@@ -72,6 +76,8 @@ export const workspace = {
         "Archive this graph when it should leave active queues, or delete it permanently.",
       archivedLifecycleDetail:
         "Restore this graph to active work, or delete it permanently.",
+      projectArchivedDetail:
+        "Its project is archived, so the archive is lifted there. This feature can still be deleted.",
       archive: "Archive feature",
       restore: "Restore feature",
       delete: "Delete feature",
@@ -110,6 +116,10 @@ export const workspace = {
       archivedLabel: "アーカイブ済み・読み取り専用",
       archivedDetail:
         "このグラフは参照用に保持されています。編集や同期を行うには復元してください。",
+      projectArchivedLabel: "プロジェクトがアーカイブ済み・読み取り専用",
+      projectArchivedDetail:
+        "{{title}} がアーカイブされているため、このフィーチャーは読み取り専用です。編集や同期を行うにはプロジェクトをアクティブに戻してください。",
+      openProject: "プロジェクトを開く",
       archiveFeature: "フィーチャーをアーカイブ",
       unarchiveFeature: "フィーチャーを復元",
       deleteFeature: "フィーチャーを削除",
@@ -163,6 +173,8 @@ export const workspace = {
       activeLifecycleDetail:
         "進行中のキューから外す場合はアーカイブし、不要な場合は完全に削除します。",
       archivedLifecycleDetail: "進行中の作業へ復元するか、完全に削除します。",
+      projectArchivedDetail:
+        "所属プロジェクトがアーカイブされているため、復元はプロジェクト側で行います。このフィーチャーは削除できます。",
       archive: "フィーチャーをアーカイブ",
       restore: "フィーチャーを復元",
       delete: "フィーチャーを削除",

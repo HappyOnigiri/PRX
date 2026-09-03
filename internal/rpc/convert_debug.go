@@ -118,6 +118,8 @@ func protoDebugStorage(v domain.DebugStorage) *prxv1.DebugStorage {
 
 func protoDebugData(v domain.DebugData) *prxv1.DebugData {
 	return &prxv1.DebugData{
+		Projects:                 int32(v.Projects),
+		ProjectStates:            protoDebugCounts(v.ProjectStates),
 		Features:                 int32(v.Features),
 		Tasks:                    int32(v.Tasks),
 		Dependencies:             int32(v.Dependencies),

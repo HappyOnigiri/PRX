@@ -13,14 +13,18 @@ import {
   featureCategories,
   featureCategoryById,
   featureCategoryForPath,
+  type FeatureCategory,
 } from "./feature-status";
 import { formValue } from "./form";
+import type { Feature, Project } from "./gen/prx/v1/prx_pb";
 import { useAutoSync, useDomainMutation, useSnapshot } from "./hooks";
 import { formatError } from "./i18n/domain";
 import { readFeatureCategory, writeFeatureCategory } from "./i18n/settings";
+import { projectsByArchive } from "./project";
 import { AutoSyncStatusContext } from "./sync-status";
 import { appVersion } from "./version";
 import { IconButton } from "./views/IconButton";
+import { ProjectSelectField } from "./views/ProjectSelectField";
 import { SettingsDialog } from "./views/SettingsDialog";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -39,6 +43,7 @@ function AppShellLayout({ children }: { children: ReactNode }) {
   const [showSettings, setShowSettings] = useState(false);
   const pathname = useLocation({ select: (location) => location.pathname });
   const features = snapshot.data?.features;
+  const projects = snapshot.data?.projects;
   const selected = useSelectedFeatureCategory(pathname);
   const demo = isDemoMode();
   return (
@@ -63,53 +68,11 @@ function AppShellLayout({ children }: { children: ReactNode }) {
             <span className="app-version">v{appVersion()}</span>
           </span>
         </Link>
-        <nav aria-label={t("nav.features")}>
-          <Link to="/" className="nav-link">
-            {t("nav.overview")}
-          </Link>
-          <Link to="/tasks" search={{ q: "" }} className="nav-link">
-            {t("nav.taskSearch")}
-          </Link>
-          <hr className="nav-divider" />
-          {featureCategories.map((category) => (
-            <Link
-              key={category.id}
-              to={category.path}
-              className="nav-link"
-              // The selection is the sidebar's own, not the matched route, so
-              // it is marked here rather than through activeProps.
-              data-active={category.id === selected.id || undefined}
-              aria-current={category.id === selected.id ? "page" : undefined}
-            >
-              {t(category.navLabelKey)}{" "}
-              <span>{features?.filter(category.select).length ?? "—"}</span>
-            </Link>
-          ))}
-          <hr className="nav-divider" />
-          {features?.filter(selected.select).map((feature) => (
-            <Link
-              key={feature.id}
-              to="/features/$featureId"
-              params={{ featureId: feature.id }}
-              className="feature-link"
-              activeProps={{ "data-active": true }}
-            >
-              <i
-                className={
-                  feature.conflictCount
-                    ? "pulse conflict"
-                    : feature.readyCount
-                      ? "pulse ready"
-                      : "pulse"
-                }
-              />
-              <span>{feature.title}</span>
-              <b>
-                {feature.mergedCount}/{feature.taskCount}
-              </b>
-            </Link>
-          ))}
-        </nav>
+        <RailNavigation
+          features={features}
+          projects={projects}
+          selected={selected}
+        />
         <IconButton
           icon={Plus}
           label={t("nav.newFeature")}
@@ -136,6 +99,7 @@ function AppShellLayout({ children }: { children: ReactNode }) {
       <main className="main-stage">{children}</main>
       {showCreate && (
         <FeatureCreateDialog
+          projects={projects ?? []}
           onClose={() => {
             setShowCreate(false);
           }}
@@ -149,6 +113,92 @@ function AppShellLayout({ children }: { children: ReactNode }) {
         />
       )}
     </div>
+  );
+}
+
+// The project section sits above the feature categories as a direct child of
+// the same <nav>: adding an element straight under .rail would break the grid
+// the 900px and 600px layouts define.
+function RailNavigation({
+  features,
+  projects,
+  selected,
+}: {
+  features: Feature[] | undefined;
+  projects: Project[] | undefined;
+  selected: FeatureCategory;
+}) {
+  const { t } = useTranslation();
+  const activeProjects = projects ? projectsByArchive(projects, false) : [];
+  return (
+    <nav aria-label={t("nav.primary")}>
+      <Link to="/" className="nav-link">
+        {t("nav.overview")}
+      </Link>
+      <Link to="/tasks" search={{ q: "" }} className="nav-link">
+        {t("nav.taskSearch")}
+      </Link>
+      <hr className="nav-divider" />
+      <Link
+        to="/projects"
+        search={{ archived: false }}
+        className="nav-link"
+        activeProps={{ "data-active": true }}
+      >
+        {t("nav.projects")}{" "}
+        <span>{projects ? activeProjects.length : "—"}</span>
+      </Link>
+      {activeProjects.map((project) => (
+        <Link
+          key={project.id}
+          to="/projects/$projectId"
+          params={{ projectId: project.id }}
+          className="feature-link project-link"
+          activeProps={{ "data-active": true }}
+        >
+          <span>{project.title}</span>
+        </Link>
+      ))}
+      <hr className="nav-divider" />
+      {featureCategories.map((category) => (
+        <Link
+          key={category.id}
+          to={category.path}
+          className="nav-link"
+          // The selection is the sidebar's own, not the matched route, so
+          // it is marked here rather than through activeProps.
+          data-active={category.id === selected.id || undefined}
+          aria-current={category.id === selected.id ? "page" : undefined}
+        >
+          {t(category.navLabelKey)}{" "}
+          <span>{features?.filter(category.select).length ?? "—"}</span>
+        </Link>
+      ))}
+      <hr className="nav-divider" />
+      {features?.filter(selected.select).map((feature) => (
+        <Link
+          key={feature.id}
+          to="/features/$featureId"
+          params={{ featureId: feature.id }}
+          className="feature-link"
+          activeProps={{ "data-active": true }}
+        >
+          <i
+            className={
+              feature.conflictCount
+                ? "pulse conflict"
+                : feature.readyCount
+                  ? "pulse ready"
+                  : "pulse"
+            }
+          />
+          <span>{feature.title}</span>
+          <b>
+            {feature.mergedCount}/{feature.taskCount}
+          </b>
+        </Link>
+      ))}
+    </nav>
   );
 }
 
@@ -180,7 +230,13 @@ function RailSettings({ onOpenSettings }: { onOpenSettings: () => void }) {
   );
 }
 
-function FeatureCreateDialog({ onClose }: { onClose: () => void }) {
+function FeatureCreateDialog({
+  projects,
+  onClose,
+}: {
+  projects: Project[];
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const createFeature = useDomainMutation(mutations.createFeature);
@@ -192,6 +248,7 @@ function FeatureCreateDialog({ onClose }: { onClose: () => void }) {
       slug: formValue(data, "slug"),
       title: formValue(data, "title"),
       description: formValue(data, "description"),
+      projectId: formValue(data, "projectId"),
     });
     onClose();
     if (response.feature)
@@ -235,6 +292,7 @@ function FeatureCreateDialog({ onClose }: { onClose: () => void }) {
             placeholder={t("featureCreate.descriptionPlaceholder")}
           />
         </label>
+        <ProjectSelectField projects={projects} />
         {createFeature.error && (
           <p className="form-error">{formatError(createFeature.error, t)}</p>
         )}

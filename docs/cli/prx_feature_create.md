@@ -10,6 +10,7 @@ prx feature create SLUG TITLE [flags]
 
 ```
 prx feature create checkout "Checkout rollout"
+prx feature create checkout "Checkout rollout" --project payments
 prx feature create checkout -- "-fix checkout"
 ```
 
@@ -18,6 +19,7 @@ prx feature create checkout -- "-fix checkout"
 ```
       --description string   feature description
   -h, --help                 help for create
+      --project string       project ID or slug to join
 ```
 
 ### Options inherited from parent commands

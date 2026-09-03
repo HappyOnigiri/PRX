@@ -64,15 +64,51 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 	if err := os.WriteFile(markdownPath, []byte(demoMarkdown), 0o600); err != nil {
 		return fmt.Errorf("write demo Markdown: %w", err)
 	}
+	platform, err := s.CreateProject(
+		ctx,
+		"delivery-platform",
+		"Delivery platform",
+		"Two related features and the brief they share.",
+	)
+	if err != nil {
+		return err
+	}
+	if _, err := s.AddDocument(
+		ctx,
+		domain.DocumentParent{ProjectID: platform.ID},
+		domain.DocumentKindURL,
+		"Platform charter",
+		"https://github.com/HappyOnigiri/PRX",
+		"",
+		false,
+	); err != nil {
+		return err
+	}
+	sunset, err := s.CreateProject(
+		ctx,
+		"sunset-initiative",
+		"Sunset initiative",
+		"An archived project: everything inside it is read-only.",
+	)
+	if err != nil {
+		return err
+	}
 	for _, initialize := range []func(context.Context) error{
-		func(ctx context.Context) error { return s.createShowcaseDemo(ctx, markdownPath) },
-		s.createPausedDemo,
+		func(ctx context.Context) error { return s.createShowcaseDemo(ctx, markdownPath, platform.ID) },
+		func(ctx context.Context) error { return s.createPausedDemo(ctx, platform.ID) },
 		s.createCompletedDemo,
-		s.createCancelledDemo,
+		func(ctx context.Context) error { return s.createCancelledDemo(ctx, sunset.ID) },
+		func(ctx context.Context) error { return s.createSunsetPostmortemDemo(ctx, sunset.ID) },
 	} {
 		if err := initialize(ctx); err != nil {
 			return err
 		}
+	}
+	// The archive is applied last: an archived project refuses the writes that
+	// build the work inside it.
+	archived := true
+	if _, err := s.UpdateProject(ctx, sunset.ID, domain.ProjectUpdate{Archived: &archived}); err != nil {
+		return err
 	}
 	if issues := s.Validate(ctx); len(issues) > 0 {
 		return fmt.Errorf("validate demo data: %v", issues)
@@ -80,12 +116,13 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 	return nil
 }
 
-func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath string) error {
+func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath, projectID string) error {
 	showcase, err := s.CreateFeature(
 		ctx,
 		"delivery-control",
 		"Delivery control showcase",
 		"Every task and pull-request state in one cross-repository graph.",
+		projectID,
 	)
 	if err != nil {
 		return err
@@ -101,8 +138,7 @@ func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath string) e
 	}
 	if _, err := s.AddDocument(
 		ctx,
-		showcase.ID,
-		"",
+		domain.DocumentParent{FeatureID: showcase.ID},
 		domain.DocumentKindURL,
 		"Product brief",
 		"https://github.com/HappyOnigiri/PRX",
@@ -113,8 +149,7 @@ func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath string) e
 	}
 	if _, err := s.AddDocument(
 		ctx,
-		showcase.ID,
-		"",
+		domain.DocumentParent{FeatureID: showcase.ID},
 		domain.DocumentKindLocalFile,
 		"Demo walkthrough",
 		markdownPath,
@@ -126,18 +161,19 @@ func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath string) e
 	return nil
 }
 
-func (s *Service) createPausedDemo(ctx context.Context) error {
+func (s *Service) createPausedDemo(ctx context.Context, projectID string) error {
 	paused, err := s.CreateFeature(
 		ctx,
 		"paused-rollout",
 		"Paused rollout",
 		"A small branch-and-merge graph with ready and blocked manual work.",
+		projectID,
 	)
 	if err != nil {
 		return err
 	}
 	pausedStatus := domain.FeatureStatusPaused
-	paused, err = s.UpdateFeature(ctx, paused.ID, nil, nil, nil, &pausedStatus, nil)
+	paused, err = s.UpdateFeature(ctx, paused.ID, domain.FeatureUpdate{Status: &pausedStatus})
 	if err != nil {
 		return err
 	}
@@ -187,6 +223,7 @@ func (s *Service) createCompletedDemo(ctx context.Context) error {
 		"completed-program",
 		"Completed 100-task program",
 		"A large balanced graph for checking layout and navigation at scale.",
+		"",
 	)
 	if err != nil {
 		return err
@@ -205,12 +242,13 @@ func (s *Service) createCompletedDemo(ctx context.Context) error {
 	return nil
 }
 
-func (s *Service) createCancelledDemo(ctx context.Context) error {
+func (s *Service) createCancelledDemo(ctx context.Context, projectID string) error {
 	cancelled, err := s.CreateFeature(
 		ctx,
 		"cancelled-experiment",
 		"Cancelled experiment",
 		"Archived work remains available for historical inspection.",
+		projectID,
 	)
 	if err != nil {
 		return err
@@ -247,10 +285,47 @@ func (s *Service) createCancelledDemo(ctx context.Context) error {
 	}
 	cancelledStatus := domain.FeatureStatusCancelled
 	archived := true
-	if _, err := s.UpdateFeature(ctx, cancelled.ID, nil, nil, nil, &cancelledStatus, &archived); err != nil {
+	if _, err := s.UpdateFeature(
+		ctx,
+		cancelled.ID,
+		domain.FeatureUpdate{Status: &cancelledStatus, Archived: &archived},
+	); err != nil {
 		return err
 	}
 	return nil
+}
+
+// createSunsetPostmortemDemo puts a feature that is not archived itself inside
+// the project the demo archives, which is the state the walkthrough points at:
+// the read-only presentation comes from the project alone.
+func (s *Service) createSunsetPostmortemDemo(ctx context.Context, projectID string) error {
+	postmortem, err := s.CreateFeature(
+		ctx,
+		"sunset-postmortem",
+		"Sunset postmortem",
+		"Not archived itself: the archived project around it makes it read-only.",
+		projectID,
+	)
+	if err != nil {
+		return err
+	}
+	_, err = s.createDemoTasks(ctx, postmortem, []demoTask{
+		{
+			title:    "Collect lessons",
+			scope:    "Summarize what the experiment showed",
+			kind:     domain.TaskKindManual,
+			status:   domain.TaskStatusCompleted,
+			assignee: "Ari",
+		},
+		{
+			title:    "Share the summary",
+			scope:    "Hand the summary to the teams that asked for it",
+			kind:     domain.TaskKindManual,
+			status:   domain.TaskStatusCompleted,
+			assignee: "Mika",
+		},
+	})
+	return err
 }
 
 func (s *Service) createDemoTasks(
@@ -410,6 +485,8 @@ const demoMarkdown = `# PRX demo walkthrough
 This file lives beside the temporary demo database and configuration.
 
 - Inspect every display state in Delivery control showcase.
+- Open Projects to see how Delivery platform groups two features.
+- Open Sunset initiative to see an archived project make its features read-only.
 - Open Completed 100-task program to exercise the large graph.
 - Edit any feature or task, then reload to see the change persist.
 - Restart the server to restore the original demo data.

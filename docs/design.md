@@ -79,13 +79,18 @@ Mutation operations retain explicit verbs so state-changing intent remains visib
 Mutations remain non-interactive so people and coding agents use the same surface.
 A missing mutation target fails instead of reporting a successful no-op.
 Destructive traversal of referenced data requires an explicit cascade request.
+A cascade on a project is the one exception to that traversal: it deletes the project's own documents and releases its features, which keep their identifiers and their tasks.
+Deleting contained work is what a cascade on a feature or a task does.
 Values every invocation of an operation requires are positional operands.
 Flags are reserved for optional modifiers, filters, partial updates, secret-safe input methods, execution settings, and output formats.
 Flags also carry values another operand makes necessary and values chosen from mutually exclusive alternatives.
 An operand value that begins with `-` is passed after `--` so it is not parsed as a flag.
 
-Features and tasks carry public identifiers that remain distinct from their storage identifiers.
-Their storage UUIDs must not cross the CLI, RPC, or WebUI boundary.
+Projects, features, and tasks carry public identifiers that remain distinct from their storage identifiers.
+They are `P-<number>`, `F-<number>`, and `T-<number>`, and their storage UUIDs must not cross the CLI, RPC, or WebUI boundary.
+An operand that accepts any of the three kinds, as `show` and `document add` do, resolves by public ID prefix first, then as a feature slug, then as a project slug.
+Project and feature slugs are independent namespaces, so the same slug may exist in both; a bare slug then resolves to the feature.
+A command named after one kind resolves only that kind: `project`, `feature`, and `graph` each accept the public ID or the slug of their own resource and report the operand as not found otherwise.
 Documents are the deliberate exception: they have no separate public identifier,
 so their storage identifier is the identifier callers pass to `document get`, `document update`, and `document delete`.
 That identifier is opaque, and migrated documents may carry a value that is not formatted as a UUID.
@@ -111,6 +116,8 @@ It never creates the database file it probes for writability.
 A failure in one section does not remove the others: a report is most valuable when something is broken.
 `prx debug` therefore succeeds even when the database cannot be opened, and reports the failure as its storage section.
 
+The record counts cover every stored kind, including projects and how many of them are archived, because an archived container is a reason a write was refused.
+
 The report is bounded, and every bounded list is ordered so the same data always produces the same output, including how it is truncated.
 A truncated list states how many rows were omitted rather than reading as a complete one.
 Callers that need every row use `prx snapshot --json` instead.
@@ -133,6 +140,36 @@ A feature's presented status follows the same two-layer rule as a task's.
 Its stored status defaults to automatic, and an automatic feature is presented as completed once it owns at least one task and every one of them is finished.
 A stored status other than automatic is a manual decision and is presented unchanged, so a feature returned to active work stays active while its tasks remain finished.
 A feature has no separate derived vocabulary: the derived value is a stored status without the automatic member.
+
+A project is the unit above a feature: it groups features and holds the documents they share.
+Membership is optional, a feature belongs to at most one project, and dependencies stay inside one feature regardless of project.
+A project's only state is whether it is archived; it is deliberately outside the two-layer status rule that features and tasks share.
+Archiving reaches into a project: a feature inside an archived project is presented as read-only even when its own archived flag is false.
+The server derives that as `Feature.ReadOnly` and clients read it directly instead of combining the feature's flag with its project's.
+Every read that carries a feature derives it, including the ones that return a single feature, so a client never has to know which read produced the value.
+A read-only feature is presented in the archived category and leaves the active feature lists, the overview, and task search, which is the same treatment an individually archived feature receives.
+
+## Archive policy
+
+Archiving is a state that forbids writes, not a presentation flag.
+The application layer refuses every create, update, and delete that lands inside an archived project or an archived feature.
+The CLI, the RPC surface, and the WebUI therefore inherit the rule instead of each enforcing it.
+That covers tasks, dependencies, pull-request attachments, documents, implementation plans, the feature itself, and the project itself.
+Refusals report one stable error code, because the caller's remedy is the same whichever container is archived.
+
+The barrier lifts for exactly three operations:
+
+- Moving the archived flag, in either direction, so archiving an already archived record is a no-op instead of an error.
+  A request that also changes another field stays refused, so unarchiving cannot smuggle an edit past the barrier.
+- Deleting a project or a feature, which is how archived work is finally discarded.
+- A GitHub refresh that names a feature or a task explicitly, because that imports external fact rather than changing recorded intent.
+
+The refusal is an application-layer decision taken before the write, not a database constraint, and it does not share a transaction with the write it guards.
+Two processes on one database therefore have a window: a write that passed the barrier can land immediately after another process archived its container.
+The archive is a coordination rule between people and their agents, not a lock, so recovering from that window is a manual deletion rather than a guarantee the store enforces.
+
+Moving a feature into or out of an archived project is a write and is therefore refused; activating the project comes first.
+A project's cascade deletion is the exception: releasing its features is part of the deletion, not a membership change.
 
 Stale synchronization data preserves the last known state and remains visibly marked as stale.
 An external failure must not rewrite known state as unknown.
@@ -192,6 +229,7 @@ SQLite records the latest attempt and completion, and atomically grants one call
 
 Automatic and unscoped manual refreshes include pull requests from active features only.
 A feature presented as completed leaves those refreshes for the same reason an archived one does.
+A feature that is read-only because its project is archived leaves them on the same terms as one archived on its own.
 Explicit feature or task refreshes may still maintain archived and completed history.
 A completed feature therefore keeps its recorded pull-request state even when GitHub changes it.
 An automatically completed feature does not return to active work on its own; changing its status or its tasks does that.
@@ -208,14 +246,15 @@ Manual refreshes continue to return operation-level failures while preserving su
 Large Markdown bodies stay outside snapshots.
 Snapshots carry only the metadata needed for derived state.
 
-Documents use one model for feature and task references.
+Documents use one model for project, feature, and task references, and each document belongs to exactly one of the three.
 Each document stores exactly one source: an HTTP or HTTPS URL, a registered local file path, or inline Markdown.
 Inline Markdown is limited to 1 MiB and is loaded only by a detailed read.
 Snapshots and list operations never include inline bodies.
 
 A task may designate at most one document as its implementation plan.
+That designation stays exclusive to tasks: a project or feature document can never be a plan.
 The designation is metadata and does not affect display state, readiness, dependency satisfaction, or completion.
-Non-plan documents and feature documents have no application-level count limit.
+Non-plan documents, feature documents, and project documents have no application-level count limit.
 
 ## GitHub credential policy
 
@@ -279,6 +318,7 @@ Pointer interactions retain a keyboard-accessible alternative.
 
 Current screens, components, gestures, and control placement belong to the WebUI implementation and its tests.
 Task search operates over the current Snapshot in the browser; its q query stays in the URL so reload, history, and sharing reproduce the view.
+The project list's archived toggle stays in the URL for the same reason.
 Which screen the main stage shows comes from the URL, while the feature category the navigation presents is browser-local state.
 Opening a category's own list page adopts that category; every other screen leaves the selection where the user put it.
 

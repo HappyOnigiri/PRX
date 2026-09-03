@@ -5,6 +5,7 @@ import {
   DocumentSchema,
   FeatureSchema,
   FeatureStatus,
+  ProjectSchema,
   PullRequestDisplayState,
   PullRequestSchema,
   SnapshotSchema,
@@ -15,6 +16,7 @@ import {
   type Dependency,
   type Document,
   type Feature,
+  type Project,
   type PullRequest,
   type Snapshot,
   type Task,
@@ -30,6 +32,12 @@ const featureDefaults = {
   readyCount: 1,
   finishedCount: 0,
 } satisfies MessageInitShape<typeof FeatureSchema>;
+
+const projectDefaults = {
+  id: "project-1",
+  slug: "delivery",
+  title: "Delivery platform",
+} satisfies MessageInitShape<typeof ProjectSchema>;
 
 const taskDefaults = {
   id: "task-1",
@@ -64,10 +72,21 @@ const documentDefaults = {
   locator: "https://example.com/runbook",
 } satisfies MessageInitShape<typeof DocumentSchema>;
 
+// The server reports every archived feature as read-only, so a fixture that
+// set only archived would describe a snapshot the server never sends. An
+// explicit readOnly still wins, which is how a feature that is read-only only
+// because its project is archived is expressed.
 export function makeFeature(
   overrides: MessageInitShape<typeof FeatureSchema> = {},
 ): Feature {
-  return create(FeatureSchema, { ...featureDefaults, ...overrides });
+  const readOnly = overrides.readOnly ?? overrides.archived ?? false;
+  return create(FeatureSchema, { ...featureDefaults, ...overrides, readOnly });
+}
+
+export function makeProject(
+  overrides: MessageInitShape<typeof ProjectSchema> = {},
+): Project {
+  return create(ProjectSchema, { ...projectDefaults, ...overrides });
 }
 
 export function makeTask(
