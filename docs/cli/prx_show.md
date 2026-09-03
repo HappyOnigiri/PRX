@@ -1,9 +1,15 @@
 ## prx show
 
-Show a feature or task by public identifier
+Show a project, a feature, or a task by public identifier
+
+### Synopsis
+
+Show a project, a feature, or a task by public identifier.
+
+The operand is a public project, feature, or task ID, or a feature or project slug.
 
 ```
-prx show FEATURE_ID_OR_SLUG_OR_TASK_ID [flags]
+prx show PROJECT_OR_FEATURE_OR_TASK [flags]
 ```
 
 ### Examples
@@ -12,6 +18,7 @@ prx show FEATURE_ID_OR_SLUG_OR_TASK_ID [flags]
 prx show F-1
 prx show checkout
 prx show T-1
+prx show P-1
 ```
 
 ### Options

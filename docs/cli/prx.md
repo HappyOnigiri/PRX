@@ -29,7 +29,7 @@ Manage pull-request dependency roadmaps
 * [prx reviews](prx_reviews.md)	 - List tasks waiting for pull-request reviews
 * [prx schema-version](prx_schema-version.md)	 - Show the CLI response schema version
 * [prx serve](prx_serve.md)	 - Start the local WebUI and ConnectRPC server
-* [prx show](prx_show.md)	 - Show a feature or task by public identifier
+* [prx show](prx_show.md)	 - Show a project, a feature, or a task by public identifier
 * [prx snapshot](prx_snapshot.md)	 - Show the complete current snapshot
 * [prx stale](prx_stale.md)	 - List tasks with stale GitHub state
 * [prx sync](prx_sync.md)	 - Refresh GitHub state for pull-request tasks

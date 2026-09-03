@@ -880,6 +880,27 @@ func TestBlackBoxShowReportsMissingTargetsWithCurrentVocabulary(t *testing.T) {
 	}
 }
 
+// show resolves all three kinds its operand documents, so a project reached by
+// public ID and by slug has to answer with the project itself.
+func TestBlackBoxShowResolvesProjectsByPublicIDAndSlug(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "show-project.db")
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "payments", "Payments"))
+	for _, identifier := range []string{project, "payments"} {
+		var value struct {
+			ID    string `json:"id"`
+			Slug  string `json:"slug"`
+			Title string `json:"title"`
+		}
+		if err := json.Unmarshal(runCLIData(t, binary, dbPath, "show", identifier), &value); err != nil {
+			t.Fatal(err)
+		}
+		if value.ID != project || value.Slug != "payments" || value.Title != "Payments" {
+			t.Errorf("show %s=%+v", identifier, value)
+		}
+	}
+}
+
 func TestBlackBoxRemovedHumanFlagIsRejectedWithRootHelp(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "conflict.db")
