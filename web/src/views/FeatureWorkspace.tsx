@@ -217,9 +217,7 @@ function WorkspaceContent(props: WorkspaceContentProps) {
   return (
     <div className={readOnly ? "workspace is-archived" : "workspace"}>
       <FeatureWorkspaceHead props={props} readOnly={readOnly} />
-      {readOnly && (
-        <ArchivedNotice feature={props.feature} project={props.project} />
-      )}
+      {readOnly && <ArchivedNotice project={props.project} />}
       <div className="workspace-body">
         <FeatureGraph
           tasks={props.tasks}
@@ -328,16 +326,12 @@ function FeatureWorkspaceHead({
 }
 
 // A feature can be read-only for two reasons, and the remedy differs: restore
-// the feature, or activate the project it belongs to. The notice says which.
-function ArchivedNotice({
-  feature,
-  project,
-}: {
-  feature: Feature;
-  project: Project | undefined;
-}) {
+// the feature, or activate the project it belongs to. The notice says which,
+// and an archived project decides even when the feature is archived too:
+// restoring the feature alone would leave it read-only.
+function ArchivedNotice({ project }: { project: Project | undefined }) {
   const { t } = useTranslation();
-  if (!feature.archived && project)
+  if (project?.archived)
     return (
       <div className="archived-notice" role="status">
         <strong>{t("workspace.projectArchivedLabel")}</strong>

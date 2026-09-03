@@ -168,6 +168,7 @@ function useFeatureLifecycleLabels(archived: boolean): LifecycleLabels {
 
 function ReadOnlyFeatureDialog({
   feature,
+  projects,
   updatePending,
   deletePending,
   updateError,
@@ -177,6 +178,11 @@ function ReadOnlyFeatureDialog({
 }: FeatureDialogContentProps) {
   const { t } = useTranslation();
   const labels = useFeatureLifecycleLabels(true);
+  // An archived project keeps the feature read-only after its own flag is
+  // cleared, so the restore is offered only when the feature is the sole cause.
+  const projectArchived =
+    projects.find((item) => item.id === feature.projectId)?.archived ?? false;
+  const restorable = feature.archived && !projectArchived;
   return (
     <section
       className="dialog feature-management-dialog"
@@ -209,7 +215,7 @@ function ReadOnlyFeatureDialog({
       <MutationError error={updateError} />
       <LifecycleActions
         labels={
-          feature.archived
+          restorable
             ? labels
             : { ...labels, detail: t("featureEdit.projectArchivedDetail") }
         }
@@ -217,7 +223,7 @@ function ReadOnlyFeatureDialog({
         deletePending={deletePending}
         // Restoring is only meaningful when the feature carries the archive
         // itself; one inherited from a project is lifted on the project.
-        {...(feature.archived ? { onRestore } : {})}
+        {...(restorable ? { onRestore } : {})}
         onDelete={onDelete}
       />
       <footer>

@@ -8,7 +8,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FeatureStatus } from "../src/gen/prx/v1/prx_pb";
 import { EditFeatureDialog } from "../src/views/EditFeatureDialog";
-import { makeFeature } from "./factories";
+import { makeFeature, makeProject } from "./factories";
 
 const dialogMocks = vi.hoisted(() => ({
   hookIndex: 0,
@@ -288,6 +288,31 @@ describe("EditFeatureDialog", () => {
       id: "feature-1",
       archived: false,
     });
+  });
+
+  // Restoring a feature whose project is archived leaves it read-only, so the
+  // dialog points at the project instead of offering that restore.
+  it("withholds the restore when the project is archived too", () => {
+    render(
+      <EditFeatureDialog
+        projects={[makeProject({ id: "project-1", archived: true })]}
+        feature={makeFeature({ archived: true, projectId: "project-1" })}
+        onClose={vi.fn()}
+        onDeleted={vi.fn()}
+      />,
+    );
+
+    expect(
+      screen.queryByRole("button", { name: "Restore feature" }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "Manage archived feature" }),
+    ).toHaveTextContent(
+      "Its project is archived, so the archive is lifted there.",
+    );
+    expect(
+      screen.getByRole("button", { name: "Delete feature" }),
+    ).toBeInTheDocument();
   });
 
   it("confirms permanent deletion and keeps pending actions locked", async () => {

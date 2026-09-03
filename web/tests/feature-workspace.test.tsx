@@ -407,4 +407,29 @@ describe("FeatureWorkspace", () => {
       screen.queryByRole("button", { name: "Sync GitHub" }),
     ).not.toBeInTheDocument();
   });
+
+  // Both flags can be set at once, and then restoring the feature alone would
+  // leave it read-only, so the project keeps deciding what the notice says.
+  it("names the archived project even when the feature is archived too", () => {
+    workspaceMocks.snapshot.data = makeSnapshot({
+      projects: [
+        makeProject({
+          id: "project-1",
+          title: "Delivery platform",
+          archived: true,
+        }),
+      ],
+      features: [
+        { ...feature, projectId: "project-1", archived: true, readOnly: true },
+      ],
+      tasks: [task],
+    });
+    render(<FeatureWorkspace />);
+
+    expect(
+      screen.getByText("Project archived · read-only"),
+    ).toBeInTheDocument();
+    expect(screen.queryByText("Archived · read-only")).not.toBeInTheDocument();
+    expect(screen.getByText("Open project")).toBeInTheDocument();
+  });
 });
