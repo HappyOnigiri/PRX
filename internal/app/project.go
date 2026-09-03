@@ -34,7 +34,7 @@ func (s *Service) UpdateProject(
 	if err != nil {
 		return domain.Project{}, err
 	}
-	if !unarchiveOnly(archived, slug, title, description) {
+	if !archivedFlagOnly(archived, slug, title, description) {
 		if err := s.guardProject(project); err != nil {
 			return domain.Project{}, err
 		}

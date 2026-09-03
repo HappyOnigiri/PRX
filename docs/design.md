@@ -156,7 +156,8 @@ Refusals report one stable error code, because the caller's remedy is the same w
 
 The barrier lifts for exactly three operations:
 
-- Clearing the archived flag. A request that also changes another field stays refused, so unarchiving cannot smuggle an edit past the barrier.
+- Moving the archived flag, in either direction, so archiving an already archived record is a no-op instead of an error.
+  A request that also changes another field stays refused, so unarchiving cannot smuggle an edit past the barrier.
 - Deleting a project or a feature, which is how archived work is finally discarded.
 - A GitHub refresh that names a feature or a task explicitly, because that imports external fact rather than changing recorded intent.
 

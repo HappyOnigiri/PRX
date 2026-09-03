@@ -10,11 +10,12 @@ import (
 // the only place that decides what an archived project or feature refuses, so
 // the CLI, the RPC handlers, and the WebUI all inherit the same rule.
 //
-// The barrier lifts for exactly three operations: clearing the archived flag,
-// deleting a project or a feature, and a GitHub refresh that names a feature or
-// a task explicitly. Deletion stays available because it is how archived work
-// is finally discarded, and a project cascade releases its features by clearing
-// their project_id, which the guards must not read as a forbidden reassignment.
+// The barrier lifts for exactly three operations: changing nothing but the
+// archived flag, deleting a project or a feature, and a GitHub refresh that
+// names a feature or a task explicitly. Deletion stays available because it is
+// how archived work is finally discarded, and a project cascade releases its
+// features by clearing their project_id, which the guards must not read as a
+// forbidden reassignment.
 
 // archivedReadOnly is the single error every refused write returns, so a caller
 // branches on one code without needing to know which container is archived.
@@ -25,11 +26,13 @@ func archivedReadOnly() error {
 	)
 }
 
-// unarchiveOnly reports whether a request does nothing but clear the archived
-// flag. Lifting the archive is the one update an archived record accepts, so a
-// request that also carries another change stays refused.
-func unarchiveOnly(archived *bool, others ...*string) bool {
-	if archived == nil || *archived {
+// archivedFlagOnly reports whether a request carries the archived flag and
+// changes nothing else. Moving that flag is the one update an archived record
+// accepts, in either direction, so lifting the archive and re-archiving a
+// record both stay possible while a request that also carries another change
+// stays refused.
+func archivedFlagOnly(archived *bool, others ...*string) bool {
+	if archived == nil {
 		return false
 	}
 	for _, value := range others {

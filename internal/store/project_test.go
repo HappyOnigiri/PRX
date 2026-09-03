@@ -309,6 +309,53 @@ func TestArchivedFeatureRefusesWritesButStaysDeletable(t *testing.T) {
 	}
 }
 
+// The archived flag moves in either direction past the barrier, so an archive
+// command stays idempotent and a feature whose own flag was cleared inside an
+// archived project can be put back the way it was.
+func TestArchivedFlagMovesInBothDirectionsPastTheBarrier(t *testing.T) {
+	ctx := context.Background()
+	fixture := newReadOnlyFixture(t)
+	archived, active := true, false
+	setProject := func(value *bool) error {
+		_, err := fixture.service.UpdateProject(ctx, fixture.project.ID, nil, nil, nil, value)
+		return err
+	}
+	setFeature := func(value *bool) error {
+		_, err := fixture.service.UpdateFeature(ctx, fixture.feature.ID, nil, nil, nil, nil, value, nil)
+		return err
+	}
+	for _, step := range []struct {
+		name string
+		err  error
+	}{
+		{"archive the project", setProject(&archived)},
+		{"archive the already archived project", setProject(&archived)},
+		{"archive the feature inside the archived project", setFeature(&archived)},
+		{"unarchive the feature inside the archived project", setFeature(&active)},
+		{"re-archive the feature inside the archived project", setFeature(&archived)},
+	} {
+		if step.err != nil {
+			t.Errorf("%s: %v", step.name, step.err)
+		}
+	}
+
+	// Only the flag passes: clearing it together with another change is still a
+	// write into an archived container.
+	if _, err := fixture.service.UpdateFeature(
+		ctx, fixture.feature.ID, nil, stringPointer("Renamed"), nil, nil, &active, nil,
+	); domain.ErrorCode(err) != domain.DomainErrorCodeArchivedReadOnly {
+		t.Errorf("unarchive with a title change: code=%s err=%v, want archived_read_only",
+			domain.ErrorCode(err), err)
+	}
+	snapshot, err := fixture.service.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !snapshot.Features[0].Archived || !snapshot.Features[0].ReadOnly {
+		t.Fatalf("feature=%+v, want archived and read-only", snapshot.Features[0])
+	}
+}
+
 // A feature with no project and no archive of its own is not read-only, which
 // is the third case the derivation has to get right.
 func TestActiveFeatureInActiveProjectIsNotReadOnly(t *testing.T) {

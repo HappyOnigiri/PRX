@@ -174,7 +174,7 @@ func (s *Service) UpdateFeature(
 	if err != nil {
 		return domain.Feature{}, err
 	}
-	if status != nil || !unarchiveOnly(archived, slug, title, description, projectID) {
+	if status != nil || !archivedFlagOnly(archived, slug, title, description, projectID) {
 		if err := s.guardFeature(ctx, feature); err != nil {
 			return domain.Feature{}, err
 		}
