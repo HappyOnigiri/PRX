@@ -152,8 +152,10 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	return root, s
 }
 
-// addCommands registers the resource commands first and the whole-repository
-// commands second, which is the order the rendered help groups them in.
+// addCommands holds every command registration so building the root command
+// stays readable. The two calls group the resource commands and the
+// whole-repository commands for a reader of this file only: the rendered help
+// sorts commands by name, so the registration order carries no meaning there.
 func (s *state) addCommands(root *cobra.Command) {
 	root.AddCommand(
 		s.schemaVersionCommand(),
