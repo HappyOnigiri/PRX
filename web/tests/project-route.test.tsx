@@ -71,7 +71,10 @@ describe("Project list route", () => {
     const list = screen.getByRole("region", { name: "Project list" });
     expect(list).toHaveTextContent("Delivery platform");
     expect(list).not.toHaveTextContent("Sunset initiative");
-    expect(list).toHaveTextContent("1 features");
+    // The count is a plural key, so a project with one feature must not read
+    // "1 features".
+    expect(list).toHaveTextContent("1 feature");
+    expect(list).not.toHaveTextContent("1 features");
 
     fireEvent.click(screen.getByRole("button", { name: "Show archived" }));
     await waitFor(() => {
