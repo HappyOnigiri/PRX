@@ -1232,7 +1232,8 @@ type Feature struct {
 	ProjectId string `protobuf:"bytes,16,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	// read_only is derived: the feature is archived, or its project is. Clients present read-only
 	// state from this value instead of combining the feature's own flag with its project's.
-	// Snapshot reads derive it; responses that echo the stored feature alone leave it false.
+	// Every response that carries a feature derives it, including the ones that echo a single
+	// stored feature, so a caller never has to know which read it came from.
 	ReadOnly      bool `protobuf:"varint,17,opt,name=read_only,json=readOnly,proto3" json:"read_only,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

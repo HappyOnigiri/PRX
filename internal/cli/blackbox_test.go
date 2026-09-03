@@ -2104,6 +2104,52 @@ func TestBlackBoxArchivedProjectAndFeatureRefuseWrites(t *testing.T) {
 	}
 }
 
+// read_only accompanies every feature the CLI prints, not only the snapshot, so
+// a caller decides whether a write is allowed from the response it already has
+// instead of reassembling the feature's flag and its project's.
+func TestBlackBoxReadOnlyAccompaniesSingleFeatureReads(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "readonly.db")
+
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "payments", "Payments"))
+	feature := decodeID(
+		t,
+		runCLIData(t, binary, dbPath, "feature", "create", "checkout", "Checkout", "--project", project),
+	)
+	for _, args := range [][]string{{"feature", "archive", feature}, {"project", "archive", project}} {
+		if _, _, exit := runCLI(t, binary, dbPath, args...); exit != 0 {
+			t.Fatalf("%v exit=%d", args, exit)
+		}
+	}
+
+	// Unarchiving the feature is allowed while the project is archived, and its
+	// response has to admit that the feature is still read-only.
+	for _, args := range [][]string{{"show", feature}, {"feature", "unarchive", feature}, {"show", feature}} {
+		if readOnly, archived := decodeFeatureState(t, runCLIData(t, binary, dbPath, args...)); !readOnly {
+			t.Errorf("%v read_only=%v archived=%v, want read_only while the project is archived",
+				args, readOnly, archived)
+		}
+	}
+	if _, _, exit := runCLI(t, binary, dbPath, "project", "unarchive", project); exit != 0 {
+		t.Fatalf("project unarchive exit=%d", exit)
+	}
+	if readOnly, _ := decodeFeatureState(t, runCLIData(t, binary, dbPath, "show", feature)); readOnly {
+		t.Errorf("show read_only=%v after activating the project, want false", readOnly)
+	}
+}
+
+func decodeFeatureState(t *testing.T, body json.RawMessage) (readOnly, archived bool) {
+	t.Helper()
+	var value struct {
+		ReadOnly bool `json:"read_only"`
+		Archived bool `json:"archived"`
+	}
+	if err := json.Unmarshal(body, &value); err != nil {
+		t.Fatal(err)
+	}
+	return value.ReadOnly, value.Archived
+}
+
 func runCLIData(t *testing.T, binary, dbPath string, args ...string) json.RawMessage {
 	t.Helper()
 	result, stderr, exit := runCLI(t, binary, dbPath, args...)

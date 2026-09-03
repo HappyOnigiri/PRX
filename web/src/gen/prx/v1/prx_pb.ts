@@ -256,7 +256,8 @@ export type Feature = Message<"prx.v1.Feature"> & {
   /**
    * read_only is derived: the feature is archived, or its project is. Clients present read-only
    * state from this value instead of combining the feature's own flag with its project's.
-   * Snapshot reads derive it; responses that echo the stored feature alone leave it false.
+   * Every response that carries a feature derives it, including the ones that echo a single
+   * stored feature, so a caller never has to know which read it came from.
    *
    * @generated from field: bool read_only = 17;
    */

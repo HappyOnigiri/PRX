@@ -152,7 +152,11 @@ func (s *Service) CreateFeature(
 	if err != nil {
 		return domain.Feature{}, err
 	}
-	return s.repository.CreateFeature(ctx, slug, title, strings.TrimSpace(description), resolvedProject)
+	created, err := s.repository.CreateFeature(ctx, slug, title, strings.TrimSpace(description), resolvedProject)
+	if err != nil {
+		return domain.Feature{}, err
+	}
+	return s.withReadOnly(ctx, created)
 }
 
 // UpdateFeature applies every field the caller supplied. A nil pointer means the
@@ -210,23 +214,29 @@ func (s *Service) UpdateFeature(
 	) {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid feature status")
 	}
-	return s.repository.UpdateFeature(ctx, feature)
+	updated, err := s.repository.UpdateFeature(ctx, feature)
+	if err != nil {
+		return domain.Feature{}, err
+	}
+	return s.withReadOnly(ctx, updated)
 }
 
 // ResolveFeature only falls through to the next lookup when the previous one
 // reported a missing row, so a storage failure such as a locked database keeps
-// its own cause instead of being reported as a missing feature.
+// its own cause instead of being reported as a missing feature. The resolved
+// feature carries the derived ReadOnly flag, so a caller that reports a single
+// feature publishes the same value a snapshot read would.
 func (s *Service) ResolveFeature(ctx context.Context, idOrSlug string) (domain.Feature, error) {
 	feature, err := s.repository.GetFeature(ctx, idOrSlug)
 	if err == nil {
-		return feature, nil
+		return s.withReadOnly(ctx, feature)
 	}
 	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		return domain.Feature{}, err
 	}
 	feature, err = s.repository.GetFeatureBySlug(ctx, idOrSlug)
 	if err == nil {
-		return feature, nil
+		return s.withReadOnly(ctx, feature)
 	}
 	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		return domain.Feature{}, err

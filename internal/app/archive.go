@@ -56,6 +56,18 @@ func (s *Service) featureReadOnly(ctx context.Context, feature domain.Feature) (
 	return project.Archived, nil
 }
 
+// withReadOnly returns the feature with ReadOnly derived, so a feature that
+// leaves the application layer outside a snapshot carries the same value
+// Snapshot publishes instead of the stored zero value.
+func (s *Service) withReadOnly(ctx context.Context, feature domain.Feature) (domain.Feature, error) {
+	readOnly, err := s.featureReadOnly(ctx, feature)
+	if err != nil {
+		return domain.Feature{}, err
+	}
+	feature.ReadOnly = readOnly
+	return feature, nil
+}
+
 // guardFeature refuses a write that lands inside an archived feature or inside
 // a feature whose project is archived.
 func (s *Service) guardFeature(ctx context.Context, feature domain.Feature) error {

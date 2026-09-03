@@ -143,6 +143,7 @@ Membership is optional, a feature belongs to at most one project, and dependenci
 A project's only state is whether it is archived; it is deliberately outside the two-layer status rule that features and tasks share.
 Archiving reaches into a project: a feature inside an archived project is presented as read-only even when its own archived flag is false.
 The server derives that as `Feature.ReadOnly` and clients read it directly instead of combining the feature's flag with its project's.
+Every read that carries a feature derives it, including the ones that return a single feature, so a client never has to know which read produced the value.
 A read-only feature is presented in the archived category and leaves the active feature lists, the overview, and task search, which is the same treatment an individually archived feature receives.
 
 ## Archive policy
