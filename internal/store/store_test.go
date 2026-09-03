@@ -1161,8 +1161,8 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(snapshot.Features) != 4 || len(snapshot.Tasks) != 120 {
-		t.Fatalf("features=%d tasks=%d, want 4 and 120", len(snapshot.Features), len(snapshot.Tasks))
+	if len(snapshot.Features) != 5 || len(snapshot.Tasks) != 122 {
+		t.Fatalf("features=%d tasks=%d, want 5 and 122", len(snapshot.Features), len(snapshot.Tasks))
 	}
 	statuses := map[domain.FeatureStatus]bool{}
 	displayStatuses := map[domain.FeatureStatus]bool{}
@@ -1235,6 +1235,12 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	}
 	if !featuresBySlug["cancelled-experiment"].Archived {
 		t.Error("cancelled feature is not archived")
+	}
+	// The walkthrough points at a feature that is read-only because of its
+	// project rather than its own flag, so the demo has to contain one.
+	postmortem := featuresBySlug["sunset-postmortem"]
+	if postmortem.Archived || !postmortem.ReadOnly {
+		t.Errorf("sunset postmortem=%+v, want read-only without being archived", postmortem)
 	}
 	featureByTask := map[string]string{}
 	var plannedTaskID string

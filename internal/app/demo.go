@@ -98,6 +98,7 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 		func(ctx context.Context) error { return s.createPausedDemo(ctx, platform.ID) },
 		s.createCompletedDemo,
 		func(ctx context.Context) error { return s.createCancelledDemo(ctx, sunset.ID) },
+		func(ctx context.Context) error { return s.createSunsetPostmortemDemo(ctx, sunset.ID) },
 	} {
 		if err := initialize(ctx); err != nil {
 			return err
@@ -288,6 +289,39 @@ func (s *Service) createCancelledDemo(ctx context.Context, projectID string) err
 		return err
 	}
 	return nil
+}
+
+// createSunsetPostmortemDemo puts a feature that is not archived itself inside
+// the project the demo archives, which is the state the walkthrough points at:
+// the read-only presentation comes from the project alone.
+func (s *Service) createSunsetPostmortemDemo(ctx context.Context, projectID string) error {
+	postmortem, err := s.CreateFeature(
+		ctx,
+		"sunset-postmortem",
+		"Sunset postmortem",
+		"Not archived itself: the archived project around it makes it read-only.",
+		projectID,
+	)
+	if err != nil {
+		return err
+	}
+	_, err = s.createDemoTasks(ctx, postmortem, []demoTask{
+		{
+			title:    "Collect lessons",
+			scope:    "Summarize what the experiment showed",
+			kind:     domain.TaskKindManual,
+			status:   domain.TaskStatusCompleted,
+			assignee: "Ari",
+		},
+		{
+			title:    "Share the summary",
+			scope:    "Hand the summary to the teams that asked for it",
+			kind:     domain.TaskKindManual,
+			status:   domain.TaskStatusCompleted,
+			assignee: "Mika",
+		},
+	})
+	return err
 }
 
 func (s *Service) createDemoTasks(
