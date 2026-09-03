@@ -10,6 +10,12 @@ import (
 // the only place that decides what an archived project or feature refuses, so
 // the CLI, the RPC handlers, and the WebUI all inherit the same rule.
 //
+// Each guard reads the container's state before the write and does not share a
+// transaction with it, so a write that passed the barrier can still land just
+// after another process archived the container. The barrier coordinates people
+// and their agents rather than locking the database, and the store carries no
+// constraint that would close that window.
+//
 // The barrier lifts for exactly three operations: changing nothing but the
 // archived flag, deleting a project or a feature, and a GitHub refresh that
 // names a feature or a task explicitly. Deletion stays available because it is
