@@ -16,6 +16,7 @@ import (
 )
 
 const (
+	projectPublicIDPrefix = "P-"
 	featurePublicIDPrefix = "F-"
 	taskPublicIDPrefix    = "T-"
 )
@@ -44,7 +45,137 @@ func publicTaskID(ctx context.Context, q *db.Queries, storageID string) string {
 	return value.PublicID
 }
 
-func (s *Store) CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error) {
+func publicProjectID(ctx context.Context, q *db.Queries, storageID string) string {
+	value, err := q.GetProject(ctx, storageID)
+	if err != nil {
+		return ""
+	}
+	return value.PublicID
+}
+
+// projectStorageID translates a public project ID into the storage UUID the
+// foreign key needs. An empty public ID means no project, which the schema
+// records as NULL.
+func projectStorageID(ctx context.Context, q *db.Queries, publicID string) (sql.NullString, error) {
+	if publicID == "" {
+		return sql.NullString{}, nil
+	}
+	project, err := q.GetProjectByPublicID(ctx, publicID)
+	if err != nil {
+		return sql.NullString{}, mapNotFound(err, "project", publicID)
+	}
+	return sql.NullString{String: project.ID, Valid: true}, nil
+}
+
+func (s *Store) CreateProject(ctx context.Context, slug, title, description string) (domain.Project, error) {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return domain.Project{}, err
+	}
+	defer func() { _ = tx.Rollback() }()
+
+	q := db.New(tx)
+	publicID, err := nextPublicID(ctx, q, "project", projectPublicIDPrefix)
+	if err != nil {
+		return domain.Project{}, err
+	}
+	now := timestamp(s.now())
+	value, err := q.CreateProject(ctx, db.CreateProjectParams{
+		ID:          uuid.NewString(),
+		PublicID:    publicID,
+		Slug:        slug,
+		Title:       title,
+		Description: description,
+		Archived:    0,
+		CreatedAt:   now,
+		UpdatedAt:   now,
+	})
+	if err != nil {
+		return domain.Project{}, fmt.Errorf("create project: %w", err)
+	}
+	if err := tx.Commit(); err != nil {
+		return domain.Project{}, err
+	}
+	return domainProject(value), nil
+}
+
+func (s *Store) GetProject(ctx context.Context, id string) (domain.Project, error) {
+	value, err := db.New(s.db).GetProjectByPublicID(ctx, id)
+	return domainProject(value), mapNotFound(err, "project", id)
+}
+
+func (s *Store) GetProjectBySlug(ctx context.Context, slug string) (domain.Project, error) {
+	value, err := db.New(s.db).GetProjectBySlug(ctx, slug)
+	return domainProject(value), mapNotFound(err, "project", slug)
+}
+
+func (s *Store) UpdateProject(ctx context.Context, project domain.Project) (domain.Project, error) {
+	storageID := project.StorageID
+	if storageID == "" {
+		value, err := db.New(s.db).GetProjectByPublicID(ctx, project.ID)
+		if err != nil {
+			return domain.Project{}, mapNotFound(err, "project", project.ID)
+		}
+		storageID = value.ID
+	}
+	value, err := db.New(s.db).UpdateProject(ctx, db.UpdateProjectParams{
+		Slug:        project.Slug,
+		Title:       project.Title,
+		Description: project.Description,
+		Archived:    boolInt(project.Archived),
+		UpdatedAt:   timestamp(s.now()),
+		ID:          storageID,
+	})
+	return domainProject(value), mapNotFound(err, "project", project.ID)
+}
+
+// DeleteProject removes the container, not its contents. A cascade deletes the
+// project's own documents and releases its features, because a feature has a
+// longer life and a public ID of its own; `feature delete --cascade` is the
+// operation that removes contained work.
+func (s *Store) DeleteProject(ctx context.Context, id string, cascade bool) error {
+	tx, err := s.db.BeginTx(ctx, nil)
+	if err != nil {
+		return err
+	}
+	defer func() { _ = tx.Rollback() }()
+	q := db.New(tx)
+	project, err := q.GetProjectByPublicID(ctx, id)
+	if err != nil {
+		return mapNotFound(err, "project", id)
+	}
+	storageID := sql.NullString{String: project.ID, Valid: true}
+	references, err := q.CountProjectReferences(ctx, storageID)
+	if err != nil {
+		return err
+	}
+	if references > 0 && !cascade {
+		return domain.NewError(
+			domain.DomainErrorCodeReferencesExist,
+			"project has features or documents; pass --cascade",
+		)
+	}
+	if cascade {
+		if err := q.DeleteDocumentsForProject(ctx, storageID); err != nil {
+			return err
+		}
+		if err := q.DetachFeaturesFromProject(ctx, db.DetachFeaturesFromProjectParams{
+			UpdatedAt: timestamp(s.now()),
+			ProjectID: storageID,
+		}); err != nil {
+			return err
+		}
+	}
+	if err := q.DeleteProject(ctx, project.ID); err != nil {
+		return err
+	}
+	return tx.Commit()
+}
+
+func (s *Store) CreateFeature(
+	ctx context.Context,
+	slug, title, description, projectID string,
+) (domain.Feature, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return domain.Feature{}, err
@@ -52,6 +183,10 @@ func (s *Store) CreateFeature(ctx context.Context, slug, title, description stri
 	defer func() { _ = tx.Rollback() }()
 
 	q := db.New(tx)
+	project, err := projectStorageID(ctx, q, projectID)
+	if err != nil {
+		return domain.Feature{}, err
+	}
 	publicID, err := nextPublicID(ctx, q, "feature", featurePublicIDPrefix)
 	if err != nil {
 		return domain.Feature{}, err
@@ -66,6 +201,7 @@ func (s *Store) CreateFeature(ctx context.Context, slug, title, description stri
 		Description: description,
 		Status:      status,
 		StatusAuto:  statusAuto,
+		ProjectID:   project,
 		CreatedAt:   now,
 		UpdatedAt:   now,
 	}
@@ -76,27 +212,47 @@ func (s *Store) CreateFeature(ctx context.Context, slug, title, description stri
 	if err := tx.Commit(); err != nil {
 		return domain.Feature{}, err
 	}
-	return domainFeature(value), nil
+	return domainFeature(value, projectID), nil
 }
 
 func (s *Store) GetFeature(ctx context.Context, id string) (domain.Feature, error) {
-	value, err := db.New(s.db).GetFeatureByPublicID(ctx, id)
-	return domainFeature(value), mapNotFound(err, "feature", id)
+	q := db.New(s.db)
+	value, err := q.GetFeatureByPublicID(ctx, id)
+	if err != nil {
+		return domain.Feature{}, mapNotFound(err, "feature", id)
+	}
+	return domainFeature(value, featureProjectPublicID(ctx, q, value)), nil
 }
 
 func (s *Store) GetFeatureBySlug(ctx context.Context, slug string) (domain.Feature, error) {
-	value, err := db.New(s.db).GetFeatureBySlug(ctx, slug)
-	return domainFeature(value), mapNotFound(err, "feature", slug)
+	q := db.New(s.db)
+	value, err := q.GetFeatureBySlug(ctx, slug)
+	if err != nil {
+		return domain.Feature{}, mapNotFound(err, "feature", slug)
+	}
+	return domainFeature(value, featureProjectPublicID(ctx, q, value)), nil
+}
+
+func featureProjectPublicID(ctx context.Context, q *db.Queries, value db.Feature) string {
+	if !value.ProjectID.Valid {
+		return ""
+	}
+	return publicProjectID(ctx, q, value.ProjectID.String)
 }
 
 func (s *Store) UpdateFeature(ctx context.Context, feature domain.Feature) (domain.Feature, error) {
+	q := db.New(s.db)
 	storageID := feature.StorageID
 	if storageID == "" {
-		value, err := db.New(s.db).GetFeatureByPublicID(ctx, feature.ID)
+		value, err := q.GetFeatureByPublicID(ctx, feature.ID)
 		if err != nil {
 			return domain.Feature{}, mapNotFound(err, "feature", feature.ID)
 		}
 		storageID = value.ID
+	}
+	project, err := projectStorageID(ctx, q, feature.ProjectID)
+	if err != nil {
+		return domain.Feature{}, err
 	}
 	status, statusAuto := storedFeatureStatus(feature.Status)
 	params := db.UpdateFeatureParams{
@@ -106,12 +262,12 @@ func (s *Store) UpdateFeature(ctx context.Context, feature domain.Feature) (doma
 		Status:      status,
 		StatusAuto:  statusAuto,
 		Archived:    boolInt(feature.Archived),
+		ProjectID:   project,
 		UpdatedAt:   timestamp(s.now()),
 		ID:          storageID,
 	}
-	value, err := db.New(s.db).
-		UpdateFeature(ctx, params)
-	return domainFeature(value), mapNotFound(err, "feature", feature.ID)
+	value, err := q.UpdateFeature(ctx, params)
+	return domainFeature(value, feature.ProjectID), mapNotFound(err, "feature", feature.ID)
 }
 
 func (s *Store) CreateTask(
@@ -200,7 +356,7 @@ func (s *Store) GetImplementationPlan(ctx context.Context, taskID string) (domai
 		return domain.Document{}, mapNotFound(err, "task", taskID)
 	}
 	value, err := q.GetImplementationPlanDocument(ctx, sql.NullString{String: task.ID, Valid: true})
-	return domainDocument(value, nil, map[string]string{task.ID: task.PublicID}),
+	return domainDocument(value, nil, nil, map[string]string{task.ID: task.PublicID}),
 		mapNotFound(err, "implementation plan for task", taskID)
 }
 
@@ -228,7 +384,7 @@ func (s *Store) UpsertImplementationPlan(
 	if err != nil {
 		return domain.Document{}, err
 	}
-	return domainDocument(value, nil, map[string]string{task.ID: task.PublicID}), nil
+	return domainDocument(value, nil, nil, map[string]string{task.ID: task.PublicID}), nil
 }
 
 func (s *Store) DeleteImplementationPlan(ctx context.Context, taskID string) error {
@@ -611,34 +767,45 @@ func unixTime(value sql.NullInt64) *time.Time {
 
 func (s *Store) CreateDocument(
 	ctx context.Context,
-	featureID, taskID string,
+	parent domain.DocumentParent,
 	kind domain.DocumentKind,
 	title, locator, content string,
 	isImplementationPlan bool,
 ) (domain.Document, error) {
 	q := db.New(s.db)
+	projectIDs := map[string]string{}
 	featureIDs := map[string]string{}
 	taskIDs := map[string]string{}
-	if featureID != "" {
-		feature, err := q.GetFeatureByPublicID(ctx, featureID)
+	stored := domain.DocumentParent{}
+	if parent.ProjectID != "" {
+		project, err := q.GetProjectByPublicID(ctx, parent.ProjectID)
 		if err != nil {
-			return domain.Document{}, mapNotFound(err, "feature", featureID)
+			return domain.Document{}, mapNotFound(err, "project", parent.ProjectID)
 		}
-		featureID = feature.ID
+		stored.ProjectID = project.ID
+		projectIDs[project.ID] = project.PublicID
+	}
+	if parent.FeatureID != "" {
+		feature, err := q.GetFeatureByPublicID(ctx, parent.FeatureID)
+		if err != nil {
+			return domain.Document{}, mapNotFound(err, "feature", parent.FeatureID)
+		}
+		stored.FeatureID = feature.ID
 		featureIDs[feature.ID] = feature.PublicID
 	}
-	if taskID != "" {
-		task, err := q.GetTaskByPublicID(ctx, taskID)
+	if parent.TaskID != "" {
+		task, err := q.GetTaskByPublicID(ctx, parent.TaskID)
 		if err != nil {
-			return domain.Document{}, mapNotFound(err, "task", taskID)
+			return domain.Document{}, mapNotFound(err, "task", parent.TaskID)
 		}
-		taskID = task.ID
+		stored.TaskID = task.ID
 		taskIDs[task.ID] = task.PublicID
 	}
 	params := db.CreateDocumentParams{
 		ID:                   uuid.NewString(),
-		FeatureID:            nullString(featureID),
-		TaskID:               nullString(taskID),
+		ProjectID:            nullString(stored.ProjectID),
+		FeatureID:            nullString(stored.FeatureID),
+		TaskID:               nullString(stored.TaskID),
 		Kind:                 string(kind),
 		Title:                title,
 		Locator:              nullString(locator),
@@ -647,12 +814,11 @@ func (s *Store) CreateDocument(
 		CreatedAt:            timestamp(s.now()),
 		UpdatedAt:            timestamp(s.now()),
 	}
-	row, err := db.New(s.db).
-		CreateDocument(ctx, params)
+	row, err := q.CreateDocument(ctx, params)
 	if err != nil {
 		return domain.Document{}, mapDocumentConstraint(err)
 	}
-	return domainDocument(row, featureIDs, taskIDs), nil
+	return domainDocument(row, projectIDs, featureIDs, taskIDs), nil
 }
 
 // UpdateDocument writes only the requested fields so that concurrent updates of
@@ -687,15 +853,8 @@ func (s *Store) UpdateDocument(
 		}
 		return domain.Document{}, mapDocumentConstraint(err)
 	}
-	featureIDs := map[string]string{}
-	taskIDs := map[string]string{}
-	if row.FeatureID.Valid {
-		featureIDs[row.FeatureID.String] = publicFeatureID(ctx, q, row.FeatureID.String)
-	}
-	if row.TaskID.Valid {
-		taskIDs[row.TaskID.String] = publicTaskID(ctx, q, row.TaskID.String)
-	}
-	return domainDocument(row, featureIDs, taskIDs), nil
+	projectIDs, featureIDs, taskIDs := documentPublicIDs(ctx, q, row)
+	return domainDocument(row, projectIDs, featureIDs, taskIDs), nil
 }
 
 func (s *Store) GetDocument(ctx context.Context, id string) (domain.Document, error) {
@@ -704,15 +863,30 @@ func (s *Store) GetDocument(ctx context.Context, id string) (domain.Document, er
 	if err != nil {
 		return domain.Document{}, mapNotFound(err, "document", id)
 	}
-	featureIDs := map[string]string{}
-	taskIDs := map[string]string{}
+	projectIDs, featureIDs, taskIDs := documentPublicIDs(ctx, q, row)
+	return domainDocument(row, projectIDs, featureIDs, taskIDs), nil
+}
+
+// documentPublicIDs resolves the public identifier of whichever parent the
+// document row carries, as the single-entry lookup maps domainDocument reads.
+func documentPublicIDs(
+	ctx context.Context,
+	q *db.Queries,
+	row db.Document,
+) (projectIDs, featureIDs, taskIDs map[string]string) {
+	projectIDs = map[string]string{}
+	featureIDs = map[string]string{}
+	taskIDs = map[string]string{}
+	if row.ProjectID.Valid {
+		projectIDs[row.ProjectID.String] = publicProjectID(ctx, q, row.ProjectID.String)
+	}
 	if row.FeatureID.Valid {
 		featureIDs[row.FeatureID.String] = publicFeatureID(ctx, q, row.FeatureID.String)
 	}
 	if row.TaskID.Valid {
 		taskIDs[row.TaskID.String] = publicTaskID(ctx, q, row.TaskID.String)
 	}
-	return domainDocument(row, featureIDs, taskIDs), nil
+	return projectIDs, featureIDs, taskIDs
 }
 
 func (s *Store) DeleteDocument(ctx context.Context, id string) error {
@@ -728,6 +902,10 @@ func (s *Store) DeleteDocument(ctx context.Context, id string) error {
 
 func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 	q := db.New(s.db)
+	projects, err := q.ListProjects(ctx)
+	if err != nil {
+		return domain.Snapshot{}, err
+	}
 	features, err := q.ListFeatures(ctx)
 	if err != nil {
 		return domain.Snapshot{}, err
@@ -753,16 +931,21 @@ func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 		return domain.Snapshot{}, err
 	}
 	result := domain.Snapshot{
+		Projects:     make([]domain.Project, len(projects)),
 		Features:     make([]domain.Feature, len(features)),
 		Tasks:        make([]domain.Task, len(tasks)),
 		Dependencies: make([]domain.Dependency, len(deps)),
 		PullRequests: make([]domain.PullRequest, len(prs)),
 		Documents:    make([]domain.Document, len(docs)),
 	}
+	projectIDs := publicProjectIDs(projects)
 	featureIDs := publicFeatureIDs(features)
 	taskIDs := publicTaskIDs(tasks)
+	for i, row := range projects {
+		result.Projects[i] = domainProject(row)
+	}
 	for i, row := range features {
-		result.Features[i] = domainFeature(row)
+		result.Features[i] = domainFeature(row, projectIDs[row.ProjectID.String])
 	}
 	for i, row := range tasks {
 		result.Tasks[i] = domainTask(row, featureIDs[row.FeatureID])
@@ -781,7 +964,7 @@ func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 		result.PullRequests[i] = domainPullRequest(row, taskIDs)
 	}
 	for i, row := range docs {
-		result.Documents[i] = domainListedDocument(row, featureIDs, taskIDs)
+		result.Documents[i] = domainListedDocument(row, projectIDs, featureIDs, taskIDs)
 	}
 	return result, nil
 }

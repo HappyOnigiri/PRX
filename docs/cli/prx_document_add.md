@@ -1,15 +1,22 @@
 ## prx document add
 
-Add a document
+Add a document to a project, a feature, or a task
+
+### Synopsis
+
+Add a document to a project, a feature, or a task.
+
+The operand is a public project, feature, or task ID, or a feature or project slug.
 
 ```
-prx document add FEATURE_ID_OR_SLUG_OR_TASK_ID [flags]
+prx document add PROJECT_OR_FEATURE_OR_TASK [flags]
 ```
 
 ### Examples
 
 ```
 prx document add T-1 --url https://example.com
+prx document add P-1 --url https://example.com
 prx document add checkout --markdown-file notes.md
 ```
 

@@ -17,6 +17,7 @@ prx document [flags]
 ```
 prx document
 prx document --task T-1
+prx document --project P-1
 prx doc
 ```
 
@@ -25,6 +26,7 @@ prx doc
 ```
       --feature string   filter by feature ID or slug
   -h, --help             help for document
+      --project string   filter by project ID or slug
       --task string      filter by task ID
 ```
 
@@ -40,7 +42,7 @@ prx doc
 ### SEE ALSO
 
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
-* [prx document add](prx_document_add.md)	 - Add a document
+* [prx document add](prx_document_add.md)	 - Add a document to a project, a feature, or a task
 * [prx document delete](prx_document_delete.md)	 - Delete a document; missing documents return not_found
 * [prx document get](prx_document_get.md)	 - Get one document
 * [prx document update](prx_document_update.md)	 - Update a document

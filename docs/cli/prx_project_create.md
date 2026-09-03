@@ -1,25 +1,22 @@
-## prx feature create
+## prx project create
 
-Create a feature
+Create a project
 
 ```
-prx feature create SLUG TITLE [flags]
+prx project create SLUG TITLE [flags]
 ```
 
 ### Examples
 
 ```
-prx feature create checkout "Checkout rollout"
-prx feature create checkout "Checkout rollout" --project payments
-prx feature create checkout -- "-fix checkout"
+prx project create payments "Payments platform"
 ```
 
 ### Options
 
 ```
-      --description string   feature description
+      --description string   project description
   -h, --help                 help for create
-      --project string       project ID or slug to join
 ```
 
 ### Options inherited from parent commands
@@ -33,5 +30,5 @@ prx feature create checkout -- "-fix checkout"
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - List features or show one by ID or slug
+* [prx project](prx_project.md)	 - List projects or show one by ID or slug
 

@@ -5,9 +5,23 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
+func protoProject(v domain.Project) *prxv1.Project {
+	return &prxv1.Project{
+		Id:          v.ID,
+		Slug:        v.Slug,
+		Title:       v.Title,
+		Description: v.Description,
+		Archived:    v.Archived,
+		CreatedAt:   v.CreatedAt.Format(timeFormat),
+		UpdatedAt:   v.UpdatedAt.Format(timeFormat),
+	}
+}
+
 func protoFeature(v domain.Feature) *prxv1.Feature {
 	return &prxv1.Feature{
 		Id:                 v.ID,
+		ProjectId:          v.ProjectID,
+		ReadOnly:           v.ReadOnly,
 		Slug:               v.Slug,
 		Title:              v.Title,
 		Description:        v.Description,
@@ -82,6 +96,7 @@ func protoPullRequest(v domain.PullRequest) *prxv1.PullRequest {
 func protoDocument(v domain.Document) *prxv1.Document {
 	return &prxv1.Document{
 		Id:                   v.ID,
+		ProjectId:            v.ProjectID,
 		FeatureId:            v.FeatureID,
 		TaskId:               v.TaskID,
 		Kind:                 protoDocumentKind(v.Kind),
@@ -95,6 +110,9 @@ func protoDocument(v domain.Document) *prxv1.Document {
 
 func protoSnapshot(v domain.Snapshot) *prxv1.Snapshot {
 	result := &prxv1.Snapshot{}
+	for _, item := range v.Projects {
+		result.Projects = append(result.Projects, protoProject(item))
+	}
 	for _, item := range v.Features {
 		result.Features = append(result.Features, protoFeature(item))
 	}
@@ -402,6 +420,8 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE
 	case domain.DomainErrorCodeInvalidConfig:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_CONFIG
+	case domain.DomainErrorCodeArchivedReadOnly:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY
 	case domain.DomainErrorCodeGitHubAuth:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH
 	case domain.DomainErrorCodeInvalidDatabase:
@@ -435,6 +455,16 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 	default:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
 	}
+}
+
+// optionalValue preserves a proto3 optional field's presence for the service
+// layer, where a nil pointer means the field was omitted and a pointer to the
+// zero value is a request to clear it.
+func optionalValue[T any](present bool, value T) *T {
+	if !present {
+		return nil
+	}
+	return &value
 }
 
 const timeFormat = "2006-01-02T15:04:05.999999999Z07:00"

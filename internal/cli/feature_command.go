@@ -44,14 +44,16 @@ func (s *state) featureCommand() *cobra.Command {
 }
 
 func (s *state) featureCreateCommand() *cobra.Command {
-	var description string
+	var description, project string
 	command := &cobra.Command{
-		Use:     "create SLUG TITLE",
-		Short:   "Create a feature",
-		Example: "prx feature create checkout \"Checkout rollout\"\nprx feature create checkout -- \"-fix checkout\"",
-		Args:    cobra.ExactArgs(2),
+		Use:   "create SLUG TITLE",
+		Short: "Create a feature",
+		Example: "prx feature create checkout \"Checkout rollout\"\n" +
+			"prx feature create checkout \"Checkout rollout\" --project payments\n" +
+			"prx feature create checkout -- \"-fix checkout\"",
+		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := s.service.CreateFeature(cmd.Context(), args[0], args[1], description)
+			value, err := s.service.CreateFeature(cmd.Context(), args[0], args[1], description, project)
 			if err != nil {
 				return err
 			}
@@ -59,16 +61,17 @@ func (s *state) featureCreateCommand() *cobra.Command {
 		},
 	}
 	command.Flags().StringVar(&description, "description", "", "feature description")
+	command.Flags().StringVar(&project, "project", "", "project ID or slug to join")
 	return command
 }
 
 func (s *state) featureUpdateCommand() *cobra.Command {
-	var slug, title, description, status string
+	var slug, title, description, status, project string
 	var archived bool
 	command := &cobra.Command{
 		Use:     "update FEATURE_ID_OR_SLUG",
 		Short:   "Update a feature by ID or slug",
-		Example: "prx feature update checkout --archived=false",
+		Example: "prx feature update checkout --archived=false\nprx feature update checkout --project=",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.UpdateFeature(
@@ -83,6 +86,7 @@ func (s *state) featureUpdateCommand() *cobra.Command {
 				),
 				changedStringType[domain.FeatureStatus](cmd, "status", &status),
 				changedBoolFlag(cmd, "archived", &archived),
+				changedFlag(cmd, "project", &project),
 			)
 			if err != nil {
 				return err
@@ -95,6 +99,7 @@ func (s *state) featureUpdateCommand() *cobra.Command {
 	command.Flags().StringVar(&description, "description", "", "new description")
 	command.Flags().StringVar(&status, "status", "", "auto, active, paused, completed, or cancelled")
 	command.Flags().BoolVar(&archived, "archived", false, "archive (true) or unarchive (false) the feature")
+	command.Flags().StringVar(&project, "project", "", "project ID or slug; an empty value leaves the project")
 	return command
 }
 
@@ -111,7 +116,7 @@ func (s *state) featureArchiveCommand(archived bool) *cobra.Command {
 		Example: "prx feature " + verb + " checkout",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, &archived)
+			value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, &archived, nil)
 			if err != nil {
 				return err
 			}

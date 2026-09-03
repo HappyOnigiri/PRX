@@ -319,7 +319,7 @@ func nullableTime(value sql.NullString) *time.Time {
 // rest of the application uses. The status column is only meaningful while
 // status_auto is 0; the automatic mode normalizes it to 'active' because the
 // column's CHECK constraint predates the automatic value.
-func domainFeature(value db.Feature) domain.Feature {
+func domainFeature(value db.Feature, projectID string) domain.Feature {
 	status := domain.FeatureStatus(value.Status)
 	if value.StatusAuto != 0 {
 		status = domain.FeatureStatusAuto
@@ -327,6 +327,7 @@ func domainFeature(value db.Feature) domain.Feature {
 	return domain.Feature{
 		ID:          value.PublicID,
 		StorageID:   value.ID,
+		ProjectID:   projectID,
 		Slug:        value.Slug,
 		Title:       value.Title,
 		Description: value.Description,
@@ -345,7 +346,28 @@ func storedFeatureStatus(status domain.FeatureStatus) (column string, auto int64
 	return string(status), 0
 }
 
+func domainProject(value db.Project) domain.Project {
+	return domain.Project{
+		ID:          value.PublicID,
+		StorageID:   value.ID,
+		Slug:        value.Slug,
+		Title:       value.Title,
+		Description: value.Description,
+		Archived:    value.Archived != 0,
+		CreatedAt:   parseTime(value.CreatedAt),
+		UpdatedAt:   parseTime(value.UpdatedAt),
+	}
+}
+
 func publicFeatureIDs(values []db.Feature) map[string]string {
+	result := make(map[string]string, len(values))
+	for _, value := range values {
+		result[value.ID] = value.PublicID
+	}
+	return result
+}
+
+func publicProjectIDs(values []db.Project) map[string]string {
 	result := make(map[string]string, len(values))
 	for _, value := range values {
 		result[value.ID] = value.PublicID
@@ -387,10 +409,11 @@ func domainDependency(value db.Dependency, taskIDs map[string]string) domain.Dep
 
 func domainDocument(
 	value db.Document,
-	featureIDs, taskIDs map[string]string,
+	projectIDs, featureIDs, taskIDs map[string]string,
 ) domain.Document {
 	return domain.Document{
 		ID:                   value.ID,
+		ProjectID:            projectIDs[value.ProjectID.String],
 		FeatureID:            featureIDs[value.FeatureID.String],
 		TaskID:               taskIDs[value.TaskID.String],
 		Kind:                 domain.DocumentKind(value.Kind),
@@ -405,10 +428,11 @@ func domainDocument(
 
 func domainListedDocument(
 	value db.ListDocumentsRow,
-	featureIDs, taskIDs map[string]string,
+	projectIDs, featureIDs, taskIDs map[string]string,
 ) domain.Document {
 	return domain.Document{
 		ID:                   value.ID,
+		ProjectID:            projectIDs[value.ProjectID.String],
 		FeatureID:            featureIDs[value.FeatureID.String],
 		TaskID:               taskIDs[value.TaskID.String],
 		Kind:                 domain.DocumentKind(value.Kind),

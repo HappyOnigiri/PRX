@@ -1386,9 +1386,10 @@ func TestBlackBoxDocumentAddResolvesPublicParentForms(t *testing.T) {
 		parent      string
 		wantMessage string
 	}{
-		{parent: "missing-feature", wantMessage: "feature or task"},
+		{parent: "missing-feature", wantMessage: "project, feature, or task"},
 		{parent: "T-999", wantMessage: "task"},
-		{parent: strings.ToLower(taskData.ID), wantMessage: "feature or task"},
+		{parent: "P-999", wantMessage: "project"},
+		{parent: strings.ToLower(taskData.ID), wantMessage: "project, feature, or task"},
 	} {
 		missing, _, missingExit := runCLI(
 			t,
@@ -1538,7 +1539,27 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	assertDirectObjectKeys(t, runConfig("config", "auth", "remove", "work-gh"), "removed")
 	assertDirectObjectKeys(t, runConfig("config", "host", "remove", "ghe.example.com"), "removed")
 
-	feature := runDB("feature", "create", "checkout", "Checkout")
+	project := runDB("project", "create", "payments", "Payments platform")
+	assertDirectObject(t, project, "id", "slug")
+	var projectID string
+	if err := json.Unmarshal(project["id"], &projectID); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObjectKeys(t, runDB("project"), "projects")
+	assertDirectObjectKeys(t, runDB("project", projectID), "project", "features", "documents")
+	assertDirectObject(t, runDB("project", "update", projectID, "--title", "Payments"), "id", "slug")
+	assertDirectObject(t, runDB("project", "archive", projectID), "id", "slug")
+	assertDirectObject(t, runDB("project", "unarchive", projectID), "id", "slug")
+	projectDocument := runDB("document", "add", projectID, "--url", "https://example.com/charter")
+	assertDirectObject(t, projectDocument, "id", "project_id")
+	var projectDocumentID string
+	if err := json.Unmarshal(projectDocument["id"], &projectDocumentID); err != nil {
+		t.Fatal(err)
+	}
+	assertDirectObjectKeys(t, runDB("document", "--project", projectID), "documents")
+	assertDirectObjectKeys(t, runDB("document", "delete", projectDocumentID), "deleted")
+
+	feature := runDB("feature", "create", "checkout", "Checkout", "--project", projectID)
 	assertDirectObject(t, feature, "id", "slug")
 	var featureID string
 	if err := json.Unmarshal(feature["id"], &featureID); err != nil {
@@ -1598,7 +1619,11 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	assertDirectObject(t, runDB("plan", "set", taskAID, "--file", planPath), "task_id", "content")
 	assertDirectObject(t, runDB("plan", taskAID), "task_id", "content")
 
-	assertDirectObject(t, runDB("snapshot"), "features", "tasks", "dependencies", "pull_requests", "documents")
+	assertDirectObject(
+		t,
+		runDB("snapshot"),
+		"projects", "features", "tasks", "dependencies", "pull_requests", "documents",
+	)
 	assertDirectObjectKeys(t, runDB("graph", featureID), "feature", "tasks", "dependencies")
 	assertDirectObjectKeys(t, runDB("ready"), "ready_tasks")
 	assertDirectObjectKeys(t, runDB("reviews"), "review_waiting_tasks")
@@ -1641,6 +1666,9 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertDirectObjectKeys(t, runDB("feature", "delete", deletableFeatureID, "--cascade"), "deleted")
+	// The checkout feature still belongs to the project, so the cascade is the
+	// form that releases it instead of failing.
+	assertDirectObjectKeys(t, runDB("project", "delete", projectID, "--cascade"), "deleted")
 }
 
 func TestBlackBoxSchemaVersionDoesNotOpenStorage(t *testing.T) {
@@ -2002,4 +2030,99 @@ func TestBlackBoxDebugKeepsCredentialsOutOfItsReport(t *testing.T) {
 			t.Fatalf("%v omitted the credential method: %s", args, result.stdout)
 		}
 	}
+}
+
+// Archiving is a write barrier at the CLI surface too, so a coding agent that
+// only has the CLI cannot edit work the WebUI presents as read-only.
+func TestBlackBoxArchivedProjectAndFeatureRefuseWrites(t *testing.T) {
+	binary := buildCLI(t)
+	dbPath := filepath.Join(t.TempDir(), "archived.db")
+
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "payments", "Payments"))
+	feature := decodeID(
+		t,
+		runCLIData(t, binary, dbPath, "feature", "create", "checkout", "Checkout", "--project", project),
+	)
+	task := decodeID(t, runCLIData(t, binary, dbPath, "task", "create", feature, "Ship it"))
+
+	for _, archiveCommand := range [][]string{
+		{"project", "archive", project},
+		{"feature", "archive", feature},
+	} {
+		if _, _, exit := runCLI(t, binary, dbPath, archiveCommand...); exit != 0 {
+			t.Fatalf("%v exit=%d", archiveCommand, exit)
+		}
+		for _, write := range [][]string{
+			{"task", "create", feature, "Another"},
+			{"task", "update", task, "--title", "Renamed"},
+			{"task", "delete", task, "--cascade"},
+			{"document", "add", feature, "--url", "https://example.com/late"},
+			{"feature", "update", feature, "--title", "Renamed"},
+		} {
+			result, _, exit := runCLI(t, binary, dbPath, write...)
+			if exit == 0 || result.ErrorCode != "archived_read_only" {
+				t.Errorf("%v result=%+v exit=%d, want archived_read_only", write, result, exit)
+			}
+		}
+		unarchive := append([]string{archiveCommand[0], "unarchive"}, archiveCommand[2])
+		if _, _, exit := runCLI(t, binary, dbPath, unarchive...); exit != 0 {
+			t.Fatalf("%v exit=%d", unarchive, exit)
+		}
+		if _, _, exit := runCLI(t, binary, dbPath, "task", "update", task, "--title", "Renamed"); exit != 0 {
+			t.Fatalf("write after %v exit=%d", unarchive, exit)
+		}
+	}
+
+	// Deleting the container is the operation the barrier lets through, and the
+	// project cascade releases its features instead of removing them.
+	if _, _, exit := runCLI(t, binary, dbPath, "project", "archive", project); exit != 0 {
+		t.Fatalf("re-archive exit=%d", exit)
+	}
+	blocked, _, exit := runCLI(t, binary, dbPath, "project", "delete", project)
+	if exit == 0 || blocked.ErrorCode != "references_exist" {
+		t.Fatalf("delete without cascade result=%+v exit=%d", blocked, exit)
+	}
+	if _, _, exit := runCLI(t, binary, dbPath, "project", "delete", project, "--cascade"); exit != 0 {
+		t.Fatalf("cascade delete exit=%d", exit)
+	}
+	var snapshot struct {
+		Projects []struct{ ID string } `json:"projects"`
+		Features []struct {
+			ID        string `json:"id"`
+			ProjectID string `json:"project_id"`
+			ReadOnly  bool   `json:"read_only"`
+		} `json:"features"`
+	}
+	if err := json.Unmarshal(runCLIData(t, binary, dbPath, "snapshot"), &snapshot); err != nil {
+		t.Fatal(err)
+	}
+	if len(snapshot.Projects) != 0 || len(snapshot.Features) != 1 {
+		t.Fatalf("snapshot=%+v", snapshot)
+	}
+	if snapshot.Features[0].ProjectID != "" || snapshot.Features[0].ReadOnly {
+		t.Fatalf("released feature=%+v", snapshot.Features[0])
+	}
+}
+
+func runCLIData(t *testing.T, binary, dbPath string, args ...string) json.RawMessage {
+	t.Helper()
+	result, stderr, exit := runCLI(t, binary, dbPath, args...)
+	if exit != 0 {
+		t.Fatalf("%v exit=%d stderr=%s", args, exit, stderr)
+	}
+	return result.Data
+}
+
+func decodeID(t *testing.T, body json.RawMessage) string {
+	t.Helper()
+	var value struct {
+		ID string `json:"id"`
+	}
+	if err := json.Unmarshal(body, &value); err != nil {
+		t.Fatal(err)
+	}
+	if value.ID == "" {
+		t.Fatalf("response has no id: %s", body)
+	}
+	return value.ID
 }

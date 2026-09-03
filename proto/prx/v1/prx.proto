@@ -232,6 +232,8 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT = 27;
   // DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN means the task already has a plan document.
   DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN = 28;
+  // DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY means the write targets an archived project or feature.
+  DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY = 29;
 }
 
 // GitHubAuthMethodType identifies how a GitHub token is obtained.
@@ -295,6 +297,26 @@ message ErrorDetail {
   repeated string path = 2;
 }
 
+// Project is a container that groups features and their shared documents.
+// Its only state is whether it is archived; it has no derived status.
+message Project {
+  // id is the public stable identifier of the project in the form P-<number>.
+  // The storage UUID is internal and is never exposed through this API.
+  string id = 1;
+  // slug is the lowercase, hyphenated identifier used by CLI commands.
+  string slug = 2;
+  // title is the human-readable project name.
+  string title = 3;
+  // description explains what the project groups.
+  string description = 4;
+  // archived makes the project and every feature in it read-only.
+  bool archived = 5;
+  // created_at is the creation time in RFC 3339 format.
+  string created_at = 6;
+  // updated_at is the last update time in RFC 3339 format.
+  string updated_at = 7;
+}
+
 // Feature is a roadmap unit that owns tasks and dependency graphs.
 message Feature {
   // id is the public stable identifier of the feature in the form F-<number>.
@@ -329,6 +351,12 @@ message Feature {
   FeatureStatus display_status = 14;
   // finished_count is the number of tasks the automatic completion rule counts as finished.
   int32 finished_count = 15;
+  // project_id identifies the owning project by its public P-<number> ID, and is empty when unaffiliated.
+  string project_id = 16;
+  // read_only is derived: the feature is archived, or its project is. Clients present read-only
+  // state from this value instead of combining the feature's own flag with its project's.
+  // Snapshot reads derive it; responses that echo the stored feature alone leave it false.
+  bool read_only = 17;
 }
 
 // Task is a unit of work belonging to a feature.
@@ -412,7 +440,7 @@ message PullRequest {
   string host = 18;
 }
 
-// Document is a reference attached to exactly one feature or task.
+// Document is a reference attached to exactly one project, feature, or task.
 message Document {
   // id is the stable identifier of the document reference.
   string id = 1;
@@ -432,6 +460,8 @@ message Document {
   bool is_implementation_plan = 8;
   // updated_at is the last update time in RFC 3339 format.
   string updated_at = 9;
+  // project_id identifies the parent project by its public P-<number> ID when the document is project-scoped.
+  string project_id = 10;
 }
 
 // Snapshot is the complete normalized dataset plus derived task queues.
@@ -454,6 +484,8 @@ message Snapshot {
   repeated Task conflict_tasks = 8;
   // stale_tasks contains tasks whose pull request data is stale or has a sync error.
   repeated Task stale_tasks = 9;
+  // projects contains all stored projects.
+  repeated Project projects = 10;
 }
 
 // GetSnapshotRequest requests the current normalized dataset and derived queues.
@@ -465,6 +497,56 @@ message GetSnapshotResponse {
   Snapshot snapshot = 1;
 }
 
+// CreateProjectRequest contains the required and descriptive values for a project.
+message CreateProjectRequest {
+  // slug is the lowercase, hyphenated project identifier.
+  string slug = 1;
+  // title is the required human-readable project name.
+  string title = 2;
+  // description is optional explanatory text for the project.
+  string description = 3;
+}
+
+// CreateProjectResponse returns the newly created project.
+message CreateProjectResponse {
+  // project is the created project with its generated identifier and timestamps.
+  Project project = 1;
+}
+
+// UpdateProjectRequest updates only the supplied project fields.
+// An unset optional field is unchanged, while an empty string requests clearing a string field.
+message UpdateProjectRequest {
+  // id identifies the project to update by public ID or slug.
+  string id = 1;
+  // slug is unchanged when unset; an empty string requests clearing it.
+  optional string slug = 2;
+  // title is unchanged when unset; an empty string requests clearing it.
+  optional string title = 3;
+  // description is unchanged when unset; an empty string clears it.
+  optional string description = 4;
+  // archived is unchanged when unset; a supplied value explicitly sets it.
+  // Clearing it is the only update an archived project accepts.
+  optional bool archived = 5;
+}
+
+// UpdateProjectResponse returns the updated project.
+message UpdateProjectResponse {
+  // project is the project after applying the requested updates.
+  Project project = 1;
+}
+
+// DeleteProjectRequest requests deletion of a project.
+message DeleteProjectRequest {
+  // id identifies the project to delete by public ID or slug.
+  string id = 1;
+  // cascade deletes the project's own documents and releases its features
+  // instead of failing; contained features are never deleted.
+  bool cascade = 2;
+}
+
+// DeleteProjectResponse confirms that the project was deleted.
+message DeleteProjectResponse {}
+
 // CreateFeatureRequest contains the required and descriptive values for a feature.
 message CreateFeatureRequest {
   // slug is the lowercase, hyphenated feature identifier.
@@ -473,6 +555,8 @@ message CreateFeatureRequest {
   string title = 2;
   // description is optional explanatory text for the feature.
   string description = 3;
+  // project_id assigns the feature to a project by public ID or slug; an empty value leaves it unaffiliated.
+  string project_id = 4;
 }
 
 // CreateFeatureResponse returns the newly created feature.
@@ -495,7 +579,11 @@ message UpdateFeatureRequest {
   // status is unchanged when unset; a supplied value replaces it.
   optional FeatureStatus status = 5;
   // archived is unchanged when unset; a supplied value explicitly sets it.
+  // Clearing it is the only update an archived feature accepts.
   optional bool archived = 6;
+  // project_id is unchanged when unset; a public ID or slug reassigns the
+  // feature, and an empty string removes it from its project.
+  optional string project_id = 7;
 }
 
 // UpdateFeatureResponse returns the updated feature.
@@ -617,9 +705,9 @@ message DetachPullRequestResponse {}
 
 // AddDocumentRequest registers one document source under exactly one parent.
 message AddDocumentRequest {
-  // feature_id identifies the parent feature when task_id is empty.
+  // feature_id identifies the parent feature when project_id and task_id are empty.
   string feature_id = 1;
-  // task_id identifies the parent task when feature_id is empty.
+  // task_id identifies the parent task when project_id and feature_id are empty.
   string task_id = 2;
   // title is the human-readable document label.
   string title = 3;
@@ -634,6 +722,8 @@ message AddDocumentRequest {
   }
   // is_implementation_plan marks this task document as its plan.
   bool is_implementation_plan = 7;
+  // project_id identifies the parent project when feature_id and task_id are empty.
+  string project_id = 8;
 }
 
 // AddDocumentResponse returns the newly registered document.
@@ -1273,10 +1363,16 @@ message GetDebugReportResponse {
   string text = 2;
 }
 
-// PRXService exposes feature, task, dependency, GitHub, document, and validation operations.
+// PRXService exposes project, feature, task, dependency, GitHub, document, and validation operations.
 service PRXService {
   // GetSnapshot returns the current normalized dataset and derived queues.
   rpc GetSnapshot(GetSnapshotRequest) returns (GetSnapshotResponse);
+  // CreateProject creates a new project.
+  rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
+  // UpdateProject applies the fields present in the request to an existing project, including archiving.
+  rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
+  // DeleteProject deletes a project, subject to the cascade option.
+  rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
   // CreateFeature creates a new feature.
   rpc CreateFeature(CreateFeatureRequest) returns (CreateFeatureResponse);
   // UpdateFeature applies the fields present in the request to an existing feature.

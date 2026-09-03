@@ -1,27 +1,24 @@
-## prx feature update
+## prx project update
 
-Update a feature by ID or slug
+Update a project by ID or slug
 
 ```
-prx feature update FEATURE_ID_OR_SLUG [flags]
+prx project update PROJECT_ID_OR_SLUG [flags]
 ```
 
 ### Examples
 
 ```
-prx feature update checkout --archived=false
-prx feature update checkout --project=
+prx project update payments --title "Payments platform"
 ```
 
 ### Options
 
 ```
-      --archived             archive (true) or unarchive (false) the feature
+      --archived             archive (true) or unarchive (false) the project
       --description string   new description
   -h, --help                 help for update
-      --project string       project ID or slug; an empty value leaves the project
       --slug string          new slug
-      --status string        auto, active, paused, completed, or cancelled
       --title string         new title
 ```
 
@@ -36,5 +33,5 @@ prx feature update checkout --project=
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - List features or show one by ID or slug
+* [prx project](prx_project.md)	 - List projects or show one by ID or slug
 

@@ -82,6 +82,7 @@ func rpcError(err error) error {
 		domain.DomainErrorCodeDuplicatePullRequest,
 		domain.DomainErrorCodeReferencesExist,
 		domain.DomainErrorCodeDuplicateImplementationPlan,
+		domain.DomainErrorCodeArchivedReadOnly,
 		domain.DomainErrorCodeCycle:
 		code = connect.CodeFailedPrecondition
 	case domain.DomainErrorCodeGitHubAuth:
@@ -110,11 +111,56 @@ func (h *Handler) GetSnapshot(
 	return connect.NewResponse(&prxv1.GetSnapshotResponse{Snapshot: protoSnapshot(snapshot)}), nil
 }
 
+func (h *Handler) CreateProject(
+	ctx context.Context,
+	req *connect.Request[prxv1.CreateProjectRequest],
+) (*connect.Response[prxv1.CreateProjectResponse], error) {
+	value, err := h.service.CreateProject(ctx, req.Msg.GetSlug(), req.Msg.GetTitle(), req.Msg.GetDescription())
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.CreateProjectResponse{Project: protoProject(value)}), nil
+}
+
+func (h *Handler) UpdateProject(
+	ctx context.Context,
+	req *connect.Request[prxv1.UpdateProjectRequest],
+) (*connect.Response[prxv1.UpdateProjectResponse], error) {
+	value, err := h.service.UpdateProject(
+		ctx,
+		req.Msg.GetId(),
+		optionalValue(req.Msg.Slug != nil, req.Msg.GetSlug()),
+		optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
+		optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
+		optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
+	)
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.UpdateProjectResponse{Project: protoProject(value)}), nil
+}
+
+func (h *Handler) DeleteProject(
+	ctx context.Context,
+	req *connect.Request[prxv1.DeleteProjectRequest],
+) (*connect.Response[prxv1.DeleteProjectResponse], error) {
+	if err := h.service.DeleteProject(ctx, req.Msg.GetId(), req.Msg.GetCascade()); err != nil {
+		return nil, rpcError(err)
+	}
+	return connect.NewResponse(&prxv1.DeleteProjectResponse{}), nil
+}
+
 func (h *Handler) CreateFeature(
 	ctx context.Context,
 	req *connect.Request[prxv1.CreateFeatureRequest],
 ) (*connect.Response[prxv1.CreateFeatureResponse], error) {
-	value, err := h.service.CreateFeature(ctx, req.Msg.GetSlug(), req.Msg.GetTitle(), req.Msg.GetDescription())
+	value, err := h.service.CreateFeature(
+		ctx,
+		req.Msg.GetSlug(),
+		req.Msg.GetTitle(),
+		req.Msg.GetDescription(),
+		req.Msg.GetProjectId(),
+	)
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -125,43 +171,19 @@ func (h *Handler) UpdateFeature(
 	ctx context.Context,
 	req *connect.Request[prxv1.UpdateFeatureRequest],
 ) (*connect.Response[prxv1.UpdateFeatureResponse], error) {
-	statusValue := req.Msg.GetStatus()
-	var statusPointer *prxv1.FeatureStatus
-	if req.Msg.Status != nil {
-		statusPointer = &statusValue
-	}
-	status, err := domainFeatureStatus(statusPointer)
+	status, err := domainFeatureStatus(optionalValue(req.Msg.Status != nil, req.Msg.GetStatus()))
 	if err != nil {
 		return nil, rpcError(err)
-	}
-	slugValue := req.Msg.GetSlug()
-	var slugPointer *string
-	if req.Msg.Slug != nil {
-		slugPointer = &slugValue
-	}
-	titleValue := req.Msg.GetTitle()
-	var titlePointer *string
-	if req.Msg.Title != nil {
-		titlePointer = &titleValue
-	}
-	descriptionValue := req.Msg.GetDescription()
-	var descriptionPointer *string
-	if req.Msg.Description != nil {
-		descriptionPointer = &descriptionValue
-	}
-	archivedValue := req.Msg.GetArchived()
-	var archivedPointer *bool
-	if req.Msg.Archived != nil {
-		archivedPointer = &archivedValue
 	}
 	value, err := h.service.UpdateFeature(
 		ctx,
 		req.Msg.GetId(),
-		slugPointer,
-		titlePointer,
-		descriptionPointer,
+		optionalValue(req.Msg.Slug != nil, req.Msg.GetSlug()),
+		optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
+		optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
 		status,
-		archivedPointer,
+		optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
+		optionalValue(req.Msg.ProjectId != nil, req.Msg.GetProjectId()),
 	)
 	if err != nil {
 		return nil, rpcError(err)
@@ -295,8 +317,11 @@ func (h *Handler) AddDocument(
 	source := protoAddDocumentSource(req.Msg)
 	value, err := h.service.AddDocument(
 		ctx,
-		req.Msg.GetFeatureId(),
-		req.Msg.GetTaskId(),
+		domain.DocumentParent{
+			ProjectID: req.Msg.GetProjectId(),
+			FeatureID: req.Msg.GetFeatureId(),
+			TaskID:    req.Msg.GetTaskId(),
+		},
 		source.Kind,
 		req.Msg.GetTitle(),
 		source.Locator,

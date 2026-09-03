@@ -11,13 +11,23 @@ import (
 type Service interface {
 	Snapshot(ctx context.Context) (domain.Snapshot, error)
 
-	CreateFeature(ctx context.Context, slug, title, description string) (domain.Feature, error)
+	CreateProject(ctx context.Context, slug, title, description string) (domain.Project, error)
+	UpdateProject(
+		ctx context.Context,
+		id string,
+		slug, title, description *string,
+		archived *bool,
+	) (domain.Project, error)
+	DeleteProject(ctx context.Context, id string, cascade bool) error
+
+	CreateFeature(ctx context.Context, slug, title, description, projectID string) (domain.Feature, error)
 	UpdateFeature(
 		ctx context.Context,
 		id string,
 		slug, title, description *string,
 		status *domain.FeatureStatus,
 		archived *bool,
+		projectID *string,
 	) (domain.Feature, error)
 	DeleteFeature(ctx context.Context, id string, cascade bool) error
 
@@ -44,7 +54,7 @@ type Service interface {
 
 	AddDocument(
 		ctx context.Context,
-		featureID, taskID string,
+		parent domain.DocumentParent,
 		kind domain.DocumentKind,
 		title, locator, content string,
 		isImplementationPlan bool,

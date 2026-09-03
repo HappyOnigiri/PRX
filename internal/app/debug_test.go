@@ -46,7 +46,7 @@ func newDebugService(t *testing.T) (*app.Service, string, string) {
 func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 	ctx := context.Background()
 	service, databasePath, configPath := newDebugService(t)
-	feature, err := service.CreateFeature(ctx, "checkout", "Checkout", "")
+	feature, err := service.CreateFeature(ctx, "checkout", "Checkout", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}

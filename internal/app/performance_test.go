@@ -27,6 +27,7 @@ func BenchmarkSnapshot5000Tasks(b *testing.B) {
 			fmt.Sprintf("feature-%03d", featureIndex),
 			fmt.Sprintf("Feature %03d", featureIndex),
 			"",
+			"",
 		)
 		if err != nil {
 			b.Fatal(err)

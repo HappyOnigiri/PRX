@@ -163,6 +163,7 @@ func queueLabel(name string) string {
 }
 
 func normalizeSnapshotCollections(snapshot domain.Snapshot) domain.Snapshot {
+	snapshot.Projects = nonNilSlice(snapshot.Projects)
 	snapshot.Features = nonNilSlice(snapshot.Features)
 	snapshot.Tasks = nonNilSlice(snapshot.Tasks)
 	snapshot.Dependencies = nonNilSlice(snapshot.Dependencies)

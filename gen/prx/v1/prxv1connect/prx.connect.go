@@ -35,6 +35,15 @@ const (
 const (
 	// PRXServiceGetSnapshotProcedure is the fully-qualified name of the PRXService's GetSnapshot RPC.
 	PRXServiceGetSnapshotProcedure = "/prx.v1.PRXService/GetSnapshot"
+	// PRXServiceCreateProjectProcedure is the fully-qualified name of the PRXService's CreateProject
+	// RPC.
+	PRXServiceCreateProjectProcedure = "/prx.v1.PRXService/CreateProject"
+	// PRXServiceUpdateProjectProcedure is the fully-qualified name of the PRXService's UpdateProject
+	// RPC.
+	PRXServiceUpdateProjectProcedure = "/prx.v1.PRXService/UpdateProject"
+	// PRXServiceDeleteProjectProcedure is the fully-qualified name of the PRXService's DeleteProject
+	// RPC.
+	PRXServiceDeleteProjectProcedure = "/prx.v1.PRXService/DeleteProject"
 	// PRXServiceCreateFeatureProcedure is the fully-qualified name of the PRXService's CreateFeature
 	// RPC.
 	PRXServiceCreateFeatureProcedure = "/prx.v1.PRXService/CreateFeature"
@@ -126,6 +135,12 @@ const (
 type PRXServiceClient interface {
 	// GetSnapshot returns the current normalized dataset and derived queues.
 	GetSnapshot(context.Context, *connect.Request[v1.GetSnapshotRequest]) (*connect.Response[v1.GetSnapshotResponse], error)
+	// CreateProject creates a new project.
+	CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v1.CreateProjectResponse], error)
+	// UpdateProject applies the fields present in the request to an existing project, including archiving.
+	UpdateProject(context.Context, *connect.Request[v1.UpdateProjectRequest]) (*connect.Response[v1.UpdateProjectResponse], error)
+	// DeleteProject deletes a project, subject to the cascade option.
+	DeleteProject(context.Context, *connect.Request[v1.DeleteProjectRequest]) (*connect.Response[v1.DeleteProjectResponse], error)
 	// CreateFeature creates a new feature.
 	CreateFeature(context.Context, *connect.Request[v1.CreateFeatureRequest]) (*connect.Response[v1.CreateFeatureResponse], error)
 	// UpdateFeature applies the fields present in the request to an existing feature.
@@ -205,6 +220,24 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			httpClient,
 			baseURL+PRXServiceGetSnapshotProcedure,
 			connect.WithSchema(pRXServiceMethods.ByName("GetSnapshot")),
+			connect.WithClientOptions(opts...),
+		),
+		createProject: connect.NewClient[v1.CreateProjectRequest, v1.CreateProjectResponse](
+			httpClient,
+			baseURL+PRXServiceCreateProjectProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("CreateProject")),
+			connect.WithClientOptions(opts...),
+		),
+		updateProject: connect.NewClient[v1.UpdateProjectRequest, v1.UpdateProjectResponse](
+			httpClient,
+			baseURL+PRXServiceUpdateProjectProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("UpdateProject")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteProject: connect.NewClient[v1.DeleteProjectRequest, v1.DeleteProjectResponse](
+			httpClient,
+			baseURL+PRXServiceDeleteProjectProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("DeleteProject")),
 			connect.WithClientOptions(opts...),
 		),
 		createFeature: connect.NewClient[v1.CreateFeatureRequest, v1.CreateFeatureResponse](
@@ -399,6 +432,9 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 // pRXServiceClient implements PRXServiceClient.
 type pRXServiceClient struct {
 	getSnapshot              *connect.Client[v1.GetSnapshotRequest, v1.GetSnapshotResponse]
+	createProject            *connect.Client[v1.CreateProjectRequest, v1.CreateProjectResponse]
+	updateProject            *connect.Client[v1.UpdateProjectRequest, v1.UpdateProjectResponse]
+	deleteProject            *connect.Client[v1.DeleteProjectRequest, v1.DeleteProjectResponse]
 	createFeature            *connect.Client[v1.CreateFeatureRequest, v1.CreateFeatureResponse]
 	updateFeature            *connect.Client[v1.UpdateFeatureRequest, v1.UpdateFeatureResponse]
 	deleteFeature            *connect.Client[v1.DeleteFeatureRequest, v1.DeleteFeatureResponse]
@@ -435,6 +471,21 @@ type pRXServiceClient struct {
 // GetSnapshot calls prx.v1.PRXService.GetSnapshot.
 func (c *pRXServiceClient) GetSnapshot(ctx context.Context, req *connect.Request[v1.GetSnapshotRequest]) (*connect.Response[v1.GetSnapshotResponse], error) {
 	return c.getSnapshot.CallUnary(ctx, req)
+}
+
+// CreateProject calls prx.v1.PRXService.CreateProject.
+func (c *pRXServiceClient) CreateProject(ctx context.Context, req *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v1.CreateProjectResponse], error) {
+	return c.createProject.CallUnary(ctx, req)
+}
+
+// UpdateProject calls prx.v1.PRXService.UpdateProject.
+func (c *pRXServiceClient) UpdateProject(ctx context.Context, req *connect.Request[v1.UpdateProjectRequest]) (*connect.Response[v1.UpdateProjectResponse], error) {
+	return c.updateProject.CallUnary(ctx, req)
+}
+
+// DeleteProject calls prx.v1.PRXService.DeleteProject.
+func (c *pRXServiceClient) DeleteProject(ctx context.Context, req *connect.Request[v1.DeleteProjectRequest]) (*connect.Response[v1.DeleteProjectResponse], error) {
+	return c.deleteProject.CallUnary(ctx, req)
 }
 
 // CreateFeature calls prx.v1.PRXService.CreateFeature.
@@ -596,6 +647,12 @@ func (c *pRXServiceClient) ValidateConfig(ctx context.Context, req *connect.Requ
 type PRXServiceHandler interface {
 	// GetSnapshot returns the current normalized dataset and derived queues.
 	GetSnapshot(context.Context, *connect.Request[v1.GetSnapshotRequest]) (*connect.Response[v1.GetSnapshotResponse], error)
+	// CreateProject creates a new project.
+	CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v1.CreateProjectResponse], error)
+	// UpdateProject applies the fields present in the request to an existing project, including archiving.
+	UpdateProject(context.Context, *connect.Request[v1.UpdateProjectRequest]) (*connect.Response[v1.UpdateProjectResponse], error)
+	// DeleteProject deletes a project, subject to the cascade option.
+	DeleteProject(context.Context, *connect.Request[v1.DeleteProjectRequest]) (*connect.Response[v1.DeleteProjectResponse], error)
 	// CreateFeature creates a new feature.
 	CreateFeature(context.Context, *connect.Request[v1.CreateFeatureRequest]) (*connect.Response[v1.CreateFeatureResponse], error)
 	// UpdateFeature applies the fields present in the request to an existing feature.
@@ -671,6 +728,24 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		PRXServiceGetSnapshotProcedure,
 		svc.GetSnapshot,
 		connect.WithSchema(pRXServiceMethods.ByName("GetSnapshot")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceCreateProjectHandler := connect.NewUnaryHandler(
+		PRXServiceCreateProjectProcedure,
+		svc.CreateProject,
+		connect.WithSchema(pRXServiceMethods.ByName("CreateProject")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceUpdateProjectHandler := connect.NewUnaryHandler(
+		PRXServiceUpdateProjectProcedure,
+		svc.UpdateProject,
+		connect.WithSchema(pRXServiceMethods.ByName("UpdateProject")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceDeleteProjectHandler := connect.NewUnaryHandler(
+		PRXServiceDeleteProjectProcedure,
+		svc.DeleteProject,
+		connect.WithSchema(pRXServiceMethods.ByName("DeleteProject")),
 		connect.WithHandlerOptions(opts...),
 	)
 	pRXServiceCreateFeatureHandler := connect.NewUnaryHandler(
@@ -863,6 +938,12 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		switch r.URL.Path {
 		case PRXServiceGetSnapshotProcedure:
 			pRXServiceGetSnapshotHandler.ServeHTTP(w, r)
+		case PRXServiceCreateProjectProcedure:
+			pRXServiceCreateProjectHandler.ServeHTTP(w, r)
+		case PRXServiceUpdateProjectProcedure:
+			pRXServiceUpdateProjectHandler.ServeHTTP(w, r)
+		case PRXServiceDeleteProjectProcedure:
+			pRXServiceDeleteProjectHandler.ServeHTTP(w, r)
 		case PRXServiceCreateFeatureProcedure:
 			pRXServiceCreateFeatureHandler.ServeHTTP(w, r)
 		case PRXServiceUpdateFeatureProcedure:
@@ -936,6 +1017,18 @@ type UnimplementedPRXServiceHandler struct{}
 
 func (UnimplementedPRXServiceHandler) GetSnapshot(context.Context, *connect.Request[v1.GetSnapshotRequest]) (*connect.Response[v1.GetSnapshotResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetSnapshot is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v1.CreateProjectResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.CreateProject is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) UpdateProject(context.Context, *connect.Request[v1.UpdateProjectRequest]) (*connect.Response[v1.UpdateProjectResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.UpdateProject is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) DeleteProject(context.Context, *connect.Request[v1.DeleteProjectRequest]) (*connect.Response[v1.DeleteProjectResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.DeleteProject is not implemented"))
 }
 
 func (UnimplementedPRXServiceHandler) CreateFeature(context.Context, *connect.Request[v1.CreateFeatureRequest]) (*connect.Response[v1.CreateFeatureResponse], error) {

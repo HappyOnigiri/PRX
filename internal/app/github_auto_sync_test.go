@@ -32,7 +32,7 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests
 	}
 	service := app.NewWithConfig(database, provider, configStore)
 
-	active, err := service.CreateFeature(ctx, "active-sync", "Active sync", "")
+	active, err := service.CreateFeature(ctx, "active-sync", "Active sync", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -43,20 +43,18 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests
 	if _, err := service.AttachPullRequest(ctx, activeTask.ID, "https://github.com/acme/api/pull/1"); err != nil {
 		t.Fatal(err)
 	}
-	archived, err := service.CreateFeature(ctx, "archived-sync", "Archived sync", "")
+	archivedTask, err := archivedFeatureWithPullRequest(
+		t, service, "archived-sync", "https://github.com/acme/web/pull/2",
+	)
 	if err != nil {
 		t.Fatal(err)
 	}
-	archivedValue := true
-	archived, err = service.UpdateFeature(ctx, archived.ID, nil, nil, nil, nil, &archivedValue)
+	// A feature that is read-only only because its project is archived leaves
+	// the same refreshes as one archived on its own.
+	projectTask, err := featureInArchivedProjectWithPullRequest(
+		t, service, "sunset", "project-sync", "https://github.com/acme/mobile/pull/4",
+	)
 	if err != nil {
-		t.Fatal(err)
-	}
-	archivedTask, err := service.CreateTask(ctx, archived.ID, "Archived PR", "", domain.TaskKindPR, "")
-	if err != nil {
-		t.Fatal(err)
-	}
-	if _, err := service.AttachPullRequest(ctx, archivedTask.ID, "https://github.com/acme/web/pull/2"); err != nil {
 		t.Fatal(err)
 	}
 	mergedTask, err := service.CreateTask(ctx, active.ID, "Merged PR", "", domain.TaskKindPR, "")
@@ -93,6 +91,7 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests
 		byTask[pullRequest.TaskID] = pullRequest
 	}
 	if byTask[activeTask.ID].LastSyncedAt == nil || byTask[archivedTask.ID].LastSyncedAt != nil ||
+		byTask[projectTask.ID].LastSyncedAt != nil ||
 		byTask[mergedTask.ID].LastSyncedAt == nil || byTask[mergedTask.ID].State != domain.PullRequestStateMerged {
 		t.Fatalf("filtered pull requests=%+v", byTask)
 	}
@@ -105,14 +104,75 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests
 		t.Fatal(err)
 	}
 	for _, pullRequest := range snapshot.PullRequests {
-		if pullRequest.TaskID == archivedTask.ID && pullRequest.LastSyncedAt != nil {
-			t.Fatalf("unscoped manual sync included archived pull request=%+v", pullRequest)
+		readOnly := pullRequest.TaskID == archivedTask.ID || pullRequest.TaskID == projectTask.ID
+		if readOnly && pullRequest.LastSyncedAt != nil {
+			t.Fatalf("unscoped manual sync included read-only pull request=%+v", pullRequest)
 		}
 	}
-	succeeded, failed, err = service.Sync(ctx, "", archivedTask.ID)
-	if err != nil || succeeded != 1 || failed != 0 {
-		t.Fatalf("manual archived sync succeeded=%d failed=%d err=%v", succeeded, failed, err)
+	for _, taskID := range []string{archivedTask.ID, projectTask.ID} {
+		succeeded, failed, err = service.Sync(ctx, "", taskID)
+		if err != nil || succeeded != 1 || failed != 0 {
+			t.Fatalf("manual scoped sync of %s succeeded=%d failed=%d err=%v", taskID, succeeded, failed, err)
+		}
 	}
+}
+
+// archivedFeatureWithPullRequest builds the work first and archives afterwards,
+// because an archived feature refuses the writes that would create it.
+func archivedFeatureWithPullRequest(
+	t *testing.T,
+	service *app.Service,
+	slug, pullRequestURL string,
+) (domain.Task, error) {
+	t.Helper()
+	ctx := context.Background()
+	feature, err := service.CreateFeature(ctx, slug, slug, "", "")
+	if err != nil {
+		return domain.Task{}, err
+	}
+	task, err := service.CreateTask(ctx, feature.ID, "Archived PR", "", domain.TaskKindPR, "")
+	if err != nil {
+		return domain.Task{}, err
+	}
+	if _, err := service.AttachPullRequest(ctx, task.ID, pullRequestURL); err != nil {
+		return domain.Task{}, err
+	}
+	archived := true
+	if _, err := service.UpdateFeature(ctx, feature.ID, nil, nil, nil, nil, &archived, nil); err != nil {
+		return domain.Task{}, err
+	}
+	return task, nil
+}
+
+// featureInArchivedProjectWithPullRequest leaves the feature itself active, so
+// the only thing making it read-only is the project it belongs to.
+func featureInArchivedProjectWithPullRequest(
+	t *testing.T,
+	service *app.Service,
+	projectSlug, featureSlug, pullRequestURL string,
+) (domain.Task, error) {
+	t.Helper()
+	ctx := context.Background()
+	project, err := service.CreateProject(ctx, projectSlug, projectSlug, "")
+	if err != nil {
+		return domain.Task{}, err
+	}
+	feature, err := service.CreateFeature(ctx, featureSlug, featureSlug, "", project.ID)
+	if err != nil {
+		return domain.Task{}, err
+	}
+	task, err := service.CreateTask(ctx, feature.ID, "Project PR", "", domain.TaskKindPR, "")
+	if err != nil {
+		return domain.Task{}, err
+	}
+	if _, err := service.AttachPullRequest(ctx, task.ID, pullRequestURL); err != nil {
+		return domain.Task{}, err
+	}
+	archived := true
+	if _, err := service.UpdateProject(ctx, project.ID, nil, nil, nil, &archived); err != nil {
+		return domain.Task{}, err
+	}
+	return task, nil
 }
 
 // A refresh narrowed to one task says nothing about the pull requests it
@@ -122,7 +182,7 @@ func TestTargetedManualSyncLeavesTheAutomaticIntervalAndStatusUntouched(t *testi
 	service, database := newAutoSyncTestService(t)
 	defer func() { _ = database.Close() }()
 
-	feature, err := service.CreateFeature(ctx, "targeted", "Targeted", "")
+	feature, err := service.CreateFeature(ctx, "targeted", "Targeted", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -167,7 +227,7 @@ func TestAutomaticSyncRecordsTheRunAfterTheCallerCancels(t *testing.T) {
 	defer func() { _ = database.Close() }()
 	service := app.NewWithConfig(database, cancellingProvider{cancel: cancel}, configStore)
 
-	feature, err := service.CreateFeature(context.Background(), "cancelled", "Cancelled", "")
+	feature, err := service.CreateFeature(context.Background(), "cancelled", "Cancelled", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}

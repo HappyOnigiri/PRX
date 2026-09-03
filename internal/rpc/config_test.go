@@ -188,7 +188,27 @@ func stringPointer(value string) *string { return &value }
 
 type noopRepository struct{}
 
-func (noopRepository) CreateFeature(context.Context, string, string, string) (domain.Feature, error) {
+func (noopRepository) CreateProject(context.Context, string, string, string) (domain.Project, error) {
+	return domain.Project{}, errors.New("not implemented")
+}
+
+func (noopRepository) UpdateProject(context.Context, domain.Project) (domain.Project, error) {
+	return domain.Project{}, errors.New("not implemented")
+}
+
+func (noopRepository) GetProject(context.Context, string) (domain.Project, error) {
+	return domain.Project{}, errors.New("not implemented")
+}
+
+func (noopRepository) GetProjectBySlug(context.Context, string) (domain.Project, error) {
+	return domain.Project{}, errors.New("not implemented")
+}
+
+func (noopRepository) DeleteProject(context.Context, string, bool) error {
+	return errors.New("not implemented")
+}
+
+func (noopRepository) CreateFeature(context.Context, string, string, string, string) (domain.Feature, error) {
 	return domain.Feature{}, errors.New("not implemented")
 }
 
@@ -261,8 +281,7 @@ func (noopRepository) DeletePullRequest(context.Context, string) error {
 
 func (noopRepository) CreateDocument(
 	context.Context,
-	string,
-	string,
+	domain.DocumentParent,
 	domain.DocumentKind,
 	string,
 	string,

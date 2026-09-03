@@ -1,7 +1,40 @@
+-- name: CreateProject :one
+INSERT INTO projects (
+  id, public_id, slug, title, description, archived, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+
+-- name: GetProject :one
+SELECT * FROM projects WHERE id = ?;
+
+-- name: GetProjectByPublicID :one
+SELECT * FROM projects WHERE public_id = ?;
+
+-- name: GetProjectBySlug :one
+SELECT * FROM projects WHERE slug = ?;
+
+-- name: ListProjects :many
+SELECT * FROM projects ORDER BY archived, updated_at DESC, slug;
+
+-- name: UpdateProject :one
+UPDATE projects SET slug=?, title=?, description=?, archived=?, updated_at=? WHERE id=? RETURNING *;
+
+-- name: DeleteProject :exec
+DELETE FROM projects WHERE id=?;
+
+-- name: CountProjectReferences :one
+SELECT (SELECT COUNT(*) FROM features WHERE features.project_id=sqlc.arg(project_id))
+  + (SELECT COUNT(*) FROM documents WHERE documents.project_id=sqlc.arg(project_id)) AS total;
+
+-- name: DetachFeaturesFromProject :exec
+UPDATE features SET project_id=NULL, updated_at=? WHERE project_id=?;
+
+-- name: DeleteDocumentsForProject :exec
+DELETE FROM documents WHERE project_id=?;
+
 -- name: CreateFeature :one
 INSERT INTO features (
-  id, public_id, slug, title, description, status, status_auto, archived, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+  id, public_id, slug, title, description, status, status_auto, archived, project_id, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
 
 -- name: IncrementIDSequence :one
 UPDATE id_sequences SET next_value = next_value + 1 WHERE entity = ? RETURNING next_value;
@@ -20,7 +53,7 @@ SELECT * FROM features ORDER BY archived, updated_at DESC, slug;
 
 -- name: UpdateFeature :one
 UPDATE features
-SET slug=?, title=?, description=?, status=?, status_auto=?, archived=?, updated_at=?
+SET slug=?, title=?, description=?, status=?, status_auto=?, archived=?, project_id=?, updated_at=?
 WHERE id=? RETURNING *;
 
 -- name: DeleteFeature :exec
@@ -121,12 +154,12 @@ DELETE FROM pull_requests WHERE task_id IN (SELECT id FROM tasks WHERE feature_i
 
 -- name: CreateDocument :one
 INSERT INTO documents (
-  id, feature_id, task_id, kind, title, locator, content,
+  id, project_id, feature_id, task_id, kind, title, locator, content,
   is_implementation_plan, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
 
 -- name: ListDocuments :many
-SELECT id, feature_id, task_id, kind, title, locator, NULL AS content,
+SELECT id, project_id, feature_id, task_id, kind, title, locator, NULL AS content,
   is_implementation_plan, created_at, updated_at
 FROM documents ORDER BY is_implementation_plan DESC, created_at, id;
 
@@ -138,9 +171,9 @@ SELECT * FROM documents WHERE task_id=? AND is_implementation_plan=1;
 
 -- name: UpsertImplementationPlanDocument :one
 INSERT INTO documents (
-  id, feature_id, task_id, kind, title, locator, content,
+  id, project_id, feature_id, task_id, kind, title, locator, content,
   is_implementation_plan, created_at, updated_at
-) VALUES (?, NULL, ?, ?, ?, ?, ?, 1, ?, ?)
+) VALUES (?, NULL, NULL, ?, ?, ?, ?, ?, 1, ?, ?)
 ON CONFLICT(task_id) WHERE is_implementation_plan=1 DO UPDATE SET
   kind=excluded.kind, locator=excluded.locator,
   content=excluded.content, updated_at=excluded.updated_at

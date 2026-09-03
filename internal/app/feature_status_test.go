@@ -122,7 +122,7 @@ func TestManualFeatureStatusOverridesAutomaticCompletion(t *testing.T) {
 	} {
 		t.Run(string(test.stored), func(t *testing.T) {
 			stored := test.stored
-			updated, err := service.UpdateFeature(ctx, feature.ID, nil, nil, nil, &stored, nil)
+			updated, err := service.UpdateFeature(ctx, feature.ID, nil, nil, nil, &stored, nil, nil)
 			if err != nil {
 				t.Fatal(err)
 			}
@@ -183,7 +183,7 @@ func createFeatureWithTasks(
 ) domain.Feature {
 	t.Helper()
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, slug, slug, "")
+	feature, err := service.CreateFeature(ctx, slug, slug, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
