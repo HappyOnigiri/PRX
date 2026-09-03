@@ -732,6 +732,39 @@ func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
 	return items, nil
 }
 
+const listGitHubRepositoryAuthCache = `-- name: ListGitHubRepositoryAuthCache :many
+SELECT host, owner, repository, auth_method_id, last_succeeded_at FROM github_repository_auth_cache ORDER BY host, owner, repository
+`
+
+func (q *Queries) ListGitHubRepositoryAuthCache(ctx context.Context) ([]GithubRepositoryAuthCache, error) {
+	rows, err := q.db.QueryContext(ctx, listGitHubRepositoryAuthCache)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []GithubRepositoryAuthCache{}
+	for rows.Next() {
+		var i GithubRepositoryAuthCache
+		if err := rows.Scan(
+			&i.Host,
+			&i.Owner,
+			&i.Repository,
+			&i.AuthMethodID,
+			&i.LastSucceededAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listImplementationPlanTaskIDs = `-- name: ListImplementationPlanTaskIDs :many
 SELECT task_id FROM documents WHERE is_implementation_plan=1 ORDER BY task_id
 `

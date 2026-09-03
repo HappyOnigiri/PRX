@@ -17,6 +17,12 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/webui"
 )
 
+// serveEndpointRecorder is implemented by the application service. The CLI
+// cannot import that package, so the address crosses the boundary as primitives.
+type serveEndpointRecorder interface {
+	SetServeEndpoint(address string, startedAt time.Time)
+}
+
 func (s *state) serveCommand() *cobra.Command {
 	var address string
 	command := &cobra.Command{
@@ -32,6 +38,12 @@ func (s *state) serveCommand() *cobra.Command {
 			listener, err := (&net.ListenConfig{}).Listen(cmd.Context(), "tcp", address)
 			if err != nil {
 				return err
+			}
+			// The accepted address is only known now, and --addr 127.0.0.1:0
+			// makes it differ from the requested one. The diagnostic report needs
+			// the address the server actually answers on.
+			if recorder, ok := s.service.(serveEndpointRecorder); ok {
+				recorder.SetServeEndpoint(listener.Addr().String(), time.Now().UTC())
 			}
 			server := &http.Server{
 				Addr:              address,

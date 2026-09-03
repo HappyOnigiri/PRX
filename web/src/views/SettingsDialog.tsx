@@ -10,11 +10,12 @@ import {
   type ThemePreference,
 } from "../i18n/settings";
 import { setDisplayTheme } from "../theme";
+import { DebugSettingsPanel } from "./DebugSettingsPanel";
 import { IconButton } from "./IconButton";
 import { LicensesSettingsPanel } from "./LicensesSettingsPanel";
 import { ServerSettingsPanel } from "./ServerSettingsPanel";
 
-const settingsTabs = ["server", "display", "licenses"] as const;
+const settingsTabs = ["server", "display", "debug", "licenses"] as const;
 type SettingsTab = (typeof settingsTabs)[number];
 
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
@@ -89,6 +90,12 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         </SettingsPanel>
         <SettingsPanel active={activeTab === "display"} tab="display">
           <DisplaySettingsPanel />
+        </SettingsPanel>
+        <SettingsPanel active={activeTab === "debug"} tab="debug">
+          {/* Unlike the other panels, this one mounts only while it is active:
+              collecting a report reads the database and the configuration file,
+              and opening the dialog must not do that on its own. */}
+          {activeTab === "debug" && <DebugSettingsPanel />}
         </SettingsPanel>
         <SettingsPanel active={activeTab === "licenses"} tab="licenses">
           <LicensesSettingsPanel />

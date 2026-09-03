@@ -1,5 +1,20 @@
 export const domain = {
   en: {
+    debugProblem: {
+      unknown: "Unrecognized problem",
+      storageUnavailable: "The database could not be opened",
+      schemaVersionAheadOfBinary: "The database was written by a newer PRX",
+      databaseNotWritable: "The database file cannot be written",
+      databaseIntegrityErrors: "Stored dependency data failed validation",
+      configUnreadable: "The configuration could not be loaded",
+      configPermissionsTooOpen: "The configuration file is readable by others",
+      configUnknownFields: "The configuration contains ignored fields",
+      noAuthMethodForHost: "A host with pull requests has no credential",
+      githubSyncRunError: "The latest synchronization run failed",
+      githubSyncOverdue: "Automatic synchronization is overdue",
+      githubSyncNeverCompleted: "No synchronization run has ever completed",
+      pullRequestsStale: "Some pull requests hold stale state",
+    },
     kind: {
       pullRequest: "Pull request",
       manual: "Manual gate",
@@ -49,6 +64,21 @@ export const domain = {
     },
   },
   ja: {
+    debugProblem: {
+      unknown: "未知の問題",
+      storageUnavailable: "データベースを開けません",
+      schemaVersionAheadOfBinary: "新しいPRXで書かれたデータベースです",
+      databaseNotWritable: "データベースファイルに書き込めません",
+      databaseIntegrityErrors: "保存された依存データの検証に失敗しました",
+      configUnreadable: "設定を読み込めません",
+      configPermissionsTooOpen: "設定ファイルが他者から読める権限です",
+      configUnknownFields: "設定に無視されるフィールドがあります",
+      noAuthMethodForHost: "PRのあるホストに認証方法がありません",
+      githubSyncRunError: "直近の同期実行が失敗しました",
+      githubSyncOverdue: "自動同期が予定より遅れています",
+      githubSyncNeverCompleted: "同期が一度も完了していません",
+      pullRequestsStale: "一部のPRが古い状態のままです",
+    },
     kind: {
       pullRequest: "プルリクエスト",
       manual: "手動ゲート",

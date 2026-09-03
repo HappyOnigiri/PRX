@@ -88,6 +88,9 @@ const (
 	PRXServiceSyncGitHubIfDueProcedure = "/prx.v1.PRXService/SyncGitHubIfDue"
 	// PRXServiceValidateProcedure is the fully-qualified name of the PRXService's Validate RPC.
 	PRXServiceValidateProcedure = "/prx.v1.PRXService/Validate"
+	// PRXServiceGetDebugReportProcedure is the fully-qualified name of the PRXService's GetDebugReport
+	// RPC.
+	PRXServiceGetDebugReportProcedure = "/prx.v1.PRXService/GetDebugReport"
 	// PRXServiceGetConfigProcedure is the fully-qualified name of the PRXService's GetConfig RPC.
 	PRXServiceGetConfigProcedure = "/prx.v1.PRXService/GetConfig"
 	// PRXServiceUpdateGitHubSyncConfigProcedure is the fully-qualified name of the PRXService's
@@ -163,6 +166,8 @@ type PRXServiceClient interface {
 	SyncGitHubIfDue(context.Context, *connect.Request[v1.SyncGitHubIfDueRequest]) (*connect.Response[v1.SyncGitHubIfDueResponse], error)
 	// Validate checks database integrity and returns any detected errors.
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
+	// GetDebugReport returns the diagnostic report without starting a synchronization run.
+	GetDebugReport(context.Context, *connect.Request[v1.GetDebugReportRequest]) (*connect.Response[v1.GetDebugReportResponse], error)
 	// GetConfig returns the public GitHub configuration.
 	GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error)
 	// UpdateGitHubSyncConfig changes the shared automatic refresh interval.
@@ -322,6 +327,12 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(pRXServiceMethods.ByName("Validate")),
 			connect.WithClientOptions(opts...),
 		),
+		getDebugReport: connect.NewClient[v1.GetDebugReportRequest, v1.GetDebugReportResponse](
+			httpClient,
+			baseURL+PRXServiceGetDebugReportProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("GetDebugReport")),
+			connect.WithClientOptions(opts...),
+		),
 		getConfig: connect.NewClient[v1.GetConfigRequest, v1.GetConfigResponse](
 			httpClient,
 			baseURL+PRXServiceGetConfigProcedure,
@@ -408,6 +419,7 @@ type pRXServiceClient struct {
 	getGitHubSyncStatus      *connect.Client[v1.GetGitHubSyncStatusRequest, v1.GetGitHubSyncStatusResponse]
 	syncGitHubIfDue          *connect.Client[v1.SyncGitHubIfDueRequest, v1.SyncGitHubIfDueResponse]
 	validate                 *connect.Client[v1.ValidateRequest, v1.ValidateResponse]
+	getDebugReport           *connect.Client[v1.GetDebugReportRequest, v1.GetDebugReportResponse]
 	getConfig                *connect.Client[v1.GetConfigRequest, v1.GetConfigResponse]
 	updateGitHubSyncConfig   *connect.Client[v1.UpdateGitHubSyncConfigRequest, v1.UpdateGitHubSyncConfigResponse]
 	addGitHubHost            *connect.Client[v1.AddGitHubHostRequest, v1.AddGitHubHostResponse]
@@ -525,6 +537,11 @@ func (c *pRXServiceClient) Validate(ctx context.Context, req *connect.Request[v1
 	return c.validate.CallUnary(ctx, req)
 }
 
+// GetDebugReport calls prx.v1.PRXService.GetDebugReport.
+func (c *pRXServiceClient) GetDebugReport(ctx context.Context, req *connect.Request[v1.GetDebugReportRequest]) (*connect.Response[v1.GetDebugReportResponse], error) {
+	return c.getDebugReport.CallUnary(ctx, req)
+}
+
 // GetConfig calls prx.v1.PRXService.GetConfig.
 func (c *pRXServiceClient) GetConfig(ctx context.Context, req *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error) {
 	return c.getConfig.CallUnary(ctx, req)
@@ -619,6 +636,8 @@ type PRXServiceHandler interface {
 	SyncGitHubIfDue(context.Context, *connect.Request[v1.SyncGitHubIfDueRequest]) (*connect.Response[v1.SyncGitHubIfDueResponse], error)
 	// Validate checks database integrity and returns any detected errors.
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
+	// GetDebugReport returns the diagnostic report without starting a synchronization run.
+	GetDebugReport(context.Context, *connect.Request[v1.GetDebugReportRequest]) (*connect.Response[v1.GetDebugReportResponse], error)
 	// GetConfig returns the public GitHub configuration.
 	GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error)
 	// UpdateGitHubSyncConfig changes the shared automatic refresh interval.
@@ -774,6 +793,12 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(pRXServiceMethods.ByName("Validate")),
 		connect.WithHandlerOptions(opts...),
 	)
+	pRXServiceGetDebugReportHandler := connect.NewUnaryHandler(
+		PRXServiceGetDebugReportProcedure,
+		svc.GetDebugReport,
+		connect.WithSchema(pRXServiceMethods.ByName("GetDebugReport")),
+		connect.WithHandlerOptions(opts...),
+	)
 	pRXServiceGetConfigHandler := connect.NewUnaryHandler(
 		PRXServiceGetConfigProcedure,
 		svc.GetConfig,
@@ -878,6 +903,8 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceSyncGitHubIfDueHandler.ServeHTTP(w, r)
 		case PRXServiceValidateProcedure:
 			pRXServiceValidateHandler.ServeHTTP(w, r)
+		case PRXServiceGetDebugReportProcedure:
+			pRXServiceGetDebugReportHandler.ServeHTTP(w, r)
 		case PRXServiceGetConfigProcedure:
 			pRXServiceGetConfigHandler.ServeHTTP(w, r)
 		case PRXServiceUpdateGitHubSyncConfigProcedure:
@@ -989,6 +1016,10 @@ func (UnimplementedPRXServiceHandler) SyncGitHubIfDue(context.Context, *connect.
 
 func (UnimplementedPRXServiceHandler) Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.Validate is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) GetDebugReport(context.Context, *connect.Request[v1.GetDebugReportRequest]) (*connect.Response[v1.GetDebugReportResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetDebugReport is not implemented"))
 }
 
 func (UnimplementedPRXServiceHandler) GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error) {

@@ -25,20 +25,25 @@ import (
 const automaticSyncTimeout = 30 * time.Second
 
 type state struct {
-	dbPath       string
-	configPath   string
-	json         bool
-	fixture      string
-	demo         bool
-	out          io.Writer
-	errOut       io.Writer
-	runStarted   bool
-	openService  OpenService
-	service      Service
-	closer       io.Closer
-	closeOnce    sync.Once
-	closeErr     error
-	standardHelp func(*cobra.Command, []string)
+	dbPath           string
+	dbPathSource     string
+	configPath       string
+	configPathSource string
+	json             bool
+	fixture          string
+	demo             bool
+	out              io.Writer
+	errOut           io.Writer
+	runStarted       bool
+	openService      OpenService
+	service          Service
+	// serviceOpenErr holds the failure `debug` is allowed to report instead of
+	// failing on, so the command that explains a broken installation still runs.
+	serviceOpenErr error
+	closer         io.Closer
+	closeOnce      sync.Once
+	closeErr       error
+	standardHelp   func(*cobra.Command, []string)
 }
 
 // closeService releases what opening the service reserved. A demo reserves a
@@ -76,6 +81,8 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 				s.dbPath = ""
 				s.configPath = ""
 				s.fixture = ""
+				s.dbPathSource = "demo"
+				s.configPathSource = "demo"
 			} else {
 				s.applyEnvironmentPaths()
 			}
@@ -97,13 +104,22 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			openContext := config.WithPath(baseContext, s.configPath)
 			live := cmd.Name() == "serve" || cmd.Name() == "sync"
 			service, closer, err := s.openService(openContext, ServiceOptions{
-				DatabasePath: s.dbPath,
-				FixturePath:  s.fixture,
-				Live:         live,
-				Demo:         s.demo,
+				DatabasePath:       s.dbPath,
+				DatabasePathSource: s.dbPathSource,
+				ConfigPathSource:   s.configPathSource,
+				FixturePath:        s.fixture,
+				Live:               live,
+				Demo:               s.demo,
 			})
 			if err != nil {
-				return domain.NewError(domain.DomainErrorCodeInternal, "%s", err)
+				// A broken installation is exactly when the diagnostic report is
+				// needed, so `debug` keeps the failure and reports it as the
+				// storage section instead of failing the command.
+				if !isDebugCommand(cmd) {
+					return domain.NewError(domain.DomainErrorCodeInternal, "%s", err)
+				}
+				s.serviceOpenErr = err
+				return nil
 			}
 			s.service = service
 			s.closer = closer
@@ -148,6 +164,7 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 		s.queueCommand("stale"),
 		s.syncCommand(),
 		s.validateCommand(),
+		s.debugCommand(),
 		s.serveCommand(),
 	)
 	s.standardHelp = root.HelpFunc()
@@ -184,12 +201,21 @@ func (s *state) helpCommand(root *cobra.Command) *cobra.Command {
 // of registering them as flag defaults, because a flag default is printed in
 // the rendered help that failures now carry in their hint.
 func (s *state) applyEnvironmentPaths() {
-	if s.dbPath == "" {
-		s.dbPath = os.Getenv("PRX_DB")
+	s.dbPath, s.dbPathSource = resolvePathSource(s.dbPath, "PRX_DB")
+	s.configPath, s.configPathSource = resolvePathSource(s.configPath, "PRX_CONFIG")
+}
+
+// resolvePathSource records which of the flag, the environment, or the default
+// selected a location. The fallback overwrites an empty flag value, so nothing
+// downstream could tell the three apart afterwards.
+func resolvePathSource(value, variable string) (resolved, source string) {
+	if value != "" {
+		return value, "flag"
 	}
-	if s.configPath == "" {
-		s.configPath = os.Getenv("PRX_CONFIG")
+	if fromEnvironment := os.Getenv(variable); fromEnvironment != "" {
+		return fromEnvironment, "env"
 	}
+	return "", "default"
 }
 
 // warnAboutConfiguration reports the recoverable configuration problems once per
@@ -232,9 +258,22 @@ func isConfigCommand(command *cobra.Command) bool {
 	return false
 }
 
+// isAutomaticSyncExcluded reports the commands the opportunistic refresh must
+// skip. `sync` performs the refresh itself, and `debug` reports the recorded
+// synchronization state, which a refresh would overwrite before the reader sees
+// the failure they were asked to send.
 func isAutomaticSyncExcluded(command *cobra.Command) bool {
 	for current := command; current != nil; current = current.Parent() {
-		if current.Name() == "sync" {
+		if current.Name() == "sync" || current.Name() == "debug" {
+			return true
+		}
+	}
+	return false
+}
+
+func isDebugCommand(command *cobra.Command) bool {
+	for current := command; current != nil; current = current.Parent() {
+		if current.Name() == "debug" {
 			return true
 		}
 	}

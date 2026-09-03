@@ -5,13 +5,16 @@ import {
   useAutoSync,
   useConfig,
   useConfigMutation,
+  useDebugReport,
   useDomainMutation,
+  useQueryDiagnostics,
   useSnapshot,
 } from "../src/hooks";
 import { makeSnapshot } from "./factories";
 
 const hookMocks = vi.hoisted(() => ({
   getSnapshot: vi.fn(),
+  getDebugReport: vi.fn(),
   getConfig: vi.fn(),
   getSyncStatus: vi.fn(),
   syncIfDue: vi.fn(),
@@ -19,6 +22,7 @@ const hookMocks = vi.hoisted(() => ({
 
 vi.mock("../src/api", () => ({
   getSnapshot: hookMocks.getSnapshot,
+  getDebugReport: hookMocks.getDebugReport,
   getConfig: hookMocks.getConfig,
   getSyncStatus: hookMocks.getSyncStatus,
   syncIfDue: hookMocks.syncIfDue,
@@ -126,6 +130,53 @@ describe("domain query hooks", () => {
     ).resolves.toBe("saved");
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ["github-config"],
+    });
+  });
+  it("requests the debug report only once the panel asks for it", async () => {
+    const report = {
+      report: { problems: [] },
+      text: "PRX diagnostic report\n",
+    };
+    hookMocks.getDebugReport.mockResolvedValue(report);
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+
+    const disabled = renderHook(() => useDebugReport(false), {
+      wrapper: createWrapper(queryClient),
+    });
+    expect(hookMocks.getDebugReport).not.toHaveBeenCalled();
+    disabled.unmount();
+
+    const { result } = renderHook(() => useDebugReport(true), {
+      wrapper: createWrapper(queryClient),
+    });
+    await waitFor(() => {
+      expect(result.current.data).toBe(report);
+    });
+    expect(hookMocks.getDebugReport).toHaveBeenCalledOnce();
+  });
+
+  it("reports the cached state of the shell queries without fetching them", async () => {
+    const queryClient = new QueryClient({
+      defaultOptions: { queries: { retry: false } },
+    });
+    queryClient.setQueryData(["snapshot"], makeSnapshot());
+    const { result } = renderHook(() => useQueryDiagnostics(), {
+      wrapper: createWrapper(queryClient),
+    });
+    expect(result.current.map((query) => query.name)).toEqual([
+      "snapshot",
+      "github-config",
+      "github-sync-status",
+    ]);
+    expect(result.current[0]?.state).toBe("success, idle");
+    expect(result.current[1]?.state).toBe("not requested");
+    expect(hookMocks.getSnapshot).not.toHaveBeenCalled();
+
+    queryClient.setQueryData(["github-config"], undefined);
+    await waitFor(() => {
+      expect(hookMocks.getConfig).not.toHaveBeenCalled();
     });
   });
 });

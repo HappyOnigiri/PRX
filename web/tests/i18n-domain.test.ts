@@ -2,6 +2,7 @@ import { Code, ConnectError } from "@connectrpc/connect";
 import { describe, expect, it } from "vitest";
 import {
   BlockedReasonCode,
+  DebugProblemCode,
   DocumentKind,
   DomainErrorCode,
   ErrorDetailSchema,
@@ -14,6 +15,7 @@ import {
 import i18n from "../src/i18n";
 import {
   blockedReasonKeys,
+  debugProblemKeys,
   displayStateKeys,
   documentKindKeys,
   errorKeys,
@@ -80,6 +82,11 @@ const translationTables = [
     name: "blocked reason codes",
     values: enumValues(BlockedReasonCode),
     keys: blockedReasonKeys as unknown as Record<number, string>,
+  },
+  {
+    name: "debug problem codes",
+    values: enumValues(DebugProblemCode),
+    keys: debugProblemKeys as unknown as Record<number, string>,
   },
   {
     name: "domain error codes",

@@ -85,6 +85,9 @@ SELECT * FROM pull_requests ORDER BY host, owner, repository, number;
 -- name: GetGitHubRepositoryAuthCache :one
 SELECT * FROM github_repository_auth_cache WHERE host=? AND owner=? AND repository=?;
 
+-- name: ListGitHubRepositoryAuthCache :many
+SELECT * FROM github_repository_auth_cache ORDER BY host, owner, repository;
+
 -- name: UpsertGitHubRepositoryAuthCache :exec
 INSERT INTO github_repository_auth_cache (host, owner, repository, auth_method_id, last_succeeded_at)
 VALUES (?, ?, ?, ?, ?)

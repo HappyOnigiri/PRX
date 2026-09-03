@@ -8,12 +8,28 @@ import (
 )
 
 // ServiceOptions carries the runtime boundaries selected by the CLI.
+// The path sources are carried so the diagnostic report can explain which of the
+// flag, the environment, or the default selected each location.
 type ServiceOptions struct {
-	DatabasePath string
-	FixturePath  string
-	Live         bool
-	Demo         bool
+	DatabasePath       string
+	DatabasePathSource string
+	ConfigPathSource   string
+	FixturePath        string
+	Live               bool
+	Demo               bool
 }
+
+// ServiceOpenError reports the database location an unsuccessful open attempted.
+// `prx debug` is expected to run when opening fails, and the resolved path is
+// the first thing its reader needs.
+type ServiceOpenError struct {
+	DatabasePath string
+	Err          error
+}
+
+func (e *ServiceOpenError) Error() string { return e.Err.Error() }
+
+func (e *ServiceOpenError) Unwrap() error { return e.Err }
 
 // OpenService constructs the application service and returns the resource that
 // must be closed after one CLI command finishes.
@@ -77,6 +93,7 @@ type Service interface {
 	DeleteDocument(ctx context.Context, id string) error
 	ReadDocumentContent(ctx context.Context, id string) (string, error)
 
+	Debug(ctx context.Context) (domain.DebugReport, error)
 	Snapshot(ctx context.Context) (domain.Snapshot, error)
 	Sync(ctx context.Context, featureID, taskID string) (int, int, error)
 	SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus, error)

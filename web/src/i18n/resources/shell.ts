@@ -4,7 +4,12 @@ export const shell = {
     settings: {
       open: "Settings",
       title: "Settings",
-      tabs: { server: "Server", display: "Display", licenses: "Licenses" },
+      tabs: {
+        server: "Server",
+        display: "Display",
+        debug: "Debug",
+        licenses: "Licenses",
+      },
       display: {
         description:
           "Choose how PRX appears in this browser. Changes apply immediately.",
@@ -18,6 +23,22 @@ export const shell = {
           description: "Color scheme used for PRX in this browser.",
           options: { system: "System", light: "Light", dark: "Dark" },
         },
+      },
+      debug: {
+        description:
+          "A diagnostic report of this PRX installation, taken when the tab was opened.",
+        generatedAt: "Taken at {{time}}",
+        reload: "Take a new report",
+        copy: "Copy report",
+        loading: "Collecting the diagnostic report…",
+        error: "The diagnostic report is unavailable.",
+        problems: "Detected problems",
+        noProblems: "No problems were detected.",
+        evidence: "Evidence",
+        next: "Next command",
+        report: "Report",
+        copyNote:
+          "The copied text is English and includes this browser's own state.",
       },
       licenses: {
         loading: "Loading license information…",
@@ -95,7 +116,12 @@ export const shell = {
     settings: {
       open: "設定",
       title: "設定",
-      tabs: { server: "サーバー", display: "表示", licenses: "ライセンス" },
+      tabs: {
+        server: "サーバー",
+        display: "表示",
+        debug: "デバッグ",
+        licenses: "ライセンス",
+      },
       display: {
         description:
           "このブラウザーでのPRXの表示を選択します。変更はすぐに反映されます。",
@@ -113,6 +139,22 @@ export const shell = {
             dark: "ダーク",
           },
         },
+      },
+      debug: {
+        description:
+          "このPRXの診断レポートです。タブを開いた時点の内容を表示します。",
+        generatedAt: "取得時刻 {{time}}",
+        reload: "取得しなおす",
+        copy: "レポートをコピー",
+        loading: "診断レポートを取得しています…",
+        error: "診断レポートを取得できません。",
+        problems: "検出された問題",
+        noProblems: "問題は検出されませんでした。",
+        evidence: "根拠",
+        next: "次に実行するコマンド",
+        report: "レポート",
+        copyNote:
+          "コピーされるテキストは英語で、このブラウザーの情報も含みます。",
       },
       licenses: {
         loading: "ライセンス情報を読み込んでいます…",

@@ -248,6 +248,37 @@ enum GithubAuthMethodType {
   GITHUB_AUTH_METHOD_TYPE_GH_CLI = 4;
 }
 
+// DebugProblemCode identifies a problem the diagnostic report detected.
+// Every member is a stable public identifier that callers may branch on.
+enum DebugProblemCode {
+  // DEBUG_PROBLEM_CODE_UNSPECIFIED is never returned by the server; it is the unmapped fallback.
+  DEBUG_PROBLEM_CODE_UNSPECIFIED = 0;
+  // DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE means the database could not be opened.
+  DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE = 1;
+  // DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY means the database was migrated by a newer PRX.
+  DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY = 2;
+  // DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE means the database file exists but cannot be written.
+  DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE = 3;
+  // DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS means stored dependency data failed validation.
+  DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS = 4;
+  // DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE means the YAML configuration could not be loaded.
+  DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE = 5;
+  // DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN means the configuration file is readable by others.
+  DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN = 6;
+  // DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS means the configuration contains fields PRX ignores.
+  DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS = 7;
+  // DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST means a host with pull requests has no credential.
+  DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST = 8;
+  // DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR means the latest recorded synchronization run failed.
+  DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR = 9;
+  // DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE means the automatic interval expired well before the report.
+  DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE = 10;
+  // DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED means pull requests exist but no run ever completed.
+  DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED = 11;
+  // DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE means at least one pull request holds stale state.
+  DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE = 12;
+}
+
 // BlockedReason is the structured reason a task is not ready.
 message BlockedReason {
   // code identifies the dependency condition preventing readiness.
@@ -958,6 +989,290 @@ message ValidateResponse {
   repeated string errors = 2;
 }
 
+// DebugProblem is one detected diagnostic problem together with its evidence.
+message DebugProblem {
+  // code identifies the detected problem.
+  DebugProblemCode code = 1;
+  // target names the file, host, or repository the problem was detected on.
+  string target = 2;
+  // evidence is the observed value that triggered the detection.
+  string evidence = 3;
+  // next_command is the command whose output explains the problem in full.
+  string next_command = 4;
+}
+
+// DebugBuild describes the running PRX build.
+message DebugBuild {
+  // version is the PRX version, carrying a -dev suffix on an unstamped development build.
+  string version = 1;
+  // development is true when the build is not a stamped release.
+  bool development = 2;
+  // go_version is the Go toolchain version the binary reports.
+  string go_version = 3;
+  // os is the operating system the binary was built for.
+  string os = 4;
+  // arch is the architecture the binary was built for.
+  string arch = 5;
+}
+
+// DebugRuntime describes the process that produced the report.
+message DebugRuntime {
+  // mode is cli for a command invocation and serve for the local server.
+  string mode = 1;
+  // demo is true while the process uses the temporary demo environment.
+  bool demo = 2;
+  // github_fixture is true while GitHub reads come from a fixture file.
+  bool github_fixture = 3;
+  // generated_at is the report time in RFC 3339 UTC format.
+  string generated_at = 4;
+  // time_zone is the local time zone name of the process.
+  string time_zone = 5;
+  // listen_address is the address the server accepted, and is empty outside serve mode.
+  string listen_address = 6;
+  // started_at is the server start time in RFC 3339 UTC format, and is empty outside serve mode.
+  string started_at = 7;
+  // uptime_seconds is how long the server has been listening, and is zero outside serve mode.
+  int64 uptime_seconds = 8;
+}
+
+// DebugEnvironmentVariable reports whether one PRX-relevant variable is set, never its value.
+message DebugEnvironmentVariable {
+  // name is the environment variable name.
+  string name = 1;
+  // set is true when the variable holds a non-empty value.
+  bool set = 2;
+}
+
+// DebugPaths reports the resolved file locations and the ambient environment that selected them.
+message DebugPaths {
+  // database_path is the resolved SQLite path, shortened to ~ under the home directory, or demo.
+  string database_path = 1;
+  // database_path_source is flag, env, default, or demo.
+  string database_path_source = 2;
+  // database_file_exists is true when the resolved database path is an existing file.
+  bool database_file_exists = 3;
+  // config_path is the resolved YAML path, shortened to ~ under the home directory, or demo.
+  string config_path = 4;
+  // config_path_source is flag, env, default, or demo.
+  string config_path_source = 5;
+  // config_file_exists is true when the resolved configuration path is an existing file.
+  bool config_file_exists = 6;
+  // config_permissions is the octal permission mode of the configuration file, when it exists.
+  string config_permissions = 7;
+  // environment_variables lists the PRX-relevant variables and whether each is set.
+  repeated DebugEnvironmentVariable environment_variables = 8;
+}
+
+// DebugConfigHost is the host boundary as the report presents it.
+message DebugConfigHost {
+  // host is the normalized GitHub host key.
+  string host = 1;
+  // api_url is the REST endpoint used for the host.
+  string api_url = 2;
+  // graphql_url is the GraphQL endpoint used for the host.
+  string graphql_url = 3;
+}
+
+// DebugConfigAuthMethod is a credential method without any secret material.
+message DebugConfigAuthMethod {
+  // id is the configured method identifier.
+  string id = 1;
+  // host is the normalized host the method is scoped to.
+  string host = 2;
+  // type is the credential source name.
+  string type = 3;
+  // secret_configured is true when the method has a usable secret source.
+  bool secret_configured = 4;
+}
+
+// DebugConfig reports the loaded configuration without secret material.
+message DebugConfig {
+  // version is the configuration file version.
+  int32 version = 1;
+  // valid is true when the configuration loaded successfully.
+  bool valid = 2;
+  // errors contains the load failure when valid is false.
+  repeated string errors = 3;
+  // warnings contains recoverable problems such as unknown fields.
+  repeated string warnings = 4;
+  // hosts lists the configured host boundaries.
+  repeated DebugConfigHost hosts = 5;
+  // auth_methods lists the credential methods in evaluation order.
+  repeated DebugConfigAuthMethod auth_methods = 6;
+  // auto_sync_interval_seconds is the configured automatic refresh interval.
+  int64 auto_sync_interval_seconds = 7;
+}
+
+// DebugDatabaseFile reports the on-disk state of the SQLite database.
+message DebugDatabaseFile {
+  // applicable is false for an in-memory or DSN-style database that has no single file.
+  bool applicable = 1;
+  // size_bytes is the size of the main database file.
+  int64 size_bytes = 2;
+  // wal_present is true when a write-ahead log file exists beside the database.
+  bool wal_present = 3;
+  // wal_size_bytes is the size of the write-ahead log file when it exists.
+  int64 wal_size_bytes = 4;
+  // shm_present is true when a shared-memory file exists beside the database.
+  bool shm_present = 5;
+  // writable is true when the database file could be opened for writing.
+  bool writable = 6;
+  // write_error explains why the database file could not be opened for writing.
+  string write_error = 7;
+}
+
+// DebugStorage reports schema state and database integrity.
+message DebugStorage {
+  // applied_schema_version is the highest migration version recorded in the database.
+  int32 applied_schema_version = 1;
+  // embedded_schema_version is the highest migration version this binary carries.
+  int32 embedded_schema_version = 2;
+  // integrity_valid is true when dependency-data validation found no errors.
+  bool integrity_valid = 3;
+  // integrity_errors contains the validation errors when integrity_valid is false.
+  repeated string integrity_errors = 4;
+  // database_file reports the on-disk state of the database.
+  DebugDatabaseFile database_file = 5;
+  // cli_schema_version is the CLI response schema version this binary emits.
+  string cli_schema_version = 6;
+  // error explains why storage diagnostics are unavailable.
+  string error = 7;
+}
+
+// DebugCount is one named count in a breakdown.
+message DebugCount {
+  // name is the value the count belongs to.
+  string name = 1;
+  // count is the number of records carrying that value.
+  int32 count = 2;
+}
+
+// DebugData reports stored record counts and their breakdowns.
+message DebugData {
+  // features is the number of stored features.
+  int32 features = 1;
+  // tasks is the number of stored tasks.
+  int32 tasks = 2;
+  // dependencies is the number of stored dependency edges.
+  int32 dependencies = 3;
+  // pull_requests is the number of attached pull requests.
+  int32 pull_requests = 4;
+  // documents is the number of registered documents.
+  int32 documents = 5;
+  // feature_statuses breaks features down by presented status.
+  repeated DebugCount feature_statuses = 6;
+  // task_display_states breaks tasks down by presented state.
+  repeated DebugCount task_display_states = 7;
+  // task_kinds breaks tasks down by kind.
+  repeated DebugCount task_kinds = 8;
+  // pull_request_display_states breaks pull requests down by presented state.
+  repeated DebugCount pull_request_display_states = 9;
+  // pull_request_hosts breaks pull requests down by normalized host.
+  repeated DebugCount pull_request_hosts = 10;
+  // document_kinds breaks documents down by source kind.
+  repeated DebugCount document_kinds = 11;
+  // error explains why the stored data could not be counted.
+  string error = 12;
+}
+
+// DebugSyncFailure counts synchronization failures within one host or repository.
+message DebugSyncFailure {
+  // scope is the host or the host, owner, and repository the failures belong to.
+  string scope = 1;
+  // count is the number of failing pull requests in that scope.
+  int32 count = 2;
+}
+
+// DebugErrorGroup is one representative synchronization error and the tasks it affected.
+message DebugErrorGroup {
+  // message is the representative error text, truncated when very long.
+  string message = 1;
+  // count is the number of pull requests whose error shares this shape.
+  int32 count = 2;
+  // task_ids lists a bounded sample of the affected task IDs.
+  repeated string task_ids = 3;
+  // total_task_count is how many tasks the group covers, including those not listed.
+  int32 total_task_count = 4;
+}
+
+// DebugAuthCacheEntry records which credential last succeeded for one repository.
+message DebugAuthCacheEntry {
+  // host is the normalized GitHub host.
+  string host = 1;
+  // owner is the repository owner.
+  string owner = 2;
+  // repository is the repository name.
+  string repository = 3;
+  // auth_method_id is the credential method that last succeeded.
+  string auth_method_id = 4;
+  // last_succeeded_at is when that credential last succeeded, in RFC 3339 UTC format.
+  string last_succeeded_at = 5;
+}
+
+// DebugGitHubSync reports synchronization state and the failures behind it.
+message DebugGitHubSync {
+  // status is the persisted process-wide synchronization status.
+  GitHubSyncStatus status = 1;
+  // next_run_at is when the interval next expires, in RFC 3339 UTC format.
+  string next_run_at = 2;
+  // due is true when the interval has already expired.
+  bool due = 3;
+  // seconds_since_last_update is how long ago the last run completed.
+  int64 seconds_since_last_update = 4;
+  // stale_pull_requests is the number of pull requests holding stale state.
+  int32 stale_pull_requests = 5;
+  // failed_pull_requests is the number of pull requests carrying a refresh error.
+  int32 failed_pull_requests = 6;
+  // host_failures breaks refresh errors down by host.
+  repeated DebugSyncFailure host_failures = 7;
+  // repository_failures breaks refresh errors down by repository, bounded in size.
+  repeated DebugSyncFailure repository_failures = 8;
+  // omitted_repository_failures is how many repository rows the size limit dropped.
+  int32 omitted_repository_failures = 9;
+  // error_groups lists representative refresh errors, bounded in size.
+  repeated DebugErrorGroup error_groups = 10;
+  // omitted_error_groups is how many error groups the size limit dropped.
+  int32 omitted_error_groups = 11;
+  // auth_cache lists the credential that last succeeded per repository, bounded in size.
+  repeated DebugAuthCacheEntry auth_cache = 12;
+  // omitted_auth_cache_entries is how many cache rows the size limit dropped.
+  int32 omitted_auth_cache_entries = 13;
+  // error explains why synchronization diagnostics are unavailable.
+  string error = 14;
+}
+
+// DebugReport is the whole diagnostic report, with detected problems first.
+message DebugReport {
+  // problems lists the detected problems in reporting order.
+  repeated DebugProblem problems = 1;
+  // build describes the running PRX build.
+  DebugBuild build = 2;
+  // runtime describes the process that produced the report.
+  DebugRuntime runtime = 3;
+  // paths reports resolved file locations and the ambient environment.
+  DebugPaths paths = 4;
+  // config reports the loaded configuration without secret material.
+  DebugConfig config = 5;
+  // storage reports schema state and database integrity.
+  DebugStorage storage = 6;
+  // records reports stored record counts and their breakdowns.
+  // It is not named data so a JSON reader never mistakes the section for a response envelope.
+  DebugData records = 7;
+  // github_sync reports synchronization state and the failures behind it.
+  DebugGitHubSync github_sync = 8;
+}
+
+// GetDebugReportRequest asks the server for a diagnostic report.
+message GetDebugReportRequest {}
+
+// GetDebugReportResponse returns the diagnostic report and its rendered text.
+message GetDebugReportResponse {
+  // report contains the structured diagnostic sections.
+  DebugReport report = 1;
+  // text is the rendered report, identical to the text `prx debug` prints.
+  string text = 2;
+}
+
 // PRXService exposes feature, task, dependency, GitHub, document, and validation operations.
 service PRXService {
   // GetSnapshot returns the current normalized dataset and derived queues.
@@ -1002,6 +1317,8 @@ service PRXService {
   rpc SyncGitHubIfDue(SyncGitHubIfDueRequest) returns (SyncGitHubIfDueResponse);
   // Validate checks database integrity and returns any detected errors.
   rpc Validate(ValidateRequest) returns (ValidateResponse);
+  // GetDebugReport returns the diagnostic report without starting a synchronization run.
+  rpc GetDebugReport(GetDebugReportRequest) returns (GetDebugReportResponse);
   // GetConfig returns the public GitHub configuration.
   rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
   // UpdateGitHubSyncConfig changes the shared automatic refresh interval.

@@ -727,6 +727,73 @@
   font-size: var(--text-sm);
 }
 
+.settings-debug-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 12px 0 4px;
+}
+
+.settings-debug-taken {
+  flex: 1 1 auto;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.settings-debug-note {
+  min-height: 18px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+
+.settings-debug-heading {
+  margin: 20px 0 8px;
+  font-size: var(--text-sm);
+}
+
+.settings-debug-problems {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  border-top: 1px solid var(--border);
+}
+
+.settings-debug-problem {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--border);
+  font-size: var(--text-sm);
+}
+
+.settings-debug-problem small {
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+
+.settings-debug-target {
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.settings-debug-text {
+  overflow-x: auto;
+  max-height: 320px;
+  margin: 0;
+  padding: 12px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  line-height: 1.5;
+}
+
 .settings-license-list {
   list-style: none;
   min-height: 48px;
