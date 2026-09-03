@@ -76,6 +76,22 @@ test("presents the demo projects and their shared references", async ({
   );
 });
 
+// A sidebar project row reuses the feature row's class, so its own single-column
+// track list has to outrank the feature one. Losing that override drops the
+// title into the 8px status-dot column, where the row still reads as present
+// but shows one clipped character.
+test("gives the sidebar project title the whole row", async ({ page }) => {
+  await page.goto("/projects");
+  const title = page
+    .locator(".project-link", { hasText: "Delivery platform" })
+    .locator("span");
+  await expect(title).toBeVisible();
+  const clipped = await title.evaluate(
+    (element) => element.scrollWidth - element.clientWidth,
+  );
+  expect(clipped).toBeLessThanOrEqual(0);
+});
+
 test("archives a project and makes its feature read-only", async ({ page }) => {
   const slug = `e2e-project-${crypto.randomUUID()}`;
   const title = `E2E project ${slug}`;

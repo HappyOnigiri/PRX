@@ -15,8 +15,11 @@
 }
 
 /* The sidebar project rows share the feature row's box but have no status dot
-   or count, so the single title column fills the row. */
-.project-link {
+   or count, so the single title column fills the row. Naming both classes
+   raises the specificity above the .feature-link track list in shell.css,
+   which main.tsx loads after this file and would otherwise win: the title
+   would land in the 8px dot column and be clipped to its first character. */
+.feature-link.project-link {
   grid-template-columns: minmax(0, 1fr);
 }
 
