@@ -1264,6 +1264,10 @@ message DebugData {
   repeated DebugCount document_kinds = 11;
   // error explains why the stored data could not be counted.
   string error = 12;
+  // projects is the number of stored projects.
+  int32 projects = 13;
+  // project_states breaks projects down by their only state, active or archived.
+  repeated DebugCount project_states = 14;
 }
 
 // DebugSyncFailure counts synchronization failures within one host or repository.

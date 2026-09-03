@@ -194,6 +194,7 @@ func TestNewDebugStorageDerivesIntegrityAndTruncatesLongErrors(t *testing.T) {
 
 func TestNewDebugDataCountsStoredRecords(t *testing.T) {
 	data := NewDebugData(Snapshot{
+		Projects: []Project{{Archived: true}, {}, {Archived: true}},
 		Features: []Feature{
 			{DisplayStatus: FeatureStatusActive},
 			{DisplayStatus: FeatureStatusCompleted},
@@ -211,8 +212,14 @@ func TestNewDebugDataCountsStoredRecords(t *testing.T) {
 		Documents: []Document{{Kind: DocumentKindURL}},
 	})
 	if data.Features != 3 || data.Tasks != 2 || data.Dependencies != 1 || data.PullRequests != 2 ||
-		data.Documents != 1 {
+		data.Documents != 1 || data.Projects != 3 {
 		t.Fatalf("data=%+v", data)
+	}
+	// An archived project is why a write into a feature that looks active can be
+	// refused, so the breakdown has to name that state.
+	if len(data.ProjectStates) != 2 || data.ProjectStates[0] != (DebugCount{Name: "archived", Count: 2}) ||
+		data.ProjectStates[1] != (DebugCount{Name: "active", Count: 1}) {
+		t.Fatalf("project states=%+v", data.ProjectStates)
 	}
 	if len(data.FeatureStatuses) != 2 || data.FeatureStatuses[0] != (DebugCount{Name: "active", Count: 2}) {
 		t.Fatalf("feature statuses=%+v", data.FeatureStatuses)
@@ -591,9 +598,11 @@ func TestFormatDebugReportRendersEverySection(t *testing.T) {
 			CLISchemaVersion: "2",
 		},
 		Records: DebugData{
+			Projects:        1,
 			Features:        1,
 			Tasks:           1,
 			PullRequests:    1,
+			ProjectStates:   []DebugCount{{Name: "archived", Count: 1}},
 			FeatureStatuses: []DebugCount{{Name: "active", Count: 1}},
 		},
 		GitHubSync: DebugGitHubSync{
@@ -688,11 +697,14 @@ storage:
     writable: yes
 
 records:
+  projects: 1
   features: 1
   tasks: 1
   dependencies: 0
   pull_requests: 1
   documents: 0
+  project_states:
+    archived: 1
   feature_statuses:
     active: 1
   task_display_states: none

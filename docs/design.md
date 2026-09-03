@@ -115,6 +115,8 @@ It never creates the database file it probes for writability.
 A failure in one section does not remove the others: a report is most valuable when something is broken.
 `prx debug` therefore succeeds even when the database cannot be opened, and reports the failure as its storage section.
 
+The record counts cover every stored kind, including projects and how many of them are archived, because an archived container is a reason a write was refused.
+
 The report is bounded, and every bounded list is ordered so the same data always produces the same output, including how it is truncated.
 A truncated list states how many rows were omitted rather than reading as a complete one.
 Callers that need every row use `prx snapshot --json` instead.
