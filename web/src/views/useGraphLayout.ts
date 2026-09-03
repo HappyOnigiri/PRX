@@ -1,4 +1,4 @@
-import type { ElkNode } from "elkjs/lib/elk-api.js";
+import type { ELK as ElkInstance, ElkNode } from "elkjs/lib/elk-api.js";
 import ELK from "elkjs/lib/elk-api.js";
 import elkWorkerUrl from "elkjs/lib/elk-worker.min.js?url";
 import { useEffect, useMemo, useState } from "react";
@@ -223,9 +223,42 @@ export function useGraphLayout({
   useEffect(() => {
     let current = true;
     const raw = buildRawNodes(layoutRequest);
-    const elk = new ELK({ workerUrl: elkWorkerUrl });
+
+    function failLayout(message: string | undefined) {
+      if (!current) return;
+      setEdgeRoutes(new Map());
+      setLayoutError({ message });
+      setCompletedLayout(layoutRequest);
+    }
+
+    // A worker that fails to start never answers, and ELK keeps its layout
+    // promise pending in that case. Own the worker so its failure events reach
+    // the graph instead of leaving it loading forever.
+    function handleWorkerFailure(event: Event) {
+      failLayout(
+        event instanceof ErrorEvent && event.message
+          ? event.message
+          : undefined,
+      );
+    }
+
+    let worker: Worker | undefined;
+    let elk: ElkInstance | undefined;
+    try {
+      elk = new ELK({
+        workerFactory: () => {
+          const created = new Worker(elkWorkerUrl);
+          created.addEventListener("error", handleWorkerFailure);
+          created.addEventListener("messageerror", handleWorkerFailure);
+          worker = created;
+          return created;
+        },
+      });
+    } catch (error) {
+      failLayout(error instanceof Error ? error.message : undefined);
+    }
     elk
-      .layout(buildLayoutGraph(raw, layoutRequest.dependencies))
+      ?.layout(buildLayoutGraph(raw, layoutRequest.dependencies))
       .then((layout) => {
         if (!current) return;
         setLayoutError(undefined);
@@ -235,16 +268,14 @@ export function useGraphLayout({
         setCompletedLayout(layoutRequest);
       })
       .catch((error: unknown) => {
-        if (!current) return;
-        setEdgeRoutes(new Map());
-        setLayoutError({
-          message: error instanceof Error ? error.message : undefined,
-        });
-        setCompletedLayout(layoutRequest);
+        failLayout(error instanceof Error ? error.message : undefined);
       });
     return () => {
       current = false;
-      elk.terminateWorker();
+      worker?.removeEventListener("error", handleWorkerFailure);
+      worker?.removeEventListener("messageerror", handleWorkerFailure);
+      if (elk) elk.terminateWorker();
+      else worker?.terminate();
     };
   }, [layoutRequest]);
 
