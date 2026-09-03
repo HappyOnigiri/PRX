@@ -88,8 +88,9 @@ An operand value that begins with `-` is passed after `--` so it is not parsed a
 
 Projects, features, and tasks carry public identifiers that remain distinct from their storage identifiers.
 They are `P-<number>`, `F-<number>`, and `T-<number>`, and their storage UUIDs must not cross the CLI, RPC, or WebUI boundary.
-An identifier operand resolves by public ID prefix first, then as a feature slug, then as a project slug.
+An operand that accepts any of the three kinds, as `show` and `document add` do, resolves by public ID prefix first, then as a feature slug, then as a project slug.
 Project and feature slugs are independent namespaces, so the same slug may exist in both; a bare slug then resolves to the feature.
+A command named after one kind resolves only that kind: `project`, `feature`, and `graph` each accept the public ID or the slug of their own resource and report the operand as not found otherwise.
 Documents are the deliberate exception: they have no separate public identifier,
 so their storage identifier is the identifier callers pass to `document get`, `document update`, and `document delete`.
 That identifier is opaque, and migrated documents may carry a value that is not formatted as a UUID.
