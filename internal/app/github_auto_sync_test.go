@@ -138,7 +138,7 @@ func archivedFeatureWithPullRequest(
 		return domain.Task{}, err
 	}
 	archived := true
-	if _, err := service.UpdateFeature(ctx, feature.ID, nil, nil, nil, nil, &archived, nil); err != nil {
+	if _, err := service.UpdateFeature(ctx, feature.ID, domain.FeatureUpdate{Archived: &archived}); err != nil {
 		return domain.Task{}, err
 	}
 	return task, nil
@@ -169,7 +169,7 @@ func featureInArchivedProjectWithPullRequest(
 		return domain.Task{}, err
 	}
 	archived := true
-	if _, err := service.UpdateProject(ctx, project.ID, nil, nil, nil, &archived); err != nil {
+	if _, err := service.UpdateProject(ctx, project.ID, domain.ProjectUpdate{Archived: &archived}); err != nil {
 		return domain.Task{}, err
 	}
 	return task, nil

@@ -116,6 +116,28 @@ type Project struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
+// ProjectUpdate carries every field a project update may change. A nil pointer
+// means the field was omitted; an empty string is a request to clear it.
+// Collecting them in one comparable value is what lets the archive barrier ask
+// whether a request changes anything but Archived without naming each field.
+type ProjectUpdate struct {
+	Slug        *string
+	Title       *string
+	Description *string
+	Archived    *bool
+}
+
+// FeatureUpdate carries every field a feature update may change, with the same
+// pointer convention and the same reason for being one value as ProjectUpdate.
+type FeatureUpdate struct {
+	Slug        *string
+	Title       *string
+	Description *string
+	Status      *FeatureStatus
+	Archived    *bool
+	ProjectID   *string
+}
+
 type Feature struct {
 	ID          string        `json:"id"`
 	StorageID   string        `json:"-"`

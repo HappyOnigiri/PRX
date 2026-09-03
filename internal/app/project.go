@@ -27,29 +27,28 @@ func (s *Service) CreateProject(ctx context.Context, slug, title, description st
 func (s *Service) UpdateProject(
 	ctx context.Context,
 	id string,
-	slug, title, description *string,
-	archived *bool,
+	update domain.ProjectUpdate,
 ) (domain.Project, error) {
 	project, err := s.ResolveProject(ctx, id)
 	if err != nil {
 		return domain.Project{}, err
 	}
-	if !archivedFlagOnly(archived, slug, title, description) {
+	if !archivedProjectFlagOnly(update) {
 		if err := s.guardProject(project); err != nil {
 			return domain.Project{}, err
 		}
 	}
-	if slug != nil {
-		project.Slug = strings.TrimSpace(strings.ToLower(*slug))
+	if update.Slug != nil {
+		project.Slug = strings.TrimSpace(strings.ToLower(*update.Slug))
 	}
-	if title != nil {
-		project.Title = strings.TrimSpace(*title)
+	if update.Title != nil {
+		project.Title = strings.TrimSpace(*update.Title)
 	}
-	if description != nil {
-		project.Description = *description
+	if update.Description != nil {
+		project.Description = *update.Description
 	}
-	if archived != nil {
-		project.Archived = *archived
+	if update.Archived != nil {
+		project.Archived = *update.Archived
 	}
 	if !slugPattern.MatchString(project.Slug) {
 		return domain.Project{}, domain.NewError(domain.DomainErrorCodeInvalidSlug, "invalid project slug")

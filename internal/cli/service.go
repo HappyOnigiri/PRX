@@ -39,24 +39,12 @@ type OpenService func(context.Context, ServiceOptions) (Service, io.Closer, erro
 // exposed by the serve command.
 type Service interface {
 	CreateProject(ctx context.Context, slug, title, description string) (domain.Project, error)
-	UpdateProject(
-		ctx context.Context,
-		id string,
-		slug, title, description *string,
-		archived *bool,
-	) (domain.Project, error)
+	UpdateProject(ctx context.Context, id string, update domain.ProjectUpdate) (domain.Project, error)
 	ResolveProject(ctx context.Context, idOrSlug string) (domain.Project, error)
 	DeleteProject(ctx context.Context, id string, cascade bool) error
 
 	CreateFeature(ctx context.Context, slug, title, description, projectID string) (domain.Feature, error)
-	UpdateFeature(
-		ctx context.Context,
-		id string,
-		slug, title, description *string,
-		status *domain.FeatureStatus,
-		archived *bool,
-		projectID *string,
-	) (domain.Feature, error)
+	UpdateFeature(ctx context.Context, id string, update domain.FeatureUpdate) (domain.Feature, error)
 	ResolveFeature(ctx context.Context, idOrSlug string) (domain.Feature, error)
 	GetNode(ctx context.Context, id string) (any, error)
 	DeleteFeature(ctx context.Context, id string, cascade bool) error

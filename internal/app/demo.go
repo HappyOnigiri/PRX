@@ -107,7 +107,7 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 	// The archive is applied last: an archived project refuses the writes that
 	// build the work inside it.
 	archived := true
-	if _, err := s.UpdateProject(ctx, sunset.ID, nil, nil, nil, &archived); err != nil {
+	if _, err := s.UpdateProject(ctx, sunset.ID, domain.ProjectUpdate{Archived: &archived}); err != nil {
 		return err
 	}
 	if issues := s.Validate(ctx); len(issues) > 0 {
@@ -173,7 +173,7 @@ func (s *Service) createPausedDemo(ctx context.Context, projectID string) error 
 		return err
 	}
 	pausedStatus := domain.FeatureStatusPaused
-	paused, err = s.UpdateFeature(ctx, paused.ID, nil, nil, nil, &pausedStatus, nil, nil)
+	paused, err = s.UpdateFeature(ctx, paused.ID, domain.FeatureUpdate{Status: &pausedStatus})
 	if err != nil {
 		return err
 	}
@@ -285,7 +285,11 @@ func (s *Service) createCancelledDemo(ctx context.Context, projectID string) err
 	}
 	cancelledStatus := domain.FeatureStatusCancelled
 	archived := true
-	if _, err := s.UpdateFeature(ctx, cancelled.ID, nil, nil, nil, &cancelledStatus, &archived, nil); err != nil {
+	if _, err := s.UpdateFeature(
+		ctx,
+		cancelled.ID,
+		domain.FeatureUpdate{Status: &cancelledStatus, Archived: &archived},
+	); err != nil {
 		return err
 	}
 	return nil

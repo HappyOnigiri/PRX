@@ -160,46 +160,43 @@ func (s *Service) CreateFeature(
 }
 
 // UpdateFeature applies every field the caller supplied. A nil pointer means the
-// field was omitted; an empty string is a request to clear it. A nil projectID
+// field was omitted; an empty string is a request to clear it. A nil ProjectID
 // leaves the membership alone, and an empty one detaches the feature.
 func (s *Service) UpdateFeature(
 	ctx context.Context,
 	id string,
-	slug, title, description *string,
-	status *domain.FeatureStatus,
-	archived *bool,
-	projectID *string,
+	update domain.FeatureUpdate,
 ) (domain.Feature, error) {
 	feature, err := s.ResolveFeature(ctx, id)
 	if err != nil {
 		return domain.Feature{}, err
 	}
-	if status != nil || !archivedFlagOnly(archived, slug, title, description, projectID) {
+	if !archivedFeatureFlagOnly(update) {
 		if err := s.guardFeature(ctx, feature); err != nil {
 			return domain.Feature{}, err
 		}
 	}
-	if projectID != nil {
-		resolvedProject, err := s.resolveProjectAssignment(ctx, strings.TrimSpace(*projectID))
+	if update.ProjectID != nil {
+		resolvedProject, err := s.resolveProjectAssignment(ctx, strings.TrimSpace(*update.ProjectID))
 		if err != nil {
 			return domain.Feature{}, err
 		}
 		feature.ProjectID = resolvedProject
 	}
-	if slug != nil {
-		feature.Slug = strings.TrimSpace(strings.ToLower(*slug))
+	if update.Slug != nil {
+		feature.Slug = strings.TrimSpace(strings.ToLower(*update.Slug))
 	}
-	if title != nil {
-		feature.Title = strings.TrimSpace(*title)
+	if update.Title != nil {
+		feature.Title = strings.TrimSpace(*update.Title)
 	}
-	if description != nil {
-		feature.Description = *description
+	if update.Description != nil {
+		feature.Description = *update.Description
 	}
-	if status != nil && *status != "" {
-		feature.Status = *status
+	if update.Status != nil && *update.Status != "" {
+		feature.Status = *update.Status
 	}
-	if archived != nil {
-		feature.Archived = *archived
+	if update.Archived != nil {
+		feature.Archived = *update.Archived
 	}
 	if !slugPattern.MatchString(feature.Slug) {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidSlug, "invalid feature slug")

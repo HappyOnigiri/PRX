@@ -91,14 +91,12 @@ func (s *state) projectUpdateCommand() *cobra.Command {
 		Example: "prx project update payments --title \"Payments platform\"",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := s.service.UpdateProject(
-				cmd.Context(),
-				args[0],
-				changedFlag(cmd, "slug", &slug),
-				changedFlag(cmd, "title", &title),
-				changedFlag(cmd, "description", &description),
-				changedBoolFlag(cmd, "archived", &archived),
-			)
+			value, err := s.service.UpdateProject(cmd.Context(), args[0], domain.ProjectUpdate{
+				Slug:        changedFlag(cmd, "slug", &slug),
+				Title:       changedFlag(cmd, "title", &title),
+				Description: changedFlag(cmd, "description", &description),
+				Archived:    changedBoolFlag(cmd, "archived", &archived),
+			})
 			if err != nil {
 				return err
 			}
@@ -125,7 +123,11 @@ func (s *state) projectArchiveCommand(archived bool) *cobra.Command {
 		Example: "prx project " + verb + " payments",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := s.service.UpdateProject(cmd.Context(), args[0], nil, nil, nil, &archived)
+			value, err := s.service.UpdateProject(
+				cmd.Context(),
+				args[0],
+				domain.ProjectUpdate{Archived: &archived},
+			)
 			if err != nil {
 				return err
 			}

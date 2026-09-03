@@ -126,14 +126,12 @@ func (h *Handler) UpdateProject(
 	ctx context.Context,
 	req *connect.Request[prxv1.UpdateProjectRequest],
 ) (*connect.Response[prxv1.UpdateProjectResponse], error) {
-	value, err := h.service.UpdateProject(
-		ctx,
-		req.Msg.GetId(),
-		optionalValue(req.Msg.Slug != nil, req.Msg.GetSlug()),
-		optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
-		optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
-		optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
-	)
+	value, err := h.service.UpdateProject(ctx, req.Msg.GetId(), domain.ProjectUpdate{
+		Slug:        optionalValue(req.Msg.Slug != nil, req.Msg.GetSlug()),
+		Title:       optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
+		Description: optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
+		Archived:    optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
+	})
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -175,16 +173,14 @@ func (h *Handler) UpdateFeature(
 	if err != nil {
 		return nil, rpcError(err)
 	}
-	value, err := h.service.UpdateFeature(
-		ctx,
-		req.Msg.GetId(),
-		optionalValue(req.Msg.Slug != nil, req.Msg.GetSlug()),
-		optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
-		optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
-		status,
-		optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
-		optionalValue(req.Msg.ProjectId != nil, req.Msg.GetProjectId()),
-	)
+	value, err := h.service.UpdateFeature(ctx, req.Msg.GetId(), domain.FeatureUpdate{
+		Slug:        optionalValue(req.Msg.Slug != nil, req.Msg.GetSlug()),
+		Title:       optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
+		Description: optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
+		Status:      status,
+		Archived:    optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
+		ProjectID:   optionalValue(req.Msg.ProjectId != nil, req.Msg.GetProjectId()),
+	})
 	if err != nil {
 		return nil, rpcError(err)
 	}

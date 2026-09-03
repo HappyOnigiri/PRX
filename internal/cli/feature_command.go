@@ -74,20 +74,14 @@ func (s *state) featureUpdateCommand() *cobra.Command {
 		Example: "prx feature update checkout --archived=false\nprx feature update checkout --project=",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := s.service.UpdateFeature(
-				cmd.Context(),
-				args[0],
-				changedFlag(cmd, "slug", &slug),
-				changedFlag(cmd, "title", &title),
-				changedFlag(
-					cmd,
-					"description",
-					&description,
-				),
-				changedStringType[domain.FeatureStatus](cmd, "status", &status),
-				changedBoolFlag(cmd, "archived", &archived),
-				changedFlag(cmd, "project", &project),
-			)
+			value, err := s.service.UpdateFeature(cmd.Context(), args[0], domain.FeatureUpdate{
+				Slug:        changedFlag(cmd, "slug", &slug),
+				Title:       changedFlag(cmd, "title", &title),
+				Description: changedFlag(cmd, "description", &description),
+				Status:      changedStringType[domain.FeatureStatus](cmd, "status", &status),
+				Archived:    changedBoolFlag(cmd, "archived", &archived),
+				ProjectID:   changedFlag(cmd, "project", &project),
+			})
 			if err != nil {
 				return err
 			}
@@ -116,7 +110,11 @@ func (s *state) featureArchiveCommand(archived bool) *cobra.Command {
 		Example: "prx feature " + verb + " checkout",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := s.service.UpdateFeature(cmd.Context(), args[0], nil, nil, nil, nil, &archived, nil)
+			value, err := s.service.UpdateFeature(
+				cmd.Context(),
+				args[0],
+				domain.FeatureUpdate{Archived: &archived},
+			)
 			if err != nil {
 				return err
 			}

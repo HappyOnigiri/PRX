@@ -51,7 +51,7 @@ func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 		t.Fatal(err)
 	}
 	archived := true
-	if _, err := service.UpdateProject(ctx, project.ID, nil, nil, nil, &archived); err != nil {
+	if _, err := service.UpdateProject(ctx, project.ID, domain.ProjectUpdate{Archived: &archived}); err != nil {
 		t.Fatal(err)
 	}
 	feature, err := service.CreateFeature(ctx, "checkout", "Checkout", "", "")

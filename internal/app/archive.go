@@ -26,21 +26,29 @@ func archivedReadOnly() error {
 	)
 }
 
-// archivedFlagOnly reports whether a request carries the archived flag and
-// changes nothing else. Moving that flag is the one update an archived record
-// accepts, in either direction, so lifting the archive and re-archiving a
-// record both stay possible while a request that also carries another change
-// stays refused.
-func archivedFlagOnly(archived *bool, others ...*string) bool {
-	if archived == nil {
+// archivedFeatureFlagOnly and archivedProjectFlagOnly report whether a request
+// carries the archived flag and changes nothing else. Moving that flag is the
+// one update an archived record accepts, in either direction, so lifting the
+// archive and re-archiving a record both stay possible while a request that
+// also carries another change stays refused.
+//
+// Each clears the flag and compares what is left with the zero value, so the
+// question stays structural: a field added to the update type is covered by the
+// barrier without this rule being edited.
+func archivedFeatureFlagOnly(update domain.FeatureUpdate) bool {
+	if update.Archived == nil {
 		return false
 	}
-	for _, value := range others {
-		if value != nil {
-			return false
-		}
+	update.Archived = nil
+	return update == domain.FeatureUpdate{}
+}
+
+func archivedProjectFlagOnly(update domain.ProjectUpdate) bool {
+	if update.Archived == nil {
+		return false
 	}
-	return true
+	update.Archived = nil
+	return update == domain.ProjectUpdate{}
 }
 
 // featureReadOnly derives, for a feature read outside a snapshot, the value

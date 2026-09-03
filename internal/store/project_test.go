@@ -90,22 +90,22 @@ func TestFeatureProjectMembershipIsOptionalAndReversible(t *testing.T) {
 		t.Fatalf("unaffiliated feature=%+v err=%v", unaffiliated, err)
 	}
 	empty := ""
-	detached, err := service.UpdateFeature(ctx, feature.ID, nil, nil, nil, nil, nil, &empty)
+	detached, err := service.UpdateFeature(ctx, feature.ID, domain.FeatureUpdate{ProjectID: &empty})
 	if err != nil || detached.ProjectID != "" {
 		t.Fatalf("detached feature=%+v err=%v", detached, err)
 	}
 	// An omitted membership leaves the current one alone.
-	renamed, err := service.UpdateFeature(ctx, feature.ID, nil, stringPointer("Renamed"), nil, nil, nil, nil)
+	renamed, err := service.UpdateFeature(ctx, feature.ID, domain.FeatureUpdate{Title: stringPointer("Renamed")})
 	if err != nil || renamed.ProjectID != "" {
 		t.Fatalf("renamed feature=%+v err=%v", renamed, err)
 	}
-	reattached, err := service.UpdateFeature(ctx, feature.ID, nil, nil, nil, nil, nil, &project.ID)
+	reattached, err := service.UpdateFeature(ctx, feature.ID, domain.FeatureUpdate{ProjectID: &project.ID})
 	if err != nil || reattached.ProjectID != project.ID {
 		t.Fatalf("reattached feature=%+v err=%v", reattached, err)
 	}
 	missing := "P-9"
 	if _, err := service.UpdateFeature(
-		ctx, feature.ID, nil, nil, nil, nil, nil, &missing,
+		ctx, feature.ID, domain.FeatureUpdate{ProjectID: &missing},
 	); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("missing project code=%s err=%v", domain.ErrorCode(err), err)
 	}
@@ -209,10 +209,10 @@ func (f readOnlyFixture) refusedWrites(ctx context.Context) map[string]error {
 	_, updateProjectDocumentErr := service.UpdateDocument(
 		ctx, f.projectDocument.ID, stringPointer("Renamed"), nil, nil,
 	)
-	_, featureErr := service.UpdateFeature(ctx, f.feature.ID, nil, stringPointer("Renamed"), nil, nil, nil, nil)
+	_, featureErr := service.UpdateFeature(ctx, f.feature.ID, domain.FeatureUpdate{Title: stringPointer("Renamed")})
 	empty := ""
-	_, membershipErr := service.UpdateFeature(ctx, f.feature.ID, nil, nil, nil, nil, nil, &empty)
-	_, projectErr := service.UpdateProject(ctx, f.project.ID, nil, stringPointer("Renamed"), nil, nil)
+	_, membershipErr := service.UpdateFeature(ctx, f.feature.ID, domain.FeatureUpdate{ProjectID: &empty})
+	_, projectErr := service.UpdateProject(ctx, f.project.ID, domain.ProjectUpdate{Title: stringPointer("Renamed")})
 	return map[string]error{
 		"add dependency":           dependencyErr,
 		"remove dependency":        service.RemoveDependency(ctx, f.blocker.ID, f.blocked.ID),
@@ -242,7 +242,9 @@ func TestArchivedProjectRefusesEveryWriteInsideIt(t *testing.T) {
 	ctx := context.Background()
 	fixture := newReadOnlyFixture(t)
 	archived := true
-	if _, err := fixture.service.UpdateProject(ctx, fixture.project.ID, nil, nil, nil, &archived); err != nil {
+	if _, err := fixture.service.UpdateProject(
+		ctx, fixture.project.ID, domain.ProjectUpdate{Archived: &archived},
+	); err != nil {
 		t.Fatal(err)
 	}
 	snapshot, err := fixture.service.Snapshot(ctx)
@@ -264,7 +266,9 @@ func TestArchivedProjectRefusesEveryWriteInsideIt(t *testing.T) {
 	// Lifting the archive is the one update the project accepts, and it restores
 	// writes to everything inside it.
 	active := false
-	if _, err := fixture.service.UpdateProject(ctx, fixture.project.ID, nil, nil, nil, &active); err != nil {
+	if _, err := fixture.service.UpdateProject(
+		ctx, fixture.project.ID, domain.ProjectUpdate{Archived: &active},
+	); err != nil {
 		t.Fatal(err)
 	}
 	if _, err := fixture.service.CreateTask(
@@ -279,7 +283,7 @@ func TestArchivedFeatureRefusesWritesButStaysDeletable(t *testing.T) {
 	fixture := newReadOnlyFixture(t)
 	archived := true
 	if _, err := fixture.service.UpdateFeature(
-		ctx, fixture.feature.ID, nil, nil, nil, nil, &archived, nil,
+		ctx, fixture.feature.ID, domain.FeatureUpdate{Archived: &archived},
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -317,11 +321,11 @@ func TestArchivedFlagMovesInBothDirectionsPastTheBarrier(t *testing.T) {
 	fixture := newReadOnlyFixture(t)
 	archived, active := true, false
 	setProject := func(value *bool) error {
-		_, err := fixture.service.UpdateProject(ctx, fixture.project.ID, nil, nil, nil, value)
+		_, err := fixture.service.UpdateProject(ctx, fixture.project.ID, domain.ProjectUpdate{Archived: value})
 		return err
 	}
 	setFeature := func(value *bool) error {
-		_, err := fixture.service.UpdateFeature(ctx, fixture.feature.ID, nil, nil, nil, nil, value, nil)
+		_, err := fixture.service.UpdateFeature(ctx, fixture.feature.ID, domain.FeatureUpdate{Archived: value})
 		return err
 	}
 	for _, step := range []struct {
@@ -342,7 +346,7 @@ func TestArchivedFlagMovesInBothDirectionsPastTheBarrier(t *testing.T) {
 	// Only the flag passes: clearing it together with another change is still a
 	// write into an archived container.
 	if _, err := fixture.service.UpdateFeature(
-		ctx, fixture.feature.ID, nil, stringPointer("Renamed"), nil, nil, &active, nil,
+		ctx, fixture.feature.ID, domain.FeatureUpdate{Title: stringPointer("Renamed"), Archived: &active},
 	); domain.ErrorCode(err) != domain.DomainErrorCodeArchivedReadOnly {
 		t.Errorf("unarchive with a title change: code=%s err=%v, want archived_read_only",
 			domain.ErrorCode(err), err)
@@ -380,7 +384,9 @@ func TestProjectDeleteReleasesFeaturesAndRemovesOnlyItsOwnDocuments(t *testing.T
 	// An archived project is still deletable; the release of its features is
 	// part of the deletion rather than a forbidden membership change.
 	archived := true
-	if _, err := fixture.service.UpdateProject(ctx, fixture.project.ID, nil, nil, nil, &archived); err != nil {
+	if _, err := fixture.service.UpdateProject(
+		ctx, fixture.project.ID, domain.ProjectUpdate{Archived: &archived},
+	); err != nil {
 		t.Fatal(err)
 	}
 	if err := fixture.service.DeleteProject(ctx, fixture.project.ID, true); err != nil {
