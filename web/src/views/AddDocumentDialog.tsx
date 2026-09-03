@@ -12,6 +12,7 @@ import {
 } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations, selectLocalFile } from "../api";
+import type { DocumentParent } from "../document-parent";
 import { DocumentKind } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { IconButton } from "./IconButton";
@@ -22,9 +23,6 @@ const documentTabs = [
   { kind: DocumentKind.LOCAL_FILE, key: "localFile", icon: FileUp },
   { kind: DocumentKind.MARKDOWN, key: "markdown", icon: Text },
 ] as const;
-
-type DocumentParent =
-  { featureId: string; taskId?: never } | { featureId?: never; taskId: string };
 
 type AddDocumentDialogProps = DocumentParent & {
   trigger: HTMLElement | null;
@@ -71,6 +69,7 @@ function useDialogState(props: AddDocumentDialogProps) {
       kind,
       value: values[kind] ?? "",
     };
+    if (props.projectId !== undefined) input.projectId = props.projectId;
     if (props.featureId !== undefined) input.featureId = props.featureId;
     if (props.taskId !== undefined) {
       input.taskId = props.taskId;
@@ -192,18 +191,20 @@ export function AddDocumentDialog(props: AddDocumentDialogProps) {
   );
 }
 
+// The heading names the parent the document will belong to, so the three
+// entry points do not each need their own dialog.
+function documentDialogTitleKey(state: DialogState) {
+  if (state.projectId !== undefined) return "documentDialog.projectTitle";
+  if (state.featureId !== undefined) return "documentDialog.featureTitle";
+  return "documentDialog.taskTitle";
+}
+
 function DialogHeader({ state }: { state: DialogState }) {
   const { t } = useTranslation();
   return (
     <header className="document-dialog-head">
       <div>
-        <h2 id={state.titleId}>
-          {t(
-            state.taskId === undefined
-              ? "documentDialog.featureTitle"
-              : "documentDialog.taskTitle",
-          )}
-        </h2>
+        <h2 id={state.titleId}>{t(documentDialogTitleKey(state))}</h2>
         <p className="dialog-lead">{t("documentDialog.description")}</p>
       </div>
       <IconButton

@@ -8,11 +8,13 @@ import {
   AddGitHubHostRequestSchema,
   AttachPullRequestRequestSchema,
   CreateFeatureRequestSchema,
+  CreateProjectRequestSchema,
   CreateTaskRequestSchema,
   DeleteDocumentRequestSchema,
   DeleteFeatureRequestSchema,
   DeleteGitHubAuthMethodRequestSchema,
   DeleteGitHubHostRequestSchema,
+  DeleteProjectRequestSchema,
   DeleteTaskRequestSchema,
   DetachPullRequestRequestSchema,
   DocumentKind,
@@ -33,6 +35,7 @@ import {
   UpdateGitHubAuthMethodRequestSchema,
   UpdateGitHubHostRequestSchema,
   UpdateGitHubSyncConfigRequestSchema,
+  UpdateProjectRequestSchema,
   UpdateTaskRequestSchema,
   ValidateConfigRequestSchema,
   type DebugReport,
@@ -90,10 +93,29 @@ export async function syncIfDue() {
 }
 
 export const mutations = {
+  createProject: (input: {
+    slug: string;
+    title: string;
+    description: string;
+  }) => client.createProject(create(CreateProjectRequestSchema, input)),
+  updateProject: (input: {
+    id: string;
+    slug?: string;
+    title?: string;
+    description?: string;
+    archived?: boolean;
+  }) => client.updateProject(create(UpdateProjectRequestSchema, input)),
+  // The cascade releases the project's features instead of deleting them, so
+  // this is the only form the WebUI needs.
+  deleteProject: (id: string) =>
+    client.deleteProject(
+      create(DeleteProjectRequestSchema, { id, cascade: true }),
+    ),
   createFeature: (input: {
     slug: string;
     title: string;
     description: string;
+    projectId?: string;
   }) => client.createFeature(create(CreateFeatureRequestSchema, input)),
   updateFeature: (input: {
     id: string;
@@ -102,6 +124,7 @@ export const mutations = {
     description?: string;
     status?: FeatureStatus;
     archived?: boolean;
+    projectId?: string;
   }) => client.updateFeature(create(UpdateFeatureRequestSchema, input)),
   deleteFeature: (id: string) =>
     client.deleteFeature(
@@ -140,6 +163,7 @@ export const mutations = {
       create(DetachPullRequestRequestSchema, { taskId }),
     ),
   addDocument: (input: {
+    projectId?: string;
     featureId?: string;
     taskId?: string;
     title: string;
@@ -154,12 +178,14 @@ export const mutations = {
           ? { case: "localFile" as const, value: input.value }
           : { case: "markdown" as const, value: input.value };
     const request: {
+      projectId?: string;
       featureId?: string;
       taskId?: string;
       title: string;
       source: typeof source;
       isImplementationPlan?: boolean;
     } = { title: input.title, source };
+    if (input.projectId !== undefined) request.projectId = input.projectId;
     if (input.featureId !== undefined) request.featureId = input.featureId;
     if (input.taskId !== undefined) request.taskId = input.taskId;
     if (input.isImplementationPlan !== undefined)

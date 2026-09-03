@@ -2,6 +2,7 @@ import { ChevronDown, Plus } from "lucide-react";
 import { useEffect, useId, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
+import type { DocumentParent } from "../document-parent";
 import { useDomainMutation } from "../hooks";
 import { AddDocumentDialog } from "./AddDocumentDialog";
 import { IconButton } from "./IconButton";
@@ -9,19 +10,21 @@ import { MutationError } from "./MutationError";
 import { DocumentRow, MarkdownEditForm } from "./TaskInspectorReferences";
 import type { TaskNodeDocument } from "./TaskNode";
 
-interface FeatureReferencesProps {
-  featureId: string;
+// The panel and its editing flow do not depend on which parent owns the
+// documents, so the parent is passed straight through to the add dialog.
+interface DocumentReferencesProps {
+  parent: DocumentParent;
   documents: TaskNodeDocument[];
   onPreview: (document: TaskNodeDocument) => void;
   readOnly?: boolean;
 }
 
-export function FeatureReferences({
-  featureId,
+export function DocumentReferences({
+  parent,
   documents,
   onPreview,
   readOnly = false,
-}: FeatureReferencesProps) {
+}: DocumentReferencesProps) {
   const { t } = useTranslation();
   const deleteDocument = useDomainMutation(mutations.deleteDocument);
   const updateDocument = useDomainMutation(mutations.updateDocument);
@@ -74,13 +77,13 @@ export function FeatureReferences({
   }
 
   return (
-    <div className="feature-references" ref={rootRef}>
+    <div className="document-references" ref={rootRef}>
       <IconButton
         ref={triggerRef}
         id={triggerId}
         icon={ChevronDown}
         label={t("workspace.references")}
-        className="feature-references-trigger"
+        className="document-references-trigger"
         variant="secondary"
         aria-expanded={open}
         aria-controls={panelId}
@@ -89,7 +92,7 @@ export function FeatureReferences({
         }}
       />
       {open && (
-        <FeatureReferencesPanel
+        <DocumentReferencesPanel
           id={panelId}
           labelledBy={triggerId}
           documents={ordered}
@@ -128,7 +131,7 @@ export function FeatureReferences({
       )}
       {showAddDialog && (
         <AddDocumentDialog
-          featureId={featureId}
+          {...parent}
           trigger={addTrigger}
           onClose={() => {
             setShowAddDialog(false);
@@ -139,7 +142,7 @@ export function FeatureReferences({
   );
 }
 
-function FeatureReferencesPanel({
+function DocumentReferencesPanel({
   id,
   labelledBy,
   documents,
@@ -170,10 +173,10 @@ function FeatureReferencesPanel({
   return (
     <section
       id={id}
-      className="feature-references-panel"
+      className="document-references-panel"
       aria-labelledby={labelledBy}
     >
-      <div className="feature-references-list">
+      <div className="document-references-list">
         {documents.map((document) =>
           editing?.id === document.id ? (
             <MarkdownEditForm
@@ -206,7 +209,7 @@ function FeatureReferencesPanel({
         ))}
       </div>
       {!readOnly && (
-        <div className="feature-references-footer">
+        <div className="document-references-footer">
           <IconButton
             icon={Plus}
             label={t("workspace.addReference")}

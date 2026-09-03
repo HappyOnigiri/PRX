@@ -52,6 +52,7 @@ describe("EditFeatureDialog", () => {
     const onClose = vi.fn();
     const { rerender } = render(
       <EditFeatureDialog
+        projects={[]}
         feature={makeFeature({
           slug: "payments",
           title: "Payments",
@@ -71,7 +72,7 @@ describe("EditFeatureDialog", () => {
     fireEvent.change(screen.getByLabelText("Description"), {
       target: { value: "Updated scope" },
     });
-    fireEvent.change(screen.getByRole("combobox"), {
+    fireEvent.change(screen.getByLabelText("Status"), {
       target: { value: String(FeatureStatus.PAUSED) },
     });
     fireEvent.submit(screen.getByRole("form", { name: "Edit feature" }));
@@ -85,6 +86,7 @@ describe("EditFeatureDialog", () => {
       title: "Payments v2",
       description: "Updated scope",
       status: FeatureStatus.PAUSED,
+      projectId: "",
     });
 
     onClose.mockClear();
@@ -92,6 +94,7 @@ describe("EditFeatureDialog", () => {
     mutationAt(0).mutateAsync.mockRejectedValueOnce(new Error("update failed"));
     rerender(
       <EditFeatureDialog
+        projects={[]}
         feature={makeFeature()}
         onClose={onClose}
         onDeleted={vi.fn()}
@@ -110,6 +113,7 @@ describe("EditFeatureDialog", () => {
     const onClose = vi.fn();
     render(
       <EditFeatureDialog
+        projects={[]}
         feature={makeFeature({
           title: "Payments",
           status: FeatureStatus.AUTO,
@@ -120,14 +124,14 @@ describe("EditFeatureDialog", () => {
         onDeleted={vi.fn()}
       />,
     );
-    expect(screen.getByRole("combobox")).toHaveValue(
+    expect(screen.getByLabelText("Status")).toHaveValue(
       String(FeatureStatus.AUTO),
     );
     expect(
       screen.getByRole("option", { name: "Automatic" }),
     ).toBeInTheDocument();
 
-    fireEvent.change(screen.getByRole("combobox"), {
+    fireEvent.change(screen.getByLabelText("Status"), {
       target: { value: String(FeatureStatus.COMPLETED) },
     });
     fireEvent.submit(screen.getByRole("form", { name: "Edit feature" }));
@@ -153,6 +157,7 @@ describe("EditFeatureDialog", () => {
       title: "Payments",
       description: "",
       status: FeatureStatus.COMPLETED,
+      projectId: "",
     });
   });
 
@@ -160,12 +165,13 @@ describe("EditFeatureDialog", () => {
     const onClose = vi.fn();
     render(
       <EditFeatureDialog
+        projects={[]}
         feature={makeFeature({ taskCount: 2, finishedCount: 2 })}
         onClose={onClose}
         onDeleted={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByRole("combobox"), {
+    fireEvent.change(screen.getByLabelText("Status"), {
       target: { value: String(FeatureStatus.COMPLETED) },
     });
     fireEvent.submit(screen.getByRole("form", { name: "Edit feature" }));
@@ -178,6 +184,7 @@ describe("EditFeatureDialog", () => {
       title: "Payments rollout",
       description: "",
       status: FeatureStatus.COMPLETED,
+      projectId: "",
     });
   });
 
@@ -187,6 +194,7 @@ describe("EditFeatureDialog", () => {
     mutationAt(0).mutateAsync.mockRejectedValue(new Error("archive failed"));
     render(
       <EditFeatureDialog
+        projects={[]}
         feature={makeFeature({ title: "Payments" })}
         onClose={onClose}
         onDeleted={vi.fn()}
@@ -240,6 +248,7 @@ describe("EditFeatureDialog", () => {
     const onClose = vi.fn();
     render(
       <EditFeatureDialog
+        projects={[]}
         feature={makeFeature({
           archived: true,
           title: "Archived payments",
@@ -285,6 +294,7 @@ describe("EditFeatureDialog", () => {
     const onDeleted = vi.fn();
     render(
       <EditFeatureDialog
+        projects={[]}
         feature={makeFeature({ title: "Payments", taskCount: 3 })}
         onClose={vi.fn()}
         onDeleted={onDeleted}
@@ -317,6 +327,7 @@ describe("EditFeatureDialog", () => {
     mutationAt(1).isPending = false;
     const pendingRender = render(
       <EditFeatureDialog
+        projects={[]}
         feature={makeFeature()}
         onClose={vi.fn()}
         onDeleted={vi.fn()}
@@ -326,6 +337,7 @@ describe("EditFeatureDialog", () => {
     mutationAt(1).isPending = true;
     pendingRender.rerender(
       <EditFeatureDialog
+        projects={[]}
         feature={makeFeature()}
         onClose={vi.fn()}
         onDeleted={vi.fn()}

@@ -5,6 +5,7 @@ import {
   screen,
   within,
 } from "@testing-library/react";
+import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import type { Snapshot } from "../src/gen/prx/v1/prx_pb";
 import { FeatureWorkspace } from "../src/views/FeatureWorkspace";
@@ -12,6 +13,7 @@ import {
   makeDependency,
   makeDocument,
   makeFeature,
+  makeProject,
   makePullRequest,
   makeSnapshot,
   makeTask,
@@ -46,6 +48,11 @@ const workspaceMocks = vi.hoisted(() => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
+  Link: ({ children, params }: { children: ReactNode; params?: unknown }) => (
+    <a href="#test" data-params={JSON.stringify(params)}>
+      {children}
+    </a>
+  ),
   useNavigate: () => workspaceMocks.navigate,
   useParams: () => ({ featureId: "feature-1" }),
 }));
@@ -341,7 +348,7 @@ describe("FeatureWorkspace", () => {
 
   it("makes archived workspaces read-only and returns deletion to the archive", () => {
     workspaceMocks.snapshot.data = makeSnapshot({
-      features: [{ ...feature, archived: true }],
+      features: [{ ...feature, archived: true, readOnly: true }],
       tasks: [task],
     });
     render(<FeatureWorkspace />);
@@ -366,5 +373,38 @@ describe("FeatureWorkspace", () => {
       screen.getByRole("button", { name: "Mock delete feature" }),
     );
     expect(workspaceMocks.navigate).toHaveBeenCalledWith({ to: "/archived" });
+  });
+
+  // A feature can be read-only without being archived itself. The remedy is on
+  // the project, so the notice names it and links there instead of offering a
+  // restore the server would refuse.
+  it("attributes read-only state to an archived project and links to it", () => {
+    workspaceMocks.snapshot.data = makeSnapshot({
+      projects: [
+        makeProject({
+          id: "project-1",
+          title: "Delivery platform",
+          archived: true,
+        }),
+      ],
+      features: [{ ...feature, projectId: "project-1", readOnly: true }],
+      tasks: [task],
+    });
+    render(<FeatureWorkspace />);
+
+    expect(
+      screen.getByText("Project archived · read-only"),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "This feature is read-only because Delivery platform is archived. Activate the project to edit or sync it.",
+      ),
+    ).toBeInTheDocument();
+    expect(screen.getByText("Open project")).toBeInTheDocument();
+    expect(screen.getByText("Delivery platform")).toBeInTheDocument();
+    expect(screen.getByText("Mock read-only graph")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Sync GitHub" }),
+    ).not.toBeInTheDocument();
   });
 });

@@ -213,6 +213,7 @@ describe("AppShell", () => {
       slug: "release",
       title: "Release",
       description: "Ship it",
+      projectId: "",
     });
     expect(shellMocks.navigate).toHaveBeenCalledWith({
       to: "/features/$featureId",

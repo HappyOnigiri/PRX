@@ -1,6 +1,7 @@
 export const documentDialog = {
   en: {
     documentDialog: {
+      projectTitle: "Add project reference",
       featureTitle: "Add feature reference",
       taskTitle: "Add task reference",
       description:
@@ -29,6 +30,7 @@ export const documentDialog = {
   },
   ja: {
     documentDialog: {
+      projectTitle: "プロジェクト資料を追加",
       featureTitle: "フィーチャー資料を追加",
       taskTitle: "タスク資料を追加",
       description:

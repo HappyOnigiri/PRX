@@ -10,6 +10,7 @@ import "./styles/components.css";
 import "./styles/dashboard.css";
 import "./styles/graph.css";
 import "./styles/markdown-preview.css";
+import "./styles/project.css";
 import "./styles/shell.css";
 import "./styles/task-inspector.css";
 import "./styles/task-search.css";

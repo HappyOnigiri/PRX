@@ -1,18 +1,25 @@
-import { Archive, ArchiveRestore, Save, Trash2, X } from "lucide-react";
+import { Save, X } from "lucide-react";
 import { useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { unfinishedTaskCount } from "../feature-status";
 import { formValue } from "../form";
-import { FeatureStatus, type Feature } from "../gen/prx/v1/prx_pb";
+import {
+  FeatureStatus,
+  type Feature,
+  type Project,
+} from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { featureStatusLabel } from "../i18n/domain";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { IconButton } from "./IconButton";
+import { LifecycleActions, type LifecycleLabels } from "./LifecycleActions";
 import { MutationError } from "./MutationError";
+import { ProjectSelectField } from "./ProjectSelectField";
 
 interface EditFeatureDialogProps {
   feature: Feature;
+  projects: Project[];
   onClose: () => void;
   onDeleted: () => void;
 }
@@ -25,6 +32,7 @@ type FeatureUpdate = Parameters<typeof mutations.updateFeature>[0];
 
 export function EditFeatureDialog({
   feature,
+  projects,
   onClose,
   onDeleted,
 }: EditFeatureDialogProps) {
@@ -53,6 +61,7 @@ export function EditFeatureDialog({
       title: formValue(form, "title"),
       description: formValue(form, "description"),
       status,
+      projectId: formValue(form, "projectId"),
     };
     if (status === FeatureStatus.COMPLETED && unfinished > 0) {
       setPendingUpdate(update);
@@ -60,23 +69,6 @@ export function EditFeatureDialog({
       return;
     }
     await applyUpdate(update);
-  }
-
-  async function archiveFeature() {
-    await applyUpdate({ id: feature.id, archived: true });
-  }
-
-  async function restoreFeature() {
-    await applyUpdate({ id: feature.id, archived: false });
-  }
-
-  async function removeFeature() {
-    try {
-      await deleteFeature.mutateAsync(feature.id);
-    } catch {
-      return;
-    }
-    onDeleted();
   }
 
   return (
@@ -88,6 +80,7 @@ export function EditFeatureDialog({
       >
         <FeatureDialogContent
           feature={feature}
+          projects={projects}
           updatePending={updateFeature.isPending}
           deletePending={deleteFeature.isPending}
           updateError={updateFeature.error}
@@ -97,7 +90,7 @@ export function EditFeatureDialog({
             setConfirmation("archive");
           }}
           onRestore={() => {
-            void restoreFeature();
+            void applyUpdate({ id: feature.id, archived: false });
           }}
           onDelete={() => {
             setConfirmation("delete");
@@ -117,13 +110,20 @@ export function EditFeatureDialog({
           setPendingUpdate(undefined);
         }}
         onArchive={() => {
-          void archiveFeature();
+          void applyUpdate({ id: feature.id, archived: true });
         }}
         onComplete={() => {
           if (pendingUpdate) void applyUpdate(pendingUpdate);
         }}
         onDelete={() => {
-          void removeFeature();
+          void (async () => {
+            try {
+              await deleteFeature.mutateAsync(feature.id);
+            } catch {
+              return;
+            }
+            onDeleted();
+          })();
         }}
       />
     </>
@@ -132,6 +132,7 @@ export function EditFeatureDialog({
 
 interface FeatureDialogContentProps {
   feature: Feature;
+  projects: Project[];
   updatePending: boolean;
   deletePending: boolean;
   updateError: Error | null;
@@ -142,15 +143,30 @@ interface FeatureDialogContentProps {
   onDelete: () => void;
 }
 
+// A read-only feature cannot be edited, whether it is archived itself or sits
+// inside an archived project, so the editable form is replaced entirely.
 function FeatureDialogContent(props: FeatureDialogContentProps) {
-  return props.feature.archived ? (
-    <ArchivedFeatureDialog {...props} />
+  return props.feature.readOnly ? (
+    <ReadOnlyFeatureDialog {...props} />
   ) : (
     <ActiveFeatureDialog {...props} />
   );
 }
 
-function ArchivedFeatureDialog({
+function useFeatureLifecycleLabels(archived: boolean): LifecycleLabels {
+  const { t } = useTranslation();
+  return {
+    section: t("featureEdit.lifecycle"),
+    detail: archived
+      ? t("featureEdit.archivedLifecycleDetail")
+      : t("featureEdit.activeLifecycleDetail"),
+    archive: t("featureEdit.archive"),
+    restore: t("featureEdit.restore"),
+    remove: t("featureEdit.delete"),
+  };
+}
+
+function ReadOnlyFeatureDialog({
   feature,
   updatePending,
   deletePending,
@@ -160,6 +176,7 @@ function ArchivedFeatureDialog({
   onDelete,
 }: FeatureDialogContentProps) {
   const { t } = useTranslation();
+  const labels = useFeatureLifecycleLabels(true);
   return (
     <section
       className="dialog feature-management-dialog"
@@ -191,10 +208,16 @@ function ArchivedFeatureDialog({
       </dl>
       <MutationError error={updateError} />
       <LifecycleActions
-        archived
+        labels={
+          feature.archived
+            ? labels
+            : { ...labels, detail: t("featureEdit.projectArchivedDetail") }
+        }
         updatePending={updatePending}
         deletePending={deletePending}
-        onRestore={onRestore}
+        // Restoring is only meaningful when the feature carries the archive
+        // itself; one inherited from a project is lifted on the project.
+        {...(feature.archived ? { onRestore } : {})}
         onDelete={onDelete}
       />
       <footer>
@@ -211,6 +234,7 @@ function ArchivedFeatureDialog({
 
 function ActiveFeatureDialog({
   feature,
+  projects,
   updatePending,
   deletePending,
   updateError,
@@ -220,6 +244,7 @@ function ActiveFeatureDialog({
   onDelete,
 }: FeatureDialogContentProps) {
   const { t } = useTranslation();
+  const labels = useFeatureLifecycleLabels(false);
   return (
     <form
       className="dialog feature-management-dialog"
@@ -257,9 +282,13 @@ function ActiveFeatureDialog({
           ))}
         </select>
       </label>
+      <ProjectSelectField
+        projects={projects}
+        currentProjectId={feature.projectId}
+      />
       <MutationError error={updateError} />
       <LifecycleActions
-        archived={false}
+        labels={labels}
         updatePending={updatePending}
         deletePending={deletePending}
         onArchive={onArchive}
@@ -350,66 +379,5 @@ function LifecycleConfirmation({
       onCancel={onCancel}
       onConfirm={onDelete}
     />
-  );
-}
-
-function LifecycleActions({
-  archived,
-  updatePending,
-  deletePending,
-  onArchive,
-  onRestore,
-  onDelete,
-}: {
-  archived: boolean;
-  updatePending: boolean;
-  deletePending: boolean;
-  onArchive?: () => void;
-  onRestore?: () => void;
-  onDelete: () => void;
-}) {
-  const { t } = useTranslation();
-  return (
-    <section
-      className="feature-lifecycle"
-      aria-label={t("featureEdit.lifecycle")}
-    >
-      <div>
-        <h3 className="feature-lifecycle-title">
-          {t("featureEdit.lifecycle")}
-        </h3>
-        <p className="feature-lifecycle-detail">
-          {archived
-            ? t("featureEdit.archivedLifecycleDetail")
-            : t("featureEdit.activeLifecycleDetail")}
-        </p>
-      </div>
-      <div className="feature-lifecycle-actions">
-        {archived ? (
-          <IconButton
-            icon={ArchiveRestore}
-            label={t("featureEdit.restore")}
-            variant="primary"
-            disabled={updatePending}
-            onClick={onRestore}
-          />
-        ) : (
-          <IconButton
-            icon={Archive}
-            label={t("featureEdit.archive")}
-            variant="secondary"
-            disabled={updatePending}
-            onClick={onArchive}
-          />
-        )}
-        <IconButton
-          icon={Trash2}
-          label={t("featureEdit.delete")}
-          variant="danger"
-          disabled={deletePending}
-          onClick={onDelete}
-        />
-      </div>
-    </section>
   );
 }
