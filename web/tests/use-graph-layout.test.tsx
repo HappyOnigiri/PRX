@@ -15,6 +15,12 @@ const layoutMocks = vi.hoisted(() => ({
 
 vi.mock("elkjs/lib/elk-api.js", () => ({
   default: class {
+    constructor(options: { workerFactory?: (url?: string) => Worker }) {
+      // ELK creates the worker in its constructor, so a factory that throws
+      // surfaces as a constructor failure just like the real implementation.
+      options.workerFactory?.(undefined);
+    }
+
     layout(...args: unknown[]) {
       return layoutMocks.layout(...args) as Promise<unknown>;
     }
@@ -25,9 +31,35 @@ vi.mock("elkjs/lib/elk-api.js", () => ({
   },
 }));
 
+const workerStubs = {
+  created: [] as StubWorker[],
+  failCreation: false,
+};
+
+class StubWorker extends EventTarget {
+  postMessage = vi.fn();
+  terminate = vi.fn();
+
+  constructor() {
+    super();
+    if (workerStubs.failCreation) throw new Error("worker script missing");
+    workerStubs.created.push(this);
+  }
+}
+
+vi.stubGlobal("Worker", StubWorker);
+
+function lastCreatedWorker() {
+  const worker = workerStubs.created.at(-1);
+  if (!worker) throw new Error("no worker was created");
+  return worker;
+}
+
 describe("useGraphLayout", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    workerStubs.created = [];
+    workerStubs.failCreation = false;
   });
 
   it("builds positioned task nodes with pull requests, documents, and edges", async () => {
@@ -239,6 +271,101 @@ describe("useGraphLayout", () => {
       expect(layoutMocks.layout).toHaveBeenCalledTimes(2);
     });
     expect(result.current.layoutError).toBeUndefined();
+    unmount();
+  });
+
+  it("reports a failure when the worker cannot be created", async () => {
+    workerStubs.failCreation = true;
+    layoutMocks.layout.mockResolvedValue({ children: [] });
+    const options = {
+      tasks: [makeTask()],
+      dependencies: [],
+      pullRequests: new Map(),
+      documentsByTask: new Map(),
+      onEditTask: vi.fn(),
+      onPreviewDocument: vi.fn(),
+    };
+    const { result, unmount } = renderHook(() => useGraphLayout(options));
+
+    await waitFor(() => {
+      expect(result.current.layoutError).toEqual({
+        message: "worker script missing",
+      });
+    });
+    expect(result.current.layoutPending).toBe(false);
+    expect(layoutMocks.layout).not.toHaveBeenCalled();
+
+    workerStubs.failCreation = false;
+    act(() => {
+      result.current.retryLayout();
+    });
+    await waitFor(() => {
+      expect(layoutMocks.layout).toHaveBeenCalledOnce();
+    });
+    expect(result.current.layoutError).toBeUndefined();
+    unmount();
+  });
+
+  it("reports a failure when the worker fails to load", async () => {
+    // A worker that fails to load never answers, so ELK's promise stays pending.
+    layoutMocks.layout
+      .mockReturnValueOnce(new Promise(() => undefined))
+      .mockResolvedValueOnce({ children: [] });
+    const options = {
+      tasks: [makeTask()],
+      dependencies: [],
+      pullRequests: new Map(),
+      documentsByTask: new Map(),
+      onEditTask: vi.fn(),
+      onPreviewDocument: vi.fn(),
+    };
+    const { result, unmount } = renderHook(() => useGraphLayout(options));
+
+    const worker = lastCreatedWorker();
+    act(() => {
+      worker.dispatchEvent(
+        new ErrorEvent("error", { message: "Unexpected token '<'" }),
+      );
+    });
+
+    await waitFor(() => {
+      expect(result.current.layoutError).toEqual({
+        message: "Unexpected token '<'",
+      });
+    });
+    expect(result.current.layoutPending).toBe(false);
+
+    act(() => {
+      result.current.retryLayout();
+    });
+    await waitFor(() => {
+      expect(layoutMocks.layout).toHaveBeenCalledTimes(2);
+    });
+    expect(result.current.layoutError).toBeUndefined();
+    unmount();
+  });
+
+  it("reports a failure when a worker message cannot be deserialized", async () => {
+    layoutMocks.layout.mockReturnValue(new Promise(() => undefined));
+    const options = {
+      tasks: [makeTask()],
+      dependencies: [],
+      pullRequests: new Map(),
+      documentsByTask: new Map(),
+      onEditTask: vi.fn(),
+      onPreviewDocument: vi.fn(),
+    };
+    const { result, unmount } = renderHook(() => useGraphLayout(options));
+
+    const worker = lastCreatedWorker();
+    act(() => {
+      worker.dispatchEvent(new MessageEvent("messageerror"));
+    });
+
+    await waitFor(() => {
+      expect(result.current.layoutError).toEqual({ message: undefined });
+    });
+    expect(result.current.layoutPending).toBe(false);
     unmount();
   });
 });
