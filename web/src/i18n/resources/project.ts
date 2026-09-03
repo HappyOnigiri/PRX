@@ -7,7 +7,6 @@ export const project = {
       title: "Projects",
       description:
         "Projects group related features and hold the documents they share.",
-      projectCount: "projects",
       listLabel: "Project list",
       loadingTitle: "Loading projects…",
       loadingDetail: "Reading the current snapshot.",
@@ -26,8 +25,6 @@ export const project = {
       returnList: "Return to projects",
       slugEyebrow: "{{slug}}",
       noDescription: "No project description yet.",
-      references: "References",
-      addReference: "Add reference",
       featuresLabel: "Features in this project",
       featuresTitle: "Features",
       noFeaturesTitle: "No features yet",
@@ -81,7 +78,6 @@ export const project = {
       title: "プロジェクト",
       description:
         "プロジェクトは関連するフィーチャーをまとめ、共通の資料を保持します。",
-      projectCount: "プロジェクト",
       listLabel: "プロジェクト一覧",
       loadingTitle: "プロジェクトを読み込んでいます…",
       loadingDetail: "現在のスナップショットを読み取っています。",
@@ -100,8 +96,6 @@ export const project = {
       returnList: "プロジェクト一覧に戻る",
       slugEyebrow: "{{slug}}",
       noDescription: "プロジェクトの説明はまだありません。",
-      references: "資料",
-      addReference: "資料を追加",
       featuresLabel: "このプロジェクトのフィーチャー",
       featuresTitle: "フィーチャー",
       noFeaturesTitle: "フィーチャーはまだありません",
