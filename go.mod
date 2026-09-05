@@ -1,6 +1,6 @@
 module github.com/HappyOnigiri/PRX
 
-go 1.26.0
+go 1.27.1
 
 tool (
 	connectrpc.com/connect/cmd/protoc-gen-connect-go
