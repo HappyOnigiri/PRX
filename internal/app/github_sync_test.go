@@ -122,11 +122,9 @@ func newSyncService(t *testing.T) (*Service, *store.Store, domain.Snapshot, map[
 	if err != nil {
 		t.Fatal(err)
 	}
-	return &Service{
-			repository: database,
-		}, database, domain.Snapshot{
-			Features: []domain.Feature{feature},
-		}, map[string]string{}
+	service := &Service{repository: database}
+	snapshot := domain.Snapshot{Features: []domain.Feature{feature}}
+	return service, database, snapshot, map[string]string{}
 }
 
 func addSyncPullRequest(

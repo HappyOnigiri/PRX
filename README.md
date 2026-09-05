@@ -7,7 +7,7 @@ The non-interactive CLI and ConnectRPC-powered React workspace expose the same a
 
 ## Requirements
 
-- Go 1.26 or newer
+- Go 1.27 or newer
 - The Node.js version defined in `.tool-versions`
 - The pnpm version defined by `packageManager` in the root `package.json`
 - A Chromium browser for Playwright development checks
