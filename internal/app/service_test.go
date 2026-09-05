@@ -135,6 +135,7 @@ func (repositoryStub) DeleteDocument(context.Context, string) error {
 func (repositoryStub) Snapshot(context.Context) (domain.Snapshot, error) {
 	return domain.Snapshot{}, errors.New("unexpected Snapshot call")
 }
+
 func (repositoryStub) Validate(context.Context) []string { return []string{"unexpected Validate call"} }
 
 type featureRepository struct {
