@@ -70,6 +70,8 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests
 		t.Fatal(err)
 	}
 
+	clearSyncMarkers(t, database)
+
 	before, err := service.SyncStatus(ctx)
 	if err != nil || before.LastUpdatedAt != nil || before.IntervalSeconds != 3600 {
 		t.Fatalf("initial status=%+v err=%v", before, err)
@@ -211,8 +213,6 @@ func TestTargetedManualSyncLeavesTheAutomaticIntervalAndStatusUntouched(t *testi
 // survive that, or the acquired attempt would hold the interval with nothing to
 // explain what stopped it.
 func TestAutomaticSyncRecordsTheRunAfterTheCallerCancels(t *testing.T) {
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 	configStore, err := config.NewStore(filepath.Join(t.TempDir(), "config.yaml"))
 	if err != nil {
 		t.Fatal(err)
@@ -225,7 +225,19 @@ func TestAutomaticSyncRecordsTheRunAfterTheCallerCancels(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() { _ = database.Close() }()
-	service := app.NewWithConfig(database, cancellingProvider{cancel: cancel}, configStore)
+	// The refresh that follows the attachment must not spend the cancellation
+	// this test aims at the automatic run, so the provider starts cancelling
+	// only once the pull request is in place.
+	var cancelAutomaticSync context.CancelFunc
+	service := app.NewWithConfig(
+		database,
+		cancellingProvider{cancel: func() {
+			if cancelAutomaticSync != nil {
+				cancelAutomaticSync()
+			}
+		}},
+		configStore,
+	)
 
 	feature, err := service.CreateFeature(context.Background(), "Cancelled", "", "")
 	if err != nil {
@@ -240,6 +252,10 @@ func TestAutomaticSyncRecordsTheRunAfterTheCallerCancels(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	cancelAutomaticSync = cancel
 
 	ran, _, err := service.SyncIfDue(ctx)
 	if err != nil || !ran {
