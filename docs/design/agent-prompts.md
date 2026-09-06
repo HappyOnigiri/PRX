@@ -5,7 +5,9 @@ Rendering a prompt never changes task state, readiness, dependencies, or the imp
 `prx prompt TASK_ID` is still an ordinary read command, so it shares the expired-interval GitHub refresh every other read runs.
 
 Which prompt a task gets is derived from one fact only.
-A task without an implementation plan gets the design prompt, which ends by registering a plan; a task with one gets the implementation prompt, which ends by recording the result.
+A task without an implementation plan gets the design prompt, which begins by marking the task as being designed and ends by registering a plan.
+A task with one gets the implementation prompt, which ends by recording the result.
+The design prompt leaves the status alone after that first step, because registering the plan is what presents the task as designed.
 Display state and readiness describe progress rather than the question being asked, so they never select the template.
 
 The templates are shared configuration rather than browser state, because the CLI and the WebUI must emit the same text.
