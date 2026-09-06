@@ -92,7 +92,12 @@ func TestRenderFillsAnOmittedTemplateWithItsDefault(t *testing.T) {
 // the commands their step depends on.
 func TestDefaultTemplatesGuideTheAgentThroughPRX(t *testing.T) {
 	defaults := prompt.DefaultTemplates()
-	for _, command := range []string{"prx task {{task_id}}", "prx graph {{feature_id}}", "prx plan set {{task_id}}"} {
+	for _, command := range []string{
+		"prx task update {{task_id}} --status designing",
+		"prx task {{task_id}}",
+		"prx graph {{feature_id}}",
+		"prx plan set {{task_id}}",
+	} {
 		if !strings.Contains(defaults.Design, command) {
 			t.Fatalf("default design template does not mention %q", command)
 		}

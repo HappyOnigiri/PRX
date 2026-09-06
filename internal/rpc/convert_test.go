@@ -68,6 +68,7 @@ func TestProtoTaskStatusMapsEveryKnownValue(t *testing.T) {
 		want  prxv1.TaskStatus
 	}{
 		{"not started", domain.TaskStatusNotStarted, prxv1.TaskStatus_TASK_STATUS_NOT_STARTED},
+		{"designing", domain.TaskStatusDesigning, prxv1.TaskStatus_TASK_STATUS_DESIGNING},
 		{"in progress", domain.TaskStatusInProgress, prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS},
 		{"completed", domain.TaskStatusCompleted, prxv1.TaskStatus_TASK_STATUS_COMPLETED},
 		{"closed", domain.TaskStatusClosed, prxv1.TaskStatus_TASK_STATUS_CLOSED},
@@ -88,6 +89,8 @@ func TestProtoTaskDisplayStateMapsEveryKnownValue(t *testing.T) {
 		want  prxv1.TaskDisplayState
 	}{
 		{"not started", domain.TaskDisplayStateNotStarted, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED},
+		{"designing", domain.TaskDisplayStateDesigning, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNING},
+		{"designed", domain.TaskDisplayStateDesigned, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED},
 		{"in progress", domain.TaskDisplayStateInProgress, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS},
 		{"completed", domain.TaskDisplayStateCompleted, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED},
 		{"closed", domain.TaskDisplayStateClosed, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED},

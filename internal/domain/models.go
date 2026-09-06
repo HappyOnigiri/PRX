@@ -16,6 +16,7 @@ type TaskStatus string
 
 const (
 	TaskStatusNotStarted TaskStatus = "not_started"
+	TaskStatusDesigning  TaskStatus = "designing"
 	TaskStatusInProgress TaskStatus = "in_progress"
 	TaskStatusCompleted  TaskStatus = "completed"
 	TaskStatusClosed     TaskStatus = "closed"
@@ -25,6 +26,7 @@ type TaskDisplayState string
 
 const (
 	TaskDisplayStateNotStarted       TaskDisplayState = "not_started"
+	TaskDisplayStateDesigning        TaskDisplayState = "designing"
 	TaskDisplayStateDesigned         TaskDisplayState = "designed"
 	TaskDisplayStateInProgress       TaskDisplayState = "in_progress"
 	TaskDisplayStateCompleted        TaskDisplayState = "completed"

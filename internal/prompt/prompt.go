@@ -61,15 +61,18 @@ Scope: {{task_scope}}
 PRX is a local CLI that tracks tasks and the dependencies between them.
 Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact surface.
 
-1. Read the task and the work it depends on.
+1. Mark the task as being designed before anything else.
+   - ` + "`prx task update {{task_id}} --status designing`" + `
+2. Read the task and the work it depends on.
    - ` + "`prx task {{task_id}}`" + `
    - ` + "`prx graph {{feature_id}}`" + `
-2. Investigate the repository and decide how the scope above should be built.
-3. Register the resulting plan on the task.
+3. Investigate the repository and decide how the scope above should be built.
+4. Register the resulting plan on the task.
    - ` + "`prx plan set {{task_id}} --file PLAN.md`" + `
    - ` + "`prx plan set {{task_id}} --stdin`" + `
+   Registering the plan is what presents the task as designed, so leave the status alone afterwards.
 
-Design only: leave the implementation, the task status, and the pull request to the next step.
+Design only: leave the implementation and the pull request to the next step.
 `
 
 const defaultImplementationTemplate = `Implement PRX task {{task_id}} of feature {{feature_id}}.

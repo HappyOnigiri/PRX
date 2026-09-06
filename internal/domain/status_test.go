@@ -8,6 +8,7 @@ func TestTaskFinishedCoversEveryDisplayState(t *testing.T) {
 		want    bool
 	}{
 		{TaskDisplayStateNotStarted, false},
+		{TaskDisplayStateDesigning, false},
 		{TaskDisplayStateDesigned, false},
 		{TaskDisplayStateInProgress, false},
 		{TaskDisplayStateCompleted, true},

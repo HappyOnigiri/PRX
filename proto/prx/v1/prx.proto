@@ -32,6 +32,8 @@ enum TaskStatus {
   TASK_STATUS_NOT_STARTED = 1;
   // TASK_STATUS_IN_PROGRESS means the task is being implemented before a pull request exists.
   TASK_STATUS_IN_PROGRESS = 2;
+  // TASK_STATUS_DESIGNING means the task is being designed before an implementation plan exists.
+  TASK_STATUS_DESIGNING = 5;
   // TASK_STATUS_COMPLETED marks the task satisfied regardless of any attached pull request.
   TASK_STATUS_COMPLETED = 3;
   // TASK_STATUS_CLOSED marks the task closed regardless of any attached pull request.
@@ -46,6 +48,8 @@ enum TaskDisplayState {
   TASK_DISPLAY_STATE_UNSPECIFIED = 0;
   // TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached and no implementation plan exists.
   TASK_DISPLAY_STATE_NOT_STARTED = 1;
+  // TASK_DISPLAY_STATE_DESIGNING means the task is being designed without an implementation plan.
+  TASK_DISPLAY_STATE_DESIGNING = 14;
   // TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
   TASK_DISPLAY_STATE_DESIGNED = 2;
   // TASK_DISPLAY_STATE_IN_PROGRESS means the task is in progress without a pull request.
