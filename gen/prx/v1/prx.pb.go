@@ -142,7 +142,7 @@ func (TaskKind) EnumDescriptor() ([]byte, []int) {
 }
 
 // TaskStatus is the stored workflow state of a task. Auto derives the task's
-// effective state from its pull request.
+// effective state from its pull request or implementation plan.
 type TaskStatus int32
 
 const (
@@ -215,8 +215,10 @@ type TaskDisplayState int32
 const (
 	// TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
 	TaskDisplayState_TASK_DISPLAY_STATE_UNSPECIFIED TaskDisplayState = 0
-	// TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached.
+	// TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached and no implementation plan exists.
 	TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED TaskDisplayState = 1
+	// TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
+	TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED TaskDisplayState = 2
 	// TASK_DISPLAY_STATE_IN_PROGRESS is a manual in-progress override.
 	TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS TaskDisplayState = 3
 	// TASK_DISPLAY_STATE_COMPLETED is a manual completed override.
@@ -246,6 +248,7 @@ var (
 	TaskDisplayState_name = map[int32]string{
 		0:  "TASK_DISPLAY_STATE_UNSPECIFIED",
 		1:  "TASK_DISPLAY_STATE_NOT_STARTED",
+		2:  "TASK_DISPLAY_STATE_DESIGNED",
 		3:  "TASK_DISPLAY_STATE_IN_PROGRESS",
 		4:  "TASK_DISPLAY_STATE_COMPLETED",
 		5:  "TASK_DISPLAY_STATE_CLOSED",
@@ -261,6 +264,7 @@ var (
 	TaskDisplayState_value = map[string]int32{
 		"TASK_DISPLAY_STATE_UNSPECIFIED":       0,
 		"TASK_DISPLAY_STATE_NOT_STARTED":       1,
+		"TASK_DISPLAY_STATE_DESIGNED":          2,
 		"TASK_DISPLAY_STATE_IN_PROGRESS":       3,
 		"TASK_DISPLAY_STATE_COMPLETED":         4,
 		"TASK_DISPLAY_STATE_CLOSED":            5,
@@ -8845,10 +8849,11 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x17TASK_STATUS_NOT_STARTED\x10\x02\x12\x1b\n" +
 	"\x17TASK_STATUS_IN_PROGRESS\x10\x03\x12\x19\n" +
 	"\x15TASK_STATUS_COMPLETED\x10\x04\x12\x16\n" +
-	"\x12TASK_STATUS_CLOSED\x10\x05*\xef\x03\n" +
+	"\x12TASK_STATUS_CLOSED\x10\x05*\xed\x03\n" +
 	"\x10TaskDisplayState\x12\"\n" +
 	"\x1eTASK_DISPLAY_STATE_UNSPECIFIED\x10\x00\x12\"\n" +
-	"\x1eTASK_DISPLAY_STATE_NOT_STARTED\x10\x01\x12\"\n" +
+	"\x1eTASK_DISPLAY_STATE_NOT_STARTED\x10\x01\x12\x1f\n" +
+	"\x1bTASK_DISPLAY_STATE_DESIGNED\x10\x02\x12\"\n" +
 	"\x1eTASK_DISPLAY_STATE_IN_PROGRESS\x10\x03\x12 \n" +
 	"\x1cTASK_DISPLAY_STATE_COMPLETED\x10\x04\x12\x1d\n" +
 	"\x19TASK_DISPLAY_STATE_CLOSED\x10\x05\x12\x1d\n" +
@@ -8860,7 +8865,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x12%\n" +
 	"!TASK_DISPLAY_STATE_REVIEW_WAITING\x10\v\x12\x1b\n" +
 	"\x17TASK_DISPLAY_STATE_OPEN\x10\f\x12\x1e\n" +
-	"\x1aTASK_DISPLAY_STATE_UNKNOWN\x10\r\"\x04\b\x02\x10\x02*\x1bTASK_DISPLAY_STATE_DESIGNED*\xb1\x01\n" +
+	"\x1aTASK_DISPLAY_STATE_UNKNOWN\x10\r*\xb1\x01\n" +
 	"\x10PullRequestState\x12\"\n" +
 	"\x1ePULL_REQUEST_STATE_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17PULL_REQUEST_STATE_OPEN\x10\x01\x12\x1d\n" +

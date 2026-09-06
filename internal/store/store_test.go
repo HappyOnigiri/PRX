@@ -1559,7 +1559,7 @@ func TestImplementationPlanLifecycleAndCascade(t *testing.T) {
 		t.Fatal(err)
 	}
 	if !snapshot.Tasks[0].HasImplementationPlan ||
-		snapshot.Tasks[0].DisplayState != domain.TaskDisplayStateNotStarted ||
+		snapshot.Tasks[0].DisplayState != domain.TaskDisplayStateDesigned ||
 		!snapshot.Tasks[0].Ready {
 		t.Fatalf("planned task=%+v", snapshot.Tasks[0])
 	}

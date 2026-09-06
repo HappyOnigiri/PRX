@@ -441,7 +441,7 @@ func TestRPCImplementationPlanLifecycle(t *testing.T) {
 	}
 	if len(snapshot.Msg.GetSnapshot().GetTasks()) != 1 ||
 		!snapshot.Msg.GetSnapshot().GetTasks()[0].GetHasImplementationPlan() ||
-		snapshot.Msg.GetSnapshot().GetTasks()[0].GetDisplayState() != prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED {
+		snapshot.Msg.GetSnapshot().GetTasks()[0].GetDisplayState() != prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED {
 		t.Fatalf("snapshot task=%+v", snapshot.Msg.GetSnapshot().GetTasks())
 	}
 	_, err = client.UpdateDocument(

@@ -34,6 +34,7 @@ type TaskDisplayState string
 
 const (
 	TaskDisplayStateNotStarted       TaskDisplayState = "not_started"
+	TaskDisplayStateDesigned         TaskDisplayState = "designed"
 	TaskDisplayStateInProgress       TaskDisplayState = "in_progress"
 	TaskDisplayStateCompleted        TaskDisplayState = "completed"
 	TaskDisplayStateClosed           TaskDisplayState = "closed"

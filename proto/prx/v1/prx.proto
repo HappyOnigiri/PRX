@@ -33,7 +33,7 @@ enum TaskKind {
 }
 
 // TaskStatus is the stored workflow state of a task. Auto derives the task's
-// effective state from its pull request.
+// effective state from its pull request or implementation plan.
 enum TaskStatus {
   // TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
   TASK_STATUS_UNSPECIFIED = 0;
@@ -55,10 +55,10 @@ enum TaskStatus {
 enum TaskDisplayState {
   // TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
   TASK_DISPLAY_STATE_UNSPECIFIED = 0;
-  // TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached.
+  // TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached and no implementation plan exists.
   TASK_DISPLAY_STATE_NOT_STARTED = 1;
-  reserved 2;
-  reserved "TASK_DISPLAY_STATE_DESIGNED";
+  // TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
+  TASK_DISPLAY_STATE_DESIGNED = 2;
   // TASK_DISPLAY_STATE_IN_PROGRESS is a manual in-progress override.
   TASK_DISPLAY_STATE_IN_PROGRESS = 3;
   // TASK_DISPLAY_STATE_COMPLETED is a manual completed override.
