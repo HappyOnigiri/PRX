@@ -84,8 +84,10 @@ Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact su
    - ` + "`prx task {{task_id}}`" + `
    - ` + "`prx graph {{feature_id}}`" + `
    - ` + "`prx plan {{task_id}}`" + `
-2. Implement the plan, staying inside the scope above.
-3. Record the result in PRX.
+2. Mark the task as being worked on before you change anything.
+   - ` + "`prx task update {{task_id}} --status in_progress`" + `
+3. Implement the plan, staying inside the scope above.
+4. Record the result in PRX.
    - Work that lands as a pull request: open it, then run ` + "`prx pr attach {{task_id}} PULL_REQUEST_URL`" + `.
      Its state then follows the pull request, so do not set the status by hand.
    - Work without a pull request: run ` + "`prx task update {{task_id}} --status completed`" + ` once it is done.
