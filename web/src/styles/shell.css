@@ -162,6 +162,7 @@
 
 .nav-tree,
 .nav-tree-children {
+  margin: 0;
   list-style: none;
 }
 
