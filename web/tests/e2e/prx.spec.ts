@@ -507,11 +507,19 @@ test("creates and edits a feature DAG while preserving state", async ({
 
   // The empty state covers the canvas and passes pointer events through so the
   // graph stays pannable, so its own button has to opt back in to receive them.
-  await addTask(
-    page,
-    "E2E API",
-    page.locator(".graph-empty").getByRole("button", { name: "Add task" }),
-  );
+  const emptyStateAddTask = page
+    .locator(".graph-empty")
+    .getByRole("button", { name: "Add task" });
+  // The muted color the empty state gives its icon must not reach the label
+  // inside the button, where it would sit on the filled accent background.
+  expect(
+    await emptyStateAddTask.evaluate((button) => {
+      const label = button.querySelector(".icon-button-label");
+      if (!label) throw new Error("The empty state button has no label.");
+      return getComputedStyle(label).color === getComputedStyle(button).color;
+    }),
+  ).toBe(true);
+  await addTask(page, "E2E API", emptyStateAddTask);
   await addTask(page, "E2E worker");
   await addTask(page, "E2E UI");
   await connectTasks(page, "E2E API", "E2E worker");
