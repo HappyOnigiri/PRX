@@ -4,8 +4,6 @@ export const documentDialog = {
       projectTitle: "Add project reference",
       featureTitle: "Add feature reference",
       taskTitle: "Add task reference",
-      description:
-        "Register a link, a file path on this computer, or Markdown stored in PRX.",
       titleLabel: "Reference title (optional)",
       titlePlaceholder: "Architecture decision",
       tabs: {
@@ -33,8 +31,6 @@ export const documentDialog = {
       projectTitle: "プロジェクト資料を追加",
       featureTitle: "フィーチャー資料を追加",
       taskTitle: "タスク資料を追加",
-      description:
-        "URL、このコンピューター上のファイルパス、または PRX に保存する Markdown を登録します。",
       titleLabel: "資料タイトル（任意）",
       titlePlaceholder: "アーキテクチャ決定記録",
       tabs: {

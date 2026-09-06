@@ -13,6 +13,7 @@ import {
   featuresWithoutProject,
   unassignedProjectKey,
 } from "../project";
+import { EntityIcon } from "./EntityIcon";
 
 interface TreeRow {
   key: string;
@@ -121,6 +122,7 @@ function ProjectTreeRow({
           <span className="nav-tree-toggle-spacer" />
         )}
         <ProjectRowLink row={row}>
+          <EntityIcon kind="project" size={14} />
           <span>{row.title}</span>
           <b>{row.features.length}</b>
         </ProjectRowLink>
@@ -190,7 +192,7 @@ function FeatureRowLink({ feature }: { feature: Feature }) {
       />
       <span>{feature.title}</span>
       <b>
-        {feature.mergedCount}/{feature.taskCount}
+        {feature.finishedCount}/{feature.taskCount}
       </b>
     </Link>
   );

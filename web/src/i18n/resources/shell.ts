@@ -12,22 +12,16 @@ export const shell = {
         licenses: "Licenses",
       },
       display: {
-        description:
-          "Choose how PRX appears in this browser. Changes apply immediately.",
         language: {
           label: "Display language",
-          description: "Language used for interface text and labels.",
           options: { en: "English", ja: "日本語" },
         },
         theme: {
           label: "Display theme",
-          description: "Color scheme used for PRX in this browser.",
           options: { system: "System", light: "Light", dark: "Dark" },
         },
       },
       debug: {
-        description:
-          "A diagnostic report of this PRX installation, taken when the tab was opened.",
         generatedAt: "Taken at {{time}}",
         reload: "Take a new report",
         copy: "Copy report",
@@ -59,15 +53,11 @@ export const shell = {
       serverUnavailable: "Server unavailable",
     },
     serverSettings: {
-      description:
-        "Register GitHub hosts and choose the credential order used on the next sync.",
       loading: "Loading server settings…",
-      syncLabel: "Refresh cadence",
       syncTitle: "Automatic GitHub updates",
       syncInterval: "Interval in seconds",
       syncHint:
         "Minimum 600 seconds. Updates run while the CLI or WebUI is active.",
-      hostsLabel: "Host boundaries",
       hostsTitle: "GitHub hosts",
       addHost: "Register a host",
       editHost: "Edit host",
@@ -76,7 +66,6 @@ export const shell = {
       apiUrl: "API URL",
       uploadUrl: "Upload URL",
       graphqlUrl: "GraphQL URL",
-      authLabel: "Credential priority",
       authTitle: "Authentication methods",
       addAuth: "Register a credential",
       editAuth: "Edit credential",
@@ -125,16 +114,12 @@ export const shell = {
         licenses: "ライセンス",
       },
       display: {
-        description:
-          "このブラウザーでのPRXの表示を選択します。変更はすぐに反映されます。",
         language: {
           label: "表示言語",
-          description: "画面の文言とラベルに使う言語です。",
           options: { en: "English", ja: "日本語" },
         },
         theme: {
           label: "表示テーマ",
-          description: "このブラウザーでのPRXに使う配色です。",
           options: {
             system: "システム",
             light: "ライト",
@@ -143,8 +128,6 @@ export const shell = {
         },
       },
       debug: {
-        description:
-          "このPRXの診断レポートです。タブを開いた時点の内容を表示します。",
         generatedAt: "取得時刻 {{time}}",
         reload: "取得しなおす",
         copy: "レポートをコピー",
@@ -176,14 +159,10 @@ export const shell = {
       serverUnavailable: "サーバーに接続できません",
     },
     serverSettings: {
-      description:
-        "GitHubホストを登録し、次回同期で使う認証の優先順を選択します。",
       loading: "サーバー設定を読み込んでいます…",
-      syncLabel: "更新間隔",
       syncTitle: "GitHubの自動更新",
       syncInterval: "間隔（秒）",
       syncHint: "最小600秒。CLIまたはWebUIの利用中に更新します。",
-      hostsLabel: "ホスト境界",
       hostsTitle: "GitHubホスト",
       addHost: "ホストを登録",
       editHost: "ホストを編集",
@@ -192,7 +171,6 @@ export const shell = {
       apiUrl: "API URL",
       uploadUrl: "Upload URL",
       graphqlUrl: "GraphQL URL",
-      authLabel: "認証の優先順",
       authTitle: "認証方法",
       addAuth: "認証を登録",
       editAuth: "認証を編集",

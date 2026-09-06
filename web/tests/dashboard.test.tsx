@@ -2,11 +2,13 @@ import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "../src/router";
-import { makeFeature, makeSnapshot, makeTask } from "./factories";
+import { makeFeature, makeProject, makeSnapshot, makeTask } from "./factories";
 
 const snapshot = makeSnapshot({
+  projects: [makeProject()],
   features: [
     makeFeature({
+      projectId: "project-1",
       taskCount: 3,
       readyCount: 1,
       reviewWaitingCount: 1,
@@ -14,7 +16,10 @@ const snapshot = makeSnapshot({
     }),
   ],
   tasks: [],
-  readyTasks: [makeTask()],
+  readyTasks: [
+    makeTask(),
+    makeTask({ id: "task-4", title: "Unowned work", assignee: "" }),
+  ],
   reviewWaitingTasks: [makeTask({ id: "task-2" })],
   conflictTasks: [makeTask({ id: "task-3" })],
 });
@@ -60,7 +65,21 @@ describe("Dashboard", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("nodes under control")).not.toBeInTheDocument();
     expect(screen.getByText("Build API")).toBeInTheDocument();
-    expect(screen.getByText("1 ready")).toBeInTheDocument();
+    // A queued task names the project it belongs to, and every value is
+    // introduced by its own field name.
+    expect(
+      screen.getAllByText("Project")[0]?.nextElementSibling,
+    ).toHaveTextContent("Delivery platform");
+    expect(
+      screen.getAllByText("Feature")[0]?.nextElementSibling,
+    ).toHaveTextContent("Payments rollout");
+    // The second queued task has no owner, so only the owned one carries the
+    // assignee pair.
+    expect(screen.getByText("Assignee").nextElementSibling).toHaveTextContent(
+      "Mika",
+    );
+    expect(screen.queryByText("Unassigned")).not.toBeInTheDocument();
+    expect(screen.getAllByText("not started")).toHaveLength(2);
     expect(screen.getByText("Conflicts")).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "Sync GitHub" }),
@@ -68,7 +87,7 @@ describe("Dashboard", () => {
     // The ready board is where a reader picks the next task, so the prompt
     // that hands it to an agent is copied there instead of one screen deeper.
     expect(
-      screen.getByRole("button", { name: "Copy design prompt" }),
-    ).toBeInTheDocument();
+      screen.getAllByRole("button", { name: "Copy design prompt" }),
+    ).toHaveLength(2);
   });
 });

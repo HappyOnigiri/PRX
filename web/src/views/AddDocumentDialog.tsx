@@ -203,7 +203,6 @@ function DialogHeader({ state }: { state: DialogState }) {
     <header className="document-dialog-head">
       <div>
         <h2 id={state.titleId}>{t(documentDialogTitleKey(state))}</h2>
-        <p className="dialog-lead">{t("documentDialog.description")}</p>
       </div>
       <IconButton
         icon={X}

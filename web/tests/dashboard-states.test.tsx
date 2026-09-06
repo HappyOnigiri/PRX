@@ -106,7 +106,7 @@ describe("Dashboard states", () => {
     expect(dashboardMocks.state.refetch).toHaveBeenCalledOnce();
   });
 
-  it("renders empty task and feature boards", () => {
+  it("renders the empty execution queue", () => {
     dashboardMocks.state.isPending = false;
     dashboardMocks.state.data = makeSnapshot({
       features: [],
@@ -120,9 +120,6 @@ describe("Dashboard states", () => {
 
     expect(
       screen.getByRole("heading", { name: "No task is ready yet" }),
-    ).toBeInTheDocument();
-    expect(
-      screen.getByRole("heading", { name: "No features yet" }),
     ).toBeInTheDocument();
     expect(container.querySelector(".queue-conflict")).not.toBeInTheDocument();
     expect(
@@ -208,10 +205,10 @@ describe("Dashboard states", () => {
       "href",
       "/tasks?q=github-status%3Aerror",
     );
-    expect(screen.getByText("Active graph")).toBeInTheDocument();
-    expect(screen.queryByText("Archived graph")).not.toBeInTheDocument();
+    expect(screen.getByText(/Active graph/)).toBeInTheDocument();
+    expect(screen.queryByText(/Archived graph/)).not.toBeInTheDocument();
     expect(screen.queryByText("Archived task")).not.toBeInTheDocument();
-    expect(screen.queryByText("Completed graph")).not.toBeInTheDocument();
+    expect(screen.queryByText(/Completed graph/)).not.toBeInTheDocument();
     expect(screen.queryByText("Completed graph task")).not.toBeInTheDocument();
   });
 

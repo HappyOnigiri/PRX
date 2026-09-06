@@ -112,7 +112,6 @@ export function ServerSettingsPanel() {
 
   return (
     <>
-      <p className="dialog-lead">{t("serverSettings.description")}</p>
       {config.data?.autoSyncIntervalSeconds !== undefined && (
         <AutoSyncSettings interval={config.data.autoSyncIntervalSeconds} />
       )}
@@ -205,7 +204,6 @@ function AutoSyncSettings({ interval }: { interval: bigint }) {
   return (
     <section className="settings-section" aria-labelledby="settings-sync">
       <header>
-        <p className="section-label">{t("serverSettings.syncLabel")}</p>
         <h3 id="settings-sync">{t("serverSettings.syncTitle")}</h3>
       </header>
       <form
@@ -346,7 +344,6 @@ function HostSettingsSection({
   return (
     <section className="settings-section" aria-labelledby="settings-hosts">
       <header>
-        <p className="section-label">{t("serverSettings.hostsLabel")}</p>
         <h3 id="settings-hosts">{t("serverSettings.hostsTitle")}</h3>
       </header>
       <div className="settings-list">
@@ -499,7 +496,6 @@ function AuthSettingsSection({
   return (
     <section className="settings-section" aria-labelledby="settings-auth">
       <header>
-        <p className="section-label">{t("serverSettings.authLabel")}</p>
         <h3 id="settings-auth">{t("serverSettings.authTitle")}</h3>
       </header>
       <div className="settings-list">

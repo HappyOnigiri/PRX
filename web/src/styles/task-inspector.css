@@ -370,3 +370,9 @@
     width: calc(100% - 16px);
   }
 }
+
+.inspector-heading h2 > svg {
+  margin-right: 8px;
+  color: var(--text-3);
+  vertical-align: -2px;
+}

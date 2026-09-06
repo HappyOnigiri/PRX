@@ -17,6 +17,7 @@ import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { DocumentReferences } from "./DocumentReferences";
 import { EditFeatureDialog } from "./EditFeatureDialog";
+import { EntityIcon } from "./EntityIcon";
 import { FeatureGraph } from "./FeatureGraph";
 import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
@@ -278,7 +279,10 @@ function FeatureWorkspaceHead({
         className="workspace-title"
         title={props.feature.description || t("workspace.noDescription")}
       >
-        <h1>{props.feature.title}</h1>
+        <h1>
+          <EntityIcon kind="feature" size={17} />
+          {props.feature.title}
+        </h1>
         <CopyableIdentifier
           label={t("common.featureId")}
           value={props.feature.id}

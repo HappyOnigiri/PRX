@@ -9,6 +9,7 @@ import { documentsInProject, featuresInProject } from "../project";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { DocumentReferences } from "./DocumentReferences";
 import { EditProjectDialog } from "./EditProjectDialog";
+import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { ProjectFeatureList } from "./ProjectFeatureList";
@@ -104,7 +105,10 @@ function ProjectContent(props: ProjectContentProps) {
           className="workspace-title"
           title={props.project.description || t("project.noDescription")}
         >
-          <h1>{props.project.title}</h1>
+          <h1>
+            <EntityIcon kind="project" size={17} />
+            {props.project.title}
+          </h1>
           <CopyableIdentifier
             label={t("project.membership")}
             value={props.project.id}

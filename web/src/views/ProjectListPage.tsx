@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { Feature, Project } from "../gen/prx/v1/prx_pb";
 import { featuresInProject, projectsByArchive } from "../project";
+import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
 import { ProjectCreateDialog } from "./ProjectCreateDialog";
 import { TabList, TabPanel } from "./TabList";
@@ -22,9 +23,7 @@ export function ProjectListPage() {
     <div className="dashboard project-list-page">
       <header className="page-head">
         <div>
-          <p className="section-label">{t("project.eyebrow")}</p>
           <h1>{t("project.title")}</h1>
-          <p>{t("project.description")}</p>
         </div>
         <div className="page-head-status project-list-actions">
           <IconButton
@@ -132,13 +131,17 @@ function ProjectListRow({
       className="feature-list-row project-list-row"
     >
       <div className="feature-list-row-title">
-        <b>{project.title}</b>
+        <b>
+          <EntityIcon kind="project" size={15} />
+          {project.title}
+        </b>
         <small>{project.slug}</small>
       </div>
       <span>{t("project.featureCount", { count: featureCount })}</span>
-      <strong>
-        {project.archived ? t("project.archivedBadge") : project.id}
-      </strong>
+      {/* The slot a feature row fills with a status carries only the archived
+          badge here, because the active tab already says every row is active
+          and the identifier belongs to the workspace, where it can be copied. */}
+      {project.archived && <strong>{t("project.archivedBadge")}</strong>}
     </Link>
   );
 }

@@ -939,6 +939,13 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
     .getByRole("dialog", { name: "Settings" })
     .getByRole("button", { name: "Done" })
     .click();
+  // The tree is hidden at this width, so the feature is reached through the
+  // Projects page instead of the sidebar.
+  await page.getByRole("link", { name: /Projects/ }).click();
+  await page
+    .getByRole("region", { name: "Project list" })
+    .getByText("Delivery platform")
+    .click();
   await page
     .getByRole("link", { name: /Delivery control showcase/ })
     .first()

@@ -56,6 +56,12 @@
   text-wrap: nowrap;
 }
 
+.workspace-head h1 > svg {
+  margin-right: 9px;
+  color: var(--text-3);
+  vertical-align: -2px;
+}
+
 .workspace-head .eyebrow {
   flex: 0 1 auto;
   min-width: 0;
@@ -148,6 +154,12 @@
 
   .workspace-title {
     display: block;
+  }
+
+  .workspace-head h1 > svg {
+    margin-right: 9px;
+    color: var(--text-3);
+    vertical-align: -2px;
   }
 
   .workspace-head .eyebrow {

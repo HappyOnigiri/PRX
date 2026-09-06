@@ -28,14 +28,8 @@ export function ProjectFeatureList(props: ProjectFeatureListProps) {
   }));
   return (
     <section className="feature-list" aria-label={t("project.featuresLabel")}>
-      <header className="project-section-head">
-        <h2>{t("project.featuresTitle")}</h2>
-        <span>
-          {t("project.featureCount", {
-            count: selectFeatureTab(props.features, props.tab).length,
-          })}
-        </span>
-      </header>
+      {/* The tabs open the list directly: the section is named by its owner's
+          page title, and the rows themselves show how many there are. */}
       <TabList
         tabs={tabs}
         active={props.tab}
@@ -83,7 +77,7 @@ function FeatureTabRows({
       key={feature.id}
       feature={feature}
       progressLabel={t("project.progress", {
-        merged: feature.mergedCount,
+        finished: feature.finishedCount,
         total: feature.taskCount,
       })}
     />

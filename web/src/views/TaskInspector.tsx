@@ -9,6 +9,7 @@ import {
   taskDisplayStateToken,
 } from "../i18n/domain";
 import { CopyableIdentifier } from "./CopyableIdentifier";
+import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 import { PullRequestSection } from "./TaskInspectorPullRequest";
@@ -34,7 +35,10 @@ function TaskInspectorHeader({
   return (
     <header>
       <div className="inspector-heading">
-        <h2>{task.title}</h2>
+        <h2>
+          <EntityIcon kind="task" size={16} />
+          {task.title}
+        </h2>
         <CopyableIdentifier
           label={t("common.taskId")}
           value={task.id}

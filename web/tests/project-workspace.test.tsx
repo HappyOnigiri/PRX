@@ -88,6 +88,7 @@ function populatedSnapshot(archived = false) {
         projectId: "P-1",
         taskCount: 4,
         mergedCount: 2,
+        finishedCount: 3,
       }),
       makeFeature({ id: "F-2", title: "Search revamp" }),
       makeFeature({
@@ -158,7 +159,9 @@ describe("ProjectWorkspace", () => {
     expect(features).toHaveTextContent("Checkout rollout");
     expect(features).not.toHaveTextContent("Search revamp");
     expect(features).not.toHaveTextContent("Legacy checkout");
-    expect(features).toHaveTextContent("2/4 merged");
+    // The progress counts every finished task, not only the merged ones, so
+    // the third task closed without a pull request still shows up here.
+    expect(features).toHaveTextContent("3/4 finished");
 
     fireEvent.click(screen.getByRole("button", { name: "References" }));
     expect(screen.getByText("Platform charter")).toBeInTheDocument();
