@@ -266,6 +266,11 @@ describe("FeatureWorkspace", () => {
       name: "Copy Feature ID",
     });
     expect(featureIdButton).toHaveTextContent("feature-1");
+    // The header states the status the server derived, so a feature left on
+    // automatic reads the same here as it does in a feature list.
+    const status = document.querySelector(".feature-status-badge");
+    expect(status).toHaveTextContent("Active");
+    expect(status).toHaveAttribute("title", "Feature status");
     expect(featureIdButton.querySelector("svg")).not.toBeInTheDocument();
     expect(screen.queryByText("Feature ID")).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "References" })).toHaveAttribute(

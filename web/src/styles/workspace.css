@@ -72,6 +72,40 @@
   white-space: nowrap;
 }
 
+.feature-status-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface-2);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.feature-status-badge > i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--status-none);
+}
+
+.feature-status-badge.status-active > i {
+  background: var(--accent);
+}
+
+.feature-status-badge.status-paused > i {
+  background: var(--status-review);
+}
+
+.feature-status-badge.status-completed > i {
+  background: var(--status-ready);
+}
+
 .workspace-actions {
   flex: 0 0 auto;
   display: flex;

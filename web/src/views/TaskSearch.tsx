@@ -1,13 +1,10 @@
-import { Link, useNavigate, useSearch } from "@tanstack/react-router";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import { Search } from "lucide-react";
 import { useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
+import type { Project } from "../gen/prx/v1/prx_pb";
 import { useSnapshot } from "../hooks";
-import {
-  formatError,
-  pullRequestDisplayStateLabel,
-  taskDisplayStateLabel,
-} from "../i18n/domain";
+import { formatError } from "../i18n/domain";
 import {
   filterTaskSearchResults,
   parseTaskSearch,
@@ -16,8 +13,8 @@ import {
   type TaskSearchResult,
 } from "../task-search";
 import { StateMessage } from "./Dashboard";
-import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
+import { TaskCard } from "./TaskCard";
 
 export function TaskSearch() {
   const { t } = useTranslation();
@@ -43,7 +40,13 @@ export function TaskSearch() {
   const parsed = parseTaskSearch(q);
   const results = parsed.error ? [] : filterTaskSearchResults(data, parsed);
   return (
-    <TaskSearchContent key={q} query={q} parsed={parsed} results={results} />
+    <TaskSearchContent
+      key={q}
+      query={q}
+      parsed={parsed}
+      results={results}
+      projects={data.projects}
+    />
   );
 }
 
@@ -51,10 +54,12 @@ function TaskSearchContent({
   query,
   parsed,
   results,
+  projects,
 }: {
   query: string;
   parsed: TaskSearchParseResult;
   results: TaskSearchResult[];
+  projects: Project[];
 }) {
   const { t } = useTranslation();
   return (
@@ -69,7 +74,11 @@ function TaskSearchContent({
         </div>
       </header>
       <TaskSearchForm query={query} />
-      <TaskSearchResults parsed={parsed} results={results} />
+      <TaskSearchResults
+        parsed={parsed}
+        results={results}
+        projects={projects}
+      />
     </div>
   );
 }
@@ -114,9 +123,11 @@ function TaskSearchForm({ query }: { query: string }) {
 function TaskSearchResults({
   parsed,
   results,
+  projects,
 }: {
   parsed: TaskSearchParseResult;
   results: TaskSearchResult[];
+  projects: Project[];
 }) {
   const { t } = useTranslation();
   if (parsed.error) return <SearchError error={parsed.error} />;
@@ -128,57 +139,22 @@ function TaskSearchResults({
       </div>
     );
   return (
-    <ol className="task-results" aria-label={t("tasks.listLabel")}>
+    <ol
+      className="task-card-list task-results"
+      aria-label={t("tasks.listLabel")}
+    >
       {results.map((result) => (
-        <TaskResult key={result.task.id} {...result} />
+        <TaskCard
+          key={result.task.id}
+          task={result.task}
+          feature={result.feature}
+          project={projects.find(
+            (item) => item.id === result.feature.projectId,
+          )}
+          pullRequest={result.pullRequest}
+        />
       ))}
     </ol>
-  );
-}
-
-function TaskResult({ task, feature, pullRequest }: TaskSearchResult) {
-  const { t } = useTranslation();
-  return (
-    <li>
-      <Link
-        to="/features/$featureId"
-        params={{ featureId: feature.id }}
-        className="task-result"
-      >
-        <div className="task-result-main">
-          <div className="task-result-title">
-            <EntityIcon kind="task" size={15} />
-            <strong>{task.title}</strong>
-            <code>{task.id}</code>
-          </div>
-          <small>
-            <EntityIcon kind="feature" size={13} />
-            {feature.title}
-          </small>
-          {task.scope && <p>{task.scope}</p>}
-        </div>
-        <span className="task-result-state">
-          {taskDisplayStateLabel(task.displayState, t)}
-        </span>
-        <div className="task-result-github">
-          {pullRequest ? (
-            <>
-              <span>
-                {`${pullRequest.host || "github.com"}/${pullRequest.owner}/${pullRequest.repository}#${pullRequest.number}`}
-              </span>
-              <small>
-                {pullRequestDisplayStateLabel(pullRequest.displayState, t)}
-              </small>
-              {pullRequest.syncError && (
-                <em title={pullRequest.syncError}>{pullRequest.syncError}</em>
-              )}
-            </>
-          ) : (
-            <small>{t("tasks.noPullRequest")}</small>
-          )}
-        </div>
-      </Link>
-    </li>
   );
 }
 

@@ -14,9 +14,6 @@ export const dashboard = {
       noTaskTitle: "No task is ready yet",
       noTaskDetail:
         "Create a feature and connect its tasks, or clear an upstream blocker.",
-      metaProject: "Project",
-      metaFeature: "Feature",
-      metaAssignee: "Assignee",
       queues: {
         ready: { title: "Ready now" },
         review: { title: "Review line" },
@@ -40,9 +37,6 @@ export const dashboard = {
       noTaskTitle: "着手できるタスクはまだありません",
       noTaskDetail:
         "フィーチャーを作成してタスクを接続するか、上流のブロッカーを解消してください。",
-      metaProject: "プロジェクト",
-      metaFeature: "フィーチャー",
-      metaAssignee: "担当",
       queues: {
         ready: { title: "着手可能" },
         review: { title: "レビュー待ち" },
