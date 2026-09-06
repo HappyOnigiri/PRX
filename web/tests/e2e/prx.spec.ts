@@ -273,7 +273,7 @@ async function addTask(page: Page, title: string, trigger?: Locator) {
   const dialog = page.getByRole("form", { name: "Create task" });
   await dialog.getByLabel("Title").fill(title);
   await dialog.getByLabel("Scope").fill(`Acceptance boundary for ${title}`);
-  await dialog.getByLabel("Assignee").fill("Mika");
+  await dialog.getByLabel("Assignee").fill("Bob");
   await dialog.getByRole("button", { name: "Add task" }).click();
   await expect(
     page.locator(".task-node").filter({ hasText: title }),
@@ -556,11 +556,11 @@ test("creates and edits a feature DAG while preserving state", async ({
   browserErrors.splice(0, browserErrors.length);
   await prSection
     .getByPlaceholder("https://github.com/org/repo/pull/42")
-    .fill(`https://github.com/HappyOnigiri/PRX/pull/${prNumber}`);
+    .fill(`https://github.com/acme/prx/pull/${prNumber}`);
   await prSection.getByRole("button", { name: "Attach" }).click();
   await expect(
     prSection.getByRole("link", {
-      name: new RegExp(`HappyOnigiri/PRX #${prNumber}`),
+      name: new RegExp(`acme/prx #${prNumber}`),
     }),
   ).toBeVisible();
   await expect(
@@ -613,7 +613,7 @@ test("creates and edits a feature DAG while preserving state", async ({
   await page.getByRole("button", { name: "Close inspector" }).click();
   await expect(
     apiCard.getByRole("link", {
-      name: new RegExp(`HappyOnigiri/PRX #${prNumber}`),
+      name: new RegExp(`acme/prx #${prNumber}`),
     }),
   ).toHaveAttribute("target", "_blank");
   await expect(

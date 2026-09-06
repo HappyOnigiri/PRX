@@ -9,7 +9,7 @@ prx task create FEATURE_ID_OR_SLUG TITLE [flags]
 ### Examples
 
 ```
-prx task create checkout "Add payment intent API" --assignee Mika
+prx task create checkout "Add payment intent API" --assignee Bob
 prx task create checkout -- "-fix login redirect"
 ```
 

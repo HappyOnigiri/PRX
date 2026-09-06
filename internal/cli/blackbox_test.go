@@ -1555,7 +1555,7 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 		runConfig("config", "sync", "update", "600"),
 		"interval_seconds",
 	)
-	assertDirectObject(t, runConfig("config", "auth", "update", "work-gh", "--user", "HappyOnigiri"), "id")
+	assertDirectObject(t, runConfig("config", "auth", "update", "work-gh", "--user", "octocat"), "id")
 	assertDirectObjectKeys(t, runConfig("config", "auth", "reorder", "work-gh"), "auth_methods")
 	assertDirectObjectKeys(t, runConfig("config", "auth", "remove", "work-gh"), "removed")
 	assertDirectObjectKeys(t, runConfig("config", "host", "remove", "ghe.example.com"), "removed")
