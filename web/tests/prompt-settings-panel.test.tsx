@@ -108,6 +108,46 @@ describe("PromptSettingsPanel", () => {
     });
   });
 
+  // The response carries the text that was sent, so it is older than anything
+  // typed while the request was in flight.
+  it("keeps text typed while a save is in flight", async () => {
+    type Templates = { design: string; implementation: string };
+    let settle: (result: { templates: Templates }) => void = () => undefined;
+    panelMocks.mutation.mutateAsync.mockImplementation(
+      () =>
+        new Promise<{ templates: Templates }>((resolve) => {
+          settle = resolve;
+        }),
+    );
+    render(<PromptSettingsPanel />);
+    fireEvent.change(screen.getByLabelText(/Design prompt/), {
+      target: { value: "Plan {{task_id}}" },
+    });
+    submitTemplateForm();
+    await waitFor(() => {
+      expect(panelMocks.mutation.mutateAsync).toHaveBeenCalled();
+    });
+
+    fireEvent.change(screen.getByLabelText(/Design prompt/), {
+      target: { value: "Plan {{task_id}} carefully" },
+    });
+    settle({
+      templates: {
+        design: "Plan {{task_id}}",
+        implementation: "Build {{task_id}}",
+      },
+    });
+
+    await waitFor(() => {
+      expect(screen.getByLabelText(/Design prompt/)).toHaveValue(
+        "Plan {{task_id}} carefully",
+      );
+    });
+    expect(
+      screen.queryByText("Prompt templates saved."),
+    ).not.toBeInTheDocument();
+  });
+
   it("shows a rejected template and keeps the edited text", async () => {
     panelMocks.mutation.mutateAsync.mockRejectedValue(
       new Error("prompts.design: template must use {{task_id}}"),

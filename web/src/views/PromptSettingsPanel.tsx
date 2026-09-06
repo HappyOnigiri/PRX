@@ -1,5 +1,5 @@
 import { RotateCcw, Save } from "lucide-react";
-import { useState, type SyntheticEvent } from "react";
+import { useRef, useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { promptMutations } from "../api";
 import { usePromptTemplates, usePromptTemplatesMutation } from "../hooks";
@@ -30,6 +30,15 @@ export function PromptSettingsPanel() {
   const update = usePromptTemplatesMutation(promptMutations.updateTemplates);
   const [draft, setDraft] = useState<TemplateDraft>();
   const [saved, setSaved] = useState(false);
+  // Counts keystrokes so a save that is still in flight can tell whether the
+  // text it sent is still the text on screen.
+  const edits = useRef(0);
+
+  function edit(next: TemplateDraft) {
+    edits.current += 1;
+    setSaved(false);
+    setDraft(next);
+  }
 
   if (templates.isPending) {
     return (
@@ -50,7 +59,12 @@ export function PromptSettingsPanel() {
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaved(false);
+    const submitted = edits.current;
     const result = await update.mutateAsync(current);
+    // Text typed while the request was in flight is newer than the response, so
+    // adopting the server's copy would silently revert those keystrokes and
+    // then report success for text the user no longer sees.
+    if (edits.current !== submitted) return;
     if (result.templates) setDraft(result.templates);
     setSaved(true);
   }
@@ -69,8 +83,7 @@ export function PromptSettingsPanel() {
           label={t("promptSettings.design")}
           value={current.design}
           onChange={(design) => {
-            setSaved(false);
-            setDraft({ ...current, design });
+            edit({ ...current, design });
           }}
         />
         <TemplateField
@@ -78,8 +91,7 @@ export function PromptSettingsPanel() {
           label={t("promptSettings.implementation")}
           value={current.implementation}
           onChange={(implementation) => {
-            setSaved(false);
-            setDraft({ ...current, implementation });
+            edit({ ...current, implementation });
           }}
         />
         <small>
@@ -96,8 +108,7 @@ export function PromptSettingsPanel() {
             type="button"
             disabled={update.isPending}
             onClick={() => {
-              setSaved(false);
-              setDraft({ design: "", implementation: "" });
+              edit({ design: "", implementation: "" });
             }}
           />
           <IconButton
