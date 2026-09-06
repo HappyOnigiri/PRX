@@ -1,15 +1,15 @@
 ## prx project
 
-List projects or show one by ID or slug
+List projects or show one by ID
 
 ### Synopsis
 
-List projects or show one by ID or slug.
+List projects or show one by ID.
 
 Alias: proj.
 
 ```
-prx project [PROJECT_ID_OR_SLUG] [flags]
+prx project [PROJECT_ID] [flags]
 ```
 
 ### Examples
@@ -17,7 +17,7 @@ prx project [PROJECT_ID_OR_SLUG] [flags]
 ```
 prx project
 prx project P-1
-prx proj payments
+prx proj P-1
 ```
 
 ### Options
@@ -42,5 +42,5 @@ prx proj payments
 * [prx project create](prx_project_create.md)	 - Create a project
 * [prx project delete](prx_project_delete.md)	 - Delete a project; --cascade removes its documents and releases its features
 * [prx project unarchive](prx_project_unarchive.md)	 - Unarchive a project and let its features accept writes again
-* [prx project update](prx_project_update.md)	 - Update a project by ID or slug
+* [prx project update](prx_project_update.md)	 - Update a project by ID
 

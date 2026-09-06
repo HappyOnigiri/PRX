@@ -75,7 +75,6 @@ function populatedSnapshot(archived = false) {
     projects: [
       makeProject({
         id: "P-1",
-        slug: "delivery",
         title: "Delivery platform",
         description: "Shared work",
         archived,

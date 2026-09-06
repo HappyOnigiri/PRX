@@ -328,7 +328,6 @@ func domainFeature(value db.Feature, projectID string) domain.Feature {
 		ID:          value.PublicID,
 		StorageID:   value.ID,
 		ProjectID:   projectID,
-		Slug:        value.Slug,
 		Title:       value.Title,
 		Description: value.Description,
 		Status:      status,
@@ -350,7 +349,6 @@ func domainProject(value db.Project) domain.Project {
 	return domain.Project{
 		ID:          value.PublicID,
 		StorageID:   value.ID,
-		Slug:        value.Slug,
 		Title:       value.Title,
 		Description: value.Description,
 		Archived:    value.Archived != 0,

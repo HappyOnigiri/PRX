@@ -36,7 +36,7 @@ func TestDemoServiceIsIsolatedPersistsUntilCloseAndResets(t *testing.T) {
 	}
 	temporaryRoot := closer.(*serviceCloser).temporaryRoot
 	assertDemoCounts(t, service, 5, 122)
-	if _, err := service.CreateFeature(ctx, "session-change", "Session change", "", ""); err != nil {
+	if _, err := service.CreateFeature(ctx, "Session change", "", ""); err != nil {
 		t.Fatal(err)
 	}
 	assertDemoCounts(t, service, 6, 122)

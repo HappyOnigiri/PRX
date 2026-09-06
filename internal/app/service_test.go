@@ -11,7 +11,7 @@ import (
 
 type repositoryStub struct{}
 
-func (repositoryStub) CreateProject(context.Context, string, string, string) (domain.Project, error) {
+func (repositoryStub) CreateProject(context.Context, string, string) (domain.Project, error) {
 	return domain.Project{}, errors.New("unexpected CreateProject call")
 }
 
@@ -23,15 +23,11 @@ func (repositoryStub) GetProject(_ context.Context, id string) (domain.Project, 
 	return domain.Project{}, domain.NewError(domain.DomainErrorCodeNotFound, "project %q was not found", id)
 }
 
-func (repositoryStub) GetProjectBySlug(_ context.Context, slug string) (domain.Project, error) {
-	return domain.Project{}, domain.NewError(domain.DomainErrorCodeNotFound, "project %q was not found", slug)
-}
-
 func (repositoryStub) DeleteProject(context.Context, string, bool) error {
 	return errors.New("unexpected DeleteProject call")
 }
 
-func (repositoryStub) CreateFeature(context.Context, string, string, string, string) (domain.Feature, error) {
+func (repositoryStub) CreateFeature(context.Context, string, string, string) (domain.Feature, error) {
 	return domain.Feature{}, errors.New("unexpected CreateFeature call")
 }
 
@@ -41,10 +37,6 @@ func (repositoryStub) UpdateFeature(context.Context, domain.Feature) (domain.Fea
 
 func (repositoryStub) GetFeature(context.Context, string) (domain.Feature, error) {
 	return domain.Feature{}, errors.New("unexpected GetFeature call")
-}
-
-func (repositoryStub) GetFeatureBySlug(context.Context, string) (domain.Feature, error) {
-	return domain.Feature{}, errors.New("unexpected GetFeatureBySlug call")
 }
 
 func (repositoryStub) DeleteFeature(context.Context, string, bool) error {
@@ -162,19 +154,6 @@ func (r *taskRepository) GetFeature(context.Context, string) (domain.Feature, er
 	return r.feature, nil
 }
 
-type featureSlugRepository struct {
-	repositoryStub
-	feature domain.Feature
-}
-
-func (r *featureSlugRepository) GetFeature(_ context.Context, id string) (domain.Feature, error) {
-	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", id)
-}
-
-func (r *featureSlugRepository) GetFeatureBySlug(context.Context, string) (domain.Feature, error) {
-	return r.feature, nil
-}
-
 type missingFeatureRepository struct {
 	repositoryStub
 }
@@ -183,14 +162,9 @@ func (missingFeatureRepository) GetFeature(_ context.Context, id string) (domain
 	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", id)
 }
 
-func (missingFeatureRepository) GetFeatureBySlug(_ context.Context, slug string) (domain.Feature, error) {
-	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", slug)
-}
-
 type failingFeatureRepository struct {
 	missingFeatureRepository
-	idFailure   error
-	slugFailure error
+	idFailure error
 }
 
 func (r *failingFeatureRepository) GetFeature(ctx context.Context, id string) (domain.Feature, error) {
@@ -200,57 +174,29 @@ func (r *failingFeatureRepository) GetFeature(ctx context.Context, id string) (d
 	return domain.Feature{}, r.idFailure
 }
 
-func (r *failingFeatureRepository) GetFeatureBySlug(ctx context.Context, slug string) (domain.Feature, error) {
-	if r.slugFailure == nil {
-		return r.missingFeatureRepository.GetFeatureBySlug(ctx, slug)
-	}
-	return domain.Feature{}, r.slugFailure
-}
-
+// A storage failure such as a locked database keeps its own cause instead of
+// being reported as a missing feature.
 func TestResolveFeatureAndGetNodeKeepStorageFailures(t *testing.T) {
-	for _, test := range []struct {
-		name       string
-		repository *failingFeatureRepository
-	}{
-		{
-			name:       "feature ID lookup fails",
-			repository: &failingFeatureRepository{idFailure: errors.New("database is locked")},
-		},
-		{
-			name:       "feature slug lookup fails",
-			repository: &failingFeatureRepository{slugFailure: errors.New("database is locked")},
-		},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			service := app.New(test.repository, nil)
-			_, err := service.ResolveFeature(context.Background(), "checkout")
-			if err == nil || err.Error() != "database is locked" {
-				t.Fatalf("ResolveFeature error=%v", err)
-			}
-			_, err = service.GetNode(context.Background(), "checkout")
-			if err == nil || err.Error() != "database is locked" {
-				t.Fatalf("GetNode error=%v", err)
-			}
-		})
+	repository := &failingFeatureRepository{idFailure: errors.New("database is locked")}
+	service := app.New(repository, nil)
+	_, err := service.ResolveFeature(context.Background(), "F-1")
+	if err == nil || err.Error() != "database is locked" {
+		t.Fatalf("ResolveFeature error=%v", err)
+	}
+	_, err = service.GetNode(context.Background(), "F-1")
+	if err == nil || err.Error() != "database is locked" {
+		t.Fatalf("GetNode error=%v", err)
 	}
 }
 
-func TestGetNodeResolvesFeatureIDsAndSlugsAndTaskIDs(t *testing.T) {
-	feature := domain.Feature{ID: "F-1", Slug: "checkout"}
+func TestGetNodeResolvesFeatureAndTaskIDs(t *testing.T) {
+	feature := domain.Feature{ID: "F-1", Title: "Checkout"}
 	featureValue, err := app.New(&featureRepository{feature: feature}, nil).GetNode(context.Background(), feature.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, ok := featureValue.(domain.Feature); !ok || got.ID != feature.ID || got.Slug != feature.Slug {
+	if got, ok := featureValue.(domain.Feature); !ok || got.ID != feature.ID || got.Title != feature.Title {
 		t.Fatalf("feature node=%#v", featureValue)
-	}
-	slugValue, err := app.New(&featureSlugRepository{feature: feature}, nil).
-		GetNode(context.Background(), feature.Slug)
-	if err != nil {
-		t.Fatal(err)
-	}
-	if got, ok := slugValue.(domain.Feature); !ok || got.ID != feature.ID || got.Slug != feature.Slug {
-		t.Fatalf("feature slug node=%#v", slugValue)
 	}
 
 	task := domain.Task{ID: "T-1", FeatureID: feature.ID, Title: "Implement"}
@@ -262,12 +208,18 @@ func TestGetNodeResolvesFeatureIDsAndSlugsAndTaskIDs(t *testing.T) {
 		t.Fatalf("task node=%#v", taskValue)
 	}
 
+	// An operand without a known public-ID prefix names no kind at all, so it
+	// is reported as missing without a lookup.
 	if _, err := app.New(missingFeatureRepository{}, nil).
-		GetNode(context.Background(), "unknown"); errorCode(
+		GetNode(context.Background(), "checkout"); errorCode(
 		t,
 		err,
 	) != domain.DomainErrorCodeNotFound {
-		t.Fatalf("unknown node error=%v", err)
+		t.Fatalf("unprefixed node error=%v", err)
+	}
+	if _, err := app.New(missingFeatureRepository{}, nil).
+		GetNode(context.Background(), "F-9"); errorCode(t, err) != domain.DomainErrorCodeNotFound {
+		t.Fatalf("unknown feature node error=%v", err)
 	}
 }
 
@@ -325,38 +277,24 @@ func (p syncProvider) Fetch(context.Context, domain.PullRequest) (domain.PullReq
 
 type createFeatureRepository struct {
 	repositoryStub
-	gotSlug        string
 	gotTitle       string
 	gotDescription string
 }
 
 func (r *createFeatureRepository) CreateFeature(
 	_ context.Context,
-	slug, title, description, _ string,
+	title, description, _ string,
 ) (domain.Feature, error) {
-	r.gotSlug = slug
 	r.gotTitle = title
 	r.gotDescription = description
-	return domain.Feature{Slug: slug, Title: title, Description: description}, nil
+	return domain.Feature{Title: title, Description: description}, nil
 }
 
 func TestCreateFeatureValidatesBeforeRepository(t *testing.T) {
-	for _, test := range []struct {
-		name  string
-		slug  string
-		title string
-		code  domain.DomainErrorCode
-	}{
-		{name: "invalid slug", slug: "not a slug", title: "Feature", code: "invalid_slug"},
-		{name: "missing title", slug: "feature", title: "  ", code: "invalid_title"},
-	} {
-		t.Run(test.name, func(t *testing.T) {
-			service := app.New(repositoryStub{}, nil)
-			_, err := service.CreateFeature(context.Background(), test.slug, test.title, "", "")
-			if got := errorCode(t, err); got != test.code {
-				t.Fatalf("error code=%q, want %q", got, test.code)
-			}
-		})
+	service := app.New(repositoryStub{}, nil)
+	_, err := service.CreateFeature(context.Background(), "  ", "", "")
+	if got := errorCode(t, err); got != domain.DomainErrorCodeInvalidTitle {
+		t.Fatalf("error code=%q, want %q", got, domain.DomainErrorCodeInvalidTitle)
 	}
 }
 
@@ -364,15 +302,13 @@ func TestCreateFeatureNormalizesBeforeRepository(t *testing.T) {
 	repository := &createFeatureRepository{}
 	service := app.New(repository, nil)
 
-	_, err := service.CreateFeature(context.Background(), "  Release-API  ", "  Release API  ", "  Description  ", "")
+	_, err := service.CreateFeature(context.Background(), "  Release API  ", "  Description  ", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if repository.gotSlug != "release-api" || repository.gotTitle != "Release API" ||
-		repository.gotDescription != "Description" {
+	if repository.gotTitle != "Release API" || repository.gotDescription != "Description" {
 		t.Fatalf(
-			"repository received slug=%q title=%q description=%q",
-			repository.gotSlug,
+			"repository received title=%q description=%q",
 			repository.gotTitle,
 			repository.gotDescription,
 		)

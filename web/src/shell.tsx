@@ -174,7 +174,6 @@ function FeatureCreateDialog({
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     const response = await createFeature.mutateAsync({
-      slug: formValue(data, "slug"),
       title: formValue(data, "title"),
       description: formValue(data, "description"),
       projectId: formValue(data, "projectId"),
@@ -197,15 +196,6 @@ function FeatureCreateDialog({
         <header>
           <h2>{t("featureCreate.title")}</h2>
         </header>
-        <label>
-          {t("common.slug")}
-          <input
-            name="slug"
-            required
-            pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-            placeholder={t("featureCreate.slugPlaceholder")}
-          />
-        </label>
         <label>
           {t("common.title")}
           <input

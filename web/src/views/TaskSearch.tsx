@@ -153,7 +153,7 @@ function TaskResult({ task, feature, pullRequest }: TaskSearchResult) {
           </div>
           <small>
             <EntityIcon kind="feature" size={13} />
-            {feature.title} · {feature.slug}
+            {feature.title}
           </small>
           {task.scope && <p>{task.scope}</p>}
         </div>

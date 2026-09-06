@@ -8,7 +8,6 @@ import (
 func protoProject(v domain.Project) *prxv1.Project {
 	return &prxv1.Project{
 		Id:          v.ID,
-		Slug:        v.Slug,
 		Title:       v.Title,
 		Description: v.Description,
 		Archived:    v.Archived,
@@ -22,7 +21,6 @@ func protoFeature(v domain.Feature) *prxv1.Feature {
 		Id:                 v.ID,
 		ProjectId:          v.ProjectID,
 		ReadOnly:           v.ReadOnly,
-		Slug:               v.Slug,
 		Title:              v.Title,
 		Description:        v.Description,
 		Status:             protoFeatureStatus(v.Status),
@@ -439,8 +437,6 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT
 	case domain.DomainErrorCodeInvalidPullRequestURL:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL
-	case domain.DomainErrorCodeInvalidSlug:
-		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG
 	case domain.DomainErrorCodeInvalidStatus:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS
 	case domain.DomainErrorCodeInvalidTitle:

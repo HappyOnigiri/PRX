@@ -222,13 +222,11 @@ describe("RPC API wrappers", () => {
 
   it("serializes every project mutation and always cascades a delete", async () => {
     await mutations.createProject({
-      slug: "delivery",
       title: "Delivery platform",
       description: "Shared work",
     });
     expect(apiMocks.client.createProject).toHaveBeenCalledWith(
       expect.objectContaining({
-        slug: "delivery",
         title: "Delivery platform",
         description: "Shared work",
       }),
@@ -249,14 +247,12 @@ describe("RPC API wrappers", () => {
 
   it("serializes every mutation request and propagates markdown content", async () => {
     await mutations.createFeature({
-      slug: "release",
       title: "Release",
       description: "Ship it",
       projectId: "P-1",
     });
     expect(apiMocks.client.createFeature).toHaveBeenCalledWith(
       expect.objectContaining({
-        slug: "release",
         title: "Release",
         description: "Ship it",
         projectId: "P-1",

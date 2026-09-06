@@ -709,8 +709,6 @@ const (
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT DomainErrorCode = 11
 	// DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL means the pull request URL cannot be parsed.
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL DomainErrorCode = 12
-	// DOMAIN_ERROR_CODE_INVALID_SLUG means a feature slug does not meet its format rules.
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG DomainErrorCode = 14
 	// DOMAIN_ERROR_CODE_INVALID_STATUS means a feature or task status is unsupported.
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS DomainErrorCode = 15
 	// DOMAIN_ERROR_CODE_INVALID_TITLE means a required feature or task title is empty.
@@ -756,7 +754,6 @@ var (
 		10: "DOMAIN_ERROR_CODE_INVALID_KIND",
 		11: "DOMAIN_ERROR_CODE_INVALID_PARENT",
 		12: "DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL",
-		14: "DOMAIN_ERROR_CODE_INVALID_SLUG",
 		15: "DOMAIN_ERROR_CODE_INVALID_STATUS",
 		16: "DOMAIN_ERROR_CODE_INVALID_TITLE",
 		17: "DOMAIN_ERROR_CODE_NOT_FOUND",
@@ -785,7 +782,6 @@ var (
 		"DOMAIN_ERROR_CODE_INVALID_KIND":                  10,
 		"DOMAIN_ERROR_CODE_INVALID_PARENT":                11,
 		"DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL":      12,
-		"DOMAIN_ERROR_CODE_INVALID_SLUG":                  14,
 		"DOMAIN_ERROR_CODE_INVALID_STATUS":                15,
 		"DOMAIN_ERROR_CODE_INVALID_TITLE":                 16,
 		"DOMAIN_ERROR_CODE_NOT_FOUND":                     17,
@@ -1156,8 +1152,6 @@ type Project struct {
 	// id is the public stable identifier of the project in the form P-<number>.
 	// The storage UUID is internal and is never exposed through this API.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// slug is the lowercase, hyphenated identifier used by CLI commands.
-	Slug string `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
 	// title is the human-readable project name.
 	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	// description explains what the project groups.
@@ -1209,13 +1203,6 @@ func (x *Project) GetId() string {
 	return ""
 }
 
-func (x *Project) GetSlug() string {
-	if x != nil {
-		return x.Slug
-	}
-	return ""
-}
-
 func (x *Project) GetTitle() string {
 	if x != nil {
 		return x.Title
@@ -1257,8 +1244,6 @@ type Feature struct {
 	// id is the public stable identifier of the feature in the form F-<number>.
 	// The storage UUID is internal and is never exposed through this API.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// slug is the lowercase, hyphenated identifier used by CLI commands.
-	Slug string `protobuf:"bytes,2,opt,name=slug,proto3" json:"slug,omitempty"`
 	// title is the human-readable feature name.
 	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	// description explains the feature's scope or goal.
@@ -1330,13 +1315,6 @@ func (*Feature) Descriptor() ([]byte, []int) {
 func (x *Feature) GetId() string {
 	if x != nil {
 		return x.Id
-	}
-	return ""
-}
-
-func (x *Feature) GetSlug() string {
-	if x != nil {
-		return x.Slug
 	}
 	return ""
 }
@@ -2204,8 +2182,6 @@ func (x *GetSnapshotResponse) GetSnapshot() *Snapshot {
 // CreateProjectRequest contains the required and descriptive values for a project.
 type CreateProjectRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// slug is the lowercase, hyphenated project identifier.
-	Slug string `protobuf:"bytes,1,opt,name=slug,proto3" json:"slug,omitempty"`
 	// title is the required human-readable project name.
 	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	// description is optional explanatory text for the project.
@@ -2242,13 +2218,6 @@ func (x *CreateProjectRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CreateProjectRequest.ProtoReflect.Descriptor instead.
 func (*CreateProjectRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{11}
-}
-
-func (x *CreateProjectRequest) GetSlug() string {
-	if x != nil {
-		return x.Slug
-	}
-	return ""
 }
 
 func (x *CreateProjectRequest) GetTitle() string {
@@ -2315,10 +2284,8 @@ func (x *CreateProjectResponse) GetProject() *Project {
 // An unset optional field is unchanged, while an empty string requests clearing a string field.
 type UpdateProjectRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the project to update by public ID or slug.
+	// id identifies the project to update by public ID.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// slug is unchanged when unset; an empty string requests clearing it.
-	Slug *string `protobuf:"bytes,2,opt,name=slug,proto3,oneof" json:"slug,omitempty"`
 	// title is unchanged when unset; an empty string requests clearing it.
 	Title *string `protobuf:"bytes,3,opt,name=title,proto3,oneof" json:"title,omitempty"`
 	// description is unchanged when unset; an empty string clears it.
@@ -2363,13 +2330,6 @@ func (*UpdateProjectRequest) Descriptor() ([]byte, []int) {
 func (x *UpdateProjectRequest) GetId() string {
 	if x != nil {
 		return x.Id
-	}
-	return ""
-}
-
-func (x *UpdateProjectRequest) GetSlug() string {
-	if x != nil && x.Slug != nil {
-		return *x.Slug
 	}
 	return ""
 }
@@ -2444,7 +2404,7 @@ func (x *UpdateProjectResponse) GetProject() *Project {
 // DeleteProjectRequest requests deletion of a project.
 type DeleteProjectRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the project to delete by public ID or slug.
+	// id identifies the project to delete by public ID.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	// cascade deletes the project's own documents and releases its features
 	// instead of failing; contained features are never deleted.
@@ -2537,13 +2497,11 @@ func (*DeleteProjectResponse) Descriptor() ([]byte, []int) {
 // CreateFeatureRequest contains the required and descriptive values for a feature.
 type CreateFeatureRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// slug is the lowercase, hyphenated feature identifier.
-	Slug string `protobuf:"bytes,1,opt,name=slug,proto3" json:"slug,omitempty"`
 	// title is the required human-readable feature name.
 	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	// description is optional explanatory text for the feature.
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// project_id assigns the feature to a project by public ID or slug; an empty value leaves it unaffiliated.
+	// project_id assigns the feature to a project by public ID; an empty value leaves it unaffiliated.
 	ProjectId     string `protobuf:"bytes,4,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2577,13 +2535,6 @@ func (x *CreateFeatureRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use CreateFeatureRequest.ProtoReflect.Descriptor instead.
 func (*CreateFeatureRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{17}
-}
-
-func (x *CreateFeatureRequest) GetSlug() string {
-	if x != nil {
-		return x.Slug
-	}
-	return ""
 }
 
 func (x *CreateFeatureRequest) GetTitle() string {
@@ -2659,8 +2610,6 @@ type UpdateFeatureRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// id identifies the feature to update.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// slug is unchanged when unset; an empty string requests clearing it.
-	Slug *string `protobuf:"bytes,2,opt,name=slug,proto3,oneof" json:"slug,omitempty"`
 	// title is unchanged when unset; an empty string requests clearing it.
 	Title *string `protobuf:"bytes,3,opt,name=title,proto3,oneof" json:"title,omitempty"`
 	// description is unchanged when unset; an empty string clears it.
@@ -2670,7 +2619,7 @@ type UpdateFeatureRequest struct {
 	// archived is unchanged when unset; a supplied value explicitly sets it.
 	// Clearing it is the only update an archived feature accepts.
 	Archived *bool `protobuf:"varint,6,opt,name=archived,proto3,oneof" json:"archived,omitempty"`
-	// project_id is unchanged when unset; a public ID or slug reassigns the
+	// project_id is unchanged when unset; a public ID reassigns the
 	// feature, and an empty string removes it from its project.
 	ProjectId     *string `protobuf:"bytes,7,opt,name=project_id,json=projectId,proto3,oneof" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -2710,13 +2659,6 @@ func (*UpdateFeatureRequest) Descriptor() ([]byte, []int) {
 func (x *UpdateFeatureRequest) GetId() string {
 	if x != nil {
 		return x.Id
-	}
-	return ""
-}
-
-func (x *UpdateFeatureRequest) GetSlug() string {
-	if x != nil && x.Slug != nil {
-		return *x.Slug
 	}
 	return ""
 }
@@ -6139,7 +6081,7 @@ func (x *GetTaskPromptResponse) GetPrompt() string {
 // Empty selectors refresh all pull requests; setting both selectors applies both filters.
 type SyncRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// feature_id selects pull requests belonging to the feature identified by public ID or slug.
+	// feature_id selects pull requests belonging to the feature identified by public ID.
 	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
 	// task_id selects the pull request attached to this task's public ID.
 	TaskId        string `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
@@ -8274,20 +8216,18 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0fblocker_task_id\x18\x02 \x01(\tR\rblockerTaskId\"N\n" +
 	"\vErrorDetail\x12+\n" +
 	"\x04code\x18\x01 \x01(\x0e2\x17.prx.v1.DomainErrorCodeR\x04code\x12\x12\n" +
-	"\x04path\x18\x02 \x03(\tR\x04path\"\xbf\x01\n" +
+	"\x04path\x18\x02 \x03(\tR\x04path\"\xb7\x01\n" +
 	"\aProject\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04slug\x18\x02 \x01(\tR\x04slug\x12\x14\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x12\x1a\n" +
 	"\barchived\x18\x05 \x01(\bR\barchived\x12\x1d\n" +
 	"\n" +
 	"created_at\x18\x06 \x01(\tR\tcreatedAt\x12\x1d\n" +
 	"\n" +
-	"updated_at\x18\a \x01(\tR\tupdatedAt\"\xcb\x04\n" +
+	"updated_at\x18\a \x01(\tR\tupdatedAtJ\x04\b\x02\x10\x03R\x04slug\"\xc3\x04\n" +
 	"\aFeature\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04slug\x18\x02 \x01(\tR\x04slug\x12\x14\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x04 \x01(\tR\vdescription\x12-\n" +
 	"\x06status\x18\x05 \x01(\x0e2\x15.prx.v1.FeatureStatusR\x06status\x12\x1a\n" +
@@ -8308,7 +8248,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0efinished_count\x18\x0f \x01(\x05R\rfinishedCount\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x10 \x01(\tR\tprojectId\x12\x1b\n" +
-	"\tread_only\x18\x11 \x01(\bR\breadOnly\"\xd8\x03\n" +
+	"\tread_only\x18\x11 \x01(\bR\breadOnlyJ\x04\b\x02\x10\x03R\x04slug\"\xd8\x03\n" +
 	"\x04Task\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -8388,52 +8328,46 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	" \x03(\v2\x0f.prx.v1.ProjectR\bprojects\"\x14\n" +
 	"\x12GetSnapshotRequest\"C\n" +
 	"\x13GetSnapshotResponse\x12,\n" +
-	"\bsnapshot\x18\x01 \x01(\v2\x10.prx.v1.SnapshotR\bsnapshot\"b\n" +
-	"\x14CreateProjectRequest\x12\x12\n" +
-	"\x04slug\x18\x01 \x01(\tR\x04slug\x12\x14\n" +
+	"\bsnapshot\x18\x01 \x01(\v2\x10.prx.v1.SnapshotR\bsnapshot\"Z\n" +
+	"\x14CreateProjectRequest\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
-	"\vdescription\x18\x03 \x01(\tR\vdescription\"B\n" +
+	"\vdescription\x18\x03 \x01(\tR\vdescriptionJ\x04\b\x01\x10\x02R\x04slug\"B\n" +
 	"\x15CreateProjectResponse\x12)\n" +
-	"\aproject\x18\x01 \x01(\v2\x0f.prx.v1.ProjectR\aproject\"\xd2\x01\n" +
+	"\aproject\x18\x01 \x01(\v2\x0f.prx.v1.ProjectR\aproject\"\xbc\x01\n" +
 	"\x14UpdateProjectRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
-	"\x04slug\x18\x02 \x01(\tH\x00R\x04slug\x88\x01\x01\x12\x19\n" +
-	"\x05title\x18\x03 \x01(\tH\x01R\x05title\x88\x01\x01\x12%\n" +
-	"\vdescription\x18\x04 \x01(\tH\x02R\vdescription\x88\x01\x01\x12\x1f\n" +
-	"\barchived\x18\x05 \x01(\bH\x03R\barchived\x88\x01\x01B\a\n" +
-	"\x05_slugB\b\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
+	"\x05title\x18\x03 \x01(\tH\x00R\x05title\x88\x01\x01\x12%\n" +
+	"\vdescription\x18\x04 \x01(\tH\x01R\vdescription\x88\x01\x01\x12\x1f\n" +
+	"\barchived\x18\x05 \x01(\bH\x02R\barchived\x88\x01\x01B\b\n" +
 	"\x06_titleB\x0e\n" +
 	"\f_descriptionB\v\n" +
-	"\t_archived\"B\n" +
+	"\t_archivedJ\x04\b\x02\x10\x03R\x04slug\"B\n" +
 	"\x15UpdateProjectResponse\x12)\n" +
 	"\aproject\x18\x01 \x01(\v2\x0f.prx.v1.ProjectR\aproject\"@\n" +
 	"\x14DeleteProjectRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
 	"\acascade\x18\x02 \x01(\bR\acascade\"\x17\n" +
-	"\x15DeleteProjectResponse\"\x81\x01\n" +
-	"\x14CreateFeatureRequest\x12\x12\n" +
-	"\x04slug\x18\x01 \x01(\tR\x04slug\x12\x14\n" +
+	"\x15DeleteProjectResponse\"y\n" +
+	"\x14CreateFeatureRequest\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12 \n" +
 	"\vdescription\x18\x03 \x01(\tR\vdescription\x12\x1d\n" +
 	"\n" +
-	"project_id\x18\x04 \x01(\tR\tprojectId\"B\n" +
+	"project_id\x18\x04 \x01(\tR\tprojectIdJ\x04\b\x01\x10\x02R\x04slug\"B\n" +
 	"\x15CreateFeatureResponse\x12)\n" +
-	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"\xc4\x02\n" +
+	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"\xae\x02\n" +
 	"\x14UpdateFeatureRequest\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x17\n" +
-	"\x04slug\x18\x02 \x01(\tH\x00R\x04slug\x88\x01\x01\x12\x19\n" +
-	"\x05title\x18\x03 \x01(\tH\x01R\x05title\x88\x01\x01\x12%\n" +
-	"\vdescription\x18\x04 \x01(\tH\x02R\vdescription\x88\x01\x01\x122\n" +
-	"\x06status\x18\x05 \x01(\x0e2\x15.prx.v1.FeatureStatusH\x03R\x06status\x88\x01\x01\x12\x1f\n" +
-	"\barchived\x18\x06 \x01(\bH\x04R\barchived\x88\x01\x01\x12\"\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x19\n" +
+	"\x05title\x18\x03 \x01(\tH\x00R\x05title\x88\x01\x01\x12%\n" +
+	"\vdescription\x18\x04 \x01(\tH\x01R\vdescription\x88\x01\x01\x122\n" +
+	"\x06status\x18\x05 \x01(\x0e2\x15.prx.v1.FeatureStatusH\x02R\x06status\x88\x01\x01\x12\x1f\n" +
+	"\barchived\x18\x06 \x01(\bH\x03R\barchived\x88\x01\x01\x12\"\n" +
 	"\n" +
-	"project_id\x18\a \x01(\tH\x05R\tprojectId\x88\x01\x01B\a\n" +
-	"\x05_slugB\b\n" +
+	"project_id\x18\a \x01(\tH\x04R\tprojectId\x88\x01\x01B\b\n" +
 	"\x06_titleB\x0e\n" +
 	"\f_descriptionB\t\n" +
 	"\a_statusB\v\n" +
 	"\t_archivedB\r\n" +
-	"\v_project_id\"B\n" +
+	"\v_project_idJ\x04\b\x02\x10\x03R\x04slug\"B\n" +
 	"\x15UpdateFeatureResponse\x12)\n" +
 	"\afeature\x18\x01 \x01(\v2\x0f.prx.v1.FeatureR\afeature\"@\n" +
 	"\x14DeleteFeatureRequest\x12\x0e\n" +
@@ -8903,7 +8837,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x11BlockedReasonCode\x12#\n" +
 	"\x1fBLOCKED_REASON_CODE_UNSPECIFIED\x10\x00\x122\n" +
 	".BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE\x10\x01\x12+\n" +
-	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03\"\x04\b\x02\x10\x02*\xa4\t\n" +
+	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03\"\x04\b\x02\x10\x02*\xa6\t\n" +
 	"\x0fDomainErrorCode\x12!\n" +
 	"\x1dDOMAIN_ERROR_CODE_UNSPECIFIED\x10\x00\x12.\n" +
 	"*DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY\x10\x02\x12\x1b\n" +
@@ -8917,8 +8851,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x1eDOMAIN_ERROR_CODE_INVALID_KIND\x10\n" +
 	"\x12$\n" +
 	" DOMAIN_ERROR_CODE_INVALID_PARENT\x10\v\x12.\n" +
-	"*DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL\x10\f\x12\"\n" +
-	"\x1eDOMAIN_ERROR_CODE_INVALID_SLUG\x10\x0e\x12$\n" +
+	"*DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL\x10\f\x12$\n" +
 	" DOMAIN_ERROR_CODE_INVALID_STATUS\x10\x0f\x12#\n" +
 	"\x1fDOMAIN_ERROR_CODE_INVALID_TITLE\x10\x10\x12\x1f\n" +
 	"\x1bDOMAIN_ERROR_CODE_NOT_FOUND\x10\x11\x12&\n" +
@@ -8932,7 +8865,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"/DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE\x10\x1a\x12'\n" +
 	"#DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT\x10\x1b\x123\n" +
 	"/DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN\x10\x1c\x12(\n" +
-	"$DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY\x10\x1d\"\x04\b\r\x10\r\"\x04\b\x14\x10\x14*\x1eDOMAIN_ERROR_CODE_INVALID_SEED*\xd6\x01\n" +
+	"$DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY\x10\x1d\"\x04\b\r\x10\r\"\x04\b\x0e\x10\x0e\"\x04\b\x14\x10\x14*\x1eDOMAIN_ERROR_CODE_INVALID_SEED*\x1eDOMAIN_ERROR_CODE_INVALID_SLUG*\xd6\x01\n" +
 	"\x14GithubAuthMethodType\x12'\n" +
 	"#GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED\x10\x00\x12$\n" +
 	" GITHUB_AUTH_METHOD_TYPE_KEYCHAIN\x10\x01\x12'\n" +

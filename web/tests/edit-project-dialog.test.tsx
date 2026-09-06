@@ -53,7 +53,6 @@ describe("EditProjectDialog", () => {
       <EditProjectDialog
         project={makeProject({
           id: "P-1",
-          slug: "delivery",
           title: "Delivery",
         })}
         referenceCount={2}
@@ -61,9 +60,6 @@ describe("EditProjectDialog", () => {
         onDeleted={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText("Slug"), {
-      target: { value: "delivery-platform" },
-    });
     fireEvent.change(screen.getByLabelText("Title"), {
       target: { value: "Delivery platform" },
     });
@@ -77,7 +73,6 @@ describe("EditProjectDialog", () => {
     });
     expect(mutationAt(0).mutateAsync).toHaveBeenCalledWith({
       id: "P-1",
-      slug: "delivery-platform",
       title: "Delivery platform",
       description: "Shared work",
     });
@@ -172,7 +167,7 @@ describe("EditProjectDialog", () => {
     expect(
       screen.getByRole("dialog", { name: "Manage archived project" }),
     ).toBeInTheDocument();
-    expect(screen.queryByLabelText("Slug")).not.toBeInTheDocument();
+    expect(screen.queryByLabelText("Title")).not.toBeInTheDocument();
     expect(screen.getByText("No project description yet.")).toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Activate project" }));
     await waitFor(() => {

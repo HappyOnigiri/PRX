@@ -24,9 +24,9 @@ prx doc
 ### Options
 
 ```
-      --feature string   filter by feature ID or slug
+      --feature string   filter by feature ID
   -h, --help             help for document
-      --project string   filter by project ID or slug
+      --project string   filter by project ID
       --task string      filter by task ID
 ```
 

@@ -288,22 +288,18 @@ function FeatureWorkspaceHead({
           value={props.feature.id}
           valueOnly
         />
-        <p className="eyebrow">
-          {t("workspace.eyebrow", { slug: props.feature.slug })}
-          {props.project && (
-            <>
-              {" · "}
-              <Link
-                to="/projects/$projectId"
-                params={{ projectId: props.project.id }}
-                search={{ features: "active" }}
-                className="workspace-project-link"
-              >
-                {props.project.title}
-              </Link>
-            </>
-          )}
-        </p>
+        {props.project && (
+          <p className="eyebrow">
+            <Link
+              to="/projects/$projectId"
+              params={{ projectId: props.project.id }}
+              search={{ features: "active" }}
+              className="workspace-project-link"
+            >
+              {props.project.title}
+            </Link>
+          </p>
+        )}
       </div>
       <div className="workspace-actions">
         <DocumentReferences

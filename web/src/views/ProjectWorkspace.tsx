@@ -114,9 +114,6 @@ function ProjectContent(props: ProjectContentProps) {
             value={props.project.id}
             valueOnly
           />
-          <p className="eyebrow">
-            {t("project.slugEyebrow", { slug: props.project.slug })}
-          </p>
         </div>
         <div className="workspace-actions">
           <DocumentReferences

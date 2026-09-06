@@ -37,7 +37,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 9 {
+		migrations != 10 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -164,11 +164,11 @@ func TestCompletingADisplacedGitHubSyncRunReportsThatItNoLongerOwnsTheState(t *t
 func TestPublicIDsAreTypedAndStorageIDsStayInternal(t *testing.T) {
 	database, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "public-ids", "Public IDs", "", "")
+	feature, err := service.CreateFeature(ctx, "Public IDs", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	secondFeature, err := service.CreateFeature(ctx, "public-ids-2", "Public IDs 2", "", "")
+	secondFeature, err := service.CreateFeature(ctx, "Public IDs 2", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -183,9 +183,9 @@ func TestPublicIDsAreTypedAndStorageIDsStayInternal(t *testing.T) {
 	if feature.ID != "F-1" || secondFeature.ID != "F-2" {
 		t.Fatalf("feature IDs=%q,%q, want F-1,F-2", feature.ID, secondFeature.ID)
 	}
-	bySlug, err := database.GetFeatureBySlug(ctx, "public-ids")
-	if err != nil || bySlug.ID != feature.ID {
-		t.Fatalf("feature by slug=%+v, err=%v", bySlug, err)
+	byPublicID, err := database.GetFeature(ctx, feature.ID)
+	if err != nil || byPublicID.Title != feature.Title {
+		t.Fatalf("feature by public ID=%+v, err=%v", byPublicID, err)
 	}
 	if firstTask.ID != "T-1" || secondTask.ID != "T-2" {
 		t.Fatalf("task IDs=%q,%q, want T-1,T-2", firstTask.ID, secondTask.ID)
@@ -614,7 +614,7 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	var migrationCount int
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
-		Scan(&migrationCount); err != nil || migrationCount != 9 {
+		Scan(&migrationCount); err != nil || migrationCount != 10 {
 		t.Fatalf("migration count=%d err=%v", migrationCount, err)
 	}
 	var status string
@@ -623,15 +623,20 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 		Scan(&status); err != nil || status != "auto" {
 		t.Fatalf("task status=%q err=%v, want auto", status, err)
 	}
-	for slug, want := range map[string]domain.FeatureStatus{
-		"legacy":           domain.FeatureStatusAuto,
-		"legacy-paused":    domain.FeatureStatusPaused,
-		"legacy-completed": domain.FeatureStatusCompleted,
-		"legacy-cancelled": domain.FeatureStatusCancelled,
+	// Migration 5 numbers the features by creation time, so the default active
+	// one becomes F-1 and the three chosen statuses follow in storage-ID order.
+	for publicID, want := range map[string]struct {
+		title  string
+		status domain.FeatureStatus
+	}{
+		"F-1": {"Legacy", domain.FeatureStatusAuto},
+		"F-2": {"Legacy cancelled", domain.FeatureStatusCancelled},
+		"F-3": {"Legacy completed", domain.FeatureStatusCompleted},
+		"F-4": {"Legacy paused", domain.FeatureStatusPaused},
 	} {
-		feature, err := database.GetFeatureBySlug(ctx, slug)
-		if err != nil || feature.Status != want {
-			t.Fatalf("migrated feature %q status=%q err=%v, want %q", slug, feature.Status, err, want)
+		feature, err := database.GetFeature(ctx, publicID)
+		if err != nil || feature.Title != want.title || feature.Status != want.status {
+			t.Fatalf("migrated feature %q=%+v err=%v, want %+v", publicID, feature, err, want)
 		}
 	}
 	plan, err := database.GetImplementationPlan(ctx, "T-1")
@@ -713,7 +718,7 @@ func TestMigrationAddsGitHubHostAndHostScopedUniqueness(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	feature, err := database.CreateFeature(ctx, "legacy", "Legacy", "", "")
+	feature, err := database.CreateFeature(ctx, "Legacy", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -840,7 +845,7 @@ func TestGitHubRepositoryAuthCacheRoundTrip(t *testing.T) {
 func TestCycleDuplicateAndSafeDeletion(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "delivery", "Delivery", "", "")
+	feature, err := service.CreateFeature(ctx, "Delivery", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -879,7 +884,7 @@ func TestCycleDuplicateAndSafeDeletion(t *testing.T) {
 func TestDuplicatePullRequestAndConcurrentWriters(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	feature, _ := service.CreateFeature(ctx, "concurrency", "Concurrency", "", "")
+	feature, _ := service.CreateFeature(ctx, "Concurrency", "", "")
 	a, _ := service.CreateTask(ctx, feature.ID, "A", "", domain.TaskKindPR, "")
 	b, _ := service.CreateTask(ctx, feature.ID, "B", "", domain.TaskKindPR, "")
 	if _, err := service.AttachPullRequest(ctx, a.ID, "https://github.com/acme/api/pull/42"); err != nil {
@@ -937,7 +942,7 @@ func TestValidateReportsCorruption(t *testing.T) {
 	}
 	provider, _ := githubprovider.NewFixtureProvider("demo")
 	service := app.New(database, provider)
-	feature, err := service.CreateFeature(ctx, "corruption", "Corruption", "", "")
+	feature, err := service.CreateFeature(ctx, "Corruption", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -995,7 +1000,7 @@ func TestValidateReportsCorruption(t *testing.T) {
 func TestUpdateClearsFieldsWhenExplicitlyEmpty(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "clearing", "Clearing", "initial description", "")
+	feature, err := service.CreateFeature(ctx, "Clearing", "initial description", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1031,7 +1036,7 @@ func TestUpdateClearsFieldsWhenExplicitlyEmpty(t *testing.T) {
 func TestArchiveRoundTrip(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "archivable", "Archivable", "", "")
+	feature, err := service.CreateFeature(ctx, "Archivable", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1052,7 +1057,7 @@ func TestArchiveRoundTrip(t *testing.T) {
 func TestFeatureStatusRoundTripKeepsTheStoredColumnsConsistent(t *testing.T) {
 	database, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "status-columns", "Status columns", "", "")
+	feature, err := service.CreateFeature(ctx, "Status columns", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1103,7 +1108,7 @@ func TestFeatureStatusRoundTripKeepsTheStoredColumnsConsistent(t *testing.T) {
 func TestConcurrentDependencyWritesDoNotLock(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "contention", "Contention", "", "")
+	feature, err := service.CreateFeature(ctx, "Contention", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1166,11 +1171,11 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	}
 	statuses := map[domain.FeatureStatus]bool{}
 	displayStatuses := map[domain.FeatureStatus]bool{}
-	featuresBySlug := map[string]domain.Feature{}
+	featuresByTitle := map[string]domain.Feature{}
 	for _, feature := range snapshot.Features {
 		statuses[feature.Status] = true
 		displayStatuses[feature.DisplayStatus] = true
-		featuresBySlug[feature.Slug] = feature
+		featuresByTitle[feature.Title] = feature
 	}
 	if !statuses[domain.FeatureStatusAuto] {
 		t.Error("no demo feature keeps the automatic status")
@@ -1187,7 +1192,7 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	}
 	// The 100-task program reaches completion from its merged pull requests
 	// alone, so the demo exercises the derivation rather than a manual status.
-	completedProgram := featuresBySlug["completed-program"]
+	completedProgram := featuresByTitle["Completed 100-task program"]
 	if completedProgram.Status != domain.FeatureStatusAuto ||
 		completedProgram.DisplayStatus != domain.FeatureStatusCompleted ||
 		completedProgram.FinishedCount != completedProgram.TaskCount {
@@ -1233,12 +1238,12 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	if references != 3 || plans != 1 {
 		t.Errorf("documents: references=%d plans=%d, want 3 and 1", references, plans)
 	}
-	if !featuresBySlug["cancelled-experiment"].Archived {
+	if !featuresByTitle["Cancelled experiment"].Archived {
 		t.Error("cancelled feature is not archived")
 	}
 	// The walkthrough points at a feature that is read-only because of its
 	// project rather than its own flag, so the demo has to contain one.
-	postmortem := featuresBySlug["sunset-postmortem"]
+	postmortem := featuresByTitle["Sunset postmortem"]
 	if postmortem.Archived || !postmortem.ReadOnly {
 		t.Errorf("sunset postmortem=%+v, want read-only without being archived", postmortem)
 	}
@@ -1256,7 +1261,7 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	}
 	completedPRs := 0
 	for _, pr := range snapshot.PullRequests {
-		if featureByTask[pr.TaskID] != featuresBySlug["completed-program"].ID {
+		if featureByTask[pr.TaskID] != featuresByTitle["Completed 100-task program"].ID {
 			continue
 		}
 		completedPRs++
@@ -1355,7 +1360,7 @@ func TestDemoSurvivesSynchronization(t *testing.T) {
 func TestSnapshotSurvivesOrphanedTask(t *testing.T) {
 	database, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "orphans", "Orphans", "", "")
+	feature, err := service.CreateFeature(ctx, "Orphans", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1394,7 +1399,7 @@ func TestSnapshotSurvivesOrphanedTask(t *testing.T) {
 func TestTaskStatusOverridesAndAutomaticPRState(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "completion", "Completion", "", "")
+	feature, err := service.CreateFeature(ctx, "Completion", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1449,7 +1454,7 @@ func TestTaskStatusOverridesAndAutomaticPRState(t *testing.T) {
 func TestSyncByTaskID(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "targeted-sync", "Targeted sync", "", "")
+	feature, err := service.CreateFeature(ctx, "Targeted sync", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1498,7 +1503,7 @@ func TestSyncByTaskID(t *testing.T) {
 func TestImplementationPlanLifecycleAndCascade(t *testing.T) {
 	database, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "implementation-plans", "Implementation plans", "", "")
+	feature, err := service.CreateFeature(ctx, "Implementation plans", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1615,7 +1620,7 @@ func TestSyncKeepsPartialCoreStateAndUsesItForDependencies(t *testing.T) {
 	ctx := context.Background()
 	provider := &scriptedProvider{}
 	service := app.New(database, provider)
-	feature, err := service.CreateFeature(ctx, "partial-sync", "Partial sync", "", "")
+	feature, err := service.CreateFeature(ctx, "Partial sync", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1685,7 +1690,7 @@ func TestInMemoryDatabaseIsSharedAcrossConcurrentCallers(t *testing.T) {
 	t.Cleanup(func() { _ = database.Close() })
 	provider, _ := githubprovider.NewFixtureProvider("demo")
 	service := app.New(database, provider)
-	feature, err := service.CreateFeature(ctx, "in-memory", "In memory", "", "")
+	feature, err := service.CreateFeature(ctx, "In memory", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1716,7 +1721,7 @@ func TestInMemoryDatabaseIsSharedAcrossConcurrentCallers(t *testing.T) {
 func TestPullRequestURLCasingIsNotADistinctPullRequest(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "casing", "Casing", "", "")
+	feature, err := service.CreateFeature(ctx, "Casing", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1745,7 +1750,7 @@ func TestPullRequestURLCasingIsNotADistinctPullRequest(t *testing.T) {
 func TestDeletingWhatIsNotThereReportsNotFound(t *testing.T) {
 	_, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "deletions", "Deletions", "", "")
+	feature, err := service.CreateFeature(ctx, "Deletions", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1773,7 +1778,7 @@ func TestDeletingWhatIsNotThereReportsNotFound(t *testing.T) {
 func TestGetPullRequestRoundTripAndNotFound(t *testing.T) {
 	database, service := openTestService(t)
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, "pull-request-read", "Pull request read", "", "")
+	feature, err := service.CreateFeature(ctx, "Pull request read", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1848,7 +1853,7 @@ func TestDefaultPathUsesUserConfigDirectory(t *testing.T) {
 func TestStoreUpdateDocumentWritesOnlyRequestedFields(t *testing.T) {
 	ctx := context.Background()
 	database, _ := openTestService(t)
-	feature, err := database.CreateFeature(ctx, "checkout", "Checkout", "", "")
+	feature, err := database.CreateFeature(ctx, "Checkout", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -1901,7 +1906,7 @@ func TestStoreUpdateDocumentWritesOnlyRequestedFields(t *testing.T) {
 func TestStoreUpsertImplementationPlanKeepsExistingTitle(t *testing.T) {
 	ctx := context.Background()
 	database, _ := openTestService(t)
-	feature, err := database.CreateFeature(ctx, "checkout", "Checkout", "", "")
+	feature, err := database.CreateFeature(ctx, "Checkout", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}

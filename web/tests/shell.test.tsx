@@ -191,9 +191,6 @@ describe("AppShell", () => {
       </AppShell>,
     );
     fireEvent.click(screen.getByRole("button", { name: "New feature" }));
-    fireEvent.change(screen.getByLabelText("Slug"), {
-      target: { value: "release" },
-    });
     fireEvent.change(screen.getByLabelText("Title"), {
       target: { value: "Release" },
     });
@@ -206,7 +203,6 @@ describe("AppShell", () => {
       expect(shellMocks.navigate).toHaveBeenCalledOnce();
     });
     expect(shellMocks.mutation.mutateAsync).toHaveBeenCalledWith({
-      slug: "release",
       title: "Release",
       description: "Ship it",
       projectId: "",

@@ -30,7 +30,6 @@ type Document struct {
 
 type Feature struct {
 	ID          string         `json:"id"`
-	Slug        string         `json:"slug"`
 	Title       string         `json:"title"`
 	Description string         `json:"description"`
 	Status      string         `json:"status"`
@@ -68,7 +67,6 @@ type IDSequence struct {
 type Project struct {
 	ID          string `json:"id"`
 	PublicID    string `json:"public_id"`
-	Slug        string `json:"slug"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Archived    int64  `json:"archived"`

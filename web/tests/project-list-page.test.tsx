@@ -120,9 +120,6 @@ describe("ProjectListPage", () => {
     render(<ProjectListPage />);
 
     fireEvent.click(screen.getByRole("button", { name: "New project" }));
-    fireEvent.change(screen.getByLabelText("Slug"), {
-      target: { value: "delivery" },
-    });
     fireEvent.change(screen.getByLabelText("Title"), {
       target: { value: "Delivery platform" },
     });
@@ -135,7 +132,6 @@ describe("ProjectListPage", () => {
       });
     });
     expect(listMocks.createProject).toHaveBeenCalledWith({
-      slug: "delivery",
       title: "Delivery platform",
       description: "",
     });

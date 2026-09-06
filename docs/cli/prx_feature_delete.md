@@ -3,13 +3,13 @@
 Delete a feature and optionally its contained data
 
 ```
-prx feature delete FEATURE_ID_OR_SLUG [flags]
+prx feature delete FEATURE_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx feature delete checkout --cascade
+prx feature delete F-1 --cascade
 ```
 
 ### Options
@@ -30,5 +30,5 @@ prx feature delete checkout --cascade
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - List features or show one by ID or slug
+* [prx feature](prx_feature.md)	 - List features or show one by ID
 

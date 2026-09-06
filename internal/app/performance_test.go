@@ -24,7 +24,6 @@ func BenchmarkSnapshot5000Tasks(b *testing.B) {
 	for featureIndex := 0; featureIndex < 100; featureIndex++ {
 		feature, err := service.CreateFeature(
 			ctx,
-			fmt.Sprintf("feature-%03d", featureIndex),
 			fmt.Sprintf("Feature %03d", featureIndex),
 			"",
 			"",

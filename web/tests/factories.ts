@@ -24,7 +24,6 @@ import {
 
 const featureDefaults = {
   id: "feature-1",
-  slug: "payments",
   title: "Payments rollout",
   status: FeatureStatus.AUTO,
   displayStatus: FeatureStatus.ACTIVE,
@@ -35,7 +34,6 @@ const featureDefaults = {
 
 const projectDefaults = {
   id: "project-1",
-  slug: "delivery",
   title: "Delivery platform",
 } satisfies MessageInitShape<typeof ProjectSchema>;
 

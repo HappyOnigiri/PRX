@@ -11,11 +11,11 @@ import (
 type Service interface {
 	Snapshot(ctx context.Context) (domain.Snapshot, error)
 
-	CreateProject(ctx context.Context, slug, title, description string) (domain.Project, error)
+	CreateProject(ctx context.Context, title, description string) (domain.Project, error)
 	UpdateProject(ctx context.Context, id string, update domain.ProjectUpdate) (domain.Project, error)
 	DeleteProject(ctx context.Context, id string, cascade bool) error
 
-	CreateFeature(ctx context.Context, slug, title, description, projectID string) (domain.Feature, error)
+	CreateFeature(ctx context.Context, title, description, projectID string) (domain.Feature, error)
 	UpdateFeature(ctx context.Context, id string, update domain.FeatureUpdate) (domain.Feature, error)
 	DeleteFeature(ctx context.Context, id string, cascade bool) error
 

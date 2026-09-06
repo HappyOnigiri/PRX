@@ -3,13 +3,13 @@
 Show a feature graph with tasks and dependencies
 
 ```
-prx graph FEATURE_ID_OR_SLUG [flags]
+prx graph FEATURE_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx graph checkout
+prx graph F-1
 ```
 
 ### Options

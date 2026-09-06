@@ -57,7 +57,6 @@ export function EditFeatureDialog({
     const status: FeatureStatus = Number(form.get("status"));
     const update: FeatureUpdate = {
       id: feature.id,
-      slug: formValue(form, "slug"),
       title: formValue(form, "title"),
       description: formValue(form, "description"),
       status,
@@ -196,10 +195,6 @@ function ReadOnlyFeatureDialog({
       </header>
       <dl className="read-only-values">
         <div>
-          <dt>{t("common.slug")}</dt>
-          <dd>{feature.slug}</dd>
-        </div>
-        <div>
           <dt>{t("common.title")}</dt>
           <dd>{feature.title}</dd>
         </div>
@@ -260,10 +255,6 @@ function ActiveFeatureDialog({
       <header>
         <h2>{t("featureEdit.title")}</h2>
       </header>
-      <label>
-        {t("common.slug")}
-        <input name="slug" required defaultValue={feature.slug} />
-      </label>
       <label>
         {t("common.title")}
         <input name="title" required defaultValue={feature.title} />

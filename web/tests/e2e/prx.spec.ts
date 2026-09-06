@@ -449,10 +449,9 @@ test("creates and edits a feature DAG while preserving state", async ({
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  // The server keeps one database for the whole run, so a fixed slug would make
-  // every retry fail on the unique constraint instead of absorbing a flake.
-  const slug = `e2e-rollout-${crypto.randomUUID()}`;
-  const title = `E2E rollout ${slug}`;
+  // The server keeps one database for the whole run, so a fixed title would
+  // make the assertions below match a feature a previous attempt left behind.
+  const title = `E2E rollout ${crypto.randomUUID()}`;
   // The demo fixture derives the PR state from the number, and 4k+2 maps to a
   // conflicting pull request. Keeping it unique avoids colliding with the pull
   // request a previous attempt attached to a task that still exists.
@@ -460,7 +459,6 @@ test("creates and edits a feature DAG while preserving state", async ({
   await page.goto("/");
   await page.getByRole("button", { name: "New feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
-  await featureDialog.getByLabel("Slug").fill(slug);
   await featureDialog.getByLabel("Title").fill(title);
   await featureDialog
     .getByLabel("Description")
@@ -699,12 +697,12 @@ test("creates and edits a feature DAG while preserving state", async ({
 });
 
 test("visually separates disconnected dependency chains", async ({ page }) => {
-  const slug = `disconnected-chains-${crypto.randomUUID()}`;
   await page.goto("/");
   await page.getByRole("button", { name: "New feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
-  await featureDialog.getByLabel("Slug").fill(slug);
-  await featureDialog.getByLabel("Title").fill(`Disconnected chains ${slug}`);
+  await featureDialog
+    .getByLabel("Title")
+    .fill(`Disconnected chains ${crypto.randomUUID()}`);
   await featureDialog.getByRole("button", { name: "Create feature" }).click();
 
   for (const title of ["Chain A1", "Chain A2", "Chain B1", "Chain B2"])
@@ -725,10 +723,8 @@ test("visually separates disconnected dependency chains", async ({ page }) => {
 test("archives and safely deletes a feature", async ({ page }) => {
   await page.goto("/");
   await page.getByRole("button", { name: "New feature" }).click();
-  const slug = `temporary-feature-${crypto.randomUUID()}`;
-  const title = `Temporary feature ${slug}`;
+  const title = `Temporary feature ${crypto.randomUUID()}`;
   const dialog = page.getByRole("form", { name: "Create feature" });
-  await dialog.getByLabel("Slug").fill(slug);
   await dialog.getByLabel("Title").fill(title);
   await dialog.getByRole("button", { name: "Create feature" }).click();
   await addTask(page, "Archived E2E task");

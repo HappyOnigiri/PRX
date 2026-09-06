@@ -48,7 +48,6 @@ export function EditProjectDialog({
     const form = new FormData(event.currentTarget);
     await applyUpdate({
       id: project.id,
-      slug: formValue(form, "slug"),
       title: formValue(form, "title"),
       description: formValue(form, "description"),
     });
@@ -218,10 +217,6 @@ function ArchivedProjectDialog({
       </header>
       <dl className="read-only-values">
         <div>
-          <dt>{t("common.slug")}</dt>
-          <dd>{project.slug}</dd>
-        </div>
-        <div>
           <dt>{t("common.title")}</dt>
           <dd>{project.title}</dd>
         </div>
@@ -271,10 +266,6 @@ function ActiveProjectDialog({
       <header>
         <h2>{t("projectEdit.title")}</h2>
       </header>
-      <label>
-        {t("common.slug")}
-        <input name="slug" required defaultValue={project.slug} />
-      </label>
       <label>
         {t("common.title")}
         <input name="title" required defaultValue={project.title} />

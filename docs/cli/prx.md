@@ -20,11 +20,11 @@ Manage pull-request dependency roadmaps
 * [prx debug](prx_debug.md)	 - Show a diagnostic report of this PRX installation
 * [prx dependency](prx_dependency.md)	 - List or manage directed blocker edges
 * [prx document](prx_document.md)	 - List or manage documents
-* [prx feature](prx_feature.md)	 - List features or show one by ID or slug
+* [prx feature](prx_feature.md)	 - List features or show one by ID
 * [prx graph](prx_graph.md)	 - Show a feature graph with tasks and dependencies
 * [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan document
 * [prx pr](prx_pr.md)	 - List or attach GitHub pull requests
-* [prx project](prx_project.md)	 - List projects or show one by ID or slug
+* [prx project](prx_project.md)	 - List projects or show one by ID
 * [prx prompt](prx_prompt.md)	 - Print the agent prompt for a task
 * [prx ready](prx_ready.md)	 - List tasks whose blockers are satisfied
 * [prx reviews](prx_reviews.md)	 - List tasks waiting for pull-request reviews

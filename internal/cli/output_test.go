@@ -144,7 +144,7 @@ func configAuthFixture() config.PublicAuthMethod {
 
 func TestHumanTablesAreDeterministic(t *testing.T) {
 	feature := domain.Feature{
-		ID: "F-1", Slug: "checkout", Status: domain.FeatureStatusAuto,
+		ID: "F-1", Status: domain.FeatureStatusAuto,
 		DisplayStatus: domain.FeatureStatusCompleted, Title: "Checkout",
 	}
 	var first, second bytes.Buffer
@@ -170,7 +170,7 @@ func TestHumanTablesAreDeterministic(t *testing.T) {
 func TestFeatureDetailShowsStoredAndDerivedStatus(t *testing.T) {
 	var out bytes.Buffer
 	feature := domain.Feature{
-		ID: "F-1", Slug: "checkout", Title: "Checkout", Status: domain.FeatureStatusAuto,
+		ID: "F-1", Title: "Checkout", Status: domain.FeatureStatusAuto,
 		DisplayStatus: domain.FeatureStatusCompleted, TaskCount: 2, FinishedCount: 2,
 	}
 	if err := renderFeatureDetail(feature)(&out); err != nil {

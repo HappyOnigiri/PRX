@@ -168,7 +168,6 @@ function matchesText(
     task.scope,
     task.assignee,
     feature.id,
-    feature.slug,
     feature.title,
     pullRequest?.host,
     pullRequest?.owner,

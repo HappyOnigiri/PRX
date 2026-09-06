@@ -51,7 +51,7 @@ func (s *state) taskCommand() *cobra.Command {
 			return s.write(map[string]any{"tasks": tasks}, renderTaskList(tasks))
 		},
 	}
-	command.Flags().StringVar(&filterFeature, "feature", "", "filter by feature ID or slug")
+	command.Flags().StringVar(&filterFeature, "feature", "", "filter by feature ID")
 	command.AddCommand(s.taskCreateCommand(), s.taskUpdateCommand(), s.taskDeleteCommand())
 	return command
 }
@@ -59,10 +59,10 @@ func (s *state) taskCommand() *cobra.Command {
 func (s *state) taskCreateCommand() *cobra.Command {
 	var scope, kind, assignee string
 	command := &cobra.Command{
-		Use:   "create FEATURE_ID_OR_SLUG TITLE",
+		Use:   "create FEATURE_ID TITLE",
 		Short: "Create an implementation or manual task",
-		Example: "prx task create checkout \"Add payment intent API\" --assignee Bob\n" +
-			"prx task create checkout -- \"-fix login redirect\"",
+		Example: "prx task create F-1 \"Add payment intent API\" --assignee Bob\n" +
+			"prx task create F-1 -- \"-fix login redirect\"",
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.CreateTask(cmd.Context(), args[0], args[1], scope, domain.TaskKind(kind), assignee)

@@ -16,7 +16,7 @@ prx sync --task TASK_ID
 ### Options
 
 ```
-      --feature string   feature ID or slug
+      --feature string   feature ID
   -h, --help             help for sync
       --task string      task ID
 ```

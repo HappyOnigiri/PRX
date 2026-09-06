@@ -95,7 +95,6 @@ export const shell = {
     featureCreate: {
       formLabel: "Create feature",
       title: "Create feature",
-      slugPlaceholder: "payments-rollout",
       titlePlaceholder: "Payments rollout",
       descriptionPlaceholder: "What must this feature deliver?",
       submit: "Create feature",
@@ -200,7 +199,6 @@ export const shell = {
     featureCreate: {
       formLabel: "フィーチャーを作成",
       title: "フィーチャーを作成",
-      slugPlaceholder: "payments-rollout",
       titlePlaceholder: "決済機能の展開",
       descriptionPlaceholder: "このフィーチャーで実現すること",
       submit: "フィーチャーを作成",

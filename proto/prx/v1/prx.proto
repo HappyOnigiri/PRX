@@ -203,8 +203,8 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL = 12;
   reserved 13;
   reserved "DOMAIN_ERROR_CODE_INVALID_SEED";
-  // DOMAIN_ERROR_CODE_INVALID_SLUG means a feature slug does not meet its format rules.
-  DOMAIN_ERROR_CODE_INVALID_SLUG = 14;
+  reserved 14;
+  reserved "DOMAIN_ERROR_CODE_INVALID_SLUG";
   // DOMAIN_ERROR_CODE_INVALID_STATUS means a feature or task status is unsupported.
   DOMAIN_ERROR_CODE_INVALID_STATUS = 15;
   // DOMAIN_ERROR_CODE_INVALID_TITLE means a required feature or task title is empty.
@@ -314,8 +314,8 @@ message Project {
   // id is the public stable identifier of the project in the form P-<number>.
   // The storage UUID is internal and is never exposed through this API.
   string id = 1;
-  // slug is the lowercase, hyphenated identifier used by CLI commands.
-  string slug = 2;
+  reserved 2;
+  reserved "slug";
   // title is the human-readable project name.
   string title = 3;
   // description explains what the project groups.
@@ -333,8 +333,8 @@ message Feature {
   // id is the public stable identifier of the feature in the form F-<number>.
   // The storage UUID is internal and is never exposed through this API.
   string id = 1;
-  // slug is the lowercase, hyphenated identifier used by CLI commands.
-  string slug = 2;
+  reserved 2;
+  reserved "slug";
   // title is the human-readable feature name.
   string title = 3;
   // description explains the feature's scope or goal.
@@ -511,8 +511,8 @@ message GetSnapshotResponse {
 
 // CreateProjectRequest contains the required and descriptive values for a project.
 message CreateProjectRequest {
-  // slug is the lowercase, hyphenated project identifier.
-  string slug = 1;
+  reserved 1;
+  reserved "slug";
   // title is the required human-readable project name.
   string title = 2;
   // description is optional explanatory text for the project.
@@ -528,10 +528,10 @@ message CreateProjectResponse {
 // UpdateProjectRequest updates only the supplied project fields.
 // An unset optional field is unchanged, while an empty string requests clearing a string field.
 message UpdateProjectRequest {
-  // id identifies the project to update by public ID or slug.
+  // id identifies the project to update by public ID.
   string id = 1;
-  // slug is unchanged when unset; an empty string requests clearing it.
-  optional string slug = 2;
+  reserved 2;
+  reserved "slug";
   // title is unchanged when unset; an empty string requests clearing it.
   optional string title = 3;
   // description is unchanged when unset; an empty string clears it.
@@ -549,7 +549,7 @@ message UpdateProjectResponse {
 
 // DeleteProjectRequest requests deletion of a project.
 message DeleteProjectRequest {
-  // id identifies the project to delete by public ID or slug.
+  // id identifies the project to delete by public ID.
   string id = 1;
   // cascade deletes the project's own documents and releases its features
   // instead of failing; contained features are never deleted.
@@ -561,13 +561,13 @@ message DeleteProjectResponse {}
 
 // CreateFeatureRequest contains the required and descriptive values for a feature.
 message CreateFeatureRequest {
-  // slug is the lowercase, hyphenated feature identifier.
-  string slug = 1;
+  reserved 1;
+  reserved "slug";
   // title is the required human-readable feature name.
   string title = 2;
   // description is optional explanatory text for the feature.
   string description = 3;
-  // project_id assigns the feature to a project by public ID or slug; an empty value leaves it unaffiliated.
+  // project_id assigns the feature to a project by public ID; an empty value leaves it unaffiliated.
   string project_id = 4;
 }
 
@@ -582,8 +582,8 @@ message CreateFeatureResponse {
 message UpdateFeatureRequest {
   // id identifies the feature to update.
   string id = 1;
-  // slug is unchanged when unset; an empty string requests clearing it.
-  optional string slug = 2;
+  reserved 2;
+  reserved "slug";
   // title is unchanged when unset; an empty string requests clearing it.
   optional string title = 3;
   // description is unchanged when unset; an empty string clears it.
@@ -593,7 +593,7 @@ message UpdateFeatureRequest {
   // archived is unchanged when unset; a supplied value explicitly sets it.
   // Clearing it is the only update an archived feature accepts.
   optional bool archived = 6;
-  // project_id is unchanged when unset; a public ID or slug reassigns the
+  // project_id is unchanged when unset; a public ID reassigns the
   // feature, and an empty string removes it from its project.
   optional string project_id = 7;
 }
@@ -1087,7 +1087,7 @@ message GetTaskPromptResponse {
 // SyncRequest selects pull requests to refresh from GitHub.
 // Empty selectors refresh all pull requests; setting both selectors applies both filters.
 message SyncRequest {
-  // feature_id selects pull requests belonging to the feature identified by public ID or slug.
+  // feature_id selects pull requests belonging to the feature identified by public ID.
   string feature_id = 1;
   // task_id selects the pull request attached to this task's public ID.
   string task_id = 2;

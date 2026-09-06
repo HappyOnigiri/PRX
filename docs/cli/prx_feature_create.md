@@ -3,15 +3,15 @@
 Create a feature
 
 ```
-prx feature create SLUG TITLE [flags]
+prx feature create TITLE [flags]
 ```
 
 ### Examples
 
 ```
-prx feature create checkout "Checkout rollout"
-prx feature create checkout "Checkout rollout" --project payments
-prx feature create checkout -- "-fix checkout"
+prx feature create "Checkout rollout"
+prx feature create "Checkout rollout" --project P-1
+prx feature create -- "-fix checkout"
 ```
 
 ### Options
@@ -19,7 +19,7 @@ prx feature create checkout -- "-fix checkout"
 ```
       --description string   feature description
   -h, --help                 help for create
-      --project string       project ID or slug to join
+      --project string       project ID to join
 ```
 
 ### Options inherited from parent commands
@@ -33,5 +33,5 @@ prx feature create checkout -- "-fix checkout"
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - List features or show one by ID or slug
+* [prx feature](prx_feature.md)	 - List features or show one by ID
 

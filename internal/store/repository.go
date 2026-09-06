@@ -67,7 +67,7 @@ func projectStorageID(ctx context.Context, q *db.Queries, publicID string) (sql.
 	return sql.NullString{String: project.ID, Valid: true}, nil
 }
 
-func (s *Store) CreateProject(ctx context.Context, slug, title, description string) (domain.Project, error) {
+func (s *Store) CreateProject(ctx context.Context, title, description string) (domain.Project, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
 		return domain.Project{}, err
@@ -83,7 +83,6 @@ func (s *Store) CreateProject(ctx context.Context, slug, title, description stri
 	value, err := q.CreateProject(ctx, db.CreateProjectParams{
 		ID:          uuid.NewString(),
 		PublicID:    publicID,
-		Slug:        slug,
 		Title:       title,
 		Description: description,
 		Archived:    0,
@@ -104,11 +103,6 @@ func (s *Store) GetProject(ctx context.Context, id string) (domain.Project, erro
 	return domainProject(value), mapNotFound(err, "project", id)
 }
 
-func (s *Store) GetProjectBySlug(ctx context.Context, slug string) (domain.Project, error) {
-	value, err := db.New(s.db).GetProjectBySlug(ctx, slug)
-	return domainProject(value), mapNotFound(err, "project", slug)
-}
-
 func (s *Store) UpdateProject(ctx context.Context, project domain.Project) (domain.Project, error) {
 	storageID := project.StorageID
 	if storageID == "" {
@@ -119,7 +113,6 @@ func (s *Store) UpdateProject(ctx context.Context, project domain.Project) (doma
 		storageID = value.ID
 	}
 	value, err := db.New(s.db).UpdateProject(ctx, db.UpdateProjectParams{
-		Slug:        project.Slug,
 		Title:       project.Title,
 		Description: project.Description,
 		Archived:    boolInt(project.Archived),
@@ -174,7 +167,7 @@ func (s *Store) DeleteProject(ctx context.Context, id string, cascade bool) erro
 
 func (s *Store) CreateFeature(
 	ctx context.Context,
-	slug, title, description, projectID string,
+	title, description, projectID string,
 ) (domain.Feature, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -196,7 +189,6 @@ func (s *Store) CreateFeature(
 	params := db.CreateFeatureParams{
 		ID:          uuid.NewString(),
 		PublicID:    publicID,
-		Slug:        slug,
 		Title:       title,
 		Description: description,
 		Status:      status,
@@ -224,15 +216,6 @@ func (s *Store) GetFeature(ctx context.Context, id string) (domain.Feature, erro
 	return domainFeature(value, featureProjectPublicID(ctx, q, value)), nil
 }
 
-func (s *Store) GetFeatureBySlug(ctx context.Context, slug string) (domain.Feature, error) {
-	q := db.New(s.db)
-	value, err := q.GetFeatureBySlug(ctx, slug)
-	if err != nil {
-		return domain.Feature{}, mapNotFound(err, "feature", slug)
-	}
-	return domainFeature(value, featureProjectPublicID(ctx, q, value)), nil
-}
-
 func featureProjectPublicID(ctx context.Context, q *db.Queries, value db.Feature) string {
 	if !value.ProjectID.Valid {
 		return ""
@@ -256,7 +239,6 @@ func (s *Store) UpdateFeature(ctx context.Context, feature domain.Feature) (doma
 	}
 	status, statusAuto := storedFeatureStatus(feature.Status)
 	params := db.UpdateFeatureParams{
-		Slug:        feature.Slug,
 		Title:       feature.Title,
 		Description: feature.Description,
 		Status:      status,

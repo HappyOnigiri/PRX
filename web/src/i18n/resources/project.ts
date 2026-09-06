@@ -21,7 +21,6 @@ export const project = {
       workspaceLoading: "Loading project…",
       notFound: "Project not found",
       returnList: "Return to projects",
-      slugEyebrow: "{{slug}}",
       noDescription: "No project description yet.",
       featuresLabel: "Features in this project",
       featureTabsLabel: "Feature status",
@@ -57,7 +56,6 @@ export const project = {
     projectCreate: {
       formLabel: "Create project",
       title: "Create project",
-      slugPlaceholder: "delivery-platform",
       titlePlaceholder: "Delivery platform",
       descriptionPlaceholder: "What do these features have in common?",
       submit: "Create project",
@@ -109,7 +107,6 @@ export const project = {
       workspaceLoading: "プロジェクトを読み込んでいます…",
       notFound: "プロジェクトが見つかりません",
       returnList: "プロジェクト一覧に戻る",
-      slugEyebrow: "{{slug}}",
       noDescription: "プロジェクトの説明はまだありません。",
       featuresLabel: "このプロジェクトのフィーチャー",
       featureTabsLabel: "フィーチャーの状態",
@@ -146,7 +143,6 @@ export const project = {
     projectCreate: {
       formLabel: "プロジェクトを作成",
       title: "プロジェクトを作成",
-      slugPlaceholder: "delivery-platform",
       titlePlaceholder: "デリバリー基盤",
       descriptionPlaceholder: "これらのフィーチャーに共通することを記述",
       submit: "プロジェクトを作成",

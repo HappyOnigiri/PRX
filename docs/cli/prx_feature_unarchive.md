@@ -1,15 +1,15 @@
 ## prx feature unarchive
 
-Unarchive a feature by ID or slug
+Unarchive a feature by ID
 
 ```
-prx feature unarchive FEATURE_ID_OR_SLUG [flags]
+prx feature unarchive FEATURE_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx feature unarchive checkout
+prx feature unarchive F-1
 ```
 
 ### Options
@@ -29,5 +29,5 @@ prx feature unarchive checkout
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - List features or show one by ID or slug
+* [prx feature](prx_feature.md)	 - List features or show one by ID
 

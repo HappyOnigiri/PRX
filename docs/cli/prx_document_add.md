@@ -6,7 +6,7 @@ Add a document to a project, a feature, or a task
 
 Add a document to a project, a feature, or a task.
 
-The operand is a public project, feature, or task ID, or a feature or project slug.
+The operand is a public project, feature, or task ID.
 
 ```
 prx document add PROJECT_OR_FEATURE_OR_TASK [flags]
@@ -17,7 +17,7 @@ prx document add PROJECT_OR_FEATURE_OR_TASK [flags]
 ```
 prx document add T-1 --url https://example.com
 prx document add P-1 --url https://example.com
-prx document add checkout --markdown-file notes.md
+prx document add F-1 --markdown-file notes.md
 ```
 
 ### Options

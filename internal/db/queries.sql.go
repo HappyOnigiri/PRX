@@ -141,14 +141,13 @@ func (q *Queries) CreateDocument(ctx context.Context, arg CreateDocumentParams) 
 
 const createFeature = `-- name: CreateFeature :one
 INSERT INTO features (
-  id, public_id, slug, title, description, status, status_auto, archived, project_id, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id
+  id, public_id, title, description, status, status_auto, archived, project_id, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id
 `
 
 type CreateFeatureParams struct {
 	ID          string         `json:"id"`
 	PublicID    string         `json:"public_id"`
-	Slug        string         `json:"slug"`
 	Title       string         `json:"title"`
 	Description string         `json:"description"`
 	Status      string         `json:"status"`
@@ -163,7 +162,6 @@ func (q *Queries) CreateFeature(ctx context.Context, arg CreateFeatureParams) (F
 	row := q.db.QueryRowContext(ctx, createFeature,
 		arg.ID,
 		arg.PublicID,
-		arg.Slug,
 		arg.Title,
 		arg.Description,
 		arg.Status,
@@ -176,7 +174,6 @@ func (q *Queries) CreateFeature(ctx context.Context, arg CreateFeatureParams) (F
 	var i Feature
 	err := row.Scan(
 		&i.ID,
-		&i.Slug,
 		&i.Title,
 		&i.Description,
 		&i.Status,
@@ -192,14 +189,13 @@ func (q *Queries) CreateFeature(ctx context.Context, arg CreateFeatureParams) (F
 
 const createProject = `-- name: CreateProject :one
 INSERT INTO projects (
-  id, public_id, slug, title, description, archived, created_at, updated_at
-) VALUES (?, ?, ?, ?, ?, ?, ?, ?) RETURNING id, public_id, slug, title, description, archived, created_at, updated_at
+  id, public_id, title, description, archived, created_at, updated_at
+) VALUES (?, ?, ?, ?, ?, ?, ?) RETURNING id, public_id, title, description, archived, created_at, updated_at
 `
 
 type CreateProjectParams struct {
 	ID          string `json:"id"`
 	PublicID    string `json:"public_id"`
-	Slug        string `json:"slug"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Archived    int64  `json:"archived"`
@@ -211,7 +207,6 @@ func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (P
 	row := q.db.QueryRowContext(ctx, createProject,
 		arg.ID,
 		arg.PublicID,
-		arg.Slug,
 		arg.Title,
 		arg.Description,
 		arg.Archived,
@@ -222,7 +217,6 @@ func (q *Queries) CreateProject(ctx context.Context, arg CreateProjectParams) (P
 	err := row.Scan(
 		&i.ID,
 		&i.PublicID,
-		&i.Slug,
 		&i.Title,
 		&i.Description,
 		&i.Archived,
@@ -466,7 +460,7 @@ func (q *Queries) GetDocument(ctx context.Context, id string) (Document, error) 
 }
 
 const getFeature = `-- name: GetFeature :one
-SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id FROM features WHERE id = ?
+SELECT id, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id FROM features WHERE id = ?
 `
 
 func (q *Queries) GetFeature(ctx context.Context, id string) (Feature, error) {
@@ -474,7 +468,6 @@ func (q *Queries) GetFeature(ctx context.Context, id string) (Feature, error) {
 	var i Feature
 	err := row.Scan(
 		&i.ID,
-		&i.Slug,
 		&i.Title,
 		&i.Description,
 		&i.Status,
@@ -489,7 +482,7 @@ func (q *Queries) GetFeature(ctx context.Context, id string) (Feature, error) {
 }
 
 const getFeatureByPublicID = `-- name: GetFeatureByPublicID :one
-SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id FROM features WHERE public_id = ?
+SELECT id, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id FROM features WHERE public_id = ?
 `
 
 func (q *Queries) GetFeatureByPublicID(ctx context.Context, publicID string) (Feature, error) {
@@ -497,30 +490,6 @@ func (q *Queries) GetFeatureByPublicID(ctx context.Context, publicID string) (Fe
 	var i Feature
 	err := row.Scan(
 		&i.ID,
-		&i.Slug,
-		&i.Title,
-		&i.Description,
-		&i.Status,
-		&i.Archived,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-		&i.PublicID,
-		&i.StatusAuto,
-		&i.ProjectID,
-	)
-	return i, err
-}
-
-const getFeatureBySlug = `-- name: GetFeatureBySlug :one
-SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id FROM features WHERE slug = ?
-`
-
-func (q *Queries) GetFeatureBySlug(ctx context.Context, slug string) (Feature, error) {
-	row := q.db.QueryRowContext(ctx, getFeatureBySlug, slug)
-	var i Feature
-	err := row.Scan(
-		&i.ID,
-		&i.Slug,
 		&i.Title,
 		&i.Description,
 		&i.Status,
@@ -600,7 +569,7 @@ func (q *Queries) GetImplementationPlanDocument(ctx context.Context, taskID sql.
 }
 
 const getProject = `-- name: GetProject :one
-SELECT id, public_id, slug, title, description, archived, created_at, updated_at FROM projects WHERE id = ?
+SELECT id, public_id, title, description, archived, created_at, updated_at FROM projects WHERE id = ?
 `
 
 func (q *Queries) GetProject(ctx context.Context, id string) (Project, error) {
@@ -609,7 +578,6 @@ func (q *Queries) GetProject(ctx context.Context, id string) (Project, error) {
 	err := row.Scan(
 		&i.ID,
 		&i.PublicID,
-		&i.Slug,
 		&i.Title,
 		&i.Description,
 		&i.Archived,
@@ -620,7 +588,7 @@ func (q *Queries) GetProject(ctx context.Context, id string) (Project, error) {
 }
 
 const getProjectByPublicID = `-- name: GetProjectByPublicID :one
-SELECT id, public_id, slug, title, description, archived, created_at, updated_at FROM projects WHERE public_id = ?
+SELECT id, public_id, title, description, archived, created_at, updated_at FROM projects WHERE public_id = ?
 `
 
 func (q *Queries) GetProjectByPublicID(ctx context.Context, publicID string) (Project, error) {
@@ -629,27 +597,6 @@ func (q *Queries) GetProjectByPublicID(ctx context.Context, publicID string) (Pr
 	err := row.Scan(
 		&i.ID,
 		&i.PublicID,
-		&i.Slug,
-		&i.Title,
-		&i.Description,
-		&i.Archived,
-		&i.CreatedAt,
-		&i.UpdatedAt,
-	)
-	return i, err
-}
-
-const getProjectBySlug = `-- name: GetProjectBySlug :one
-SELECT id, public_id, slug, title, description, archived, created_at, updated_at FROM projects WHERE slug = ?
-`
-
-func (q *Queries) GetProjectBySlug(ctx context.Context, slug string) (Project, error) {
-	row := q.db.QueryRowContext(ctx, getProjectBySlug, slug)
-	var i Project
-	err := row.Scan(
-		&i.ID,
-		&i.PublicID,
-		&i.Slug,
 		&i.Title,
 		&i.Description,
 		&i.Archived,
@@ -854,7 +801,7 @@ func (q *Queries) ListDocuments(ctx context.Context) ([]ListDocumentsRow, error)
 }
 
 const listFeatures = `-- name: ListFeatures :many
-SELECT id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id FROM features ORDER BY archived, updated_at DESC, slug
+SELECT id, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id FROM features ORDER BY archived, updated_at DESC, public_id
 `
 
 func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
@@ -868,7 +815,6 @@ func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
 		var i Feature
 		if err := rows.Scan(
 			&i.ID,
-			&i.Slug,
 			&i.Title,
 			&i.Description,
 			&i.Status,
@@ -953,7 +899,7 @@ func (q *Queries) ListImplementationPlanTaskIDs(ctx context.Context) ([]sql.Null
 }
 
 const listProjects = `-- name: ListProjects :many
-SELECT id, public_id, slug, title, description, archived, created_at, updated_at FROM projects ORDER BY archived, updated_at DESC, slug
+SELECT id, public_id, title, description, archived, created_at, updated_at FROM projects ORDER BY archived, updated_at DESC, public_id
 `
 
 func (q *Queries) ListProjects(ctx context.Context) ([]Project, error) {
@@ -968,7 +914,6 @@ func (q *Queries) ListProjects(ctx context.Context) ([]Project, error) {
 		if err := rows.Scan(
 			&i.ID,
 			&i.PublicID,
-			&i.Slug,
 			&i.Title,
 			&i.Description,
 			&i.Archived,
@@ -1198,12 +1143,11 @@ func (q *Queries) UpdateDocument(ctx context.Context, arg UpdateDocumentParams) 
 
 const updateFeature = `-- name: UpdateFeature :one
 UPDATE features
-SET slug=?, title=?, description=?, status=?, status_auto=?, archived=?, project_id=?, updated_at=?
-WHERE id=? RETURNING id, slug, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id
+SET title=?, description=?, status=?, status_auto=?, archived=?, project_id=?, updated_at=?
+WHERE id=? RETURNING id, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id
 `
 
 type UpdateFeatureParams struct {
-	Slug        string         `json:"slug"`
 	Title       string         `json:"title"`
 	Description string         `json:"description"`
 	Status      string         `json:"status"`
@@ -1216,7 +1160,6 @@ type UpdateFeatureParams struct {
 
 func (q *Queries) UpdateFeature(ctx context.Context, arg UpdateFeatureParams) (Feature, error) {
 	row := q.db.QueryRowContext(ctx, updateFeature,
-		arg.Slug,
 		arg.Title,
 		arg.Description,
 		arg.Status,
@@ -1229,7 +1172,6 @@ func (q *Queries) UpdateFeature(ctx context.Context, arg UpdateFeatureParams) (F
 	var i Feature
 	err := row.Scan(
 		&i.ID,
-		&i.Slug,
 		&i.Title,
 		&i.Description,
 		&i.Status,
@@ -1244,11 +1186,10 @@ func (q *Queries) UpdateFeature(ctx context.Context, arg UpdateFeatureParams) (F
 }
 
 const updateProject = `-- name: UpdateProject :one
-UPDATE projects SET slug=?, title=?, description=?, archived=?, updated_at=? WHERE id=? RETURNING id, public_id, slug, title, description, archived, created_at, updated_at
+UPDATE projects SET title=?, description=?, archived=?, updated_at=? WHERE id=? RETURNING id, public_id, title, description, archived, created_at, updated_at
 `
 
 type UpdateProjectParams struct {
-	Slug        string `json:"slug"`
 	Title       string `json:"title"`
 	Description string `json:"description"`
 	Archived    int64  `json:"archived"`
@@ -1258,7 +1199,6 @@ type UpdateProjectParams struct {
 
 func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (Project, error) {
 	row := q.db.QueryRowContext(ctx, updateProject,
-		arg.Slug,
 		arg.Title,
 		arg.Description,
 		arg.Archived,
@@ -1269,7 +1209,6 @@ func (q *Queries) UpdateProject(ctx context.Context, arg UpdateProjectParams) (P
 	err := row.Scan(
 		&i.ID,
 		&i.PublicID,
-		&i.Slug,
 		&i.Title,
 		&i.Description,
 		&i.Archived,

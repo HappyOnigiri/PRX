@@ -7,19 +7,12 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-func (s *Service) CreateProject(ctx context.Context, slug, title, description string) (domain.Project, error) {
-	slug = strings.TrimSpace(strings.ToLower(slug))
+func (s *Service) CreateProject(ctx context.Context, title, description string) (domain.Project, error) {
 	title = strings.TrimSpace(title)
-	if !slugPattern.MatchString(slug) {
-		return domain.Project{}, domain.NewError(
-			domain.DomainErrorCodeInvalidSlug,
-			"slug must contain lowercase letters, numbers, and single hyphens",
-		)
-	}
 	if title == "" {
 		return domain.Project{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "project title is required")
 	}
-	return s.repository.CreateProject(ctx, slug, title, strings.TrimSpace(description))
+	return s.repository.CreateProject(ctx, title, strings.TrimSpace(description))
 }
 
 // UpdateProject applies every field the caller supplied. A nil pointer means
@@ -38,9 +31,6 @@ func (s *Service) UpdateProject(
 			return domain.Project{}, err
 		}
 	}
-	if update.Slug != nil {
-		project.Slug = strings.TrimSpace(strings.ToLower(*update.Slug))
-	}
 	if update.Title != nil {
 		project.Title = strings.TrimSpace(*update.Title)
 	}
@@ -50,34 +40,17 @@ func (s *Service) UpdateProject(
 	if update.Archived != nil {
 		project.Archived = *update.Archived
 	}
-	if !slugPattern.MatchString(project.Slug) {
-		return domain.Project{}, domain.NewError(domain.DomainErrorCodeInvalidSlug, "invalid project slug")
-	}
 	if project.Title == "" {
 		return domain.Project{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "project title is required")
 	}
 	return s.repository.UpdateProject(ctx, project)
 }
 
-// ResolveProject only falls through to the next lookup when the previous one
-// reported a missing row, so a storage failure such as a locked database keeps
-// its own cause instead of being reported as a missing project.
-func (s *Service) ResolveProject(ctx context.Context, idOrSlug string) (domain.Project, error) {
-	project, err := s.repository.GetProject(ctx, idOrSlug)
-	if err == nil {
-		return project, nil
-	}
-	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
-		return domain.Project{}, err
-	}
-	project, err = s.repository.GetProjectBySlug(ctx, idOrSlug)
-	if err == nil {
-		return project, nil
-	}
-	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
-		return domain.Project{}, err
-	}
-	return domain.Project{}, domain.NewError(domain.DomainErrorCodeNotFound, "project %q was not found", idOrSlug)
+// ResolveProject looks a project up by its public ID. It exists so callers
+// name one entry point for an operand that identifies a project, and so a
+// missing row is always reported with the operand the caller supplied.
+func (s *Service) ResolveProject(ctx context.Context, id string) (domain.Project, error) {
+	return s.repository.GetProject(ctx, id)
 }
 
 // DeleteProject removes the container. Deletion is one of the operations an
