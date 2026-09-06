@@ -135,8 +135,15 @@ func TestAutomaticDisplayStateMatrix(t *testing.T) {
 		{
 			name:  "automatic task with plan",
 			task:  Task{ID: "task", Kind: TaskKindManual, Status: TaskStatusAuto, HasImplementationPlan: true},
-			want:  TaskDisplayStateNotStarted,
+			want:  TaskDisplayStateDesigned,
 			ready: true,
+		},
+		{
+			name:  "automatic task with plan and pull request",
+			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusAuto, HasImplementationPlan: true},
+			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
+			want:  TaskDisplayStateOpen,
+			ready: false,
 		},
 		{
 			name:  "manual not started override",

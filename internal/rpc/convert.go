@@ -258,6 +258,7 @@ func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 func protoTaskDisplayState(value domain.TaskDisplayState) prxv1.TaskDisplayState {
 	states := map[domain.TaskDisplayState]prxv1.TaskDisplayState{
 		domain.TaskDisplayStateNotStarted:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED,
+		domain.TaskDisplayStateDesigned:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED,
 		domain.TaskDisplayStateInProgress:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS,
 		domain.TaskDisplayStateCompleted:        prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED,
 		domain.TaskDisplayStateClosed:           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED,

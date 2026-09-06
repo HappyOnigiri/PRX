@@ -64,6 +64,7 @@ export function documentKindLabel(value: DocumentKind, t: TFunction): string {
 export const displayStateKeys = {
   [TaskDisplayState.UNSPECIFIED]: "displayState.unknown",
   [TaskDisplayState.NOT_STARTED]: "displayState.notStarted",
+  [TaskDisplayState.DESIGNED]: "displayState.designed",
   [TaskDisplayState.IN_PROGRESS]: "displayState.inProgress",
   [TaskDisplayState.COMPLETED]: "displayState.completed",
   [TaskDisplayState.CLOSED]: "displayState.closed",
