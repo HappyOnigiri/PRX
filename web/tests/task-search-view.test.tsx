@@ -96,6 +96,12 @@ describe("TaskSearch view", () => {
     expect(screen.getByText("Feature").nextElementSibling).toHaveTextContent(
       "Payments rollout",
     );
+    // The ID is what a reader pastes into a search or hands to an agent, so
+    // the card carries it next to the name and copies it on click.
+    const identifier = screen.getAllByRole("button", {
+      name: "Copy Task ID",
+    })[0];
+    expect(identifier).toHaveTextContent("ready-task");
     const pullRequest = screen.getByRole("link", { name: /acme\/prx #42/ });
     expect(pullRequest).toHaveAttribute(
       "href",

@@ -8,6 +8,7 @@ import {
   taskDisplayStateLabel,
   taskDisplayStateToken,
 } from "../i18n/domain";
+import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon, type EntityKind } from "./EntityIcon";
 import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 
@@ -40,6 +41,13 @@ export function TaskCard({
           >
             {task.title}
           </Link>
+          {/* The ID is what a reader hands to an agent or a search, so it sits
+              next to the name and copies on click, as it does on the graph. */}
+          <CopyableIdentifier
+            label={t("common.taskId")}
+            value={task.id}
+            valueOnly
+          />
         </p>
         {/* Values of the same size read as one sentence, so an icon marks
             which field each one belongs to. The names stay for assistive

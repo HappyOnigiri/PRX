@@ -49,6 +49,10 @@
   font-family: var(--font-mono);
 }
 
+.task-card-title .copyable-identifier {
+  flex: 0 0 auto;
+}
+
 .task-card-title a:hover {
   color: var(--accent);
   text-decoration: underline;
