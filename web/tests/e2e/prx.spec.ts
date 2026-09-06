@@ -266,8 +266,10 @@ test("follows the system theme unless the user selects an override", async ({
   await expect.poll(background).toBe("rgb(245, 246, 248)");
 });
 
-async function addTask(page: Page, title: string) {
-  await page.getByRole("button", { name: "Add task" }).first().click();
+async function addTask(page: Page, title: string, trigger?: Locator) {
+  await (
+    trigger ?? page.getByRole("button", { name: "Add task" }).first()
+  ).click();
   const dialog = page.getByRole("form", { name: "Create task" });
   await dialog.getByLabel("Title").fill(title);
   await dialog.getByLabel("Scope").fill(`Acceptance boundary for ${title}`);
@@ -503,7 +505,13 @@ test("creates and edits a feature DAG while preserving state", async ({
     .getByRole("button", { name: "Close Markdown preview" })
     .click();
 
-  await addTask(page, "E2E API");
+  // The empty state covers the canvas and passes pointer events through so the
+  // graph stays pannable, so its own button has to opt back in to receive them.
+  await addTask(
+    page,
+    "E2E API",
+    page.locator(".graph-empty").getByRole("button", { name: "Add task" }),
+  );
   await addTask(page, "E2E worker");
   await addTask(page, "E2E UI");
   await connectTasks(page, "E2E API", "E2E worker");

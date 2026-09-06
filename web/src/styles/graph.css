@@ -506,15 +506,10 @@
   font-size: var(--text-sm);
 }
 
-.graph-empty button:not(.icon-button) {
+/* The empty state spans the whole canvas and lets pointer events through so
+   the graph stays pannable, so its own controls have to opt back in. */
+.graph-empty button {
   pointer-events: auto;
-  border-color: var(--border-strong);
-  background: transparent;
-  color: var(--text);
-}
-
-.graph-empty button:not(.icon-button):hover {
-  background: var(--surface-2);
 }
 
 @media (width <= 1050px) {
