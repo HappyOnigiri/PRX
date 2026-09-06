@@ -1450,7 +1450,7 @@ func TestTaskStatusOverridesAndAutomaticPRState(t *testing.T) {
 }
 
 func TestSyncByTaskID(t *testing.T) {
-	_, service := openTestService(t)
+	database, service := openTestService(t)
 	ctx := context.Background()
 	feature, err := service.CreateFeature(ctx, "Targeted sync", "", "")
 	if err != nil {
@@ -1465,11 +1465,21 @@ func TestSyncByTaskID(t *testing.T) {
 		t.Fatal(err)
 	}
 	for index, task := range []domain.Task{target, other} {
-		if _, err := service.AttachPullRequest(
+		attached, err := service.AttachPullRequest(
 			ctx,
 			task.ID,
 			fmt.Sprintf("https://github.com/acme/api/pull/%d", index+1),
-		); err != nil {
+		)
+		if err != nil {
+			t.Fatal(err)
+		}
+		// Attaching refreshes what it attached, and this test observes which
+		// pull requests the targeted refresh reaches, so both go back to the
+		// never-refreshed state.
+		attached.LastSyncedAt = nil
+		attached.SyncError = ""
+		attached.Stale = true
+		if _, err := database.UpsertPullRequest(ctx, attached); err != nil {
 			t.Fatal(err)
 		}
 	}

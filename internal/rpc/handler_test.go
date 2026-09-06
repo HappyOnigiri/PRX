@@ -555,17 +555,26 @@ func TestRPCLifecyclePersistsAndDeletesResources(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
+	// Attaching refreshes the pull request it recorded, so the response already
+	// carries the GitHub state instead of the stale placeholder.
 	attachedPR := attached.Msg.GetPullRequest()
 	if attachedPR.GetOwner() != "acme" || attachedPR.GetRepository() != "api" || attachedPR.GetNumber() != 42 ||
-		attachedPR.GetUrl() != mergedURL || attachedPR.GetState() != prxv1.PullRequestState_PULL_REQUEST_STATE_UNKNOWN ||
-		!attachedPR.GetStale() || attachedPR.GetGithubUpdatedAt() != "" || attachedPR.GetLastSyncedAt() != "" {
+		attachedPR.GetUrl() != mergedURL || attachedPR.GetState() != prxv1.PullRequestState_PULL_REQUEST_STATE_MERGED ||
+		attachedPR.GetStale() || attachedPR.GetGithubUpdatedAt() == "" || attachedPR.GetLastSyncedAt() == "" {
 		t.Fatalf("attached pull request=%+v", attachedPR)
 	}
-	if _, err := client.AttachPullRequest(
+	// A pull request GitHub cannot answer for is still attached, and keeps the
+	// staleness and the failure that record why it holds no state.
+	attachedFailed, err := client.AttachPullRequest(
 		ctx,
 		connect.NewRequest(&prxv1.AttachPullRequestRequest{TaskId: failedTask.GetId(), Url: failedURL}),
-	); err != nil {
+	)
+	if err != nil {
 		t.Fatal(err)
+	}
+	failedAttachedPR := attachedFailed.Msg.GetPullRequest()
+	if failedAttachedPR.GetSyncError() != "GitHub unavailable" || !failedAttachedPR.GetStale() {
+		t.Fatalf("attached failing pull request=%+v", failedAttachedPR)
 	}
 
 	syncResponse, err := client.Sync(
