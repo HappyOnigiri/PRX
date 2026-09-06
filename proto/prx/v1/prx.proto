@@ -1047,6 +1047,10 @@ message GetPromptTemplatesResponse {
   repeated string supported_placeholders = 2;
   // required_placeholder is the one placeholder every template must use.
   string required_placeholder = 3;
+  // built_in contains the templates PRX ships. An editor offering to restore
+  // them shows the text they contain instead of leaving the field empty until a
+  // write completes.
+  PromptTemplates built_in = 4;
 }
 
 // UpdatePromptTemplatesRequest replaces both templates in one configuration write.

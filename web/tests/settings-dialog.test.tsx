@@ -92,6 +92,10 @@ const settingsMocks = vi.hoisted(() => {
         implementation: "Build {{task_id}}",
         supportedPlaceholders: ["task_id", "feature_id"],
         requiredPlaceholder: "task_id",
+        builtIn: {
+          design: "Built-in design {{task_id}}",
+          implementation: "Built-in build {{task_id}}",
+        },
       },
       isPending: false,
       error: null as Error | null,
