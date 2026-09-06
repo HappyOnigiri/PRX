@@ -36,13 +36,28 @@ export function PullRequestSection({
         <div
           className={`linked-pr state-${pullRequestDisplayStateToken(pullRequest.displayState)} ${pullRequest.stale ? "is-stale" : ""}`}
         >
-          <a href={pullRequest.url} target="_blank" rel="noreferrer">
-            {pullRequest.host && pullRequest.host !== "github.com"
-              ? `${pullRequest.host}/`
-              : ""}
-            {pullRequest.owner}/{pullRequest.repository} #
-            {String(pullRequest.number)}
-          </a>
+          <div className="pr-header">
+            <a href={pullRequest.url} target="_blank" rel="noreferrer">
+              {pullRequest.host && pullRequest.host !== "github.com"
+                ? `${pullRequest.host}/`
+                : ""}
+              {pullRequest.owner}/{pullRequest.repository} #
+              {String(pullRequest.number)}
+            </a>
+            {!readOnly && (
+              <IconButton
+                icon={Trash2}
+                label={t("inspector.detach")}
+                variant="secondary"
+                size="compact"
+                iconOnly
+                className="pr-detach"
+                onClick={() => {
+                  detach.mutate(taskId);
+                }}
+              />
+            )}
+          </div>
           <span>
             {pullRequestDisplayStateLabel(pullRequest.displayState, t)}
           </span>
@@ -54,18 +69,6 @@ export function PullRequestSection({
               <strong>{t("inspector.githubSyncError")}</strong>
               {pullRequest.syncError}
             </p>
-          )}
-          {!readOnly && (
-            <IconButton
-              icon={Trash2}
-              label={t("inspector.detach")}
-              variant="secondary"
-              size="compact"
-              className="pr-detach"
-              onClick={() => {
-                detach.mutate(taskId);
-              }}
-            />
           )}
         </div>
       ) : readOnly ? (

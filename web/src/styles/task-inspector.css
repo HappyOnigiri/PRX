@@ -158,11 +158,20 @@
   padding: 10px;
 }
 
+.linked-pr .pr-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .linked-pr a {
   display: block;
+  flex: 1 1 auto;
+  min-width: 0;
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
+  overflow-wrap: anywhere;
 }
 
 .linked-pr span {
@@ -209,9 +218,7 @@
 }
 
 .linked-pr .pr-detach {
-  display: flex;
-  width: fit-content;
-  margin-top: 10px;
+  flex: 0 0 auto;
 }
 
 .implementation-plan-section {
