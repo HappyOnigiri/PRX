@@ -165,6 +165,13 @@
   list-style: none;
 }
 
+/* The tree hangs directly under the Projects link, so the project rows keep
+   the browser's list indent away and only the children below them are
+   indented. */
+.nav-tree {
+  padding-left: 0;
+}
+
 .nav-tree-row {
   display: grid;
   grid-template-columns: 18px minmax(0, 1fr);
