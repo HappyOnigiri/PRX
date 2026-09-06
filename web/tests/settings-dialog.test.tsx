@@ -430,6 +430,20 @@ describe("SettingsDialog", () => {
     expect(licensesTab).toHaveFocus();
   });
 
+  it("keeps unsaved prompt edits while navigating away and back", () => {
+    render(<SettingsDialog onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole("tab", { name: "Prompts" }));
+    const design = screen.getByLabelText(/Design prompt/);
+    fireEvent.change(design, { target: { value: "Draft {{task_id}}" } });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Display" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Prompts" }));
+
+    expect(screen.getByLabelText(/Design prompt/)).toHaveValue(
+      "Draft {{task_id}}",
+    );
+  });
+
   it("lists bundled OSS packages and their licenses", async () => {
     render(<SettingsDialog onClose={vi.fn()} />);
 

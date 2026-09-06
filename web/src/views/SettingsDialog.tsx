@@ -28,12 +28,21 @@ type SettingsTab = (typeof settingsTabs)[number];
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<SettingsTab>("server");
+  const [promptsMounted, setPromptsMounted] = useState(false);
   const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
+
+  function openTab(tab: SettingsTab) {
+    setActiveTab(tab);
+    // The prompt panel holds unsaved edits in component state, so once it has
+    // been opened it stays mounted until the dialog closes: leaving the tab and
+    // coming back must not discard what the user typed without warning.
+    if (tab === "prompts") setPromptsMounted(true);
+  }
 
   function selectTab(index: number) {
     const tab = settingsTabs[index];
     if (!tab) return;
-    setActiveTab(tab);
+    openTab(tab);
     tabRefs.current[index]?.focus();
   }
 
@@ -78,7 +87,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
               id={`settings-tab-${tab}`}
               key={tab}
               onClick={() => {
-                setActiveTab(tab);
+                openTab(tab);
               }}
               onKeyDown={handleTabKey}
               ref={(element) => {
@@ -97,8 +106,9 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         </SettingsPanel>
         <SettingsPanel active={activeTab === "prompts"} tab="prompts">
           {/* Like the debug panel, this one reads the configuration file, so it
-              mounts only once the tab is opened. */}
-          {activeTab === "prompts" && <PromptSettingsPanel />}
+              mounts only once the tab is opened. Unlike it, it stays mounted
+              afterwards so unsaved edits survive a trip to another tab. */}
+          {promptsMounted && <PromptSettingsPanel />}
         </SettingsPanel>
         <SettingsPanel active={activeTab === "display"} tab="display">
           <DisplaySettingsPanel />
