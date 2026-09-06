@@ -77,7 +77,7 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 		domain.DocumentParent{ProjectID: platform.ID},
 		domain.DocumentKindURL,
 		"Platform charter",
-		"https://github.com/HappyOnigiri/PRX",
+		"https://example.com/prx-demo/platform-charter",
 		"",
 		false,
 	); err != nil {
@@ -138,7 +138,7 @@ func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath, projectI
 		domain.DocumentParent{FeatureID: showcase.ID},
 		domain.DocumentKindURL,
 		"Product brief",
-		"https://github.com/HappyOnigiri/PRX",
+		"https://example.com/prx-demo/product-brief",
 		"",
 		false,
 	); err != nil {
@@ -179,7 +179,7 @@ func (s *Service) createPausedDemo(ctx context.Context, projectID string) error 
 			scope:    "Shared rollout foundation",
 			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusCompleted,
-			assignee: "Mika",
+			assignee: "Bob",
 		},
 		{
 			title:  "Prepare operator guide",
@@ -192,14 +192,14 @@ func (s *Service) createPausedDemo(ctx context.Context, projectID string) error 
 			scope:    "Exercise the first cohort",
 			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusInProgress,
-			assignee: "Ren",
+			assignee: "Carol",
 		},
 		{
 			title:    "Complete general rollout",
 			scope:    "Merge both rollout branches",
 			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusAuto,
-			assignee: "Ari",
+			assignee: "Alice",
 		},
 	})
 	if err != nil {
@@ -253,14 +253,14 @@ func (s *Service) createCancelledDemo(ctx context.Context, projectID string) err
 			scope:    "Preserve the original hypothesis",
 			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusCompleted,
-			assignee: "Ari",
+			assignee: "Alice",
 		},
 		{
 			title:    "Close implementation",
 			scope:    "Stop implementation work",
 			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusClosed,
-			assignee: "Mika",
+			assignee: "Bob",
 		},
 		{
 			title:  "Capture decision",
@@ -308,14 +308,14 @@ func (s *Service) createSunsetPostmortemDemo(ctx context.Context, projectID stri
 			scope:    "Summarize what the experiment showed",
 			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusCompleted,
-			assignee: "Ari",
+			assignee: "Alice",
 		},
 		{
 			title:    "Share the summary",
 			scope:    "Hand the summary to the teams that asked for it",
 			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusCompleted,
-			assignee: "Mika",
+			assignee: "Bob",
 		},
 	})
 	return err
@@ -379,9 +379,9 @@ func completedDemoTasks() []demoTask {
 			scope:    "A completed repository delivery boundary",
 			kind:     domain.TaskKindPR,
 			status:   domain.TaskStatusAuto,
-			assignee: []string{"Ari", "Mika", "Ren"}[index%3],
+			assignee: []string{"Alice", "Bob", "Carol"}[index%3],
 			pr: &domain.PullRequest{
-				Host: "github.com", Owner: "HappyOnigiri", Repository: "prx-demo-scale",
+				Host: "github.com", Owner: "prx-demo", Repository: "prx-demo-scale",
 				Number: int64(1001 + index), State: domain.PullRequestStateMerged,
 				ReviewState: domain.ReviewStateApproved, Mergeability: domain.MergeabilityMergeable,
 			},
@@ -403,7 +403,7 @@ func showcaseManualTasks() []demoTask {
 			scope:    "A planned task waiting on scope",
 			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusAuto,
-			assignee: "Mika",
+			assignee: "Bob",
 			plan:     "1. Confirm dependency direction.\n2. Document readiness rules.\n3. Verify the graph.",
 		},
 		{
@@ -411,14 +411,14 @@ func showcaseManualTasks() []demoTask {
 			scope:    "Explicitly in-progress work",
 			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusInProgress,
-			assignee: "Ren",
+			assignee: "Carol",
 		},
 		{
 			title:    "Verify storage boundary",
 			scope:    "Explicitly completed work",
 			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusCompleted,
-			assignee: "Ari",
+			assignee: "Alice",
 		},
 		{
 			title:  "Retire legacy path",
@@ -432,21 +432,21 @@ func showcaseManualTasks() []demoTask {
 func showcasePullRequestTasks() []demoTask {
 	values := []demoTask{
 		demoPullRequestTask("Merged server support", "Merged pull request", "prx-server", 101,
-			domain.PullRequestStateMerged, false, domain.ReviewStateApproved, domain.MergeabilityMergeable, "Ari"),
+			domain.PullRequestStateMerged, false, domain.ReviewStateApproved, domain.MergeabilityMergeable, "Alice"),
 		demoPullRequestTask("Draft WebUI shell", "Draft pull request", "prx-web", 102,
-			domain.PullRequestStateOpen, true, domain.ReviewStateNone, domain.MergeabilityMergeable, "Mika"),
+			domain.PullRequestStateOpen, true, domain.ReviewStateNone, domain.MergeabilityMergeable, "Bob"),
 		demoPullRequestTask("Resolve graph conflict", "Conflicting pull request", "prx-graph", 103,
-			domain.PullRequestStateOpen, false, domain.ReviewStateNone, domain.MergeabilityConflicting, "Ren"),
+			domain.PullRequestStateOpen, false, domain.ReviewStateNone, domain.MergeabilityConflicting, "Carol"),
 		demoPullRequestTask("Address review feedback", "Changes requested", "prx-cli", 104,
 			domain.PullRequestStateOpen, false, domain.ReviewStateChangesRequested, domain.MergeabilityMergeable, ""),
 		demoPullRequestTask("Approved configuration", "Approved pull request", "prx-config", 105,
-			domain.PullRequestStateOpen, false, domain.ReviewStateApproved, domain.MergeabilityMergeable, "Ari"),
+			domain.PullRequestStateOpen, false, domain.ReviewStateApproved, domain.MergeabilityMergeable, "Alice"),
 		demoPullRequestTask("Await fixture review", "Review waiting", "prx-fixtures", 106,
-			domain.PullRequestStateOpen, false, domain.ReviewStateRequired, domain.MergeabilityMergeable, "Mika"),
+			domain.PullRequestStateOpen, false, domain.ReviewStateRequired, domain.MergeabilityMergeable, "Bob"),
 		demoPullRequestTask("Open integration work", "Open pull request", "prx-integrations", 107,
 			domain.PullRequestStateOpen, false, domain.ReviewStateNone, domain.MergeabilityMergeable, ""),
 		demoPullRequestTask("Stale external state", "A failed sync preserving its last result", "prx-external", 108,
-			domain.PullRequestStateUnknown, false, domain.ReviewStateUnknown, domain.MergeabilityUnknown, "Ren"),
+			domain.PullRequestStateUnknown, false, domain.ReviewStateUnknown, domain.MergeabilityUnknown, "Carol"),
 	}
 	values[7].pr.Stale = true
 	values[7].pr.SyncError = "demo fixture: repository temporarily unavailable"
@@ -466,7 +466,7 @@ func demoPullRequestTask(
 		title: title, scope: scope, kind: domain.TaskKindPR,
 		status: domain.TaskStatusAuto, assignee: assignee,
 		pr: &domain.PullRequest{
-			Host: "github.com", Owner: "HappyOnigiri", Repository: repository,
+			Host: "github.com", Owner: "prx-demo", Repository: repository,
 			Number: number, State: state, Draft: draft,
 			ReviewState: review, Mergeability: mergeability,
 		},

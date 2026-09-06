@@ -9,7 +9,7 @@ prx task create FEATURE_ID TITLE [flags]
 ### Examples
 
 ```
-prx task create F-1 "Add payment intent API" --assignee Mika
+prx task create F-1 "Add payment intent API" --assignee Bob
 prx task create F-1 -- "-fix login redirect"
 ```
 

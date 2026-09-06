@@ -76,7 +76,7 @@ describe("useGraphLayout", () => {
       locator: "docs/plan.md",
     });
     const options = {
-      tasks: [makeTask({ assignee: "Ren" })],
+      tasks: [makeTask({ assignee: "Carol" })],
       dependencies: [makeDependency()],
       pullRequests: new Map([["task-1", makePullRequest({ stale: true })]]),
       documentsByTask: new Map([["task-1", [document]]]),
@@ -96,7 +96,7 @@ describe("useGraphLayout", () => {
       position: { x: 120, y: 48 },
       data: {
         title: "Build API",
-        assignee: "Ren",
+        assignee: "Carol",
         stale: true,
         pullRequest: {
           label: "acme/prx #42",

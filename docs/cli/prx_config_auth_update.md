@@ -9,7 +9,7 @@ prx config auth update AUTH_METHOD_ID [flags]
 ### Examples
 
 ```
-prx config auth update work-gh --user HappyOnigiri
+prx config auth update work-gh --user octocat
 ```
 
 ### Options

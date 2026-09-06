@@ -60,7 +60,7 @@ export const workspace = {
       titlePlaceholder: "Implement checkout API",
       scopePlaceholder: "Repository and acceptance boundary",
       kind: "Kind",
-      assigneePlaceholder: "Mika",
+      assigneePlaceholder: "Bob",
       submit: "Add task",
     },
     featureEdit: {
@@ -157,7 +157,7 @@ export const workspace = {
       titlePlaceholder: "決済 API を実装",
       scopePlaceholder: "対象リポジトリと受け入れ条件",
       kind: "種類",
-      assigneePlaceholder: "Mika",
+      assigneePlaceholder: "Bob",
       submit: "タスクを追加",
     },
     featureEdit: {

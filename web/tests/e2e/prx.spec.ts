@@ -266,12 +266,14 @@ test("follows the system theme unless the user selects an override", async ({
   await expect.poll(background).toBe("rgb(245, 246, 248)");
 });
 
-async function addTask(page: Page, title: string) {
-  await page.getByRole("button", { name: "Add task" }).first().click();
+async function addTask(page: Page, title: string, trigger?: Locator) {
+  await (
+    trigger ?? page.getByRole("button", { name: "Add task" }).first()
+  ).click();
   const dialog = page.getByRole("form", { name: "Create task" });
   await dialog.getByLabel("Title").fill(title);
   await dialog.getByLabel("Scope").fill(`Acceptance boundary for ${title}`);
-  await dialog.getByLabel("Assignee").fill("Mika");
+  await dialog.getByLabel("Assignee").fill("Bob");
   await dialog.getByRole("button", { name: "Add task" }).click();
   await expect(
     page.locator(".task-node").filter({ hasText: title }),
@@ -501,7 +503,21 @@ test("creates and edits a feature DAG while preserving state", async ({
     .getByRole("button", { name: "Close Markdown preview" })
     .click();
 
-  await addTask(page, "E2E API");
+  // The empty state covers the canvas and passes pointer events through so the
+  // graph stays pannable, so its own button has to opt back in to receive them.
+  const emptyStateAddTask = page
+    .locator(".graph-empty")
+    .getByRole("button", { name: "Add task" });
+  // The muted color the empty state gives its icon must not reach the label
+  // inside the button, where it would sit on the filled accent background.
+  expect(
+    await emptyStateAddTask.evaluate((button) => {
+      const label = button.querySelector(".icon-button-label");
+      if (!label) throw new Error("The empty state button has no label.");
+      return getComputedStyle(label).color === getComputedStyle(button).color;
+    }),
+  ).toBe(true);
+  await addTask(page, "E2E API", emptyStateAddTask);
   await addTask(page, "E2E worker");
   await addTask(page, "E2E UI");
   await connectTasks(page, "E2E API", "E2E worker");
@@ -538,11 +554,11 @@ test("creates and edits a feature DAG while preserving state", async ({
   browserErrors.splice(0, browserErrors.length);
   await prSection
     .getByPlaceholder("https://github.com/org/repo/pull/42")
-    .fill(`https://github.com/HappyOnigiri/PRX/pull/${prNumber}`);
+    .fill(`https://github.com/acme/prx/pull/${prNumber}`);
   await prSection.getByRole("button", { name: "Attach" }).click();
   await expect(
     prSection.getByRole("link", {
-      name: new RegExp(`HappyOnigiri/PRX #${prNumber}`),
+      name: new RegExp(`acme/prx #${prNumber}`),
     }),
   ).toBeVisible();
   await expect(
@@ -595,7 +611,7 @@ test("creates and edits a feature DAG while preserving state", async ({
   await page.getByRole("button", { name: "Close inspector" }).click();
   await expect(
     apiCard.getByRole("link", {
-      name: new RegExp(`HappyOnigiri/PRX #${prNumber}`),
+      name: new RegExp(`acme/prx #${prNumber}`),
     }),
   ).toHaveAttribute("target", "_blank");
   await expect(
