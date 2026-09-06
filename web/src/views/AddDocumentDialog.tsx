@@ -7,7 +7,6 @@ import {
   useState,
   type KeyboardEvent,
   type ReactNode,
-  type RefObject,
   type SyntheticEvent,
 } from "react";
 import { useTranslation } from "react-i18next";
@@ -17,6 +16,7 @@ import { DocumentKind } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
+import { TabPanel as SharedTabPanel, TabList } from "./TabList";
 
 const documentTabs = [
   { kind: DocumentKind.URL, key: "url", icon: Link },
@@ -111,10 +111,8 @@ export function AddDocumentDialog(props: AddDocumentDialogProps) {
   const { t } = useTranslation();
   const state = useDialogState(props);
   const dialogRef = useRef<HTMLFormElement>(null);
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
-    tabRefs.current[0]?.focus();
     return () => {
       window.setTimeout(() => props.trigger?.focus());
     };
@@ -171,7 +169,7 @@ export function AddDocumentDialog(props: AddDocumentDialogProps) {
             }}
           />
         </label>
-        <DocumentSourceTabs state={state} tabRefs={tabRefs} />
+        <DocumentSourceTabs state={state} />
         {state.taskId !== undefined && (
           <label className="document-plan-toggle">
             <input
@@ -219,62 +217,27 @@ function DialogHeader({ state }: { state: DialogState }) {
   );
 }
 
-function DocumentSourceTabs({
-  state,
-  tabRefs,
-}: {
-  state: DialogState;
-  tabRefs: RefObject<(HTMLButtonElement | null)[]>;
-}) {
+function DocumentSourceTabs({ state }: { state: DialogState }) {
   const { t } = useTranslation();
-  function selectTab(index: number) {
-    const tab = documentTabs[index];
-    if (!tab) return;
-    state.setKind(tab.kind);
-    tabRefs.current[index]?.focus();
-  }
-  function handleKey(event: KeyboardEvent<HTMLButtonElement>) {
-    const current = documentTabs.findIndex((tab) => tab.kind === state.kind);
-    let next: number | undefined;
-    if (event.key === "ArrowRight") next = (current + 1) % documentTabs.length;
-    if (event.key === "ArrowLeft")
-      next = (current - 1 + documentTabs.length) % documentTabs.length;
-    if (event.key === "Home") next = 0;
-    if (event.key === "End") next = documentTabs.length - 1;
-    if (next === undefined) return;
-    event.preventDefault();
-    selectTab(next);
-  }
+  const active = documentTabs.find((tab) => tab.kind === state.kind);
   return (
     <>
-      <div className="document-tabs" role="tablist">
-        {documentTabs.map((tab, index) => {
-          const TabIcon = tab.icon;
-          const active = tab.kind === state.kind;
-          return (
-            <button
-              aria-controls={`${state.idPrefix}-panel-${tab.key}`}
-              aria-selected={active}
-              className="document-tab"
-              id={`${state.idPrefix}-tab-${tab.key}`}
-              key={tab.key}
-              onClick={() => {
-                state.setKind(tab.kind);
-              }}
-              onKeyDown={handleKey}
-              ref={(element) => {
-                tabRefs.current[index] = element;
-              }}
-              role="tab"
-              tabIndex={active ? 0 : -1}
-              type="button"
-            >
-              <TabIcon aria-hidden="true" focusable="false" size={16} />
-              {t(`documentDialog.tabs.${tab.key}`)}
-            </button>
-          );
-        })}
-      </div>
+      <TabList
+        tabs={documentTabs.map((tab) => ({
+          id: tab.key,
+          label: t(`documentDialog.tabs.${tab.key}`),
+          icon: <tab.icon aria-hidden="true" focusable="false" size={16} />,
+        }))}
+        active={active?.key ?? documentTabs[0].key}
+        onSelect={(key) => {
+          const tab = documentTabs.find((entry) => entry.key === key);
+          if (tab) state.setKind(tab.kind);
+        }}
+        idPrefix={state.idPrefix}
+        className="document-tabs"
+        tabClassName="document-tab"
+        focusOnMount
+      />
       <URLPanel state={state} />
       <LocalFilePanel state={state} />
       <MarkdownPanel state={state} />
@@ -292,16 +255,14 @@ function TabPanel({
   tab: (typeof documentTabs)[number];
 }) {
   return (
-    <div
-      aria-labelledby={`${state.idPrefix}-tab-${tab.key}`}
+    <SharedTabPanel
+      active={state.kind === tab.kind}
       className={`document-tab-panel document-tab-panel-${tab.key}`}
-      hidden={state.kind !== tab.kind}
-      id={`${state.idPrefix}-panel-${tab.key}`}
-      role="tabpanel"
-      tabIndex={0}
+      idPrefix={state.idPrefix}
+      tab={tab.key}
     >
       {children}
-    </div>
+    </SharedTabPanel>
   );
 }
 
