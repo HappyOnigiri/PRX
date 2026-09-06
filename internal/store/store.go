@@ -29,7 +29,10 @@ type Store struct {
 	now  func() time.Time
 }
 
-const publicIDsMigration = 5
+const (
+	taskStatusMigration = 3
+	publicIDsMigration  = 5
+)
 
 func DefaultPath() (string, error) {
 	dir, err := os.UserConfigDir()
@@ -140,6 +143,14 @@ func (s *Store) migrate(ctx context.Context) error {
 // branch before it was merged with the migration added on main. Those two
 // branches both used versions 2 and 3 for different schemas, so the version
 // alone cannot tell the migration runner what has actually been applied.
+//
+// The repair also restores a version that an older build removed by mistake.
+// Builds before the task status vocabulary lost its automatic member matched
+// that vocabulary exactly, so opening a current database with one of them
+// dropped version 3 and left the database unopenable: migration 3 rebuilds the
+// task table around a kind column that migration 11 has already removed. The
+// schema decides the record here, so the next open re-records the version
+// instead of replaying a migration whose result is already in place.
 func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
 	rows, err := s.db.QueryContext(
 		ctx,
@@ -188,8 +199,16 @@ func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
 	).Scan(&publicIDsRecorded); err != nil {
 		return err
 	}
-	recordPublicIDs := hasPublicIDs && publicIDsRecorded == 0
-	if len(staleVersions) == 0 && !recordPublicIDs {
+	missingVersions := make([]int, 0, 2)
+	// A stale version 3 is being removed just above, so only a schema that keeps
+	// the vocabulary asks for the record back.
+	if !versions[3] && hasTaskStatusVocabulary {
+		missingVersions = append(missingVersions, taskStatusMigration)
+	}
+	if hasPublicIDs && publicIDsRecorded == 0 {
+		missingVersions = append(missingVersions, publicIDsMigration)
+	}
+	if len(staleVersions) == 0 && len(missingVersions) == 0 {
 		return nil
 	}
 
@@ -203,11 +222,11 @@ func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
 			return err
 		}
 	}
-	if recordPublicIDs {
+	for _, version := range missingVersions {
 		if _, err := tx.ExecContext(
 			ctx,
 			`INSERT INTO schema_migrations(version, applied_at) VALUES(?, ?)`,
-			publicIDsMigration,
+			version,
 			s.now().Format(time.RFC3339Nano),
 		); err != nil {
 			_ = tx.Rollback()
