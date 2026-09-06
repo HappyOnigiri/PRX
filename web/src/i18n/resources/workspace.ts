@@ -9,6 +9,7 @@ export const workspace = {
       syncing: "Syncing…",
       syncGithub: "Sync GitHub",
       addTask: "Add task",
+      hideCompleted: "Hide completed",
       references: "References",
       addReference: "Add reference",
       addTaskReference: "Add reference to {{title}}",
@@ -31,6 +32,9 @@ export const workspace = {
       graphEmptyTitle: "Draw the first node",
       graphEmptyDetail: "Add an implementation PR or a manual gate.",
       addTaskPlain: "Add task",
+      graphAllHiddenTitle: "Every task is completed",
+      graphAllHiddenDetail:
+        "{{total}} completed tasks are hidden. Turn off Hide completed to see them.",
       layoutErrorTitle: "Graph layout failed",
       layoutErrorFallback: "Graph layout failed.",
       retryLayout: "Retry layout",
@@ -46,6 +50,8 @@ export const workspace = {
         detachInstruction:
           "Drop in empty space to remove {{blocker}} → {{blocked}}.",
         dependencyRemoving: "Removing dependency…",
+        hiddenBlockers: "Hidden completed blockers: {{titles}}",
+        hiddenBlocked: "Hidden completed dependents: {{titles}}",
         blockerHandle: "Blocker output (drag from here)",
         blockedHandle: "Blocked task input (drop here)",
         controls: "Graph controls",
@@ -104,6 +110,7 @@ export const workspace = {
       syncing: "同期しています…",
       syncGithub: "GitHub と同期",
       addTask: "タスクを追加",
+      hideCompleted: "完了済みを非表示",
       references: "資料",
       addReference: "資料を追加",
       addTaskReference: "{{title}} に資料を追加",
@@ -127,6 +134,9 @@ export const workspace = {
       graphEmptyTitle: "最初のノードを作成",
       graphEmptyDetail: "実装 PR または手動ゲートを追加してください。",
       addTaskPlain: "タスクを追加",
+      graphAllHiddenTitle: "すべてのタスクが完了済みです",
+      graphAllHiddenDetail:
+        "完了済みのタスク {{total}} 件を非表示にしています。「完了済みを非表示」をオフにすると表示されます。",
       layoutErrorTitle: "グラフを配置できませんでした",
       layoutErrorFallback: "グラフの配置に失敗しました。",
       retryLayout: "配置を再試行",
@@ -143,6 +153,8 @@ export const workspace = {
         detachInstruction:
           "空白にドロップすると {{blocker}} → {{blocked}} の依存を解除します。",
         dependencyRemoving: "依存関係を解除しています…",
+        hiddenBlockers: "非表示の完了済みブロッカー: {{titles}}",
+        hiddenBlocked: "非表示の完了済みブロック対象: {{titles}}",
         blockerHandle: "ブロッカーの送り口（ここからドラッグ）",
         blockedHandle: "ブロック対象の受け口（ここにドロップ）",
         controls: "グラフ操作",

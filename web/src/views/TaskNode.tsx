@@ -10,6 +10,7 @@ import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
 import { DocumentKind, type TaskDisplayState } from "../gen/prx/v1/prx_pb";
 import { taskDisplayStateLabel, taskDisplayStateToken } from "../i18n/domain";
+import type { HiddenDependencies } from "./completedTasks";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
@@ -40,6 +41,7 @@ interface TaskNodeData extends Record<string, unknown> {
   syncError: boolean;
   pullRequest: { label: string; url: string } | undefined;
   documents: TaskNodeDocument[];
+  hiddenDependencies?: HiddenDependencies;
   incomingPorts?: TaskNodePort[];
   outgoingPorts?: TaskNodePort[];
   readOnly: boolean;
@@ -98,6 +100,40 @@ function TaskEdgePorts({
   );
 }
 
+// A hidden completed task takes its edge off the canvas with it, which would
+// leave the task that waited on it looking like it never had a blocker. The
+// stub keeps that connection visible as a severed edge, and names the hidden
+// tasks so the reader can tell which work it stands for.
+function HiddenDependencyStub({
+  direction,
+  titles,
+}: {
+  direction: "in" | "out";
+  titles: string[];
+}) {
+  const { t } = useTranslation();
+  if (titles.length === 0) return null;
+  const label = t(
+    direction === "in"
+      ? "workspace.flow.hiddenBlockers"
+      : "workspace.flow.hiddenBlocked",
+    { titles: titles.join(", ") },
+  );
+  return (
+    <span
+      className={`node-hidden-dependency node-hidden-dependency-${direction}`}
+      role="img"
+      aria-label={label}
+      title={label}
+    >
+      <svg viewBox="0 0 28 12" width="28" height="12" focusable="false">
+        <path d="M0 6 H19" />
+        <path d="M19 2 L27 6 L19 10 Z" />
+      </svg>
+    </span>
+  );
+}
+
 export function TaskNode({
   id,
   data,
@@ -130,6 +166,14 @@ export function TaskNode({
         incoming={incomingPorts}
         isConnectable={isConnectable}
         outgoing={outgoingPorts}
+      />
+      <HiddenDependencyStub
+        direction="in"
+        titles={data.hiddenDependencies?.blockers ?? []}
+      />
+      <HiddenDependencyStub
+        direction="out"
+        titles={data.hiddenDependencies?.blocked ?? []}
       />
       <div className="task-node-head">
         <div className="node-state">

@@ -223,4 +223,75 @@
     gap: 3px;
     padding-inline: 12px;
   }
+
+  /* The switch stays reachable at this width; only its wording gives way, and
+     the accessible name and tooltip on the control carry it instead. */
+  .hide-completed-toggle span {
+    display: none;
+  }
+}
+
+.hide-completed-toggle {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.hide-completed-toggle input {
+  appearance: none;
+  width: 30px;
+  height: 17px;
+  flex: 0 0 auto;
+  margin: 0;
+  border: 1px solid var(--border-strong);
+  border-radius: 9px;
+  background: var(--surface-2);
+  cursor: pointer;
+  transition:
+    background-color 0.15s,
+    border-color 0.15s;
+}
+
+.hide-completed-toggle input::before {
+  display: block;
+  width: 11px;
+  height: 11px;
+  margin: 2px;
+  border-radius: 50%;
+  background: var(--text-3);
+  content: "";
+  transition:
+    transform 0.15s,
+    background-color 0.15s;
+}
+
+.hide-completed-toggle input:checked {
+  border-color: var(--accent);
+  background: var(--accent);
+}
+
+.hide-completed-toggle input:checked::before {
+  background: var(--surface);
+  transform: translateX(13px);
+}
+
+.hide-completed-toggle input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+.hide-completed-toggle:has(input:checked) {
+  color: var(--text);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hide-completed-toggle input,
+  .hide-completed-toggle input::before {
+    transition: none;
+  }
 }

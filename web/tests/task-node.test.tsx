@@ -170,4 +170,98 @@ describe("TaskNode", () => {
     );
     expect(onEdit).toHaveBeenCalledOnce();
   });
+
+  it("stands in for hidden completed dependencies on each side", () => {
+    const props = {
+      id: "task",
+      data: {
+        title: "Ship API",
+        assignee: "",
+        state: TaskDisplayState.NOT_STARTED,
+        hasImplementationPlan: false,
+        ready: false,
+        stale: false,
+        syncError: false,
+        pullRequest: undefined,
+        documents: [],
+        hiddenDependencies: {
+          blockers: ["Migrate schema", "Design schema"],
+          blocked: ["Announce"],
+        },
+        readOnly: true,
+        onEdit: vi.fn(),
+        onPreview: vi.fn(),
+      },
+      selected: false,
+      isConnectable: false,
+      zIndex: 0,
+      dragging: false,
+      draggable: false,
+      selectable: true,
+      deletable: false,
+      type: "task",
+      positionAbsoluteX: 0,
+      positionAbsoluteY: 0,
+    } as NodeProps<TaskFlowNode>;
+    const { container } = render(
+      <ReactFlowProvider>
+        <TaskNode {...props} />
+      </ReactFlowProvider>,
+    );
+    const blockers = screen.getByRole("img", {
+      name: "Hidden completed blockers: Migrate schema, Design schema",
+    });
+    expect(blockers).toHaveClass("node-hidden-dependency-in");
+    expect(blockers).toHaveAttribute(
+      "title",
+      "Hidden completed blockers: Migrate schema, Design schema",
+    );
+    expect(
+      screen.getByRole("img", {
+        name: "Hidden completed dependents: Announce",
+      }),
+    ).toHaveClass("node-hidden-dependency-out");
+    expect(container.querySelectorAll(".node-hidden-dependency")).toHaveLength(
+      2,
+    );
+  });
+
+  it("leaves out the stub when nothing is hidden behind the task", () => {
+    const props = {
+      id: "task",
+      data: {
+        title: "Ship API",
+        assignee: "",
+        state: TaskDisplayState.NOT_STARTED,
+        hasImplementationPlan: false,
+        ready: false,
+        stale: false,
+        syncError: false,
+        pullRequest: undefined,
+        documents: [],
+        hiddenDependencies: { blockers: [], blocked: [] },
+        readOnly: true,
+        onEdit: vi.fn(),
+        onPreview: vi.fn(),
+      },
+      selected: false,
+      isConnectable: false,
+      zIndex: 0,
+      dragging: false,
+      draggable: false,
+      selectable: true,
+      deletable: false,
+      type: "task",
+      positionAbsoluteX: 0,
+      positionAbsoluteY: 0,
+    } as NodeProps<TaskFlowNode>;
+    const { container } = render(
+      <ReactFlowProvider>
+        <TaskNode {...props} />
+      </ReactFlowProvider>,
+    );
+    expect(
+      container.querySelector(".node-hidden-dependency"),
+    ).not.toBeInTheDocument();
+  });
 });
