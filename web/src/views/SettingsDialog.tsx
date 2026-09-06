@@ -1,5 +1,5 @@
 import { Check, X } from "lucide-react";
-import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { setDisplayLanguage } from "../i18n";
 import {
@@ -15,6 +15,7 @@ import { IconButton } from "./IconButton";
 import { LicensesSettingsPanel } from "./LicensesSettingsPanel";
 import { PromptSettingsPanel } from "./PromptSettingsPanel";
 import { ServerSettingsPanel } from "./ServerSettingsPanel";
+import { TabList, TabPanel } from "./TabList";
 
 const settingsTabs = [
   "server",
@@ -29,7 +30,6 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<SettingsTab>("server");
   const [promptsMounted, setPromptsMounted] = useState(false);
-  const tabRefs = useRef<(HTMLButtonElement | null)[]>([]);
 
   function openTab(tab: SettingsTab) {
     setActiveTab(tab);
@@ -37,26 +37,6 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     // been opened it stays mounted until the dialog closes: leaving the tab and
     // coming back must not discard what the user typed without warning.
     if (tab === "prompts") setPromptsMounted(true);
-  }
-
-  function selectTab(index: number) {
-    const tab = settingsTabs[index];
-    if (!tab) return;
-    openTab(tab);
-    tabRefs.current[index]?.focus();
-  }
-
-  function handleTabKey(event: KeyboardEvent<HTMLButtonElement>) {
-    const current = settingsTabs.indexOf(activeTab);
-    let next: number | undefined;
-    if (event.key === "ArrowRight") next = (current + 1) % settingsTabs.length;
-    if (event.key === "ArrowLeft")
-      next = (current - 1 + settingsTabs.length) % settingsTabs.length;
-    if (event.key === "Home") next = 0;
-    if (event.key === "End") next = settingsTabs.length - 1;
-    if (next === undefined) return;
-    event.preventDefault();
-    selectTab(next);
   }
 
   return (
@@ -78,29 +58,17 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
             onClick={onClose}
           />
         </header>
-        <div className="settings-tabs" role="tablist">
-          {settingsTabs.map((tab, index) => (
-            <button
-              aria-controls={`settings-panel-${tab}`}
-              aria-selected={activeTab === tab}
-              className="settings-tab"
-              id={`settings-tab-${tab}`}
-              key={tab}
-              onClick={() => {
-                openTab(tab);
-              }}
-              onKeyDown={handleTabKey}
-              ref={(element) => {
-                tabRefs.current[index] = element;
-              }}
-              role="tab"
-              tabIndex={activeTab === tab ? 0 : -1}
-              type="button"
-            >
-              {t(`settings.tabs.${tab}`)}
-            </button>
-          ))}
-        </div>
+        <TabList
+          tabs={settingsTabs.map((tab) => ({
+            id: tab,
+            label: t(`settings.tabs.${tab}`),
+          }))}
+          active={activeTab}
+          onSelect={openTab}
+          idPrefix="settings"
+          className="settings-tabs"
+          tabClassName="settings-tab"
+        />
         <SettingsPanel active={activeTab === "server"} tab="server">
           <ServerSettingsPanel />
         </SettingsPanel>
@@ -146,16 +114,14 @@ function SettingsPanel({
   tab: SettingsTab;
 }) {
   return (
-    <div
-      aria-labelledby={`settings-tab-${tab}`}
+    <TabPanel
+      active={active}
       className="settings-tab-panel"
-      hidden={!active}
-      id={`settings-panel-${tab}`}
-      role="tabpanel"
-      tabIndex={0}
+      idPrefix="settings"
+      tab={tab}
     >
       {children}
-    </div>
+    </TabPanel>
   );
 }
 

@@ -142,9 +142,11 @@
   color: var(--text);
 }
 
-/* Only one category is selected at a time, so it needs a mark that hover
+/* Only one screen is open at a time, so its link needs a mark that hover
    cannot produce. The bar keeps the row's box unchanged so the horizontal
-   header at narrow widths does not reflow when the selection moves. */
+   header at narrow widths does not reflow when the selection moves. The tree
+   rows below stay on the plain highlight, which keeps "this screen" and "this
+   resource" apart. */
 .nav-link[data-active] {
   position: relative;
 }
@@ -156,6 +158,66 @@
   width: 2px;
   border-radius: 0 2px 2px 0;
   background: var(--accent);
+}
+
+.nav-tree,
+.nav-tree-children {
+  margin: 0;
+  list-style: none;
+}
+
+/* The tree hangs directly under the Projects link, so the project rows keep
+   the browser's list indent away and only the children below them are
+   indented. */
+.nav-tree {
+  padding-left: 0;
+}
+
+.nav-tree-row {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+}
+
+.nav-tree-toggle {
+  width: 18px;
+  min-width: 18px;
+  height: 18px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 0;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--text-3);
+  padding: 0;
+}
+
+.nav-tree-toggle:hover {
+  background: var(--surface-2);
+  color: var(--text);
+}
+
+.nav-tree-toggle:active {
+  transform: none;
+}
+
+.nav-tree-toggle svg {
+  transition: transform 120ms ease;
+}
+
+.nav-tree-toggle[aria-expanded="true"] svg {
+  transform: rotate(90deg);
+}
+
+.nav-tree-toggle-spacer {
+  width: 18px;
+}
+
+/* The children indent under the project title rather than under its toggle,
+   which is what makes the nesting readable at a glance. */
+.nav-tree-children {
+  padding-left: 18px;
 }
 
 .pulse {
@@ -244,13 +306,15 @@
     overflow-x: auto;
   }
 
-  .feature-link b,
+  /* The rail turns into one horizontal row of links here, which a nested list
+     cannot sit in. The Projects link stays and its page carries the tree's
+     job. */
+  .nav-tree,
   .rail-foot {
     display: none;
   }
 
-  .nav-link,
-  .feature-link {
+  .nav-link {
     flex: 0 0 auto;
   }
 
@@ -306,8 +370,7 @@
     grid-template-columns: 96px minmax(0, 1fr) auto;
   }
 
-  .rail-action,
-  .feature-link {
+  .rail-action {
     display: none;
   }
 

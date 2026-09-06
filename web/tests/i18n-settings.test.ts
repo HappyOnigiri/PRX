@@ -1,14 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   detectDisplayLanguage,
-  readFeatureCategory,
+  readCollapsedProjects,
   readGraphZoom,
   readThemePreference,
   readWebUISettings,
   resolveThemePreference,
   webUISettingsKey,
+  writeCollapsedProjects,
   writeDisplayLanguage,
-  writeFeatureCategory,
   writeGraphZoom,
   writeThemePreference,
 } from "../src/i18n/settings";
@@ -48,24 +48,40 @@ describe("WebUI settings", () => {
     writeThemePreference("dark");
     writeGraphZoom(0.64);
     writeDisplayLanguage("ja");
-    writeFeatureCategory("archived");
+    writeCollapsedProjects(["P-1"]);
     expect(readWebUISettings()).toEqual({
       language: "ja",
       graphZoom: 0.64,
       theme: "dark",
-      featureCategory: "archived",
+      collapsedProjects: ["P-1"],
     });
   });
 
-  it("restores the sidebar category and defaults to the working set", () => {
-    expect(readFeatureCategory()).toBe("active");
-    writeFeatureCategory("completed");
-    expect(readFeatureCategory()).toBe("completed");
-    localStorage.setItem(
-      webUISettingsKey,
-      JSON.stringify({ featureCategory: "everything" }),
-    );
-    expect(readFeatureCategory()).toBe("active");
+  // Only the collapsed rows are stored, so anything the file cannot vouch for
+  // has to read back as "nothing is collapsed" and leave the tree expanded.
+  it("restores the collapsed sidebar rows and rejects a malformed list", () => {
+    expect(readCollapsedProjects()).toEqual([]);
+    writeCollapsedProjects(["P-2", "unassigned"]);
+    expect(readCollapsedProjects()).toEqual(["P-2", "unassigned"]);
+    for (const collapsedProjects of ["P-1", [1], [""], { id: "P-1" }]) {
+      localStorage.setItem(
+        webUISettingsKey,
+        JSON.stringify({ collapsedProjects }),
+      );
+      expect(readCollapsedProjects()).toEqual([]);
+    }
+  });
+
+  it("keeps the session usable when Local Storage refuses a write", () => {
+    const setItem = vi
+      .spyOn(Storage.prototype, "setItem")
+      .mockImplementation(() => {
+        throw new Error("quota exceeded");
+      });
+    expect(() => {
+      writeCollapsedProjects(["P-1"]);
+    }).not.toThrow();
+    setItem.mockRestore();
   });
 
   it("uses the default graph zoom when the saved value is invalid", () => {

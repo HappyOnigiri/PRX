@@ -1,8 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
-  featureCategories,
-  featureCategoryById,
-  featureCategoryForPath,
+  isActiveFeature,
+  isArchivedFeature,
+  isCompletedFeature,
+  unfinishedTaskCount,
 } from "../src/feature-status";
 import { FeatureStatus } from "../src/gen/prx/v1/prx_pb";
 import { makeFeature } from "./factories";
@@ -23,49 +24,25 @@ const features = [
   }),
 ];
 
-describe("featureCategories", () => {
-  it("pairs every category with its own route and selector", () => {
-    expect(featureCategories.map((category) => category.id)).toEqual([
-      "active",
-      "completed",
+function selected(predicate: (feature: (typeof features)[number]) => boolean) {
+  return features.filter(predicate).map((feature) => feature.id);
+}
+
+describe("feature status predicates", () => {
+  // A feature that is both read-only and completed belongs to the archive, so
+  // the three predicates have to partition the set rather than overlap.
+  it("puts every feature in exactly one of the three states", () => {
+    expect(selected(isActiveFeature)).toEqual(["active"]);
+    expect(selected(isCompletedFeature)).toEqual(["completed"]);
+    expect(selected(isArchivedFeature)).toEqual([
       "archived",
+      "archived and completed",
     ]);
-    expect(featureCategories.map((category) => category.path)).toEqual([
-      "/active",
-      "/completed",
-      "/archived",
-    ]);
+  });
+
+  it("counts the tasks the completion rule still calls unfinished", () => {
     expect(
-      featureCategories.map((category) =>
-        features.filter(category.select).map((feature) => feature.id),
-      ),
-    ).toEqual([
-      ["active"],
-      ["completed"],
-      ["archived", "archived and completed"],
-    ]);
-  });
-
-  it("looks a category up by the identifier that was stored", () => {
-    expect(featureCategoryById("completed").path).toBe("/completed");
-    expect(featureCategoryById("archived").navLabelKey).toBe(
-      "nav.archivedFeatures",
-    );
-  });
-});
-
-describe("featureCategoryForPath", () => {
-  it("reports the category a list route presents", () => {
-    expect(featureCategoryForPath("/active")?.id).toBe("active");
-    expect(featureCategoryForPath("/completed")?.id).toBe("completed");
-    expect(featureCategoryForPath("/archived")?.id).toBe("archived");
-    expect(featureCategoryForPath("/archived/")?.id).toBe("archived");
-  });
-
-  it("reports nothing for the routes that present something else", () => {
-    expect(featureCategoryForPath("/")).toBeUndefined();
-    expect(featureCategoryForPath("/tasks")).toBeUndefined();
-    expect(featureCategoryForPath("/features/completed")).toBeUndefined();
-    expect(featureCategoryForPath("/nowhere")).toBeUndefined();
+      unfinishedTaskCount(makeFeature({ taskCount: 5, finishedCount: 2 })),
+    ).toBe(3);
   });
 });
