@@ -9,6 +9,11 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setDisplayLanguage } from "../src/i18n";
 import { PromptSettingsPanel } from "../src/views/PromptSettingsPanel";
 
+interface PromptDraft {
+  design: string;
+  implementation: string;
+}
+
 const panelMocks = vi.hoisted(() => ({
   updateTemplates: vi.fn(),
   templates: {
@@ -92,7 +97,9 @@ describe("PromptSettingsPanel", () => {
     expect(
       screen.getByText(/\{\{task_ref\}\}, \{\{milestone_id\}\}/),
     ).toBeInTheDocument();
-    expect(screen.getByText(/\{\{task_ref\}\} is required/)).toBeInTheDocument();
+    expect(
+      screen.getByText(/\{\{task_ref\}\} is required/),
+    ).toBeInTheDocument();
   });
 
   it("saves both templates in one write and confirms the result", async () => {
@@ -136,11 +143,10 @@ describe("PromptSettingsPanel", () => {
   // The response carries the text that was sent, so it is older than anything
   // typed while the request was in flight.
   it("keeps text typed while a save is in flight", async () => {
-    type Templates = { design: string; implementation: string };
-    let settle: (result: { templates: Templates }) => void = () => undefined;
+    let settle: (result: { templates: PromptDraft }) => void = () => undefined;
     panelMocks.mutation.mutateAsync.mockImplementation(
       () =>
-        new Promise<{ templates: Templates }>((resolve) => {
+        new Promise<{ templates: PromptDraft }>((resolve) => {
           settle = resolve;
         }),
     );

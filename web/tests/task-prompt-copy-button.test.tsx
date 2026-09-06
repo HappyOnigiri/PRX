@@ -132,7 +132,7 @@ describe("TaskPromptCopyButton", () => {
       expect(screen.getByText("Prompt copied.")).toBeInTheDocument();
     });
 
-    await act(async () => {
+    act(() => {
       vi.advanceTimersByTime(1600);
     });
     expect(screen.queryByText("Prompt copied.")).not.toBeInTheDocument();
