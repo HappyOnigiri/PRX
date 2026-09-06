@@ -19,9 +19,9 @@ import (
 // The barrier lifts for exactly three operations: changing nothing but the
 // archived flag, deleting a project or a feature, and a GitHub refresh that
 // names a feature or a task explicitly. Deletion stays available because it is
-// how archived work is finally discarded, and a project cascade releases its
-// features by clearing their project_id, which the guards must not read as a
-// forbidden reassignment.
+// how archived work is finally discarded, and a project cascade deletes the
+// features it holds rather than reassigning them, so the guards never see it as
+// a membership change.
 
 // archivedReadOnly is the single error every refused write returns, so a caller
 // branches on one code without needing to know which container is archived.
@@ -62,9 +62,6 @@ func archivedProjectFlagOnly(update domain.ProjectUpdate) bool {
 func (s *Service) featureReadOnly(ctx context.Context, feature domain.Feature) (bool, error) {
 	if feature.Archived {
 		return true, nil
-	}
-	if feature.ProjectID == "" {
-		return false, nil
 	}
 	project, err := s.repository.GetProject(ctx, feature.ProjectID)
 	if err != nil {
@@ -148,11 +145,11 @@ func (s *Service) guardDocument(ctx context.Context, document domain.Document) e
 }
 
 // resolveProjectAssignment turns the requested membership into the public
-// project ID to store. An empty request detaches the feature, and an archived
-// project refuses to take one in.
+// project ID to store. Membership is required, so an empty request is refused,
+// and an archived project refuses to take a feature in.
 func (s *Service) resolveProjectAssignment(ctx context.Context, requested string) (string, error) {
 	if requested == "" {
-		return "", nil
+		return "", domain.NewError(domain.DomainErrorCodeInvalidParent, "feature project is required")
 	}
 	project, err := s.ResolveProject(ctx, requested)
 	if err != nil {

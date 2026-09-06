@@ -80,7 +80,7 @@ SELECT (SELECT COUNT(*) FROM features WHERE features.project_id=?1)
   + (SELECT COUNT(*) FROM documents WHERE documents.project_id=?1) AS total
 `
 
-func (q *Queries) CountProjectReferences(ctx context.Context, projectID sql.NullString) (int64, error) {
+func (q *Queries) CountProjectReferences(ctx context.Context, projectID string) (int64, error) {
 	row := q.db.QueryRowContext(ctx, countProjectReferences, projectID)
 	var total int64
 	err := row.Scan(&total)
@@ -146,16 +146,16 @@ INSERT INTO features (
 `
 
 type CreateFeatureParams struct {
-	ID          string         `json:"id"`
-	PublicID    string         `json:"public_id"`
-	Title       string         `json:"title"`
-	Description string         `json:"description"`
-	Status      string         `json:"status"`
-	StatusAuto  int64          `json:"status_auto"`
-	Archived    int64          `json:"archived"`
-	ProjectID   sql.NullString `json:"project_id"`
-	CreatedAt   string         `json:"created_at"`
-	UpdatedAt   string         `json:"updated_at"`
+	ID          string `json:"id"`
+	PublicID    string `json:"public_id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	StatusAuto  int64  `json:"status_auto"`
+	Archived    int64  `json:"archived"`
+	ProjectID   string `json:"project_id"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
 }
 
 func (q *Queries) CreateFeature(ctx context.Context, arg CreateFeatureParams) (Feature, error) {
@@ -416,20 +416,6 @@ DELETE FROM tasks WHERE feature_id=?
 
 func (q *Queries) DeleteTasksForFeature(ctx context.Context, featureID string) error {
 	_, err := q.db.ExecContext(ctx, deleteTasksForFeature, featureID)
-	return err
-}
-
-const detachFeaturesFromProject = `-- name: DetachFeaturesFromProject :exec
-UPDATE features SET project_id=NULL, updated_at=? WHERE project_id=?
-`
-
-type DetachFeaturesFromProjectParams struct {
-	UpdatedAt string         `json:"updated_at"`
-	ProjectID sql.NullString `json:"project_id"`
-}
-
-func (q *Queries) DetachFeaturesFromProject(ctx context.Context, arg DetachFeaturesFromProjectParams) error {
-	_, err := q.db.ExecContext(ctx, detachFeaturesFromProject, arg.UpdatedAt, arg.ProjectID)
 	return err
 }
 
@@ -833,6 +819,44 @@ func (q *Queries) ListFeatures(ctx context.Context) ([]Feature, error) {
 	return items, nil
 }
 
+const listFeaturesByProject = `-- name: ListFeaturesByProject :many
+SELECT id, title, description, status, archived, created_at, updated_at, public_id, status_auto, project_id FROM features WHERE project_id=? ORDER BY updated_at DESC, public_id
+`
+
+func (q *Queries) ListFeaturesByProject(ctx context.Context, projectID string) ([]Feature, error) {
+	rows, err := q.db.QueryContext(ctx, listFeaturesByProject, projectID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Feature{}
+	for rows.Next() {
+		var i Feature
+		if err := rows.Scan(
+			&i.ID,
+			&i.Title,
+			&i.Description,
+			&i.Status,
+			&i.Archived,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.PublicID,
+			&i.StatusAuto,
+			&i.ProjectID,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listGitHubRepositoryAuthCache = `-- name: ListGitHubRepositoryAuthCache :many
 SELECT host, owner, repository, auth_method_id, last_succeeded_at FROM github_repository_auth_cache ORDER BY host, owner, repository
 `
@@ -1141,14 +1165,14 @@ WHERE id=? RETURNING id, title, description, status, archived, created_at, updat
 `
 
 type UpdateFeatureParams struct {
-	Title       string         `json:"title"`
-	Description string         `json:"description"`
-	Status      string         `json:"status"`
-	StatusAuto  int64          `json:"status_auto"`
-	Archived    int64          `json:"archived"`
-	ProjectID   sql.NullString `json:"project_id"`
-	UpdatedAt   string         `json:"updated_at"`
-	ID          string         `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	StatusAuto  int64  `json:"status_auto"`
+	Archived    int64  `json:"archived"`
+	ProjectID   string `json:"project_id"`
+	UpdatedAt   string `json:"updated_at"`
+	ID          string `json:"id"`
 }
 
 func (q *Queries) UpdateFeature(ctx context.Context, arg UpdateFeatureParams) (Feature, error) {

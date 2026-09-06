@@ -54,10 +54,7 @@ func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 	if _, err := service.UpdateProject(ctx, project.ID, domain.ProjectUpdate{Archived: &archived}); err != nil {
 		t.Fatal(err)
 	}
-	feature, err := service.CreateFeature(ctx, "Checkout", "", "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	feature := newFeature(t, ctx, service, "Checkout")
 	task, err := service.CreateTask(ctx, feature.ID, "Payment API", "", "")
 	if err != nil {
 		t.Fatal(err)
@@ -94,9 +91,12 @@ func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 		t.Fatalf("records=%+v", report.Records)
 	}
 	// A refused write is explained by the archived project it landed in, so the
-	// report has to carry the project count and its state.
-	if report.Records.Projects != 1 ||
-		len(report.Records.ProjectStates) != 1 || report.Records.ProjectStates[0].Name != "archived" {
+	// report has to carry the project count and the states in play. Equal counts
+	// are ordered by name, so the active project comes first.
+	if report.Records.Projects != 2 ||
+		len(report.Records.ProjectStates) != 2 ||
+		report.Records.ProjectStates[0].Name != "active" ||
+		report.Records.ProjectStates[1].Name != "archived" {
 		t.Fatalf("records=%+v", report.Records)
 	}
 	if !report.Config.Valid || len(report.Config.Hosts) != 1 {

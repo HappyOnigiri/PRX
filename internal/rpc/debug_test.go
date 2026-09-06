@@ -20,7 +20,10 @@ func TestRPCReturnsTheDiagnosticReportAndItsText(t *testing.T) {
 	client := newTestClient(t)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "Diagnostics"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{
+			Title:     "Diagnostics",
+			ProjectId: newRPCProject(t, ctx, client, "Diagnostics"),
+		}),
 	)
 	if err != nil {
 		t.Fatal(err)

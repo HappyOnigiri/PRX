@@ -39,7 +39,8 @@ Mutation operations retain explicit verbs so state-changing intent remains visib
 Mutations remain non-interactive so people and coding agents use the same surface.
 A missing mutation target fails instead of reporting a successful no-op.
 Destructive traversal of referenced data requires an explicit cascade request.
-A cascade on a project is the one exception to that traversal: it deletes the project's own documents and releases its features, which keep their identifiers and their tasks.
+A cascade on a project deletes the project's own documents and every feature it holds, together with the work inside those features.
+A feature cannot outlive its project, because it belongs to one.
 Deleting contained work is what a cascade on a feature or a task does.
 Values every invocation of an operation requires are positional operands.
 Flags are reserved for optional modifiers, filters, partial updates, secret-safe input methods, execution settings, and output formats.
