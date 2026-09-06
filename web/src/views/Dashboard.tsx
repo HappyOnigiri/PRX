@@ -3,18 +3,13 @@ import { RefreshCw, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { isActiveFeature } from "../feature-status";
-import type { Feature, Project, Task } from "../gen/prx/v1/prx_pb";
+import type { Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
-import {
-  formatError,
-  taskDisplayStateLabel,
-  taskDisplayStateToken,
-} from "../i18n/domain";
+import { formatError } from "../i18n/domain";
 import { useAutoSyncStatus } from "../sync-status";
 import { filterTaskSearchResults } from "../task-search";
-import { EntityIcon, type EntityKind } from "./EntityIcon";
 import { IconButton } from "./IconButton";
-import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
+import { TaskCard } from "./TaskCard";
 
 const queueNames = [
   [
@@ -71,6 +66,7 @@ export function Dashboard() {
       terms: [],
     }).map(({ task }) => task.id),
   );
+  const pullRequests = new Map(data.pullRequests.map((pr) => [pr.taskId, pr]));
   const projected = {
     readyTasks: data.readyTasks.filter((task) =>
       featureIds.has(task.featureId),
@@ -111,90 +107,28 @@ export function Dashboard() {
               <p>{t("dashboard.noTaskDetail")}</p>
             </div>
           ) : (
-            <ol>
-              {projected.readyTasks.map((task) => (
-                <QueueRow
-                  key={task.id}
-                  task={task}
-                  features={features}
-                  projects={data.projects}
-                />
-              ))}
+            <ol className="task-card-list">
+              {projected.readyTasks.map((task) => {
+                const feature = features.find(
+                  (item) => item.id === task.featureId,
+                );
+                return (
+                  <TaskCard
+                    key={task.id}
+                    task={task}
+                    feature={feature}
+                    project={data.projects.find(
+                      (item) => item.id === feature?.projectId,
+                    )}
+                    pullRequest={pullRequests.get(task.id)}
+                  />
+                );
+              })}
             </ol>
           )}
         </section>
       </div>
     </div>
-  );
-}
-
-function QueueRow({
-  task,
-  features,
-  projects,
-}: {
-  task: Task;
-  features: Feature[];
-  projects: Project[];
-}) {
-  const { t } = useTranslation();
-  const feature = features.find((item) => item.id === task.featureId);
-  const project = projects.find((item) => item.id === feature?.projectId);
-  return (
-    <li>
-      <div>
-        <p className="queue-title">
-          <EntityIcon kind="task" size={15} />
-          <Link
-            to="/features/$featureId"
-            params={{ featureId: task.featureId }}
-          >
-            {task.title}
-          </Link>
-        </p>
-        {/* Three values of the same size read as one sentence, so an icon
-            marks which field each one belongs to. The names stay for
-            assistive technology, which cannot read a glyph. */}
-        <dl className="queue-meta">
-          <div>
-            <dt>{t("dashboard.metaProject")}</dt>
-            <MetaValue
-              kind="project"
-              value={project?.title ?? t("project.unassignedTitle")}
-            />
-          </div>
-          <div>
-            <dt>{t("dashboard.metaFeature")}</dt>
-            <MetaValue kind="feature" value={feature?.title ?? ""} />
-          </div>
-          {/* An unassigned task says nothing by naming an empty owner, so the
-              pair is dropped instead of carrying a placeholder. */}
-          {task.assignee && (
-            <div>
-              <dt>{t("dashboard.metaAssignee")}</dt>
-              <MetaValue kind="assignee" value={task.assignee} />
-            </div>
-          )}
-        </dl>
-      </div>
-      <i className={`state-${taskDisplayStateToken(task.displayState)}`}>
-        {taskDisplayStateLabel(task.displayState, t)}
-      </i>
-      <TaskPromptCopyButton
-        taskId={task.id}
-        hasImplementationPlan={task.hasImplementationPlan}
-        size="compact"
-      />
-    </li>
-  );
-}
-
-function MetaValue({ kind, value }: { kind: EntityKind; value: string }) {
-  return (
-    <dd>
-      <EntityIcon kind={kind} size={13} />
-      <span className="queue-meta-name">{value}</span>
-    </dd>
   );
 }
 

@@ -21,6 +21,12 @@ export function taskStatusLabel(value: TaskStatus, t: TFunction): string {
   return t(taskStatusKeys[value]);
 }
 
+// The token names a CSS class, so it mirrors taskDisplayStateToken rather than
+// letting each caller derive its own spelling of the enum name.
+export function featureStatusToken(value: FeatureStatus): string {
+  return FeatureStatus[value].toLowerCase().replaceAll("_", "-");
+}
+
 export const featureStatusKeys = {
   [FeatureStatus.AUTO]: "featureStatus.auto",
   [FeatureStatus.ACTIVE]: "featureStatus.active",

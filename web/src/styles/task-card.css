@@ -1,0 +1,152 @@
+/* One card presents a task wherever tasks are listed, so the overview queue
+   and the search results share these rules instead of drifting apart. */
+.task-card-list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.task-card {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  gap: 12px;
+  align-items: center;
+  padding: 14px 18px;
+  border-bottom: 1px solid var(--border);
+}
+
+.task-card > div {
+  min-width: 0;
+}
+
+.task-card-title {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-width: 0;
+}
+
+.task-card-title svg {
+  flex: 0 0 auto;
+  color: var(--text-3);
+}
+
+.task-card-title a {
+  overflow: hidden;
+  font-size: var(--text-md);
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-card-pr a {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+}
+
+.task-card-title a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+/* An icon carries the field, so the values stop reading as one run-on line
+   without spelling the field names out. */
+.task-card-meta {
+  margin: 6px 0 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 14px;
+}
+
+.task-card-meta > div {
+  min-width: 0;
+}
+
+/* The field name stays for assistive technology, which cannot read a glyph. */
+.task-card-meta dt {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.task-card-meta dd {
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  min-width: 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+
+.task-card-meta dd svg {
+  flex: 0 0 auto;
+  color: var(--text-3);
+}
+
+.task-card-meta-name {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-card-meta a.task-card-meta-name:hover,
+.task-card-pr a:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+.task-card-pr > small {
+  color: var(--text-3);
+}
+
+.task-card-pr > em {
+  overflow: hidden;
+  color: var(--status-conflict);
+  font-style: normal;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.task-card > i {
+  border: 1px solid var(--status-none);
+  border-radius: 3px;
+  color: var(--text-2);
+  padding: 3px 6px;
+  font-size: var(--text-xs);
+  font-style: normal;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.task-card > i.state-designed,
+.task-card > i.state-in-progress,
+.task-card > i.state-completed,
+.task-card > i.state-approved {
+  border-color: var(--status-ready);
+  color: var(--status-ready);
+}
+
+.task-card > i.state-review-waiting,
+.task-card > i.state-changes-requested {
+  border-color: var(--status-review);
+  color: var(--status-review);
+}
+
+.task-card > i.state-conflict {
+  border-color: var(--status-conflict);
+  color: var(--status-conflict);
+}
+
+.task-card > i.state-merged {
+  border-color: var(--status-merged);
+  color: var(--status-merged);
+}

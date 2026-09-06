@@ -114,10 +114,16 @@
 
 .feature-link {
   min-height: 36px;
-  grid-template-columns: 8px 1fr auto;
+  grid-template-columns: auto minmax(0, 1fr) auto;
   gap: 9px;
   padding: 6px 10px;
   font-size: var(--text-sm);
+}
+
+/* A tree row carries the glyph of the record it points at. A feature's state
+   rides on that glyph's color, which the rules below the tree layout set. */
+.feature-link > svg {
+  color: var(--text-3);
 }
 
 .feature-link span {
@@ -214,25 +220,18 @@
   width: 18px;
 }
 
+.feature-link[data-state="ready"] > svg {
+  color: var(--status-ready);
+}
+
+.feature-link[data-state="conflict"] > svg {
+  color: var(--status-conflict);
+}
+
 /* The children indent under the project title rather than under its toggle,
    which is what makes the nesting readable at a glance. */
 .nav-tree-children {
   padding-left: 18px;
-}
-
-.pulse {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--status-none);
-}
-
-.pulse.ready {
-  background: var(--status-ready);
-}
-
-.pulse.conflict {
-  background: var(--status-conflict);
 }
 
 .rail-action {
