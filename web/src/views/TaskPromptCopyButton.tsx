@@ -21,15 +21,33 @@ export function TaskPromptCopyButton({ task }: { task: Task }) {
     ? t("inspector.copyImplementationPrompt")
     : t("inspector.copyDesignPrompt");
 
+  function settle(next: CopyStatus) {
+    setStatus(next);
+    // Like the other copy controls, the outcome clears itself so the button
+    // does not keep reporting a result from an earlier click.
+    window.setTimeout(() => {
+      setStatus({ case: "idle" });
+    }, 1600);
+  }
+
   async function copyPrompt() {
     setPending(true);
     setStatus({ case: "idle" });
     try {
+      // The server's message names the task or the template at fault, so it is
+      // worth showing verbatim. A clipboard failure has no such detail, and
+      // navigator.clipboard is simply absent outside a secure context, so those
+      // are reported through the translated text instead of a raw TypeError.
       const response = await getTaskPrompt(task.id);
-      await navigator.clipboard.writeText(response.prompt);
-      setStatus({ case: "copied" });
+      try {
+        await navigator.clipboard.writeText(response.prompt);
+      } catch {
+        settle({ case: "failed", message: t("inspector.promptFailed") });
+        return;
+      }
+      settle({ case: "copied" });
     } catch (error) {
-      setStatus({
+      settle({
         case: "failed",
         message:
           error instanceof Error ? error.message : t("inspector.promptFailed"),

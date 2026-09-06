@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -83,7 +84,9 @@ describe("TaskPromptCopyButton", () => {
     expect(writeText).not.toHaveBeenCalled();
   });
 
-  it("reports a clipboard failure", async () => {
+  // A clipboard rejection carries a browser-internal message, so the reader is
+  // told what happened in their own language instead.
+  it("reports a clipboard failure in the display language", async () => {
     stubClipboard(vi.fn().mockRejectedValue(new Error("clipboard blocked")));
     promptMocks.getTaskPrompt.mockResolvedValue({ prompt: "Design T-1" });
     render(<TaskPromptCopyButton task={makeTask(false)} />);
@@ -91,7 +94,48 @@ describe("TaskPromptCopyButton", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copy design prompt" }));
 
     await waitFor(() => {
-      expect(screen.getByText("clipboard blocked")).toBeInTheDocument();
+      expect(
+        screen.getByText("The prompt could not be copied."),
+      ).toBeInTheDocument();
     });
+    expect(screen.queryByText("clipboard blocked")).not.toBeInTheDocument();
+  });
+
+  // Outside a secure context the whole clipboard API is missing, which would
+  // otherwise surface as a raw TypeError.
+  it("reports a missing clipboard API", async () => {
+    Object.defineProperty(navigator, "clipboard", {
+      configurable: true,
+      value: undefined,
+    });
+    promptMocks.getTaskPrompt.mockResolvedValue({ prompt: "Design T-1" });
+    render(<TaskPromptCopyButton task={makeTask(false)} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy design prompt" }));
+
+    await waitFor(() => {
+      expect(
+        screen.getByText("The prompt could not be copied."),
+      ).toBeInTheDocument();
+    });
+  });
+
+  it("clears the outcome so it does not describe an earlier click", async () => {
+    vi.useFakeTimers();
+    const writeText = vi.fn().mockResolvedValue(undefined);
+    stubClipboard(writeText);
+    promptMocks.getTaskPrompt.mockResolvedValue({ prompt: "Design T-1" });
+    render(<TaskPromptCopyButton task={makeTask(false)} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Copy design prompt" }));
+    await vi.waitFor(() => {
+      expect(screen.getByText("Prompt copied.")).toBeInTheDocument();
+    });
+
+    await act(async () => {
+      vi.advanceTimersByTime(1600);
+    });
+    expect(screen.queryByText("Prompt copied.")).not.toBeInTheDocument();
+    vi.useRealTimers();
   });
 });
