@@ -92,6 +92,11 @@ test("copies a task prompt built from the configured template", async ({
   await promptPanel
     .getByRole("button", { name: "Restore built-in templates" })
     .click();
+  // Restoring shows the built-in text right away, so the reader sees what the
+  // save is about to write instead of an empty field.
+  await expect(promptPanel.getByLabel("Design prompt")).toContainText(
+    "Design PRX task {{task_id}}",
+  );
   await promptPanel.getByRole("button", { name: "Save" }).click();
   await expect(promptPanel.getByText("Prompt templates saved.")).toBeVisible();
   await expect(promptPanel.getByLabel("Design prompt")).toContainText(

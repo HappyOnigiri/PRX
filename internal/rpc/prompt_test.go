@@ -91,6 +91,17 @@ func TestRPCPromptTemplatesRoundTripAndDriveTheTaskPrompt(t *testing.T) {
 		t.Fatalf("implementation template=%q", updated.Msg.GetTemplates().GetImplementation())
 	}
 
+	// The built-in pair is served alongside the stored one, so an editor can
+	// show what restoring would write without first performing the write.
+	customized, err := client.GetPromptTemplates(ctx, connect.NewRequest(&prxv1.GetPromptTemplatesRequest{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if customized.Msg.GetBuiltIn().GetDesign() != prompt.DefaultTemplates().Design ||
+		customized.Msg.GetBuiltIn().GetImplementation() != prompt.DefaultTemplates().Implementation {
+		t.Fatalf("built-in templates=%+v", customized.Msg.GetBuiltIn())
+	}
+
 	design, err := client.GetTaskPrompt(ctx, connect.NewRequest(&prxv1.GetTaskPromptRequest{TaskId: taskID}))
 	if err != nil {
 		t.Fatal(err)

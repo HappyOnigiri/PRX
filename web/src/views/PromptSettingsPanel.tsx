@@ -39,6 +39,10 @@ export function PromptSettingsPanel() {
     design: templates.data.design,
     implementation: templates.data.implementation,
   };
+  const builtIn = {
+    design: templates.data.builtIn.design,
+    implementation: templates.data.builtIn.implementation,
+  };
 
   // The vocabulary comes from the server so the hint can never advertise a
   // placeholder the server would reject. Both are interpolation values so the
@@ -103,7 +107,11 @@ export function PromptSettingsPanel() {
             type="button"
             disabled={update.isPending}
             onClick={() => {
-              edit({ design: "", implementation: "" });
+              // The server would restore a blank template on its own, but the
+              // editor shows what it is about to save, so the built-in text
+              // goes into the fields instead of leaving them empty until the
+              // write comes back.
+              edit(builtIn);
             }}
           />
           <IconButton
