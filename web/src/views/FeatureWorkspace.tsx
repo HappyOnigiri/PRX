@@ -6,12 +6,14 @@ import { mutations } from "../api";
 import type {
   Dependency,
   Feature,
+  FeatureStatus,
   Project,
   PullRequest,
   Snapshot,
   Task,
 } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
+import { featureStatusLabel, featureStatusToken } from "../i18n/domain";
 import { AddDocumentDialog } from "./AddDocumentDialog";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
@@ -288,6 +290,7 @@ function FeatureWorkspaceHead({
           value={props.feature.id}
           valueOnly
         />
+        <FeatureStatusBadge status={props.feature.displayStatus} />
         {props.project && (
           <p className="eyebrow">
             <Link
@@ -340,6 +343,21 @@ function FeatureWorkspaceHead({
         />
       </div>
     </header>
+  );
+}
+
+// The header shows the status the server derived, the same value the feature
+// lists show, so a feature left on automatic reads the same in both places.
+function FeatureStatusBadge({ status }: { status: FeatureStatus }) {
+  const { t } = useTranslation();
+  return (
+    <span
+      className={`feature-status-badge status-${featureStatusToken(status)}`}
+      title={t("workspace.featureStatus")}
+    >
+      <i aria-hidden="true" />
+      {featureStatusLabel(status, t)}
+    </span>
   );
 }
 

@@ -196,6 +196,8 @@
   margin-left: auto;
 }
 
+/* The glyph is the same one a task carries elsewhere, and it inherits the
+   label's color so the state is stated once for both. */
 .node-state {
   display: flex;
   align-items: center;
@@ -203,13 +205,6 @@
   color: var(--text-2);
   font-size: var(--text-xs);
   font-weight: 500;
-}
-
-.node-state i {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-  background: var(--status-none);
 }
 
 .node-asset svg {
@@ -221,36 +216,18 @@
   color: var(--status-ready);
 }
 
-.is-ready .node-state i {
-  background: var(--status-ready);
-}
-
 .state-conflict .node-state {
   color: var(--status-conflict);
-}
-
-.state-conflict .node-state i {
-  background: var(--status-conflict);
 }
 
 .state-merged .node-state {
   color: var(--status-merged);
 }
 
-.state-merged .node-state i {
-  background: var(--status-merged);
-}
-
 .state-review-waiting .node-state,
 .state-approved .node-state,
 .state-changes-requested .node-state {
   color: var(--status-review);
-}
-
-.state-review-waiting .node-state i,
-.state-approved .node-state i,
-.state-changes-requested .node-state i {
-  background: var(--status-review);
 }
 
 .node-edit {
@@ -279,6 +256,27 @@
   overflow-wrap: anywhere;
   -webkit-box-orient: vertical;
   -webkit-line-clamp: 2;
+}
+
+.node-assignee {
+  min-height: 18px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  margin: 0 0 4px;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+
+.node-assignee svg {
+  flex: 0 0 auto;
+  color: var(--text-3);
+}
+
+.node-assignee span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .node-sync-error {
@@ -321,15 +319,6 @@
   background: var(--surface-2);
 }
 
-.node-asset-add {
-  color: var(--text-2);
-}
-
-.node-asset-add span,
-.node-asset-add svg {
-  color: var(--accent);
-}
-
 .node-asset span {
   color: var(--text-3);
   font-family: var(--font-mono);
@@ -345,21 +334,34 @@
   white-space: nowrap;
 }
 
-.task-node footer {
-  min-height: 24px;
+/* The action is not one of the assets above it, so it drops their row layout
+   for a centered outline that reads as a control. */
+.node-add-reference {
+  width: 100%;
+  min-height: 28px;
+  margin-top: auto;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  margin-top: 4px;
-  padding-top: 4px;
-  color: var(--text-2);
+  justify-content: center;
+  gap: 6px;
+  border: 1px dashed var(--border-strong);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--accent);
+  padding: 0 8px;
   font-size: var(--text-xs);
+  font-weight: 500;
 }
 
-.task-node footer b {
-  color: var(--status-ready);
-  font-size: var(--text-xs);
-  font-weight: 600;
+.node-assets + .node-add-reference {
+  margin-top: 8px;
+}
+
+.node-add-reference:hover,
+.node-add-reference:focus-visible {
+  outline: none;
+  border-style: solid;
+  background: var(--surface-2);
 }
 
 .react-flow__handle {

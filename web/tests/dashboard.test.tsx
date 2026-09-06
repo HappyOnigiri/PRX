@@ -2,7 +2,13 @@ import { createMemoryHistory, RouterProvider } from "@tanstack/react-router";
 import { cleanup, render, screen } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "../src/router";
-import { makeFeature, makeProject, makeSnapshot, makeTask } from "./factories";
+import {
+  makeFeature,
+  makeProject,
+  makePullRequest,
+  makeSnapshot,
+  makeTask,
+} from "./factories";
 
 const snapshot = makeSnapshot({
   projects: [makeProject()],
@@ -16,6 +22,7 @@ const snapshot = makeSnapshot({
     }),
   ],
   tasks: [],
+  pullRequests: [makePullRequest()],
   readyTasks: [
     makeTask(),
     makeTask({ id: "task-4", title: "Unowned work", assignee: "" }),
@@ -84,6 +91,13 @@ describe("Dashboard", () => {
     expect(
       screen.getByRole("button", { name: "Sync GitHub" }),
     ).toBeInTheDocument();
+    // A queued task that already has a pull request links straight to it, so
+    // a reader reaches the review without opening the feature first.
+    const pullRequest = screen.getByRole("link", { name: /acme\/prx #42/ });
+    expect(pullRequest).toHaveAttribute(
+      "href",
+      "https://github.com/acme/prx/pull/42",
+    );
     // The ready board is where a reader picks the next task, so the prompt
     // that hands it to an agent is copied there instead of one screen deeper.
     expect(

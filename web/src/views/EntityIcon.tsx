@@ -1,4 +1,10 @@
-import { CircleDot, Folder, GitBranch, User } from "lucide-react";
+import {
+  CircleDot,
+  Folder,
+  GitBranch,
+  GitPullRequest,
+  User,
+} from "lucide-react";
 
 // One glyph per kind of record, shared by every screen. A reader who learns
 // the folder on the sidebar reads the same folder in a queue row, so the icon
@@ -7,6 +13,7 @@ const entityIcons = {
   project: Folder,
   feature: GitBranch,
   task: CircleDot,
+  pullRequest: GitPullRequest,
   assignee: User,
 } as const;
 

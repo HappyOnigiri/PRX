@@ -71,124 +71,13 @@
 
 .task-results {
   margin: 28px 0 0;
-  padding: 0;
   border: 1px solid var(--border);
-  list-style: none;
+  background: var(--surface);
 }
 
-.task-results > li + li {
-  border-top: 1px solid var(--border);
-}
-
-.task-result {
-  min-width: 0;
-  display: grid;
-  grid-template-columns: minmax(230px, 1.35fr) minmax(110px, 0.45fr) minmax(
-      260px,
-      1fr
-    );
-  align-items: center;
-  gap: 18px;
-  padding: 15px 18px;
-}
-
-.task-result:hover,
-.task-result:focus-visible {
-  background: var(--surface-2);
-}
-
-.task-result-main,
-.task-result-github {
-  min-width: 0;
-}
-
-.task-result-title {
-  min-width: 0;
-  display: flex;
-  align-items: baseline;
-  gap: 10px;
-}
-
-.task-result-title > svg {
-  flex: 0 0 auto;
-  align-self: center;
-  color: var(--text-3);
-}
-
-.task-result-title strong {
-  min-width: 0;
-  overflow: hidden;
-  font-size: var(--text-md);
-  font-weight: 600;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.task-result-title code {
-  flex: 0 0 auto;
-  color: var(--text-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-}
-
-/* The icon sits inside the truncating line rather than in a flex row of its
-   own, so the feature name keeps its ellipsis. */
-.task-result-main > small > svg {
-  margin-right: 5px;
-  color: var(--text-3);
-  vertical-align: -2px;
-}
-
-.task-result-main > small {
-  display: block;
-  margin-top: 4px;
-  overflow: hidden;
-  color: var(--text-2);
-  font-size: var(--text-xs);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.task-result-main > p {
-  margin: 7px 0 0;
-  overflow: hidden;
-  color: var(--text-3);
-  font-size: var(--text-xs);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.task-result-state {
-  color: var(--text-2);
-  font-size: var(--text-sm);
-  font-weight: 500;
-}
-
-.task-result-github {
-  display: grid;
-  gap: 3px;
-  color: var(--text-2);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-}
-
-.task-result-github > span,
-.task-result-github > small,
-.task-result-github > em {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.task-result-github > small {
-  color: var(--text-3);
-  font-family: inherit;
-}
-
-.task-result-github > em {
-  color: var(--status-conflict);
-  font-family: inherit;
-  font-style: normal;
+/* The list draws its own outer border, so the last card stops repeating it. */
+.task-results > li:last-child {
+  border-bottom: 0;
 }
 
 .task-search-empty,
@@ -209,28 +98,6 @@
   font-size: var(--text-sm);
 }
 
-@media (width <= 900px) {
-  .task-result {
-    grid-template-columns: minmax(0, 1fr) auto;
-    gap: 9px 14px;
-  }
-
-  .task-result-main {
-    grid-column: 1;
-  }
-
-  .task-result-state {
-    grid-column: 2;
-    grid-row: 1;
-    text-align: right;
-  }
-
-  .task-result-github {
-    grid-column: 1 / -1;
-    grid-row: 2;
-  }
-}
-
 @media (width <= 600px) {
   .task-search-count {
     min-width: 0;
@@ -247,7 +114,7 @@
     border-inline: 0;
   }
 
-  .task-result {
+  .task-results .task-card {
     padding-inline: 14px;
   }
 }
