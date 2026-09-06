@@ -88,59 +88,6 @@ func (FeatureStatus) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{0}
 }
 
-// TaskKind identifies whether a task is tracked with a pull request or a manual gate.
-type TaskKind int32
-
-const (
-	// TASK_KIND_UNSPECIFIED is never returned by the server; in create requests it defaults to a pull-request task.
-	TaskKind_TASK_KIND_UNSPECIFIED TaskKind = 0
-	// TASK_KIND_PULL_REQUEST identifies a task whose automatic state comes from its pull request.
-	TaskKind_TASK_KIND_PULL_REQUEST TaskKind = 1
-	// TASK_KIND_MANUAL identifies a task whose completion is controlled manually.
-	TaskKind_TASK_KIND_MANUAL TaskKind = 2
-)
-
-// Enum value maps for TaskKind.
-var (
-	TaskKind_name = map[int32]string{
-		0: "TASK_KIND_UNSPECIFIED",
-		1: "TASK_KIND_PULL_REQUEST",
-		2: "TASK_KIND_MANUAL",
-	}
-	TaskKind_value = map[string]int32{
-		"TASK_KIND_UNSPECIFIED":  0,
-		"TASK_KIND_PULL_REQUEST": 1,
-		"TASK_KIND_MANUAL":       2,
-	}
-)
-
-func (x TaskKind) Enum() *TaskKind {
-	p := new(TaskKind)
-	*p = x
-	return p
-}
-
-func (x TaskKind) String() string {
-	return protoimpl.X.EnumStringOf(x.Descriptor(), protoreflect.EnumNumber(x))
-}
-
-func (TaskKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[1].Descriptor()
-}
-
-func (TaskKind) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[1]
-}
-
-func (x TaskKind) Number() protoreflect.EnumNumber {
-	return protoreflect.EnumNumber(x)
-}
-
-// Deprecated: Use TaskKind.Descriptor instead.
-func (TaskKind) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{1}
-}
-
 // TaskStatus is the stored workflow state of a task. Auto derives the task's
 // effective state from its pull request or implementation plan.
 type TaskStatus int32
@@ -191,11 +138,11 @@ func (x TaskStatus) String() string {
 }
 
 func (TaskStatus) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[2].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[1].Descriptor()
 }
 
 func (TaskStatus) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[2]
+	return &file_prx_v1_prx_proto_enumTypes[1]
 }
 
 func (x TaskStatus) Number() protoreflect.EnumNumber {
@@ -204,7 +151,7 @@ func (x TaskStatus) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TaskStatus.Descriptor instead.
 func (TaskStatus) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{2}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{1}
 }
 
 // TaskDisplayState is the derived state presented for a task.
@@ -290,11 +237,11 @@ func (x TaskDisplayState) String() string {
 }
 
 func (TaskDisplayState) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[3].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[2].Descriptor()
 }
 
 func (TaskDisplayState) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[3]
+	return &file_prx_v1_prx_proto_enumTypes[2]
 }
 
 func (x TaskDisplayState) Number() protoreflect.EnumNumber {
@@ -303,7 +250,7 @@ func (x TaskDisplayState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TaskDisplayState.Descriptor instead.
 func (TaskDisplayState) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{3}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{2}
 }
 
 // PullRequestState is the raw lifecycle state reported for a GitHub pull request.
@@ -351,11 +298,11 @@ func (x PullRequestState) String() string {
 }
 
 func (PullRequestState) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[4].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[3].Descriptor()
 }
 
 func (PullRequestState) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[4]
+	return &file_prx_v1_prx_proto_enumTypes[3]
 }
 
 func (x PullRequestState) Number() protoreflect.EnumNumber {
@@ -364,7 +311,7 @@ func (x PullRequestState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use PullRequestState.Descriptor instead.
 func (PullRequestState) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{4}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{3}
 }
 
 // ReviewState summarizes the current review decision and requested reviewers.
@@ -416,11 +363,11 @@ func (x ReviewState) String() string {
 }
 
 func (ReviewState) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[5].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[4].Descriptor()
 }
 
 func (ReviewState) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[5]
+	return &file_prx_v1_prx_proto_enumTypes[4]
 }
 
 func (x ReviewState) Number() protoreflect.EnumNumber {
@@ -429,7 +376,7 @@ func (x ReviewState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use ReviewState.Descriptor instead.
 func (ReviewState) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{5}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{4}
 }
 
 // Mergeability is the current mergeability reported for a GitHub pull request.
@@ -473,11 +420,11 @@ func (x Mergeability) String() string {
 }
 
 func (Mergeability) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[6].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[5].Descriptor()
 }
 
 func (Mergeability) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[6]
+	return &file_prx_v1_prx_proto_enumTypes[5]
 }
 
 func (x Mergeability) Number() protoreflect.EnumNumber {
@@ -486,7 +433,7 @@ func (x Mergeability) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use Mergeability.Descriptor instead.
 func (Mergeability) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{6}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{5}
 }
 
 // PullRequestDisplayState is the derived presentation state of a pull request.
@@ -555,11 +502,11 @@ func (x PullRequestDisplayState) String() string {
 }
 
 func (PullRequestDisplayState) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[7].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[6].Descriptor()
 }
 
 func (PullRequestDisplayState) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[7]
+	return &file_prx_v1_prx_proto_enumTypes[6]
 }
 
 func (x PullRequestDisplayState) Number() protoreflect.EnumNumber {
@@ -568,7 +515,7 @@ func (x PullRequestDisplayState) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use PullRequestDisplayState.Descriptor instead.
 func (PullRequestDisplayState) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{7}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{6}
 }
 
 // DocumentKind identifies the type of reference stored in a document.
@@ -612,11 +559,11 @@ func (x DocumentKind) String() string {
 }
 
 func (DocumentKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[8].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[7].Descriptor()
 }
 
 func (DocumentKind) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[8]
+	return &file_prx_v1_prx_proto_enumTypes[7]
 }
 
 func (x DocumentKind) Number() protoreflect.EnumNumber {
@@ -625,7 +572,7 @@ func (x DocumentKind) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DocumentKind.Descriptor instead.
 func (DocumentKind) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{8}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{7}
 }
 
 // BlockedReasonCode explains why a task is not ready.
@@ -665,11 +612,11 @@ func (x BlockedReasonCode) String() string {
 }
 
 func (BlockedReasonCode) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[9].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[8].Descriptor()
 }
 
 func (BlockedReasonCode) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[9]
+	return &file_prx_v1_prx_proto_enumTypes[8]
 }
 
 func (x BlockedReasonCode) Number() protoreflect.EnumNumber {
@@ -678,7 +625,7 @@ func (x BlockedReasonCode) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use BlockedReasonCode.Descriptor instead.
 func (BlockedReasonCode) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{9}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{8}
 }
 
 // DomainErrorCode identifies a known validation, state, storage, or GitHub error exposed over RPC.
@@ -703,8 +650,6 @@ const (
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT DomainErrorCode = 8
 	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND means the document kind is unsupported.
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND DomainErrorCode = 9
-	// DOMAIN_ERROR_CODE_INVALID_KIND means the task kind is unsupported.
-	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND DomainErrorCode = 10
 	// DOMAIN_ERROR_CODE_INVALID_PARENT means a document does not have exactly one valid parent.
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT DomainErrorCode = 11
 	// DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL means the pull request URL cannot be parsed.
@@ -717,8 +662,6 @@ const (
 	DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND DomainErrorCode = 17
 	// DOMAIN_ERROR_CODE_REFERENCES_EXIST means deletion is blocked by referencing records.
 	DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST DomainErrorCode = 18
-	// DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK means a pull request cannot attach to a manual task.
-	DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK DomainErrorCode = 19
 	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL means a document URL is not HTTP or HTTPS.
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL DomainErrorCode = 21
 	// DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED means a registered Markdown file could not be read.
@@ -751,14 +694,12 @@ var (
 		7:  "DOMAIN_ERROR_CODE_INVALID_DATABASE",
 		8:  "DOMAIN_ERROR_CODE_INVALID_DOCUMENT",
 		9:  "DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND",
-		10: "DOMAIN_ERROR_CODE_INVALID_KIND",
 		11: "DOMAIN_ERROR_CODE_INVALID_PARENT",
 		12: "DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL",
 		15: "DOMAIN_ERROR_CODE_INVALID_STATUS",
 		16: "DOMAIN_ERROR_CODE_INVALID_TITLE",
 		17: "DOMAIN_ERROR_CODE_NOT_FOUND",
 		18: "DOMAIN_ERROR_CODE_REFERENCES_EXIST",
-		19: "DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK",
 		21: "DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL",
 		22: "DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED",
 		23: "DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE",
@@ -779,14 +720,12 @@ var (
 		"DOMAIN_ERROR_CODE_INVALID_DATABASE":              7,
 		"DOMAIN_ERROR_CODE_INVALID_DOCUMENT":              8,
 		"DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND":         9,
-		"DOMAIN_ERROR_CODE_INVALID_KIND":                  10,
 		"DOMAIN_ERROR_CODE_INVALID_PARENT":                11,
 		"DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL":      12,
 		"DOMAIN_ERROR_CODE_INVALID_STATUS":                15,
 		"DOMAIN_ERROR_CODE_INVALID_TITLE":                 16,
 		"DOMAIN_ERROR_CODE_NOT_FOUND":                     17,
 		"DOMAIN_ERROR_CODE_REFERENCES_EXIST":              18,
-		"DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK":   19,
 		"DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL":          21,
 		"DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED":          22,
 		"DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE":            23,
@@ -810,11 +749,11 @@ func (x DomainErrorCode) String() string {
 }
 
 func (DomainErrorCode) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[10].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[9].Descriptor()
 }
 
 func (DomainErrorCode) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[10]
+	return &file_prx_v1_prx_proto_enumTypes[9]
 }
 
 func (x DomainErrorCode) Number() protoreflect.EnumNumber {
@@ -823,7 +762,7 @@ func (x DomainErrorCode) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DomainErrorCode.Descriptor instead.
 func (DomainErrorCode) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{10}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{9}
 }
 
 // GitHubAuthMethodType identifies how a GitHub token is obtained.
@@ -871,11 +810,11 @@ func (x GithubAuthMethodType) String() string {
 }
 
 func (GithubAuthMethodType) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[11].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[10].Descriptor()
 }
 
 func (GithubAuthMethodType) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[11]
+	return &file_prx_v1_prx_proto_enumTypes[10]
 }
 
 func (x GithubAuthMethodType) Number() protoreflect.EnumNumber {
@@ -884,7 +823,7 @@ func (x GithubAuthMethodType) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use GithubAuthMethodType.Descriptor instead.
 func (GithubAuthMethodType) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{11}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{10}
 }
 
 // TaskPromptKind identifies which prompt template a task was rendered with.
@@ -925,11 +864,11 @@ func (x TaskPromptKind) String() string {
 }
 
 func (TaskPromptKind) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[12].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[11].Descriptor()
 }
 
 func (TaskPromptKind) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[12]
+	return &file_prx_v1_prx_proto_enumTypes[11]
 }
 
 func (x TaskPromptKind) Number() protoreflect.EnumNumber {
@@ -938,7 +877,7 @@ func (x TaskPromptKind) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use TaskPromptKind.Descriptor instead.
 func (TaskPromptKind) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{12}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{11}
 }
 
 // DebugProblemCode identifies a problem the diagnostic report detected.
@@ -1019,11 +958,11 @@ func (x DebugProblemCode) String() string {
 }
 
 func (DebugProblemCode) Descriptor() protoreflect.EnumDescriptor {
-	return file_prx_v1_prx_proto_enumTypes[13].Descriptor()
+	return file_prx_v1_prx_proto_enumTypes[12].Descriptor()
 }
 
 func (DebugProblemCode) Type() protoreflect.EnumType {
-	return &file_prx_v1_prx_proto_enumTypes[13]
+	return &file_prx_v1_prx_proto_enumTypes[12]
 }
 
 func (x DebugProblemCode) Number() protoreflect.EnumNumber {
@@ -1032,7 +971,7 @@ func (x DebugProblemCode) Number() protoreflect.EnumNumber {
 
 // Deprecated: Use DebugProblemCode.Descriptor instead.
 func (DebugProblemCode) EnumDescriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{13}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{12}
 }
 
 // BlockedReason is the structured reason a task is not ready.
@@ -1436,9 +1375,7 @@ type Task struct {
 	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
 	// scope describes the work covered by the task.
 	Scope string `protobuf:"bytes,4,opt,name=scope,proto3" json:"scope,omitempty"`
-	// kind determines whether automatic state comes from a pull request or an implementation plan.
-	Kind TaskKind `protobuf:"varint,5,opt,name=kind,proto3,enum=prx.v1.TaskKind" json:"kind,omitempty"`
-	// status is the stored automatic/manual workflow control value.
+	// status is the stored workflow control value.
 	Status TaskStatus `protobuf:"varint,6,opt,name=status,proto3,enum=prx.v1.TaskStatus" json:"status,omitempty"`
 	// assignee is the person responsible for the task, when assigned.
 	Assignee string `protobuf:"bytes,7,opt,name=assignee,proto3" json:"assignee,omitempty"`
@@ -1514,13 +1451,6 @@ func (x *Task) GetScope() string {
 		return x.Scope
 	}
 	return ""
-}
-
-func (x *Task) GetKind() TaskKind {
-	if x != nil {
-		return x.Kind
-	}
-	return TaskKind_TASK_KIND_UNSPECIFIED
 }
 
 func (x *Task) GetStatus() TaskStatus {
@@ -2845,8 +2775,6 @@ type CreateTaskRequest struct {
 	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	// scope describes the work covered by the task.
 	Scope string `protobuf:"bytes,3,opt,name=scope,proto3" json:"scope,omitempty"`
-	// kind selects pull-request completion or manual completion; unspecified defaults to pull-request.
-	Kind TaskKind `protobuf:"varint,4,opt,name=kind,proto3,enum=prx.v1.TaskKind" json:"kind,omitempty"`
 	// assignee is the optional person responsible for the task.
 	Assignee      string `protobuf:"bytes,5,opt,name=assignee,proto3" json:"assignee,omitempty"`
 	unknownFields protoimpl.UnknownFields
@@ -2902,13 +2830,6 @@ func (x *CreateTaskRequest) GetScope() string {
 		return x.Scope
 	}
 	return ""
-}
-
-func (x *CreateTaskRequest) GetKind() TaskKind {
-	if x != nil {
-		return x.Kind
-	}
-	return TaskKind_TASK_KIND_UNSPECIFIED
 }
 
 func (x *CreateTaskRequest) GetAssignee() string {
@@ -7485,8 +7406,6 @@ type DebugData struct {
 	FeatureStatuses []*DebugCount `protobuf:"bytes,6,rep,name=feature_statuses,json=featureStatuses,proto3" json:"feature_statuses,omitempty"`
 	// task_display_states breaks tasks down by presented state.
 	TaskDisplayStates []*DebugCount `protobuf:"bytes,7,rep,name=task_display_states,json=taskDisplayStates,proto3" json:"task_display_states,omitempty"`
-	// task_kinds breaks tasks down by kind.
-	TaskKinds []*DebugCount `protobuf:"bytes,8,rep,name=task_kinds,json=taskKinds,proto3" json:"task_kinds,omitempty"`
 	// pull_request_display_states breaks pull requests down by presented state.
 	PullRequestDisplayStates []*DebugCount `protobuf:"bytes,9,rep,name=pull_request_display_states,json=pullRequestDisplayStates,proto3" json:"pull_request_display_states,omitempty"`
 	// pull_request_hosts breaks pull requests down by normalized host.
@@ -7578,13 +7497,6 @@ func (x *DebugData) GetFeatureStatuses() []*DebugCount {
 func (x *DebugData) GetTaskDisplayStates() []*DebugCount {
 	if x != nil {
 		return x.TaskDisplayStates
-	}
-	return nil
-}
-
-func (x *DebugData) GetTaskKinds() []*DebugCount {
-	if x != nil {
-		return x.TaskKinds
 	}
 	return nil
 }
@@ -8248,14 +8160,13 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0efinished_count\x18\x0f \x01(\x05R\rfinishedCount\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x10 \x01(\tR\tprojectId\x12\x1b\n" +
-	"\tread_only\x18\x11 \x01(\bR\breadOnlyJ\x04\b\x02\x10\x03R\x04slug\"\xd8\x03\n" +
+	"\tread_only\x18\x11 \x01(\bR\breadOnlyJ\x04\b\x02\x10\x03R\x04slug\"\xbe\x03\n" +
 	"\x04Task\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
 	"feature_id\x18\x02 \x01(\tR\tfeatureId\x12\x14\n" +
 	"\x05title\x18\x03 \x01(\tR\x05title\x12\x14\n" +
-	"\x05scope\x18\x04 \x01(\tR\x05scope\x12$\n" +
-	"\x04kind\x18\x05 \x01(\x0e2\x10.prx.v1.TaskKindR\x04kind\x12*\n" +
+	"\x05scope\x18\x04 \x01(\tR\x05scope\x12*\n" +
 	"\x06status\x18\x06 \x01(\x0e2\x12.prx.v1.TaskStatusR\x06status\x12\x1a\n" +
 	"\bassignee\x18\a \x01(\tR\bassignee\x12\x1d\n" +
 	"\n" +
@@ -8266,7 +8177,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	" \x01(\bR\x05ready\x12=\n" +
 	"\rdisplay_state\x18\v \x01(\x0e2\x18.prx.v1.TaskDisplayStateR\fdisplayState\x12<\n" +
 	"\x0eblocked_reason\x18\f \x01(\v2\x15.prx.v1.BlockedReasonR\rblockedReason\x126\n" +
-	"\x17has_implementation_plan\x18\r \x01(\bR\x15hasImplementationPlan\"{\n" +
+	"\x17has_implementation_plan\x18\r \x01(\bR\x15hasImplementationPlanJ\x04\b\x05\x10\x06R\x04kind\"{\n" +
 	"\n" +
 	"Dependency\x12&\n" +
 	"\x0fblocker_task_id\x18\x01 \x01(\tR\rblockerTaskId\x12&\n" +
@@ -8373,14 +8284,13 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x14DeleteFeatureRequest\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x18\n" +
 	"\acascade\x18\x02 \x01(\bR\acascade\"\x17\n" +
-	"\x15DeleteFeatureResponse\"\xa0\x01\n" +
+	"\x15DeleteFeatureResponse\"\x86\x01\n" +
 	"\x11CreateTaskRequest\x12\x1d\n" +
 	"\n" +
 	"feature_id\x18\x01 \x01(\tR\tfeatureId\x12\x14\n" +
 	"\x05title\x18\x02 \x01(\tR\x05title\x12\x14\n" +
-	"\x05scope\x18\x03 \x01(\tR\x05scope\x12$\n" +
-	"\x04kind\x18\x04 \x01(\x0e2\x10.prx.v1.TaskKindR\x04kind\x12\x1a\n" +
-	"\bassignee\x18\x05 \x01(\tR\bassignee\"6\n" +
+	"\x05scope\x18\x03 \x01(\tR\x05scope\x12\x1a\n" +
+	"\bassignee\x18\x05 \x01(\tR\bassigneeJ\x04\b\x04\x10\x05R\x04kind\"6\n" +
 	"\x12CreateTaskResponse\x12 \n" +
 	"\x04task\x18\x01 \x01(\v2\f.prx.v1.TaskR\x04task\"\xd7\x01\n" +
 	"\x11UpdateTaskRequest\x12\x0e\n" +
@@ -8700,7 +8610,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\n" +
 	"DebugCount\x12\x12\n" +
 	"\x04name\x18\x01 \x01(\tR\x04name\x12\x14\n" +
-	"\x05count\x18\x02 \x01(\x05R\x05count\"\x97\x05\n" +
+	"\x05count\x18\x02 \x01(\x05R\x05count\"\xf6\x04\n" +
 	"\tDebugData\x12\x1a\n" +
 	"\bfeatures\x18\x01 \x01(\x05R\bfeatures\x12\x14\n" +
 	"\x05tasks\x18\x02 \x01(\x05R\x05tasks\x12\"\n" +
@@ -8708,16 +8618,15 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\rpull_requests\x18\x04 \x01(\x05R\fpullRequests\x12\x1c\n" +
 	"\tdocuments\x18\x05 \x01(\x05R\tdocuments\x12=\n" +
 	"\x10feature_statuses\x18\x06 \x03(\v2\x12.prx.v1.DebugCountR\x0ffeatureStatuses\x12B\n" +
-	"\x13task_display_states\x18\a \x03(\v2\x12.prx.v1.DebugCountR\x11taskDisplayStates\x121\n" +
-	"\n" +
-	"task_kinds\x18\b \x03(\v2\x12.prx.v1.DebugCountR\ttaskKinds\x12Q\n" +
+	"\x13task_display_states\x18\a \x03(\v2\x12.prx.v1.DebugCountR\x11taskDisplayStates\x12Q\n" +
 	"\x1bpull_request_display_states\x18\t \x03(\v2\x12.prx.v1.DebugCountR\x18pullRequestDisplayStates\x12@\n" +
 	"\x12pull_request_hosts\x18\n" +
 	" \x03(\v2\x12.prx.v1.DebugCountR\x10pullRequestHosts\x129\n" +
 	"\x0edocument_kinds\x18\v \x03(\v2\x12.prx.v1.DebugCountR\rdocumentKinds\x12\x14\n" +
 	"\x05error\x18\f \x01(\tR\x05error\x12\x1a\n" +
 	"\bprojects\x18\r \x01(\x05R\bprojects\x129\n" +
-	"\x0eproject_states\x18\x0e \x03(\v2\x12.prx.v1.DebugCountR\rprojectStates\">\n" +
+	"\x0eproject_states\x18\x0e \x03(\v2\x12.prx.v1.DebugCountR\rprojectStatesJ\x04\b\b\x10\tR\n" +
+	"task_kinds\">\n" +
 	"\x10DebugSyncFailure\x12\x14\n" +
 	"\x05scope\x18\x01 \x01(\tR\x05scope\x12\x14\n" +
 	"\x05count\x18\x02 \x01(\x05R\x05count\"\x86\x01\n" +
@@ -8771,11 +8680,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x15FEATURE_STATUS_PAUSED\x10\x02\x12\x1c\n" +
 	"\x18FEATURE_STATUS_COMPLETED\x10\x03\x12\x1c\n" +
 	"\x18FEATURE_STATUS_CANCELLED\x10\x04\x12\x17\n" +
-	"\x13FEATURE_STATUS_AUTO\x10\x05*W\n" +
-	"\bTaskKind\x12\x19\n" +
-	"\x15TASK_KIND_UNSPECIFIED\x10\x00\x12\x1a\n" +
-	"\x16TASK_KIND_PULL_REQUEST\x10\x01\x12\x14\n" +
-	"\x10TASK_KIND_MANUAL\x10\x02*\xac\x01\n" +
+	"\x13FEATURE_STATUS_AUTO\x10\x05*\xac\x01\n" +
 	"\n" +
 	"TaskStatus\x12\x1b\n" +
 	"\x17TASK_STATUS_UNSPECIFIED\x10\x00\x12\x14\n" +
@@ -8837,7 +8742,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x11BlockedReasonCode\x12#\n" +
 	"\x1fBLOCKED_REASON_CODE_UNSPECIFIED\x10\x00\x122\n" +
 	".BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE\x10\x01\x12+\n" +
-	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03\"\x04\b\x02\x10\x02*\xa6\t\n" +
+	"'BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER\x10\x03\"\x04\b\x02\x10\x02*\xaa\t\n" +
 	"\x0fDomainErrorCode\x12!\n" +
 	"\x1dDOMAIN_ERROR_CODE_UNSPECIFIED\x10\x00\x12.\n" +
 	"*DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY\x10\x02\x12\x1b\n" +
@@ -8847,16 +8752,13 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x1dDOMAIN_ERROR_CODE_GITHUB_AUTH\x10\x06\x12&\n" +
 	"\"DOMAIN_ERROR_CODE_INVALID_DATABASE\x10\a\x12&\n" +
 	"\"DOMAIN_ERROR_CODE_INVALID_DOCUMENT\x10\b\x12+\n" +
-	"'DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND\x10\t\x12\"\n" +
-	"\x1eDOMAIN_ERROR_CODE_INVALID_KIND\x10\n" +
-	"\x12$\n" +
+	"'DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND\x10\t\x12$\n" +
 	" DOMAIN_ERROR_CODE_INVALID_PARENT\x10\v\x12.\n" +
 	"*DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL\x10\f\x12$\n" +
 	" DOMAIN_ERROR_CODE_INVALID_STATUS\x10\x0f\x12#\n" +
 	"\x1fDOMAIN_ERROR_CODE_INVALID_TITLE\x10\x10\x12\x1f\n" +
 	"\x1bDOMAIN_ERROR_CODE_NOT_FOUND\x10\x11\x12&\n" +
-	"\"DOMAIN_ERROR_CODE_REFERENCES_EXIST\x10\x12\x121\n" +
-	"-DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK\x10\x13\x12*\n" +
+	"\"DOMAIN_ERROR_CODE_REFERENCES_EXIST\x10\x12\x12*\n" +
 	"&DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL\x10\x15\x12*\n" +
 	"&DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED\x10\x16\x12(\n" +
 	"$DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE\x10\x17\x12$\n" +
@@ -8865,7 +8767,9 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"/DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE\x10\x1a\x12'\n" +
 	"#DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT\x10\x1b\x123\n" +
 	"/DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN\x10\x1c\x12(\n" +
-	"$DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY\x10\x1d\"\x04\b\r\x10\r\"\x04\b\x0e\x10\x0e\"\x04\b\x14\x10\x14*\x1eDOMAIN_ERROR_CODE_INVALID_SEED*\x1eDOMAIN_ERROR_CODE_INVALID_SLUG*\xd6\x01\n" +
+	"$DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY\x10\x1d\"\x04\b\n" +
+	"\x10\n" +
+	"\"\x04\b\r\x10\r\"\x04\b\x0e\x10\x0e\"\x04\b\x13\x10\x13\"\x04\b\x14\x10\x14*\x1eDOMAIN_ERROR_CODE_INVALID_KIND*\x1eDOMAIN_ERROR_CODE_INVALID_SEED*\x1eDOMAIN_ERROR_CODE_INVALID_SLUG*-DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK*\xd6\x01\n" +
 	"\x14GithubAuthMethodType\x12'\n" +
 	"#GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED\x10\x00\x12$\n" +
 	" GITHUB_AUTH_METHOD_TYPE_KEYCHAIN\x10\x01\x12'\n" +
@@ -8947,295 +8851,291 @@ func file_prx_v1_prx_proto_rawDescGZIP() []byte {
 	return file_prx_v1_prx_proto_rawDescData
 }
 
-var file_prx_v1_prx_proto_enumTypes = make([]protoimpl.EnumInfo, 14)
+var file_prx_v1_prx_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
 var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 107)
 var file_prx_v1_prx_proto_goTypes = []any{
 	(FeatureStatus)(0),                       // 0: prx.v1.FeatureStatus
-	(TaskKind)(0),                            // 1: prx.v1.TaskKind
-	(TaskStatus)(0),                          // 2: prx.v1.TaskStatus
-	(TaskDisplayState)(0),                    // 3: prx.v1.TaskDisplayState
-	(PullRequestState)(0),                    // 4: prx.v1.PullRequestState
-	(ReviewState)(0),                         // 5: prx.v1.ReviewState
-	(Mergeability)(0),                        // 6: prx.v1.Mergeability
-	(PullRequestDisplayState)(0),             // 7: prx.v1.PullRequestDisplayState
-	(DocumentKind)(0),                        // 8: prx.v1.DocumentKind
-	(BlockedReasonCode)(0),                   // 9: prx.v1.BlockedReasonCode
-	(DomainErrorCode)(0),                     // 10: prx.v1.DomainErrorCode
-	(GithubAuthMethodType)(0),                // 11: prx.v1.GithubAuthMethodType
-	(TaskPromptKind)(0),                      // 12: prx.v1.TaskPromptKind
-	(DebugProblemCode)(0),                    // 13: prx.v1.DebugProblemCode
-	(*BlockedReason)(nil),                    // 14: prx.v1.BlockedReason
-	(*ErrorDetail)(nil),                      // 15: prx.v1.ErrorDetail
-	(*Project)(nil),                          // 16: prx.v1.Project
-	(*Feature)(nil),                          // 17: prx.v1.Feature
-	(*Task)(nil),                             // 18: prx.v1.Task
-	(*Dependency)(nil),                       // 19: prx.v1.Dependency
-	(*PullRequest)(nil),                      // 20: prx.v1.PullRequest
-	(*Document)(nil),                         // 21: prx.v1.Document
-	(*Snapshot)(nil),                         // 22: prx.v1.Snapshot
-	(*GetSnapshotRequest)(nil),               // 23: prx.v1.GetSnapshotRequest
-	(*GetSnapshotResponse)(nil),              // 24: prx.v1.GetSnapshotResponse
-	(*CreateProjectRequest)(nil),             // 25: prx.v1.CreateProjectRequest
-	(*CreateProjectResponse)(nil),            // 26: prx.v1.CreateProjectResponse
-	(*UpdateProjectRequest)(nil),             // 27: prx.v1.UpdateProjectRequest
-	(*UpdateProjectResponse)(nil),            // 28: prx.v1.UpdateProjectResponse
-	(*DeleteProjectRequest)(nil),             // 29: prx.v1.DeleteProjectRequest
-	(*DeleteProjectResponse)(nil),            // 30: prx.v1.DeleteProjectResponse
-	(*CreateFeatureRequest)(nil),             // 31: prx.v1.CreateFeatureRequest
-	(*CreateFeatureResponse)(nil),            // 32: prx.v1.CreateFeatureResponse
-	(*UpdateFeatureRequest)(nil),             // 33: prx.v1.UpdateFeatureRequest
-	(*UpdateFeatureResponse)(nil),            // 34: prx.v1.UpdateFeatureResponse
-	(*DeleteFeatureRequest)(nil),             // 35: prx.v1.DeleteFeatureRequest
-	(*DeleteFeatureResponse)(nil),            // 36: prx.v1.DeleteFeatureResponse
-	(*CreateTaskRequest)(nil),                // 37: prx.v1.CreateTaskRequest
-	(*CreateTaskResponse)(nil),               // 38: prx.v1.CreateTaskResponse
-	(*UpdateTaskRequest)(nil),                // 39: prx.v1.UpdateTaskRequest
-	(*UpdateTaskResponse)(nil),               // 40: prx.v1.UpdateTaskResponse
-	(*DeleteTaskRequest)(nil),                // 41: prx.v1.DeleteTaskRequest
-	(*DeleteTaskResponse)(nil),               // 42: prx.v1.DeleteTaskResponse
-	(*AddDependencyRequest)(nil),             // 43: prx.v1.AddDependencyRequest
-	(*AddDependencyResponse)(nil),            // 44: prx.v1.AddDependencyResponse
-	(*RemoveDependencyRequest)(nil),          // 45: prx.v1.RemoveDependencyRequest
-	(*RemoveDependencyResponse)(nil),         // 46: prx.v1.RemoveDependencyResponse
-	(*AttachPullRequestRequest)(nil),         // 47: prx.v1.AttachPullRequestRequest
-	(*AttachPullRequestResponse)(nil),        // 48: prx.v1.AttachPullRequestResponse
-	(*DetachPullRequestRequest)(nil),         // 49: prx.v1.DetachPullRequestRequest
-	(*DetachPullRequestResponse)(nil),        // 50: prx.v1.DetachPullRequestResponse
-	(*AddDocumentRequest)(nil),               // 51: prx.v1.AddDocumentRequest
-	(*AddDocumentResponse)(nil),              // 52: prx.v1.AddDocumentResponse
-	(*GetDocumentRequest)(nil),               // 53: prx.v1.GetDocumentRequest
-	(*GetDocumentResponse)(nil),              // 54: prx.v1.GetDocumentResponse
-	(*UpdateDocumentRequest)(nil),            // 55: prx.v1.UpdateDocumentRequest
-	(*UpdateDocumentResponse)(nil),           // 56: prx.v1.UpdateDocumentResponse
-	(*DeleteDocumentRequest)(nil),            // 57: prx.v1.DeleteDocumentRequest
-	(*DeleteDocumentResponse)(nil),           // 58: prx.v1.DeleteDocumentResponse
-	(*ReadDocumentContentRequest)(nil),       // 59: prx.v1.ReadDocumentContentRequest
-	(*ReadDocumentContentResponse)(nil),      // 60: prx.v1.ReadDocumentContentResponse
-	(*SelectLocalFileRequest)(nil),           // 61: prx.v1.SelectLocalFileRequest
-	(*SelectLocalFileResponse)(nil),          // 62: prx.v1.SelectLocalFileResponse
-	(*GitHubHost)(nil),                       // 63: prx.v1.GitHubHost
-	(*GitHubAuthMethod)(nil),                 // 64: prx.v1.GitHubAuthMethod
-	(*GitHubConfig)(nil),                     // 65: prx.v1.GitHubConfig
-	(*GetConfigRequest)(nil),                 // 66: prx.v1.GetConfigRequest
-	(*GetConfigResponse)(nil),                // 67: prx.v1.GetConfigResponse
-	(*UpdateGitHubSyncConfigRequest)(nil),    // 68: prx.v1.UpdateGitHubSyncConfigRequest
-	(*UpdateGitHubSyncConfigResponse)(nil),   // 69: prx.v1.UpdateGitHubSyncConfigResponse
-	(*AddGitHubHostRequest)(nil),             // 70: prx.v1.AddGitHubHostRequest
-	(*AddGitHubHostResponse)(nil),            // 71: prx.v1.AddGitHubHostResponse
-	(*UpdateGitHubHostRequest)(nil),          // 72: prx.v1.UpdateGitHubHostRequest
-	(*UpdateGitHubHostResponse)(nil),         // 73: prx.v1.UpdateGitHubHostResponse
-	(*DeleteGitHubHostRequest)(nil),          // 74: prx.v1.DeleteGitHubHostRequest
-	(*DeleteGitHubHostResponse)(nil),         // 75: prx.v1.DeleteGitHubHostResponse
-	(*AddGitHubAuthMethodRequest)(nil),       // 76: prx.v1.AddGitHubAuthMethodRequest
-	(*AddGitHubAuthMethodResponse)(nil),      // 77: prx.v1.AddGitHubAuthMethodResponse
-	(*UpdateGitHubAuthMethodRequest)(nil),    // 78: prx.v1.UpdateGitHubAuthMethodRequest
-	(*UpdateGitHubAuthMethodResponse)(nil),   // 79: prx.v1.UpdateGitHubAuthMethodResponse
-	(*DeleteGitHubAuthMethodRequest)(nil),    // 80: prx.v1.DeleteGitHubAuthMethodRequest
-	(*DeleteGitHubAuthMethodResponse)(nil),   // 81: prx.v1.DeleteGitHubAuthMethodResponse
-	(*ReorderGitHubAuthMethodsRequest)(nil),  // 82: prx.v1.ReorderGitHubAuthMethodsRequest
-	(*ReorderGitHubAuthMethodsResponse)(nil), // 83: prx.v1.ReorderGitHubAuthMethodsResponse
-	(*ValidateConfigRequest)(nil),            // 84: prx.v1.ValidateConfigRequest
-	(*ValidateConfigResponse)(nil),           // 85: prx.v1.ValidateConfigResponse
-	(*PromptTemplates)(nil),                  // 86: prx.v1.PromptTemplates
-	(*GetPromptTemplatesRequest)(nil),        // 87: prx.v1.GetPromptTemplatesRequest
-	(*GetPromptTemplatesResponse)(nil),       // 88: prx.v1.GetPromptTemplatesResponse
-	(*UpdatePromptTemplatesRequest)(nil),     // 89: prx.v1.UpdatePromptTemplatesRequest
-	(*UpdatePromptTemplatesResponse)(nil),    // 90: prx.v1.UpdatePromptTemplatesResponse
-	(*GetTaskPromptRequest)(nil),             // 91: prx.v1.GetTaskPromptRequest
-	(*GetTaskPromptResponse)(nil),            // 92: prx.v1.GetTaskPromptResponse
-	(*SyncRequest)(nil),                      // 93: prx.v1.SyncRequest
-	(*SyncResponse)(nil),                     // 94: prx.v1.SyncResponse
-	(*GitHubSyncStatus)(nil),                 // 95: prx.v1.GitHubSyncStatus
-	(*GetGitHubSyncStatusRequest)(nil),       // 96: prx.v1.GetGitHubSyncStatusRequest
-	(*GetGitHubSyncStatusResponse)(nil),      // 97: prx.v1.GetGitHubSyncStatusResponse
-	(*SyncGitHubIfDueRequest)(nil),           // 98: prx.v1.SyncGitHubIfDueRequest
-	(*SyncGitHubIfDueResponse)(nil),          // 99: prx.v1.SyncGitHubIfDueResponse
-	(*ValidateRequest)(nil),                  // 100: prx.v1.ValidateRequest
-	(*ValidateResponse)(nil),                 // 101: prx.v1.ValidateResponse
-	(*DebugProblem)(nil),                     // 102: prx.v1.DebugProblem
-	(*DebugBuild)(nil),                       // 103: prx.v1.DebugBuild
-	(*DebugRuntime)(nil),                     // 104: prx.v1.DebugRuntime
-	(*DebugEnvironmentVariable)(nil),         // 105: prx.v1.DebugEnvironmentVariable
-	(*DebugPaths)(nil),                       // 106: prx.v1.DebugPaths
-	(*DebugConfigHost)(nil),                  // 107: prx.v1.DebugConfigHost
-	(*DebugConfigAuthMethod)(nil),            // 108: prx.v1.DebugConfigAuthMethod
-	(*DebugConfig)(nil),                      // 109: prx.v1.DebugConfig
-	(*DebugDatabaseFile)(nil),                // 110: prx.v1.DebugDatabaseFile
-	(*DebugStorage)(nil),                     // 111: prx.v1.DebugStorage
-	(*DebugCount)(nil),                       // 112: prx.v1.DebugCount
-	(*DebugData)(nil),                        // 113: prx.v1.DebugData
-	(*DebugSyncFailure)(nil),                 // 114: prx.v1.DebugSyncFailure
-	(*DebugErrorGroup)(nil),                  // 115: prx.v1.DebugErrorGroup
-	(*DebugAuthCacheEntry)(nil),              // 116: prx.v1.DebugAuthCacheEntry
-	(*DebugGitHubSync)(nil),                  // 117: prx.v1.DebugGitHubSync
-	(*DebugReport)(nil),                      // 118: prx.v1.DebugReport
-	(*GetDebugReportRequest)(nil),            // 119: prx.v1.GetDebugReportRequest
-	(*GetDebugReportResponse)(nil),           // 120: prx.v1.GetDebugReportResponse
+	(TaskStatus)(0),                          // 1: prx.v1.TaskStatus
+	(TaskDisplayState)(0),                    // 2: prx.v1.TaskDisplayState
+	(PullRequestState)(0),                    // 3: prx.v1.PullRequestState
+	(ReviewState)(0),                         // 4: prx.v1.ReviewState
+	(Mergeability)(0),                        // 5: prx.v1.Mergeability
+	(PullRequestDisplayState)(0),             // 6: prx.v1.PullRequestDisplayState
+	(DocumentKind)(0),                        // 7: prx.v1.DocumentKind
+	(BlockedReasonCode)(0),                   // 8: prx.v1.BlockedReasonCode
+	(DomainErrorCode)(0),                     // 9: prx.v1.DomainErrorCode
+	(GithubAuthMethodType)(0),                // 10: prx.v1.GithubAuthMethodType
+	(TaskPromptKind)(0),                      // 11: prx.v1.TaskPromptKind
+	(DebugProblemCode)(0),                    // 12: prx.v1.DebugProblemCode
+	(*BlockedReason)(nil),                    // 13: prx.v1.BlockedReason
+	(*ErrorDetail)(nil),                      // 14: prx.v1.ErrorDetail
+	(*Project)(nil),                          // 15: prx.v1.Project
+	(*Feature)(nil),                          // 16: prx.v1.Feature
+	(*Task)(nil),                             // 17: prx.v1.Task
+	(*Dependency)(nil),                       // 18: prx.v1.Dependency
+	(*PullRequest)(nil),                      // 19: prx.v1.PullRequest
+	(*Document)(nil),                         // 20: prx.v1.Document
+	(*Snapshot)(nil),                         // 21: prx.v1.Snapshot
+	(*GetSnapshotRequest)(nil),               // 22: prx.v1.GetSnapshotRequest
+	(*GetSnapshotResponse)(nil),              // 23: prx.v1.GetSnapshotResponse
+	(*CreateProjectRequest)(nil),             // 24: prx.v1.CreateProjectRequest
+	(*CreateProjectResponse)(nil),            // 25: prx.v1.CreateProjectResponse
+	(*UpdateProjectRequest)(nil),             // 26: prx.v1.UpdateProjectRequest
+	(*UpdateProjectResponse)(nil),            // 27: prx.v1.UpdateProjectResponse
+	(*DeleteProjectRequest)(nil),             // 28: prx.v1.DeleteProjectRequest
+	(*DeleteProjectResponse)(nil),            // 29: prx.v1.DeleteProjectResponse
+	(*CreateFeatureRequest)(nil),             // 30: prx.v1.CreateFeatureRequest
+	(*CreateFeatureResponse)(nil),            // 31: prx.v1.CreateFeatureResponse
+	(*UpdateFeatureRequest)(nil),             // 32: prx.v1.UpdateFeatureRequest
+	(*UpdateFeatureResponse)(nil),            // 33: prx.v1.UpdateFeatureResponse
+	(*DeleteFeatureRequest)(nil),             // 34: prx.v1.DeleteFeatureRequest
+	(*DeleteFeatureResponse)(nil),            // 35: prx.v1.DeleteFeatureResponse
+	(*CreateTaskRequest)(nil),                // 36: prx.v1.CreateTaskRequest
+	(*CreateTaskResponse)(nil),               // 37: prx.v1.CreateTaskResponse
+	(*UpdateTaskRequest)(nil),                // 38: prx.v1.UpdateTaskRequest
+	(*UpdateTaskResponse)(nil),               // 39: prx.v1.UpdateTaskResponse
+	(*DeleteTaskRequest)(nil),                // 40: prx.v1.DeleteTaskRequest
+	(*DeleteTaskResponse)(nil),               // 41: prx.v1.DeleteTaskResponse
+	(*AddDependencyRequest)(nil),             // 42: prx.v1.AddDependencyRequest
+	(*AddDependencyResponse)(nil),            // 43: prx.v1.AddDependencyResponse
+	(*RemoveDependencyRequest)(nil),          // 44: prx.v1.RemoveDependencyRequest
+	(*RemoveDependencyResponse)(nil),         // 45: prx.v1.RemoveDependencyResponse
+	(*AttachPullRequestRequest)(nil),         // 46: prx.v1.AttachPullRequestRequest
+	(*AttachPullRequestResponse)(nil),        // 47: prx.v1.AttachPullRequestResponse
+	(*DetachPullRequestRequest)(nil),         // 48: prx.v1.DetachPullRequestRequest
+	(*DetachPullRequestResponse)(nil),        // 49: prx.v1.DetachPullRequestResponse
+	(*AddDocumentRequest)(nil),               // 50: prx.v1.AddDocumentRequest
+	(*AddDocumentResponse)(nil),              // 51: prx.v1.AddDocumentResponse
+	(*GetDocumentRequest)(nil),               // 52: prx.v1.GetDocumentRequest
+	(*GetDocumentResponse)(nil),              // 53: prx.v1.GetDocumentResponse
+	(*UpdateDocumentRequest)(nil),            // 54: prx.v1.UpdateDocumentRequest
+	(*UpdateDocumentResponse)(nil),           // 55: prx.v1.UpdateDocumentResponse
+	(*DeleteDocumentRequest)(nil),            // 56: prx.v1.DeleteDocumentRequest
+	(*DeleteDocumentResponse)(nil),           // 57: prx.v1.DeleteDocumentResponse
+	(*ReadDocumentContentRequest)(nil),       // 58: prx.v1.ReadDocumentContentRequest
+	(*ReadDocumentContentResponse)(nil),      // 59: prx.v1.ReadDocumentContentResponse
+	(*SelectLocalFileRequest)(nil),           // 60: prx.v1.SelectLocalFileRequest
+	(*SelectLocalFileResponse)(nil),          // 61: prx.v1.SelectLocalFileResponse
+	(*GitHubHost)(nil),                       // 62: prx.v1.GitHubHost
+	(*GitHubAuthMethod)(nil),                 // 63: prx.v1.GitHubAuthMethod
+	(*GitHubConfig)(nil),                     // 64: prx.v1.GitHubConfig
+	(*GetConfigRequest)(nil),                 // 65: prx.v1.GetConfigRequest
+	(*GetConfigResponse)(nil),                // 66: prx.v1.GetConfigResponse
+	(*UpdateGitHubSyncConfigRequest)(nil),    // 67: prx.v1.UpdateGitHubSyncConfigRequest
+	(*UpdateGitHubSyncConfigResponse)(nil),   // 68: prx.v1.UpdateGitHubSyncConfigResponse
+	(*AddGitHubHostRequest)(nil),             // 69: prx.v1.AddGitHubHostRequest
+	(*AddGitHubHostResponse)(nil),            // 70: prx.v1.AddGitHubHostResponse
+	(*UpdateGitHubHostRequest)(nil),          // 71: prx.v1.UpdateGitHubHostRequest
+	(*UpdateGitHubHostResponse)(nil),         // 72: prx.v1.UpdateGitHubHostResponse
+	(*DeleteGitHubHostRequest)(nil),          // 73: prx.v1.DeleteGitHubHostRequest
+	(*DeleteGitHubHostResponse)(nil),         // 74: prx.v1.DeleteGitHubHostResponse
+	(*AddGitHubAuthMethodRequest)(nil),       // 75: prx.v1.AddGitHubAuthMethodRequest
+	(*AddGitHubAuthMethodResponse)(nil),      // 76: prx.v1.AddGitHubAuthMethodResponse
+	(*UpdateGitHubAuthMethodRequest)(nil),    // 77: prx.v1.UpdateGitHubAuthMethodRequest
+	(*UpdateGitHubAuthMethodResponse)(nil),   // 78: prx.v1.UpdateGitHubAuthMethodResponse
+	(*DeleteGitHubAuthMethodRequest)(nil),    // 79: prx.v1.DeleteGitHubAuthMethodRequest
+	(*DeleteGitHubAuthMethodResponse)(nil),   // 80: prx.v1.DeleteGitHubAuthMethodResponse
+	(*ReorderGitHubAuthMethodsRequest)(nil),  // 81: prx.v1.ReorderGitHubAuthMethodsRequest
+	(*ReorderGitHubAuthMethodsResponse)(nil), // 82: prx.v1.ReorderGitHubAuthMethodsResponse
+	(*ValidateConfigRequest)(nil),            // 83: prx.v1.ValidateConfigRequest
+	(*ValidateConfigResponse)(nil),           // 84: prx.v1.ValidateConfigResponse
+	(*PromptTemplates)(nil),                  // 85: prx.v1.PromptTemplates
+	(*GetPromptTemplatesRequest)(nil),        // 86: prx.v1.GetPromptTemplatesRequest
+	(*GetPromptTemplatesResponse)(nil),       // 87: prx.v1.GetPromptTemplatesResponse
+	(*UpdatePromptTemplatesRequest)(nil),     // 88: prx.v1.UpdatePromptTemplatesRequest
+	(*UpdatePromptTemplatesResponse)(nil),    // 89: prx.v1.UpdatePromptTemplatesResponse
+	(*GetTaskPromptRequest)(nil),             // 90: prx.v1.GetTaskPromptRequest
+	(*GetTaskPromptResponse)(nil),            // 91: prx.v1.GetTaskPromptResponse
+	(*SyncRequest)(nil),                      // 92: prx.v1.SyncRequest
+	(*SyncResponse)(nil),                     // 93: prx.v1.SyncResponse
+	(*GitHubSyncStatus)(nil),                 // 94: prx.v1.GitHubSyncStatus
+	(*GetGitHubSyncStatusRequest)(nil),       // 95: prx.v1.GetGitHubSyncStatusRequest
+	(*GetGitHubSyncStatusResponse)(nil),      // 96: prx.v1.GetGitHubSyncStatusResponse
+	(*SyncGitHubIfDueRequest)(nil),           // 97: prx.v1.SyncGitHubIfDueRequest
+	(*SyncGitHubIfDueResponse)(nil),          // 98: prx.v1.SyncGitHubIfDueResponse
+	(*ValidateRequest)(nil),                  // 99: prx.v1.ValidateRequest
+	(*ValidateResponse)(nil),                 // 100: prx.v1.ValidateResponse
+	(*DebugProblem)(nil),                     // 101: prx.v1.DebugProblem
+	(*DebugBuild)(nil),                       // 102: prx.v1.DebugBuild
+	(*DebugRuntime)(nil),                     // 103: prx.v1.DebugRuntime
+	(*DebugEnvironmentVariable)(nil),         // 104: prx.v1.DebugEnvironmentVariable
+	(*DebugPaths)(nil),                       // 105: prx.v1.DebugPaths
+	(*DebugConfigHost)(nil),                  // 106: prx.v1.DebugConfigHost
+	(*DebugConfigAuthMethod)(nil),            // 107: prx.v1.DebugConfigAuthMethod
+	(*DebugConfig)(nil),                      // 108: prx.v1.DebugConfig
+	(*DebugDatabaseFile)(nil),                // 109: prx.v1.DebugDatabaseFile
+	(*DebugStorage)(nil),                     // 110: prx.v1.DebugStorage
+	(*DebugCount)(nil),                       // 111: prx.v1.DebugCount
+	(*DebugData)(nil),                        // 112: prx.v1.DebugData
+	(*DebugSyncFailure)(nil),                 // 113: prx.v1.DebugSyncFailure
+	(*DebugErrorGroup)(nil),                  // 114: prx.v1.DebugErrorGroup
+	(*DebugAuthCacheEntry)(nil),              // 115: prx.v1.DebugAuthCacheEntry
+	(*DebugGitHubSync)(nil),                  // 116: prx.v1.DebugGitHubSync
+	(*DebugReport)(nil),                      // 117: prx.v1.DebugReport
+	(*GetDebugReportRequest)(nil),            // 118: prx.v1.GetDebugReportRequest
+	(*GetDebugReportResponse)(nil),           // 119: prx.v1.GetDebugReportResponse
 }
 var file_prx_v1_prx_proto_depIdxs = []int32{
-	9,   // 0: prx.v1.BlockedReason.code:type_name -> prx.v1.BlockedReasonCode
-	10,  // 1: prx.v1.ErrorDetail.code:type_name -> prx.v1.DomainErrorCode
+	8,   // 0: prx.v1.BlockedReason.code:type_name -> prx.v1.BlockedReasonCode
+	9,   // 1: prx.v1.ErrorDetail.code:type_name -> prx.v1.DomainErrorCode
 	0,   // 2: prx.v1.Feature.status:type_name -> prx.v1.FeatureStatus
 	0,   // 3: prx.v1.Feature.display_status:type_name -> prx.v1.FeatureStatus
-	1,   // 4: prx.v1.Task.kind:type_name -> prx.v1.TaskKind
-	2,   // 5: prx.v1.Task.status:type_name -> prx.v1.TaskStatus
-	3,   // 6: prx.v1.Task.display_state:type_name -> prx.v1.TaskDisplayState
-	14,  // 7: prx.v1.Task.blocked_reason:type_name -> prx.v1.BlockedReason
-	4,   // 8: prx.v1.PullRequest.state:type_name -> prx.v1.PullRequestState
-	5,   // 9: prx.v1.PullRequest.review_state:type_name -> prx.v1.ReviewState
-	6,   // 10: prx.v1.PullRequest.mergeability:type_name -> prx.v1.Mergeability
-	7,   // 11: prx.v1.PullRequest.display_state:type_name -> prx.v1.PullRequestDisplayState
-	8,   // 12: prx.v1.Document.kind:type_name -> prx.v1.DocumentKind
-	17,  // 13: prx.v1.Snapshot.features:type_name -> prx.v1.Feature
-	18,  // 14: prx.v1.Snapshot.tasks:type_name -> prx.v1.Task
-	19,  // 15: prx.v1.Snapshot.dependencies:type_name -> prx.v1.Dependency
-	20,  // 16: prx.v1.Snapshot.pull_requests:type_name -> prx.v1.PullRequest
-	21,  // 17: prx.v1.Snapshot.documents:type_name -> prx.v1.Document
-	18,  // 18: prx.v1.Snapshot.ready_tasks:type_name -> prx.v1.Task
-	18,  // 19: prx.v1.Snapshot.review_waiting_tasks:type_name -> prx.v1.Task
-	18,  // 20: prx.v1.Snapshot.conflict_tasks:type_name -> prx.v1.Task
-	18,  // 21: prx.v1.Snapshot.stale_tasks:type_name -> prx.v1.Task
-	16,  // 22: prx.v1.Snapshot.projects:type_name -> prx.v1.Project
-	22,  // 23: prx.v1.GetSnapshotResponse.snapshot:type_name -> prx.v1.Snapshot
-	16,  // 24: prx.v1.CreateProjectResponse.project:type_name -> prx.v1.Project
-	16,  // 25: prx.v1.UpdateProjectResponse.project:type_name -> prx.v1.Project
-	17,  // 26: prx.v1.CreateFeatureResponse.feature:type_name -> prx.v1.Feature
-	0,   // 27: prx.v1.UpdateFeatureRequest.status:type_name -> prx.v1.FeatureStatus
-	17,  // 28: prx.v1.UpdateFeatureResponse.feature:type_name -> prx.v1.Feature
-	1,   // 29: prx.v1.CreateTaskRequest.kind:type_name -> prx.v1.TaskKind
-	18,  // 30: prx.v1.CreateTaskResponse.task:type_name -> prx.v1.Task
-	2,   // 31: prx.v1.UpdateTaskRequest.status:type_name -> prx.v1.TaskStatus
-	18,  // 32: prx.v1.UpdateTaskResponse.task:type_name -> prx.v1.Task
-	19,  // 33: prx.v1.AddDependencyResponse.dependency:type_name -> prx.v1.Dependency
-	20,  // 34: prx.v1.AttachPullRequestResponse.pull_request:type_name -> prx.v1.PullRequest
-	21,  // 35: prx.v1.AddDocumentResponse.document:type_name -> prx.v1.Document
-	21,  // 36: prx.v1.GetDocumentResponse.document:type_name -> prx.v1.Document
-	21,  // 37: prx.v1.UpdateDocumentResponse.document:type_name -> prx.v1.Document
-	11,  // 38: prx.v1.GitHubAuthMethod.type:type_name -> prx.v1.GithubAuthMethodType
-	63,  // 39: prx.v1.GitHubConfig.hosts:type_name -> prx.v1.GitHubHost
-	64,  // 40: prx.v1.GitHubConfig.auth_methods:type_name -> prx.v1.GitHubAuthMethod
-	65,  // 41: prx.v1.GetConfigResponse.config:type_name -> prx.v1.GitHubConfig
-	65,  // 42: prx.v1.UpdateGitHubSyncConfigResponse.config:type_name -> prx.v1.GitHubConfig
-	63,  // 43: prx.v1.AddGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
-	63,  // 44: prx.v1.UpdateGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
-	11,  // 45: prx.v1.AddGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
-	64,  // 46: prx.v1.AddGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
-	11,  // 47: prx.v1.UpdateGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
-	64,  // 48: prx.v1.UpdateGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
-	64,  // 49: prx.v1.ReorderGitHubAuthMethodsResponse.auth_methods:type_name -> prx.v1.GitHubAuthMethod
-	86,  // 50: prx.v1.GetPromptTemplatesResponse.templates:type_name -> prx.v1.PromptTemplates
-	86,  // 51: prx.v1.GetPromptTemplatesResponse.built_in:type_name -> prx.v1.PromptTemplates
-	86,  // 52: prx.v1.UpdatePromptTemplatesResponse.templates:type_name -> prx.v1.PromptTemplates
-	12,  // 53: prx.v1.GetTaskPromptResponse.kind:type_name -> prx.v1.TaskPromptKind
-	95,  // 54: prx.v1.GetGitHubSyncStatusResponse.status:type_name -> prx.v1.GitHubSyncStatus
-	95,  // 55: prx.v1.SyncGitHubIfDueResponse.status:type_name -> prx.v1.GitHubSyncStatus
-	13,  // 56: prx.v1.DebugProblem.code:type_name -> prx.v1.DebugProblemCode
-	105, // 57: prx.v1.DebugPaths.environment_variables:type_name -> prx.v1.DebugEnvironmentVariable
-	107, // 58: prx.v1.DebugConfig.hosts:type_name -> prx.v1.DebugConfigHost
-	108, // 59: prx.v1.DebugConfig.auth_methods:type_name -> prx.v1.DebugConfigAuthMethod
-	110, // 60: prx.v1.DebugStorage.database_file:type_name -> prx.v1.DebugDatabaseFile
-	112, // 61: prx.v1.DebugData.feature_statuses:type_name -> prx.v1.DebugCount
-	112, // 62: prx.v1.DebugData.task_display_states:type_name -> prx.v1.DebugCount
-	112, // 63: prx.v1.DebugData.task_kinds:type_name -> prx.v1.DebugCount
-	112, // 64: prx.v1.DebugData.pull_request_display_states:type_name -> prx.v1.DebugCount
-	112, // 65: prx.v1.DebugData.pull_request_hosts:type_name -> prx.v1.DebugCount
-	112, // 66: prx.v1.DebugData.document_kinds:type_name -> prx.v1.DebugCount
-	112, // 67: prx.v1.DebugData.project_states:type_name -> prx.v1.DebugCount
-	95,  // 68: prx.v1.DebugGitHubSync.status:type_name -> prx.v1.GitHubSyncStatus
-	114, // 69: prx.v1.DebugGitHubSync.host_failures:type_name -> prx.v1.DebugSyncFailure
-	114, // 70: prx.v1.DebugGitHubSync.repository_failures:type_name -> prx.v1.DebugSyncFailure
-	115, // 71: prx.v1.DebugGitHubSync.error_groups:type_name -> prx.v1.DebugErrorGroup
-	116, // 72: prx.v1.DebugGitHubSync.auth_cache:type_name -> prx.v1.DebugAuthCacheEntry
-	102, // 73: prx.v1.DebugReport.problems:type_name -> prx.v1.DebugProblem
-	103, // 74: prx.v1.DebugReport.build:type_name -> prx.v1.DebugBuild
-	104, // 75: prx.v1.DebugReport.runtime:type_name -> prx.v1.DebugRuntime
-	106, // 76: prx.v1.DebugReport.paths:type_name -> prx.v1.DebugPaths
-	109, // 77: prx.v1.DebugReport.config:type_name -> prx.v1.DebugConfig
-	111, // 78: prx.v1.DebugReport.storage:type_name -> prx.v1.DebugStorage
-	113, // 79: prx.v1.DebugReport.records:type_name -> prx.v1.DebugData
-	117, // 80: prx.v1.DebugReport.github_sync:type_name -> prx.v1.DebugGitHubSync
-	118, // 81: prx.v1.GetDebugReportResponse.report:type_name -> prx.v1.DebugReport
-	23,  // 82: prx.v1.PRXService.GetSnapshot:input_type -> prx.v1.GetSnapshotRequest
-	25,  // 83: prx.v1.PRXService.CreateProject:input_type -> prx.v1.CreateProjectRequest
-	27,  // 84: prx.v1.PRXService.UpdateProject:input_type -> prx.v1.UpdateProjectRequest
-	29,  // 85: prx.v1.PRXService.DeleteProject:input_type -> prx.v1.DeleteProjectRequest
-	31,  // 86: prx.v1.PRXService.CreateFeature:input_type -> prx.v1.CreateFeatureRequest
-	33,  // 87: prx.v1.PRXService.UpdateFeature:input_type -> prx.v1.UpdateFeatureRequest
-	35,  // 88: prx.v1.PRXService.DeleteFeature:input_type -> prx.v1.DeleteFeatureRequest
-	37,  // 89: prx.v1.PRXService.CreateTask:input_type -> prx.v1.CreateTaskRequest
-	39,  // 90: prx.v1.PRXService.UpdateTask:input_type -> prx.v1.UpdateTaskRequest
-	41,  // 91: prx.v1.PRXService.DeleteTask:input_type -> prx.v1.DeleteTaskRequest
-	43,  // 92: prx.v1.PRXService.AddDependency:input_type -> prx.v1.AddDependencyRequest
-	45,  // 93: prx.v1.PRXService.RemoveDependency:input_type -> prx.v1.RemoveDependencyRequest
-	47,  // 94: prx.v1.PRXService.AttachPullRequest:input_type -> prx.v1.AttachPullRequestRequest
-	49,  // 95: prx.v1.PRXService.DetachPullRequest:input_type -> prx.v1.DetachPullRequestRequest
-	51,  // 96: prx.v1.PRXService.AddDocument:input_type -> prx.v1.AddDocumentRequest
-	53,  // 97: prx.v1.PRXService.GetDocument:input_type -> prx.v1.GetDocumentRequest
-	55,  // 98: prx.v1.PRXService.UpdateDocument:input_type -> prx.v1.UpdateDocumentRequest
-	57,  // 99: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
-	59,  // 100: prx.v1.PRXService.ReadDocumentContent:input_type -> prx.v1.ReadDocumentContentRequest
-	61,  // 101: prx.v1.PRXService.SelectLocalFile:input_type -> prx.v1.SelectLocalFileRequest
-	93,  // 102: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
-	96,  // 103: prx.v1.PRXService.GetGitHubSyncStatus:input_type -> prx.v1.GetGitHubSyncStatusRequest
-	98,  // 104: prx.v1.PRXService.SyncGitHubIfDue:input_type -> prx.v1.SyncGitHubIfDueRequest
-	100, // 105: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
-	119, // 106: prx.v1.PRXService.GetDebugReport:input_type -> prx.v1.GetDebugReportRequest
-	66,  // 107: prx.v1.PRXService.GetConfig:input_type -> prx.v1.GetConfigRequest
-	68,  // 108: prx.v1.PRXService.UpdateGitHubSyncConfig:input_type -> prx.v1.UpdateGitHubSyncConfigRequest
-	70,  // 109: prx.v1.PRXService.AddGitHubHost:input_type -> prx.v1.AddGitHubHostRequest
-	72,  // 110: prx.v1.PRXService.UpdateGitHubHost:input_type -> prx.v1.UpdateGitHubHostRequest
-	74,  // 111: prx.v1.PRXService.DeleteGitHubHost:input_type -> prx.v1.DeleteGitHubHostRequest
-	76,  // 112: prx.v1.PRXService.AddGitHubAuthMethod:input_type -> prx.v1.AddGitHubAuthMethodRequest
-	78,  // 113: prx.v1.PRXService.UpdateGitHubAuthMethod:input_type -> prx.v1.UpdateGitHubAuthMethodRequest
-	80,  // 114: prx.v1.PRXService.DeleteGitHubAuthMethod:input_type -> prx.v1.DeleteGitHubAuthMethodRequest
-	82,  // 115: prx.v1.PRXService.ReorderGitHubAuthMethods:input_type -> prx.v1.ReorderGitHubAuthMethodsRequest
-	84,  // 116: prx.v1.PRXService.ValidateConfig:input_type -> prx.v1.ValidateConfigRequest
-	87,  // 117: prx.v1.PRXService.GetPromptTemplates:input_type -> prx.v1.GetPromptTemplatesRequest
-	89,  // 118: prx.v1.PRXService.UpdatePromptTemplates:input_type -> prx.v1.UpdatePromptTemplatesRequest
-	91,  // 119: prx.v1.PRXService.GetTaskPrompt:input_type -> prx.v1.GetTaskPromptRequest
-	24,  // 120: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
-	26,  // 121: prx.v1.PRXService.CreateProject:output_type -> prx.v1.CreateProjectResponse
-	28,  // 122: prx.v1.PRXService.UpdateProject:output_type -> prx.v1.UpdateProjectResponse
-	30,  // 123: prx.v1.PRXService.DeleteProject:output_type -> prx.v1.DeleteProjectResponse
-	32,  // 124: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
-	34,  // 125: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
-	36,  // 126: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
-	38,  // 127: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
-	40,  // 128: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
-	42,  // 129: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
-	44,  // 130: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
-	46,  // 131: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
-	48,  // 132: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
-	50,  // 133: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
-	52,  // 134: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
-	54,  // 135: prx.v1.PRXService.GetDocument:output_type -> prx.v1.GetDocumentResponse
-	56,  // 136: prx.v1.PRXService.UpdateDocument:output_type -> prx.v1.UpdateDocumentResponse
-	58,  // 137: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
-	60,  // 138: prx.v1.PRXService.ReadDocumentContent:output_type -> prx.v1.ReadDocumentContentResponse
-	62,  // 139: prx.v1.PRXService.SelectLocalFile:output_type -> prx.v1.SelectLocalFileResponse
-	94,  // 140: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
-	97,  // 141: prx.v1.PRXService.GetGitHubSyncStatus:output_type -> prx.v1.GetGitHubSyncStatusResponse
-	99,  // 142: prx.v1.PRXService.SyncGitHubIfDue:output_type -> prx.v1.SyncGitHubIfDueResponse
-	101, // 143: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
-	120, // 144: prx.v1.PRXService.GetDebugReport:output_type -> prx.v1.GetDebugReportResponse
-	67,  // 145: prx.v1.PRXService.GetConfig:output_type -> prx.v1.GetConfigResponse
-	69,  // 146: prx.v1.PRXService.UpdateGitHubSyncConfig:output_type -> prx.v1.UpdateGitHubSyncConfigResponse
-	71,  // 147: prx.v1.PRXService.AddGitHubHost:output_type -> prx.v1.AddGitHubHostResponse
-	73,  // 148: prx.v1.PRXService.UpdateGitHubHost:output_type -> prx.v1.UpdateGitHubHostResponse
-	75,  // 149: prx.v1.PRXService.DeleteGitHubHost:output_type -> prx.v1.DeleteGitHubHostResponse
-	77,  // 150: prx.v1.PRXService.AddGitHubAuthMethod:output_type -> prx.v1.AddGitHubAuthMethodResponse
-	79,  // 151: prx.v1.PRXService.UpdateGitHubAuthMethod:output_type -> prx.v1.UpdateGitHubAuthMethodResponse
-	81,  // 152: prx.v1.PRXService.DeleteGitHubAuthMethod:output_type -> prx.v1.DeleteGitHubAuthMethodResponse
-	83,  // 153: prx.v1.PRXService.ReorderGitHubAuthMethods:output_type -> prx.v1.ReorderGitHubAuthMethodsResponse
-	85,  // 154: prx.v1.PRXService.ValidateConfig:output_type -> prx.v1.ValidateConfigResponse
-	88,  // 155: prx.v1.PRXService.GetPromptTemplates:output_type -> prx.v1.GetPromptTemplatesResponse
-	90,  // 156: prx.v1.PRXService.UpdatePromptTemplates:output_type -> prx.v1.UpdatePromptTemplatesResponse
-	92,  // 157: prx.v1.PRXService.GetTaskPrompt:output_type -> prx.v1.GetTaskPromptResponse
-	120, // [120:158] is the sub-list for method output_type
-	82,  // [82:120] is the sub-list for method input_type
-	82,  // [82:82] is the sub-list for extension type_name
-	82,  // [82:82] is the sub-list for extension extendee
-	0,   // [0:82] is the sub-list for field type_name
+	1,   // 4: prx.v1.Task.status:type_name -> prx.v1.TaskStatus
+	2,   // 5: prx.v1.Task.display_state:type_name -> prx.v1.TaskDisplayState
+	13,  // 6: prx.v1.Task.blocked_reason:type_name -> prx.v1.BlockedReason
+	3,   // 7: prx.v1.PullRequest.state:type_name -> prx.v1.PullRequestState
+	4,   // 8: prx.v1.PullRequest.review_state:type_name -> prx.v1.ReviewState
+	5,   // 9: prx.v1.PullRequest.mergeability:type_name -> prx.v1.Mergeability
+	6,   // 10: prx.v1.PullRequest.display_state:type_name -> prx.v1.PullRequestDisplayState
+	7,   // 11: prx.v1.Document.kind:type_name -> prx.v1.DocumentKind
+	16,  // 12: prx.v1.Snapshot.features:type_name -> prx.v1.Feature
+	17,  // 13: prx.v1.Snapshot.tasks:type_name -> prx.v1.Task
+	18,  // 14: prx.v1.Snapshot.dependencies:type_name -> prx.v1.Dependency
+	19,  // 15: prx.v1.Snapshot.pull_requests:type_name -> prx.v1.PullRequest
+	20,  // 16: prx.v1.Snapshot.documents:type_name -> prx.v1.Document
+	17,  // 17: prx.v1.Snapshot.ready_tasks:type_name -> prx.v1.Task
+	17,  // 18: prx.v1.Snapshot.review_waiting_tasks:type_name -> prx.v1.Task
+	17,  // 19: prx.v1.Snapshot.conflict_tasks:type_name -> prx.v1.Task
+	17,  // 20: prx.v1.Snapshot.stale_tasks:type_name -> prx.v1.Task
+	15,  // 21: prx.v1.Snapshot.projects:type_name -> prx.v1.Project
+	21,  // 22: prx.v1.GetSnapshotResponse.snapshot:type_name -> prx.v1.Snapshot
+	15,  // 23: prx.v1.CreateProjectResponse.project:type_name -> prx.v1.Project
+	15,  // 24: prx.v1.UpdateProjectResponse.project:type_name -> prx.v1.Project
+	16,  // 25: prx.v1.CreateFeatureResponse.feature:type_name -> prx.v1.Feature
+	0,   // 26: prx.v1.UpdateFeatureRequest.status:type_name -> prx.v1.FeatureStatus
+	16,  // 27: prx.v1.UpdateFeatureResponse.feature:type_name -> prx.v1.Feature
+	17,  // 28: prx.v1.CreateTaskResponse.task:type_name -> prx.v1.Task
+	1,   // 29: prx.v1.UpdateTaskRequest.status:type_name -> prx.v1.TaskStatus
+	17,  // 30: prx.v1.UpdateTaskResponse.task:type_name -> prx.v1.Task
+	18,  // 31: prx.v1.AddDependencyResponse.dependency:type_name -> prx.v1.Dependency
+	19,  // 32: prx.v1.AttachPullRequestResponse.pull_request:type_name -> prx.v1.PullRequest
+	20,  // 33: prx.v1.AddDocumentResponse.document:type_name -> prx.v1.Document
+	20,  // 34: prx.v1.GetDocumentResponse.document:type_name -> prx.v1.Document
+	20,  // 35: prx.v1.UpdateDocumentResponse.document:type_name -> prx.v1.Document
+	10,  // 36: prx.v1.GitHubAuthMethod.type:type_name -> prx.v1.GithubAuthMethodType
+	62,  // 37: prx.v1.GitHubConfig.hosts:type_name -> prx.v1.GitHubHost
+	63,  // 38: prx.v1.GitHubConfig.auth_methods:type_name -> prx.v1.GitHubAuthMethod
+	64,  // 39: prx.v1.GetConfigResponse.config:type_name -> prx.v1.GitHubConfig
+	64,  // 40: prx.v1.UpdateGitHubSyncConfigResponse.config:type_name -> prx.v1.GitHubConfig
+	62,  // 41: prx.v1.AddGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
+	62,  // 42: prx.v1.UpdateGitHubHostResponse.host:type_name -> prx.v1.GitHubHost
+	10,  // 43: prx.v1.AddGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
+	63,  // 44: prx.v1.AddGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
+	10,  // 45: prx.v1.UpdateGitHubAuthMethodRequest.type:type_name -> prx.v1.GithubAuthMethodType
+	63,  // 46: prx.v1.UpdateGitHubAuthMethodResponse.auth_method:type_name -> prx.v1.GitHubAuthMethod
+	63,  // 47: prx.v1.ReorderGitHubAuthMethodsResponse.auth_methods:type_name -> prx.v1.GitHubAuthMethod
+	85,  // 48: prx.v1.GetPromptTemplatesResponse.templates:type_name -> prx.v1.PromptTemplates
+	85,  // 49: prx.v1.GetPromptTemplatesResponse.built_in:type_name -> prx.v1.PromptTemplates
+	85,  // 50: prx.v1.UpdatePromptTemplatesResponse.templates:type_name -> prx.v1.PromptTemplates
+	11,  // 51: prx.v1.GetTaskPromptResponse.kind:type_name -> prx.v1.TaskPromptKind
+	94,  // 52: prx.v1.GetGitHubSyncStatusResponse.status:type_name -> prx.v1.GitHubSyncStatus
+	94,  // 53: prx.v1.SyncGitHubIfDueResponse.status:type_name -> prx.v1.GitHubSyncStatus
+	12,  // 54: prx.v1.DebugProblem.code:type_name -> prx.v1.DebugProblemCode
+	104, // 55: prx.v1.DebugPaths.environment_variables:type_name -> prx.v1.DebugEnvironmentVariable
+	106, // 56: prx.v1.DebugConfig.hosts:type_name -> prx.v1.DebugConfigHost
+	107, // 57: prx.v1.DebugConfig.auth_methods:type_name -> prx.v1.DebugConfigAuthMethod
+	109, // 58: prx.v1.DebugStorage.database_file:type_name -> prx.v1.DebugDatabaseFile
+	111, // 59: prx.v1.DebugData.feature_statuses:type_name -> prx.v1.DebugCount
+	111, // 60: prx.v1.DebugData.task_display_states:type_name -> prx.v1.DebugCount
+	111, // 61: prx.v1.DebugData.pull_request_display_states:type_name -> prx.v1.DebugCount
+	111, // 62: prx.v1.DebugData.pull_request_hosts:type_name -> prx.v1.DebugCount
+	111, // 63: prx.v1.DebugData.document_kinds:type_name -> prx.v1.DebugCount
+	111, // 64: prx.v1.DebugData.project_states:type_name -> prx.v1.DebugCount
+	94,  // 65: prx.v1.DebugGitHubSync.status:type_name -> prx.v1.GitHubSyncStatus
+	113, // 66: prx.v1.DebugGitHubSync.host_failures:type_name -> prx.v1.DebugSyncFailure
+	113, // 67: prx.v1.DebugGitHubSync.repository_failures:type_name -> prx.v1.DebugSyncFailure
+	114, // 68: prx.v1.DebugGitHubSync.error_groups:type_name -> prx.v1.DebugErrorGroup
+	115, // 69: prx.v1.DebugGitHubSync.auth_cache:type_name -> prx.v1.DebugAuthCacheEntry
+	101, // 70: prx.v1.DebugReport.problems:type_name -> prx.v1.DebugProblem
+	102, // 71: prx.v1.DebugReport.build:type_name -> prx.v1.DebugBuild
+	103, // 72: prx.v1.DebugReport.runtime:type_name -> prx.v1.DebugRuntime
+	105, // 73: prx.v1.DebugReport.paths:type_name -> prx.v1.DebugPaths
+	108, // 74: prx.v1.DebugReport.config:type_name -> prx.v1.DebugConfig
+	110, // 75: prx.v1.DebugReport.storage:type_name -> prx.v1.DebugStorage
+	112, // 76: prx.v1.DebugReport.records:type_name -> prx.v1.DebugData
+	116, // 77: prx.v1.DebugReport.github_sync:type_name -> prx.v1.DebugGitHubSync
+	117, // 78: prx.v1.GetDebugReportResponse.report:type_name -> prx.v1.DebugReport
+	22,  // 79: prx.v1.PRXService.GetSnapshot:input_type -> prx.v1.GetSnapshotRequest
+	24,  // 80: prx.v1.PRXService.CreateProject:input_type -> prx.v1.CreateProjectRequest
+	26,  // 81: prx.v1.PRXService.UpdateProject:input_type -> prx.v1.UpdateProjectRequest
+	28,  // 82: prx.v1.PRXService.DeleteProject:input_type -> prx.v1.DeleteProjectRequest
+	30,  // 83: prx.v1.PRXService.CreateFeature:input_type -> prx.v1.CreateFeatureRequest
+	32,  // 84: prx.v1.PRXService.UpdateFeature:input_type -> prx.v1.UpdateFeatureRequest
+	34,  // 85: prx.v1.PRXService.DeleteFeature:input_type -> prx.v1.DeleteFeatureRequest
+	36,  // 86: prx.v1.PRXService.CreateTask:input_type -> prx.v1.CreateTaskRequest
+	38,  // 87: prx.v1.PRXService.UpdateTask:input_type -> prx.v1.UpdateTaskRequest
+	40,  // 88: prx.v1.PRXService.DeleteTask:input_type -> prx.v1.DeleteTaskRequest
+	42,  // 89: prx.v1.PRXService.AddDependency:input_type -> prx.v1.AddDependencyRequest
+	44,  // 90: prx.v1.PRXService.RemoveDependency:input_type -> prx.v1.RemoveDependencyRequest
+	46,  // 91: prx.v1.PRXService.AttachPullRequest:input_type -> prx.v1.AttachPullRequestRequest
+	48,  // 92: prx.v1.PRXService.DetachPullRequest:input_type -> prx.v1.DetachPullRequestRequest
+	50,  // 93: prx.v1.PRXService.AddDocument:input_type -> prx.v1.AddDocumentRequest
+	52,  // 94: prx.v1.PRXService.GetDocument:input_type -> prx.v1.GetDocumentRequest
+	54,  // 95: prx.v1.PRXService.UpdateDocument:input_type -> prx.v1.UpdateDocumentRequest
+	56,  // 96: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
+	58,  // 97: prx.v1.PRXService.ReadDocumentContent:input_type -> prx.v1.ReadDocumentContentRequest
+	60,  // 98: prx.v1.PRXService.SelectLocalFile:input_type -> prx.v1.SelectLocalFileRequest
+	92,  // 99: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
+	95,  // 100: prx.v1.PRXService.GetGitHubSyncStatus:input_type -> prx.v1.GetGitHubSyncStatusRequest
+	97,  // 101: prx.v1.PRXService.SyncGitHubIfDue:input_type -> prx.v1.SyncGitHubIfDueRequest
+	99,  // 102: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
+	118, // 103: prx.v1.PRXService.GetDebugReport:input_type -> prx.v1.GetDebugReportRequest
+	65,  // 104: prx.v1.PRXService.GetConfig:input_type -> prx.v1.GetConfigRequest
+	67,  // 105: prx.v1.PRXService.UpdateGitHubSyncConfig:input_type -> prx.v1.UpdateGitHubSyncConfigRequest
+	69,  // 106: prx.v1.PRXService.AddGitHubHost:input_type -> prx.v1.AddGitHubHostRequest
+	71,  // 107: prx.v1.PRXService.UpdateGitHubHost:input_type -> prx.v1.UpdateGitHubHostRequest
+	73,  // 108: prx.v1.PRXService.DeleteGitHubHost:input_type -> prx.v1.DeleteGitHubHostRequest
+	75,  // 109: prx.v1.PRXService.AddGitHubAuthMethod:input_type -> prx.v1.AddGitHubAuthMethodRequest
+	77,  // 110: prx.v1.PRXService.UpdateGitHubAuthMethod:input_type -> prx.v1.UpdateGitHubAuthMethodRequest
+	79,  // 111: prx.v1.PRXService.DeleteGitHubAuthMethod:input_type -> prx.v1.DeleteGitHubAuthMethodRequest
+	81,  // 112: prx.v1.PRXService.ReorderGitHubAuthMethods:input_type -> prx.v1.ReorderGitHubAuthMethodsRequest
+	83,  // 113: prx.v1.PRXService.ValidateConfig:input_type -> prx.v1.ValidateConfigRequest
+	86,  // 114: prx.v1.PRXService.GetPromptTemplates:input_type -> prx.v1.GetPromptTemplatesRequest
+	88,  // 115: prx.v1.PRXService.UpdatePromptTemplates:input_type -> prx.v1.UpdatePromptTemplatesRequest
+	90,  // 116: prx.v1.PRXService.GetTaskPrompt:input_type -> prx.v1.GetTaskPromptRequest
+	23,  // 117: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
+	25,  // 118: prx.v1.PRXService.CreateProject:output_type -> prx.v1.CreateProjectResponse
+	27,  // 119: prx.v1.PRXService.UpdateProject:output_type -> prx.v1.UpdateProjectResponse
+	29,  // 120: prx.v1.PRXService.DeleteProject:output_type -> prx.v1.DeleteProjectResponse
+	31,  // 121: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
+	33,  // 122: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
+	35,  // 123: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
+	37,  // 124: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
+	39,  // 125: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
+	41,  // 126: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
+	43,  // 127: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
+	45,  // 128: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
+	47,  // 129: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
+	49,  // 130: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
+	51,  // 131: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
+	53,  // 132: prx.v1.PRXService.GetDocument:output_type -> prx.v1.GetDocumentResponse
+	55,  // 133: prx.v1.PRXService.UpdateDocument:output_type -> prx.v1.UpdateDocumentResponse
+	57,  // 134: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
+	59,  // 135: prx.v1.PRXService.ReadDocumentContent:output_type -> prx.v1.ReadDocumentContentResponse
+	61,  // 136: prx.v1.PRXService.SelectLocalFile:output_type -> prx.v1.SelectLocalFileResponse
+	93,  // 137: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
+	96,  // 138: prx.v1.PRXService.GetGitHubSyncStatus:output_type -> prx.v1.GetGitHubSyncStatusResponse
+	98,  // 139: prx.v1.PRXService.SyncGitHubIfDue:output_type -> prx.v1.SyncGitHubIfDueResponse
+	100, // 140: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
+	119, // 141: prx.v1.PRXService.GetDebugReport:output_type -> prx.v1.GetDebugReportResponse
+	66,  // 142: prx.v1.PRXService.GetConfig:output_type -> prx.v1.GetConfigResponse
+	68,  // 143: prx.v1.PRXService.UpdateGitHubSyncConfig:output_type -> prx.v1.UpdateGitHubSyncConfigResponse
+	70,  // 144: prx.v1.PRXService.AddGitHubHost:output_type -> prx.v1.AddGitHubHostResponse
+	72,  // 145: prx.v1.PRXService.UpdateGitHubHost:output_type -> prx.v1.UpdateGitHubHostResponse
+	74,  // 146: prx.v1.PRXService.DeleteGitHubHost:output_type -> prx.v1.DeleteGitHubHostResponse
+	76,  // 147: prx.v1.PRXService.AddGitHubAuthMethod:output_type -> prx.v1.AddGitHubAuthMethodResponse
+	78,  // 148: prx.v1.PRXService.UpdateGitHubAuthMethod:output_type -> prx.v1.UpdateGitHubAuthMethodResponse
+	80,  // 149: prx.v1.PRXService.DeleteGitHubAuthMethod:output_type -> prx.v1.DeleteGitHubAuthMethodResponse
+	82,  // 150: prx.v1.PRXService.ReorderGitHubAuthMethods:output_type -> prx.v1.ReorderGitHubAuthMethodsResponse
+	84,  // 151: prx.v1.PRXService.ValidateConfig:output_type -> prx.v1.ValidateConfigResponse
+	87,  // 152: prx.v1.PRXService.GetPromptTemplates:output_type -> prx.v1.GetPromptTemplatesResponse
+	89,  // 153: prx.v1.PRXService.UpdatePromptTemplates:output_type -> prx.v1.UpdatePromptTemplatesResponse
+	91,  // 154: prx.v1.PRXService.GetTaskPrompt:output_type -> prx.v1.GetTaskPromptResponse
+	117, // [117:155] is the sub-list for method output_type
+	79,  // [79:117] is the sub-list for method input_type
+	79,  // [79:79] is the sub-list for extension type_name
+	79,  // [79:79] is the sub-list for extension extendee
+	0,   // [0:79] is the sub-list for field type_name
 }
 
 func init() { file_prx_v1_prx_proto_init() }
@@ -9265,7 +9165,7 @@ func file_prx_v1_prx_proto_init() {
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_prx_v1_prx_proto_rawDesc), len(file_prx_v1_prx_proto_rawDesc)),
-			NumEnums:      14,
+			NumEnums:      13,
 			NumMessages:   107,
 			NumExtensions: 0,
 			NumServices:   1,

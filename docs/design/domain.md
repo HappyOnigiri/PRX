@@ -3,6 +3,9 @@
 The server derives display state from stored state and external facts.
 Clients must not recreate that derivation independently.
 
+A task has no kind: any task may hold a pull request, and one without a pull request reaches completion through its stored status.
+Deciding that in advance changed nothing the server derives, so it is not asked for.
+
 Manual task-state overrides take precedence over automatic derivation.
 Dependency satisfaction uses raw completion semantics rather than display labels.
 Presentation flags such as review, conflict, or staleness do not silently redefine completion.

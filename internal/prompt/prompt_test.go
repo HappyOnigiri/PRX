@@ -11,7 +11,7 @@ import (
 func designTask() domain.Task {
 	return domain.Task{
 		ID: "T-7", FeatureID: "F-3", Title: "Add the checkout API",
-		Scope: "Server only", Kind: domain.TaskKindPullRequest,
+		Scope: "Server only",
 	}
 }
 
@@ -20,9 +20,8 @@ func TestKindFollowsOnlyTheImplementationPlan(t *testing.T) {
 	if got := prompt.KindFor(task); got != prompt.KindDesign {
 		t.Fatalf("kind=%q, want %q", got, prompt.KindDesign)
 	}
-	// A finished manual task without a plan is still a design request: progress
-	// does not answer the question the prompt asks.
-	task.Kind = domain.TaskKindManual
+	// A finished task without a plan is still a design request: progress does not
+	// answer the question the prompt asks.
 	task.Status = domain.TaskStatusCompleted
 	if got := prompt.KindFor(task); got != prompt.KindDesign {
 		t.Fatalf("kind=%q, want %q", got, prompt.KindDesign)
@@ -35,7 +34,7 @@ func TestKindFollowsOnlyTheImplementationPlan(t *testing.T) {
 
 func TestRenderExpandsEveryPlaceholderOfTheSelectedTemplate(t *testing.T) {
 	templates := prompt.Templates{
-		Design:         "design {{task_id}} {{feature_id}} {{task_title}} {{task_scope}} {{task_kind}}",
+		Design:         "design {{task_id}} {{feature_id}} {{task_title}} {{task_scope}}",
 		Implementation: "implement {{task_id}}",
 	}
 	kind, body, err := prompt.Render(designTask(), templates)
@@ -45,7 +44,7 @@ func TestRenderExpandsEveryPlaceholderOfTheSelectedTemplate(t *testing.T) {
 	if kind != prompt.KindDesign {
 		t.Fatalf("kind=%q, want %q", kind, prompt.KindDesign)
 	}
-	if want := "design T-7 F-3 Add the checkout API Server only pr"; body != want {
+	if want := "design T-7 F-3 Add the checkout API Server only"; body != want {
 		t.Fatalf("body=%q, want %q", body, want)
 	}
 
@@ -58,7 +57,7 @@ func TestRenderExpandsEveryPlaceholderOfTheSelectedTemplate(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if want := "design T-7 F-3 Add the checkout API (not specified) pr"; body != want {
+	if want := "design T-7 F-3 Add the checkout API (not specified)"; body != want {
 		t.Fatalf("body=%q, want %q", body, want)
 	}
 

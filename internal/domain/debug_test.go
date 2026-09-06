@@ -201,8 +201,8 @@ func TestNewDebugDataCountsStoredRecords(t *testing.T) {
 			{DisplayStatus: FeatureStatusActive},
 		},
 		Tasks: []Task{
-			{Kind: TaskKindPR, DisplayState: TaskDisplayStateOpen},
-			{Kind: TaskKindManual, DisplayState: TaskDisplayStateNotStarted},
+			{DisplayState: TaskDisplayStateOpen},
+			{DisplayState: TaskDisplayStateNotStarted},
 		},
 		Dependencies: []Dependency{{}},
 		PullRequests: []PullRequest{
@@ -719,7 +719,6 @@ records:
   feature_statuses:
     active: 1
   task_display_states: none
-  task_kinds: none
   pull_request_display_states: none
   pull_request_hosts: none
   document_kinds: none

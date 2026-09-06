@@ -49,7 +49,6 @@ func createPromptTask(t *testing.T, client prxv1connect.PRXServiceClient) string
 		FeatureId: feature.Msg.GetFeature().GetId(),
 		Title:     "Add the checkout API",
 		Scope:     "Server only",
-		Kind:      prxv1.TaskKind_TASK_KIND_MANUAL,
 	}))
 	if err != nil {
 		t.Fatal(err)

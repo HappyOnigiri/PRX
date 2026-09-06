@@ -127,7 +127,6 @@ func protoDebugData(v domain.DebugData) *prxv1.DebugData {
 		Documents:                int32(v.Documents),
 		FeatureStatuses:          protoDebugCounts(v.FeatureStatuses),
 		TaskDisplayStates:        protoDebugCounts(v.TaskDisplayStates),
-		TaskKinds:                protoDebugCounts(v.TaskKinds),
 		PullRequestDisplayStates: protoDebugCounts(v.PullRequestDisplayStates),
 		PullRequestHosts:         protoDebugCounts(v.PullRequestHosts),
 		DocumentKinds:            protoDebugCounts(v.DocumentKinds),

@@ -58,7 +58,7 @@ func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	task, err := service.CreateTask(ctx, feature.ID, "Payment API", "", domain.TaskKindPR, "")
+	task, err := service.CreateTask(ctx, feature.ID, "Payment API", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}

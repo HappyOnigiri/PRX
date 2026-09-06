@@ -14,7 +14,6 @@ import (
 type demoTask struct {
 	title    string
 	scope    string
-	kind     domain.TaskKind
 	status   domain.TaskStatus
 	assignee string
 	plan     string
@@ -177,27 +176,23 @@ func (s *Service) createPausedDemo(ctx context.Context, projectID string) error 
 		{
 			title:    "Foundation complete",
 			scope:    "Shared rollout foundation",
-			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusCompleted,
 			assignee: "Bob",
 		},
 		{
 			title:  "Prepare operator guide",
 			scope:  "Document the rollout",
-			kind:   domain.TaskKindManual,
 			status: domain.TaskStatusNotStarted,
 		},
 		{
 			title:    "Run limited rollout",
 			scope:    "Exercise the first cohort",
-			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusInProgress,
 			assignee: "Carol",
 		},
 		{
 			title:    "Complete general rollout",
 			scope:    "Merge both rollout branches",
-			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusAuto,
 			assignee: "Alice",
 		},
@@ -251,21 +246,18 @@ func (s *Service) createCancelledDemo(ctx context.Context, projectID string) err
 		{
 			title:    "Record experiment",
 			scope:    "Preserve the original hypothesis",
-			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusCompleted,
 			assignee: "Alice",
 		},
 		{
 			title:    "Close implementation",
 			scope:    "Stop implementation work",
-			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusClosed,
 			assignee: "Bob",
 		},
 		{
 			title:  "Capture decision",
 			scope:  "Document the cancellation",
-			kind:   domain.TaskKindManual,
 			status: domain.TaskStatusCompleted,
 		},
 	})
@@ -306,14 +298,12 @@ func (s *Service) createSunsetPostmortemDemo(ctx context.Context, projectID stri
 		{
 			title:    "Collect lessons",
 			scope:    "Summarize what the experiment showed",
-			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusCompleted,
 			assignee: "Alice",
 		},
 		{
 			title:    "Share the summary",
 			scope:    "Hand the summary to the teams that asked for it",
-			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusCompleted,
 			assignee: "Bob",
 		},
@@ -328,7 +318,7 @@ func (s *Service) createDemoTasks(
 ) ([]domain.Task, error) {
 	tasks := make([]domain.Task, len(values))
 	for index, value := range values {
-		task, err := s.CreateTask(ctx, feature.ID, value.title, value.scope, value.kind, value.assignee)
+		task, err := s.CreateTask(ctx, feature.ID, value.title, value.scope, value.assignee)
 		if err != nil {
 			return nil, err
 		}
@@ -377,7 +367,6 @@ func completedDemoTasks() []demoTask {
 		tasks[index] = demoTask{
 			title:    fmt.Sprintf("Completed delivery slice %03d", index+1),
 			scope:    "A completed repository delivery boundary",
-			kind:     domain.TaskKindPR,
 			status:   domain.TaskStatusAuto,
 			assignee: []string{"Alice", "Bob", "Carol"}[index%3],
 			pr: &domain.PullRequest{
@@ -395,13 +384,11 @@ func showcaseManualTasks() []demoTask {
 		{
 			title:  "Define rollout scope",
 			scope:  "A ready manual task",
-			kind:   domain.TaskKindManual,
 			status: domain.TaskStatusNotStarted,
 		},
 		{
 			title:    "Design dependency policy",
 			scope:    "A planned task waiting on scope",
-			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusAuto,
 			assignee: "Bob",
 			plan:     "1. Confirm dependency direction.\n2. Document readiness rules.\n3. Verify the graph.",
@@ -409,21 +396,18 @@ func showcaseManualTasks() []demoTask {
 		{
 			title:    "Implement command surface",
 			scope:    "Explicitly in-progress work",
-			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusInProgress,
 			assignee: "Carol",
 		},
 		{
 			title:    "Verify storage boundary",
 			scope:    "Explicitly completed work",
-			kind:     domain.TaskKindManual,
 			status:   domain.TaskStatusCompleted,
 			assignee: "Alice",
 		},
 		{
 			title:  "Retire legacy path",
 			scope:  "Explicitly closed work",
-			kind:   domain.TaskKindManual,
 			status: domain.TaskStatusClosed,
 		},
 	}
@@ -463,7 +447,7 @@ func demoPullRequestTask(
 	assignee string,
 ) demoTask {
 	return demoTask{
-		title: title, scope: scope, kind: domain.TaskKindPR,
+		title: title, scope: scope,
 		status: domain.TaskStatusAuto, assignee: assignee,
 		pr: &domain.PullRequest{
 			Host: "github.com", Owner: "prx-demo", Repository: repository,

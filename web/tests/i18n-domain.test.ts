@@ -9,7 +9,6 @@ import {
   FeatureStatus,
   PullRequestDisplayState,
   TaskDisplayState,
-  TaskKind,
   TaskStatus,
 } from "../src/gen/prx/v1/prx_pb";
 import i18n from "../src/i18n";
@@ -23,7 +22,6 @@ import {
   formatError,
   pullRequestDisplayStateKeys,
   pullRequestDisplayStateToken,
-  taskKindKeys,
   taskStatusKeys,
 } from "../src/i18n/domain";
 import { resources } from "../src/i18n/resources";
@@ -57,11 +55,6 @@ const translationTables = [
     name: "task statuses",
     values: enumValues(TaskStatus),
     keys: taskStatusKeys as unknown as Record<number, string>,
-  },
-  {
-    name: "task kinds",
-    values: enumValues(TaskKind),
-    keys: taskKindKeys as unknown as Record<number, string>,
   },
   {
     name: "document kinds",

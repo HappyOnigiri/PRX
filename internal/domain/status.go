@@ -61,9 +61,6 @@ func IsSatisfied(task Task, pr *PullRequest) bool {
 	if task.Status != TaskStatusAuto {
 		return task.Status == TaskStatusCompleted || task.Status == TaskStatusClosed
 	}
-	if task.Kind != TaskKindPR {
-		return false
-	}
 	return pr != nil && (pr.State == PullRequestStateOpen ||
 		pr.State == PullRequestStateClosed || pr.State == PullRequestStateMerged)
 }

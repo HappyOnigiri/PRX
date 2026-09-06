@@ -38,7 +38,7 @@ func TestAttachPullRequestUsesConfiguredHostURL(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	task, err := service.CreateTask(ctx, feature.ID, "Enterprise PR", "", domain.TaskKindPR, "")
+	task, err := service.CreateTask(ctx, feature.ID, "Enterprise PR", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}

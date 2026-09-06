@@ -6,7 +6,7 @@ Rendering a prompt never changes task state, readiness, dependencies, or the imp
 
 Which prompt a task gets is derived from one fact only.
 A task without an implementation plan gets the design prompt, which ends by registering a plan; a task with one gets the implementation prompt, which ends by recording the result.
-Display state, readiness, and task kind describe progress rather than the question being asked, so they never select the template.
+Display state and readiness describe progress rather than the question being asked, so they never select the template.
 
 The templates are shared configuration rather than browser state, because the CLI and the WebUI must emit the same text.
 Both templates are written together, so one configuration write never leaves a task with a stale half of the pair.
@@ -14,7 +14,7 @@ An omitted or blank template is restored to its built-in default, which keeps a 
 A template that still matches its built-in default is left out of the file.
 An installation that never customized one then keeps following the built-in wording after an upgrade, rather than being pinned to whichever version first wrote the file.
 
-A template is plain substitution over a closed vocabulary: `{{task_id}}`, `{{feature_id}}`, `{{task_title}}`, `{{task_scope}}`, and `{{task_kind}}`.
+A template is plain substitution over a closed vocabulary: `{{task_id}}`, `{{feature_id}}`, `{{task_title}}`, and `{{task_scope}}`.
 An unsupported placeholder is rejected instead of being emitted verbatim, and `{{task_id}}` is required so a rendered prompt always names its target.
 Plan bodies are deliberately absent from that vocabulary: a plan may reach 1 MiB or live behind a locator, so the prompt tells the agent to read it with `prx plan TASK_ID`.
 A task created without a scope renders as `(not specified)` rather than an empty line.

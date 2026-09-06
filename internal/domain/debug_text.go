@@ -153,7 +153,6 @@ func writeDebugData(out *debugText, data DebugData) {
 	writeDebugCounts(out, "project_states", data.ProjectStates)
 	writeDebugCounts(out, "feature_statuses", data.FeatureStatuses)
 	writeDebugCounts(out, "task_display_states", data.TaskDisplayStates)
-	writeDebugCounts(out, "task_kinds", data.TaskKinds)
 	writeDebugCounts(out, "pull_request_display_states", data.PullRequestDisplayStates)
 	writeDebugCounts(out, "pull_request_hosts", data.PullRequestHosts)
 	writeDebugCounts(out, "document_kinds", data.DocumentKinds)

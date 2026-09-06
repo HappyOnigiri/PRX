@@ -14,9 +14,6 @@ func TestTypedValuesKeepTheirJSONStrings(t *testing.T) {
 		{"feature status", struct {
 			Status FeatureStatus `json:"status"`
 		}{FeatureStatusPaused}, `{"status":"paused"}`},
-		{"task kind", struct {
-			Kind TaskKind `json:"kind"`
-		}{TaskKindManual}, `{"kind":"manual"}`},
 		{"task status", struct {
 			Status TaskStatus `json:"status"`
 		}{TaskStatusInProgress}, `{"status":"in_progress"}`},

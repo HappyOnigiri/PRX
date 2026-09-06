@@ -4,7 +4,6 @@ import {
   DocumentKind,
   FeatureStatus,
   PullRequestDisplayState,
-  TaskKind,
   TaskStatus,
   type BlockedReason,
 } from "../src/gen/prx/v1/prx_pb";
@@ -14,7 +13,6 @@ import {
   documentKindLabel,
   featureStatusLabel,
   pullRequestDisplayStateLabel,
-  taskKindLabel,
   taskStatusLabel,
 } from "../src/i18n/domain";
 
@@ -32,8 +30,6 @@ describe("domain labels", () => {
       expect(featureStatusLabel(value, t)).toEqual(expect.any(String));
     for (const value of numericValues(TaskStatus))
       expect(taskStatusLabel(value, t)).toEqual(expect.any(String));
-    for (const value of numericValues(TaskKind))
-      expect(taskKindLabel(value, t)).toEqual(expect.any(String));
     for (const value of numericValues(DocumentKind))
       expect(documentKindLabel(value, t)).toEqual(expect.any(String));
     for (const value of numericValues(PullRequestDisplayState))

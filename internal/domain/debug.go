@@ -248,7 +248,6 @@ type DebugData struct {
 	ProjectStates            []DebugCount `json:"project_states"`
 	FeatureStatuses          []DebugCount `json:"feature_statuses"`
 	TaskDisplayStates        []DebugCount `json:"task_display_states"`
-	TaskKinds                []DebugCount `json:"task_kinds"`
 	PullRequestDisplayStates []DebugCount `json:"pull_request_display_states"`
 	PullRequestHosts         []DebugCount `json:"pull_request_hosts"`
 	DocumentKinds            []DebugCount `json:"document_kinds"`
@@ -430,7 +429,6 @@ func NewDebugData(snapshot Snapshot) DebugData {
 	projects := newDebugTally()
 	features := newDebugTally()
 	taskStates := newDebugTally()
-	taskKinds := newDebugTally()
 	pullRequestStates := newDebugTally()
 	pullRequestHosts := newDebugTally()
 	documentKinds := newDebugTally()
@@ -444,7 +442,6 @@ func NewDebugData(snapshot Snapshot) DebugData {
 	}
 	for _, task := range snapshot.Tasks {
 		taskStates.add(string(task.DisplayState))
-		taskKinds.add(string(task.Kind))
 	}
 	for _, pullRequest := range snapshot.PullRequests {
 		pullRequestStates.add(string(pullRequest.DisplayState))
@@ -463,7 +460,6 @@ func NewDebugData(snapshot Snapshot) DebugData {
 		ProjectStates:            projects.counts(),
 		FeatureStatuses:          features.counts(),
 		TaskDisplayStates:        taskStates.counts(),
-		TaskKinds:                taskKinds.counts(),
 		PullRequestDisplayStates: pullRequestStates.counts(),
 		PullRequestHosts:         pullRequestHosts.counts(),
 		DocumentKinds:            documentKinds.counts(),

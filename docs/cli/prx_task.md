@@ -40,7 +40,7 @@ prx t T-1
 ### SEE ALSO
 
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
-* [prx task create](prx_task_create.md)	 - Create an implementation or manual task
+* [prx task create](prx_task_create.md)	 - Create a task
 * [prx task delete](prx_task_delete.md)	 - Delete a task and optionally its dependencies and references
 * [prx task update](prx_task_update.md)	 - Update a task by ID
 

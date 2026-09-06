@@ -304,12 +304,11 @@ func TestBlackBoxCRUDAndCycle(t *testing.T) {
 	var nodeTaskData struct {
 		ID        string `json:"id"`
 		FeatureID string `json:"feature_id"`
-		Kind      string `json:"kind"`
 	}
 	if err := json.Unmarshal(nodeTask.Data, &nodeTaskData); err != nil {
 		t.Fatal(err)
 	}
-	if nodeTaskData.ID != at.ID || nodeTaskData.FeatureID != featureData.ID || nodeTaskData.Kind != "pr" {
+	if nodeTaskData.ID != at.ID || nodeTaskData.FeatureID != featureData.ID {
 		t.Fatalf("node task=%+v", nodeTaskData)
 	}
 	if value, _, exit := runCLI(t, binary, dbPath, "dependency", "add", at.ID, bt.ID); exit != 0 || !value.OK {
@@ -452,8 +451,6 @@ func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 		"create",
 		featureData.ID,
 		"Plan task",
-		"--kind",
-		"manual",
 	)
 	if exit != 0 || !task.OK {
 		t.Fatalf("task result=%+v exit=%d", task, exit)
@@ -1150,7 +1147,7 @@ func TestBlackBoxDefaultTextOutputCoversResourcesAndSummaries(t *testing.T) {
 		t.Fatalf("task create outputs=%q %q", taskA.stdout, taskB.stdout)
 	}
 	taskList := run("task", "--feature", "F-1")
-	for _, value := range []string{"STATUS", "READY", "KIND", "ASSIGNEE", "Payment API"} {
+	for _, value := range []string{"STATUS", "READY", "ASSIGNEE", "Payment API"} {
 		if !strings.Contains(taskList.stdout, value) {
 			t.Fatalf("task list omitted %q: %s", value, taskList.stdout)
 		}

@@ -141,7 +141,6 @@ func addSyncPullRequest(
 		snapshot.Features[0].ID,
 		fmt.Sprintf("PR %d", number),
 		"",
-		domain.TaskKindPR,
 		"",
 	)
 	if err != nil {

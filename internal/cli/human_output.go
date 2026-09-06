@@ -134,7 +134,7 @@ func writeTaskTable(out io.Writer, tasks []domain.Task) error {
 	}
 	return writeTable(
 		out,
-		[]string{"ID", "STATUS", "READY", "KIND", "ASSIGNEE", "TITLE"},
+		[]string{"ID", "STATUS", "READY", "ASSIGNEE", "TITLE"},
 		func(table *tabwriter.Writer) {
 			for _, task := range tasks {
 				writeRow(
@@ -142,7 +142,6 @@ func writeTaskTable(out io.Writer, tasks []domain.Task) error {
 					task.ID,
 					task.DisplayState,
 					yesNo(task.Ready),
-					task.Kind,
 					displayValue(task.Assignee),
 					task.Title,
 				)
@@ -158,7 +157,6 @@ func renderTaskDetail(task domain.Task) humanRenderer {
 			{"Feature", task.FeatureID},
 			{"Title", task.Title},
 			{"Scope", displayValue(task.Scope)},
-			{"Kind", string(task.Kind)},
 			{"Status", string(task.Status)},
 			{"Display state", string(task.DisplayState)},
 			{"Ready", yesNo(task.Ready)},

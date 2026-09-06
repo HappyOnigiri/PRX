@@ -9,7 +9,6 @@ import {
   FeatureStatus,
   PullRequestDisplayState,
   TaskDisplayState,
-  TaskKind,
   TaskStatus,
   type BlockedReason,
 } from "../gen/prx/v1/prx_pb";
@@ -39,16 +38,6 @@ export const taskStatusKeys = {
   [TaskStatus.CLOSED]: "taskStatus.closed",
   [TaskStatus.UNSPECIFIED]: "taskStatus.unknown",
 } as const satisfies Record<TaskStatus, string>;
-
-export const taskKindKeys = {
-  [TaskKind.UNSPECIFIED]: "kind.unknown",
-  [TaskKind.PULL_REQUEST]: "kind.pullRequest",
-  [TaskKind.MANUAL]: "kind.manual",
-} as const satisfies Record<TaskKind, string>;
-
-export function taskKindLabel(value: TaskKind, t: TFunction): string {
-  return t(taskKindKeys[value]);
-}
 
 export const documentKindKeys = {
   [DocumentKind.UNSPECIFIED]: "documentKind.unknown",
@@ -192,14 +181,11 @@ export const errorKeys = {
     "error.invalidImplementationPlan",
   [DomainErrorCode.IMPLEMENTATION_PLAN_TOO_LARGE]:
     "error.implementationPlanTooLarge",
-  [DomainErrorCode.INVALID_KIND]: "error.invalidKind",
   [DomainErrorCode.INVALID_PARENT]: "error.invalidParent",
   [DomainErrorCode.INVALID_PULL_REQUEST_URL]: "error.invalidPullRequestUrl",
   [DomainErrorCode.INVALID_STATUS]: "error.invalidStatus",
   [DomainErrorCode.INVALID_TITLE]: "error.invalidTitle",
   [DomainErrorCode.NOT_FOUND]: "error.notFound",
-  [DomainErrorCode.PULL_REQUEST_ON_MANUAL_TASK]:
-    "error.pullRequestOnManualTask",
   [DomainErrorCode.REFERENCES_EXIST]: "error.referencesExist",
 } as const satisfies Record<DomainErrorCode, string>;
 

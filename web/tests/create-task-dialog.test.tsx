@@ -6,7 +6,6 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { TaskKind } from "../src/gen/prx/v1/prx_pb";
 import { CreateTaskDialog } from "../src/views/CreateTaskDialog";
 
 const dialogMocks = vi.hoisted(() => ({
@@ -40,9 +39,6 @@ describe("CreateTaskDialog", () => {
     fireEvent.change(screen.getByLabelText("Scope"), {
       target: { value: "API and acceptance tests" },
     });
-    fireEvent.change(screen.getByRole("combobox"), {
-      target: { value: String(TaskKind.MANUAL) },
-    });
     fireEvent.change(screen.getByLabelText("Assignee"), {
       target: { value: "Carol" },
     });
@@ -55,7 +51,6 @@ describe("CreateTaskDialog", () => {
       featureId: "feature-1",
       title: "Implement checkout",
       scope: "API and acceptance tests",
-      kind: TaskKind.MANUAL,
       assignee: "Carol",
     });
   });

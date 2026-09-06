@@ -51,14 +51,12 @@ var supportedPlaceholders = []string{
 	"feature_id",
 	"task_title",
 	"task_scope",
-	"task_kind",
 }
 
 const defaultDesignTemplate = `Design PRX task {{task_id}} of feature {{feature_id}}.
 
 Title: {{task_title}}
 Scope: {{task_scope}}
-Kind: {{task_kind}}
 
 PRX is a local CLI that tracks tasks and the dependencies between them.
 Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact surface.
@@ -78,7 +76,6 @@ const defaultImplementationTemplate = `Implement PRX task {{task_id}} of feature
 
 Title: {{task_title}}
 Scope: {{task_scope}}
-Kind: {{task_kind}}
 
 PRX is a local CLI that tracks tasks and the dependencies between them.
 Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact surface.
@@ -89,9 +86,9 @@ Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact su
    - ` + "`prx plan {{task_id}}`" + `
 2. Implement the plan, staying inside the scope above.
 3. Record the result in PRX.
-   - A ` + "`pr`" + ` task: open the pull request, then run ` + "`prx pr attach {{task_id}} PULL_REQUEST_URL`" + `.
+   - Work that lands as a pull request: open it, then run ` + "`prx pr attach {{task_id}} PULL_REQUEST_URL`" + `.
      Its state then follows the pull request, so do not set the status by hand.
-   - A ` + "`manual`" + ` task: run ` + "`prx task update {{task_id}} --status completed`" + ` once the work is done.
+   - Work without a pull request: run ` + "`prx task update {{task_id}} --status completed`" + ` once it is done.
 
 Report what you changed and anything the plan did not cover.
 `
@@ -114,8 +111,8 @@ func DefaultTemplates() Templates {
 }
 
 // KindFor selects the template a task needs. Only the presence of an
-// implementation plan decides it: display state, readiness, and task kind
-// describe progress rather than which question the agent is being asked.
+// implementation plan decides it: display state and readiness describe progress
+// rather than which question the agent is being asked.
 func KindFor(task domain.Task) Kind {
 	if task.HasImplementationPlan {
 		return KindImplementation
@@ -166,7 +163,6 @@ func Render(task domain.Task, templates Templates) (Kind, string, error) {
 		"feature_id": task.FeatureID,
 		"task_title": task.Title,
 		"task_scope": describedScope(task.Scope),
-		"task_kind":  string(task.Kind),
 	}
 	body := placeholderPattern.ReplaceAllStringFunc(normalized.Template(kind), func(match string) string {
 		return values[placeholderName(match)]

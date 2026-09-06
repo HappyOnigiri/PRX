@@ -22,16 +22,6 @@ enum FeatureStatus {
   FEATURE_STATUS_AUTO = 5;
 }
 
-// TaskKind identifies whether a task is tracked with a pull request or a manual gate.
-enum TaskKind {
-  // TASK_KIND_UNSPECIFIED is never returned by the server; in create requests it defaults to a pull-request task.
-  TASK_KIND_UNSPECIFIED = 0;
-  // TASK_KIND_PULL_REQUEST identifies a task whose automatic state comes from its pull request.
-  TASK_KIND_PULL_REQUEST = 1;
-  // TASK_KIND_MANUAL identifies a task whose completion is controlled manually.
-  TASK_KIND_MANUAL = 2;
-}
-
 // TaskStatus is the stored workflow state of a task. Auto derives the task's
 // effective state from its pull request or implementation plan.
 enum TaskStatus {
@@ -195,8 +185,8 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT = 8;
   // DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND means the document kind is unsupported.
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND = 9;
-  // DOMAIN_ERROR_CODE_INVALID_KIND means the task kind is unsupported.
-  DOMAIN_ERROR_CODE_INVALID_KIND = 10;
+  reserved 10;
+  reserved "DOMAIN_ERROR_CODE_INVALID_KIND";
   // DOMAIN_ERROR_CODE_INVALID_PARENT means a document does not have exactly one valid parent.
   DOMAIN_ERROR_CODE_INVALID_PARENT = 11;
   // DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL means the pull request URL cannot be parsed.
@@ -213,8 +203,8 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_NOT_FOUND = 17;
   // DOMAIN_ERROR_CODE_REFERENCES_EXIST means deletion is blocked by referencing records.
   DOMAIN_ERROR_CODE_REFERENCES_EXIST = 18;
-  // DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK means a pull request cannot attach to a manual task.
-  DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK = 19;
+  reserved 19;
+  reserved "DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK";
   reserved 20;
   // DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL means a document URL is not HTTP or HTTPS.
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL = 21;
@@ -382,9 +372,9 @@ message Task {
   string title = 3;
   // scope describes the work covered by the task.
   string scope = 4;
-  // kind determines whether automatic state comes from a pull request or an implementation plan.
-  TaskKind kind = 5;
-  // status is the stored automatic/manual workflow control value.
+  reserved 5;
+  reserved "kind";
+  // status is the stored workflow control value.
   TaskStatus status = 6;
   // assignee is the person responsible for the task, when assigned.
   string assignee = 7;
@@ -623,8 +613,8 @@ message CreateTaskRequest {
   string title = 2;
   // scope describes the work covered by the task.
   string scope = 3;
-  // kind selects pull-request completion or manual completion; unspecified defaults to pull-request.
-  TaskKind kind = 4;
+  reserved 4;
+  reserved "kind";
   // assignee is the optional person responsible for the task.
   string assignee = 5;
 }
@@ -1324,8 +1314,8 @@ message DebugData {
   repeated DebugCount feature_statuses = 6;
   // task_display_states breaks tasks down by presented state.
   repeated DebugCount task_display_states = 7;
-  // task_kinds breaks tasks down by kind.
-  repeated DebugCount task_kinds = 8;
+  reserved 8;
+  reserved "task_kinds";
   // pull_request_display_states breaks pull requests down by presented state.
   repeated DebugCount pull_request_display_states = 9;
   // pull_request_hosts breaks pull requests down by normalized host.

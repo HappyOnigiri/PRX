@@ -49,7 +49,6 @@ import {
   type GitHubSyncStatus,
   type PromptTemplates,
   type Snapshot,
-  type TaskKind,
   type TaskStatus,
 } from "./gen/prx/v1/prx_pb";
 
@@ -133,7 +132,6 @@ export const mutations = {
     featureId: string;
     title: string;
     scope: string;
-    kind: TaskKind;
     assignee: string;
   }) => client.createTask(create(CreateTaskRequestSchema, input)),
   updateTask: (input: {

@@ -3,9 +3,8 @@ import type { SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";
-import { TaskKind } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
-import { formatError, taskKindLabel } from "../i18n/domain";
+import { formatError } from "../i18n/domain";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 
@@ -29,7 +28,6 @@ export function CreateTaskDialog({
         featureId,
         title: formValue(form, "title"),
         scope: formValue(form, "scope"),
-        kind: Number(form.get("kind")),
         assignee: formValue(form, "assignee"),
       });
     } catch {
@@ -63,26 +61,13 @@ export function CreateTaskDialog({
             placeholder={t("taskCreate.scopePlaceholder")}
           />
         </label>
-        <div className="form-row">
-          <label>
-            {t("taskCreate.kind")}
-            <select name="kind">
-              <option value={TaskKind.PULL_REQUEST}>
-                {taskKindLabel(TaskKind.PULL_REQUEST, t)}
-              </option>
-              <option value={TaskKind.MANUAL}>
-                {taskKindLabel(TaskKind.MANUAL, t)}
-              </option>
-            </select>
-          </label>
-          <label>
-            {t("common.assignee")}
-            <input
-              name="assignee"
-              placeholder={t("taskCreate.assigneePlaceholder")}
-            />
-          </label>
-        </div>
+        <label>
+          {t("common.assignee")}
+          <input
+            name="assignee"
+            placeholder={t("taskCreate.assigneePlaceholder")}
+          />
+        </label>
         {createTask.error && (
           <p className="form-error">{formatError(createTask.error, t)}</p>
         )}

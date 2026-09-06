@@ -43,7 +43,6 @@ func protoTask(v domain.Task) *prxv1.Task {
 		FeatureId:             v.FeatureID,
 		Title:                 v.Title,
 		Scope:                 v.Scope,
-		Kind:                  protoTaskKind(v.Kind),
 		Status:                protoTaskStatus(v.Status),
 		Assignee:              v.Assignee,
 		HasImplementationPlan: v.HasImplementationPlan,
@@ -182,32 +181,6 @@ func domainFeatureStatus(value *prxv1.FeatureStatus) (*domain.FeatureStatus, err
 		return nil, domain.NewError(domain.DomainErrorCodeInvalidStatus, "invalid feature status")
 	}
 	return &result, nil
-}
-
-func protoTaskKind(value domain.TaskKind) prxv1.TaskKind {
-	switch value {
-	case domain.TaskKindPR:
-		return prxv1.TaskKind_TASK_KIND_PULL_REQUEST
-	case domain.TaskKindManual:
-		return prxv1.TaskKind_TASK_KIND_MANUAL
-	default:
-		return prxv1.TaskKind_TASK_KIND_UNSPECIFIED
-	}
-}
-
-// domainTaskKind maps the unspecified value to the empty string so the service
-// layer can apply its default, and rejects everything else it cannot map.
-func domainTaskKind(value prxv1.TaskKind) (domain.TaskKind, error) {
-	switch value {
-	case prxv1.TaskKind_TASK_KIND_UNSPECIFIED:
-		return "", nil
-	case prxv1.TaskKind_TASK_KIND_PULL_REQUEST:
-		return domain.TaskKindPR, nil
-	case prxv1.TaskKind_TASK_KIND_MANUAL:
-		return domain.TaskKindManual, nil
-	default:
-		return "", domain.NewError(domain.DomainErrorCodeInvalidKind, "task kind must be pr or manual")
-	}
 }
 
 func protoTaskStatus(value domain.TaskStatus) prxv1.TaskStatus {
@@ -431,8 +404,6 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND
 	case domain.DomainErrorCodeInvalidDocumentURL:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL
-	case domain.DomainErrorCodeInvalidKind:
-		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND
 	case domain.DomainErrorCodeInvalidParent:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT
 	case domain.DomainErrorCodeInvalidPullRequestURL:
@@ -443,8 +414,6 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE
 	case domain.DomainErrorCodeNotFound:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND
-	case domain.DomainErrorCodePullRequestOnManualTask:
-		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK
 	case domain.DomainErrorCodeReferencesExist:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST
 	case domain.DomainErrorCodeInternal:

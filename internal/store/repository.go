@@ -254,9 +254,7 @@ func (s *Store) UpdateFeature(ctx context.Context, feature domain.Feature) (doma
 
 func (s *Store) CreateTask(
 	ctx context.Context,
-	featureID, title, scope string,
-	kind domain.TaskKind,
-	assignee string,
+	featureID, title, scope, assignee string,
 ) (domain.Task, error) {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -279,7 +277,6 @@ func (s *Store) CreateTask(
 		FeatureID: feature.ID,
 		Title:     title,
 		Scope:     scope,
-		Kind:      string(kind),
 		Status:    string(domain.TaskStatusAuto),
 		Assignee:  assignee,
 		CreatedAt: now,

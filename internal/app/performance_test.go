@@ -7,7 +7,6 @@ import (
 	"testing"
 
 	"github.com/HappyOnigiri/PRX/internal/app"
-	"github.com/HappyOnigiri/PRX/internal/domain"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 	"github.com/HappyOnigiri/PRX/internal/store"
 )
@@ -38,7 +37,6 @@ func BenchmarkSnapshot5000Tasks(b *testing.B) {
 				feature.ID,
 				fmt.Sprintf("Task %03d/%02d", featureIndex, taskIndex),
 				"",
-				domain.TaskKindManual,
 				"",
 			)
 			if err != nil {
