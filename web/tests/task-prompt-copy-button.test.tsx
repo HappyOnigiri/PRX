@@ -49,7 +49,7 @@ describe("TaskPromptCopyButton", () => {
     fireEvent.click(screen.getByRole("button", { name: "Copy design prompt" }));
 
     await waitFor(() => {
-      expect(screen.getByText("Prompt copied.")).toBeInTheDocument();
+      expect(screen.getByText("Design prompt copied.")).toBeInTheDocument();
     });
     expect(promptMocks.getTaskPrompt).toHaveBeenCalledWith("T-1");
     expect(writeText).toHaveBeenCalledWith("Design T-1");
@@ -70,6 +70,9 @@ describe("TaskPromptCopyButton", () => {
     await waitFor(() => {
       expect(writeText).toHaveBeenCalledWith("Build T-1");
     });
+    expect(
+      screen.getByText("Implementation prompt copied."),
+    ).toBeInTheDocument();
   });
 
   it("reports a server failure without writing to the clipboard", async () => {
@@ -133,13 +136,13 @@ describe("TaskPromptCopyButton", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Copy design prompt" }));
     await vi.waitFor(() => {
-      expect(screen.getByText("Prompt copied.")).toBeInTheDocument();
+      expect(screen.getByText("Design prompt copied.")).toBeInTheDocument();
     });
 
     act(() => {
       vi.advanceTimersByTime(1600);
     });
-    expect(screen.queryByText("Prompt copied.")).not.toBeInTheDocument();
+    expect(screen.queryByText("Design prompt copied.")).not.toBeInTheDocument();
     vi.useRealTimers();
   });
 });

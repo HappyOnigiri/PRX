@@ -29,6 +29,11 @@ export function TaskPromptCopyButton({
   const label = hasImplementationPlan
     ? t("inspector.copyImplementationPrompt")
     : t("inspector.copyDesignPrompt");
+  // Which prompt a task gets is not visible on the task itself, so the outcome
+  // names it rather than reporting that something was copied.
+  const copiedLabel = hasImplementationPlan
+    ? t("inspector.implementationPromptCopied")
+    : t("inspector.designPromptCopied");
 
   function settle(next: CopyStatus) {
     setStatus(next);
@@ -84,7 +89,7 @@ export function TaskPromptCopyButton({
         onClick={() => void copyPrompt()}
       />
       <span className="task-prompt-copy-status" aria-live="polite">
-        {status.case === "copied" && t("inspector.promptCopied")}
+        {status.case === "copied" && copiedLabel}
         {status.case === "failed" && status.message}
       </span>
     </span>

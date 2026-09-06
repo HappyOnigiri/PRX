@@ -81,7 +81,7 @@ test("copies a task prompt built from the configured template", async ({
     .first()
     .innerText();
   await node.getByRole("button", { name: "Copy design prompt" }).click();
-  await expect(node.getByText("Prompt copied.")).toBeVisible();
+  await expect(node.getByText("Design prompt copied.")).toBeVisible();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   expect(copied).toBe(`${slug} designs ${taskId}: E2E prompt task`);
 
