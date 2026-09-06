@@ -36,7 +36,7 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests
 	if err != nil {
 		t.Fatal(err)
 	}
-	activeTask, err := service.CreateTask(ctx, active.ID, "Active PR", "", domain.TaskKindPR, "")
+	activeTask, err := service.CreateTask(ctx, active.ID, "Active PR", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -57,7 +57,7 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests
 	if err != nil {
 		t.Fatal(err)
 	}
-	mergedTask, err := service.CreateTask(ctx, active.ID, "Merged PR", "", domain.TaskKindPR, "")
+	mergedTask, err := service.CreateTask(ctx, active.ID, "Merged PR", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -130,7 +130,7 @@ func archivedFeatureWithPullRequest(
 	if err != nil {
 		return domain.Task{}, err
 	}
-	task, err := service.CreateTask(ctx, feature.ID, "Archived PR", "", domain.TaskKindPR, "")
+	task, err := service.CreateTask(ctx, feature.ID, "Archived PR", "", "")
 	if err != nil {
 		return domain.Task{}, err
 	}
@@ -161,7 +161,7 @@ func featureInArchivedProjectWithPullRequest(
 	if err != nil {
 		return domain.Task{}, err
 	}
-	task, err := service.CreateTask(ctx, feature.ID, "Project PR", "", domain.TaskKindPR, "")
+	task, err := service.CreateTask(ctx, feature.ID, "Project PR", "", "")
 	if err != nil {
 		return domain.Task{}, err
 	}
@@ -186,7 +186,7 @@ func TestTargetedManualSyncLeavesTheAutomaticIntervalAndStatusUntouched(t *testi
 	if err != nil {
 		t.Fatal(err)
 	}
-	task, err := service.CreateTask(ctx, feature.ID, "Targeted PR", "", domain.TaskKindPR, "")
+	task, err := service.CreateTask(ctx, feature.ID, "Targeted PR", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -231,7 +231,7 @@ func TestAutomaticSyncRecordsTheRunAfterTheCallerCancels(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	task, err := service.CreateTask(context.Background(), feature.ID, "PR", "", domain.TaskKindPR, "")
+	task, err := service.CreateTask(context.Background(), feature.ID, "PR", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}

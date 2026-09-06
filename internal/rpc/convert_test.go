@@ -61,24 +61,6 @@ func TestDomainFeatureStatusAcceptsAutoAndRejectsUnknownValues(t *testing.T) {
 	}
 }
 
-func TestProtoTaskKindMapsEveryKnownValue(t *testing.T) {
-	tests := []struct {
-		name  string
-		value domain.TaskKind
-		want  prxv1.TaskKind
-	}{
-		{"pull request", domain.TaskKindPR, prxv1.TaskKind_TASK_KIND_PULL_REQUEST},
-		{"manual", domain.TaskKindManual, prxv1.TaskKind_TASK_KIND_MANUAL},
-	}
-	for _, test := range tests {
-		t.Run(test.name, func(t *testing.T) {
-			if got := protoTaskKind(test.value); got != test.want {
-				t.Fatalf("protoTaskKind(%q)=%s, want %s", test.value, got, test.want)
-			}
-		})
-	}
-}
-
 func TestProtoTaskStatusMapsEveryKnownValue(t *testing.T) {
 	tests := []struct {
 		name  string
@@ -333,7 +315,6 @@ func TestRPCErrorDetailsMapEveryKnownDomainErrorCode(t *testing.T) {
 			domain.DomainErrorCodeInvalidDocumentKind,
 			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND,
 		},
-		{"invalid kind", domain.DomainErrorCodeInvalidKind, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND},
 		{"invalid parent", domain.DomainErrorCodeInvalidParent, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT},
 		{
 			"invalid pull request URL",
@@ -347,11 +328,6 @@ func TestRPCErrorDetailsMapEveryKnownDomainErrorCode(t *testing.T) {
 			"references exist",
 			domain.DomainErrorCodeReferencesExist,
 			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST,
-		},
-		{
-			"pull request on manual task",
-			domain.DomainErrorCodePullRequestOnManualTask,
-			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK,
 		},
 		{
 			"invalid document URL",

@@ -225,7 +225,6 @@ func (noopRepository) CreateTask(
 	string,
 	string,
 	string,
-	domain.TaskKind,
 	string,
 ) (domain.Task, error) {
 	return domain.Task{}, errors.New("not implemented")

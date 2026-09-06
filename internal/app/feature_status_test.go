@@ -13,7 +13,6 @@ import (
 // statusTask describes one task to create for a feature whose derived status is
 // under test.
 type statusTask struct {
-	kind   domain.TaskKind
 	status domain.TaskStatus
 	pr     domain.PullRequestState
 }
@@ -33,21 +32,21 @@ func TestFeatureCompletesOnlyWhenEveryTaskIsFinished(t *testing.T) {
 		{
 			name:  "manual completions finish the work",
 			slug:  "manual-completed",
-			tasks: []statusTask{{kind: domain.TaskKindManual, status: domain.TaskStatusCompleted}},
+			tasks: []statusTask{{status: domain.TaskStatusCompleted}},
 			want:  domain.FeatureStatusCompleted,
 		},
 		{
 			name:  "manual closures finish the work",
 			slug:  "manual-closed",
-			tasks: []statusTask{{kind: domain.TaskKindManual, status: domain.TaskStatusClosed}},
+			tasks: []statusTask{{status: domain.TaskStatusClosed}},
 			want:  domain.FeatureStatusCompleted,
 		},
 		{
 			name: "merged and closed pull requests finish the work",
 			slug: "merged-and-closed",
 			tasks: []statusTask{
-				{kind: domain.TaskKindPR, status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
-				{kind: domain.TaskKindPR, status: domain.TaskStatusAuto, pr: domain.PullRequestStateClosed},
+				{status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
+				{status: domain.TaskStatusAuto, pr: domain.PullRequestStateClosed},
 			},
 			want: domain.FeatureStatusCompleted,
 		},
@@ -55,8 +54,8 @@ func TestFeatureCompletesOnlyWhenEveryTaskIsFinished(t *testing.T) {
 			name: "manual and automatic finishes mix",
 			slug: "mixed-finished",
 			tasks: []statusTask{
-				{kind: domain.TaskKindManual, status: domain.TaskStatusCompleted},
-				{kind: domain.TaskKindPR, status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
+				{status: domain.TaskStatusCompleted},
+				{status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
 			},
 			want: domain.FeatureStatusCompleted,
 		},
@@ -64,8 +63,8 @@ func TestFeatureCompletesOnlyWhenEveryTaskIsFinished(t *testing.T) {
 			name: "one task not started keeps the feature active",
 			slug: "one-not-started",
 			tasks: []statusTask{
-				{kind: domain.TaskKindManual, status: domain.TaskStatusCompleted},
-				{kind: domain.TaskKindManual, status: domain.TaskStatusNotStarted},
+				{status: domain.TaskStatusCompleted},
+				{status: domain.TaskStatusNotStarted},
 			},
 			want: domain.FeatureStatusActive,
 		},
@@ -73,8 +72,8 @@ func TestFeatureCompletesOnlyWhenEveryTaskIsFinished(t *testing.T) {
 			name: "one task in progress keeps the feature active",
 			slug: "one-in-progress",
 			tasks: []statusTask{
-				{kind: domain.TaskKindManual, status: domain.TaskStatusCompleted},
-				{kind: domain.TaskKindManual, status: domain.TaskStatusInProgress},
+				{status: domain.TaskStatusCompleted},
+				{status: domain.TaskStatusInProgress},
 			},
 			want: domain.FeatureStatusActive,
 		},
@@ -82,8 +81,8 @@ func TestFeatureCompletesOnlyWhenEveryTaskIsFinished(t *testing.T) {
 			name: "one open pull request keeps the feature active",
 			slug: "one-open-pull-request",
 			tasks: []statusTask{
-				{kind: domain.TaskKindPR, status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
-				{kind: domain.TaskKindPR, status: domain.TaskStatusAuto, pr: domain.PullRequestStateOpen},
+				{status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
+				{status: domain.TaskStatusAuto, pr: domain.PullRequestStateOpen},
 			},
 			want: domain.FeatureStatusActive,
 		},
@@ -106,7 +105,7 @@ func TestManualFeatureStatusOverridesAutomaticCompletion(t *testing.T) {
 	service, database := newAutoSyncTestService(t)
 	defer func() { _ = database.Close() }()
 	feature := createFeatureWithTasks(t, service, database, "override", []statusTask{
-		{kind: domain.TaskKindManual, status: domain.TaskStatusCompleted},
+		{status: domain.TaskStatusCompleted},
 	})
 	if got := snapshotFeature(t, service, feature.ID); got.DisplayStatus != domain.FeatureStatusCompleted {
 		t.Fatalf("automatic display status=%q", got.DisplayStatus)
@@ -143,7 +142,7 @@ func TestUnscopedSyncSkipsCompletedFeaturesAndExplicitScopeRefreshesThem(t *test
 	service, database := newAutoSyncTestService(t)
 	defer func() { _ = database.Close() }()
 	feature := createFeatureWithTasks(t, service, database, "completed-sync", []statusTask{
-		{kind: domain.TaskKindPR, status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
+		{status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
 	})
 	if got := snapshotFeature(t, service, feature.ID); got.DisplayStatus != domain.FeatureStatusCompleted {
 		t.Fatalf("display status=%q", got.DisplayStatus)
@@ -188,7 +187,7 @@ func createFeatureWithTasks(
 		t.Fatal(err)
 	}
 	for index, value := range tasks {
-		task, err := service.CreateTask(ctx, feature.ID, fmt.Sprintf("Task %d", index+1), "", value.kind, "")
+		task, err := service.CreateTask(ctx, feature.ID, fmt.Sprintf("Task %d", index+1), "", "")
 		if err != nil {
 			t.Fatal(err)
 		}

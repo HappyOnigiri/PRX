@@ -26,8 +26,8 @@ func TestCyclePathAndTopologicalOrder(t *testing.T) {
 
 func TestReadyUsesLastKnownPullRequestState(t *testing.T) {
 	tasks := []Task{
-		{ID: "a", Title: "API", Kind: TaskKindPR, Status: TaskStatusAuto},
-		{ID: "b", Title: "UI", Kind: TaskKindPR, Status: TaskStatusAuto},
+		{ID: "a", Title: "API", Status: TaskStatusAuto},
+		{ID: "b", Title: "UI", Status: TaskStatusAuto},
 	}
 	deps := []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}
 	prs := []PullRequest{{TaskID: "a", State: PullRequestStateMerged, Stale: true}}
@@ -45,8 +45,8 @@ func TestReadyUsesLastKnownPullRequestState(t *testing.T) {
 
 func TestReadyReportsStructuredWaitingReason(t *testing.T) {
 	tasks := []Task{
-		{ID: "a", Title: "API", Kind: TaskKindManual, Status: TaskStatusAuto},
-		{ID: "b", Title: "UI", Kind: TaskKindManual, Status: TaskStatusAuto},
+		{ID: "a", Title: "API", Status: TaskStatusAuto},
+		{ID: "b", Title: "UI", Status: TaskStatusAuto},
 	}
 	deps := []Dependency{{BlockerTaskID: "a", BlockedTaskID: "b"}}
 	got := Derive(tasks, deps, nil)
@@ -56,8 +56,8 @@ func TestReadyReportsStructuredWaitingReason(t *testing.T) {
 }
 
 func TestBlockedReasonAndCodeAreSetTogether(t *testing.T) {
-	blocked := Task{ID: "b", Title: "UI", Kind: TaskKindManual, Status: TaskStatusAuto}
-	blocker := Task{ID: "a", Title: "API", Kind: TaskKindPR, Status: TaskStatusAuto}
+	blocked := Task{ID: "b", Title: "UI", Status: TaskStatusAuto}
+	blocker := Task{ID: "a", Title: "API", Status: TaskStatusAuto}
 	cases := []struct {
 		name  string
 		tasks []Task
@@ -128,54 +128,54 @@ func TestAutomaticDisplayStateMatrix(t *testing.T) {
 	}{
 		{
 			name:  "automatic task without plan",
-			task:  Task{ID: "task", Kind: TaskKindManual, Status: TaskStatusAuto},
+			task:  Task{ID: "task", Status: TaskStatusAuto},
 			want:  TaskDisplayStateNotStarted,
 			ready: true,
 		},
 		{
 			name:  "automatic task with plan",
-			task:  Task{ID: "task", Kind: TaskKindManual, Status: TaskStatusAuto, HasImplementationPlan: true},
+			task:  Task{ID: "task", Status: TaskStatusAuto, HasImplementationPlan: true},
 			want:  TaskDisplayStateDesigned,
 			ready: true,
 		},
 		{
 			name:  "automatic task with plan and pull request",
-			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusAuto, HasImplementationPlan: true},
+			task:  Task{ID: "task", Status: TaskStatusAuto, HasImplementationPlan: true},
 			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
 			want:  TaskDisplayStateOpen,
 			ready: false,
 		},
 		{
 			name:  "manual not started override",
-			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusNotStarted, HasImplementationPlan: true},
+			task:  Task{ID: "task", Status: TaskStatusNotStarted, HasImplementationPlan: true},
 			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateMerged}},
 			want:  TaskDisplayStateNotStarted,
 			ready: true,
 		},
 		{
 			name:  "manual in progress override",
-			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusInProgress},
+			task:  Task{ID: "task", Status: TaskStatusInProgress},
 			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
 			want:  TaskDisplayStateInProgress,
 			ready: false,
 		},
 		{
 			name:  "manual completed override",
-			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusCompleted},
+			task:  Task{ID: "task", Status: TaskStatusCompleted},
 			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
 			want:  TaskDisplayStateCompleted,
 			ready: false,
 		},
 		{
 			name:  "manual closed override",
-			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusClosed},
+			task:  Task{ID: "task", Status: TaskStatusClosed},
 			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
 			want:  TaskDisplayStateClosed,
 			ready: false,
 		},
 		{
 			name:  "automatic PR unknown",
-			task:  Task{ID: "task", Kind: TaskKindPR, Status: TaskStatusAuto},
+			task:  Task{ID: "task", Status: TaskStatusAuto},
 			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateUnknown}},
 			want:  TaskDisplayStateUnknown,
 			ready: false,
@@ -198,40 +198,40 @@ func TestDependencySatisfactionMatrix(t *testing.T) {
 		pr   *PullRequest
 		want bool
 	}{
-		{name: "manual completed", task: Task{Kind: TaskKindManual, Status: TaskStatusCompleted}, want: true},
-		{name: "manual closed", task: Task{Kind: TaskKindManual, Status: TaskStatusClosed}, want: true},
-		{name: "manual in progress", task: Task{Kind: TaskKindManual, Status: TaskStatusInProgress}, want: false},
+		{name: "manual completed", task: Task{Status: TaskStatusCompleted}, want: true},
+		{name: "manual closed", task: Task{Status: TaskStatusClosed}, want: true},
+		{name: "manual in progress", task: Task{Status: TaskStatusInProgress}, want: false},
 		{
 			name: "PR open",
-			task: Task{Kind: TaskKindPR, Status: TaskStatusAuto},
+			task: Task{Status: TaskStatusAuto},
 			pr:   &PullRequest{State: PullRequestStateOpen},
 			want: true,
 		},
 		{
 			name: "PR closed",
-			task: Task{Kind: TaskKindPR, Status: TaskStatusAuto},
+			task: Task{Status: TaskStatusAuto},
 			pr:   &PullRequest{State: PullRequestStateClosed},
 			want: true,
 		},
 		{
 			name: "PR merged",
-			task: Task{Kind: TaskKindPR, Status: TaskStatusAuto},
+			task: Task{Status: TaskStatusAuto},
 			pr:   &PullRequest{State: PullRequestStateMerged},
 			want: true,
 		},
 		{
 			name: "PR merged but stale",
-			task: Task{Kind: TaskKindPR, Status: TaskStatusAuto},
+			task: Task{Status: TaskStatusAuto},
 			pr:   &PullRequest{State: PullRequestStateMerged, Stale: true},
 			want: true,
 		},
 		{
 			name: "unknown PR",
-			task: Task{Kind: TaskKindPR, Status: TaskStatusAuto},
+			task: Task{Status: TaskStatusAuto},
 			pr:   &PullRequest{State: PullRequestStateUnknown, Stale: true},
 			want: false,
 		},
-		{name: "missing PR", task: Task{Kind: TaskKindPR, Status: TaskStatusAuto}, want: false},
+		{name: "missing PR", task: Task{Status: TaskStatusAuto}, want: false},
 	}
 	for _, test := range tests {
 		t.Run(test.name, func(t *testing.T) {

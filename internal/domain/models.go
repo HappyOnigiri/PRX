@@ -12,14 +12,6 @@ const (
 	FeatureStatusCancelled FeatureStatus = "cancelled"
 )
 
-type TaskKind string
-
-const (
-	TaskKindPR          TaskKind = "pr"
-	TaskKindManual      TaskKind = "manual"
-	TaskKindPullRequest TaskKind = TaskKindPR
-)
-
 type TaskStatus string
 
 const (
@@ -166,7 +158,6 @@ type Task struct {
 	StorageFeatureID      string            `json:"-"`
 	Title                 string            `json:"title"`
 	Scope                 string            `json:"scope"`
-	Kind                  TaskKind          `json:"kind"`
 	Status                TaskStatus        `json:"status"`
 	Assignee              string            `json:"assignee"`
 	HasImplementationPlan bool              `json:"has_implementation_plan"`

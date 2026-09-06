@@ -48,7 +48,6 @@ func (repositoryStub) CreateTask(
 	string,
 	string,
 	string,
-	domain.TaskKind,
 	string,
 ) (domain.Task, error) {
 	return domain.Task{}, errors.New("unexpected CreateTask call")
@@ -315,19 +314,9 @@ func TestCreateFeatureNormalizesBeforeRepository(t *testing.T) {
 	}
 }
 
-func TestCreateTaskRejectsUnknownKind(t *testing.T) {
-	repository := &featureRepository{feature: domain.Feature{ID: "feature-id"}}
-	service := app.New(repository, nil)
-
-	_, err := service.CreateTask(context.Background(), "feature-id", "Task", "", domain.TaskKind("unknown"), "")
-	if got := errorCode(t, err); got != "invalid_kind" {
-		t.Fatalf("error code=%q, want invalid_kind", got)
-	}
-}
-
-func TestUpdateTaskAcceptsManualOverridesForPRTask(t *testing.T) {
+func TestUpdateTaskAcceptsManualOverrides(t *testing.T) {
 	repository := &taskRepository{
-		task: domain.Task{ID: "task-id", Title: "Ship", Kind: domain.TaskKindPR, Status: domain.TaskStatusAuto},
+		task: domain.Task{ID: "task-id", Title: "Ship", Status: domain.TaskStatusAuto},
 	}
 	service := app.New(repository, nil)
 	completed := domain.TaskStatusCompleted
@@ -340,7 +329,7 @@ func TestUpdateTaskAcceptsManualOverridesForPRTask(t *testing.T) {
 
 func TestImplementationPlanValidationPreservesContent(t *testing.T) {
 	repository := &planRepository{
-		taskRepository: taskRepository{task: domain.Task{ID: "task-id", Title: "Plan", Kind: domain.TaskKindManual}},
+		taskRepository: taskRepository{task: domain.Task{ID: "task-id", Title: "Plan"}},
 	}
 	service := app.New(repository, nil)
 	content := "  # Plan\n\nKeep the surrounding whitespace.  \n"
@@ -530,16 +519,6 @@ func TestAddDocumentValidatesWithoutRepository(t *testing.T) {
 				t.Fatalf("error code=%q, want %q", got, test.code)
 			}
 		})
-	}
-}
-
-func TestAttachPullRequestRejectsManualTask(t *testing.T) {
-	repository := &taskRepository{task: domain.Task{ID: "task-id", Kind: domain.TaskKindManual}}
-	service := app.New(repository, nil)
-
-	_, err := service.AttachPullRequest(context.Background(), "task-id", "https://github.com/acme/api/pull/42")
-	if got := errorCode(t, err); got != "pull_request_on_manual_task" {
-		t.Fatalf("error code=%q, want pull_request_on_manual_task", got)
 	}
 }
 

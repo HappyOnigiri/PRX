@@ -137,12 +137,12 @@ func newReadOnlyFixture(t *testing.T) readOnlyFixture {
 		t.Fatal(err)
 	}
 	if fixture.blocker, err = service.CreateTask(
-		ctx, fixture.feature.ID, "Blocker", "", domain.TaskKindPR, "",
+		ctx, fixture.feature.ID, "Blocker", "", "",
 	); err != nil {
 		t.Fatal(err)
 	}
 	if fixture.blocked, err = service.CreateTask(
-		ctx, fixture.feature.ID, "Blocked", "", domain.TaskKindPR, "",
+		ctx, fixture.feature.ID, "Blocked", "", "",
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -179,7 +179,7 @@ func newReadOnlyFixture(t *testing.T) readOnlyFixture {
 func (f readOnlyFixture) refusedWrites(ctx context.Context) map[string]error {
 	service := f.service
 	_, dependencyErr := service.AddDependency(ctx, f.blocker.ID, f.blocked.ID)
-	_, taskErr := service.CreateTask(ctx, f.feature.ID, "New", "", domain.TaskKindManual, "")
+	_, taskErr := service.CreateTask(ctx, f.feature.ID, "New", "", "")
 	_, updateTaskErr := service.UpdateTask(ctx, f.blocker.ID, stringPointer("Renamed"), nil, nil, nil)
 	_, pullRequestErr := service.AttachPullRequest(ctx, f.blocked.ID, "https://github.com/acme/api/pull/2")
 	_, planErr := service.UpsertImplementationPlan(
@@ -267,7 +267,7 @@ func TestArchivedProjectRefusesEveryWriteInsideIt(t *testing.T) {
 		t.Fatal(err)
 	}
 	if _, err := fixture.service.CreateTask(
-		ctx, fixture.feature.ID, "After", "", domain.TaskKindManual, "",
+		ctx, fixture.feature.ID, "After", "", "",
 	); err != nil {
 		t.Fatalf("write after unarchiving: %v", err)
 	}

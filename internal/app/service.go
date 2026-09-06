@@ -34,12 +34,7 @@ type Repository interface {
 	GetFeature(ctx context.Context, id string) (domain.Feature, error)
 	DeleteFeature(ctx context.Context, id string, cascade bool) error
 
-	CreateTask(
-		ctx context.Context,
-		featureID, title, scope string,
-		kind domain.TaskKind,
-		assignee string,
-	) (domain.Task, error)
+	CreateTask(ctx context.Context, featureID, title, scope, assignee string) (domain.Task, error)
 	GetTask(ctx context.Context, id string) (domain.Task, error)
 	UpdateTask(ctx context.Context, task domain.Task) (domain.Task, error)
 	DeleteTask(ctx context.Context, id string, cascade bool) error
@@ -238,9 +233,7 @@ func (s *Service) DeleteFeature(ctx context.Context, id string, cascade bool) er
 
 func (s *Service) CreateTask(
 	ctx context.Context,
-	featureID, title, scope string,
-	kind domain.TaskKind,
-	assignee string,
+	featureID, title, scope, assignee string,
 ) (domain.Task, error) {
 	feature, err := s.ResolveFeature(ctx, featureID)
 	if err != nil {
@@ -253,13 +246,7 @@ func (s *Service) CreateTask(
 	if title == "" {
 		return domain.Task{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "task title is required")
 	}
-	if kind == "" {
-		kind = domain.TaskKindPR
-	}
-	if !oneOf(kind, domain.TaskKindPR, domain.TaskKindManual) {
-		return domain.Task{}, domain.NewError(domain.DomainErrorCodeInvalidKind, "task kind must be pr or manual")
-	}
-	return s.repository.CreateTask(ctx, feature.ID, title, strings.TrimSpace(scope), kind, strings.TrimSpace(assignee))
+	return s.repository.CreateTask(ctx, feature.ID, title, strings.TrimSpace(scope), strings.TrimSpace(assignee))
 }
 
 // UpdateTask applies every field the caller supplied. A nil pointer means the
@@ -368,12 +355,6 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 	}
 	if err := s.guardTask(ctx, task); err != nil {
 		return domain.PullRequest{}, err
-	}
-	if task.Kind != domain.TaskKindPR {
-		return domain.PullRequest{}, domain.NewError(
-			domain.DomainErrorCodePullRequestOnManualTask,
-			"manual tasks cannot have pull requests",
-		)
 	}
 	host, owner, repo, number, parsedCanonical, err := githubprovider.ParsePullRequestURLDetails(rawURL)
 	if err != nil {

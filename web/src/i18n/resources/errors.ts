@@ -26,14 +26,11 @@ export const errors = {
       invalidImplementationPlan: "Enter a non-empty implementation plan.",
       implementationPlanTooLarge:
         "Implementation plans support content up to 1 MiB.",
-      invalidKind: "The task type is invalid.",
       invalidParent: "Choose either a feature or a task for this reference.",
       invalidPullRequestUrl: "Enter a github.com pull request URL.",
       invalidStatus: "The selected status is invalid.",
       invalidTitle: "Enter a title.",
       notFound: "The requested item was not found.",
-      pullRequestOnManualTask:
-        "Manual tasks cannot have a pull request. Create a PR task instead.",
       referencesExist: "Remove dependent references before deleting this item.",
     },
   },
@@ -63,7 +60,6 @@ export const errors = {
         "参照資料の URL は http:// または https:// で始まる必要があります。",
       invalidImplementationPlan: "空ではない実装プランを入力してください。",
       implementationPlanTooLarge: "実装プランは 1 MiB 以内で入力してください。",
-      invalidKind: "タスクの種類が正しくありません。",
       invalidParent:
         "参照先はフィーチャーまたはタスクのどちらか一方を選んでください。",
       invalidPullRequestUrl:
@@ -71,8 +67,6 @@ export const errors = {
       invalidStatus: "選択したステータスは正しくありません。",
       invalidTitle: "タイトルを入力してください。",
       notFound: "指定された項目が見つかりません。",
-      pullRequestOnManualTask:
-        "手動タスクにはプルリクエストを関連付けられません。PR タスクを作成してください。",
       referencesExist: "先に関連する参照を削除してください。",
     },
   },

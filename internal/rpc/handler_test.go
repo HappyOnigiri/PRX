@@ -38,7 +38,6 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 			&prxv1.CreateTaskRequest{
 				FeatureId: feature.Msg.GetFeature().GetId(),
 				Title:     "Documented task",
-				Kind:      prxv1.TaskKind_TASK_KIND_MANUAL,
 			},
 		),
 	)
@@ -321,7 +320,6 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 			&prxv1.CreateTaskRequest{
 				FeatureId: feature.Msg.GetFeature().GetId(),
 				Title:     "A",
-				Kind:      prxv1.TaskKind_TASK_KIND_PULL_REQUEST,
 			},
 		),
 	)
@@ -334,7 +332,6 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 			&prxv1.CreateTaskRequest{
 				FeatureId: feature.Msg.GetFeature().GetId(),
 				Title:     "B",
-				Kind:      prxv1.TaskKind_TASK_KIND_PULL_REQUEST,
 			},
 		),
 	)
@@ -385,8 +382,7 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	if len(snapshot.Msg.GetSnapshot().GetTasks()) != 2 || len(snapshot.Msg.GetSnapshot().GetDependencies()) != 1 {
 		t.Fatalf("unexpected snapshot: %+v", snapshot.Msg.GetSnapshot())
 	}
-	if snapshot.Msg.GetSnapshot().GetTasks()[1].GetKind() != prxv1.TaskKind_TASK_KIND_PULL_REQUEST ||
-		snapshot.Msg.GetSnapshot().GetTasks()[1].GetBlockedReason() == nil {
+	if snapshot.Msg.GetSnapshot().GetTasks()[1].GetBlockedReason() == nil {
 		t.Fatalf("unexpected structured task state: %+v", snapshot.Msg.GetSnapshot().GetTasks()[1])
 	}
 	if snapshot.Msg.GetSnapshot().GetTasks()[1].GetBlockedReason().GetCode() !=
@@ -410,7 +406,6 @@ func TestRPCImplementationPlanLifecycle(t *testing.T) {
 		connect.NewRequest(&prxv1.CreateTaskRequest{
 			FeatureId: feature.Msg.GetFeature().GetId(),
 			Title:     "Store a plan",
-			Kind:      prxv1.TaskKind_TASK_KIND_MANUAL,
 		}),
 	)
 	if err != nil {
@@ -500,20 +495,20 @@ func TestRPCLifecyclePersistsAndDeletesResources(t *testing.T) {
 		t.Fatal(err)
 	}
 	featureID := featureResponse.Msg.GetFeature().GetId()
-	createTask := func(title string, kind prxv1.TaskKind) *prxv1.Task {
+	createTask := func(title string) *prxv1.Task {
 		response, err := client.CreateTask(
 			ctx,
-			connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: featureID, Title: title, Kind: kind}),
+			connect.NewRequest(&prxv1.CreateTaskRequest{FeatureId: featureID, Title: title}),
 		)
 		if err != nil {
 			t.Fatal(err)
 		}
 		return response.Msg.GetTask()
 	}
-	blocker := createTask("Merged blocker", prxv1.TaskKind_TASK_KIND_PULL_REQUEST)
-	blocked := createTask("Blocked task", prxv1.TaskKind_TASK_KIND_MANUAL)
-	failedTask := createTask("Failed sync", prxv1.TaskKind_TASK_KIND_PULL_REQUEST)
-	deletedTask := createTask("Deleted task", prxv1.TaskKind_TASK_KIND_MANUAL)
+	blocker := createTask("Merged blocker")
+	blocked := createTask("Blocked task")
+	failedTask := createTask("Failed sync")
+	deletedTask := createTask("Deleted task")
 
 	if _, err := client.AddDependency(
 		ctx,
@@ -719,25 +714,11 @@ func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 			&prxv1.CreateTaskRequest{
 				FeatureId: feature.Msg.GetFeature().GetId(),
 				Title:     "A",
-				Kind:      prxv1.TaskKind_TASK_KIND_MANUAL,
 			},
 		),
 	)
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	unknownKind := prxv1.TaskKind(999)
-	if _, err = client.CreateTask(
-		ctx,
-		connect.NewRequest(
-			&prxv1.CreateTaskRequest{FeatureId: feature.Msg.GetFeature().GetId(), Title: "B", Kind: unknownKind},
-		),
-	); errorDetailCode(
-		t,
-		err,
-	) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_KIND {
-		t.Fatalf("unknown task kind err=%v", err)
 	}
 
 	unknownTaskStatus := prxv1.TaskStatus(999)
@@ -786,44 +767,17 @@ func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	manual, err := client.CreateTask(
-		ctx,
-		connect.NewRequest(
-			&prxv1.CreateTaskRequest{
-				FeatureId: feature.Msg.GetFeature().GetId(),
-				Title:     "Sign off",
-				Kind:      prxv1.TaskKind_TASK_KIND_MANUAL,
-			},
-		),
-	)
-	if err != nil {
-		t.Fatal(err)
-	}
 	prTask, err := client.CreateTask(
 		ctx,
 		connect.NewRequest(
 			&prxv1.CreateTaskRequest{
 				FeatureId: feature.Msg.GetFeature().GetId(),
 				Title:     "Ship API",
-				Kind:      prxv1.TaskKind_TASK_KIND_PULL_REQUEST,
 			},
 		),
 	)
 	if err != nil {
 		t.Fatal(err)
-	}
-
-	_, err = client.AttachPullRequest(
-		ctx,
-		connect.NewRequest(
-			&prxv1.AttachPullRequestRequest{
-				TaskId: manual.Msg.GetTask().GetId(),
-				Url:    "https://github.com/org/repo/pull/42",
-			},
-		),
-	)
-	if got := errorDetailCode(t, err); got != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK {
-		t.Fatalf("pull request on manual task code=%s err=%v", got, err)
 	}
 
 	completed := prxv1.TaskStatus_TASK_STATUS_COMPLETED
@@ -847,7 +801,7 @@ func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
 		ctx,
 		connect.NewRequest(
 			&prxv1.AddDocumentRequest{
-				TaskId: manual.Msg.GetTask().GetId(),
+				TaskId: prTask.Msg.GetTask().GetId(),
 				Title:  "Spec",
 				Source: &prxv1.AddDocumentRequest_Url{Url: "ftp://example.com/spec"},
 			},
@@ -861,7 +815,7 @@ func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
 		ctx,
 		connect.NewRequest(
 			&prxv1.AddDocumentRequest{
-				TaskId: manual.Msg.GetTask().GetId(),
+				TaskId: prTask.Msg.GetTask().GetId(),
 				Title:  "Spec",
 				Source: &prxv1.AddDocumentRequest_Url{Url: "  "},
 			},

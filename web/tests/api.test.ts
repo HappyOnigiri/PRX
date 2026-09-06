@@ -283,7 +283,6 @@ describe("RPC API wrappers", () => {
       featureId: "feature-1",
       title: "Implement",
       scope: "WebUI",
-      kind: 1,
       assignee: "Bob",
     });
     expect(apiMocks.client.createTask).toHaveBeenCalledWith(
@@ -291,7 +290,6 @@ describe("RPC API wrappers", () => {
         featureId: "feature-1",
         title: "Implement",
         scope: "WebUI",
-        kind: 1,
         assignee: "Bob",
       }),
     );

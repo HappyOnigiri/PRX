@@ -15,11 +15,6 @@ export const domain = {
       githubSyncNeverCompleted: "No synchronization run has ever completed",
       pullRequestsStale: "Some pull requests hold stale state",
     },
-    kind: {
-      pullRequest: "Pull request",
-      manual: "Manual gate",
-      unknown: "Unknown",
-    },
     documentKind: {
       url: "URL",
       localFile: "Local file",
@@ -79,11 +74,6 @@ export const domain = {
       githubSyncOverdue: "自動同期が予定より遅れています",
       githubSyncNeverCompleted: "同期が一度も完了していません",
       pullRequestsStale: "一部のPRが古い状態のままです",
-    },
-    kind: {
-      pullRequest: "プルリクエスト",
-      manual: "手動ゲート",
-      unknown: "不明",
     },
     documentKind: {
       url: "URL",

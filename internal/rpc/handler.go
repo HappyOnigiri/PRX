@@ -61,12 +61,10 @@ func rpcError(err error) error {
 		domain.DomainErrorCodeInvalidDatabase,
 		domain.DomainErrorCodeInvalidDocument,
 		domain.DomainErrorCodeInvalidDocumentKind,
-		domain.DomainErrorCodeInvalidKind,
 		domain.DomainErrorCodeInvalidParent,
 		domain.DomainErrorCodeInvalidPullRequestURL,
 		domain.DomainErrorCodeInvalidStatus,
 		domain.DomainErrorCodeInvalidTitle,
-		domain.DomainErrorCodePullRequestOnManualTask,
 		domain.DomainErrorCodeInvalidDocumentURL,
 		domain.DomainErrorCodeDocumentReadFailed,
 		domain.DomainErrorCodeDocumentTooLarge,
@@ -197,16 +195,11 @@ func (h *Handler) CreateTask(
 	ctx context.Context,
 	req *connect.Request[prxv1.CreateTaskRequest],
 ) (*connect.Response[prxv1.CreateTaskResponse], error) {
-	kind, err := domainTaskKind(req.Msg.GetKind())
-	if err != nil {
-		return nil, rpcError(err)
-	}
 	value, err := h.service.CreateTask(
 		ctx,
 		req.Msg.GetFeatureId(),
 		req.Msg.GetTitle(),
 		req.Msg.GetScope(),
-		kind,
 		req.Msg.GetAssignee(),
 	)
 	if err != nil {

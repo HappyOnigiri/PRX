@@ -1,6 +1,6 @@
 ## prx task create
 
-Create an implementation or manual task
+Create a task
 
 ```
 prx task create FEATURE_ID TITLE [flags]
@@ -18,7 +18,6 @@ prx task create F-1 -- "-fix login redirect"
 ```
       --assignee string   assignee
   -h, --help              help for create
-      --kind string       pr or manual (default "pr")
       --scope string      scope description
 ```
 

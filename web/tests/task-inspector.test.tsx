@@ -10,7 +10,6 @@ import {
   BlockedReasonCode,
   DocumentKind,
   PullRequestDisplayState,
-  TaskKind,
   TaskStatus,
 } from "../src/gen/prx/v1/prx_pb";
 import { TaskInspector } from "../src/views/TaskInspector";
@@ -84,7 +83,6 @@ describe("TaskInspector", () => {
     const task = makeTask({
       title: "Current task",
       scope: "Initial scope",
-      kind: TaskKind.MANUAL,
       status: TaskStatus.AUTO,
       assignee: "Bob",
       blockedReason: {
@@ -234,7 +232,7 @@ describe("TaskInspector", () => {
   });
 
   it("attaches a pull request when none is linked and closes explicitly", () => {
-    const task = makeTask({ kind: TaskKind.PULL_REQUEST });
+    const task = makeTask();
     render(
       <TaskInspector
         task={task}

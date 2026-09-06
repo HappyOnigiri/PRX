@@ -54,8 +54,8 @@ WHERE id=? RETURNING *;
 DELETE FROM features WHERE id=?;
 
 -- name: CreateTask :one
-INSERT INTO tasks (id, public_id, feature_id, title, scope, kind, status, assignee, created_at, updated_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
+INSERT INTO tasks (id, public_id, feature_id, title, scope, status, assignee, created_at, updated_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?) RETURNING *;
 
 -- name: GetTask :one
 SELECT * FROM tasks WHERE id=?;
