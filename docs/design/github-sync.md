@@ -33,6 +33,10 @@ A feature that is read-only because its project is archived leaves them on the s
 Explicit feature or task refreshes may still maintain archived and completed history.
 A completed feature therefore keeps its recorded pull-request state even when GitHub changes it.
 An automatically completed feature does not return to active work on its own; changing its status or its tasks does that.
+Attaching a pull request refreshes that pull request at once, so a task never presents freshly recorded work as stale while it waits for the next refresh.
+That refresh is scoped to the task, so it maintains archived and completed history and leaves the recorded run status and the shared interval untouched.
+It is best effort and bounded by a deadline, like an automatic refresh.
+Attaching succeeds even when GitHub is unreachable, and the pull request then keeps the staleness and the synchronization error that record why.
 Merged and closed pull requests remain eligible so state changes and prior errors can be detected.
 Only a refresh that covers every eligible pull request records a run and resets the interval; one narrowed to a feature or task leaves the recorded run status untouched.
 

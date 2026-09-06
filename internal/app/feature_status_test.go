@@ -207,11 +207,36 @@ func createFeatureWithTasks(
 			t.Fatal(err)
 		}
 		attached.State = value.pr
+		// Attaching refreshes the pull request, and these tests observe which
+		// pull requests a later refresh reaches, so the stored value goes back
+		// to the never-refreshed one the caller asked for.
+		attached.LastSyncedAt = nil
+		attached.SyncError = ""
+		attached.Stale = true
 		if _, err := database.UpsertPullRequest(ctx, attached); err != nil {
 			t.Fatal(err)
 		}
 	}
 	return feature
+}
+
+// clearSyncMarkers forgets what the refresh that follows an attachment
+// recorded, so a test can tell which pull requests a later refresh reaches.
+func clearSyncMarkers(t *testing.T, database *store.Store) {
+	t.Helper()
+	ctx := context.Background()
+	snapshot, err := database.Snapshot(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, pullRequest := range snapshot.PullRequests {
+		pullRequest.LastSyncedAt = nil
+		pullRequest.SyncError = ""
+		pullRequest.Stale = true
+		if _, err := database.UpsertPullRequest(ctx, pullRequest); err != nil {
+			t.Fatal(err)
+		}
+	}
 }
 
 func snapshotFeature(t *testing.T, service *app.Service, id string) domain.Feature {

@@ -378,7 +378,7 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 	} else if host == "" {
 		host = "github.com"
 	}
-	return s.repository.UpsertPullRequest(
+	attached, err := s.repository.UpsertPullRequest(
 		ctx,
 		domain.PullRequest{
 			TaskID:       taskID,
@@ -393,6 +393,44 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 			Stale:        true,
 		},
 	)
+	if err != nil {
+		return domain.PullRequest{}, err
+	}
+	return s.refreshAttachedPullRequest(ctx, attached), nil
+}
+
+// attachSyncTimeout bounds the refresh that follows an attachment. The refresh
+// is a side effect of the write rather than what the caller asked for, so an
+// unreachable host must not hold the attachment open for as long as its
+// credential lookups and requests take.
+const attachSyncTimeout = 30 * time.Second
+
+// refreshAttachedPullRequest fetches the pull request that was just attached so
+// the task does not present freshly recorded work as stale until some later
+// refresh reaches it. It goes through the task-scoped refresh, which maintains
+// the pull request even on a completed or archived feature and leaves the
+// shared interval and the recorded run status untouched.
+//
+// The refresh is best effort: attaching succeeds even when GitHub cannot be
+// reached, and the value read back keeps the staleness and the synchronization
+// error that record why it could not be refreshed.
+func (s *Service) refreshAttachedPullRequest(
+	ctx context.Context,
+	attached domain.PullRequest,
+) domain.PullRequest {
+	syncContext, cancel := context.WithTimeout(ctx, attachSyncTimeout)
+	defer cancel()
+	_, _, _ = s.Sync(syncContext, "", attached.TaskID)
+	snapshot, err := s.repository.Snapshot(ctx)
+	if err != nil {
+		return attached
+	}
+	for _, pullRequest := range snapshot.PullRequests {
+		if pullRequest.TaskID == attached.TaskID {
+			return pullRequest
+		}
+	}
+	return attached
 }
 
 func (s *Service) DetachPullRequest(ctx context.Context, taskID string) error {
