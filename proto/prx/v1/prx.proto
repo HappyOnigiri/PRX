@@ -250,6 +250,17 @@ enum GithubAuthMethodType {
   GITHUB_AUTH_METHOD_TYPE_GH_CLI = 4;
 }
 
+// TaskPromptKind identifies which prompt template a task was rendered with.
+// The presence of an implementation plan is the only input to that choice.
+enum TaskPromptKind {
+  // TASK_PROMPT_KIND_UNSPECIFIED is never returned by the server and is not a request field.
+  TASK_PROMPT_KIND_UNSPECIFIED = 0;
+  // TASK_PROMPT_KIND_DESIGN asks an agent to produce the implementation plan.
+  TASK_PROMPT_KIND_DESIGN = 1;
+  // TASK_PROMPT_KIND_IMPLEMENTATION asks an agent to carry out the registered plan.
+  TASK_PROMPT_KIND_IMPLEMENTATION = 2;
+}
+
 // DebugProblemCode identifies a problem the diagnostic report detected.
 // Every member is a stable public identifier that callers may branch on.
 enum DebugProblemCode {
@@ -1014,6 +1025,55 @@ message ValidateConfigResponse {
   repeated string warnings = 3;
 }
 
+// PromptTemplates holds the shared agent prompt templates.
+// Both templates are stored in the same configuration the CLI reads.
+message PromptTemplates {
+  // design is used for a task that has no implementation plan yet.
+  string design = 1;
+  // implementation is used for a task that already has an implementation plan.
+  string implementation = 2;
+}
+
+// GetPromptTemplatesRequest requests the stored agent prompt templates.
+message GetPromptTemplatesRequest {}
+
+// GetPromptTemplatesResponse returns the stored agent prompt templates.
+message GetPromptTemplatesResponse {
+  // templates contains both stored templates.
+  PromptTemplates templates = 1;
+}
+
+// UpdatePromptTemplatesRequest replaces both templates in one configuration write.
+// An empty template is restored to its built-in default.
+message UpdatePromptTemplatesRequest {
+  // design replaces the template used for a task without an implementation plan.
+  string design = 1;
+  // implementation replaces the template used for a task with an implementation plan.
+  string implementation = 2;
+}
+
+// UpdatePromptTemplatesResponse returns the templates the write produced.
+message UpdatePromptTemplatesResponse {
+  // templates contains both stored templates.
+  PromptTemplates templates = 1;
+}
+
+// GetTaskPromptRequest asks for the expanded agent prompt of one task.
+message GetTaskPromptRequest {
+  // task_id is the task's public identifier.
+  string task_id = 1;
+}
+
+// GetTaskPromptResponse returns the expanded agent prompt of one task.
+message GetTaskPromptResponse {
+  // task_id is the task the prompt targets.
+  string task_id = 1;
+  // kind reports which template produced the prompt.
+  TaskPromptKind kind = 2;
+  // prompt is the expanded template, ready to hand to another agent.
+  string prompt = 3;
+}
+
 // SyncRequest selects pull requests to refresh from GitHub.
 // Empty selectors refresh all pull requests; setting both selectors applies both filters.
 message SyncRequest {
@@ -1440,4 +1500,10 @@ service PRXService {
   rpc ReorderGitHubAuthMethods(ReorderGitHubAuthMethodsRequest) returns (ReorderGitHubAuthMethodsResponse);
   // ValidateConfig validates the YAML configuration without changing it.
   rpc ValidateConfig(ValidateConfigRequest) returns (ValidateConfigResponse);
+  // GetPromptTemplates returns the stored agent prompt templates.
+  rpc GetPromptTemplates(GetPromptTemplatesRequest) returns (GetPromptTemplatesResponse);
+  // UpdatePromptTemplates replaces both agent prompt templates in one write.
+  rpc UpdatePromptTemplates(UpdatePromptTemplatesRequest) returns (UpdatePromptTemplatesResponse);
+  // GetTaskPrompt returns the expanded agent prompt for one task.
+  rpc GetTaskPrompt(GetTaskPromptRequest) returns (GetTaskPromptResponse);
 }

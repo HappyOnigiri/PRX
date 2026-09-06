@@ -13,9 +13,16 @@ import { setDisplayTheme } from "../theme";
 import { DebugSettingsPanel } from "./DebugSettingsPanel";
 import { IconButton } from "./IconButton";
 import { LicensesSettingsPanel } from "./LicensesSettingsPanel";
+import { PromptSettingsPanel } from "./PromptSettingsPanel";
 import { ServerSettingsPanel } from "./ServerSettingsPanel";
 
-const settingsTabs = ["server", "display", "debug", "licenses"] as const;
+const settingsTabs = [
+  "server",
+  "prompts",
+  "display",
+  "debug",
+  "licenses",
+] as const;
 type SettingsTab = (typeof settingsTabs)[number];
 
 export function SettingsDialog({ onClose }: { onClose: () => void }) {
@@ -87,6 +94,11 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
         </div>
         <SettingsPanel active={activeTab === "server"} tab="server">
           <ServerSettingsPanel />
+        </SettingsPanel>
+        <SettingsPanel active={activeTab === "prompts"} tab="prompts">
+          {/* Like the debug panel, this one reads the configuration file, so it
+              mounts only once the tab is opened. */}
+          {activeTab === "prompts" && <PromptSettingsPanel />}
         </SettingsPanel>
         <SettingsPanel active={activeTab === "display"} tab="display">
           <DisplaySettingsPanel />

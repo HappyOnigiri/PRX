@@ -900,3 +900,20 @@
     flex-direction: column;
   }
 }
+
+.dialog .settings-prompt-field textarea {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  line-height: 1.55;
+}
+
+.settings-prompt-field small {
+  color: var(--text-3);
+  font-weight: 400;
+}
+
+.settings-form-status {
+  margin: 12px 0 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}

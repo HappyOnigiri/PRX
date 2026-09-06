@@ -167,6 +167,7 @@ func (s *state) addCommands(root *cobra.Command) {
 		s.pullRequestCommand(),
 		s.documentCommand(),
 		s.planCommand(),
+		s.promptCommand(),
 		s.configCommand(),
 	)
 	root.AddCommand(

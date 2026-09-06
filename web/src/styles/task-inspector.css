@@ -370,3 +370,20 @@
     width: calc(100% - 16px);
   }
 }
+
+.inspector-prompt {
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.inspector-prompt-status {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+
+.inspector-prompt-status:empty {
+  display: none;
+}

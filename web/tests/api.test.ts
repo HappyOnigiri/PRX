@@ -3,9 +3,12 @@ import {
   configMutations,
   getConfig,
   getDebugReport,
+  getPromptTemplates,
   getSnapshot,
   getSyncStatus,
+  getTaskPrompt,
   mutations,
+  promptMutations,
   readDocumentContent,
   selectLocalFile,
   syncIfDue,
@@ -48,6 +51,9 @@ const apiMocks = vi.hoisted(() => {
     reorderGitHubAuthMethods: vi.fn(),
     validateConfig: vi.fn(),
     updateGitHubSyncConfig: vi.fn(),
+    getPromptTemplates: vi.fn(),
+    updatePromptTemplates: vi.fn(),
+    getTaskPrompt: vi.fn(),
   };
   return {
     client,
@@ -149,6 +155,41 @@ describe("RPC API wrappers", () => {
       status,
     });
     await expect(syncIfDue()).resolves.toEqual({ ran: false, status });
+  });
+
+  it("wraps prompt template reads, writes, and one task prompt", async () => {
+    const templates = { design: "Design {{task_id}}", implementation: "" };
+    apiMocks.client.getPromptTemplates.mockResolvedValueOnce({ templates });
+    await expect(getPromptTemplates()).resolves.toBe(templates);
+    apiMocks.client.getPromptTemplates.mockResolvedValueOnce({});
+    await expect(getPromptTemplates()).rejects.toThrow(
+      "The server returned empty prompt templates.",
+    );
+
+    await promptMutations.updateTemplates({
+      design: "Design {{task_id}}",
+      implementation: "Build {{task_id}}",
+    });
+    expect(apiMocks.client.updatePromptTemplates).toHaveBeenCalledWith(
+      expect.objectContaining({
+        design: "Design {{task_id}}",
+        implementation: "Build {{task_id}}",
+      }),
+    );
+
+    apiMocks.client.getTaskPrompt.mockResolvedValueOnce({
+      taskId: "T-1",
+      kind: 1,
+      prompt: "Design T-1",
+    });
+    await expect(getTaskPrompt("T-1")).resolves.toEqual({
+      taskId: "T-1",
+      kind: 1,
+      prompt: "Design T-1",
+    });
+    expect(apiMocks.client.getTaskPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({ taskId: "T-1" }),
+    );
   });
 
   it("requests a native local file selection", async () => {

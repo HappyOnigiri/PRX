@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/HappyOnigiri/PRX/internal/prompt"
 )
 
 func TestNormalizeDefaultsAndRejectsUnsafeValues(t *testing.T) {
@@ -342,5 +344,85 @@ func TestConfigCRUDAndPathPrecedence(t *testing.T) {
 	}
 	if got := PathFromContext(WithPath(context.Background(), overridePath)); got != overridePath {
 		t.Fatalf("context path=%q", got)
+	}
+}
+
+func TestPromptTemplatesLoadDefaultAndSurviveAWrite(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	// A file written before prompts existed still loads, and the built-in
+	// templates fill the gap instead of leaving the CLI without a prompt.
+	legacy := "version: 1\ngithub:\n  hosts:\n    - host: github.com\n"
+	if err := os.WriteFile(path, []byte(legacy), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := store.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.Prompts != prompt.DefaultTemplates() {
+		t.Fatalf("prompts=%+v, want the built-in templates", loaded.Prompts)
+	}
+
+	custom := prompt.Templates{
+		Design:         "Design {{task_id}}\nsecond line\n",
+		Implementation: "Implement {{task_id}} of {{feature_id}}",
+	}
+	if _, err := store.Update(func(settings *Config) error { return settings.SetPrompts(custom) }); err != nil {
+		t.Fatal(err)
+	}
+	reloaded, err := store.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reloaded.Prompts != custom {
+		t.Fatalf("prompts=%+v, want %+v", reloaded.Prompts, custom)
+	}
+	// An unrelated configuration write must not disturb the stored templates.
+	if _, err := store.Update(func(settings *Config) error {
+		return settings.SetAutoSyncInterval(MinimumAutoSyncIntervalSeconds)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	afterWrite, err := store.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if afterWrite.Prompts != custom {
+		t.Fatalf("prompts=%+v, want %+v", afterWrite.Prompts, custom)
+	}
+}
+
+func TestInvalidPromptTemplateFailsTheConfiguration(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	settings := Default()
+	err = settings.SetPrompts(prompt.Templates{Design: "no target", Implementation: "{{task_id}}"})
+	if err == nil || !strings.Contains(err.Error(), "prompts.design") {
+		t.Fatalf("error=%v, want a rejected design template", err)
+	}
+	if ErrorCodeOf(err) != ErrorCodeInvalid {
+		t.Fatalf("code=%q, want %q", ErrorCodeOf(err), ErrorCodeInvalid)
+	}
+	// The rejected pair is not kept, so the caller still holds a valid value.
+	if settings.Prompts != prompt.DefaultTemplates() {
+		t.Fatalf("prompts=%+v, want the previous templates", settings.Prompts)
+	}
+	if err := store.Save(settings); err != nil {
+		t.Fatal(err)
+	}
+
+	broken := "version: 1\nprompts:\n  design: \"{{plan_body}}\"\n  implementation: \"{{task_id}}\"\n"
+	if err := os.WriteFile(path, []byte(broken), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Load(); err == nil || !strings.Contains(err.Error(), "unsupported placeholder") {
+		t.Fatalf("error=%v, want an unsupported placeholder failure", err)
 	}
 }

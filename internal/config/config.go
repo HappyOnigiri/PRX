@@ -11,6 +11,8 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+
+	"github.com/HappyOnigiri/PRX/internal/prompt"
 )
 
 const (
@@ -74,9 +76,13 @@ func (c GitHubConfig) MarshalYAML() (any, error) {
 
 // Config is the on-disk configuration. AuthMethod.Token is deliberately not
 // serializable as JSON; callers should use Public for any human or RPC output.
+//
+// Prompts affect what the CLI prints and what the WebUI copies, so they live
+// here rather than in the browser's Local Storage.
 type Config struct {
-	Version int          `yaml:"version" json:"version"`
-	GitHub  GitHubConfig `yaml:"github"  json:"github"`
+	Version int              `yaml:"version" json:"version"`
+	GitHub  GitHubConfig     `yaml:"github"  json:"github"`
+	Prompts prompt.Templates `yaml:"prompts" json:"prompts"`
 }
 
 type PublicAuthMethod struct {
@@ -151,6 +157,7 @@ func Default() Config {
 			Hosts:                   []Host{DefaultHost()},
 			AutoSyncIntervalSeconds: DefaultAutoSyncIntervalSeconds,
 		},
+		Prompts: prompt.DefaultTemplates(),
 	}
 }
 
@@ -182,6 +189,11 @@ func (c Config) Normalize() (Config, error) {
 		return Config{}, newError(ErrorCodeInvalid, "config version must be %d", CurrentVersion)
 	}
 	result := c
+	prompts, err := c.Prompts.Normalize()
+	if err != nil {
+		return Config{}, promptError(err)
+	}
+	result.Prompts = prompts
 	result.GitHub.Hosts = append([]Host(nil), c.GitHub.Hosts...)
 	if c.GitHub.AuthMethods != nil {
 		result.GitHub.AuthMethods = append([]AuthMethod{}, c.GitHub.AuthMethods...)
@@ -507,6 +519,29 @@ func (c *Config) ReorderAuthMethods(ids []string) error {
 	}
 	c.GitHub.AuthMethods = ordered
 	return c.normalizeInPlace()
+}
+
+// SetPrompts replaces both templates at once so one configuration write always
+// leaves a consistent pair behind.
+func (c *Config) SetPrompts(templates prompt.Templates) error {
+	previous := c.Prompts
+	c.Prompts = templates
+	if err := c.normalizeInPlace(); err != nil {
+		c.Prompts = previous
+		return err
+	}
+	return nil
+}
+
+// promptError presents a rejected template with the configuration's own error
+// vocabulary, so the CLI and the RPC map it the way they map every other
+// invalid configuration value.
+func promptError(err error) error {
+	var typed *prompt.Error
+	if errors.As(err, &typed) {
+		return newError(ErrorCodeInvalid, "%s", typed.Error())
+	}
+	return newError(ErrorCodeInvalid, "%s", err)
 }
 
 func (c *Config) SetAutoSyncInterval(seconds int64) error {

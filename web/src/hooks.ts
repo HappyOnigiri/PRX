@@ -3,6 +3,7 @@ import { useEffect, useRef } from "react";
 import {
   getConfig,
   getDebugReport,
+  getPromptTemplates,
   getSnapshot,
   getSyncStatus,
   syncIfDue,
@@ -11,6 +12,7 @@ import type { QueryDiagnostic } from "./debug-text";
 
 const snapshotKey = ["snapshot"] as const;
 const configKey = ["github-config"] as const;
+const promptTemplatesKey = ["prompt-templates"] as const;
 const syncStatusKey = ["github-sync-status"] as const;
 const debugReportKey = ["debug-report"] as const;
 
@@ -24,6 +26,26 @@ export function useSnapshot() {
 
 export function useConfig() {
   return useQuery({ queryKey: configKey, queryFn: getConfig });
+}
+
+// The templates are only read by the settings panel, so they stay out of the
+// queries the shell keeps alive and load when that panel first mounts.
+export function usePromptTemplates() {
+  return useQuery({
+    queryKey: promptTemplatesKey,
+    queryFn: getPromptTemplates,
+  });
+}
+
+export function usePromptTemplatesMutation<TVariables, TData>(
+  mutationFn: (input: TVariables) => Promise<TData>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: promptTemplatesKey }),
+  });
 }
 
 // The report is a snapshot of the moment it was taken, so it is never refetched

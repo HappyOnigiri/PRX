@@ -1639,6 +1639,7 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	}
 	assertDirectObject(t, runDB("plan", "set", taskAID, "--file", planPath), "task_id", "content")
 	assertDirectObject(t, runDB("plan", taskAID), "task_id", "content")
+	assertDirectObjectKeys(t, runDB("prompt", taskAID), "task_id", "kind", "prompt")
 
 	assertDirectObject(
 		t,
@@ -2192,4 +2193,116 @@ func decodeID(t *testing.T, body json.RawMessage) string {
 		t.Fatalf("response has no id: %s", body)
 	}
 	return value.ID
+}
+
+func TestBlackBoxPromptFollowsThePlanAndTheConfiguredTemplates(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "prompt.db")
+	configPath := filepath.Join(root, "prompt-config.yaml")
+	run := func(args ...string) commandOutput {
+		return executeCLI(t, binary, "", append([]string{"--db", dbPath, "--config", configPath}, args...)...)
+	}
+
+	if result := run("feature", "create", "prompts", "Prompts"); result.exit != 0 {
+		t.Fatalf("create feature: stderr=%q", result.stderr)
+	}
+	if result := run("task", "create", "F-1", "Add the checkout API", "--scope", "Server only"); result.exit != 0 {
+		t.Fatalf("create task: stderr=%q", result.stderr)
+	}
+
+	design := run("prompt", "T-1")
+	if design.exit != 0 || design.stderr != "" {
+		t.Fatalf("prompt failed: stdout=%q stderr=%q exit=%d", design.stdout, design.stderr, design.exit)
+	}
+	// The text output is the prompt and nothing else, so it can be handed to
+	// another agent without editing.
+	if !strings.HasPrefix(design.stdout, "Design PRX task T-1 of feature F-1.\n") {
+		t.Fatalf("design prompt=%q", design.stdout)
+	}
+	for _, expected := range []string{"Add the checkout API", "Server only", "prx plan set T-1 --file PLAN.md"} {
+		if !strings.Contains(design.stdout, expected) {
+			t.Fatalf("design prompt does not contain %q: %q", expected, design.stdout)
+		}
+	}
+	if strings.Contains(design.stdout, "{{") {
+		t.Fatalf("design prompt kept a placeholder: %q", design.stdout)
+	}
+
+	planPath := filepath.Join(root, "plan.md")
+	if err := os.WriteFile(planPath, []byte("# Checkout plan\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if result := run("plan", "set", "T-1", "--file", planPath); result.exit != 0 {
+		t.Fatalf("set plan: stderr=%q", result.stderr)
+	}
+	implementation := run("prompt", "T-1")
+	if !strings.HasPrefix(implementation.stdout, "Implement PRX task T-1 of feature F-1.\n") {
+		t.Fatalf("implementation prompt=%q", implementation.stdout)
+	}
+	// The plan body stays out of the prompt; the agent is told to read it.
+	if strings.Contains(implementation.stdout, "# Checkout plan") ||
+		!strings.Contains(implementation.stdout, "prx plan T-1") {
+		t.Fatalf("implementation prompt=%q", implementation.stdout)
+	}
+
+	jsonResult, stderr, exit := runCLIWithFixture(t, binary, dbPath, "", "--config", configPath, "prompt", "T-1")
+	if exit != 0 || stderr != "" {
+		t.Fatalf("prompt --json failed: stderr=%q exit=%d", stderr, exit)
+	}
+	assertEnvelopeKeys(t, jsonResult, "task_id", "kind", "prompt")
+	var promptData struct {
+		TaskID string `json:"task_id"`
+		Kind   string `json:"kind"`
+		Prompt string `json:"prompt"`
+	}
+	if err := json.Unmarshal(jsonResult.Data, &promptData); err != nil {
+		t.Fatal(err)
+	}
+	if promptData.TaskID != "T-1" || promptData.Kind != "implementation" ||
+		promptData.Prompt != implementation.stdout {
+		t.Fatalf("prompt JSON=%+v, want the same body the text output printed", promptData)
+	}
+
+	missing, _, exit := runCLIWithFixture(t, binary, dbPath, "", "--config", configPath, "prompt", "T-404")
+	if exit == 0 || missing.ErrorCode != "not_found" {
+		t.Fatalf("missing task result=%+v exit=%d", missing, exit)
+	}
+}
+
+func TestBlackBoxPromptUsesTheConfiguredTemplateAndReportsABrokenOne(t *testing.T) {
+	binary := buildCLI(t)
+	root := t.TempDir()
+	dbPath := filepath.Join(root, "prompt.db")
+	configPath := filepath.Join(root, "prompt-config.yaml")
+	run := func(args ...string) commandOutput {
+		return executeCLI(t, binary, "", append([]string{"--db", dbPath, "--config", configPath}, args...)...)
+	}
+	if result := run("feature", "create", "prompts", "Prompts"); result.exit != 0 {
+		t.Fatalf("create feature: stderr=%q", result.stderr)
+	}
+	if result := run("task", "create", "F-1", "Ship it"); result.exit != 0 {
+		t.Fatalf("create task: stderr=%q", result.stderr)
+	}
+
+	settings := "version: 1\nprompts:\n  design: \"Custom {{task_id}} for {{feature_id}}\"\n"
+	if err := os.WriteFile(configPath, []byte(settings), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	custom := run("prompt", "T-1")
+	if custom.exit != 0 || custom.stdout != "Custom T-1 for F-1\n" {
+		t.Fatalf("custom prompt=%q stderr=%q exit=%d", custom.stdout, custom.stderr, custom.exit)
+	}
+
+	broken := "version: 1\nprompts:\n  design: \"{{plan_body}}\"\n"
+	if err := os.WriteFile(configPath, []byte(broken), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	failure, stderr, exit := runCLIWithFixture(t, binary, dbPath, "", "--config", configPath, "prompt", "T-1")
+	if exit == 0 || failure.ErrorCode != "invalid_config" {
+		t.Fatalf("broken template result=%+v stderr=%q exit=%d", failure, stderr, exit)
+	}
+	if !strings.Contains(failure.Error, "prompts.design") {
+		t.Fatalf("broken template message=%q", failure.Error)
+	}
 }
