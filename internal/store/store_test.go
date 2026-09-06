@@ -814,6 +814,51 @@ func TestMigrationAddsGitHubHostAndHostScopedUniqueness(t *testing.T) {
 	}
 }
 
+// An older build matched the task status vocabulary exactly, so it dropped the
+// record of migration 3 from a database migrated past it. Reopening then
+// replayed a migration that rebuilds the task table around a column the schema
+// no longer has, which left the database unopenable until the record came back.
+func TestDroppedTaskStatusMigrationRecordIsRestored(t *testing.T) {
+	ctx := context.Background()
+	databasePath := filepath.Join(t.TempDir(), "dropped.db")
+	database, err := store.Open(ctx, databasePath)
+	if err != nil {
+		t.Fatal(err)
+	}
+	provider, _ := githubprovider.NewFixtureProvider("demo")
+	service := app.New(database, provider)
+	feature, err := service.CreateFeature(ctx, "Delivery", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	task, err := service.CreateTask(ctx, feature.ID, "Ship", "", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if _, err := database.DB().ExecContext(ctx, `DELETE FROM schema_migrations WHERE version=3`); err != nil {
+		t.Fatal(err)
+	}
+	if err := database.Close(); err != nil {
+		t.Fatal(err)
+	}
+
+	database, err = store.Open(ctx, databasePath)
+	if err != nil {
+		t.Fatalf("reopen after dropped migration record: %v", err)
+	}
+	defer func() { _ = database.Close() }()
+	var recorded int
+	if err := database.DB().
+		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations WHERE version=3`).
+		Scan(&recorded); err != nil || recorded != 1 {
+		t.Fatalf("restored migration 3 count=%d err=%v", recorded, err)
+	}
+	reopened, err := database.GetTask(ctx, task.ID)
+	if err != nil || reopened.Title != "Ship" {
+		t.Fatalf("task after repair title=%q err=%v", reopened.Title, err)
+	}
+}
+
 func TestGitHubRepositoryAuthCacheRoundTrip(t *testing.T) {
 	database, _ := openTestService(t)
 	ctx := context.Background()

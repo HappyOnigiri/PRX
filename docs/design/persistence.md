@@ -14,6 +14,11 @@ Settings follow ownership rather than convenience:
 Persistent mutations and migrations are atomic.
 Configuration writes preserve local secret-file protections and use atomic replacement.
 
+Where the recorded migration versions and the actual schema disagree, the schema decides.
+Opening a database repairs the record before applying anything: a version whose schema is absent loses its record, and a version whose schema is already in place regains one.
+This keeps a database openable after an older build, which recognizes a schema only by the shape it knew, removes a record that a later migration has since reshaped.
+A migration is never replayed against a schema that has already moved past it.
+
 A configuration file using a supported version still loads when it contains unknown fields.
 Those fields are reported as warnings instead of failing the command or the server start, and the next configuration write drops them.
 Unsupported versions and every other decoding failure keep the configuration from loading, so a malformed or ambiguous file is never accepted silently.
