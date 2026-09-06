@@ -181,6 +181,19 @@ vi.mock("../src/views/CreateTaskDialog", () => ({
     </div>
   ),
 }));
+vi.mock("../src/views/BatchPromptDialog", () => ({
+  BatchPromptDialog: ({
+    featureId,
+    onClose,
+  }: {
+    featureId: string;
+    onClose: () => void;
+  }) => (
+    <div role="dialog" aria-label={`Mock batch prompt ${featureId}`}>
+      <button onClick={onClose}>Mock close batch prompt</button>
+    </div>
+  ),
+}));
 vi.mock("../src/views/EditFeatureDialog", () => ({
   EditFeatureDialog: ({
     onClose,
@@ -258,7 +271,13 @@ describe("FeatureWorkspace", () => {
         .map(
           (button) => button.getAttribute("aria-label") ?? button.textContent,
         ),
-    ).toEqual(["References", "Sync GitHub", "Add task", "Edit feature"]);
+    ).toEqual([
+      "References",
+      "Sync GitHub",
+      "Copy batch prompt",
+      "Add task",
+      "Edit feature",
+    ]);
     expect(
       screen.getByRole("heading", { name: "Payments rollout" }),
     ).toBeInTheDocument();
@@ -282,6 +301,18 @@ describe("FeatureWorkspace", () => {
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sync GitHub" }));
     expect(mutationAt(0).mutate).toHaveBeenCalledWith("feature-1");
+    // The batch prompt is opened from the header and reads the feature the
+    // workspace is showing.
+    fireEvent.click(screen.getByRole("button", { name: "Copy batch prompt" }));
+    expect(
+      screen.getByRole("dialog", { name: "Mock batch prompt feature-1" }),
+    ).toBeInTheDocument();
+    fireEvent.click(
+      screen.getByRole("button", { name: "Mock close batch prompt" }),
+    );
+    expect(
+      screen.queryByRole("dialog", { name: "Mock batch prompt feature-1" }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Edit feature" }));
     expect(
       screen.getByRole("dialog", { name: "Mock edit feature" }),

@@ -951,3 +951,107 @@
   color: var(--text-2);
   font-size: var(--text-xs);
 }
+
+.batch-prompt-dialog {
+  width: min(620px, 100%);
+  max-height: min(720px, calc(100dvh - 40px));
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.batch-prompt-head {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+}
+
+.batch-prompt-head h2 {
+  margin-bottom: 6px;
+}
+
+.batch-prompt-head .dialog-lead {
+  margin: 0;
+}
+
+.batch-prompt-body {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  gap: 8px;
+  min-height: 0;
+}
+
+.batch-prompt-toolbar {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.batch-prompt-count {
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+}
+
+.batch-prompt-list {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  margin: 0;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  list-style: none;
+}
+
+.batch-prompt-list li + li {
+  border-top: 1px solid var(--border);
+}
+
+.dialog .batch-prompt-list label {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+  margin: 0;
+  padding: 8px 12px;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 400;
+  cursor: pointer;
+}
+
+.batch-prompt-task-title {
+  flex: 1 1 auto;
+  overflow-wrap: anywhere;
+}
+
+.batch-prompt-task-id {
+  flex: 0 0 auto;
+  color: var(--text-2);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+}
+
+.batch-prompt-empty {
+  flex: 0 0 auto;
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.batch-prompt-dialog > footer {
+  flex: 0 0 auto;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.batch-prompt-status {
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}

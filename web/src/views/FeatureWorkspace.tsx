@@ -1,5 +1,11 @@
 import { Link, useNavigate, useParams } from "@tanstack/react-router";
-import { ArrowLeft, Pencil, Plus, RefreshCw } from "lucide-react";
+import {
+  ArrowLeft,
+  ClipboardList,
+  Pencil,
+  Plus,
+  RefreshCw,
+} from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
@@ -15,6 +21,7 @@ import type {
 import { useDomainMutation, useSnapshot } from "../hooks";
 import { featureStatusLabel, featureStatusToken } from "../i18n/domain";
 import { AddDocumentDialog } from "./AddDocumentDialog";
+import { BatchPromptDialog } from "./BatchPromptDialog";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { DocumentReferences } from "./DocumentReferences";
@@ -39,6 +46,7 @@ export function FeatureWorkspace() {
   const [selected, setSelected] = useState<string>();
   const [showTask, setShowTask] = useState(false);
   const [showFeatureEdit, setShowFeatureEdit] = useState(false);
+  const [showBatchPrompt, setShowBatchPrompt] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<TaskNodeDocument>();
   const [documentTarget, setDocumentTarget] = useState<DocumentTarget>();
   const data = snapshot.data;
@@ -99,6 +107,7 @@ export function FeatureWorkspace() {
       documentTarget={documentTarget}
       showTask={showTask}
       showFeatureEdit={showFeatureEdit}
+      showBatchPrompt={showBatchPrompt}
       syncPending={sync.isPending}
       onSync={() => {
         sync.mutate(featureId);
@@ -109,6 +118,12 @@ export function FeatureWorkspace() {
       onAddDocument={openDocumentDialog}
       onEditFeature={() => {
         setShowFeatureEdit(true);
+      }}
+      onCopyBatchPrompt={() => {
+        setShowBatchPrompt(true);
+      }}
+      onCloseBatchPrompt={() => {
+        setShowBatchPrompt(false);
       }}
       onCloseInspector={() => {
         setSelected(undefined);
@@ -215,6 +230,7 @@ interface WorkspaceContentProps {
   documentTarget: DocumentTarget | undefined;
   showTask: boolean;
   showFeatureEdit: boolean;
+  showBatchPrompt: boolean;
   syncPending: boolean;
   onSync: () => void;
   onCreateTask: () => void;
@@ -222,6 +238,8 @@ interface WorkspaceContentProps {
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onAddDocument: (taskId: string, trigger: HTMLButtonElement) => void;
   onEditFeature: () => void;
+  onCopyBatchPrompt: () => void;
+  onCloseBatchPrompt: () => void;
   onCloseInspector: () => void;
   onClosePreview: () => void;
   onCloseDocumentDialog: () => void;
@@ -324,6 +342,14 @@ function FeatureWorkspaceHead({
             disabled={props.syncPending}
           />
         )}
+        {/* Copying stays available on an archived feature: handing work to an
+            agent reads PRX rather than changing it. */}
+        <IconButton
+          icon={ClipboardList}
+          label={t("batchPrompt.open")}
+          variant="secondary"
+          onClick={props.onCopyBatchPrompt}
+        />
         {!readOnly && (
           <IconButton
             icon={Plus}
@@ -406,6 +432,13 @@ function WorkspaceOverlays({ props }: { props: WorkspaceContentProps }) {
           taskId={props.documentTarget.taskId}
           trigger={props.documentTarget.trigger}
           onClose={props.onCloseDocumentDialog}
+        />
+      )}
+      {props.showBatchPrompt && (
+        <BatchPromptDialog
+          featureId={props.featureId}
+          tasks={props.tasks}
+          onClose={props.onCloseBatchPrompt}
         />
       )}
       {props.showTask && (
