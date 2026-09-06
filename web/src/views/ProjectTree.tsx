@@ -180,16 +180,13 @@ function FeatureRowLink({ feature }: { feature: Feature }) {
       params={{ featureId: feature.id }}
       className="feature-link"
       activeProps={{ "data-active": true }}
+      // The row carries the same glyph a feature gets everywhere else, so its
+      // state rides on the icon's color instead of a second mark of its own.
+      data-state={
+        feature.conflictCount ? "conflict" : feature.readyCount ? "ready" : ""
+      }
     >
-      <i
-        className={
-          feature.conflictCount
-            ? "pulse conflict"
-            : feature.readyCount
-              ? "pulse ready"
-              : "pulse"
-        }
-      />
+      <EntityIcon kind="feature" size={14} />
       <span>{feature.title}</span>
       <b>
         {feature.finishedCount}/{feature.taskCount}

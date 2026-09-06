@@ -161,8 +161,10 @@ describe("TaskNode", () => {
       </ReactFlowProvider>,
     );
     expect(screen.queryByText("Unassigned")).not.toBeInTheDocument();
-    expect(container.querySelector("footer")).not.toBeInTheDocument();
-    expect(container.querySelector(".node-asset-add")).not.toBeInTheDocument();
+    expect(container.querySelector(".node-assignee")).not.toBeInTheDocument();
+    expect(
+      container.querySelector(".node-add-reference"),
+    ).not.toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "View Archived task details" }),
     );

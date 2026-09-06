@@ -8,6 +8,7 @@ import { markdownPreview } from "./resources/markdown-preview";
 import { project } from "./resources/project";
 import { prompt } from "./resources/prompt";
 import { shell } from "./resources/shell";
+import { taskCard } from "./resources/task-card";
 import { tasks } from "./resources/tasks";
 import { workspace } from "./resources/workspace";
 
@@ -24,6 +25,7 @@ export const resources = {
       ...domain.en,
       ...errors.en,
       ...tasks.en,
+      ...taskCard.en,
       ...project.en,
       ...prompt.en,
     },
@@ -40,6 +42,7 @@ export const resources = {
       ...domain.ja,
       ...errors.ja,
       ...tasks.ja,
+      ...taskCard.ja,
       ...project.ja,
       ...prompt.ja,
     },

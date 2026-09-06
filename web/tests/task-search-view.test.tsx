@@ -3,7 +3,13 @@ import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TaskDisplayState, type Snapshot } from "../src/gen/prx/v1/prx_pb";
 import { TaskSearch } from "../src/views/TaskSearch";
-import { makeSnapshot, makeTask } from "./factories";
+import {
+  makeFeature,
+  makeProject,
+  makePullRequest,
+  makeSnapshot,
+  makeTask,
+} from "./factories";
 
 const mocks = vi.hoisted(() => ({
   query: "task-status:ready",
@@ -36,6 +42,11 @@ describe("TaskSearch view", () => {
     mocks.state.error = null;
     mocks.state.refetch.mockReset();
     mocks.state.data = makeSnapshot({
+      projects: [makeProject()],
+      features: [makeFeature({ projectId: "project-1" })],
+      pullRequests: [
+        makePullRequest({ taskId: "ready-task", syncError: "offline" }),
+      ],
       tasks: [
         makeTask({
           id: "ready-task",
@@ -72,6 +83,32 @@ describe("TaskSearch view", () => {
       to: "/tasks",
       search: { q: "payments" },
     });
+  });
+
+  // The card is shared with the overview, so a result names its owners and
+  // opens the linked pull request on GitHub instead of restating its state.
+  it("names the owners of a result and links its pull request", () => {
+    render(<TaskSearch />);
+
+    expect(screen.getByText("Project").nextElementSibling).toHaveTextContent(
+      "Delivery platform",
+    );
+    expect(screen.getByText("Feature").nextElementSibling).toHaveTextContent(
+      "Payments rollout",
+    );
+    // The ID is what a reader pastes into a search or hands to an agent, so
+    // the card carries it next to the name and copies it on click.
+    const identifier = screen.getAllByRole("button", {
+      name: "Copy Task ID",
+    })[0];
+    expect(identifier).toHaveTextContent("ready-task");
+    const pullRequest = screen.getByRole("link", { name: /acme\/prx #42/ });
+    expect(pullRequest).toHaveAttribute(
+      "href",
+      "https://github.com/acme/prx/pull/42",
+    );
+    expect(screen.getByText("open")).toBeInTheDocument();
+    expect(screen.getByText("offline")).toBeInTheDocument();
   });
 
   it("distinguishes invalid syntax from an empty result", () => {

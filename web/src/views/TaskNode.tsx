@@ -11,6 +11,7 @@ import { useTranslation } from "react-i18next";
 import { DocumentKind, type TaskDisplayState } from "../gen/prx/v1/prx_pb";
 import { taskDisplayStateLabel, taskDisplayStateToken } from "../i18n/domain";
 import { CopyableIdentifier } from "./CopyableIdentifier";
+import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
 import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 
@@ -132,7 +133,7 @@ export function TaskNode({
       />
       <div className="task-node-head">
         <div className="node-state">
-          <i />
+          <EntityIcon kind="task" size={13} />
           {taskDisplayStateLabel(data.state, t)}
         </div>
         <div className="task-node-actions nodrag nowheel nopan">
@@ -160,17 +161,18 @@ export function TaskNode({
         </div>
       </div>
       <h3>{data.title}</h3>
+      {/* The owner belongs to the title rather than to the assets, so it reads
+          directly under the name it answers for. */}
+      {data.assignee && (
+        <p className="node-assignee">
+          <EntityIcon kind="assignee" size={13} />
+          <span>{data.assignee}</span>
+        </p>
+      )}
       {data.syncError && (
         <p className="node-sync-error">{t("inspector.githubSyncError")}</p>
       )}
-      {(data.pullRequest ?? (data.documents.length > 0 || !data.readOnly)) && (
-        <NodeAssets data={data} />
-      )}
-      {data.assignee && (
-        <footer>
-          <span>{data.assignee}</span>
-        </footer>
-      )}
+      <NodeAssets data={data} />
       <Handle
         type="source"
         position={Position.Right}
@@ -184,7 +186,33 @@ export function TaskNode({
   );
 }
 
+// Adding a reference is an action, not one more entry, so it sits below the
+// list of assets in a shape of its own rather than repeating their row.
 function NodeAssets({ data }: { data: TaskNodeData }) {
+  const { t } = useTranslation();
+  const hasAssets = Boolean(data.pullRequest) || data.documents.length > 0;
+  return (
+    <>
+      {hasAssets && <NodeAssetList data={data} />}
+      {!data.readOnly && (
+        <button
+          type="button"
+          className="node-add-reference nodrag nowheel nopan"
+          aria-label={t("workspace.addTaskReference", { title: data.title })}
+          title={t("workspace.addTaskReference", { title: data.title })}
+          onClick={(event) => {
+            data.onAddReference?.(event.currentTarget);
+          }}
+        >
+          <Plus aria-hidden="true" focusable="false" size={14} />
+          <span>{t("workspace.addReference")}</span>
+        </button>
+      )}
+    </>
+  );
+}
+
+function NodeAssetList({ data }: { data: TaskNodeData }) {
   const { t } = useTranslation();
   return (
     <div className="node-assets nodrag nowheel nopan">
@@ -244,21 +272,6 @@ function NodeAssets({ data }: { data: TaskNodeData }) {
             </button>
           ),
         )}
-      {!data.readOnly && (
-        <button
-          type="button"
-          className="node-asset node-asset-add"
-          aria-label={t("workspace.addTaskReference", { title: data.title })}
-          title={t("workspace.addTaskReference", { title: data.title })}
-          onClick={(event) => {
-            data.onAddReference?.(event.currentTarget);
-          }}
-        >
-          <span>ADD</span>
-          <b>{t("workspace.addReference")}</b>
-          <Plus aria-hidden="true" focusable="false" size={14} />
-        </button>
-      )}
     </div>
   );
 }
