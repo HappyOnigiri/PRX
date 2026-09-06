@@ -354,7 +354,7 @@ func (s *state) configAuthUpdateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "update AUTH_METHOD_ID",
 		Short:   "Update a host-scoped authentication method",
-		Example: "prx config auth update work-gh --user HappyOnigiri",
+		Example: "prx config auth update work-gh --user octocat",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			token, err := readConfigToken(cmd, tokenStdin)

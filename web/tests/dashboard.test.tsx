@@ -76,7 +76,7 @@ describe("Dashboard", () => {
     // The second queued task has no owner, so only the owned one carries the
     // assignee pair.
     expect(screen.getByText("Assignee").nextElementSibling).toHaveTextContent(
-      "Mika",
+      "Bob",
     );
     expect(screen.queryByText("Unassigned")).not.toBeInTheDocument();
     expect(screen.getAllByText("not started")).toHaveLength(2);

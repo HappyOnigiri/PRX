@@ -25,7 +25,7 @@ describe("TaskNode", () => {
       id: "T-42",
       data: {
         title: "Merge billing schema",
-        assignee: "Ren",
+        assignee: "Carol",
         state: TaskDisplayState.REVIEW_WAITING,
         hasImplementationPlan: true,
         ready: true,
@@ -82,7 +82,7 @@ describe("TaskNode", () => {
     expect(taskIdButton).toHaveClass("is-copied");
     expect(taskIdButton).toHaveAccessibleName("Copied");
     expect(screen.getByText("Merge billing schema")).toBeInTheDocument();
-    expect(screen.getByText("Ren")).toBeInTheDocument();
+    expect(screen.getByText("Carol")).toBeInTheDocument();
     expect(screen.queryByText("READY")).not.toBeInTheDocument();
     expect(container.querySelector(".is-ready")).toBeInTheDocument();
     expect(container.querySelector(".is-stale")).toBeInTheDocument();

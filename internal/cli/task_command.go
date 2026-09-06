@@ -61,7 +61,7 @@ func (s *state) taskCreateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:   "create FEATURE_ID_OR_SLUG TITLE",
 		Short: "Create an implementation or manual task",
-		Example: "prx task create checkout \"Add payment intent API\" --assignee Mika\n" +
+		Example: "prx task create checkout \"Add payment intent API\" --assignee Bob\n" +
 			"prx task create checkout -- \"-fix login redirect\"",
 		Args: cobra.ExactArgs(2),
 		RunE: func(cmd *cobra.Command, args []string) error {

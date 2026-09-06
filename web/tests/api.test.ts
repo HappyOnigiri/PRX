@@ -109,7 +109,7 @@ describe("RPC API wrappers", () => {
       type: 3,
       token: "secret",
     });
-    await configMutations.updateAuth({ id: "token", user: "Mika" });
+    await configMutations.updateAuth({ id: "token", user: "Bob" });
     await configMutations.deleteAuth("token");
     await configMutations.reorderAuth(["token"]);
     await configMutations.validate();
@@ -288,7 +288,7 @@ describe("RPC API wrappers", () => {
       title: "Implement",
       scope: "WebUI",
       kind: 1,
-      assignee: "Mika",
+      assignee: "Bob",
     });
     expect(apiMocks.client.createTask).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -296,7 +296,7 @@ describe("RPC API wrappers", () => {
         title: "Implement",
         scope: "WebUI",
         kind: 1,
-        assignee: "Mika",
+        assignee: "Bob",
       }),
     );
 
@@ -304,14 +304,14 @@ describe("RPC API wrappers", () => {
       id: "task-1",
       scope: "API",
       status: 2,
-      assignee: "Ren",
+      assignee: "Carol",
     });
     expect(apiMocks.client.updateTask).toHaveBeenCalledWith(
       expect.objectContaining({
         id: "task-1",
         scope: "API",
         status: 2,
-        assignee: "Ren",
+        assignee: "Carol",
       }),
     );
 

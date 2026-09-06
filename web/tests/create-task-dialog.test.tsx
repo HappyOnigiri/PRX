@@ -44,7 +44,7 @@ describe("CreateTaskDialog", () => {
       target: { value: String(TaskKind.MANUAL) },
     });
     fireEvent.change(screen.getByLabelText("Assignee"), {
-      target: { value: "Ren" },
+      target: { value: "Carol" },
     });
 
     fireEvent.submit(screen.getByRole("form", { name: "Create task" }));
@@ -56,7 +56,7 @@ describe("CreateTaskDialog", () => {
       title: "Implement checkout",
       scope: "API and acceptance tests",
       kind: TaskKind.MANUAL,
-      assignee: "Ren",
+      assignee: "Carol",
     });
   });
 

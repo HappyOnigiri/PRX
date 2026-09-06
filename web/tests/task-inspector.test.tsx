@@ -86,7 +86,7 @@ describe("TaskInspector", () => {
       scope: "Initial scope",
       kind: TaskKind.MANUAL,
       status: TaskStatus.AUTO,
-      assignee: "Mika",
+      assignee: "Bob",
       blockedReason: {
         code: BlockedReasonCode.WAITING_FOR_BLOCKER,
         blockerTaskId: "task-2",
@@ -177,7 +177,7 @@ describe("TaskInspector", () => {
       target: { value: String(TaskStatus.CLOSED) },
     });
     fireEvent.change(screen.getByLabelText("Assignee"), {
-      target: { value: "Ren" },
+      target: { value: "Carol" },
     });
     fireEvent.click(screen.getByRole("button", { name: "Save task" }));
     expect(mutationAt(1).mutate).toHaveBeenCalledWith({
@@ -185,7 +185,7 @@ describe("TaskInspector", () => {
       title: "Updated task",
       scope: "Updated scope",
       status: TaskStatus.CLOSED,
-      assignee: "Ren",
+      assignee: "Carol",
     });
 
     fireEvent.click(screen.getByRole("button", { name: "Detach" }));
@@ -316,7 +316,7 @@ describe("TaskInspector", () => {
     const task = makeTask({
       title: "Archived task",
       scope: "Historical scope",
-      assignee: "Ren",
+      assignee: "Carol",
     });
     const blocker = makeTask({ id: "task-2", title: "Archived blocker" });
     const markdown = makeDocument({

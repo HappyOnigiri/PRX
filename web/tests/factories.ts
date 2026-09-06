@@ -45,7 +45,7 @@ const taskDefaults = {
   title: "Build API",
   kind: TaskKind.PULL_REQUEST,
   status: TaskStatus.AUTO,
-  assignee: "Mika",
+  assignee: "Bob",
   ready: true,
   displayState: TaskDisplayState.NOT_STARTED,
 } satisfies MessageInitShape<typeof TaskSchema>;
