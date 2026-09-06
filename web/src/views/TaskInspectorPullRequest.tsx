@@ -1,4 +1,4 @@
-import { Link, Unlink } from "lucide-react";
+import { Link, Trash2 } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";
@@ -57,12 +57,11 @@ export function PullRequestSection({
           )}
           {!readOnly && (
             <IconButton
-              icon={Unlink}
+              icon={Trash2}
               label={t("inspector.detach")}
-              variant="quiet"
+              variant="secondary"
               size="compact"
-              iconOnly
-              className="text-action"
+              className="pr-detach"
               onClick={() => {
                 detach.mutate(taskId);
               }}
@@ -91,6 +90,7 @@ export function PullRequestSection({
             icon={Link}
             label={t("inspector.attach")}
             variant="primary"
+            iconOnly
             type="submit"
           />
         </form>

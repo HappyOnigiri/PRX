@@ -208,6 +208,12 @@
   flex: 0 0 auto;
 }
 
+.linked-pr .pr-detach {
+  display: flex;
+  width: fit-content;
+  margin-top: 10px;
+}
+
 .implementation-plan-section {
   min-width: 0;
 }
@@ -245,19 +251,6 @@
   overflow: auto;
   border-top: 1px solid var(--border);
   padding-top: 12px;
-}
-
-.text-action {
-  min-height: 28px;
-  background: transparent;
-  color: var(--accent);
-  padding: 0;
-  font-size: var(--text-sm);
-}
-
-.text-action:hover {
-  background: transparent;
-  text-decoration: underline;
 }
 
 .danger-zone {
