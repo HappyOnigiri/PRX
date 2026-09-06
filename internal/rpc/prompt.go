@@ -27,6 +27,7 @@ func (h *Handler) GetPromptTemplates(
 		Templates:             protoPromptTemplates(settings.Prompts),
 		SupportedPlaceholders: prompt.SupportedPlaceholders(),
 		RequiredPlaceholder:   prompt.RequiredPlaceholder(),
+		BuiltIn:               protoPromptTemplates(prompt.DefaultTemplates()),
 	}), nil
 }
 

@@ -2,24 +2,38 @@ import { Check, ClipboardCopy } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getTaskPrompt } from "../api";
-import { type Task } from "../gen/prx/v1/prx_pb";
 import { IconButton } from "./IconButton";
 
 type CopyStatus =
   { case: "idle" } | { case: "copied" } | { case: "failed"; message: string };
 
-// TaskPromptCopyButton hands the task to another agent. The label follows the
-// snapshot's plan flag so the reader knows what they are about to copy, while
-// the copied text always comes from the server, which decides the template from
-// the task as it is at that moment.
-export function TaskPromptCopyButton({ task }: { task: Task }) {
+// TaskPromptCopyButton hands the task to another agent. It sits next to the
+// task wherever the task is listed, so it is icon-only and reports its outcome
+// in a floating status that leaves the surrounding layout alone. The accessible
+// name follows the snapshot's plan flag so the reader knows what they are about
+// to copy, while the copied text always comes from the server, which decides
+// the template from the task as it is at that moment.
+export function TaskPromptCopyButton({
+  taskId,
+  hasImplementationPlan,
+  size = "standard",
+}: {
+  taskId: string;
+  hasImplementationPlan: boolean;
+  size?: "standard" | "compact";
+}) {
   const { t } = useTranslation();
   const [status, setStatus] = useState<CopyStatus>({ case: "idle" });
   const [pending, setPending] = useState(false);
 
-  const label = task.hasImplementationPlan
+  const label = hasImplementationPlan
     ? t("inspector.copyImplementationPrompt")
     : t("inspector.copyDesignPrompt");
+  // Which prompt a task gets is not visible on the task itself, so the outcome
+  // names it rather than reporting that something was copied.
+  const copiedLabel = hasImplementationPlan
+    ? t("inspector.implementationPromptCopied")
+    : t("inspector.designPromptCopied");
 
   function settle(next: CopyStatus) {
     setStatus(next);
@@ -38,7 +52,7 @@ export function TaskPromptCopyButton({ task }: { task: Task }) {
       // worth showing verbatim. A clipboard failure has no such detail, and
       // navigator.clipboard is simply absent outside a secure context, so those
       // are reported through the translated text instead of a raw TypeError.
-      const response = await getTaskPrompt(task.id);
+      const response = await getTaskPrompt(taskId);
       try {
         await navigator.clipboard.writeText(response.prompt);
       } catch {
@@ -58,19 +72,26 @@ export function TaskPromptCopyButton({ task }: { task: Task }) {
   }
 
   return (
-    <div className="inspector-prompt">
+    <span className="task-prompt-copy">
       <IconButton
         icon={status.case === "copied" ? Check : ClipboardCopy}
         label={label}
         variant="secondary"
+        size={size}
+        iconOnly
+        className={
+          status.case === "copied"
+            ? "task-prompt-copy-button is-copied"
+            : "task-prompt-copy-button"
+        }
         type="button"
         disabled={pending}
         onClick={() => void copyPrompt()}
       />
-      <p className="inspector-prompt-status" aria-live="polite">
-        {status.case === "copied" && t("inspector.promptCopied")}
+      <span className="task-prompt-copy-status" aria-live="polite">
+        {status.case === "copied" && copiedLabel}
         {status.case === "failed" && status.message}
-      </p>
-    </div>
+      </span>
+    </span>
   );
 }

@@ -20,6 +20,7 @@ Plan bodies are deliberately absent from that vocabulary: a plan may reach 1 MiB
 A task created without a scope renders as `(not specified)` rather than an empty line.
 The templates go on to reference that scope, and a receiving agent cannot tell a blank apart from a value that failed to load.
 The vocabulary is served with the stored templates so an editor presents what its own server accepts rather than a copy that could drift from it.
+The built-in pair is served with them for the same reason, so an editor offering to restore the defaults shows the text it is about to write rather than an empty field.
 
 The WebUI copies what the server renders at the moment of the copy rather than what its snapshot last recorded, so a plan registered or deleted meanwhile cannot produce the wrong prompt.
 `prx prompt TASK_ID` prints the prompt body alone, with no header a caller would have to delete before using it.

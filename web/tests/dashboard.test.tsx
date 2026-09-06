@@ -65,5 +65,10 @@ describe("Dashboard", () => {
     expect(
       screen.getByRole("button", { name: "Sync GitHub" }),
     ).toBeInTheDocument();
+    // The ready board is where a reader picks the next task, so the prompt
+    // that hands it to an agent is copied there instead of one screen deeper.
+    expect(
+      screen.getByRole("button", { name: "Copy design prompt" }),
+    ).toBeInTheDocument();
   });
 });

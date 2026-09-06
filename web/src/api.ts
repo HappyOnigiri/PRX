@@ -274,23 +274,26 @@ export const configMutations = {
 };
 
 // PromptTemplateSettings carries the stored templates together with the
-// vocabulary the server accepts, so the editor presents what that server will
-// actually validate against rather than a list of its own.
+// vocabulary the server accepts and the templates it ships, so the editor
+// presents what that server will actually validate against and restore rather
+// than copies of its own.
 export interface PromptTemplateSettings extends PromptTemplates {
   supportedPlaceholders: string[];
   requiredPlaceholder: string;
+  builtIn: PromptTemplates;
 }
 
 export async function getPromptTemplates(): Promise<PromptTemplateSettings> {
   const response = await client.getPromptTemplates(
     create(GetPromptTemplatesRequestSchema),
   );
-  if (!response.templates)
+  if (!response.templates || !response.builtIn)
     throw new Error("The server returned empty prompt templates.");
   return {
     ...response.templates,
     supportedPlaceholders: response.supportedPlaceholders,
     requiredPlaceholder: response.requiredPlaceholder,
+    builtIn: response.builtIn,
   };
 }
 

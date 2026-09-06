@@ -23,6 +23,7 @@ const panelMocks = vi.hoisted(() => ({
           implementation: string;
           supportedPlaceholders: string[];
           requiredPlaceholder: string;
+          builtIn: { design: string; implementation: string };
         }
       | undefined,
     isPending: false,
@@ -59,6 +60,10 @@ describe("PromptSettingsPanel", () => {
       implementation: "Build {{task_id}}",
       supportedPlaceholders: ["task_id", "feature_id"],
       requiredPlaceholder: "task_id",
+      builtIn: {
+        design: "Built-in design {{task_id}}",
+        implementation: "Built-in build {{task_id}}",
+      },
     };
     panelMocks.templates.isPending = false;
     panelMocks.templates.error = null;
@@ -92,6 +97,10 @@ describe("PromptSettingsPanel", () => {
       implementation: "Build {{task_id}}",
       supportedPlaceholders: ["task_ref", "milestone_id"],
       requiredPlaceholder: "task_ref",
+      builtIn: {
+        design: "Built-in design {{task_ref}}",
+        implementation: "Built-in build {{task_ref}}",
+      },
     };
     render(<PromptSettingsPanel />);
     expect(
@@ -123,19 +132,26 @@ describe("PromptSettingsPanel", () => {
     ).toBeInTheDocument();
   });
 
-  // An empty template is what asks the server for its built-in text, so the
-  // restore control clears both fields rather than inventing defaults here.
-  it("restores the built-in templates by sending empty ones", async () => {
+  // The built-in text comes from the server, so restoring shows what the save
+  // will write instead of emptying the fields until the write comes back.
+  it("puts the built-in templates in the fields before saving them", async () => {
     render(<PromptSettingsPanel />);
     fireEvent.click(
       screen.getByRole("button", { name: "Restore built-in templates" }),
+    );
+
+    expect(screen.getByLabelText(/Design prompt/)).toHaveValue(
+      "Built-in design {{task_id}}",
+    );
+    expect(screen.getByLabelText(/Implementation prompt/)).toHaveValue(
+      "Built-in build {{task_id}}",
     );
     submitTemplateForm();
 
     await waitFor(() => {
       expect(panelMocks.mutation.mutateAsync).toHaveBeenCalledWith({
-        design: "",
-        implementation: "",
+        design: "Built-in design {{task_id}}",
+        implementation: "Built-in build {{task_id}}",
       });
     });
   });
