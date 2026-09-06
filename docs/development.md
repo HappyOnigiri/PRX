@@ -48,7 +48,7 @@ They must not depend on the real Keychain, ambient token variables, authenticate
 Authentication tests use controlled HTTPS servers and explicit fake credential sources.
 They verify host isolation, safe fallback, and secret-free outputs without contacting production services.
 
-External-integration tests preserve the fail-safe synchronization and trust-boundary policies documented in `docs/design.md`.
+External-integration tests preserve the fail-safe synchronization and trust-boundary policies documented in `docs/design/github-sync.md` and `docs/design/security.md`.
 
 ## Version and release policy
 
