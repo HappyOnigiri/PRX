@@ -38,6 +38,7 @@ export const featureStatusKeys = {
 
 export const taskStatusKeys = {
   [TaskStatus.NOT_STARTED]: "taskStatus.notStarted",
+  [TaskStatus.DESIGNING]: "taskStatus.designing",
   [TaskStatus.IN_PROGRESS]: "taskStatus.inProgress",
   [TaskStatus.COMPLETED]: "taskStatus.completed",
   [TaskStatus.CLOSED]: "taskStatus.closed",
@@ -58,6 +59,7 @@ export function documentKindLabel(value: DocumentKind, t: TFunction): string {
 export const displayStateKeys = {
   [TaskDisplayState.UNSPECIFIED]: "displayState.unknown",
   [TaskDisplayState.NOT_STARTED]: "displayState.notStarted",
+  [TaskDisplayState.DESIGNING]: "displayState.designing",
   [TaskDisplayState.DESIGNED]: "displayState.designed",
   [TaskDisplayState.IN_PROGRESS]: "displayState.inProgress",
   [TaskDisplayState.COMPLETED]: "displayState.completed",

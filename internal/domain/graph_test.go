@@ -139,6 +139,25 @@ func TestTaskDisplayStateMatrix(t *testing.T) {
 			ready: true,
 		},
 		{
+			name:  "designing without plan",
+			task:  Task{ID: "task", Status: TaskStatusDesigning},
+			want:  TaskDisplayStateDesigning,
+			ready: true,
+		},
+		{
+			name:  "designing yields to a registered plan",
+			task:  Task{ID: "task", Status: TaskStatusDesigning, HasImplementationPlan: true},
+			want:  TaskDisplayStateDesigned,
+			ready: true,
+		},
+		{
+			name:  "designing yields to a pull request",
+			task:  Task{ID: "task", Status: TaskStatusDesigning},
+			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
+			want:  TaskDisplayStateOpen,
+			ready: false,
+		},
+		{
 			name:  "not started with plan and pull request",
 			task:  Task{ID: "task", Status: TaskStatusNotStarted, HasImplementationPlan: true},
 			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},

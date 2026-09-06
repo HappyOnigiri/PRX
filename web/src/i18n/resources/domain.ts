@@ -31,6 +31,7 @@ export const domain = {
     },
     taskStatus: {
       notStarted: "Not started",
+      designing: "Designing",
       inProgress: "In progress",
       completed: "Completed",
       closed: "Closed",
@@ -38,6 +39,7 @@ export const domain = {
     },
     displayState: {
       notStarted: "not started",
+      designing: "designing",
       designed: "designed",
       inProgress: "in progress",
       completed: "completed",
@@ -90,6 +92,7 @@ export const domain = {
     },
     taskStatus: {
       notStarted: "未着手",
+      designing: "設計中",
       inProgress: "実装中",
       completed: "完了",
       closed: "クローズ",
@@ -97,6 +100,7 @@ export const domain = {
     },
     displayState: {
       notStarted: "未着手",
+      designing: "設計中",
       designed: "設計済み",
       inProgress: "実装中",
       completed: "完了",

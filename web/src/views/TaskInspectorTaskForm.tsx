@@ -69,6 +69,9 @@ export function TaskInspectorTaskForm({
             <option value={TaskStatus.NOT_STARTED}>
               {taskStatusLabel(TaskStatus.NOT_STARTED, t)}
             </option>
+            <option value={TaskStatus.DESIGNING}>
+              {taskStatusLabel(TaskStatus.DESIGNING, t)}
+            </option>
             <option value={TaskStatus.IN_PROGRESS}>
               {taskStatusLabel(TaskStatus.IN_PROGRESS, t)}
             </option>

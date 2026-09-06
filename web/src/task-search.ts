@@ -7,6 +7,7 @@ import {
 const taskStatusValues = [
   "ready",
   "not-started",
+  "designing",
   "designed",
   "in-progress",
   "completed",

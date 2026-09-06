@@ -96,7 +96,7 @@ func (s *state) taskUpdateCommand() *cobra.Command {
 	}
 	command.Flags().StringVar(&title, "title", "", "new title")
 	command.Flags().StringVar(&scope, "scope", "", "new scope")
-	command.Flags().StringVar(&status, "status", "", "not_started, in_progress, completed, or closed")
+	command.Flags().StringVar(&status, "status", "", "not_started, designing, in_progress, completed, or closed")
 	command.Flags().StringVar(&assignee, "assignee", "", "new assignee")
 	return command
 }

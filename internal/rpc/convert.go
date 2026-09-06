@@ -187,6 +187,8 @@ func protoTaskStatus(value domain.TaskStatus) prxv1.TaskStatus {
 	switch value {
 	case domain.TaskStatusNotStarted:
 		return prxv1.TaskStatus_TASK_STATUS_NOT_STARTED
+	case domain.TaskStatusDesigning:
+		return prxv1.TaskStatus_TASK_STATUS_DESIGNING
 	case domain.TaskStatusInProgress:
 		return prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS
 	case domain.TaskStatusCompleted:
@@ -208,6 +210,8 @@ func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 	switch *value {
 	case prxv1.TaskStatus_TASK_STATUS_NOT_STARTED:
 		result = domain.TaskStatusNotStarted
+	case prxv1.TaskStatus_TASK_STATUS_DESIGNING:
+		result = domain.TaskStatusDesigning
 	case prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS:
 		result = domain.TaskStatusInProgress
 	case prxv1.TaskStatus_TASK_STATUS_COMPLETED:
@@ -225,6 +229,7 @@ func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 func protoTaskDisplayState(value domain.TaskDisplayState) prxv1.TaskDisplayState {
 	states := map[domain.TaskDisplayState]prxv1.TaskDisplayState{
 		domain.TaskDisplayStateNotStarted:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED,
+		domain.TaskDisplayStateDesigning:        prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNING,
 		domain.TaskDisplayStateDesigned:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED,
 		domain.TaskDisplayStateInProgress:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS,
 		domain.TaskDisplayStateCompleted:        prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED,

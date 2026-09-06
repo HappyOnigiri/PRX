@@ -8,8 +8,10 @@ Deciding that in advance changed nothing the server derives, so it is not asked 
 
 A task status is always chosen by hand; there is no automatic member to select.
 The unfinished statuses yield to an attached pull request, so linking one presents the pull request's state without a second edit.
+The designing status yields once more, to a registered implementation plan, so a task marked as being designed is presented as designed the moment its plan is registered.
 The finished statuses outrank a pull request, so a task settled by hand stays settled while its pull request is still open.
 A task left in progress without a pull request satisfies nothing and clears no dependent, because the work it names has not landed anywhere.
+Designing describes deciding how the work will be built rather than building it, so it keeps the readiness question a not-started task asks.
 Dependency satisfaction uses raw completion semantics rather than display labels.
 Presentation flags such as review, conflict, or staleness do not silently redefine completion.
 

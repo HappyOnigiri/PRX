@@ -62,6 +62,9 @@ func FeatureDisplayStatus(stored FeatureStatus, taskCount, finishedCount int) Fe
 // a task marked completed stays completed while its pull request is still open.
 // An unfinished status yields to an attached pull request instead, which is how
 // linking one moves a task from in progress on to review without a second edit.
+// Designing yields once more, to a registered implementation plan, so the task
+// an agent marked as being designed reaches designed by registering the plan
+// rather than by a second edit of the status.
 func displayStateFor(task Task, pr *PullRequest) TaskDisplayState {
 	if task.Status == TaskStatusCompleted {
 		return TaskDisplayStateCompleted
@@ -77,6 +80,9 @@ func displayStateFor(task Task, pr *PullRequest) TaskDisplayState {
 	}
 	if task.HasImplementationPlan {
 		return TaskDisplayStateDesigned
+	}
+	if task.Status == TaskStatusDesigning {
+		return TaskDisplayStateDesigning
 	}
 	return TaskDisplayStateNotStarted
 }
@@ -96,7 +102,11 @@ func IsSatisfied(task Task, pr *PullRequest) bool {
 
 // isReadyCandidate reads the derived state alone. A task that reached a pull
 // request or a finished status is past the point readiness describes, and only
-// work that has not begun asks whether its blockers are clear.
+// work whose implementation has not begun asks whether its blockers are clear.
+// Designing sits with not started and designed, because designing decides how
+// the work will be built rather than starting to build it.
 func isReadyCandidate(display TaskDisplayState) bool {
-	return display == TaskDisplayStateNotStarted || display == TaskDisplayStateDesigned
+	return display == TaskDisplayStateNotStarted ||
+		display == TaskDisplayStateDesigning ||
+		display == TaskDisplayStateDesigned
 }

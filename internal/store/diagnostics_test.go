@@ -32,8 +32,8 @@ func TestStoreReportsResolvedPathAndSchemaVersions(t *testing.T) {
 	// A freshly opened database has every embedded migration applied, so the two
 	// versions must agree; a difference is what identifies a database written by
 	// another PRX build.
-	if applied != embedded || embedded != 12 {
-		t.Fatalf("applied=%d embedded=%d, want 12", applied, embedded)
+	if applied != embedded || embedded != 13 {
+		t.Fatalf("applied=%d embedded=%d, want 13", applied, embedded)
 	}
 }
 

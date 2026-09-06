@@ -100,6 +100,8 @@ const (
 	TaskStatus_TASK_STATUS_NOT_STARTED TaskStatus = 1
 	// TASK_STATUS_IN_PROGRESS means the task is being implemented before a pull request exists.
 	TaskStatus_TASK_STATUS_IN_PROGRESS TaskStatus = 2
+	// TASK_STATUS_DESIGNING means the task is being designed before an implementation plan exists.
+	TaskStatus_TASK_STATUS_DESIGNING TaskStatus = 5
 	// TASK_STATUS_COMPLETED marks the task satisfied regardless of any attached pull request.
 	TaskStatus_TASK_STATUS_COMPLETED TaskStatus = 3
 	// TASK_STATUS_CLOSED marks the task closed regardless of any attached pull request.
@@ -112,6 +114,7 @@ var (
 		0: "TASK_STATUS_UNSPECIFIED",
 		1: "TASK_STATUS_NOT_STARTED",
 		2: "TASK_STATUS_IN_PROGRESS",
+		5: "TASK_STATUS_DESIGNING",
 		3: "TASK_STATUS_COMPLETED",
 		4: "TASK_STATUS_CLOSED",
 	}
@@ -119,6 +122,7 @@ var (
 		"TASK_STATUS_UNSPECIFIED": 0,
 		"TASK_STATUS_NOT_STARTED": 1,
 		"TASK_STATUS_IN_PROGRESS": 2,
+		"TASK_STATUS_DESIGNING":   5,
 		"TASK_STATUS_COMPLETED":   3,
 		"TASK_STATUS_CLOSED":      4,
 	}
@@ -161,6 +165,8 @@ const (
 	TaskDisplayState_TASK_DISPLAY_STATE_UNSPECIFIED TaskDisplayState = 0
 	// TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached and no implementation plan exists.
 	TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED TaskDisplayState = 1
+	// TASK_DISPLAY_STATE_DESIGNING means the task is being designed without an implementation plan.
+	TaskDisplayState_TASK_DISPLAY_STATE_DESIGNING TaskDisplayState = 14
 	// TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
 	TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED TaskDisplayState = 2
 	// TASK_DISPLAY_STATE_IN_PROGRESS means the task is in progress without a pull request.
@@ -192,6 +198,7 @@ var (
 	TaskDisplayState_name = map[int32]string{
 		0:  "TASK_DISPLAY_STATE_UNSPECIFIED",
 		1:  "TASK_DISPLAY_STATE_NOT_STARTED",
+		14: "TASK_DISPLAY_STATE_DESIGNING",
 		2:  "TASK_DISPLAY_STATE_DESIGNED",
 		3:  "TASK_DISPLAY_STATE_IN_PROGRESS",
 		4:  "TASK_DISPLAY_STATE_COMPLETED",
@@ -208,6 +215,7 @@ var (
 	TaskDisplayState_value = map[string]int32{
 		"TASK_DISPLAY_STATE_UNSPECIFIED":       0,
 		"TASK_DISPLAY_STATE_NOT_STARTED":       1,
+		"TASK_DISPLAY_STATE_DESIGNING":         14,
 		"TASK_DISPLAY_STATE_DESIGNED":          2,
 		"TASK_DISPLAY_STATE_IN_PROGRESS":       3,
 		"TASK_DISPLAY_STATE_COMPLETED":         4,
@@ -8677,17 +8685,19 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x15FEATURE_STATUS_PAUSED\x10\x02\x12\x1c\n" +
 	"\x18FEATURE_STATUS_COMPLETED\x10\x03\x12\x1c\n" +
 	"\x18FEATURE_STATUS_CANCELLED\x10\x04\x12\x17\n" +
-	"\x13FEATURE_STATUS_AUTO\x10\x05*\x96\x01\n" +
+	"\x13FEATURE_STATUS_AUTO\x10\x05*\xb1\x01\n" +
 	"\n" +
 	"TaskStatus\x12\x1b\n" +
 	"\x17TASK_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
 	"\x17TASK_STATUS_NOT_STARTED\x10\x01\x12\x1b\n" +
 	"\x17TASK_STATUS_IN_PROGRESS\x10\x02\x12\x19\n" +
+	"\x15TASK_STATUS_DESIGNING\x10\x05\x12\x19\n" +
 	"\x15TASK_STATUS_COMPLETED\x10\x03\x12\x16\n" +
-	"\x12TASK_STATUS_CLOSED\x10\x04*\xed\x03\n" +
+	"\x12TASK_STATUS_CLOSED\x10\x04*\x8f\x04\n" +
 	"\x10TaskDisplayState\x12\"\n" +
 	"\x1eTASK_DISPLAY_STATE_UNSPECIFIED\x10\x00\x12\"\n" +
-	"\x1eTASK_DISPLAY_STATE_NOT_STARTED\x10\x01\x12\x1f\n" +
+	"\x1eTASK_DISPLAY_STATE_NOT_STARTED\x10\x01\x12 \n" +
+	"\x1cTASK_DISPLAY_STATE_DESIGNING\x10\x0e\x12\x1f\n" +
 	"\x1bTASK_DISPLAY_STATE_DESIGNED\x10\x02\x12\"\n" +
 	"\x1eTASK_DISPLAY_STATE_IN_PROGRESS\x10\x03\x12 \n" +
 	"\x1cTASK_DISPLAY_STATE_COMPLETED\x10\x04\x12\x1d\n" +
