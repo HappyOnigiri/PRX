@@ -174,6 +174,7 @@ type DebugConfigPrompt struct {
 type DebugConfigPrompts struct {
 	Design         DebugConfigPrompt `json:"design"`
 	Implementation DebugConfigPrompt `json:"implementation"`
+	Batch          DebugConfigPrompt `json:"batch"`
 }
 
 // DebugConfigInput carries the configuration facts collected outside the domain,

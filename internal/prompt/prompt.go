@@ -29,10 +29,13 @@ const (
 	KindImplementation Kind = "implementation"
 )
 
-// Templates holds one template per Kind.
+// Templates holds one template per Kind, plus the batch template, which is not
+// a Kind because it is chosen by the caller asking for several tasks at once
+// rather than derived from any single task.
 type Templates struct {
 	Design         string `yaml:"design"         json:"design"`
 	Implementation string `yaml:"implementation" json:"implementation"`
+	Batch          string `yaml:"batch"          json:"batch"`
 }
 
 // placeholderPattern matches every substitution token, including unsupported
@@ -51,6 +54,20 @@ var supportedPlaceholders = []string{
 	"feature_id",
 	"task_title",
 	"task_scope",
+}
+
+// batchRequiredPlaceholder keeps a batch template pointed at the tasks it was
+// asked for. Without it the rendered prompt names no target at all, which is
+// worse than a task prompt missing its own identifier.
+const batchRequiredPlaceholder = "task_list"
+
+// batchSupportedPlaceholders is the batch vocabulary. It is deliberately
+// smaller than the task vocabulary: a batch covers several tasks, so no single
+// task's title or scope belongs in it, and the per-task text the agent needs
+// comes from `prx prompt TASK_ID` rather than from this template.
+var batchSupportedPlaceholders = []string{
+	batchRequiredPlaceholder,
+	"feature_id",
 }
 
 const defaultDesignTemplate = `Design PRX task {{task_id}} of feature {{feature_id}}.
@@ -98,6 +115,27 @@ Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact su
 Report what you changed and anything the plan did not cover.
 `
 
+const defaultBatchTemplate = `Implement the PRX tasks of feature {{feature_id}} listed below.
+
+PRX is a local CLI that tracks tasks and the dependencies between them.
+Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact surface.
+
+Tasks:
+{{task_list}}
+
+1. Read the feature graph so you know how the listed tasks relate to the rest of the work.
+   - ` + "`prx graph {{feature_id}}`" + `
+2. Hand every task to its own SubAgent: one task per SubAgent, and never two tasks to the same one.
+   Each SubAgent takes its instructions from PRX rather than from you.
+   - It runs ` + "`prx prompt TASK_ID`" + ` for the task it was given and follows the prompt that prints.
+   - It reports what it changed and anything the prompt did not cover.
+   Nothing in the list is waiting on anything else in it, so the SubAgents may run in parallel.
+3. Wait for every SubAgent and read what each one reported.
+   A task whose SubAgent failed stays unfinished: report it instead of implementing it yourself.
+
+Report each task's outcome separately, including the ones that failed.
+`
+
 // SupportedPlaceholders returns the substitution vocabulary, without the
 // surrounding braces. It exists so a client can present what the server accepts
 // instead of maintaining its own list, which would drift from this one without
@@ -106,13 +144,27 @@ func SupportedPlaceholders() []string {
 	return slices.Clone(supportedPlaceholders)
 }
 
-// RequiredPlaceholder returns the placeholder every template must use.
+// RequiredPlaceholder returns the placeholder every task template must use.
 func RequiredPlaceholder() string { return requiredPlaceholder }
+
+// BatchSupportedPlaceholders returns the batch substitution vocabulary. It is
+// served separately because a batch template that used a task placeholder would
+// have nothing to expand it from.
+func BatchSupportedPlaceholders() []string {
+	return slices.Clone(batchSupportedPlaceholders)
+}
+
+// BatchRequiredPlaceholder returns the placeholder every batch template must use.
+func BatchRequiredPlaceholder() string { return batchRequiredPlaceholder }
 
 // DefaultTemplates returns the built-in templates used when the configuration
 // does not define its own.
 func DefaultTemplates() Templates {
-	return Templates{Design: defaultDesignTemplate, Implementation: defaultImplementationTemplate}
+	return Templates{
+		Design:         defaultDesignTemplate,
+		Implementation: defaultImplementationTemplate,
+		Batch:          defaultBatchTemplate,
+	}
 }
 
 // KindFor selects the template a task needs. Only the presence of an
@@ -145,10 +197,22 @@ func (t Templates) Normalize() (Templates, error) {
 	if strings.TrimSpace(result.Implementation) == "" {
 		result.Implementation = defaults.Implementation
 	}
-	if err := validateTemplate("prompts.design", result.Design); err != nil {
+	if strings.TrimSpace(result.Batch) == "" {
+		result.Batch = defaults.Batch
+	}
+	if err := validateTemplate(
+		"prompts.design", result.Design, supportedPlaceholders, requiredPlaceholder,
+	); err != nil {
 		return Templates{}, err
 	}
-	if err := validateTemplate("prompts.implementation", result.Implementation); err != nil {
+	if err := validateTemplate(
+		"prompts.implementation", result.Implementation, supportedPlaceholders, requiredPlaceholder,
+	); err != nil {
+		return Templates{}, err
+	}
+	if err := validateTemplate(
+		"prompts.batch", result.Batch, batchSupportedPlaceholders, batchRequiredPlaceholder,
+	); err != nil {
 		return Templates{}, err
 	}
 	return result, nil
@@ -173,6 +237,36 @@ func Render(task domain.Task, templates Templates) (Kind, string, error) {
 		return values[placeholderName(match)]
 	})
 	return kind, body, nil
+}
+
+// RenderBatch expands the batch template over several tasks. The tasks arrive
+// in the order the caller listed them, and the rendered list keeps that order so
+// the reader hands the agent the batch they saw. The per-task instructions stay
+// out of the body: the template tells the agent to fetch each one with
+// `prx prompt TASK_ID`, so a batch stays the same length whatever it covers.
+func RenderBatch(featureID string, tasks []domain.Task, templates Templates) (string, error) {
+	normalized, err := templates.Normalize()
+	if err != nil {
+		return "", err
+	}
+	values := map[string]string{
+		"feature_id": featureID,
+		"task_list":  batchTaskList(tasks),
+	}
+	return placeholderPattern.ReplaceAllStringFunc(normalized.Batch, func(match string) string {
+		return values[placeholderName(match)]
+	}), nil
+}
+
+// batchTaskList names every task by the identifier the agent passes back to
+// `prx prompt`, with the title behind it so a person reading the prompt can tell
+// the tasks apart.
+func batchTaskList(tasks []domain.Task) string {
+	lines := make([]string, 0, len(tasks))
+	for _, task := range tasks {
+		lines = append(lines, fmt.Sprintf("- %s: %s", task.ID, task.Title))
+	}
+	return strings.Join(lines, "\n")
 }
 
 // unspecifiedScope stands in for a task created without a scope. The templates
@@ -200,28 +294,24 @@ func newError(field, format string, args ...any) *Error {
 	return &Error{Field: field, Message: fmt.Sprintf(format, args...)}
 }
 
-func validateTemplate(field, value string) error {
+func validateTemplate(field, value string, supported []string, required string) error {
 	if len(value) > MaximumTemplateBytes {
 		return newError(field, "template must be at most %d bytes", MaximumTemplateBytes)
 	}
 	found := make(map[string]struct{})
 	for _, match := range placeholderPattern.FindAllString(value, -1) {
 		name := placeholderName(match)
-		if !isSupportedPlaceholder(name) {
+		if !slices.Contains(supported, name) {
 			return newError(field, "template uses unsupported placeholder %s", match)
 		}
 		found[name] = struct{}{}
 	}
-	if _, ok := found[requiredPlaceholder]; !ok {
-		return newError(field, "template must use {{%s}}", requiredPlaceholder)
+	if _, ok := found[required]; !ok {
+		return newError(field, "template must use {{%s}}", required)
 	}
 	return nil
 }
 
 func placeholderName(match string) string {
 	return strings.TrimSpace(strings.TrimSuffix(strings.TrimPrefix(match, "{{"), "}}"))
-}
-
-func isSupportedPlaceholder(name string) bool {
-	return slices.Contains(supportedPlaceholders, name)
 }

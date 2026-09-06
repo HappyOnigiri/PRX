@@ -5622,15 +5622,18 @@ func (x *ValidateConfigResponse) GetWarnings() []string {
 }
 
 // PromptTemplates holds the shared agent prompt templates.
-// Both templates are stored in the same configuration the CLI reads.
+// Every template is stored in the same configuration the CLI reads.
 type PromptTemplates struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// design is used for a task that has no implementation plan yet.
 	Design string `protobuf:"bytes,1,opt,name=design,proto3" json:"design,omitempty"`
 	// implementation is used for a task that already has an implementation plan.
 	Implementation string `protobuf:"bytes,2,opt,name=implementation,proto3" json:"implementation,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// batch is used for several tasks handed over in one prompt. It is selected by
+	// the caller asking for a batch rather than derived from any single task.
+	Batch         string `protobuf:"bytes,3,opt,name=batch,proto3" json:"batch,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *PromptTemplates) Reset() {
@@ -5673,6 +5676,13 @@ func (x *PromptTemplates) GetDesign() string {
 func (x *PromptTemplates) GetImplementation() string {
 	if x != nil {
 		return x.Implementation
+	}
+	return ""
+}
+
+func (x *PromptTemplates) GetBatch() string {
+	if x != nil {
+		return x.Batch
 	}
 	return ""
 }
@@ -5723,14 +5733,20 @@ type GetPromptTemplatesResponse struct {
 	// surrounding braces. A client presents this list rather than keeping its own
 	// copy, which would drift from what the server accepts.
 	SupportedPlaceholders []string `protobuf:"bytes,2,rep,name=supported_placeholders,json=supportedPlaceholders,proto3" json:"supported_placeholders,omitempty"`
-	// required_placeholder is the one placeholder every template must use.
+	// required_placeholder is the one placeholder every task template must use.
 	RequiredPlaceholder string `protobuf:"bytes,3,opt,name=required_placeholder,json=requiredPlaceholder,proto3" json:"required_placeholder,omitempty"`
 	// built_in contains the templates PRX ships. An editor offering to restore
 	// them shows the text they contain instead of leaving the field empty until a
 	// write completes.
-	BuiltIn       *PromptTemplates `protobuf:"bytes,4,opt,name=built_in,json=builtIn,proto3" json:"built_in,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	BuiltIn *PromptTemplates `protobuf:"bytes,4,opt,name=built_in,json=builtIn,proto3" json:"built_in,omitempty"`
+	// batch_supported_placeholders is the substitution vocabulary of the batch
+	// template. It is smaller than the task vocabulary, because a batch has no
+	// single task to expand a task placeholder from.
+	BatchSupportedPlaceholders []string `protobuf:"bytes,5,rep,name=batch_supported_placeholders,json=batchSupportedPlaceholders,proto3" json:"batch_supported_placeholders,omitempty"`
+	// batch_required_placeholder is the one placeholder every batch template must use.
+	BatchRequiredPlaceholder string `protobuf:"bytes,6,opt,name=batch_required_placeholder,json=batchRequiredPlaceholder,proto3" json:"batch_required_placeholder,omitempty"`
+	unknownFields            protoimpl.UnknownFields
+	sizeCache                protoimpl.SizeCache
 }
 
 func (x *GetPromptTemplatesResponse) Reset() {
@@ -5791,7 +5807,21 @@ func (x *GetPromptTemplatesResponse) GetBuiltIn() *PromptTemplates {
 	return nil
 }
 
-// UpdatePromptTemplatesRequest replaces both templates in one configuration write.
+func (x *GetPromptTemplatesResponse) GetBatchSupportedPlaceholders() []string {
+	if x != nil {
+		return x.BatchSupportedPlaceholders
+	}
+	return nil
+}
+
+func (x *GetPromptTemplatesResponse) GetBatchRequiredPlaceholder() string {
+	if x != nil {
+		return x.BatchRequiredPlaceholder
+	}
+	return ""
+}
+
+// UpdatePromptTemplatesRequest replaces every template in one configuration write.
 // An empty template is restored to its built-in default.
 type UpdatePromptTemplatesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
@@ -5799,8 +5829,10 @@ type UpdatePromptTemplatesRequest struct {
 	Design string `protobuf:"bytes,1,opt,name=design,proto3" json:"design,omitempty"`
 	// implementation replaces the template used for a task with an implementation plan.
 	Implementation string `protobuf:"bytes,2,opt,name=implementation,proto3" json:"implementation,omitempty"`
-	unknownFields  protoimpl.UnknownFields
-	sizeCache      protoimpl.SizeCache
+	// batch replaces the template used for several tasks handed over in one prompt.
+	Batch         string `protobuf:"bytes,3,opt,name=batch,proto3" json:"batch,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UpdatePromptTemplatesRequest) Reset() {
@@ -5843,6 +5875,13 @@ func (x *UpdatePromptTemplatesRequest) GetDesign() string {
 func (x *UpdatePromptTemplatesRequest) GetImplementation() string {
 	if x != nil {
 		return x.Implementation
+	}
+	return ""
+}
+
+func (x *UpdatePromptTemplatesRequest) GetBatch() string {
+	if x != nil {
+		return x.Batch
 	}
 	return ""
 }
@@ -6003,6 +6042,125 @@ func (x *GetTaskPromptResponse) GetPrompt() string {
 	return ""
 }
 
+// GetBatchPromptRequest asks for one prompt covering several tasks of one feature.
+type GetBatchPromptRequest struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// feature_id is the public identifier of the feature the tasks belong to.
+	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
+	// task_ids lists the tasks to cover, in the order they should appear.
+	TaskIds       []string `protobuf:"bytes,2,rep,name=task_ids,json=taskIds,proto3" json:"task_ids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetBatchPromptRequest) Reset() {
+	*x = GetBatchPromptRequest{}
+	mi := &file_prx_v1_prx_proto_msgTypes[79]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetBatchPromptRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetBatchPromptRequest) ProtoMessage() {}
+
+func (x *GetBatchPromptRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[79]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetBatchPromptRequest.ProtoReflect.Descriptor instead.
+func (*GetBatchPromptRequest) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{79}
+}
+
+func (x *GetBatchPromptRequest) GetFeatureId() string {
+	if x != nil {
+		return x.FeatureId
+	}
+	return ""
+}
+
+func (x *GetBatchPromptRequest) GetTaskIds() []string {
+	if x != nil {
+		return x.TaskIds
+	}
+	return nil
+}
+
+// GetBatchPromptResponse returns the expanded batch prompt.
+type GetBatchPromptResponse struct {
+	state protoimpl.MessageState `protogen:"open.v1"`
+	// feature_id is the feature the prompt covers.
+	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
+	// task_ids lists the covered tasks in the order the prompt names them.
+	TaskIds []string `protobuf:"bytes,2,rep,name=task_ids,json=taskIds,proto3" json:"task_ids,omitempty"`
+	// prompt is the expanded batch template, ready to hand to another agent.
+	Prompt        string `protobuf:"bytes,3,opt,name=prompt,proto3" json:"prompt,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetBatchPromptResponse) Reset() {
+	*x = GetBatchPromptResponse{}
+	mi := &file_prx_v1_prx_proto_msgTypes[80]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetBatchPromptResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetBatchPromptResponse) ProtoMessage() {}
+
+func (x *GetBatchPromptResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_prx_v1_prx_proto_msgTypes[80]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetBatchPromptResponse.ProtoReflect.Descriptor instead.
+func (*GetBatchPromptResponse) Descriptor() ([]byte, []int) {
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{80}
+}
+
+func (x *GetBatchPromptResponse) GetFeatureId() string {
+	if x != nil {
+		return x.FeatureId
+	}
+	return ""
+}
+
+func (x *GetBatchPromptResponse) GetTaskIds() []string {
+	if x != nil {
+		return x.TaskIds
+	}
+	return nil
+}
+
+func (x *GetBatchPromptResponse) GetPrompt() string {
+	if x != nil {
+		return x.Prompt
+	}
+	return ""
+}
+
 // SyncRequest selects pull requests to refresh from GitHub.
 // Empty selectors refresh all pull requests; setting both selectors applies both filters.
 type SyncRequest struct {
@@ -6017,7 +6175,7 @@ type SyncRequest struct {
 
 func (x *SyncRequest) Reset() {
 	*x = SyncRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[79]
+	mi := &file_prx_v1_prx_proto_msgTypes[81]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6029,7 +6187,7 @@ func (x *SyncRequest) String() string {
 func (*SyncRequest) ProtoMessage() {}
 
 func (x *SyncRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[79]
+	mi := &file_prx_v1_prx_proto_msgTypes[81]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6042,7 +6200,7 @@ func (x *SyncRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncRequest.ProtoReflect.Descriptor instead.
 func (*SyncRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{79}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{81}
 }
 
 func (x *SyncRequest) GetFeatureId() string {
@@ -6073,7 +6231,7 @@ type SyncResponse struct {
 
 func (x *SyncResponse) Reset() {
 	*x = SyncResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[80]
+	mi := &file_prx_v1_prx_proto_msgTypes[82]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6085,7 +6243,7 @@ func (x *SyncResponse) String() string {
 func (*SyncResponse) ProtoMessage() {}
 
 func (x *SyncResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[80]
+	mi := &file_prx_v1_prx_proto_msgTypes[82]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6098,7 +6256,7 @@ func (x *SyncResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncResponse.ProtoReflect.Descriptor instead.
 func (*SyncResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{80}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{82}
 }
 
 func (x *SyncResponse) GetSucceeded() int32 {
@@ -6137,7 +6295,7 @@ type GitHubSyncStatus struct {
 
 func (x *GitHubSyncStatus) Reset() {
 	*x = GitHubSyncStatus{}
-	mi := &file_prx_v1_prx_proto_msgTypes[81]
+	mi := &file_prx_v1_prx_proto_msgTypes[83]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6149,7 +6307,7 @@ func (x *GitHubSyncStatus) String() string {
 func (*GitHubSyncStatus) ProtoMessage() {}
 
 func (x *GitHubSyncStatus) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[81]
+	mi := &file_prx_v1_prx_proto_msgTypes[83]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6162,7 +6320,7 @@ func (x *GitHubSyncStatus) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GitHubSyncStatus.ProtoReflect.Descriptor instead.
 func (*GitHubSyncStatus) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{81}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{83}
 }
 
 func (x *GitHubSyncStatus) GetIntervalSeconds() int64 {
@@ -6216,7 +6374,7 @@ type GetGitHubSyncStatusRequest struct {
 
 func (x *GetGitHubSyncStatusRequest) Reset() {
 	*x = GetGitHubSyncStatusRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[82]
+	mi := &file_prx_v1_prx_proto_msgTypes[84]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6228,7 +6386,7 @@ func (x *GetGitHubSyncStatusRequest) String() string {
 func (*GetGitHubSyncStatusRequest) ProtoMessage() {}
 
 func (x *GetGitHubSyncStatusRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[82]
+	mi := &file_prx_v1_prx_proto_msgTypes[84]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6241,7 +6399,7 @@ func (x *GetGitHubSyncStatusRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGitHubSyncStatusRequest.ProtoReflect.Descriptor instead.
 func (*GetGitHubSyncStatusRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{82}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{84}
 }
 
 // GetGitHubSyncStatusResponse returns the persisted synchronization status.
@@ -6255,7 +6413,7 @@ type GetGitHubSyncStatusResponse struct {
 
 func (x *GetGitHubSyncStatusResponse) Reset() {
 	*x = GetGitHubSyncStatusResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[83]
+	mi := &file_prx_v1_prx_proto_msgTypes[85]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6267,7 +6425,7 @@ func (x *GetGitHubSyncStatusResponse) String() string {
 func (*GetGitHubSyncStatusResponse) ProtoMessage() {}
 
 func (x *GetGitHubSyncStatusResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[83]
+	mi := &file_prx_v1_prx_proto_msgTypes[85]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6280,7 +6438,7 @@ func (x *GetGitHubSyncStatusResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetGitHubSyncStatusResponse.ProtoReflect.Descriptor instead.
 func (*GetGitHubSyncStatusResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{83}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{85}
 }
 
 func (x *GetGitHubSyncStatusResponse) GetStatus() *GitHubSyncStatus {
@@ -6299,7 +6457,7 @@ type SyncGitHubIfDueRequest struct {
 
 func (x *SyncGitHubIfDueRequest) Reset() {
 	*x = SyncGitHubIfDueRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[84]
+	mi := &file_prx_v1_prx_proto_msgTypes[86]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6311,7 +6469,7 @@ func (x *SyncGitHubIfDueRequest) String() string {
 func (*SyncGitHubIfDueRequest) ProtoMessage() {}
 
 func (x *SyncGitHubIfDueRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[84]
+	mi := &file_prx_v1_prx_proto_msgTypes[86]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6324,7 +6482,7 @@ func (x *SyncGitHubIfDueRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncGitHubIfDueRequest.ProtoReflect.Descriptor instead.
 func (*SyncGitHubIfDueRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{84}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{86}
 }
 
 // SyncGitHubIfDueResponse reports whether this caller claimed a run and the resulting status.
@@ -6340,7 +6498,7 @@ type SyncGitHubIfDueResponse struct {
 
 func (x *SyncGitHubIfDueResponse) Reset() {
 	*x = SyncGitHubIfDueResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[85]
+	mi := &file_prx_v1_prx_proto_msgTypes[87]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6352,7 +6510,7 @@ func (x *SyncGitHubIfDueResponse) String() string {
 func (*SyncGitHubIfDueResponse) ProtoMessage() {}
 
 func (x *SyncGitHubIfDueResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[85]
+	mi := &file_prx_v1_prx_proto_msgTypes[87]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6365,7 +6523,7 @@ func (x *SyncGitHubIfDueResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use SyncGitHubIfDueResponse.ProtoReflect.Descriptor instead.
 func (*SyncGitHubIfDueResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{85}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{87}
 }
 
 func (x *SyncGitHubIfDueResponse) GetRan() bool {
@@ -6391,7 +6549,7 @@ type ValidateRequest struct {
 
 func (x *ValidateRequest) Reset() {
 	*x = ValidateRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[86]
+	mi := &file_prx_v1_prx_proto_msgTypes[88]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6403,7 +6561,7 @@ func (x *ValidateRequest) String() string {
 func (*ValidateRequest) ProtoMessage() {}
 
 func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[86]
+	mi := &file_prx_v1_prx_proto_msgTypes[88]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6416,7 +6574,7 @@ func (x *ValidateRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateRequest.ProtoReflect.Descriptor instead.
 func (*ValidateRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{86}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{88}
 }
 
 // ValidateResponse reports whether database integrity checks passed.
@@ -6432,7 +6590,7 @@ type ValidateResponse struct {
 
 func (x *ValidateResponse) Reset() {
 	*x = ValidateResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[87]
+	mi := &file_prx_v1_prx_proto_msgTypes[89]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6444,7 +6602,7 @@ func (x *ValidateResponse) String() string {
 func (*ValidateResponse) ProtoMessage() {}
 
 func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[87]
+	mi := &file_prx_v1_prx_proto_msgTypes[89]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6457,7 +6615,7 @@ func (x *ValidateResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ValidateResponse.ProtoReflect.Descriptor instead.
 func (*ValidateResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{87}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{89}
 }
 
 func (x *ValidateResponse) GetValid() bool {
@@ -6491,7 +6649,7 @@ type DebugProblem struct {
 
 func (x *DebugProblem) Reset() {
 	*x = DebugProblem{}
-	mi := &file_prx_v1_prx_proto_msgTypes[88]
+	mi := &file_prx_v1_prx_proto_msgTypes[90]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6503,7 +6661,7 @@ func (x *DebugProblem) String() string {
 func (*DebugProblem) ProtoMessage() {}
 
 func (x *DebugProblem) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[88]
+	mi := &file_prx_v1_prx_proto_msgTypes[90]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6516,7 +6674,7 @@ func (x *DebugProblem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugProblem.ProtoReflect.Descriptor instead.
 func (*DebugProblem) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{88}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{90}
 }
 
 func (x *DebugProblem) GetCode() DebugProblemCode {
@@ -6566,7 +6724,7 @@ type DebugBuild struct {
 
 func (x *DebugBuild) Reset() {
 	*x = DebugBuild{}
-	mi := &file_prx_v1_prx_proto_msgTypes[89]
+	mi := &file_prx_v1_prx_proto_msgTypes[91]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6578,7 +6736,7 @@ func (x *DebugBuild) String() string {
 func (*DebugBuild) ProtoMessage() {}
 
 func (x *DebugBuild) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[89]
+	mi := &file_prx_v1_prx_proto_msgTypes[91]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6591,7 +6749,7 @@ func (x *DebugBuild) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugBuild.ProtoReflect.Descriptor instead.
 func (*DebugBuild) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{89}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{91}
 }
 
 func (x *DebugBuild) GetVersion() string {
@@ -6654,7 +6812,7 @@ type DebugRuntime struct {
 
 func (x *DebugRuntime) Reset() {
 	*x = DebugRuntime{}
-	mi := &file_prx_v1_prx_proto_msgTypes[90]
+	mi := &file_prx_v1_prx_proto_msgTypes[92]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6666,7 +6824,7 @@ func (x *DebugRuntime) String() string {
 func (*DebugRuntime) ProtoMessage() {}
 
 func (x *DebugRuntime) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[90]
+	mi := &file_prx_v1_prx_proto_msgTypes[92]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6679,7 +6837,7 @@ func (x *DebugRuntime) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugRuntime.ProtoReflect.Descriptor instead.
 func (*DebugRuntime) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{90}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{92}
 }
 
 func (x *DebugRuntime) GetMode() string {
@@ -6751,7 +6909,7 @@ type DebugEnvironmentVariable struct {
 
 func (x *DebugEnvironmentVariable) Reset() {
 	*x = DebugEnvironmentVariable{}
-	mi := &file_prx_v1_prx_proto_msgTypes[91]
+	mi := &file_prx_v1_prx_proto_msgTypes[93]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6763,7 +6921,7 @@ func (x *DebugEnvironmentVariable) String() string {
 func (*DebugEnvironmentVariable) ProtoMessage() {}
 
 func (x *DebugEnvironmentVariable) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[91]
+	mi := &file_prx_v1_prx_proto_msgTypes[93]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6776,7 +6934,7 @@ func (x *DebugEnvironmentVariable) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugEnvironmentVariable.ProtoReflect.Descriptor instead.
 func (*DebugEnvironmentVariable) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{91}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{93}
 }
 
 func (x *DebugEnvironmentVariable) GetName() string {
@@ -6818,7 +6976,7 @@ type DebugPaths struct {
 
 func (x *DebugPaths) Reset() {
 	*x = DebugPaths{}
-	mi := &file_prx_v1_prx_proto_msgTypes[92]
+	mi := &file_prx_v1_prx_proto_msgTypes[94]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6830,7 +6988,7 @@ func (x *DebugPaths) String() string {
 func (*DebugPaths) ProtoMessage() {}
 
 func (x *DebugPaths) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[92]
+	mi := &file_prx_v1_prx_proto_msgTypes[94]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6843,7 +7001,7 @@ func (x *DebugPaths) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugPaths.ProtoReflect.Descriptor instead.
 func (*DebugPaths) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{92}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{94}
 }
 
 func (x *DebugPaths) GetDatabasePath() string {
@@ -6917,7 +7075,7 @@ type DebugConfigHost struct {
 
 func (x *DebugConfigHost) Reset() {
 	*x = DebugConfigHost{}
-	mi := &file_prx_v1_prx_proto_msgTypes[93]
+	mi := &file_prx_v1_prx_proto_msgTypes[95]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6929,7 +7087,7 @@ func (x *DebugConfigHost) String() string {
 func (*DebugConfigHost) ProtoMessage() {}
 
 func (x *DebugConfigHost) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[93]
+	mi := &file_prx_v1_prx_proto_msgTypes[95]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -6942,7 +7100,7 @@ func (x *DebugConfigHost) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugConfigHost.ProtoReflect.Descriptor instead.
 func (*DebugConfigHost) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{93}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{95}
 }
 
 func (x *DebugConfigHost) GetHost() string {
@@ -6983,7 +7141,7 @@ type DebugConfigAuthMethod struct {
 
 func (x *DebugConfigAuthMethod) Reset() {
 	*x = DebugConfigAuthMethod{}
-	mi := &file_prx_v1_prx_proto_msgTypes[94]
+	mi := &file_prx_v1_prx_proto_msgTypes[96]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -6995,7 +7153,7 @@ func (x *DebugConfigAuthMethod) String() string {
 func (*DebugConfigAuthMethod) ProtoMessage() {}
 
 func (x *DebugConfigAuthMethod) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[94]
+	mi := &file_prx_v1_prx_proto_msgTypes[96]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7008,7 +7166,7 @@ func (x *DebugConfigAuthMethod) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugConfigAuthMethod.ProtoReflect.Descriptor instead.
 func (*DebugConfigAuthMethod) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{94}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{96}
 }
 
 func (x *DebugConfigAuthMethod) GetId() string {
@@ -7062,7 +7220,7 @@ type DebugConfig struct {
 
 func (x *DebugConfig) Reset() {
 	*x = DebugConfig{}
-	mi := &file_prx_v1_prx_proto_msgTypes[95]
+	mi := &file_prx_v1_prx_proto_msgTypes[97]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7074,7 +7232,7 @@ func (x *DebugConfig) String() string {
 func (*DebugConfig) ProtoMessage() {}
 
 func (x *DebugConfig) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[95]
+	mi := &file_prx_v1_prx_proto_msgTypes[97]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7087,7 +7245,7 @@ func (x *DebugConfig) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugConfig.ProtoReflect.Descriptor instead.
 func (*DebugConfig) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{95}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{97}
 }
 
 func (x *DebugConfig) GetVersion() int32 {
@@ -7162,7 +7320,7 @@ type DebugDatabaseFile struct {
 
 func (x *DebugDatabaseFile) Reset() {
 	*x = DebugDatabaseFile{}
-	mi := &file_prx_v1_prx_proto_msgTypes[96]
+	mi := &file_prx_v1_prx_proto_msgTypes[98]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7174,7 +7332,7 @@ func (x *DebugDatabaseFile) String() string {
 func (*DebugDatabaseFile) ProtoMessage() {}
 
 func (x *DebugDatabaseFile) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[96]
+	mi := &file_prx_v1_prx_proto_msgTypes[98]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7187,7 +7345,7 @@ func (x *DebugDatabaseFile) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugDatabaseFile.ProtoReflect.Descriptor instead.
 func (*DebugDatabaseFile) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{96}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{98}
 }
 
 func (x *DebugDatabaseFile) GetApplicable() bool {
@@ -7262,7 +7420,7 @@ type DebugStorage struct {
 
 func (x *DebugStorage) Reset() {
 	*x = DebugStorage{}
-	mi := &file_prx_v1_prx_proto_msgTypes[97]
+	mi := &file_prx_v1_prx_proto_msgTypes[99]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7274,7 +7432,7 @@ func (x *DebugStorage) String() string {
 func (*DebugStorage) ProtoMessage() {}
 
 func (x *DebugStorage) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[97]
+	mi := &file_prx_v1_prx_proto_msgTypes[99]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7287,7 +7445,7 @@ func (x *DebugStorage) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugStorage.ProtoReflect.Descriptor instead.
 func (*DebugStorage) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{97}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{99}
 }
 
 func (x *DebugStorage) GetAppliedSchemaVersion() int32 {
@@ -7352,7 +7510,7 @@ type DebugCount struct {
 
 func (x *DebugCount) Reset() {
 	*x = DebugCount{}
-	mi := &file_prx_v1_prx_proto_msgTypes[98]
+	mi := &file_prx_v1_prx_proto_msgTypes[100]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7364,7 +7522,7 @@ func (x *DebugCount) String() string {
 func (*DebugCount) ProtoMessage() {}
 
 func (x *DebugCount) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[98]
+	mi := &file_prx_v1_prx_proto_msgTypes[100]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7377,7 +7535,7 @@ func (x *DebugCount) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugCount.ProtoReflect.Descriptor instead.
 func (*DebugCount) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{98}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{100}
 }
 
 func (x *DebugCount) GetName() string {
@@ -7429,7 +7587,7 @@ type DebugData struct {
 
 func (x *DebugData) Reset() {
 	*x = DebugData{}
-	mi := &file_prx_v1_prx_proto_msgTypes[99]
+	mi := &file_prx_v1_prx_proto_msgTypes[101]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7441,7 +7599,7 @@ func (x *DebugData) String() string {
 func (*DebugData) ProtoMessage() {}
 
 func (x *DebugData) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[99]
+	mi := &file_prx_v1_prx_proto_msgTypes[101]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7454,7 +7612,7 @@ func (x *DebugData) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugData.ProtoReflect.Descriptor instead.
 func (*DebugData) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{99}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{101}
 }
 
 func (x *DebugData) GetFeatures() int32 {
@@ -7561,7 +7719,7 @@ type DebugSyncFailure struct {
 
 func (x *DebugSyncFailure) Reset() {
 	*x = DebugSyncFailure{}
-	mi := &file_prx_v1_prx_proto_msgTypes[100]
+	mi := &file_prx_v1_prx_proto_msgTypes[102]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7573,7 +7731,7 @@ func (x *DebugSyncFailure) String() string {
 func (*DebugSyncFailure) ProtoMessage() {}
 
 func (x *DebugSyncFailure) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[100]
+	mi := &file_prx_v1_prx_proto_msgTypes[102]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7586,7 +7744,7 @@ func (x *DebugSyncFailure) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugSyncFailure.ProtoReflect.Descriptor instead.
 func (*DebugSyncFailure) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{100}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{102}
 }
 
 func (x *DebugSyncFailure) GetScope() string {
@@ -7620,7 +7778,7 @@ type DebugErrorGroup struct {
 
 func (x *DebugErrorGroup) Reset() {
 	*x = DebugErrorGroup{}
-	mi := &file_prx_v1_prx_proto_msgTypes[101]
+	mi := &file_prx_v1_prx_proto_msgTypes[103]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7632,7 +7790,7 @@ func (x *DebugErrorGroup) String() string {
 func (*DebugErrorGroup) ProtoMessage() {}
 
 func (x *DebugErrorGroup) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[101]
+	mi := &file_prx_v1_prx_proto_msgTypes[103]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7645,7 +7803,7 @@ func (x *DebugErrorGroup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugErrorGroup.ProtoReflect.Descriptor instead.
 func (*DebugErrorGroup) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{101}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{103}
 }
 
 func (x *DebugErrorGroup) GetMessage() string {
@@ -7695,7 +7853,7 @@ type DebugAuthCacheEntry struct {
 
 func (x *DebugAuthCacheEntry) Reset() {
 	*x = DebugAuthCacheEntry{}
-	mi := &file_prx_v1_prx_proto_msgTypes[102]
+	mi := &file_prx_v1_prx_proto_msgTypes[104]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7707,7 +7865,7 @@ func (x *DebugAuthCacheEntry) String() string {
 func (*DebugAuthCacheEntry) ProtoMessage() {}
 
 func (x *DebugAuthCacheEntry) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[102]
+	mi := &file_prx_v1_prx_proto_msgTypes[104]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7720,7 +7878,7 @@ func (x *DebugAuthCacheEntry) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugAuthCacheEntry.ProtoReflect.Descriptor instead.
 func (*DebugAuthCacheEntry) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{102}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{104}
 }
 
 func (x *DebugAuthCacheEntry) GetHost() string {
@@ -7795,7 +7953,7 @@ type DebugGitHubSync struct {
 
 func (x *DebugGitHubSync) Reset() {
 	*x = DebugGitHubSync{}
-	mi := &file_prx_v1_prx_proto_msgTypes[103]
+	mi := &file_prx_v1_prx_proto_msgTypes[105]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7807,7 +7965,7 @@ func (x *DebugGitHubSync) String() string {
 func (*DebugGitHubSync) ProtoMessage() {}
 
 func (x *DebugGitHubSync) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[103]
+	mi := &file_prx_v1_prx_proto_msgTypes[105]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7820,7 +7978,7 @@ func (x *DebugGitHubSync) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugGitHubSync.ProtoReflect.Descriptor instead.
 func (*DebugGitHubSync) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{103}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{105}
 }
 
 func (x *DebugGitHubSync) GetStatus() *GitHubSyncStatus {
@@ -7947,7 +8105,7 @@ type DebugReport struct {
 
 func (x *DebugReport) Reset() {
 	*x = DebugReport{}
-	mi := &file_prx_v1_prx_proto_msgTypes[104]
+	mi := &file_prx_v1_prx_proto_msgTypes[106]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -7959,7 +8117,7 @@ func (x *DebugReport) String() string {
 func (*DebugReport) ProtoMessage() {}
 
 func (x *DebugReport) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[104]
+	mi := &file_prx_v1_prx_proto_msgTypes[106]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -7972,7 +8130,7 @@ func (x *DebugReport) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use DebugReport.ProtoReflect.Descriptor instead.
 func (*DebugReport) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{104}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{106}
 }
 
 func (x *DebugReport) GetProblems() []*DebugProblem {
@@ -8040,7 +8198,7 @@ type GetDebugReportRequest struct {
 
 func (x *GetDebugReportRequest) Reset() {
 	*x = GetDebugReportRequest{}
-	mi := &file_prx_v1_prx_proto_msgTypes[105]
+	mi := &file_prx_v1_prx_proto_msgTypes[107]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8052,7 +8210,7 @@ func (x *GetDebugReportRequest) String() string {
 func (*GetDebugReportRequest) ProtoMessage() {}
 
 func (x *GetDebugReportRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[105]
+	mi := &file_prx_v1_prx_proto_msgTypes[107]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8065,7 +8223,7 @@ func (x *GetDebugReportRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDebugReportRequest.ProtoReflect.Descriptor instead.
 func (*GetDebugReportRequest) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{105}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{107}
 }
 
 // GetDebugReportResponse returns the diagnostic report and its rendered text.
@@ -8081,7 +8239,7 @@ type GetDebugReportResponse struct {
 
 func (x *GetDebugReportResponse) Reset() {
 	*x = GetDebugReportResponse{}
-	mi := &file_prx_v1_prx_proto_msgTypes[106]
+	mi := &file_prx_v1_prx_proto_msgTypes[108]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -8093,7 +8251,7 @@ func (x *GetDebugReportResponse) String() string {
 func (*GetDebugReportResponse) ProtoMessage() {}
 
 func (x *GetDebugReportResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_prx_v1_prx_proto_msgTypes[106]
+	mi := &file_prx_v1_prx_proto_msgTypes[108]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -8106,7 +8264,7 @@ func (x *GetDebugReportResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetDebugReportResponse.ProtoReflect.Descriptor instead.
 func (*GetDebugReportResponse) Descriptor() ([]byte, []int) {
-	return file_prx_v1_prx_proto_rawDescGZIP(), []int{106}
+	return file_prx_v1_prx_proto_rawDescGZIP(), []int{108}
 }
 
 func (x *GetDebugReportResponse) GetReport() *DebugReport {
@@ -8487,19 +8645,23 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x16ValidateConfigResponse\x12\x14\n" +
 	"\x05valid\x18\x01 \x01(\bR\x05valid\x12\x16\n" +
 	"\x06errors\x18\x02 \x03(\tR\x06errors\x12\x1a\n" +
-	"\bwarnings\x18\x03 \x03(\tR\bwarnings\"Q\n" +
+	"\bwarnings\x18\x03 \x03(\tR\bwarnings\"g\n" +
 	"\x0fPromptTemplates\x12\x16\n" +
 	"\x06design\x18\x01 \x01(\tR\x06design\x12&\n" +
-	"\x0eimplementation\x18\x02 \x01(\tR\x0eimplementation\"\x1b\n" +
-	"\x19GetPromptTemplatesRequest\"\xf1\x01\n" +
+	"\x0eimplementation\x18\x02 \x01(\tR\x0eimplementation\x12\x14\n" +
+	"\x05batch\x18\x03 \x01(\tR\x05batch\"\x1b\n" +
+	"\x19GetPromptTemplatesRequest\"\xf1\x02\n" +
 	"\x1aGetPromptTemplatesResponse\x125\n" +
 	"\ttemplates\x18\x01 \x01(\v2\x17.prx.v1.PromptTemplatesR\ttemplates\x125\n" +
 	"\x16supported_placeholders\x18\x02 \x03(\tR\x15supportedPlaceholders\x121\n" +
 	"\x14required_placeholder\x18\x03 \x01(\tR\x13requiredPlaceholder\x122\n" +
-	"\bbuilt_in\x18\x04 \x01(\v2\x17.prx.v1.PromptTemplatesR\abuiltIn\"^\n" +
+	"\bbuilt_in\x18\x04 \x01(\v2\x17.prx.v1.PromptTemplatesR\abuiltIn\x12@\n" +
+	"\x1cbatch_supported_placeholders\x18\x05 \x03(\tR\x1abatchSupportedPlaceholders\x12<\n" +
+	"\x1abatch_required_placeholder\x18\x06 \x01(\tR\x18batchRequiredPlaceholder\"t\n" +
 	"\x1cUpdatePromptTemplatesRequest\x12\x16\n" +
 	"\x06design\x18\x01 \x01(\tR\x06design\x12&\n" +
-	"\x0eimplementation\x18\x02 \x01(\tR\x0eimplementation\"V\n" +
+	"\x0eimplementation\x18\x02 \x01(\tR\x0eimplementation\x12\x14\n" +
+	"\x05batch\x18\x03 \x01(\tR\x05batch\"V\n" +
 	"\x1dUpdatePromptTemplatesResponse\x125\n" +
 	"\ttemplates\x18\x01 \x01(\v2\x17.prx.v1.PromptTemplatesR\ttemplates\"/\n" +
 	"\x14GetTaskPromptRequest\x12\x17\n" +
@@ -8507,6 +8669,15 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x15GetTaskPromptResponse\x12\x17\n" +
 	"\atask_id\x18\x01 \x01(\tR\x06taskId\x12*\n" +
 	"\x04kind\x18\x02 \x01(\x0e2\x16.prx.v1.TaskPromptKindR\x04kind\x12\x16\n" +
+	"\x06prompt\x18\x03 \x01(\tR\x06prompt\"Q\n" +
+	"\x15GetBatchPromptRequest\x12\x1d\n" +
+	"\n" +
+	"feature_id\x18\x01 \x01(\tR\tfeatureId\x12\x19\n" +
+	"\btask_ids\x18\x02 \x03(\tR\ataskIds\"j\n" +
+	"\x16GetBatchPromptResponse\x12\x1d\n" +
+	"\n" +
+	"feature_id\x18\x01 \x01(\tR\tfeatureId\x12\x19\n" +
+	"\btask_ids\x18\x02 \x03(\tR\ataskIds\x12\x16\n" +
 	"\x06prompt\x18\x03 \x01(\tR\x06prompt\"E\n" +
 	"\vSyncRequest\x12\x1d\n" +
 	"\n" +
@@ -8800,7 +8971,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"&DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE\x10\n" +
 	"\x122\n" +
 	".DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED\x10\v\x12*\n" +
-	"&DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE\x10\f2\xd7\x18\n" +
+	"&DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE\x10\f2\xa8\x19\n" +
 	"\n" +
 	"PRXService\x12F\n" +
 	"\vGetSnapshot\x12\x1a.prx.v1.GetSnapshotRequest\x1a\x1b.prx.v1.GetSnapshotResponse\x12L\n" +
@@ -8843,7 +9014,8 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0eValidateConfig\x12\x1d.prx.v1.ValidateConfigRequest\x1a\x1e.prx.v1.ValidateConfigResponse\x12[\n" +
 	"\x12GetPromptTemplates\x12!.prx.v1.GetPromptTemplatesRequest\x1a\".prx.v1.GetPromptTemplatesResponse\x12d\n" +
 	"\x15UpdatePromptTemplates\x12$.prx.v1.UpdatePromptTemplatesRequest\x1a%.prx.v1.UpdatePromptTemplatesResponse\x12L\n" +
-	"\rGetTaskPrompt\x12\x1c.prx.v1.GetTaskPromptRequest\x1a\x1d.prx.v1.GetTaskPromptResponseB.Z,github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1b\x06proto3"
+	"\rGetTaskPrompt\x12\x1c.prx.v1.GetTaskPromptRequest\x1a\x1d.prx.v1.GetTaskPromptResponse\x12O\n" +
+	"\x0eGetBatchPrompt\x12\x1d.prx.v1.GetBatchPromptRequest\x1a\x1e.prx.v1.GetBatchPromptResponseB.Z,github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1b\x06proto3"
 
 var (
 	file_prx_v1_prx_proto_rawDescOnce sync.Once
@@ -8858,7 +9030,7 @@ func file_prx_v1_prx_proto_rawDescGZIP() []byte {
 }
 
 var file_prx_v1_prx_proto_enumTypes = make([]protoimpl.EnumInfo, 13)
-var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 107)
+var file_prx_v1_prx_proto_msgTypes = make([]protoimpl.MessageInfo, 109)
 var file_prx_v1_prx_proto_goTypes = []any{
 	(FeatureStatus)(0),                       // 0: prx.v1.FeatureStatus
 	(TaskStatus)(0),                          // 1: prx.v1.TaskStatus
@@ -8952,34 +9124,36 @@ var file_prx_v1_prx_proto_goTypes = []any{
 	(*UpdatePromptTemplatesResponse)(nil),    // 89: prx.v1.UpdatePromptTemplatesResponse
 	(*GetTaskPromptRequest)(nil),             // 90: prx.v1.GetTaskPromptRequest
 	(*GetTaskPromptResponse)(nil),            // 91: prx.v1.GetTaskPromptResponse
-	(*SyncRequest)(nil),                      // 92: prx.v1.SyncRequest
-	(*SyncResponse)(nil),                     // 93: prx.v1.SyncResponse
-	(*GitHubSyncStatus)(nil),                 // 94: prx.v1.GitHubSyncStatus
-	(*GetGitHubSyncStatusRequest)(nil),       // 95: prx.v1.GetGitHubSyncStatusRequest
-	(*GetGitHubSyncStatusResponse)(nil),      // 96: prx.v1.GetGitHubSyncStatusResponse
-	(*SyncGitHubIfDueRequest)(nil),           // 97: prx.v1.SyncGitHubIfDueRequest
-	(*SyncGitHubIfDueResponse)(nil),          // 98: prx.v1.SyncGitHubIfDueResponse
-	(*ValidateRequest)(nil),                  // 99: prx.v1.ValidateRequest
-	(*ValidateResponse)(nil),                 // 100: prx.v1.ValidateResponse
-	(*DebugProblem)(nil),                     // 101: prx.v1.DebugProblem
-	(*DebugBuild)(nil),                       // 102: prx.v1.DebugBuild
-	(*DebugRuntime)(nil),                     // 103: prx.v1.DebugRuntime
-	(*DebugEnvironmentVariable)(nil),         // 104: prx.v1.DebugEnvironmentVariable
-	(*DebugPaths)(nil),                       // 105: prx.v1.DebugPaths
-	(*DebugConfigHost)(nil),                  // 106: prx.v1.DebugConfigHost
-	(*DebugConfigAuthMethod)(nil),            // 107: prx.v1.DebugConfigAuthMethod
-	(*DebugConfig)(nil),                      // 108: prx.v1.DebugConfig
-	(*DebugDatabaseFile)(nil),                // 109: prx.v1.DebugDatabaseFile
-	(*DebugStorage)(nil),                     // 110: prx.v1.DebugStorage
-	(*DebugCount)(nil),                       // 111: prx.v1.DebugCount
-	(*DebugData)(nil),                        // 112: prx.v1.DebugData
-	(*DebugSyncFailure)(nil),                 // 113: prx.v1.DebugSyncFailure
-	(*DebugErrorGroup)(nil),                  // 114: prx.v1.DebugErrorGroup
-	(*DebugAuthCacheEntry)(nil),              // 115: prx.v1.DebugAuthCacheEntry
-	(*DebugGitHubSync)(nil),                  // 116: prx.v1.DebugGitHubSync
-	(*DebugReport)(nil),                      // 117: prx.v1.DebugReport
-	(*GetDebugReportRequest)(nil),            // 118: prx.v1.GetDebugReportRequest
-	(*GetDebugReportResponse)(nil),           // 119: prx.v1.GetDebugReportResponse
+	(*GetBatchPromptRequest)(nil),            // 92: prx.v1.GetBatchPromptRequest
+	(*GetBatchPromptResponse)(nil),           // 93: prx.v1.GetBatchPromptResponse
+	(*SyncRequest)(nil),                      // 94: prx.v1.SyncRequest
+	(*SyncResponse)(nil),                     // 95: prx.v1.SyncResponse
+	(*GitHubSyncStatus)(nil),                 // 96: prx.v1.GitHubSyncStatus
+	(*GetGitHubSyncStatusRequest)(nil),       // 97: prx.v1.GetGitHubSyncStatusRequest
+	(*GetGitHubSyncStatusResponse)(nil),      // 98: prx.v1.GetGitHubSyncStatusResponse
+	(*SyncGitHubIfDueRequest)(nil),           // 99: prx.v1.SyncGitHubIfDueRequest
+	(*SyncGitHubIfDueResponse)(nil),          // 100: prx.v1.SyncGitHubIfDueResponse
+	(*ValidateRequest)(nil),                  // 101: prx.v1.ValidateRequest
+	(*ValidateResponse)(nil),                 // 102: prx.v1.ValidateResponse
+	(*DebugProblem)(nil),                     // 103: prx.v1.DebugProblem
+	(*DebugBuild)(nil),                       // 104: prx.v1.DebugBuild
+	(*DebugRuntime)(nil),                     // 105: prx.v1.DebugRuntime
+	(*DebugEnvironmentVariable)(nil),         // 106: prx.v1.DebugEnvironmentVariable
+	(*DebugPaths)(nil),                       // 107: prx.v1.DebugPaths
+	(*DebugConfigHost)(nil),                  // 108: prx.v1.DebugConfigHost
+	(*DebugConfigAuthMethod)(nil),            // 109: prx.v1.DebugConfigAuthMethod
+	(*DebugConfig)(nil),                      // 110: prx.v1.DebugConfig
+	(*DebugDatabaseFile)(nil),                // 111: prx.v1.DebugDatabaseFile
+	(*DebugStorage)(nil),                     // 112: prx.v1.DebugStorage
+	(*DebugCount)(nil),                       // 113: prx.v1.DebugCount
+	(*DebugData)(nil),                        // 114: prx.v1.DebugData
+	(*DebugSyncFailure)(nil),                 // 115: prx.v1.DebugSyncFailure
+	(*DebugErrorGroup)(nil),                  // 116: prx.v1.DebugErrorGroup
+	(*DebugAuthCacheEntry)(nil),              // 117: prx.v1.DebugAuthCacheEntry
+	(*DebugGitHubSync)(nil),                  // 118: prx.v1.DebugGitHubSync
+	(*DebugReport)(nil),                      // 119: prx.v1.DebugReport
+	(*GetDebugReportRequest)(nil),            // 120: prx.v1.GetDebugReportRequest
+	(*GetDebugReportResponse)(nil),           // 121: prx.v1.GetDebugReportResponse
 }
 var file_prx_v1_prx_proto_depIdxs = []int32{
 	8,   // 0: prx.v1.BlockedReason.code:type_name -> prx.v1.BlockedReasonCode
@@ -9034,33 +9208,33 @@ var file_prx_v1_prx_proto_depIdxs = []int32{
 	85,  // 49: prx.v1.GetPromptTemplatesResponse.built_in:type_name -> prx.v1.PromptTemplates
 	85,  // 50: prx.v1.UpdatePromptTemplatesResponse.templates:type_name -> prx.v1.PromptTemplates
 	11,  // 51: prx.v1.GetTaskPromptResponse.kind:type_name -> prx.v1.TaskPromptKind
-	94,  // 52: prx.v1.GetGitHubSyncStatusResponse.status:type_name -> prx.v1.GitHubSyncStatus
-	94,  // 53: prx.v1.SyncGitHubIfDueResponse.status:type_name -> prx.v1.GitHubSyncStatus
+	96,  // 52: prx.v1.GetGitHubSyncStatusResponse.status:type_name -> prx.v1.GitHubSyncStatus
+	96,  // 53: prx.v1.SyncGitHubIfDueResponse.status:type_name -> prx.v1.GitHubSyncStatus
 	12,  // 54: prx.v1.DebugProblem.code:type_name -> prx.v1.DebugProblemCode
-	104, // 55: prx.v1.DebugPaths.environment_variables:type_name -> prx.v1.DebugEnvironmentVariable
-	106, // 56: prx.v1.DebugConfig.hosts:type_name -> prx.v1.DebugConfigHost
-	107, // 57: prx.v1.DebugConfig.auth_methods:type_name -> prx.v1.DebugConfigAuthMethod
-	109, // 58: prx.v1.DebugStorage.database_file:type_name -> prx.v1.DebugDatabaseFile
-	111, // 59: prx.v1.DebugData.feature_statuses:type_name -> prx.v1.DebugCount
-	111, // 60: prx.v1.DebugData.task_display_states:type_name -> prx.v1.DebugCount
-	111, // 61: prx.v1.DebugData.pull_request_display_states:type_name -> prx.v1.DebugCount
-	111, // 62: prx.v1.DebugData.pull_request_hosts:type_name -> prx.v1.DebugCount
-	111, // 63: prx.v1.DebugData.document_kinds:type_name -> prx.v1.DebugCount
-	111, // 64: prx.v1.DebugData.project_states:type_name -> prx.v1.DebugCount
-	94,  // 65: prx.v1.DebugGitHubSync.status:type_name -> prx.v1.GitHubSyncStatus
-	113, // 66: prx.v1.DebugGitHubSync.host_failures:type_name -> prx.v1.DebugSyncFailure
-	113, // 67: prx.v1.DebugGitHubSync.repository_failures:type_name -> prx.v1.DebugSyncFailure
-	114, // 68: prx.v1.DebugGitHubSync.error_groups:type_name -> prx.v1.DebugErrorGroup
-	115, // 69: prx.v1.DebugGitHubSync.auth_cache:type_name -> prx.v1.DebugAuthCacheEntry
-	101, // 70: prx.v1.DebugReport.problems:type_name -> prx.v1.DebugProblem
-	102, // 71: prx.v1.DebugReport.build:type_name -> prx.v1.DebugBuild
-	103, // 72: prx.v1.DebugReport.runtime:type_name -> prx.v1.DebugRuntime
-	105, // 73: prx.v1.DebugReport.paths:type_name -> prx.v1.DebugPaths
-	108, // 74: prx.v1.DebugReport.config:type_name -> prx.v1.DebugConfig
-	110, // 75: prx.v1.DebugReport.storage:type_name -> prx.v1.DebugStorage
-	112, // 76: prx.v1.DebugReport.records:type_name -> prx.v1.DebugData
-	116, // 77: prx.v1.DebugReport.github_sync:type_name -> prx.v1.DebugGitHubSync
-	117, // 78: prx.v1.GetDebugReportResponse.report:type_name -> prx.v1.DebugReport
+	106, // 55: prx.v1.DebugPaths.environment_variables:type_name -> prx.v1.DebugEnvironmentVariable
+	108, // 56: prx.v1.DebugConfig.hosts:type_name -> prx.v1.DebugConfigHost
+	109, // 57: prx.v1.DebugConfig.auth_methods:type_name -> prx.v1.DebugConfigAuthMethod
+	111, // 58: prx.v1.DebugStorage.database_file:type_name -> prx.v1.DebugDatabaseFile
+	113, // 59: prx.v1.DebugData.feature_statuses:type_name -> prx.v1.DebugCount
+	113, // 60: prx.v1.DebugData.task_display_states:type_name -> prx.v1.DebugCount
+	113, // 61: prx.v1.DebugData.pull_request_display_states:type_name -> prx.v1.DebugCount
+	113, // 62: prx.v1.DebugData.pull_request_hosts:type_name -> prx.v1.DebugCount
+	113, // 63: prx.v1.DebugData.document_kinds:type_name -> prx.v1.DebugCount
+	113, // 64: prx.v1.DebugData.project_states:type_name -> prx.v1.DebugCount
+	96,  // 65: prx.v1.DebugGitHubSync.status:type_name -> prx.v1.GitHubSyncStatus
+	115, // 66: prx.v1.DebugGitHubSync.host_failures:type_name -> prx.v1.DebugSyncFailure
+	115, // 67: prx.v1.DebugGitHubSync.repository_failures:type_name -> prx.v1.DebugSyncFailure
+	116, // 68: prx.v1.DebugGitHubSync.error_groups:type_name -> prx.v1.DebugErrorGroup
+	117, // 69: prx.v1.DebugGitHubSync.auth_cache:type_name -> prx.v1.DebugAuthCacheEntry
+	103, // 70: prx.v1.DebugReport.problems:type_name -> prx.v1.DebugProblem
+	104, // 71: prx.v1.DebugReport.build:type_name -> prx.v1.DebugBuild
+	105, // 72: prx.v1.DebugReport.runtime:type_name -> prx.v1.DebugRuntime
+	107, // 73: prx.v1.DebugReport.paths:type_name -> prx.v1.DebugPaths
+	110, // 74: prx.v1.DebugReport.config:type_name -> prx.v1.DebugConfig
+	112, // 75: prx.v1.DebugReport.storage:type_name -> prx.v1.DebugStorage
+	114, // 76: prx.v1.DebugReport.records:type_name -> prx.v1.DebugData
+	118, // 77: prx.v1.DebugReport.github_sync:type_name -> prx.v1.DebugGitHubSync
+	119, // 78: prx.v1.GetDebugReportResponse.report:type_name -> prx.v1.DebugReport
 	22,  // 79: prx.v1.PRXService.GetSnapshot:input_type -> prx.v1.GetSnapshotRequest
 	24,  // 80: prx.v1.PRXService.CreateProject:input_type -> prx.v1.CreateProjectRequest
 	26,  // 81: prx.v1.PRXService.UpdateProject:input_type -> prx.v1.UpdateProjectRequest
@@ -9081,11 +9255,11 @@ var file_prx_v1_prx_proto_depIdxs = []int32{
 	56,  // 96: prx.v1.PRXService.DeleteDocument:input_type -> prx.v1.DeleteDocumentRequest
 	58,  // 97: prx.v1.PRXService.ReadDocumentContent:input_type -> prx.v1.ReadDocumentContentRequest
 	60,  // 98: prx.v1.PRXService.SelectLocalFile:input_type -> prx.v1.SelectLocalFileRequest
-	92,  // 99: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
-	95,  // 100: prx.v1.PRXService.GetGitHubSyncStatus:input_type -> prx.v1.GetGitHubSyncStatusRequest
-	97,  // 101: prx.v1.PRXService.SyncGitHubIfDue:input_type -> prx.v1.SyncGitHubIfDueRequest
-	99,  // 102: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
-	118, // 103: prx.v1.PRXService.GetDebugReport:input_type -> prx.v1.GetDebugReportRequest
+	94,  // 99: prx.v1.PRXService.Sync:input_type -> prx.v1.SyncRequest
+	97,  // 100: prx.v1.PRXService.GetGitHubSyncStatus:input_type -> prx.v1.GetGitHubSyncStatusRequest
+	99,  // 101: prx.v1.PRXService.SyncGitHubIfDue:input_type -> prx.v1.SyncGitHubIfDueRequest
+	101, // 102: prx.v1.PRXService.Validate:input_type -> prx.v1.ValidateRequest
+	120, // 103: prx.v1.PRXService.GetDebugReport:input_type -> prx.v1.GetDebugReportRequest
 	65,  // 104: prx.v1.PRXService.GetConfig:input_type -> prx.v1.GetConfigRequest
 	67,  // 105: prx.v1.PRXService.UpdateGitHubSyncConfig:input_type -> prx.v1.UpdateGitHubSyncConfigRequest
 	69,  // 106: prx.v1.PRXService.AddGitHubHost:input_type -> prx.v1.AddGitHubHostRequest
@@ -9099,46 +9273,48 @@ var file_prx_v1_prx_proto_depIdxs = []int32{
 	86,  // 114: prx.v1.PRXService.GetPromptTemplates:input_type -> prx.v1.GetPromptTemplatesRequest
 	88,  // 115: prx.v1.PRXService.UpdatePromptTemplates:input_type -> prx.v1.UpdatePromptTemplatesRequest
 	90,  // 116: prx.v1.PRXService.GetTaskPrompt:input_type -> prx.v1.GetTaskPromptRequest
-	23,  // 117: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
-	25,  // 118: prx.v1.PRXService.CreateProject:output_type -> prx.v1.CreateProjectResponse
-	27,  // 119: prx.v1.PRXService.UpdateProject:output_type -> prx.v1.UpdateProjectResponse
-	29,  // 120: prx.v1.PRXService.DeleteProject:output_type -> prx.v1.DeleteProjectResponse
-	31,  // 121: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
-	33,  // 122: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
-	35,  // 123: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
-	37,  // 124: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
-	39,  // 125: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
-	41,  // 126: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
-	43,  // 127: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
-	45,  // 128: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
-	47,  // 129: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
-	49,  // 130: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
-	51,  // 131: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
-	53,  // 132: prx.v1.PRXService.GetDocument:output_type -> prx.v1.GetDocumentResponse
-	55,  // 133: prx.v1.PRXService.UpdateDocument:output_type -> prx.v1.UpdateDocumentResponse
-	57,  // 134: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
-	59,  // 135: prx.v1.PRXService.ReadDocumentContent:output_type -> prx.v1.ReadDocumentContentResponse
-	61,  // 136: prx.v1.PRXService.SelectLocalFile:output_type -> prx.v1.SelectLocalFileResponse
-	93,  // 137: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
-	96,  // 138: prx.v1.PRXService.GetGitHubSyncStatus:output_type -> prx.v1.GetGitHubSyncStatusResponse
-	98,  // 139: prx.v1.PRXService.SyncGitHubIfDue:output_type -> prx.v1.SyncGitHubIfDueResponse
-	100, // 140: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
-	119, // 141: prx.v1.PRXService.GetDebugReport:output_type -> prx.v1.GetDebugReportResponse
-	66,  // 142: prx.v1.PRXService.GetConfig:output_type -> prx.v1.GetConfigResponse
-	68,  // 143: prx.v1.PRXService.UpdateGitHubSyncConfig:output_type -> prx.v1.UpdateGitHubSyncConfigResponse
-	70,  // 144: prx.v1.PRXService.AddGitHubHost:output_type -> prx.v1.AddGitHubHostResponse
-	72,  // 145: prx.v1.PRXService.UpdateGitHubHost:output_type -> prx.v1.UpdateGitHubHostResponse
-	74,  // 146: prx.v1.PRXService.DeleteGitHubHost:output_type -> prx.v1.DeleteGitHubHostResponse
-	76,  // 147: prx.v1.PRXService.AddGitHubAuthMethod:output_type -> prx.v1.AddGitHubAuthMethodResponse
-	78,  // 148: prx.v1.PRXService.UpdateGitHubAuthMethod:output_type -> prx.v1.UpdateGitHubAuthMethodResponse
-	80,  // 149: prx.v1.PRXService.DeleteGitHubAuthMethod:output_type -> prx.v1.DeleteGitHubAuthMethodResponse
-	82,  // 150: prx.v1.PRXService.ReorderGitHubAuthMethods:output_type -> prx.v1.ReorderGitHubAuthMethodsResponse
-	84,  // 151: prx.v1.PRXService.ValidateConfig:output_type -> prx.v1.ValidateConfigResponse
-	87,  // 152: prx.v1.PRXService.GetPromptTemplates:output_type -> prx.v1.GetPromptTemplatesResponse
-	89,  // 153: prx.v1.PRXService.UpdatePromptTemplates:output_type -> prx.v1.UpdatePromptTemplatesResponse
-	91,  // 154: prx.v1.PRXService.GetTaskPrompt:output_type -> prx.v1.GetTaskPromptResponse
-	117, // [117:155] is the sub-list for method output_type
-	79,  // [79:117] is the sub-list for method input_type
+	92,  // 117: prx.v1.PRXService.GetBatchPrompt:input_type -> prx.v1.GetBatchPromptRequest
+	23,  // 118: prx.v1.PRXService.GetSnapshot:output_type -> prx.v1.GetSnapshotResponse
+	25,  // 119: prx.v1.PRXService.CreateProject:output_type -> prx.v1.CreateProjectResponse
+	27,  // 120: prx.v1.PRXService.UpdateProject:output_type -> prx.v1.UpdateProjectResponse
+	29,  // 121: prx.v1.PRXService.DeleteProject:output_type -> prx.v1.DeleteProjectResponse
+	31,  // 122: prx.v1.PRXService.CreateFeature:output_type -> prx.v1.CreateFeatureResponse
+	33,  // 123: prx.v1.PRXService.UpdateFeature:output_type -> prx.v1.UpdateFeatureResponse
+	35,  // 124: prx.v1.PRXService.DeleteFeature:output_type -> prx.v1.DeleteFeatureResponse
+	37,  // 125: prx.v1.PRXService.CreateTask:output_type -> prx.v1.CreateTaskResponse
+	39,  // 126: prx.v1.PRXService.UpdateTask:output_type -> prx.v1.UpdateTaskResponse
+	41,  // 127: prx.v1.PRXService.DeleteTask:output_type -> prx.v1.DeleteTaskResponse
+	43,  // 128: prx.v1.PRXService.AddDependency:output_type -> prx.v1.AddDependencyResponse
+	45,  // 129: prx.v1.PRXService.RemoveDependency:output_type -> prx.v1.RemoveDependencyResponse
+	47,  // 130: prx.v1.PRXService.AttachPullRequest:output_type -> prx.v1.AttachPullRequestResponse
+	49,  // 131: prx.v1.PRXService.DetachPullRequest:output_type -> prx.v1.DetachPullRequestResponse
+	51,  // 132: prx.v1.PRXService.AddDocument:output_type -> prx.v1.AddDocumentResponse
+	53,  // 133: prx.v1.PRXService.GetDocument:output_type -> prx.v1.GetDocumentResponse
+	55,  // 134: prx.v1.PRXService.UpdateDocument:output_type -> prx.v1.UpdateDocumentResponse
+	57,  // 135: prx.v1.PRXService.DeleteDocument:output_type -> prx.v1.DeleteDocumentResponse
+	59,  // 136: prx.v1.PRXService.ReadDocumentContent:output_type -> prx.v1.ReadDocumentContentResponse
+	61,  // 137: prx.v1.PRXService.SelectLocalFile:output_type -> prx.v1.SelectLocalFileResponse
+	95,  // 138: prx.v1.PRXService.Sync:output_type -> prx.v1.SyncResponse
+	98,  // 139: prx.v1.PRXService.GetGitHubSyncStatus:output_type -> prx.v1.GetGitHubSyncStatusResponse
+	100, // 140: prx.v1.PRXService.SyncGitHubIfDue:output_type -> prx.v1.SyncGitHubIfDueResponse
+	102, // 141: prx.v1.PRXService.Validate:output_type -> prx.v1.ValidateResponse
+	121, // 142: prx.v1.PRXService.GetDebugReport:output_type -> prx.v1.GetDebugReportResponse
+	66,  // 143: prx.v1.PRXService.GetConfig:output_type -> prx.v1.GetConfigResponse
+	68,  // 144: prx.v1.PRXService.UpdateGitHubSyncConfig:output_type -> prx.v1.UpdateGitHubSyncConfigResponse
+	70,  // 145: prx.v1.PRXService.AddGitHubHost:output_type -> prx.v1.AddGitHubHostResponse
+	72,  // 146: prx.v1.PRXService.UpdateGitHubHost:output_type -> prx.v1.UpdateGitHubHostResponse
+	74,  // 147: prx.v1.PRXService.DeleteGitHubHost:output_type -> prx.v1.DeleteGitHubHostResponse
+	76,  // 148: prx.v1.PRXService.AddGitHubAuthMethod:output_type -> prx.v1.AddGitHubAuthMethodResponse
+	78,  // 149: prx.v1.PRXService.UpdateGitHubAuthMethod:output_type -> prx.v1.UpdateGitHubAuthMethodResponse
+	80,  // 150: prx.v1.PRXService.DeleteGitHubAuthMethod:output_type -> prx.v1.DeleteGitHubAuthMethodResponse
+	82,  // 151: prx.v1.PRXService.ReorderGitHubAuthMethods:output_type -> prx.v1.ReorderGitHubAuthMethodsResponse
+	84,  // 152: prx.v1.PRXService.ValidateConfig:output_type -> prx.v1.ValidateConfigResponse
+	87,  // 153: prx.v1.PRXService.GetPromptTemplates:output_type -> prx.v1.GetPromptTemplatesResponse
+	89,  // 154: prx.v1.PRXService.UpdatePromptTemplates:output_type -> prx.v1.UpdatePromptTemplatesResponse
+	91,  // 155: prx.v1.PRXService.GetTaskPrompt:output_type -> prx.v1.GetTaskPromptResponse
+	93,  // 156: prx.v1.PRXService.GetBatchPrompt:output_type -> prx.v1.GetBatchPromptResponse
+	118, // [118:157] is the sub-list for method output_type
+	79,  // [79:118] is the sub-list for method input_type
 	79,  // [79:79] is the sub-list for extension type_name
 	79,  // [79:79] is the sub-list for extension extendee
 	0,   // [0:79] is the sub-list for field type_name
@@ -9165,14 +9341,14 @@ func file_prx_v1_prx_proto_init() {
 	file_prx_v1_prx_proto_msgTypes[58].OneofWrappers = []any{}
 	file_prx_v1_prx_proto_msgTypes[62].OneofWrappers = []any{}
 	file_prx_v1_prx_proto_msgTypes[64].OneofWrappers = []any{}
-	file_prx_v1_prx_proto_msgTypes[81].OneofWrappers = []any{}
+	file_prx_v1_prx_proto_msgTypes[83].OneofWrappers = []any{}
 	type x struct{}
 	out := protoimpl.TypeBuilder{
 		File: protoimpl.DescBuilder{
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_prx_v1_prx_proto_rawDesc), len(file_prx_v1_prx_proto_rawDesc)),
 			NumEnums:      13,
-			NumMessages:   107,
+			NumMessages:   109,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

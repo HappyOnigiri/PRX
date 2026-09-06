@@ -585,6 +585,7 @@ func TestFormatDebugReportRendersEverySection(t *testing.T) {
 			Prompts: DebugConfigPrompts{
 				Design:         DebugConfigPrompt{Customized: true, Bytes: 42},
 				Implementation: DebugConfigPrompt{Bytes: 900},
+				Batch:          DebugConfigPrompt{Bytes: 700},
 			},
 		},
 		Storage: DebugStorage{
@@ -692,6 +693,9 @@ config:
     - implementation
       customized: no
       bytes: 900
+    - batch
+      customized: no
+      bytes: 700
 
 storage:
   applied_schema_version: 8
