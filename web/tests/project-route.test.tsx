@@ -12,10 +12,9 @@ import { makeFeature, makeProject, makeSnapshot } from "./factories";
 
 const snapshot = makeSnapshot({
   projects: [
-    makeProject({ id: "P-1", slug: "delivery", title: "Delivery platform" }),
+    makeProject({ id: "P-1", title: "Delivery platform" }),
     makeProject({
       id: "P-2",
-      slug: "sunset",
       title: "Sunset initiative",
       archived: true,
     }),

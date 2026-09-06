@@ -48,8 +48,8 @@ func (s *state) documentCommand() *cobra.Command {
 			return s.write(map[string]any{"documents": documents}, renderDocumentList(documents))
 		},
 	}
-	command.Flags().StringVar(&projectFilter, "project", "", "filter by project ID or slug")
-	command.Flags().StringVar(&featureFilter, "feature", "", "filter by feature ID or slug")
+	command.Flags().StringVar(&projectFilter, "project", "", "filter by project ID")
+	command.Flags().StringVar(&featureFilter, "feature", "", "filter by feature ID")
 	command.Flags().StringVar(&taskFilter, "task", "", "filter by task ID")
 
 	command.AddCommand(
@@ -99,10 +99,10 @@ func (s *state) documentAddCommand() *cobra.Command {
 		Use:   "add PROJECT_OR_FEATURE_OR_TASK",
 		Short: "Add a document to a project, a feature, or a task",
 		Long: "Add a document to a project, a feature, or a task.\n\n" +
-			"The operand is a public project, feature, or task ID, or a feature or project slug.",
+			"The operand is a public project, feature, or task ID.",
 		Example: "prx document add T-1 --url https://example.com\n" +
 			"prx document add P-1 --url https://example.com\n" +
-			"prx document add checkout --markdown-file notes.md",
+			"prx document add F-1 --markdown-file notes.md",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			document, err := readDocumentSource(cmd, source, domain.DomainErrorCodeInvalidDocument)

@@ -24,7 +24,7 @@ prx t T-1
 ### Options
 
 ```
-      --feature string   filter by feature ID or slug
+      --feature string   filter by feature ID
   -h, --help             help for task
 ```
 

@@ -3,13 +3,13 @@
 Archive a project and make its features read-only
 
 ```
-prx project archive PROJECT_ID_OR_SLUG [flags]
+prx project archive PROJECT_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx project archive payments
+prx project archive P-1
 ```
 
 ### Options
@@ -29,5 +29,5 @@ prx project archive payments
 
 ### SEE ALSO
 
-* [prx project](prx_project.md)	 - List projects or show one by ID or slug
+* [prx project](prx_project.md)	 - List projects or show one by ID
 

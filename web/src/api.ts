@@ -98,14 +98,10 @@ export async function syncIfDue() {
 }
 
 export const mutations = {
-  createProject: (input: {
-    slug: string;
-    title: string;
-    description: string;
-  }) => client.createProject(create(CreateProjectRequestSchema, input)),
+  createProject: (input: { title: string; description: string }) =>
+    client.createProject(create(CreateProjectRequestSchema, input)),
   updateProject: (input: {
     id: string;
-    slug?: string;
     title?: string;
     description?: string;
     archived?: boolean;
@@ -117,14 +113,12 @@ export const mutations = {
       create(DeleteProjectRequestSchema, { id, cascade: true }),
     ),
   createFeature: (input: {
-    slug: string;
     title: string;
     description: string;
     projectId?: string;
   }) => client.createFeature(create(CreateFeatureRequestSchema, input)),
   updateFeature: (input: {
     id: string;
-    slug?: string;
     title?: string;
     description?: string;
     status?: FeatureStatus;

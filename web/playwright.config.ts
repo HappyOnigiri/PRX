@@ -5,7 +5,7 @@ export default defineConfig({
   outputDir: "../test-results/playwright",
   timeout: 45_000,
   expect: { timeout: 8_000 },
-  // Tests create features with unique slugs and otherwise only read the demo
+  // Tests create features with unique titles and otherwise only read the demo
   // graphs, so they can share the single E2E server across workers. The one
   // exception is prompts.spec.ts, which rewrites the shared prompt templates and
   // restores them, so template-sensitive tests have to live in that file.

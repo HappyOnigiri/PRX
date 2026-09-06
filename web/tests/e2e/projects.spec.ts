@@ -30,11 +30,10 @@ test.afterEach(() => {
 
 // The demo data is shared by every worker, so each test builds its own project
 // and feature and never archives one the other tests read.
-async function createProject(page: Page, slug: string, title: string) {
+async function createProject(page: Page, title: string) {
   await page.goto("/projects");
   await page.getByRole("button", { name: "New project" }).click();
   const dialog = page.getByRole("form", { name: "Create project" });
-  await dialog.getByLabel("Slug").fill(slug);
   await dialog.getByLabel("Title").fill(title);
   await dialog.getByRole("button", { name: "Create project" }).click();
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
@@ -92,15 +91,12 @@ test("gives the sidebar project title the whole row", async ({ page }) => {
 });
 
 test("archives a project and makes its feature read-only", async ({ page }) => {
-  const slug = `e2e-project-${crypto.randomUUID()}`;
-  const title = `E2E project ${slug}`;
-  await createProject(page, slug, title);
+  const title = `E2E project ${crypto.randomUUID()}`;
+  await createProject(page, title);
 
-  const featureSlug = `e2e-member-${crypto.randomUUID()}`;
-  const featureTitle = `E2E member ${featureSlug}`;
+  const featureTitle = `E2E member ${crypto.randomUUID()}`;
   await page.getByRole("button", { name: "New feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
-  await featureDialog.getByLabel("Slug").fill(featureSlug);
   await featureDialog.getByLabel("Title").fill(featureTitle);
   await featureDialog.getByLabel("Project").selectOption({ label: title });
   await featureDialog.getByRole("button", { name: "Create feature" }).click();

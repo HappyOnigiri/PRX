@@ -1,15 +1,15 @@
 ## prx feature archive
 
-Archive a feature by ID or slug
+Archive a feature by ID
 
 ```
-prx feature archive FEATURE_ID_OR_SLUG [flags]
+prx feature archive FEATURE_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx feature archive checkout
+prx feature archive F-1
 ```
 
 ### Options
@@ -29,5 +29,5 @@ prx feature archive checkout
 
 ### SEE ALSO
 
-* [prx feature](prx_feature.md)	 - List features or show one by ID or slug
+* [prx feature](prx_feature.md)	 - List features or show one by ID
 

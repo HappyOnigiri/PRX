@@ -340,7 +340,6 @@ func TestRPCErrorDetailsMapEveryKnownDomainErrorCode(t *testing.T) {
 			domain.DomainErrorCodeInvalidPullRequestURL,
 			prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL,
 		},
-		{"invalid slug", domain.DomainErrorCodeInvalidSlug, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_SLUG},
 		{"invalid status", domain.DomainErrorCodeInvalidStatus, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS},
 		{"invalid title", domain.DomainErrorCodeInvalidTitle, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE},
 		{"not found", domain.DomainErrorCodeNotFound, prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND},

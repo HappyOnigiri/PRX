@@ -195,7 +195,6 @@ export const errorKeys = {
   [DomainErrorCode.INVALID_KIND]: "error.invalidKind",
   [DomainErrorCode.INVALID_PARENT]: "error.invalidParent",
   [DomainErrorCode.INVALID_PULL_REQUEST_URL]: "error.invalidPullRequestUrl",
-  [DomainErrorCode.INVALID_SLUG]: "error.invalidSlug",
   [DomainErrorCode.INVALID_STATUS]: "error.invalidStatus",
   [DomainErrorCode.INVALID_TITLE]: "error.invalidTitle",
   [DomainErrorCode.NOT_FOUND]: "error.notFound",

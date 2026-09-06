@@ -6,7 +6,7 @@ Show a project, a feature, or a task by public identifier
 
 Show a project, a feature, or a task by public identifier.
 
-The operand is a public project, feature, or task ID, or a feature or project slug.
+The operand is a public project, feature, or task ID.
 
 ```
 prx show PROJECT_OR_FEATURE_OR_TASK [flags]
@@ -16,7 +16,6 @@ prx show PROJECT_OR_FEATURE_OR_TASK [flags]
 
 ```
 prx show F-1
-prx show checkout
 prx show T-1
 prx show P-1
 ```

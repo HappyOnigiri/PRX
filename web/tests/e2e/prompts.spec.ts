@@ -40,13 +40,12 @@ test("copies a task prompt built from the configured template", async ({
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  const slug = `e2e-prompt-${crypto.randomUUID()}`;
-  const title = `E2E prompt ${slug}`;
+  const token = `e2e-prompt-${crypto.randomUUID()}`;
+  const title = `E2E prompt ${token}`;
 
   await page.goto("/");
   await page.getByRole("button", { name: "New feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
-  await featureDialog.getByLabel("Slug").fill(slug);
   await featureDialog.getByLabel("Title").fill(title);
   await featureDialog.getByRole("button", { name: "Create feature" }).click();
   await expect(page.getByRole("heading", { name: title })).toBeVisible();
@@ -66,7 +65,7 @@ test("copies a task prompt built from the configured template", async ({
   const promptPanel = settings.getByRole("tabpanel", { name: "Prompts" });
   await promptPanel
     .getByLabel("Design prompt")
-    .fill(`${slug} designs {{task_id}}: {{task_title}}`);
+    .fill(`${token} designs {{task_id}}: {{task_title}}`);
   await promptPanel.getByRole("button", { name: "Save" }).click();
   await expect(promptPanel.getByText("Prompt templates saved.")).toBeVisible();
   await settings.getByRole("button", { name: "Done" }).click();
@@ -83,7 +82,7 @@ test("copies a task prompt built from the configured template", async ({
   await node.getByRole("button", { name: "Copy design prompt" }).click();
   await expect(node.getByText("Design prompt copied.")).toBeVisible();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
-  expect(copied).toBe(`${slug} designs ${taskId}: E2E prompt task`);
+  expect(copied).toBe(`${token} designs ${taskId}: E2E prompt task`);
 
   await page.getByRole("button", { name: "Settings" }).click();
   await settings.getByRole("tab", { name: "Prompts" }).click();

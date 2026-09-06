@@ -27,9 +27,9 @@ func (s *state) snapshotCommand() *cobra.Command {
 
 func (s *state) graphCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:     "graph FEATURE_ID_OR_SLUG",
+		Use:     "graph FEATURE_ID",
 		Short:   "Show a feature graph with tasks and dependencies",
-		Example: "prx graph checkout",
+		Example: "prx graph F-1",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			feature, err := s.service.ResolveFeature(cmd.Context(), args[0])
@@ -113,7 +113,7 @@ func (s *state) syncCommand() *cobra.Command {
 				renderMessage("GitHub sync completed: %d succeeded, %d failed.", succeeded, failed))
 		},
 	}
-	command.Flags().StringVar(&feature, "feature", "", "feature ID or slug")
+	command.Flags().StringVar(&feature, "feature", "", "feature ID")
 	command.Flags().StringVar(&task, "task", "", "task ID")
 	command.AddCommand(s.syncStatusCommand())
 	return command

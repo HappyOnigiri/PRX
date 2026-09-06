@@ -27,7 +27,7 @@ func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 	client := newTestClient(t)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "markdown-preview", Title: "Markdown preview"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "Markdown preview"}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -307,7 +307,7 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	client := prxv1connect.NewPRXServiceClient(server.Client(), server.URL)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "rpc-feature", Title: "RPC feature"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "RPC feature"}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -400,7 +400,7 @@ func TestRPCImplementationPlanLifecycle(t *testing.T) {
 	client := newTestClient(t)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "rpc-plans", Title: "RPC plans"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "RPC plans"}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -494,7 +494,7 @@ func TestRPCLifecyclePersistsAndDeletesResources(t *testing.T) {
 
 	featureResponse, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "rpc-lifecycle", Title: "RPC lifecycle"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "RPC lifecycle"}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -708,7 +708,7 @@ func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 	client := newTestClient(t)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "enum-feature", Title: "Enum feature"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "Enum feature"}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -781,7 +781,7 @@ func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
 	client := newTestClient(t)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "cause-feature", Title: "Cause feature"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "Cause feature"}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -945,7 +945,7 @@ func TestRPCProjectLifecycleAndArchiveEnforcement(t *testing.T) {
 	project, err := client.CreateProject(
 		ctx,
 		connect.NewRequest(&prxv1.CreateProjectRequest{
-			Slug: "payments", Title: "Payments platform", Description: "Shared work",
+			Title: "Payments platform", Description: "Shared work",
 		}),
 	)
 	if err != nil {
@@ -957,7 +957,7 @@ func TestRPCProjectLifecycleAndArchiveEnforcement(t *testing.T) {
 	}
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "checkout", Title: "Checkout", ProjectId: projectID}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "Checkout", ProjectId: projectID}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -1022,7 +1022,7 @@ func TestRPCProjectDocumentUsesTheSharedDocumentModel(t *testing.T) {
 	client := newTestClient(t)
 	project, err := client.CreateProject(
 		ctx,
-		connect.NewRequest(&prxv1.CreateProjectRequest{Slug: "payments", Title: "Payments"}),
+		connect.NewRequest(&prxv1.CreateProjectRequest{Title: "Payments"}),
 	)
 	if err != nil {
 		t.Fatal(err)

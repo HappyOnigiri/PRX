@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/url"
 	"os"
-	"regexp"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -16,8 +15,6 @@ import (
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
 )
 
-var slugPattern = regexp.MustCompile(`^[a-z0-9]+(?:-[a-z0-9]+)*$`)
-
 const (
 	maxDocumentContentBytes = 1 << 20
 )
@@ -27,16 +24,14 @@ const (
 // opening SQLite and leaves alternative persistence implementations free to
 // satisfy the same use cases.
 type Repository interface {
-	CreateProject(ctx context.Context, slug, title, description string) (domain.Project, error)
+	CreateProject(ctx context.Context, title, description string) (domain.Project, error)
 	UpdateProject(ctx context.Context, project domain.Project) (domain.Project, error)
 	GetProject(ctx context.Context, id string) (domain.Project, error)
-	GetProjectBySlug(ctx context.Context, slug string) (domain.Project, error)
 	DeleteProject(ctx context.Context, id string, cascade bool) error
 
-	CreateFeature(ctx context.Context, slug, title, description, projectID string) (domain.Feature, error)
+	CreateFeature(ctx context.Context, title, description, projectID string) (domain.Feature, error)
 	UpdateFeature(ctx context.Context, feature domain.Feature) (domain.Feature, error)
 	GetFeature(ctx context.Context, id string) (domain.Feature, error)
-	GetFeatureBySlug(ctx context.Context, slug string) (domain.Feature, error)
 	DeleteFeature(ctx context.Context, id string, cascade bool) error
 
 	CreateTask(
@@ -135,16 +130,9 @@ func (s *Service) ConfigStore() *config.Store { return s.configStore }
 // leaves the feature unaffiliated, which is the normal case.
 func (s *Service) CreateFeature(
 	ctx context.Context,
-	slug, title, description, projectID string,
+	title, description, projectID string,
 ) (domain.Feature, error) {
-	slug = strings.TrimSpace(strings.ToLower(slug))
 	title = strings.TrimSpace(title)
-	if !slugPattern.MatchString(slug) {
-		return domain.Feature{}, domain.NewError(
-			domain.DomainErrorCodeInvalidSlug,
-			"slug must contain lowercase letters, numbers, and single hyphens",
-		)
-	}
 	if title == "" {
 		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidTitle, "feature title is required")
 	}
@@ -152,7 +140,7 @@ func (s *Service) CreateFeature(
 	if err != nil {
 		return domain.Feature{}, err
 	}
-	created, err := s.repository.CreateFeature(ctx, slug, title, strings.TrimSpace(description), resolvedProject)
+	created, err := s.repository.CreateFeature(ctx, title, strings.TrimSpace(description), resolvedProject)
 	if err != nil {
 		return domain.Feature{}, err
 	}
@@ -183,9 +171,6 @@ func (s *Service) UpdateFeature(
 		}
 		feature.ProjectID = resolvedProject
 	}
-	if update.Slug != nil {
-		feature.Slug = strings.TrimSpace(strings.ToLower(*update.Slug))
-	}
 	if update.Title != nil {
 		feature.Title = strings.TrimSpace(*update.Title)
 	}
@@ -197,9 +182,6 @@ func (s *Service) UpdateFeature(
 	}
 	if update.Archived != nil {
 		feature.Archived = *update.Archived
-	}
-	if !slugPattern.MatchString(feature.Slug) {
-		return domain.Feature{}, domain.NewError(domain.DomainErrorCodeInvalidSlug, "invalid feature slug")
 	}
 	if !oneOf(
 		feature.Status,
@@ -218,57 +200,28 @@ func (s *Service) UpdateFeature(
 	return s.withReadOnly(ctx, updated)
 }
 
-// ResolveFeature only falls through to the next lookup when the previous one
-// reported a missing row, so a storage failure such as a locked database keeps
-// its own cause instead of being reported as a missing feature. The resolved
-// feature carries the derived ReadOnly flag, so a caller that reports a single
-// feature publishes the same value a snapshot read would.
-func (s *Service) ResolveFeature(ctx context.Context, idOrSlug string) (domain.Feature, error) {
-	feature, err := s.repository.GetFeature(ctx, idOrSlug)
-	if err == nil {
-		return s.withReadOnly(ctx, feature)
-	}
-	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+// ResolveFeature looks a feature up by its public ID. The resolved feature
+// carries the derived ReadOnly flag, so a caller that reports a single feature
+// publishes the same value a snapshot read would.
+func (s *Service) ResolveFeature(ctx context.Context, id string) (domain.Feature, error) {
+	feature, err := s.repository.GetFeature(ctx, id)
+	if err != nil {
 		return domain.Feature{}, err
 	}
-	feature, err = s.repository.GetFeatureBySlug(ctx, idOrSlug)
-	if err == nil {
-		return s.withReadOnly(ctx, feature)
-	}
-	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
-		return domain.Feature{}, err
-	}
-	return domain.Feature{}, domain.NewError(domain.DomainErrorCodeNotFound, "feature %q was not found", idOrSlug)
+	return s.withReadOnly(ctx, feature)
 }
 
-// GetNode resolves a public project, feature, or task ID, a feature slug, or a
-// project slug, without exposing the storage UUID or requiring callers to
-// choose the resource first. A slug is looked up as a feature before a project,
-// so the two independent slug namespaces resolve predictably when they collide.
+// GetNode resolves a public project, feature, or task ID without exposing the
+// storage UUID or requiring callers to choose the resource first. The public ID
+// prefix names the kind, so no operand is ambiguous.
 func (s *Service) GetNode(ctx context.Context, id string) (any, error) {
-	if strings.HasPrefix(id, "T-") {
+	switch {
+	case strings.HasPrefix(id, "T-"):
 		return s.repository.GetTask(ctx, id)
-	}
-	if strings.HasPrefix(id, "P-") {
-		project, err := s.ResolveProject(ctx, id)
-		if err != nil {
-			return nil, err
-		}
-		return project, nil
-	}
-	feature, err := s.ResolveFeature(ctx, id)
-	if err == nil {
-		return feature, nil
-	}
-	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
-		return nil, err
-	}
-	project, err := s.ResolveProject(ctx, id)
-	if err == nil {
-		return project, nil
-	}
-	if domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
-		return nil, err
+	case strings.HasPrefix(id, "P-"):
+		return s.ResolveProject(ctx, id)
+	case strings.HasPrefix(id, "F-"):
+		return s.ResolveFeature(ctx, id)
 	}
 	return nil, domain.NewError(domain.DomainErrorCodeNotFound, "project, feature, or task %q was not found", id)
 }
@@ -506,7 +459,7 @@ func (s *Service) AddDocument(
 }
 
 // resolveDocumentParent checks that the named parent exists and accepts writes,
-// and returns it with its public identifier normalized from any slug given.
+// and returns it with its public identifier normalized.
 func (s *Service) resolveDocumentParent(
 	ctx context.Context,
 	parent domain.DocumentParent,

@@ -40,7 +40,7 @@ func createPromptTask(t *testing.T, client prxv1connect.PRXServiceClient) string
 	ctx := context.Background()
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Slug: "prompts", Title: "Prompts"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "Prompts"}),
 	)
 	if err != nil {
 		t.Fatal(err)

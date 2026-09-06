@@ -12,13 +12,13 @@ With --cascade it deletes the project's own documents and releases its features.
 Contained features are never deleted: they keep their own identifiers and tasks.
 
 ```
-prx project delete PROJECT_ID_OR_SLUG [flags]
+prx project delete PROJECT_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx project delete payments --cascade
+prx project delete P-1 --cascade
 ```
 
 ### Options
@@ -39,5 +39,5 @@ prx project delete payments --cascade
 
 ### SEE ALSO
 
-* [prx project](prx_project.md)	 - List projects or show one by ID or slug
+* [prx project](prx_project.md)	 - List projects or show one by ID
 

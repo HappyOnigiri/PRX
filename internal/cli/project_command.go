@@ -8,11 +8,11 @@ import (
 
 func (s *state) projectCommand() *cobra.Command {
 	command := &cobra.Command{
-		Use:     "project [PROJECT_ID_OR_SLUG]",
+		Use:     "project [PROJECT_ID]",
 		Aliases: []string{"proj"},
-		Short:   "List projects or show one by ID or slug",
-		Long:    "List projects or show one by ID or slug.\n\nAlias: proj.",
-		Example: "prx project\nprx project P-1\nprx proj payments",
+		Short:   "List projects or show one by ID",
+		Long:    "List projects or show one by ID.\n\nAlias: proj.",
+		Example: "prx project\nprx project P-1\nprx proj P-1",
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			// Both forms read the snapshot so the features listed with a project
@@ -38,9 +38,9 @@ func (s *state) projectCommand() *cobra.Command {
 	return command
 }
 
-func (s *state) writeProjectDetail(snapshot domain.Snapshot, idOrSlug string) error {
+func (s *state) writeProjectDetail(snapshot domain.Snapshot, id string) error {
 	for _, project := range snapshot.Projects {
-		if project.ID != idOrSlug && project.Slug != idOrSlug {
+		if project.ID != id {
 			continue
 		}
 		features := make([]domain.Feature, 0, len(snapshot.Features))
@@ -60,22 +60,22 @@ func (s *state) writeProjectDetail(snapshot domain.Snapshot, idOrSlug string) er
 			renderProjectDetail(project, features, documents),
 		)
 	}
-	return domain.NewError(domain.DomainErrorCodeNotFound, "project %q was not found", idOrSlug)
+	return domain.NewError(domain.DomainErrorCodeNotFound, "project %q was not found", id)
 }
 
 func (s *state) projectCreateCommand() *cobra.Command {
 	var description string
 	command := &cobra.Command{
-		Use:     "create SLUG TITLE",
+		Use:     "create TITLE",
 		Short:   "Create a project",
-		Example: "prx project create payments \"Payments platform\"",
-		Args:    cobra.ExactArgs(2),
+		Example: "prx project create \"Payments platform\"",
+		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			value, err := s.service.CreateProject(cmd.Context(), args[0], args[1], description)
+			value, err := s.service.CreateProject(cmd.Context(), args[0], description)
 			if err != nil {
 				return err
 			}
-			return s.write(value, renderMessage("Created project %s (%s).", value.Slug, value.ID))
+			return s.write(value, renderMessage("Created project %s (%s).", value.ID, value.Title))
 		},
 	}
 	command.Flags().StringVar(&description, "description", "", "project description")
@@ -83,16 +83,15 @@ func (s *state) projectCreateCommand() *cobra.Command {
 }
 
 func (s *state) projectUpdateCommand() *cobra.Command {
-	var slug, title, description string
+	var title, description string
 	var archived bool
 	command := &cobra.Command{
-		Use:     "update PROJECT_ID_OR_SLUG",
-		Short:   "Update a project by ID or slug",
-		Example: "prx project update payments --title \"Payments platform\"",
+		Use:     "update PROJECT_ID",
+		Short:   "Update a project by ID",
+		Example: "prx project update P-1 --title \"Payments platform\"",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.UpdateProject(cmd.Context(), args[0], domain.ProjectUpdate{
-				Slug:        changedFlag(cmd, "slug", &slug),
 				Title:       changedFlag(cmd, "title", &title),
 				Description: changedFlag(cmd, "description", &description),
 				Archived:    changedBoolFlag(cmd, "archived", &archived),
@@ -100,10 +99,9 @@ func (s *state) projectUpdateCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			return s.write(value, renderMessage("Updated project %s (%s).", value.Slug, value.ID))
+			return s.write(value, renderMessage("Updated project %s (%s).", value.ID, value.Title))
 		},
 	}
-	command.Flags().StringVar(&slug, "slug", "", "new slug")
 	command.Flags().StringVar(&title, "title", "", "new title")
 	command.Flags().StringVar(&description, "description", "", "new description")
 	command.Flags().BoolVar(&archived, "archived", false, "archive (true) or unarchive (false) the project")
@@ -118,9 +116,9 @@ func (s *state) projectArchiveCommand(archived bool) *cobra.Command {
 		short = "Unarchive a project and let its features accept writes again"
 	}
 	return &cobra.Command{
-		Use:     verb + " PROJECT_ID_OR_SLUG",
+		Use:     verb + " PROJECT_ID",
 		Short:   short,
-		Example: "prx project " + verb + " payments",
+		Example: "prx project " + verb + " P-1",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.UpdateProject(
@@ -135,7 +133,7 @@ func (s *state) projectArchiveCommand(archived bool) *cobra.Command {
 			if !archived {
 				action = "Unarchived"
 			}
-			return s.write(value, renderMessage("%s project %s (%s).", action, value.Slug, value.ID))
+			return s.write(value, renderMessage("%s project %s (%s).", action, value.ID, value.Title))
 		},
 	}
 }
@@ -143,13 +141,13 @@ func (s *state) projectArchiveCommand(archived bool) *cobra.Command {
 func (s *state) projectDeleteCommand() *cobra.Command {
 	var cascade bool
 	command := &cobra.Command{
-		Use:   "delete PROJECT_ID_OR_SLUG",
+		Use:   "delete PROJECT_ID",
 		Short: "Delete a project; --cascade removes its documents and releases its features",
 		Long: "Delete a project.\n\n" +
 			"Without --cascade the command fails while the project still has features or documents.\n\n" +
 			"With --cascade it deletes the project's own documents and releases its features.\n" +
 			"Contained features are never deleted: they keep their own identifiers and tasks.",
-		Example: "prx project delete payments --cascade",
+		Example: "prx project delete P-1 --cascade",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := s.service.DeleteProject(cmd.Context(), args[0], cascade); err != nil {

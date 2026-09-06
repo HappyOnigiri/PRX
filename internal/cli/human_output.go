@@ -27,9 +27,9 @@ func writeProjectTable(out io.Writer, projects []domain.Project) error {
 		_, err := fmt.Fprintln(out, "No projects found.")
 		return err
 	}
-	return writeTable(out, []string{"ID", "SLUG", "ARCHIVED", "TITLE"}, func(table *tabwriter.Writer) {
+	return writeTable(out, []string{"ID", "ARCHIVED", "TITLE"}, func(table *tabwriter.Writer) {
 		for _, project := range projects {
-			writeRow(table, project.ID, project.Slug, yesNo(project.Archived), project.Title)
+			writeRow(table, project.ID, yesNo(project.Archived), project.Title)
 		}
 	})
 }
@@ -40,7 +40,6 @@ func renderProjectFields(project domain.Project) humanRenderer {
 	return func(out io.Writer) error {
 		return writeFields(out, [][2]string{
 			{"ID", project.ID},
-			{"Slug", project.Slug},
 			{"Title", project.Title},
 			{"Description", displayValue(project.Description)},
 			{"Archived", yesNo(project.Archived)},
@@ -83,13 +82,12 @@ func writeFeatureTable(out io.Writer, features []domain.Feature) error {
 	}
 	return writeTable(
 		out,
-		[]string{"ID", "SLUG", "PROJECT", "STATUS", "ARCHIVED", "READ-ONLY", "TASKS", "TITLE"},
+		[]string{"ID", "PROJECT", "STATUS", "ARCHIVED", "READ-ONLY", "TASKS", "TITLE"},
 		func(table *tabwriter.Writer) {
 			for _, feature := range features {
 				writeRow(
 					table,
 					feature.ID,
-					feature.Slug,
 					displayValue(feature.ProjectID),
 					feature.DisplayStatus,
 					yesNo(feature.Archived),
@@ -106,7 +104,6 @@ func renderFeatureDetail(feature domain.Feature) humanRenderer {
 	return func(out io.Writer) error {
 		return writeFields(out, [][2]string{
 			{"ID", feature.ID},
-			{"Slug", feature.Slug},
 			{"Project", displayValue(feature.ProjectID)},
 			{"Title", feature.Title},
 			{"Description", displayValue(feature.Description)},
@@ -325,7 +322,7 @@ func renderGraph(feature domain.Feature, tasks []domain.Task, dependencies []dom
 		if _, err := fmt.Fprintf(
 			out,
 			"Feature\n  %s — %s (%s)\n\nTasks\n",
-			feature.Slug,
+			feature.ID,
 			feature.Title,
 			feature.Status,
 		); err != nil {

@@ -109,7 +109,6 @@ const (
 type Project struct {
 	ID          string    `json:"id"`
 	StorageID   string    `json:"-"`
-	Slug        string    `json:"slug"`
 	Title       string    `json:"title"`
 	Description string    `json:"description"`
 	Archived    bool      `json:"archived"`
@@ -122,7 +121,6 @@ type Project struct {
 // Collecting them in one comparable value is what lets the archive barrier ask
 // whether a request changes anything but Archived without naming each field.
 type ProjectUpdate struct {
-	Slug        *string
 	Title       *string
 	Description *string
 	Archived    *bool
@@ -131,7 +129,6 @@ type ProjectUpdate struct {
 // FeatureUpdate carries every field a feature update may change, with the same
 // pointer convention and the same reason for being one value as ProjectUpdate.
 type FeatureUpdate struct {
-	Slug        *string
 	Title       *string
 	Description *string
 	Status      *FeatureStatus
@@ -143,7 +140,6 @@ type Feature struct {
 	ID          string        `json:"id"`
 	StorageID   string        `json:"-"`
 	ProjectID   string        `json:"project_id,omitempty"`
-	Slug        string        `json:"slug"`
 	Title       string        `json:"title"`
 	Description string        `json:"description"`
 	Status      FeatureStatus `json:"status"`

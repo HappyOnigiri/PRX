@@ -135,7 +135,6 @@ function ProjectListRow({
           <EntityIcon kind="project" size={15} />
           {project.title}
         </b>
-        <small>{project.slug}</small>
       </div>
       <span>{t("project.featureCount", { count: featureCount })}</span>
       {/* The slot a feature row fills with a status carries only the archived

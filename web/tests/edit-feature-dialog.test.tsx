@@ -54,7 +54,6 @@ describe("EditFeatureDialog", () => {
       <EditFeatureDialog
         projects={[]}
         feature={makeFeature({
-          slug: "payments",
           title: "Payments",
           description: "Initial scope",
           status: FeatureStatus.ACTIVE,
@@ -63,9 +62,6 @@ describe("EditFeatureDialog", () => {
         onDeleted={vi.fn()}
       />,
     );
-    fireEvent.change(screen.getByLabelText("Slug"), {
-      target: { value: "payments-v2" },
-    });
     fireEvent.change(screen.getByLabelText("Title"), {
       target: { value: "Payments v2" },
     });
@@ -82,7 +78,6 @@ describe("EditFeatureDialog", () => {
     });
     expect(mutationAt(0).mutateAsync).toHaveBeenCalledWith({
       id: "feature-1",
-      slug: "payments-v2",
       title: "Payments v2",
       description: "Updated scope",
       status: FeatureStatus.PAUSED,
@@ -153,7 +148,6 @@ describe("EditFeatureDialog", () => {
     });
     expect(mutationAt(0).mutateAsync).toHaveBeenCalledWith({
       id: "feature-1",
-      slug: "payments",
       title: "Payments",
       description: "",
       status: FeatureStatus.COMPLETED,
@@ -180,7 +174,6 @@ describe("EditFeatureDialog", () => {
     });
     expect(mutationAt(0).mutateAsync).toHaveBeenCalledWith({
       id: "feature-1",
-      slug: "payments",
       title: "Payments rollout",
       description: "",
       status: FeatureStatus.COMPLETED,

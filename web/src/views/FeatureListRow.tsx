@@ -27,7 +27,6 @@ export function FeatureListRow({
           <EntityIcon kind="feature" size={15} />
           {feature.title}
         </b>
-        <small>{feature.slug}</small>
       </div>
       <div className="progress-track" aria-hidden="true">
         <i

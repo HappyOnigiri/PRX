@@ -3,13 +3,13 @@
 Unarchive a project and let its features accept writes again
 
 ```
-prx project unarchive PROJECT_ID_OR_SLUG [flags]
+prx project unarchive PROJECT_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx project unarchive payments
+prx project unarchive P-1
 ```
 
 ### Options
@@ -29,5 +29,5 @@ prx project unarchive payments
 
 ### SEE ALSO
 
-* [prx project](prx_project.md)	 - List projects or show one by ID or slug
+* [prx project](prx_project.md)	 - List projects or show one by ID
 

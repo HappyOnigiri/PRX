@@ -3,13 +3,13 @@
 Create a project
 
 ```
-prx project create SLUG TITLE [flags]
+prx project create TITLE [flags]
 ```
 
 ### Examples
 
 ```
-prx project create payments "Payments platform"
+prx project create "Payments platform"
 ```
 
 ### Options
@@ -30,5 +30,5 @@ prx project create payments "Payments platform"
 
 ### SEE ALSO
 
-* [prx project](prx_project.md)	 - List projects or show one by ID or slug
+* [prx project](prx_project.md)	 - List projects or show one by ID
 

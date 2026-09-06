@@ -12,45 +12,42 @@ func TestProjectAllocatesPublicIDsAndNormalizesItsValues(t *testing.T) {
 	ctx := context.Background()
 	_, service := openTestService(t)
 
-	project, err := service.CreateProject(ctx, "  Payments  ", "  Payments platform  ", "  Shared work  ")
+	project, err := service.CreateProject(ctx, "  Payments platform  ", "  Shared work  ")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if project.ID != "P-1" || project.Slug != "payments" || project.Title != "Payments platform" ||
+	if project.ID != "P-1" || project.Title != "Payments platform" ||
 		project.Description != "Shared work" || project.Archived {
 		t.Fatalf("project=%+v", project)
 	}
-	second, err := service.CreateProject(ctx, "billing", "Billing", "")
+	second, err := service.CreateProject(ctx, "Billing", "")
 	if err != nil || second.ID != "P-2" {
 		t.Fatalf("second project=%+v err=%v", second, err)
 	}
-	bySlug, err := service.ResolveProject(ctx, "payments")
-	if err != nil || bySlug.ID != project.ID {
-		t.Fatalf("resolved by slug=%+v err=%v", bySlug, err)
+	byID, err := service.ResolveProject(ctx, project.ID)
+	if err != nil || byID.Title != project.Title {
+		t.Fatalf("resolved by ID=%+v err=%v", byID, err)
 	}
-	if _, err := service.ResolveProject(ctx, "unknown"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
+	if _, err := service.ResolveProject(ctx, "P-9"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("unknown project code=%s err=%v", domain.ErrorCode(err), err)
 	}
-	if _, err := service.CreateProject(ctx, "Not A Slug", "Title", ""); domain.ErrorCode(err) !=
-		domain.DomainErrorCodeInvalidSlug {
-		t.Fatalf("invalid slug code=%s", domain.ErrorCode(err))
-	}
-	if _, err := service.CreateProject(ctx, "titleless", "  ", ""); domain.ErrorCode(err) !=
+	if _, err := service.CreateProject(ctx, "  ", ""); domain.ErrorCode(err) !=
 		domain.DomainErrorCodeInvalidTitle {
 		t.Fatalf("missing title code=%s", domain.ErrorCode(err))
 	}
 }
 
-// The public ID prefix decides the kind, and a bare slug resolves to a feature
-// before a project so the two independent namespaces stay predictable.
-func TestGetNodeResolvesProjectsByPublicIDAndFallsBackFromFeatureSlugs(t *testing.T) {
+// The public ID prefix decides the kind, so a project and a feature never
+// compete for the same operand.
+func TestGetNodeResolvesProjectsAndFeaturesByPublicID(t *testing.T) {
 	ctx := context.Background()
 	_, service := openTestService(t)
-	project, err := service.CreateProject(ctx, "shared", "Shared", "")
+	project, err := service.CreateProject(ctx, "Shared", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if _, err := service.CreateFeature(ctx, "shared", "Shared feature", "", ""); err != nil {
+	feature, err := service.CreateFeature(ctx, "Shared feature", "", "")
+	if err != nil {
 		t.Fatal(err)
 	}
 	node, err := service.GetNode(ctx, project.ID)
@@ -60,12 +57,12 @@ func TestGetNodeResolvesProjectsByPublicIDAndFallsBackFromFeatureSlugs(t *testin
 	if got, ok := node.(domain.Project); !ok || got.ID != project.ID {
 		t.Fatalf("project node=%#v", node)
 	}
-	node, err = service.GetNode(ctx, "shared")
+	node, err = service.GetNode(ctx, feature.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
-	if got, ok := node.(domain.Feature); !ok || got.Slug != "shared" {
-		t.Fatalf("colliding slug node=%#v, want the feature", node)
+	if got, ok := node.(domain.Feature); !ok || got.ID != feature.ID {
+		t.Fatalf("feature node=%#v", node)
 	}
 	if _, err := service.GetNode(ctx, "P-9"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("missing project node code=%s err=%v", domain.ErrorCode(err), err)
@@ -75,17 +72,15 @@ func TestGetNodeResolvesProjectsByPublicIDAndFallsBackFromFeatureSlugs(t *testin
 func TestFeatureProjectMembershipIsOptionalAndReversible(t *testing.T) {
 	ctx := context.Background()
 	_, service := openTestService(t)
-	project, err := service.CreateProject(ctx, "payments", "Payments", "")
+	project, err := service.CreateProject(ctx, "Payments", "")
 	if err != nil {
 		t.Fatal(err)
 	}
-	// A slug is accepted wherever a public project ID is, and the stored value
-	// is always the public ID.
-	feature, err := service.CreateFeature(ctx, "checkout", "Checkout", "", "payments")
+	feature, err := service.CreateFeature(ctx, "Checkout", "", project.ID)
 	if err != nil || feature.ProjectID != project.ID {
 		t.Fatalf("created feature=%+v err=%v", feature, err)
 	}
-	unaffiliated, err := service.CreateFeature(ctx, "search", "Search", "", "")
+	unaffiliated, err := service.CreateFeature(ctx, "Search", "", "")
 	if err != nil || unaffiliated.ProjectID != "" {
 		t.Fatalf("unaffiliated feature=%+v err=%v", unaffiliated, err)
 	}
@@ -110,7 +105,7 @@ func TestFeatureProjectMembershipIsOptionalAndReversible(t *testing.T) {
 		t.Fatalf("missing project code=%s err=%v", domain.ErrorCode(err), err)
 	}
 	if _, err := service.CreateFeature(
-		ctx, "orphan", "Orphan", "", "P-9",
+		ctx, "Orphan", "", "P-9",
 	); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("missing project on create code=%s", domain.ErrorCode(err))
 	}
@@ -135,10 +130,10 @@ func newReadOnlyFixture(t *testing.T) readOnlyFixture {
 	_, service := openTestService(t)
 	fixture := readOnlyFixture{service: service}
 	var err error
-	if fixture.project, err = service.CreateProject(ctx, "payments", "Payments", ""); err != nil {
+	if fixture.project, err = service.CreateProject(ctx, "Payments", ""); err != nil {
 		t.Fatal(err)
 	}
-	if fixture.feature, err = service.CreateFeature(ctx, "checkout", "Checkout", "", "payments"); err != nil {
+	if fixture.feature, err = service.CreateFeature(ctx, "Checkout", "", fixture.project.ID); err != nil {
 		t.Fatal(err)
 	}
 	if fixture.blocker, err = service.CreateTask(

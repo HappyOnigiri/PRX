@@ -183,7 +183,7 @@ func createFeatureWithTasks(
 ) domain.Feature {
 	t.Helper()
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, slug, slug, "", "")
+	feature, err := service.CreateFeature(ctx, slug, "", "")
 	if err != nil {
 		t.Fatal(err)
 	}

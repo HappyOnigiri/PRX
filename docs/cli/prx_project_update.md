@@ -1,15 +1,15 @@
 ## prx project update
 
-Update a project by ID or slug
+Update a project by ID
 
 ```
-prx project update PROJECT_ID_OR_SLUG [flags]
+prx project update PROJECT_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx project update payments --title "Payments platform"
+prx project update P-1 --title "Payments platform"
 ```
 
 ### Options
@@ -18,7 +18,6 @@ prx project update payments --title "Payments platform"
       --archived             archive (true) or unarchive (false) the project
       --description string   new description
   -h, --help                 help for update
-      --slug string          new slug
       --title string         new title
 ```
 
@@ -33,5 +32,5 @@ prx project update payments --title "Payments platform"
 
 ### SEE ALSO
 
-* [prx project](prx_project.md)	 - List projects or show one by ID or slug
+* [prx project](prx_project.md)	 - List projects or show one by ID
 

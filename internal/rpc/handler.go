@@ -64,7 +64,6 @@ func rpcError(err error) error {
 		domain.DomainErrorCodeInvalidKind,
 		domain.DomainErrorCodeInvalidParent,
 		domain.DomainErrorCodeInvalidPullRequestURL,
-		domain.DomainErrorCodeInvalidSlug,
 		domain.DomainErrorCodeInvalidStatus,
 		domain.DomainErrorCodeInvalidTitle,
 		domain.DomainErrorCodePullRequestOnManualTask,
@@ -115,7 +114,7 @@ func (h *Handler) CreateProject(
 	ctx context.Context,
 	req *connect.Request[prxv1.CreateProjectRequest],
 ) (*connect.Response[prxv1.CreateProjectResponse], error) {
-	value, err := h.service.CreateProject(ctx, req.Msg.GetSlug(), req.Msg.GetTitle(), req.Msg.GetDescription())
+	value, err := h.service.CreateProject(ctx, req.Msg.GetTitle(), req.Msg.GetDescription())
 	if err != nil {
 		return nil, rpcError(err)
 	}
@@ -127,7 +126,6 @@ func (h *Handler) UpdateProject(
 	req *connect.Request[prxv1.UpdateProjectRequest],
 ) (*connect.Response[prxv1.UpdateProjectResponse], error) {
 	value, err := h.service.UpdateProject(ctx, req.Msg.GetId(), domain.ProjectUpdate{
-		Slug:        optionalValue(req.Msg.Slug != nil, req.Msg.GetSlug()),
 		Title:       optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
 		Description: optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
 		Archived:    optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
@@ -154,7 +152,6 @@ func (h *Handler) CreateFeature(
 ) (*connect.Response[prxv1.CreateFeatureResponse], error) {
 	value, err := h.service.CreateFeature(
 		ctx,
-		req.Msg.GetSlug(),
 		req.Msg.GetTitle(),
 		req.Msg.GetDescription(),
 		req.Msg.GetProjectId(),
@@ -174,7 +171,6 @@ func (h *Handler) UpdateFeature(
 		return nil, rpcError(err)
 	}
 	value, err := h.service.UpdateFeature(ctx, req.Msg.GetId(), domain.FeatureUpdate{
-		Slug:        optionalValue(req.Msg.Slug != nil, req.Msg.GetSlug()),
 		Title:       optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
 		Description: optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
 		Status:      status,

@@ -46,7 +46,7 @@ func newDebugService(t *testing.T) (*app.Service, string, string) {
 func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 	ctx := context.Background()
 	service, databasePath, configPath := newDebugService(t)
-	project, err := service.CreateProject(ctx, "payments", "Payments", "")
+	project, err := service.CreateProject(ctx, "Payments", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -54,7 +54,7 @@ func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 	if _, err := service.UpdateProject(ctx, project.ID, domain.ProjectUpdate{Archived: &archived}); err != nil {
 		t.Fatal(err)
 	}
-	feature, err := service.CreateFeature(ctx, "checkout", "Checkout", "", "")
+	feature, err := service.CreateFeature(ctx, "Checkout", "", "")
 	if err != nil {
 		t.Fatal(err)
 	}

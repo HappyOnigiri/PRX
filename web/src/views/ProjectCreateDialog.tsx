@@ -19,7 +19,6 @@ export function ProjectCreateDialog({ onClose }: { onClose: () => void }) {
     let response;
     try {
       response = await createProject.mutateAsync({
-        slug: formValue(data, "slug"),
         title: formValue(data, "title"),
         description: formValue(data, "description"),
       });
@@ -45,15 +44,6 @@ export function ProjectCreateDialog({ onClose }: { onClose: () => void }) {
         <header>
           <h2>{t("projectCreate.title")}</h2>
         </header>
-        <label>
-          {t("common.slug")}
-          <input
-            name="slug"
-            required
-            pattern="[a-z0-9]+(?:-[a-z0-9]+)*"
-            placeholder={t("projectCreate.slugPlaceholder")}
-          />
-        </label>
         <label>
           {t("common.title")}
           <input

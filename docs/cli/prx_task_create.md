@@ -3,14 +3,14 @@
 Create an implementation or manual task
 
 ```
-prx task create FEATURE_ID_OR_SLUG TITLE [flags]
+prx task create FEATURE_ID TITLE [flags]
 ```
 
 ### Examples
 
 ```
-prx task create checkout "Add payment intent API" --assignee Mika
-prx task create checkout -- "-fix login redirect"
+prx task create F-1 "Add payment intent API" --assignee Mika
+prx task create F-1 -- "-fix login redirect"
 ```
 
 ### Options

@@ -66,7 +66,6 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 	}
 	platform, err := s.CreateProject(
 		ctx,
-		"delivery-platform",
 		"Delivery platform",
 		"Two related features and the brief they share.",
 	)
@@ -86,7 +85,6 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 	}
 	sunset, err := s.CreateProject(
 		ctx,
-		"sunset-initiative",
 		"Sunset initiative",
 		"An archived project: everything inside it is read-only.",
 	)
@@ -119,7 +117,6 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath, projectID string) error {
 	showcase, err := s.CreateFeature(
 		ctx,
-		"delivery-control",
 		"Delivery control showcase",
 		"Every task and pull-request state in one cross-repository graph.",
 		projectID,
@@ -164,7 +161,6 @@ func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath, projectI
 func (s *Service) createPausedDemo(ctx context.Context, projectID string) error {
 	paused, err := s.CreateFeature(
 		ctx,
-		"paused-rollout",
 		"Paused rollout",
 		"A small branch-and-merge graph with ready and blocked manual work.",
 		projectID,
@@ -220,7 +216,6 @@ func (s *Service) createPausedDemo(ctx context.Context, projectID string) error 
 func (s *Service) createCompletedDemo(ctx context.Context) error {
 	completed, err := s.CreateFeature(
 		ctx,
-		"completed-program",
 		"Completed 100-task program",
 		"A large balanced graph for checking layout and navigation at scale.",
 		"",
@@ -245,7 +240,6 @@ func (s *Service) createCompletedDemo(ctx context.Context) error {
 func (s *Service) createCancelledDemo(ctx context.Context, projectID string) error {
 	cancelled, err := s.CreateFeature(
 		ctx,
-		"cancelled-experiment",
 		"Cancelled experiment",
 		"Archived work remains available for historical inspection.",
 		projectID,
@@ -301,7 +295,6 @@ func (s *Service) createCancelledDemo(ctx context.Context, projectID string) err
 func (s *Service) createSunsetPostmortemDemo(ctx context.Context, projectID string) error {
 	postmortem, err := s.CreateFeature(
 		ctx,
-		"sunset-postmortem",
 		"Sunset postmortem",
 		"Not archived itself: the archived project around it makes it read-only.",
 		projectID,
