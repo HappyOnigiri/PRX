@@ -12,7 +12,14 @@ import { PromptSettingsPanel } from "../src/views/PromptSettingsPanel";
 const panelMocks = vi.hoisted(() => ({
   updateTemplates: vi.fn(),
   templates: {
-    data: undefined as { design: string; implementation: string } | undefined,
+    data: undefined as
+      | {
+          design: string;
+          implementation: string;
+          supportedPlaceholders: string[];
+          requiredPlaceholder: string;
+        }
+      | undefined,
     isPending: false,
     error: null as Error | null,
   },
@@ -45,6 +52,8 @@ describe("PromptSettingsPanel", () => {
     panelMocks.templates.data = {
       design: "Design {{task_id}}",
       implementation: "Build {{task_id}}",
+      supportedPlaceholders: ["task_id", "feature_id"],
+      requiredPlaceholder: "task_id",
     };
     panelMocks.templates.isPending = false;
     panelMocks.templates.error = null;
@@ -68,6 +77,22 @@ describe("PromptSettingsPanel", () => {
     panelMocks.templates.error = new Error("config file is unreadable");
     render(<PromptSettingsPanel />);
     expect(screen.getByText("config file is unreadable")).toBeInTheDocument();
+  });
+
+  // The vocabulary is whatever the server reports, so adding or removing a
+  // placeholder there never leaves this hint advertising a rejected name.
+  it("lists the placeholders the server reported", () => {
+    panelMocks.templates.data = {
+      design: "Design {{task_id}}",
+      implementation: "Build {{task_id}}",
+      supportedPlaceholders: ["task_ref", "milestone_id"],
+      requiredPlaceholder: "task_ref",
+    };
+    render(<PromptSettingsPanel />);
+    expect(
+      screen.getByText(/\{\{task_ref\}\}, \{\{milestone_id\}\}/),
+    ).toBeInTheDocument();
+    expect(screen.getByText(/\{\{task_ref\}\} is required/)).toBeInTheDocument();
   });
 
   it("saves both templates in one write and confirms the result", async () => {

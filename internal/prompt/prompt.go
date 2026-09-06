@@ -96,6 +96,17 @@ Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact su
 Report what you changed and anything the plan did not cover.
 `
 
+// SupportedPlaceholders returns the substitution vocabulary, without the
+// surrounding braces. It exists so a client can present what the server accepts
+// instead of maintaining its own list, which would drift from this one without
+// anything failing.
+func SupportedPlaceholders() []string {
+	return slices.Clone(supportedPlaceholders)
+}
+
+// RequiredPlaceholder returns the placeholder every template must use.
+func RequiredPlaceholder() string { return requiredPlaceholder }
+
 // DefaultTemplates returns the built-in templates used when the configuration
 // does not define its own.
 func DefaultTemplates() Templates {

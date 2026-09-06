@@ -24,7 +24,9 @@ func (h *Handler) GetPromptTemplates(
 		return nil, configRPCError(err)
 	}
 	return connect.NewResponse(&prxv1.GetPromptTemplatesResponse{
-		Templates: protoPromptTemplates(settings.Prompts),
+		Templates:             protoPromptTemplates(settings.Prompts),
+		SupportedPlaceholders: prompt.SupportedPlaceholders(),
+		RequiredPlaceholder:   prompt.RequiredPlaceholder(),
 	}), nil
 }
 

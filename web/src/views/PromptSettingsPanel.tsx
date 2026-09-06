@@ -10,20 +10,6 @@ interface TemplateDraft {
   implementation: string;
 }
 
-// The vocabulary the server accepts. It is listed through an interpolation
-// value so the braces survive: a translation containing them would itself be
-// interpolated away.
-const placeholderNames = [
-  "task_id",
-  "feature_id",
-  "task_title",
-  "task_scope",
-  "task_kind",
-] as const;
-const placeholderList = placeholderNames
-  .map((name) => `{{${name}}}`)
-  .join(", ");
-
 export function PromptSettingsPanel() {
   const { t } = useTranslation();
   const templates = usePromptTemplates();
@@ -53,6 +39,15 @@ export function PromptSettingsPanel() {
     design: templates.data.design,
     implementation: templates.data.implementation,
   };
+
+  // The vocabulary comes from the server so the hint can never advertise a
+  // placeholder the server would reject. Both are interpolation values so the
+  // braces survive: a translation containing them would itself be interpolated
+  // away.
+  const placeholderList = templates.data.supportedPlaceholders
+    .map((name) => `{{${name}}}`)
+    .join(", ");
+  const requiredPlaceholder = `{{${templates.data.requiredPlaceholder}}}`;
 
   // Both templates travel in one request so a configuration write never leaves
   // one of them updated and the other stale.
@@ -97,7 +92,7 @@ export function PromptSettingsPanel() {
         <small>
           {t("promptSettings.placeholders", {
             list: placeholderList,
-            required: "{{task_id}}",
+            required: requiredPlaceholder,
           })}
         </small>
         <div className="settings-form-actions">

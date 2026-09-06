@@ -159,8 +159,18 @@ describe("RPC API wrappers", () => {
 
   it("wraps prompt template reads, writes, and one task prompt", async () => {
     const templates = { design: "Design {{task_id}}", implementation: "" };
-    apiMocks.client.getPromptTemplates.mockResolvedValueOnce({ templates });
-    await expect(getPromptTemplates()).resolves.toBe(templates);
+    apiMocks.client.getPromptTemplates.mockResolvedValueOnce({
+      templates,
+      supportedPlaceholders: ["task_id", "feature_id"],
+      requiredPlaceholder: "task_id",
+    });
+    // The vocabulary travels with the templates so the editor never has to keep
+    // its own copy of what the server accepts.
+    await expect(getPromptTemplates()).resolves.toEqual({
+      ...templates,
+      supportedPlaceholders: ["task_id", "feature_id"],
+      requiredPlaceholder: "task_id",
+    });
     apiMocks.client.getPromptTemplates.mockResolvedValueOnce({});
     await expect(getPromptTemplates()).rejects.toThrow(
       "The server returned empty prompt templates.",

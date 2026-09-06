@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"path/filepath"
+	"slices"
 	"strings"
 	"testing"
 
@@ -67,6 +68,16 @@ func TestRPCPromptTemplatesRoundTripAndDriveTheTaskPrompt(t *testing.T) {
 	}
 	if stored.Msg.GetTemplates().GetDesign() != prompt.DefaultTemplates().Design {
 		t.Fatalf("design template=%q, want the built-in template", stored.Msg.GetTemplates().GetDesign())
+	}
+	// The vocabulary travels with the templates so an editor never has to keep
+	// its own copy of what this server accepts.
+	if !slices.Equal(stored.Msg.GetSupportedPlaceholders(), prompt.SupportedPlaceholders()) {
+		t.Fatalf("supported placeholders=%v, want %v",
+			stored.Msg.GetSupportedPlaceholders(), prompt.SupportedPlaceholders())
+	}
+	if stored.Msg.GetRequiredPlaceholder() != prompt.RequiredPlaceholder() {
+		t.Fatalf("required placeholder=%q, want %q",
+			stored.Msg.GetRequiredPlaceholder(), prompt.RequiredPlaceholder())
 	}
 
 	updated, err := client.UpdatePromptTemplates(ctx, connect.NewRequest(&prxv1.UpdatePromptTemplatesRequest{

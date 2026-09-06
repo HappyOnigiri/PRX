@@ -273,13 +273,25 @@ export const configMutations = {
   validate: () => client.validateConfig(create(ValidateConfigRequestSchema)),
 };
 
-export async function getPromptTemplates(): Promise<PromptTemplates> {
+// PromptTemplateSettings carries the stored templates together with the
+// vocabulary the server accepts, so the editor presents what that server will
+// actually validate against rather than a list of its own.
+export interface PromptTemplateSettings extends PromptTemplates {
+  supportedPlaceholders: string[];
+  requiredPlaceholder: string;
+}
+
+export async function getPromptTemplates(): Promise<PromptTemplateSettings> {
   const response = await client.getPromptTemplates(
     create(GetPromptTemplatesRequestSchema),
   );
   if (!response.templates)
     throw new Error("The server returned empty prompt templates.");
-  return response.templates;
+  return {
+    ...response.templates,
+    supportedPlaceholders: response.supportedPlaceholders,
+    requiredPlaceholder: response.requiredPlaceholder,
+  };
 }
 
 // The prompt is rendered on demand instead of with the snapshot: the template

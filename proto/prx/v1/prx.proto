@@ -1041,6 +1041,12 @@ message GetPromptTemplatesRequest {}
 message GetPromptTemplatesResponse {
   // templates contains both stored templates.
   PromptTemplates templates = 1;
+  // supported_placeholders is the complete substitution vocabulary, without the
+  // surrounding braces. A client presents this list rather than keeping its own
+  // copy, which would drift from what the server accepts.
+  repeated string supported_placeholders = 2;
+  // required_placeholder is the one placeholder every template must use.
+  string required_placeholder = 3;
 }
 
 // UpdatePromptTemplatesRequest replaces both templates in one configuration write.

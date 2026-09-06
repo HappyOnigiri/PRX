@@ -5846,9 +5846,15 @@ func (*GetPromptTemplatesRequest) Descriptor() ([]byte, []int) {
 type GetPromptTemplatesResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// templates contains both stored templates.
-	Templates     *PromptTemplates `protobuf:"bytes,1,opt,name=templates,proto3" json:"templates,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	Templates *PromptTemplates `protobuf:"bytes,1,opt,name=templates,proto3" json:"templates,omitempty"`
+	// supported_placeholders is the complete substitution vocabulary, without the
+	// surrounding braces. A client presents this list rather than keeping its own
+	// copy, which would drift from what the server accepts.
+	SupportedPlaceholders []string `protobuf:"bytes,2,rep,name=supported_placeholders,json=supportedPlaceholders,proto3" json:"supported_placeholders,omitempty"`
+	// required_placeholder is the one placeholder every template must use.
+	RequiredPlaceholder string `protobuf:"bytes,3,opt,name=required_placeholder,json=requiredPlaceholder,proto3" json:"required_placeholder,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *GetPromptTemplatesResponse) Reset() {
@@ -5886,6 +5892,20 @@ func (x *GetPromptTemplatesResponse) GetTemplates() *PromptTemplates {
 		return x.Templates
 	}
 	return nil
+}
+
+func (x *GetPromptTemplatesResponse) GetSupportedPlaceholders() []string {
+	if x != nil {
+		return x.SupportedPlaceholders
+	}
+	return nil
+}
+
+func (x *GetPromptTemplatesResponse) GetRequiredPlaceholder() string {
+	if x != nil {
+		return x.RequiredPlaceholder
+	}
+	return ""
 }
 
 // UpdatePromptTemplatesRequest replaces both templates in one configuration write.
@@ -8607,9 +8627,11 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0fPromptTemplates\x12\x16\n" +
 	"\x06design\x18\x01 \x01(\tR\x06design\x12&\n" +
 	"\x0eimplementation\x18\x02 \x01(\tR\x0eimplementation\"\x1b\n" +
-	"\x19GetPromptTemplatesRequest\"S\n" +
+	"\x19GetPromptTemplatesRequest\"\xbd\x01\n" +
 	"\x1aGetPromptTemplatesResponse\x125\n" +
-	"\ttemplates\x18\x01 \x01(\v2\x17.prx.v1.PromptTemplatesR\ttemplates\"^\n" +
+	"\ttemplates\x18\x01 \x01(\v2\x17.prx.v1.PromptTemplatesR\ttemplates\x125\n" +
+	"\x16supported_placeholders\x18\x02 \x03(\tR\x15supportedPlaceholders\x121\n" +
+	"\x14required_placeholder\x18\x03 \x01(\tR\x13requiredPlaceholder\"^\n" +
 	"\x1cUpdatePromptTemplatesRequest\x12\x16\n" +
 	"\x06design\x18\x01 \x01(\tR\x06design\x12&\n" +
 	"\x0eimplementation\x18\x02 \x01(\tR\x0eimplementation\"V\n" +
