@@ -73,7 +73,7 @@ Feature and task commands list without an identifier and show details with one i
 `show` resolves a feature public ID, feature slug, or task public ID when a feature slug conflicts with a mutation command name.
 Dependency and pull-request commands list when invoked without a mutation subcommand.
 Document commands list without a subcommand and use `document get DOCUMENT_ID` for a detailed read.
-Implementation plans use `plan TASK_ID`, and configuration reads use `config`, `config host`, `config auth`, or `config sync`.
+Implementation plans use `plan TASK_ID`, agent prompts use `prompt TASK_ID`, and configuration reads use `config`, `config host`, `config auth`, or `config sync`.
 Mutation operations retain explicit verbs so state-changing intent remains visible.
 
 Mutations remain non-interactive so people and coding agents use the same surface.
@@ -126,6 +126,34 @@ The rendered report text crosses the RPC boundary, which is otherwise reserved f
 This is a deliberate exception: the CLI and the WebUI must hand a reader exactly the same text, and a second rendering in the browser would drift from the first.
 The response also carries the structured sections, so the browser presents them without re-deriving anything.
 Problem descriptions are not part of that contract: the CLI writes English, and the WebUI translates the identifiers it receives.
+
+## Agent prompt policy
+
+PRX hands one task to an AI agent that does not know PRX, so the prompt has to carry the task, its identifiers, and the commands the agent needs.
+Rendering a prompt never changes task state, readiness, dependencies, or the implementation plan.
+`prx prompt TASK_ID` is still an ordinary read command, so it shares the expired-interval GitHub refresh every other read runs.
+
+Which prompt a task gets is derived from one fact only.
+A task without an implementation plan gets the design prompt, which ends by registering a plan; a task with one gets the implementation prompt, which ends by recording the result.
+Display state, readiness, and task kind describe progress rather than the question being asked, so they never select the template.
+
+The templates are shared configuration rather than browser state, because the CLI and the WebUI must emit the same text.
+Both templates are written together, so one configuration write never leaves a task with a stale half of the pair.
+An omitted or blank template is restored to its built-in default, which keeps a configuration file written before prompts existed loading unchanged.
+A template that still matches its built-in default is left out of the file.
+An installation that never customized one then keeps following the built-in wording after an upgrade, rather than being pinned to whichever version first wrote the file.
+
+A template is plain substitution over a closed vocabulary: `{{task_id}}`, `{{feature_id}}`, `{{task_title}}`, `{{task_scope}}`, and `{{task_kind}}`.
+An unsupported placeholder is rejected instead of being emitted verbatim, and `{{task_id}}` is required so a rendered prompt always names its target.
+Plan bodies are deliberately absent from that vocabulary: a plan may reach 1 MiB or live behind a locator, so the prompt tells the agent to read it with `prx plan TASK_ID`.
+A task created without a scope renders as `(not specified)` rather than an empty line.
+The templates go on to reference that scope, and a receiving agent cannot tell a blank apart from a value that failed to load.
+The vocabulary is served with the stored templates so an editor presents what its own server accepts rather than a copy that could drift from it.
+
+The WebUI copies what the server renders at the moment of the copy rather than what its snapshot last recorded, so a plan registered or deleted meanwhile cannot produce the wrong prompt.
+`prx prompt TASK_ID` prints the prompt body alone, with no header a caller would have to delete before using it.
+The diagnostic report says whether each stored template still matches its built-in text and how long it is.
+That separates an edited template from the one PRX ships without putting user-authored text into the report.
 
 ## Domain policy
 
@@ -223,6 +251,7 @@ No refresh occurs while both the CLI and WebUI are idle.
 Pull requests are fetched through GraphQL in batches that group the repositories of one host into a single request.
 A host whose GraphQL endpoint answers with an HTTP error falls back to fetching each pull request over REST.
 
+The YAML configuration also owns the agent prompt templates, which the CLI and the WebUI both render from.
 The YAML configuration owns the shared interval and each host's GraphQL endpoint.
 The interval defaults to 3600 seconds and cannot be lower than 600 seconds.
 SQLite records the latest attempt and completion, and atomically grants one caller the right to run an expired refresh.

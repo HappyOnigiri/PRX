@@ -7,6 +7,8 @@ import (
 	"path/filepath"
 	"strings"
 	"testing"
+
+	"github.com/HappyOnigiri/PRX/internal/prompt"
 )
 
 func TestNormalizeDefaultsAndRejectsUnsafeValues(t *testing.T) {
@@ -342,5 +344,162 @@ func TestConfigCRUDAndPathPrecedence(t *testing.T) {
 	}
 	if got := PathFromContext(WithPath(context.Background(), overridePath)); got != overridePath {
 		t.Fatalf("context path=%q", got)
+	}
+}
+
+func TestPromptTemplatesLoadDefaultAndSurviveAWrite(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	// A file written before prompts existed still loads, and the built-in
+	// templates fill the gap instead of leaving the CLI without a prompt.
+	legacy := "version: 1\ngithub:\n  hosts:\n    - host: github.com\n"
+	if err := os.WriteFile(path, []byte(legacy), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	loaded, err := store.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if loaded.Prompts != prompt.DefaultTemplates() {
+		t.Fatalf("prompts=%+v, want the built-in templates", loaded.Prompts)
+	}
+
+	custom := prompt.Templates{
+		Design:         "Design {{task_id}}\nsecond line\n",
+		Implementation: "Implement {{task_id}} of {{feature_id}}",
+	}
+	if _, err := store.Update(func(settings *Config) error { return settings.SetPrompts(custom) }); err != nil {
+		t.Fatal(err)
+	}
+	reloaded, err := store.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reloaded.Prompts != custom {
+		t.Fatalf("prompts=%+v, want %+v", reloaded.Prompts, custom)
+	}
+	// An unrelated configuration write must not disturb the stored templates.
+	if _, err := store.Update(func(settings *Config) error {
+		return settings.SetAutoSyncInterval(MinimumAutoSyncIntervalSeconds)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	afterWrite, err := store.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if afterWrite.Prompts != custom {
+		t.Fatalf("prompts=%+v, want %+v", afterWrite.Prompts, custom)
+	}
+}
+
+func TestDefaultPromptTemplatesStayOutOfTheFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A write that has nothing to do with prompts must not freeze the built-in
+	// wording into the file; the installation keeps following later versions.
+	if _, err := store.Update(func(settings *Config) error {
+		return settings.SetAutoSyncInterval(MinimumAutoSyncIntervalSeconds)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	body, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(body), "prompts:") {
+		t.Fatalf("config file contains prompts:\n%s", body)
+	}
+
+	// Only one customized template is stored, and the other one keeps following
+	// the built-in wording.
+	custom := prompt.DefaultTemplates()
+	custom.Design = "Design {{task_id}}\n"
+	if _, err := store.Update(func(settings *Config) error { return settings.SetPrompts(custom) }); err != nil {
+		t.Fatal(err)
+	}
+	body, err = os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), "Design {{task_id}}") {
+		t.Fatalf("config file lost the customized design template:\n%s", body)
+	}
+	if strings.Contains(string(body), "implementation:") {
+		t.Fatalf("config file stored the built-in implementation template:\n%s", body)
+	}
+	reloaded, err := store.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reloaded.Prompts != custom {
+		t.Fatalf("prompts=%+v, want %+v", reloaded.Prompts, custom)
+	}
+}
+
+func TestInvalidPromptTemplateFailsTheConfiguration(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	settings := Default()
+	err = settings.SetPrompts(prompt.Templates{Design: "no target", Implementation: "{{task_id}}"})
+	if err == nil || !strings.Contains(err.Error(), "prompts.design") {
+		t.Fatalf("error=%v, want a rejected design template", err)
+	}
+	if ErrorCodeOf(err) != ErrorCodeInvalid {
+		t.Fatalf("code=%q, want %q", ErrorCodeOf(err), ErrorCodeInvalid)
+	}
+	// The rejected pair is not kept, so the caller still holds a valid value.
+	if settings.Prompts != prompt.DefaultTemplates() {
+		t.Fatalf("prompts=%+v, want the previous templates", settings.Prompts)
+	}
+	if err := store.Save(settings); err != nil {
+		t.Fatal(err)
+	}
+
+	broken := "version: 1\nprompts:\n  design: \"{{plan_body}}\"\n  implementation: \"{{task_id}}\"\n"
+	if err := os.WriteFile(path, []byte(broken), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := store.Load(); err == nil || !strings.Contains(err.Error(), "unsupported placeholder") {
+		t.Fatalf("error=%v, want an unsupported placeholder failure", err)
+	}
+}
+
+func TestDebugInputReportsWhetherPromptsWereEdited(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A report on an untouched installation must not read as "someone edited
+	// the wording", which is the question a bad copied prompt raises.
+	input := store.DebugInput()
+	if input.Prompts.Design.Customized || input.Prompts.Implementation.Customized {
+		t.Fatalf("prompts=%+v, want neither reported as customized", input.Prompts)
+	}
+	if input.Prompts.Design.Bytes != len(prompt.DefaultTemplates().Design) {
+		t.Fatalf("design bytes=%d", input.Prompts.Design.Bytes)
+	}
+
+	custom := prompt.DefaultTemplates()
+	custom.Design = "Design {{task_id}}\n"
+	if _, err := store.Update(func(settings *Config) error { return settings.SetPrompts(custom) }); err != nil {
+		t.Fatal(err)
+	}
+	edited := store.DebugInput()
+	if !edited.Prompts.Design.Customized || edited.Prompts.Implementation.Customized {
+		t.Fatalf("prompts=%+v, want only the design template reported as customized", edited.Prompts)
+	}
+	if edited.Prompts.Design.Bytes != len(custom.Design) {
+		t.Fatalf("design bytes=%d, want %d", edited.Prompts.Design.Bytes, len(custom.Design))
 	}
 }

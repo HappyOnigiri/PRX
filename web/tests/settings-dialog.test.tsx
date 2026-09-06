@@ -86,7 +86,18 @@ const settingsMocks = vi.hoisted(() => {
       error: null as Error | null,
       refetch: vi.fn(),
     },
+    promptTemplates: {
+      data: {
+        design: "Design {{task_id}}",
+        implementation: "Build {{task_id}}",
+        supportedPlaceholders: ["task_id", "feature_id"],
+        requiredPlaceholder: "task_id",
+      },
+      isPending: false,
+      error: null as Error | null,
+    },
     mutations: {
+      updatePrompts: mutation(),
       addHost: mutation(),
       updateHost: mutation(),
       deleteHost: mutation(),
@@ -99,11 +110,16 @@ const settingsMocks = vi.hoisted(() => {
   };
 });
 
-vi.mock("../src/api", () => ({ configMutations: settingsMocks.api }));
+vi.mock("../src/api", () => ({
+  configMutations: settingsMocks.api,
+  promptMutations: { updateTemplates: vi.fn() },
+}));
 vi.mock("../src/hooks", () => ({
   useConfig: () => settingsMocks.config,
   useDebugReport: () => settingsMocks.debugReport,
   useQueryDiagnostics: () => [{ name: "snapshot", state: "success, idle" }],
+  usePromptTemplates: () => settingsMocks.promptTemplates,
+  usePromptTemplatesMutation: () => settingsMocks.mutations.updatePrompts,
   useConfigMutation: (mutation: unknown) => {
     const entries: [
       unknown,
@@ -381,6 +397,7 @@ describe("SettingsDialog", () => {
   it("keeps server drafts mounted while navigating tabs by keyboard", () => {
     render(<SettingsDialog onClose={vi.fn()} />);
     const serverTab = screen.getByRole("tab", { name: "Server" });
+    const promptsTab = screen.getByRole("tab", { name: "Prompts" });
     const displayTab = screen.getByRole("tab", { name: "Display" });
     const licensesTab = screen.getByRole("tab", { name: "Licenses" });
     const hostForm = screen
@@ -393,6 +410,8 @@ describe("SettingsDialog", () => {
     });
 
     fireEvent.keyDown(serverTab, { key: "ArrowRight" });
+    expect(promptsTab).toHaveFocus();
+    fireEvent.keyDown(promptsTab, { key: "ArrowRight" });
     expect(displayTab).toHaveFocus();
     expect(displayTab).toHaveAttribute("aria-selected", "true");
     expect(
@@ -411,6 +430,20 @@ describe("SettingsDialog", () => {
     expect(serverTab).toHaveFocus();
     fireEvent.keyDown(serverTab, { key: "ArrowLeft" });
     expect(licensesTab).toHaveFocus();
+  });
+
+  it("keeps unsaved prompt edits while navigating away and back", () => {
+    render(<SettingsDialog onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole("tab", { name: "Prompts" }));
+    const design = screen.getByLabelText(/Design prompt/);
+    fireEvent.change(design, { target: { value: "Draft {{task_id}}" } });
+
+    fireEvent.click(screen.getByRole("tab", { name: "Display" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Prompts" }));
+
+    expect(screen.getByLabelText(/Design prompt/)).toHaveValue(
+      "Draft {{task_id}}",
+    );
   });
 
   it("lists bundled OSS packages and their licenses", async () => {

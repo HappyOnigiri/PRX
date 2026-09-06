@@ -129,6 +129,15 @@ const (
 	// PRXServiceValidateConfigProcedure is the fully-qualified name of the PRXService's ValidateConfig
 	// RPC.
 	PRXServiceValidateConfigProcedure = "/prx.v1.PRXService/ValidateConfig"
+	// PRXServiceGetPromptTemplatesProcedure is the fully-qualified name of the PRXService's
+	// GetPromptTemplates RPC.
+	PRXServiceGetPromptTemplatesProcedure = "/prx.v1.PRXService/GetPromptTemplates"
+	// PRXServiceUpdatePromptTemplatesProcedure is the fully-qualified name of the PRXService's
+	// UpdatePromptTemplates RPC.
+	PRXServiceUpdatePromptTemplatesProcedure = "/prx.v1.PRXService/UpdatePromptTemplates"
+	// PRXServiceGetTaskPromptProcedure is the fully-qualified name of the PRXService's GetTaskPrompt
+	// RPC.
+	PRXServiceGetTaskPromptProcedure = "/prx.v1.PRXService/GetTaskPrompt"
 )
 
 // PRXServiceClient is a client for the prx.v1.PRXService service.
@@ -203,6 +212,12 @@ type PRXServiceClient interface {
 	ReorderGitHubAuthMethods(context.Context, *connect.Request[v1.ReorderGitHubAuthMethodsRequest]) (*connect.Response[v1.ReorderGitHubAuthMethodsResponse], error)
 	// ValidateConfig validates the YAML configuration without changing it.
 	ValidateConfig(context.Context, *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error)
+	// GetPromptTemplates returns the stored agent prompt templates.
+	GetPromptTemplates(context.Context, *connect.Request[v1.GetPromptTemplatesRequest]) (*connect.Response[v1.GetPromptTemplatesResponse], error)
+	// UpdatePromptTemplates replaces both agent prompt templates in one write.
+	UpdatePromptTemplates(context.Context, *connect.Request[v1.UpdatePromptTemplatesRequest]) (*connect.Response[v1.UpdatePromptTemplatesResponse], error)
+	// GetTaskPrompt returns the expanded agent prompt for one task.
+	GetTaskPrompt(context.Context, *connect.Request[v1.GetTaskPromptRequest]) (*connect.Response[v1.GetTaskPromptResponse], error)
 }
 
 // NewPRXServiceClient constructs a client for the prx.v1.PRXService service. By default, it uses
@@ -426,6 +441,24 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(pRXServiceMethods.ByName("ValidateConfig")),
 			connect.WithClientOptions(opts...),
 		),
+		getPromptTemplates: connect.NewClient[v1.GetPromptTemplatesRequest, v1.GetPromptTemplatesResponse](
+			httpClient,
+			baseURL+PRXServiceGetPromptTemplatesProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("GetPromptTemplates")),
+			connect.WithClientOptions(opts...),
+		),
+		updatePromptTemplates: connect.NewClient[v1.UpdatePromptTemplatesRequest, v1.UpdatePromptTemplatesResponse](
+			httpClient,
+			baseURL+PRXServiceUpdatePromptTemplatesProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("UpdatePromptTemplates")),
+			connect.WithClientOptions(opts...),
+		),
+		getTaskPrompt: connect.NewClient[v1.GetTaskPromptRequest, v1.GetTaskPromptResponse](
+			httpClient,
+			baseURL+PRXServiceGetTaskPromptProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("GetTaskPrompt")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -466,6 +499,9 @@ type pRXServiceClient struct {
 	deleteGitHubAuthMethod   *connect.Client[v1.DeleteGitHubAuthMethodRequest, v1.DeleteGitHubAuthMethodResponse]
 	reorderGitHubAuthMethods *connect.Client[v1.ReorderGitHubAuthMethodsRequest, v1.ReorderGitHubAuthMethodsResponse]
 	validateConfig           *connect.Client[v1.ValidateConfigRequest, v1.ValidateConfigResponse]
+	getPromptTemplates       *connect.Client[v1.GetPromptTemplatesRequest, v1.GetPromptTemplatesResponse]
+	updatePromptTemplates    *connect.Client[v1.UpdatePromptTemplatesRequest, v1.UpdatePromptTemplatesResponse]
+	getTaskPrompt            *connect.Client[v1.GetTaskPromptRequest, v1.GetTaskPromptResponse]
 }
 
 // GetSnapshot calls prx.v1.PRXService.GetSnapshot.
@@ -643,6 +679,21 @@ func (c *pRXServiceClient) ValidateConfig(ctx context.Context, req *connect.Requ
 	return c.validateConfig.CallUnary(ctx, req)
 }
 
+// GetPromptTemplates calls prx.v1.PRXService.GetPromptTemplates.
+func (c *pRXServiceClient) GetPromptTemplates(ctx context.Context, req *connect.Request[v1.GetPromptTemplatesRequest]) (*connect.Response[v1.GetPromptTemplatesResponse], error) {
+	return c.getPromptTemplates.CallUnary(ctx, req)
+}
+
+// UpdatePromptTemplates calls prx.v1.PRXService.UpdatePromptTemplates.
+func (c *pRXServiceClient) UpdatePromptTemplates(ctx context.Context, req *connect.Request[v1.UpdatePromptTemplatesRequest]) (*connect.Response[v1.UpdatePromptTemplatesResponse], error) {
+	return c.updatePromptTemplates.CallUnary(ctx, req)
+}
+
+// GetTaskPrompt calls prx.v1.PRXService.GetTaskPrompt.
+func (c *pRXServiceClient) GetTaskPrompt(ctx context.Context, req *connect.Request[v1.GetTaskPromptRequest]) (*connect.Response[v1.GetTaskPromptResponse], error) {
+	return c.getTaskPrompt.CallUnary(ctx, req)
+}
+
 // PRXServiceHandler is an implementation of the prx.v1.PRXService service.
 type PRXServiceHandler interface {
 	// GetSnapshot returns the current normalized dataset and derived queues.
@@ -715,6 +766,12 @@ type PRXServiceHandler interface {
 	ReorderGitHubAuthMethods(context.Context, *connect.Request[v1.ReorderGitHubAuthMethodsRequest]) (*connect.Response[v1.ReorderGitHubAuthMethodsResponse], error)
 	// ValidateConfig validates the YAML configuration without changing it.
 	ValidateConfig(context.Context, *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error)
+	// GetPromptTemplates returns the stored agent prompt templates.
+	GetPromptTemplates(context.Context, *connect.Request[v1.GetPromptTemplatesRequest]) (*connect.Response[v1.GetPromptTemplatesResponse], error)
+	// UpdatePromptTemplates replaces both agent prompt templates in one write.
+	UpdatePromptTemplates(context.Context, *connect.Request[v1.UpdatePromptTemplatesRequest]) (*connect.Response[v1.UpdatePromptTemplatesResponse], error)
+	// GetTaskPrompt returns the expanded agent prompt for one task.
+	GetTaskPrompt(context.Context, *connect.Request[v1.GetTaskPromptRequest]) (*connect.Response[v1.GetTaskPromptResponse], error)
 }
 
 // NewPRXServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -934,6 +991,24 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(pRXServiceMethods.ByName("ValidateConfig")),
 		connect.WithHandlerOptions(opts...),
 	)
+	pRXServiceGetPromptTemplatesHandler := connect.NewUnaryHandler(
+		PRXServiceGetPromptTemplatesProcedure,
+		svc.GetPromptTemplates,
+		connect.WithSchema(pRXServiceMethods.ByName("GetPromptTemplates")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceUpdatePromptTemplatesHandler := connect.NewUnaryHandler(
+		PRXServiceUpdatePromptTemplatesProcedure,
+		svc.UpdatePromptTemplates,
+		connect.WithSchema(pRXServiceMethods.ByName("UpdatePromptTemplates")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceGetTaskPromptHandler := connect.NewUnaryHandler(
+		PRXServiceGetTaskPromptProcedure,
+		svc.GetTaskPrompt,
+		connect.WithSchema(pRXServiceMethods.ByName("GetTaskPrompt")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/prx.v1.PRXService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PRXServiceGetSnapshotProcedure:
@@ -1006,6 +1081,12 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceReorderGitHubAuthMethodsHandler.ServeHTTP(w, r)
 		case PRXServiceValidateConfigProcedure:
 			pRXServiceValidateConfigHandler.ServeHTTP(w, r)
+		case PRXServiceGetPromptTemplatesProcedure:
+			pRXServiceGetPromptTemplatesHandler.ServeHTTP(w, r)
+		case PRXServiceUpdatePromptTemplatesProcedure:
+			pRXServiceUpdatePromptTemplatesHandler.ServeHTTP(w, r)
+		case PRXServiceGetTaskPromptProcedure:
+			pRXServiceGetTaskPromptHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1153,4 +1234,16 @@ func (UnimplementedPRXServiceHandler) ReorderGitHubAuthMethods(context.Context, 
 
 func (UnimplementedPRXServiceHandler) ValidateConfig(context.Context, *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.ValidateConfig is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) GetPromptTemplates(context.Context, *connect.Request[v1.GetPromptTemplatesRequest]) (*connect.Response[v1.GetPromptTemplatesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetPromptTemplates is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) UpdatePromptTemplates(context.Context, *connect.Request[v1.UpdatePromptTemplatesRequest]) (*connect.Response[v1.UpdatePromptTemplatesResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.UpdatePromptTemplates is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) GetTaskPrompt(context.Context, *connect.Request[v1.GetTaskPromptRequest]) (*connect.Response[v1.GetTaskPromptResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetTaskPrompt is not implemented"))
 }

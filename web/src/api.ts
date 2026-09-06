@@ -22,7 +22,9 @@ import {
   GetDebugReportRequestSchema,
   GetDocumentRequestSchema,
   GetGitHubSyncStatusRequestSchema,
+  GetPromptTemplatesRequestSchema,
   GetSnapshotRequestSchema,
+  GetTaskPromptRequestSchema,
   PRXService,
   ReadDocumentContentRequestSchema,
   RemoveDependencyRequestSchema,
@@ -36,13 +38,16 @@ import {
   UpdateGitHubHostRequestSchema,
   UpdateGitHubSyncConfigRequestSchema,
   UpdateProjectRequestSchema,
+  UpdatePromptTemplatesRequestSchema,
   UpdateTaskRequestSchema,
   ValidateConfigRequestSchema,
   type DebugReport,
   type FeatureStatus,
+  type GetTaskPromptResponse,
   type GithubAuthMethodType,
   type GitHubConfig,
   type GitHubSyncStatus,
+  type PromptTemplates,
   type Snapshot,
   type TaskKind,
   type TaskStatus,
@@ -266,6 +271,43 @@ export const configMutations = {
       create(UpdateGitHubSyncConfigRequestSchema, { intervalSeconds }),
     ),
   validate: () => client.validateConfig(create(ValidateConfigRequestSchema)),
+};
+
+// PromptTemplateSettings carries the stored templates together with the
+// vocabulary the server accepts, so the editor presents what that server will
+// actually validate against rather than a list of its own.
+export interface PromptTemplateSettings extends PromptTemplates {
+  supportedPlaceholders: string[];
+  requiredPlaceholder: string;
+}
+
+export async function getPromptTemplates(): Promise<PromptTemplateSettings> {
+  const response = await client.getPromptTemplates(
+    create(GetPromptTemplatesRequestSchema),
+  );
+  if (!response.templates)
+    throw new Error("The server returned empty prompt templates.");
+  return {
+    ...response.templates,
+    supportedPlaceholders: response.supportedPlaceholders,
+    requiredPlaceholder: response.requiredPlaceholder,
+  };
+}
+
+// The prompt is rendered on demand instead of with the snapshot: the template
+// the server picks depends on whether the task has an implementation plan right
+// now, and a cached snapshot may already disagree with that.
+export async function getTaskPrompt(
+  taskId: string,
+): Promise<GetTaskPromptResponse> {
+  return client.getTaskPrompt(create(GetTaskPromptRequestSchema, { taskId }));
+}
+
+export const promptMutations = {
+  updateTemplates: (input: { design: string; implementation: string }) =>
+    client.updatePromptTemplates(
+      create(UpdatePromptTemplatesRequestSchema, input),
+    ),
 };
 
 export async function readDocumentContent(id: string): Promise<string> {

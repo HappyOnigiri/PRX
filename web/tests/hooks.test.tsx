@@ -7,6 +7,8 @@ import {
   useConfigMutation,
   useDebugReport,
   useDomainMutation,
+  usePromptTemplates,
+  usePromptTemplatesMutation,
   useQueryDiagnostics,
   useSnapshot,
 } from "../src/hooks";
@@ -18,6 +20,7 @@ const hookMocks = vi.hoisted(() => ({
   getConfig: vi.fn(),
   getSyncStatus: vi.fn(),
   syncIfDue: vi.fn(),
+  getPromptTemplates: vi.fn(),
 }));
 
 vi.mock("../src/api", () => ({
@@ -26,6 +29,7 @@ vi.mock("../src/api", () => ({
   getConfig: hookMocks.getConfig,
   getSyncStatus: hookMocks.getSyncStatus,
   syncIfDue: hookMocks.syncIfDue,
+  getPromptTemplates: hookMocks.getPromptTemplates,
 }));
 
 function createWrapper(queryClient: QueryClient) {
@@ -132,6 +136,39 @@ describe("domain query hooks", () => {
       queryKey: ["github-config"],
     });
   });
+  it("reads prompt templates and refreshes them after a write", async () => {
+    const templates = { design: "Design {{task_id}}", implementation: "" };
+    hookMocks.getPromptTemplates.mockResolvedValue(templates);
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+
+    const { result } = renderHook(() => usePromptTemplates(), {
+      wrapper: createWrapper(queryClient),
+    });
+    await waitFor(() => {
+      expect(result.current.data).toBe(templates);
+    });
+
+    const mutation = vi.fn().mockResolvedValue("saved");
+    const mutationHook = renderHook(
+      () => usePromptTemplatesMutation(mutation),
+      {
+        wrapper: createWrapper(queryClient),
+      },
+    );
+    await expect(
+      mutationHook.result.current.mutateAsync("input"),
+    ).resolves.toBe("saved");
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["prompt-templates"],
+    });
+  });
+
   it("requests the debug report only once the panel asks for it", async () => {
     const report = {
       report: { problems: [] },

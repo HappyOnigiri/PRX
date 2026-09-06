@@ -6,6 +6,7 @@ export const shell = {
       title: "Settings",
       tabs: {
         server: "Server",
+        prompts: "Prompts",
         display: "Display",
         debug: "Debug",
         licenses: "Licenses",
@@ -120,6 +121,7 @@ export const shell = {
       title: "設定",
       tabs: {
         server: "サーバー",
+        prompts: "プロンプト",
         display: "表示",
         debug: "デバッグ",
         licenses: "ライセンス",
