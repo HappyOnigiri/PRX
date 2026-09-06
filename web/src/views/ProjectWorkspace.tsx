@@ -1,7 +1,8 @@
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
 import { ArrowLeft, Pencil } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
+import type { FeatureTabId } from "../feature-tabs";
 import type { Document, Feature, Project } from "../gen/prx/v1/prx_pb";
 import { useSnapshot } from "../hooks";
 import { documentsInProject, featuresInProject } from "../project";
@@ -16,6 +17,7 @@ import { type TaskNodeDocument } from "./TaskNode";
 export function ProjectWorkspace() {
   const { t } = useTranslation();
   const { projectId } = useParams({ from: "/projects/$projectId" });
+  const { features: tab } = useSearch({ from: "/projects/$projectId" });
   const navigate = useNavigate();
   const snapshot = useSnapshot();
   const [showEdit, setShowEdit] = useState(false);
@@ -50,6 +52,14 @@ export function ProjectWorkspace() {
       project={project}
       features={featuresInProject(data.features, projectId)}
       documents={documentsInProject(data.documents, projectId)}
+      tab={tab}
+      onSelectTab={(next) => {
+        void navigate({
+          to: "/projects/$projectId",
+          params: { projectId },
+          search: { features: next },
+        });
+      }}
       previewDocument={previewDocument}
       showEdit={showEdit}
       onPreviewDocument={setPreviewDocument}
@@ -73,6 +83,8 @@ interface ProjectContentProps {
   project: Project;
   features: Feature[];
   documents: Document[];
+  tab: FeatureTabId;
+  onSelectTab: (tab: FeatureTabId) => void;
   previewDocument: TaskNodeDocument | undefined;
   showEdit: boolean;
   onPreviewDocument: (document: TaskNodeDocument) => void;
@@ -127,7 +139,12 @@ function ProjectContent(props: ProjectContentProps) {
         </div>
       )}
       <div className="workspace-body project-body">
-        <ProjectFeatureList features={props.features} />
+        <ProjectFeatureList
+          features={props.features}
+          tab={props.tab}
+          onSelectTab={props.onSelectTab}
+          idPrefix="project-features"
+        />
       </div>
       <ProjectOverlays props={props} />
     </div>

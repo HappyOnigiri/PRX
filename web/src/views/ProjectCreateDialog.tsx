@@ -31,6 +31,7 @@ export function ProjectCreateDialog({ onClose }: { onClose: () => void }) {
       await navigate({
         to: "/projects/$projectId",
         params: { projectId: response.project.id },
+        search: { features: "active" },
       });
   }
 

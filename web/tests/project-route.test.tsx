@@ -58,7 +58,7 @@ describe("Project list route", () => {
 
   // The archived view is a URL state so reload, history, and a shared link
   // reproduce it, and the sidebar reaches the page at every viewport width.
-  it("keeps the archive toggle in the URL and links from the sidebar", async () => {
+  it("keeps the archive tab in the URL and links from the sidebar", async () => {
     render(<RouterProvider router={router} />);
 
     const navigation = screen.getByRole("navigation", {
@@ -76,7 +76,7 @@ describe("Project list route", () => {
     expect(list).toHaveTextContent("1 feature");
     expect(list).not.toHaveTextContent("1 features");
 
-    fireEvent.click(screen.getByRole("button", { name: "Show archived" }));
+    fireEvent.click(screen.getByRole("tab", { name: "Archived" }));
     await waitFor(() => {
       expect(router.state.location.search).toEqual({ archived: true });
     });

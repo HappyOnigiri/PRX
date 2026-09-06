@@ -1,5 +1,3 @@
-import { featureCategoryIds, type FeatureCategoryId } from "../feature-status";
-
 export const supportedLanguages = ["en", "ja"] as const;
 export type SupportedLanguage = (typeof supportedLanguages)[number];
 
@@ -9,7 +7,6 @@ export type ResolvedTheme = Exclude<ThemePreference, "system">;
 
 export const webUISettingsKey = "prx.webui.settings";
 const defaultGraphZoom = 1;
-const defaultFeatureCategory: FeatureCategoryId = "active";
 export const minGraphZoom = 0.08;
 export const maxGraphZoom = 1.7;
 
@@ -17,7 +14,7 @@ interface WebUISettings {
   language?: SupportedLanguage;
   graphZoom?: number;
   theme?: ThemePreference;
-  featureCategory?: FeatureCategoryId;
+  collapsedProjects?: string[];
 }
 
 function isSupportedLanguage(value: unknown): value is SupportedLanguage {
@@ -28,8 +25,11 @@ function isThemePreference(value: unknown): value is ThemePreference {
   return themePreferences.includes(value as ThemePreference);
 }
 
-function isFeatureCategoryId(value: unknown): value is FeatureCategoryId {
-  return featureCategoryIds.includes(value as FeatureCategoryId);
+function isCollapsedProjects(value: unknown): value is string[] {
+  return (
+    Array.isArray(value) &&
+    value.every((entry) => typeof entry === "string" && entry !== "")
+  );
 }
 
 export function readWebUISettings(): WebUISettings {
@@ -42,14 +42,14 @@ export function readWebUISettings(): WebUISettings {
       language?: unknown;
       graphZoom?: unknown;
       theme?: unknown;
-      featureCategory?: unknown;
+      collapsedProjects?: unknown;
     };
     const settings: WebUISettings = {};
     if (isSupportedLanguage(candidate.language))
       settings.language = candidate.language;
     if (isThemePreference(candidate.theme)) settings.theme = candidate.theme;
-    if (isFeatureCategoryId(candidate.featureCategory))
-      settings.featureCategory = candidate.featureCategory;
+    if (isCollapsedProjects(candidate.collapsedProjects))
+      settings.collapsedProjects = candidate.collapsedProjects;
     if (
       typeof candidate.graphZoom === "number" &&
       Number.isFinite(candidate.graphZoom) &&
@@ -85,21 +85,22 @@ export function writeGraphZoom(graphZoom: number) {
   }
 }
 
-// The selected sidebar category is adjusted while working rather than from
-// the Settings dialog, so it is stored the way graph zoom is.
-export function readFeatureCategory(): FeatureCategoryId {
-  return readWebUISettings().featureCategory ?? defaultFeatureCategory;
+// Which sidebar projects are collapsed is adjusted while working rather than
+// from the Settings dialog, so it is stored the way graph zoom is. Only the
+// collapsed IDs are kept, which makes an unknown project expanded by default.
+export function readCollapsedProjects(): string[] {
+  return readWebUISettings().collapsedProjects ?? [];
 }
 
-export function writeFeatureCategory(featureCategory: FeatureCategoryId) {
+export function writeCollapsedProjects(collapsedProjects: string[]) {
   try {
     const settings = readWebUISettings();
     localStorage.setItem(
       webUISettingsKey,
-      JSON.stringify({ ...settings, featureCategory }),
+      JSON.stringify({ ...settings, collapsedProjects }),
     );
   } catch {
-    // The selection still holds for this session when storage is unavailable.
+    // The rows still fold for this session when storage is unavailable.
   }
 }
 

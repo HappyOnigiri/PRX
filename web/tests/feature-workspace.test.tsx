@@ -346,6 +346,8 @@ describe("FeatureWorkspace", () => {
     expect(screen.getByRole("button", { name: "Syncing…" })).toBeDisabled();
   });
 
+  // Deleting returns to the list the feature was reachable from, which for a
+  // read-only one without a project is the unaffiliated archive tab.
   it("makes archived workspaces read-only and returns deletion to the archive", () => {
     workspaceMocks.snapshot.data = makeSnapshot({
       features: [{ ...feature, archived: true, readOnly: true }],
@@ -372,7 +374,31 @@ describe("FeatureWorkspace", () => {
     fireEvent.click(
       screen.getByRole("button", { name: "Mock delete feature" }),
     );
-    expect(workspaceMocks.navigate).toHaveBeenCalledWith({ to: "/archived" });
+    expect(workspaceMocks.navigate).toHaveBeenCalledWith({
+      to: "/projects/unassigned",
+      search: { features: "archived" },
+    });
+  });
+
+  it("returns deletion of a project member to that project's archive tab", () => {
+    workspaceMocks.snapshot.data = makeSnapshot({
+      projects: [makeProject({ id: "project-1", title: "Delivery platform" })],
+      features: [
+        { ...feature, projectId: "project-1", archived: true, readOnly: true },
+      ],
+      tasks: [task],
+    });
+    render(<FeatureWorkspace />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Manage feature" }));
+    fireEvent.click(
+      screen.getByRole("button", { name: "Mock delete feature" }),
+    );
+    expect(workspaceMocks.navigate).toHaveBeenCalledWith({
+      to: "/projects/$projectId",
+      params: { projectId: "project-1" },
+      search: { features: "archived" },
+    });
   });
 
   // A feature can be read-only without being archived itself. The remedy is on

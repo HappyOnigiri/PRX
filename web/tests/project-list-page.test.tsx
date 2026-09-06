@@ -68,7 +68,7 @@ describe("ProjectListPage", () => {
     expect(listMocks.state.refetch).toHaveBeenCalledOnce();
   });
 
-  it("explains an empty list differently for the archived view", () => {
+  it("explains an empty list differently for the archived tab", () => {
     listMocks.state.isPending = false;
     listMocks.state.data = makeSnapshot({ projects: [], features: [] });
     const { rerender } = render(<ProjectListPage />);
@@ -81,6 +81,34 @@ describe("ProjectListPage", () => {
     expect(
       screen.getByRole("heading", { name: "No archived projects" }),
     ).toBeInTheDocument();
+  });
+
+  // A project is either in play or archived, so the strip carries two tabs and
+  // the selection travels through the URL rather than component state.
+  it("moves between the two tabs by navigating", () => {
+    listMocks.state.isPending = false;
+    listMocks.state.data = makeSnapshot({
+      projects: [
+        makeProject({ id: "P-1", title: "Delivery platform" }),
+        makeProject({ id: "P-2", title: "Sunset initiative", archived: true }),
+      ],
+      features: [],
+    });
+    render(<ProjectListPage />);
+
+    expect(screen.getByRole("tab", { name: "Active" })).toHaveAttribute(
+      "aria-selected",
+      "true",
+    );
+    const list = screen.getByRole("region", { name: "Project list" });
+    expect(list).toHaveTextContent("Delivery platform");
+    expect(list).not.toHaveTextContent("Sunset initiative");
+
+    fireEvent.click(screen.getByRole("tab", { name: "Archived" }));
+    expect(listMocks.navigate).toHaveBeenCalledWith({
+      to: "/projects",
+      search: { archived: true },
+    });
   });
 
   it("creates a project and opens its workspace", async () => {
@@ -103,6 +131,7 @@ describe("ProjectListPage", () => {
       expect(listMocks.navigate).toHaveBeenCalledWith({
         to: "/projects/$projectId",
         params: { projectId: "P-7" },
+        search: { features: "active" },
       });
     });
     expect(listMocks.createProject).toHaveBeenCalledWith({

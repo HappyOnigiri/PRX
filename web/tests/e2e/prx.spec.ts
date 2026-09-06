@@ -725,20 +725,13 @@ test("archives and safely deletes a feature", async ({ page }) => {
     .getByRole("button", { name: "Archive feature" })
     .click();
   await expect(page.getByText("Archived · read-only")).toBeVisible();
-  // The rail holds the category the user selected, so archiving from the
-  // workspace drops the feature out of the list it is showing.
+  // The rail tree shows the features in flight, so archiving from the
+  // workspace drops this one out of it. The feature belongs to no project, so
+  // the unaffiliated page is where it is now listed.
   const rail = page.getByRole("navigation", { name: "PRX navigation" });
-  await expect(
-    rail.getByRole("link", { name: /Active features/ }),
-  ).toHaveAttribute("aria-current", "page");
   await expect(rail.getByText(title)).toHaveCount(0);
-  await page.getByRole("link", { name: /Archived features/ }).click();
-  await expect(
-    page.getByRole("heading", { name: "Archived features", exact: true }),
-  ).toBeVisible();
-  // Selecting the category lists the feature in the rail too, so open the one
-  // on the page.
-  await page.locator(".feature-list").getByText(title).click();
+  await page.goto("/projects/unassigned?features=archived");
+  await page.getByRole("tabpanel").getByText(title).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toHaveCount(
     0,
   );
@@ -753,11 +746,9 @@ test("archives and safely deletes a feature", async ({ page }) => {
   await page.getByRole("button", { name: "Manage feature" }).click();
   await page.getByRole("button", { name: "Restore feature" }).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toBeVisible();
-  // Restoring returns the feature to the working set, which the rail shows
-  // once that category is selected again.
-  await page.getByRole("link", { name: /Active features/ }).click();
+  // Restoring returns the feature to the working set, so the rail tree picks
+  // it up again without any navigation.
   await expect(rail.getByText(title)).toHaveCount(1);
-  await page.locator(".feature-list").getByText(title).click();
 
   await page.getByRole("button", { name: "Edit feature" }).click();
   await page.getByRole("button", { name: "Archive feature" }).click();
@@ -780,7 +771,7 @@ test("archives and safely deletes a feature", async ({ page }) => {
     .getByRole("button", { name: "Delete permanently" })
     .click();
   await expect(
-    page.getByRole("heading", { name: "Archived features", exact: true }),
+    page.getByRole("heading", { name: "No project", level: 1 }),
   ).toBeVisible();
   await expect(page.getByText(title)).toHaveCount(0);
 });
@@ -789,7 +780,11 @@ test("archives and safely deletes a feature", async ({ page }) => {
 // it off the overview and onto the completed list.
 for (const { title, size, from } of [
   { title: "Delivery control showcase", size: 13, from: "/" },
-  { title: "Completed 100-task program", size: 100, from: "/completed" },
+  {
+    title: "Completed 100-task program",
+    size: 100,
+    from: "/projects/unassigned?features=completed",
+  },
 ]) {
   test(`renders and inspects the ${size}-node graph`, async ({ page }) => {
     await page.goto(from);
@@ -882,7 +877,7 @@ test("keeps the user's graph zoom across features and reloads", async ({
   await expect.poll(() => graphZoom(page)).toBeLessThan(1);
   const savedZoom = await graphZoom(page);
 
-  await page.getByRole("link", { name: /Completed features/ }).click();
+  await page.goto("/projects/unassigned?features=completed");
   await page
     .getByRole("link", { name: /Completed 100-task program/ })
     .first()
@@ -917,9 +912,10 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
     expect(
       dashboardSyncBounds.x + dashboardSyncBounds.width,
     ).toBeLessThanOrEqual(320);
-  await expect(
-    page.getByRole("link", { name: /Archived features/ }),
-  ).toBeVisible();
+  // The tree cannot sit in the one-row rail at this width, but the Projects
+  // link stays and its page carries the tree's job.
+  await expect(page.getByRole("link", { name: /Projects/ })).toBeVisible();
+  await expect(page.locator(".rail .nav-tree")).toBeHidden();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
   await openDisplaySettings(page);
   await page.getByLabel("Display language").selectOption("ja");

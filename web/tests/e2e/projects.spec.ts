@@ -48,28 +48,27 @@ test("presents the demo projects and their shared references", async ({
   await expect(list).toContainText("Delivery platform");
   await expect(list).not.toContainText("Sunset initiative");
 
-  await page.getByRole("button", { name: "Show archived" }).click();
+  await page.getByRole("tab", { name: "Archived" }).click();
   await expect(page).toHaveURL(/archived=true/);
   await expect(
     page.getByRole("region", { name: "Project list" }),
   ).toContainText("Sunset initiative");
 
-  // Reloading has to reproduce the archived view, which is why the toggle
-  // lives in the URL rather than in browser-local state.
+  // Reloading has to reproduce the archived view, which is why the tab lives
+  // in the URL rather than in browser-local state.
   await page.reload();
   await expect(
     page.getByRole("region", { name: "Project list" }),
   ).toContainText("Sunset initiative");
-  await page.getByRole("button", { name: "Show active" }).click();
+  await page.getByRole("tab", { name: "Active" }).click();
 
   await page
     .getByRole("region", { name: "Project list" })
     .getByText("Delivery platform")
     .click();
-  const features = page.getByRole("region", {
-    name: "Features in this project",
-  });
-  await expect(features).toContainText("Delivery control showcase");
+  await expect(page.getByRole("tabpanel")).toContainText(
+    "Delivery control showcase",
+  );
   await page.getByRole("button", { name: "References" }).click();
   await expect(page.getByRole("region", { name: "References" })).toContainText(
     "Platform charter",
@@ -111,9 +110,7 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
 
   // The sidebar links to the project too, so follow the one in the header.
   await page.locator(".workspace-project-link").click();
-  await expect(
-    page.getByRole("region", { name: "Features in this project" }),
-  ).toContainText(featureTitle);
+  await expect(page.getByRole("tabpanel")).toContainText(featureTitle);
   await page.getByRole("button", { name: "Edit project" }).click();
   await page.getByRole("button", { name: "Archive project" }).click();
   await page
@@ -124,8 +121,9 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
 
   // The feature itself is not archived, so the notice has to say the archive
   // came from the project and link back to it instead of offering a restore.
-  await page.goto("/archived");
-  await page.locator(".feature-list").getByText(featureTitle).click();
+  // A project's archived tab is where a read-only member is now listed.
+  await page.getByRole("tab", { name: "Archived" }).click();
+  await page.getByRole("tabpanel").getByText(featureTitle).click();
   await expect(page.getByText("Project archived · read-only")).toBeVisible();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toHaveCount(
     0,
@@ -143,10 +141,10 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
   await page.getByRole("button", { name: "Manage project" }).click();
   await page.getByRole("button", { name: "Activate project" }).click();
   await expect(page.getByText("Archived · read-only")).toHaveCount(0);
-  await page
-    .getByRole("region", { name: "Features in this project" })
-    .getByText(featureTitle)
-    .click();
+  // The member is back in flight, so it leaves the archived tab it was on.
+  await expect(page.getByRole("tabpanel")).not.toContainText(featureTitle);
+  await page.getByRole("tab", { name: "Active" }).click();
+  await page.getByRole("tabpanel").getByText(featureTitle).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toBeVisible();
 
   // Deleting the project releases the feature rather than removing it.
@@ -160,6 +158,75 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Projects", exact: true }),
   ).toBeVisible();
-  await page.goto("/active");
-  await expect(page.locator(".feature-list")).toContainText(featureTitle);
+  // Deleting the project released the feature, so it is now unaffiliated.
+  await page.goto("/projects/unassigned?features=active");
+  await expect(page.getByRole("tabpanel")).toContainText(featureTitle);
+});
+
+// The sidebar tree folds a project away and remembers that across a reload,
+// and its feature rows open the workspaces directly.
+test("folds a sidebar project and restores the fold after a reload", async ({
+  page,
+}) => {
+  await page.goto("/");
+  const rail = page.getByRole("navigation", { name: "PRX navigation" });
+  const toggle = rail.getByRole("button", {
+    name: "Expand or collapse Delivery platform",
+  });
+  const child = rail.getByRole("link", { name: /Delivery control showcase/ });
+
+  await expect(toggle).toHaveAttribute("aria-expanded", "true");
+  await expect(child).toBeVisible();
+
+  await toggle.click();
+  await expect(toggle).toHaveAttribute("aria-expanded", "false");
+  await expect(child).toBeHidden();
+
+  await page.reload();
+  await expect(
+    rail.getByRole("button", { name: "Expand or collapse Delivery platform" }),
+  ).toHaveAttribute("aria-expanded", "false");
+
+  await rail
+    .getByRole("button", { name: "Expand or collapse Delivery platform" })
+    .click();
+  await child.click();
+  await expect(
+    page.getByRole("heading", { name: "Delivery control showcase" }),
+  ).toBeVisible();
+});
+
+// Between 601px and 900px the rail is one horizontal row of links, which a
+// nested list cannot sit in. The tree goes away there and the Projects link
+// stays, so the page keeps carrying the tree's job.
+test("drops the sidebar tree once the rail turns horizontal", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1200, height: 900 });
+  await page.goto("/");
+  const rail = page.getByRole("navigation", { name: "PRX navigation" });
+  await expect(rail.locator(".nav-tree")).toBeVisible();
+
+  await page.setViewportSize({ width: 800, height: 900 });
+  await expect(rail.locator(".nav-tree")).toBeHidden();
+  await expect(rail.getByRole("link", { name: /Projects/ })).toBeVisible();
+  await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 800);
+});
+
+test("lists the unaffiliated features under their own three tabs", async ({
+  page,
+}) => {
+  await page.goto("/projects/unassigned?features=active");
+  await expect(
+    page.getByRole("heading", { name: "No project", level: 1 }),
+  ).toBeVisible();
+  await expect(page.getByRole("tab", { name: "Active" })).toHaveAttribute(
+    "aria-selected",
+    "true",
+  );
+
+  await page.getByRole("tab", { name: "Completed" }).click();
+  await expect(page).toHaveURL(/features=completed/);
+  await page.getByRole("tab", { name: "Archived" }).click();
+  await expect(page).toHaveURL(/features=archived/);
 });

@@ -4,15 +4,14 @@ import {
   createRouter,
   Outlet,
 } from "@tanstack/react-router";
+import { validateFeatureTabSearch } from "./feature-tabs";
 import { AppShell } from "./shell";
-import { ActiveFeatures } from "./views/ActiveFeatures";
-import { ArchivedFeatures } from "./views/ArchivedFeatures";
-import { CompletedFeatures } from "./views/CompletedFeatures";
 import { Dashboard } from "./views/Dashboard";
 import { FeatureWorkspace } from "./views/FeatureWorkspace";
 import { ProjectListPage } from "./views/ProjectListPage";
 import { ProjectWorkspace } from "./views/ProjectWorkspace";
 import { TaskSearch } from "./views/TaskSearch";
+import { UnassignedFeaturesPage } from "./views/UnassignedFeaturesPage";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -31,21 +30,6 @@ const featureRoute = createRoute({
   path: "/features/$featureId",
   component: FeatureWorkspace,
 });
-const activeRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/active",
-  component: ActiveFeatures,
-});
-const archivedRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/archived",
-  component: ArchivedFeatures,
-});
-const completedRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/completed",
-  component: CompletedFeatures,
-});
 const projectsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/projects",
@@ -56,9 +40,20 @@ const projectsRoute = createRoute({
   }),
   component: ProjectListPage,
 });
+// The unaffiliated list is a static segment, which the router ranks above the
+// dynamic one, so it wins over a project whose ID could never spell it anyway.
+const unassignedFeaturesRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: "/projects/unassigned",
+  validateSearch: validateFeatureTabSearch,
+  component: UnassignedFeaturesPage,
+});
 const projectRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/projects/$projectId",
+  // The status tab stays in the URL for the same reason the archive toggle
+  // above does.
+  validateSearch: validateFeatureTabSearch,
   component: ProjectWorkspace,
 });
 const taskSearchRoute = createRoute({
@@ -71,12 +66,10 @@ const taskSearchRoute = createRoute({
 });
 const routeTree = rootRoute.addChildren([
   indexRoute,
-  activeRoute,
-  archivedRoute,
-  completedRoute,
   taskSearchRoute,
   featureRoute,
   projectsRoute,
+  unassignedFeaturesRoute,
   projectRoute,
 ]);
 

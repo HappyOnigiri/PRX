@@ -123,10 +123,27 @@ export function FeatureWorkspace() {
         setShowFeatureEdit(false);
       }}
       onFeatureDeleted={() => {
-        void navigate({ to: feature.readOnly ? "/archived" : "/" });
+        // Deleting returns to the list the feature was reachable from, which
+        // for a read-only one is its owner's archived tab rather than the
+        // overview it never appeared on.
+        void navigate(deletedFeatureDestination(feature));
       }}
     />
   );
+}
+
+function deletedFeatureDestination(feature: Feature) {
+  if (!feature.readOnly) return { to: "/" } as const;
+  if (feature.projectId === "")
+    return {
+      to: "/projects/unassigned",
+      search: { features: "archived" },
+    } as const;
+  return {
+    to: "/projects/$projectId",
+    params: { projectId: feature.projectId },
+    search: { features: "archived" },
+  } as const;
 }
 
 // The workspace narrows one snapshot to a single feature. Keeping the memos
@@ -275,6 +292,7 @@ function FeatureWorkspaceHead({
               <Link
                 to="/projects/$projectId"
                 params={{ projectId: props.project.id }}
+                search={{ features: "active" }}
                 className="workspace-project-link"
               >
                 {props.project.title}
@@ -338,7 +356,11 @@ function ArchivedNotice({ project }: { project: Project | undefined }) {
         <span>
           {t("workspace.projectArchivedDetail", { title: project.title })}
         </span>
-        <Link to="/projects/$projectId" params={{ projectId: project.id }}>
+        <Link
+          to="/projects/$projectId"
+          params={{ projectId: project.id }}
+          search={{ features: "archived" }}
+        >
           {t("workspace.openProject")}
         </Link>
       </div>

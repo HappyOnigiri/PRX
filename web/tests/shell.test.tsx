@@ -11,11 +11,10 @@ import { FeatureStatus } from "../src/gen/prx/v1/prx_pb";
 import { setDisplayLanguage } from "../src/i18n";
 import { AppShell } from "../src/shell";
 import { appVersion } from "../src/version";
-import { makeFeature, makeSnapshot } from "./factories";
+import { makeFeature, makeProject, makeSnapshot } from "./factories";
 
 const shellMocks = vi.hoisted(() => ({
   navigate: vi.fn().mockResolvedValue(undefined),
-  pathname: "/",
   mutation: {
     mutateAsync: vi.fn(),
     isPending: false,
@@ -30,8 +29,14 @@ const shellMocks = vi.hoisted(() => ({
 }));
 
 const snapshot = makeSnapshot({
+  projects: [makeProject({ id: "P-1", title: "Delivery platform" })],
   features: [
-    makeFeature({ id: "active", title: "Active feature", readyCount: 1 }),
+    makeFeature({
+      id: "active",
+      title: "Active feature",
+      projectId: "P-1",
+      readyCount: 1,
+    }),
     makeFeature({
       id: "conflict",
       title: "Conflict feature",
@@ -59,11 +64,6 @@ vi.mock("@tanstack/react-router", () => ({
     className?: string;
   }) => <span className={className}>{children}</span>,
   useNavigate: () => shellMocks.navigate,
-  useLocation: ({
-    select,
-  }: {
-    select: (location: { pathname: string }) => unknown;
-  }) => select({ pathname: shellMocks.pathname }),
 }));
 vi.mock("../src/api", () => ({
   mutations: { createFeature: vi.fn() },
@@ -105,27 +105,23 @@ describe("AppShell", () => {
     shellMocks.mutation.error = null;
   });
 
-  it("shows active features and changes display settings from Settings", async () => {
+  it("shows the project tree and changes display settings from Settings", async () => {
     render(
       <AppShell>
         <p>Workspace</p>
       </AppShell>,
     );
 
+    // The tree lists the projects still in play and, under them, the features
+    // still in flight. Everything else belongs to the tabs on the pages.
+    expect(screen.getByText("Delivery platform")).toBeInTheDocument();
     expect(screen.getByText("Active feature")).toBeInTheDocument();
     expect(screen.getByText("Conflict feature")).toBeInTheDocument();
+    expect(screen.getByText("No project")).toBeInTheDocument();
     expect(screen.queryByText("Archived feature")).not.toBeInTheDocument();
     expect(screen.queryByText("Completed feature")).not.toBeInTheDocument();
     expect(screen.getByText("Overview")).toBeInTheDocument();
-    expect(screen.getByText(/Active features/)).toHaveTextContent(
-      "Active features 2",
-    );
-    expect(screen.getByText(/Completed features/)).toHaveTextContent(
-      "Completed features 1",
-    );
-    expect(screen.getByText(/Archived features/)).toHaveTextContent(
-      "Archived features 1",
-    );
+    expect(screen.getByText(/Projects/)).toHaveTextContent("Projects 1");
     expect(screen.getByText("Workspace")).toBeInTheDocument();
     expect(screen.getByText(`v${appVersion()}`)).toBeInTheDocument();
     expect(screen.queryByText("Local database online")).not.toBeInTheDocument();

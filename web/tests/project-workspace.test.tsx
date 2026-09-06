@@ -7,6 +7,7 @@ import {
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import type { FeatureTabId } from "../src/feature-tabs";
 import { DocumentKind, type Snapshot } from "../src/gen/prx/v1/prx_pb";
 import { ProjectWorkspace } from "../src/views/ProjectWorkspace";
 import {
@@ -16,11 +17,15 @@ import {
   makeSnapshot,
 } from "./factories";
 
-const workspaceMocks = vi.hoisted(() => ({
-  navigate: vi.fn().mockResolvedValue(undefined),
-  projectId: "P-1",
-  snapshot: { data: undefined as Snapshot | undefined, isPending: false },
-}));
+const workspaceMocks = vi.hoisted(() => {
+  const search: { features: FeatureTabId } = { features: "active" };
+  return {
+    navigate: vi.fn().mockResolvedValue(undefined),
+    projectId: "P-1",
+    search,
+    snapshot: { data: undefined as Snapshot | undefined, isPending: false },
+  };
+});
 
 vi.mock("@tanstack/react-router", () => ({
   Link: ({ children }: { children: ReactNode }) => (
@@ -28,6 +33,7 @@ vi.mock("@tanstack/react-router", () => ({
   ),
   useNavigate: () => workspaceMocks.navigate,
   useParams: () => ({ projectId: workspaceMocks.projectId }),
+  useSearch: () => workspaceMocks.search,
 }));
 vi.mock("../src/hooks", () => ({
   useSnapshot: () => workspaceMocks.snapshot,
@@ -84,6 +90,12 @@ function populatedSnapshot(archived = false) {
         mergedCount: 2,
       }),
       makeFeature({ id: "F-2", title: "Search revamp" }),
+      makeFeature({
+        id: "F-3",
+        title: "Legacy checkout",
+        projectId: "P-1",
+        archived: true,
+      }),
     ],
     documents: [
       makeDocument({
@@ -104,6 +116,7 @@ describe("ProjectWorkspace", () => {
   afterEach(cleanup);
   beforeEach(() => {
     workspaceMocks.projectId = "P-1";
+    workspaceMocks.search.features = "active";
     workspaceMocks.snapshot.data = undefined;
     workspaceMocks.snapshot.isPending = false;
     workspaceMocks.navigate.mockClear();
@@ -139,11 +152,12 @@ describe("ProjectWorkspace", () => {
     expect(
       screen.getByRole("heading", { name: "Delivery platform", level: 1 }),
     ).toBeInTheDocument();
-    const features = screen.getByRole("region", {
-      name: "Features in this project",
-    });
+    // Only the open panel is in the accessibility tree; the folded ones keep
+    // their rows in the DOM, so the assertions read the open one.
+    const features = screen.getByRole("tabpanel");
     expect(features).toHaveTextContent("Checkout rollout");
     expect(features).not.toHaveTextContent("Search revamp");
+    expect(features).not.toHaveTextContent("Legacy checkout");
     expect(features).toHaveTextContent("2/4 merged");
 
     fireEvent.click(screen.getByRole("button", { name: "References" }));
@@ -161,6 +175,32 @@ describe("ProjectWorkspace", () => {
     expect(
       screen.queryByRole("form", { name: "Edit project" }),
     ).not.toBeInTheDocument();
+  });
+
+  // The status filter is a search parameter, so choosing a tab navigates and
+  // the page renders whatever the URL then says.
+  it("narrows the feature list to the tab the URL names", () => {
+    workspaceMocks.snapshot.data = populatedSnapshot();
+    const { rerender } = render(<ProjectWorkspace />);
+
+    fireEvent.click(screen.getByRole("tab", { name: "Archived" }));
+    expect(workspaceMocks.navigate).toHaveBeenCalledWith({
+      to: "/projects/$projectId",
+      params: { projectId: "P-1" },
+      search: { features: "archived" },
+    });
+
+    workspaceMocks.search.features = "archived";
+    rerender(<ProjectWorkspace />);
+    const features = screen.getByRole("tabpanel");
+    expect(features).toHaveTextContent("Legacy checkout");
+    expect(features).not.toHaveTextContent("Checkout rollout");
+
+    workspaceMocks.search.features = "completed";
+    rerender(<ProjectWorkspace />);
+    expect(
+      screen.getByRole("heading", { name: "No completed features" }),
+    ).toBeInTheDocument();
   });
 
   it("presents an archived project without reference editing", () => {

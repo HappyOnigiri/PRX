@@ -16,8 +16,8 @@ export const project = {
         "Create a project to group related features and their shared documents.",
       emptyArchivedTitle: "No archived projects",
       emptyArchivedDetail: "Archived projects appear here.",
-      showArchived: "Show archived",
-      showActive: "Show active",
+      tabsLabel: "Project status",
+      tabs: { active: "Active", archived: "Archived" },
       featureCount_one: "{{count}} feature",
       featureCount_other: "{{count}} features",
       archivedBadge: "Archived",
@@ -28,9 +28,31 @@ export const project = {
       noDescription: "No project description yet.",
       featuresLabel: "Features in this project",
       featuresTitle: "Features",
-      noFeaturesTitle: "No features yet",
-      noFeaturesDetail:
-        "Assign a feature to this project from the feature's edit dialog.",
+      featureTabsLabel: "Feature status",
+      featureTabs: {
+        active: "Active",
+        completed: "Completed",
+        archived: "Archived",
+      },
+      emptyFeatures: {
+        active: {
+          title: "No features in flight",
+          detail:
+            "Assign a feature here from the feature's edit dialog, or return a completed one to active work.",
+        },
+        completed: {
+          title: "No completed features",
+          detail:
+            "A feature appears here once every one of its tasks is finished, or when you set its status to completed.",
+        },
+        archived: {
+          title: "No archived features",
+          detail: "Features you archive appear here without leaving the list.",
+        },
+      },
+      unassignedTitle: "No project",
+      unassignedDescription:
+        "Features that belong to no project. Assign one from the feature's edit dialog.",
       progress: "{{merged}}/{{total}} merged",
       editProject: "Edit project",
       manageProject: "Manage project",
@@ -88,8 +110,8 @@ export const project = {
         "関連するフィーチャーと共通資料をまとめるプロジェクトを作成します。",
       emptyArchivedTitle: "アーカイブ済みのプロジェクトはありません",
       emptyArchivedDetail: "アーカイブしたプロジェクトはここに表示されます。",
-      showArchived: "アーカイブ済みを表示",
-      showActive: "進行中を表示",
+      tabsLabel: "プロジェクトの状態",
+      tabs: { active: "進行中", archived: "アーカイブ済み" },
       featureCount_one: "フィーチャー {{count}} 件",
       featureCount_other: "フィーチャー {{count}} 件",
       archivedBadge: "アーカイブ済み",
@@ -100,9 +122,32 @@ export const project = {
       noDescription: "プロジェクトの説明はまだありません。",
       featuresLabel: "このプロジェクトのフィーチャー",
       featuresTitle: "フィーチャー",
-      noFeaturesTitle: "フィーチャーはまだありません",
-      noFeaturesDetail:
-        "フィーチャーの編集ダイアログからこのプロジェクトに所属させます。",
+      featureTabsLabel: "フィーチャーの状態",
+      featureTabs: {
+        active: "進行中",
+        completed: "完了済み",
+        archived: "アーカイブ済み",
+      },
+      emptyFeatures: {
+        active: {
+          title: "進行中のフィーチャーはありません",
+          detail:
+            "フィーチャーの編集ダイアログから所属させるか、完了済みフィーチャーを進行中へ戻します。",
+        },
+        completed: {
+          title: "完了済みフィーチャーはありません",
+          detail:
+            "タスクがすべて終了したフィーチャー、またはステータスを完了にしたフィーチャーがここへ表示されます。",
+        },
+        archived: {
+          title: "アーカイブ済みフィーチャーはありません",
+          detail:
+            "アーカイブしたフィーチャーは、一覧から消えずにここへ表示されます。",
+        },
+      },
+      unassignedTitle: "プロジェクトなし",
+      unassignedDescription:
+        "どのプロジェクトにも所属しないフィーチャーです。フィーチャーの編集ダイアログから所属させます。",
       progress: "{{merged}}/{{total}} マージ済み",
       editProject: "プロジェクトを編集",
       manageProject: "プロジェクトを管理",

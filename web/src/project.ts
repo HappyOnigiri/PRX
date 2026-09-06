@@ -19,6 +19,17 @@ export function featuresInProject(
   );
 }
 
+// The unaffiliated features get their own row in the sidebar and their own
+// page, so they need a selector as much as a project's members do.
+export function featuresWithoutProject(features: Feature[]): Feature[] {
+  return features.filter((feature) => feature.projectId === "");
+}
+
+// The unaffiliated row is not a project, so it has no project ID to key its
+// expansion state by. A project ID is always "P-<number>", so this literal
+// cannot collide with one.
+export const unassignedProjectKey = "unassigned";
+
 export function documentsInProject(
   documents: Document[],
   projectId: string,

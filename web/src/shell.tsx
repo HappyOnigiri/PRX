@@ -1,30 +1,19 @@
-import { Link, useLocation, useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { Plus, Settings, X } from "lucide-react";
-import {
-  useEffect,
-  useState,
-  type ReactNode,
-  type SyntheticEvent,
-} from "react";
+import { useState, type ReactNode, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "./api";
 import { isDemoMode } from "./demo";
-import {
-  featureCategories,
-  featureCategoryById,
-  featureCategoryForPath,
-  type FeatureCategory,
-} from "./feature-status";
 import { formValue } from "./form";
 import type { Feature, Project } from "./gen/prx/v1/prx_pb";
 import { useAutoSync, useDomainMutation, useSnapshot } from "./hooks";
 import { formatError } from "./i18n/domain";
-import { readFeatureCategory, writeFeatureCategory } from "./i18n/settings";
 import { projectsByArchive } from "./project";
 import { AutoSyncStatusContext } from "./sync-status";
 import { appVersion } from "./version";
 import { IconButton } from "./views/IconButton";
 import { ProjectSelectField } from "./views/ProjectSelectField";
+import { ProjectTree } from "./views/ProjectTree";
 import { SettingsDialog } from "./views/SettingsDialog";
 
 export function AppShell({ children }: { children: ReactNode }) {
@@ -41,10 +30,8 @@ function AppShellLayout({ children }: { children: ReactNode }) {
   const snapshot = useSnapshot();
   const [showCreate, setShowCreate] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
-  const pathname = useLocation({ select: (location) => location.pathname });
   const features = snapshot.data?.features;
   const projects = snapshot.data?.projects;
-  const selected = useSelectedFeatureCategory(pathname);
   const demo = isDemoMode();
   return (
     <div className="app-shell" data-demo={demo || undefined}>
@@ -68,11 +55,7 @@ function AppShellLayout({ children }: { children: ReactNode }) {
             <span className="app-version">v{appVersion()}</span>
           </span>
         </Link>
-        <RailNavigation
-          features={features}
-          projects={projects}
-          selected={selected}
-        />
+        <RailNavigation features={features} projects={projects} />
         <IconButton
           icon={Plus}
           label={t("nav.newFeature")}
@@ -116,17 +99,15 @@ function AppShellLayout({ children }: { children: ReactNode }) {
   );
 }
 
-// The project section sits above the feature categories as a direct child of
-// the same <nav>: adding an element straight under .rail would break the grid
-// the 900px and 600px layouts define.
+// The tree sits inside the same <nav> as the screen links: adding an element
+// straight under .rail would break the grid the 900px and 600px layouts
+// define.
 function RailNavigation({
   features,
   projects,
-  selected,
 }: {
   features: Feature[] | undefined;
   projects: Project[] | undefined;
-  selected: FeatureCategory;
 }) {
   const { t } = useTranslation();
   const activeProjects = projects ? projectsByArchive(projects, false) : [];
@@ -143,78 +124,26 @@ function RailNavigation({
         to="/projects"
         search={{ archived: false }}
         className="nav-link"
+        id="nav-projects-heading"
+        // The default prefix match would light the heading up on a project's
+        // own page, and matching the search would put it out on the archived
+        // view, which is the same screen.
+        activeOptions={{ exact: true, includeSearch: false }}
         activeProps={{ "data-active": true }}
       >
         {t("nav.projects")}{" "}
         <span>{projects ? activeProjects.length : "—"}</span>
       </Link>
-      {activeProjects.map((project) => (
-        <Link
-          key={project.id}
-          to="/projects/$projectId"
-          params={{ projectId: project.id }}
-          className="feature-link project-link"
-          activeProps={{ "data-active": true }}
-        >
-          <span>{project.title}</span>
-        </Link>
-      ))}
+      {features && (
+        <ProjectTree
+          headingId="nav-projects-heading"
+          projects={activeProjects}
+          features={features}
+        />
+      )}
       <hr className="nav-divider" />
-      {featureCategories.map((category) => (
-        <Link
-          key={category.id}
-          to={category.path}
-          className="nav-link"
-          // The selection is the sidebar's own, not the matched route, so
-          // it is marked here rather than through activeProps.
-          data-active={category.id === selected.id || undefined}
-          aria-current={category.id === selected.id ? "page" : undefined}
-        >
-          {t(category.navLabelKey)}{" "}
-          <span>{features?.filter(category.select).length ?? "—"}</span>
-        </Link>
-      ))}
-      <hr className="nav-divider" />
-      {features?.filter(selected.select).map((feature) => (
-        <Link
-          key={feature.id}
-          to="/features/$featureId"
-          params={{ featureId: feature.id }}
-          className="feature-link"
-          activeProps={{ "data-active": true }}
-        >
-          <i
-            className={
-              feature.conflictCount
-                ? "pulse conflict"
-                : feature.readyCount
-                  ? "pulse ready"
-                  : "pulse"
-            }
-          />
-          <span>{feature.title}</span>
-          <b>
-            {feature.mergedCount}/{feature.taskCount}
-          </b>
-        </Link>
-      ))}
     </nav>
   );
-}
-
-// The sidebar keeps its own selection so that the overview, task search, and
-// the feature workspaces do not move it. Opening a category's own list page is
-// the one navigation that adopts a category, whether it came from the sidebar,
-// a shared link, or browser history, and that route is also what records it.
-// Navigating always re-renders the shell, so the stored value is in place
-// before the next route reads it and no copy has to live in component state.
-function useSelectedFeatureCategory(pathname: string) {
-  const routeCategory = featureCategoryForPath(pathname);
-  const routeCategoryId = routeCategory?.id;
-  useEffect(() => {
-    if (routeCategoryId) writeFeatureCategory(routeCategoryId);
-  }, [routeCategoryId]);
-  return routeCategory ?? featureCategoryById(readFeatureCategory());
 }
 
 function RailSettings({ onOpenSettings }: { onOpenSettings: () => void }) {
