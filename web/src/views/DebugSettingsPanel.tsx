@@ -45,7 +45,6 @@ export function DebugSettingsPanel() {
   const generatedAt = report.data.report.runtime?.generatedAt ?? "";
   return (
     <>
-      <p className="dialog-lead">{t("settings.debug.description")}</p>
       <div className="settings-debug-actions">
         <span className="settings-debug-taken">
           {t("settings.debug.generatedAt", { time: generatedAt })}

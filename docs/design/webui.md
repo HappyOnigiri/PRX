@@ -15,6 +15,12 @@ State colors are reserved for state communication rather than decoration.
 Identifiers and counts may use monospace, while normal content prioritizes readability in English and Japanese.
 Nonessential motion respects the reduced-motion preference.
 
+Ordinal numbers appear only where their order is the information.
+A row does not carry a running index, a record identifier, or any other number the reader cannot act on.
+A field name is dropped wherever position, shape, or color already tells the reader which field a value belongs to.
+The name stays in the markup for assistive technology when the visual distinction is color or placement alone.
+A visible label is kept when the value would otherwise be ambiguous, or when the reader must match it against wording used elsewhere.
+
 Controls are icon-first: a button carries an icon alone unless its meaning needs words.
 Icon-only controls require an accessible name and tooltip.
 Controls keep a visible label when an icon cannot communicate the target, result, or danger scope.

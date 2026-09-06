@@ -3,10 +3,7 @@ export const project = {
     project: {
       membership: "Project",
       noMembership: "No project",
-      eyebrow: "Portfolio",
       title: "Projects",
-      description:
-        "Projects group related features and hold the documents they share.",
       listLabel: "Project list",
       loadingTitle: "Loading projects…",
       loadingDetail: "Reading the current snapshot.",
@@ -27,7 +24,6 @@ export const project = {
       slugEyebrow: "{{slug}}",
       noDescription: "No project description yet.",
       featuresLabel: "Features in this project",
-      featuresTitle: "Features",
       featureTabsLabel: "Feature status",
       featureTabs: {
         active: "Active",
@@ -51,9 +47,7 @@ export const project = {
         },
       },
       unassignedTitle: "No project",
-      unassignedDescription:
-        "Features that belong to no project. Assign one from the feature's edit dialog.",
-      progress: "{{merged}}/{{total}} merged",
+      progress: "{{finished}}/{{total}} finished",
       editProject: "Edit project",
       manageProject: "Manage project",
       archivedLabel: "Archived · read-only",
@@ -97,10 +91,7 @@ export const project = {
     project: {
       membership: "プロジェクト",
       noMembership: "プロジェクトなし",
-      eyebrow: "ポートフォリオ",
       title: "プロジェクト",
-      description:
-        "プロジェクトは関連するフィーチャーをまとめ、共通の資料を保持します。",
       listLabel: "プロジェクト一覧",
       loadingTitle: "プロジェクトを読み込んでいます…",
       loadingDetail: "現在のスナップショットを読み取っています。",
@@ -121,7 +112,6 @@ export const project = {
       slugEyebrow: "{{slug}}",
       noDescription: "プロジェクトの説明はまだありません。",
       featuresLabel: "このプロジェクトのフィーチャー",
-      featuresTitle: "フィーチャー",
       featureTabsLabel: "フィーチャーの状態",
       featureTabs: {
         active: "進行中",
@@ -146,9 +136,7 @@ export const project = {
         },
       },
       unassignedTitle: "プロジェクトなし",
-      unassignedDescription:
-        "どのプロジェクトにも所属しないフィーチャーです。フィーチャーの編集ダイアログから所属させます。",
-      progress: "{{merged}}/{{total}} マージ済み",
+      progress: "{{finished}}/{{total}} 完了",
       editProject: "プロジェクトを編集",
       manageProject: "プロジェクトを管理",
       archivedLabel: "アーカイブ済み・読み取り専用",

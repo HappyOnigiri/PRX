@@ -21,7 +21,6 @@ export const common = {
       done: "Done",
       retry: "Try again",
       unassigned: "Unassigned",
-      ready: "READY",
     },
   },
   ja: {
@@ -46,7 +45,6 @@ export const common = {
       done: "完了",
       retry: "再試行",
       unassigned: "未割り当て",
-      ready: "着手可能",
     },
   },
 } as const;

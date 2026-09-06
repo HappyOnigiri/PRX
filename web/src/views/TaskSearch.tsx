@@ -16,6 +16,7 @@ import {
   type TaskSearchResult,
 } from "../task-search";
 import { StateMessage } from "./Dashboard";
+import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
 
 export function TaskSearch() {
@@ -60,9 +61,7 @@ function TaskSearchContent({
     <div className="dashboard task-search-page">
       <header className="page-head">
         <div>
-          <p className="section-label">{t("tasks.eyebrow")}</p>
           <h1>{t("tasks.title")}</h1>
-          <p>{t("tasks.description")}</p>
         </div>
         <div className="task-search-count" aria-live="polite">
           <span>{parsed.error ? "—" : results.length}</span>
@@ -148,10 +147,12 @@ function TaskResult({ task, feature, pullRequest }: TaskSearchResult) {
       >
         <div className="task-result-main">
           <div className="task-result-title">
+            <EntityIcon kind="task" size={15} />
             <strong>{task.title}</strong>
             <code>{task.id}</code>
           </div>
           <small>
+            <EntityIcon kind="feature" size={13} />
             {feature.title} · {feature.slug}
           </small>
           {task.scope && <p>{task.scope}</p>}

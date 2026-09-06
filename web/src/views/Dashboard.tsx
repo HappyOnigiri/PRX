@@ -3,11 +3,16 @@ import { RefreshCw, RotateCcw } from "lucide-react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { isActiveFeature } from "../feature-status";
-import type { Feature, Task } from "../gen/prx/v1/prx_pb";
+import type { Feature, Project, Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
-import { formatError } from "../i18n/domain";
+import {
+  formatError,
+  taskDisplayStateLabel,
+  taskDisplayStateToken,
+} from "../i18n/domain";
 import { useAutoSyncStatus } from "../sync-status";
 import { filterTaskSearchResults } from "../task-search";
+import { EntityIcon, type EntityKind } from "./EntityIcon";
 import { IconButton } from "./IconButton";
 import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 
@@ -16,28 +21,24 @@ const queueNames = [
     "readyTasks",
     "queue-ready",
     "dashboard.queues.ready.title",
-    "dashboard.queues.ready.detail",
     "task-status:ready",
   ],
   [
     "reviewWaitingTasks",
     "queue-review-waiting",
     "dashboard.queues.review.title",
-    "dashboard.queues.review.detail",
     "github-status:review-waiting",
   ],
   [
     "conflictTasks",
     "queue-conflict",
     "dashboard.queues.conflicts.title",
-    "dashboard.queues.conflicts.detail",
     "github-status:conflict",
   ],
   [
     "syncErrorTasks",
     "queue-sync-error",
     "dashboard.queues.syncError.title",
-    "dashboard.queues.syncError.detail",
     "github-status:error",
   ],
 ] as const;
@@ -99,11 +100,10 @@ export function Dashboard() {
       </header>
       <QueueStrip projected={projected} />
       <div className="dashboard-grid">
-        <section className="ready-board">
-          <header>
-            <p className="section-label">{t("dashboard.executionQueue")}</p>
-            <h2>{t("dashboard.readyToStart")}</h2>
-          </header>
+        <section
+          className="ready-board"
+          aria-label={t("dashboard.readyToStart")}
+        >
           {projected.readyTasks.length === 0 ? (
             <div className="empty">
               <span>◇</span>
@@ -112,40 +112,89 @@ export function Dashboard() {
             </div>
           ) : (
             <ol>
-              {projected.readyTasks.map((task, index) => {
-                const feature = features.find((f) => f.id === task.featureId);
-                return (
-                  <li key={task.id}>
-                    <span className="queue-index">
-                      {String(index + 1).padStart(2, "0")}
-                    </span>
-                    <div>
-                      <Link
-                        to="/features/$featureId"
-                        params={{ featureId: task.featureId }}
-                      >
-                        {task.title}
-                      </Link>
-                      <p>
-                        {feature?.title} ·{" "}
-                        {task.assignee || t("common.unassigned")}
-                      </p>
-                    </div>
-                    <i>{t("common.ready")}</i>
-                    <TaskPromptCopyButton
-                      taskId={task.id}
-                      hasImplementationPlan={task.hasImplementationPlan}
-                      size="compact"
-                    />
-                  </li>
-                );
-              })}
+              {projected.readyTasks.map((task) => (
+                <QueueRow
+                  key={task.id}
+                  task={task}
+                  features={features}
+                  projects={data.projects}
+                />
+              ))}
             </ol>
           )}
         </section>
-        <FeatureBoard features={features} />
       </div>
     </div>
+  );
+}
+
+function QueueRow({
+  task,
+  features,
+  projects,
+}: {
+  task: Task;
+  features: Feature[];
+  projects: Project[];
+}) {
+  const { t } = useTranslation();
+  const feature = features.find((item) => item.id === task.featureId);
+  const project = projects.find((item) => item.id === feature?.projectId);
+  return (
+    <li>
+      <div>
+        <p className="queue-title">
+          <EntityIcon kind="task" size={15} />
+          <Link
+            to="/features/$featureId"
+            params={{ featureId: task.featureId }}
+          >
+            {task.title}
+          </Link>
+        </p>
+        {/* Three values of the same size read as one sentence, so an icon
+            marks which field each one belongs to. The names stay for
+            assistive technology, which cannot read a glyph. */}
+        <dl className="queue-meta">
+          <div>
+            <dt>{t("dashboard.metaProject")}</dt>
+            <MetaValue
+              kind="project"
+              value={project?.title ?? t("project.unassignedTitle")}
+            />
+          </div>
+          <div>
+            <dt>{t("dashboard.metaFeature")}</dt>
+            <MetaValue kind="feature" value={feature?.title ?? ""} />
+          </div>
+          {/* An unassigned task says nothing by naming an empty owner, so the
+              pair is dropped instead of carrying a placeholder. */}
+          {task.assignee && (
+            <div>
+              <dt>{t("dashboard.metaAssignee")}</dt>
+              <MetaValue kind="assignee" value={task.assignee} />
+            </div>
+          )}
+        </dl>
+      </div>
+      <i className={`state-${taskDisplayStateToken(task.displayState)}`}>
+        {taskDisplayStateLabel(task.displayState, t)}
+      </i>
+      <TaskPromptCopyButton
+        taskId={task.id}
+        hasImplementationPlan={task.hasImplementationPlan}
+        size="compact"
+      />
+    </li>
+  );
+}
+
+function MetaValue({ kind, value }: { kind: EntityKind; value: string }) {
+  return (
+    <dd>
+      <EntityIcon kind={kind} size={13} />
+      <span className="queue-meta-name">{value}</span>
+    </dd>
   );
 }
 
@@ -158,7 +207,7 @@ function QueueStrip({ projected }: { projected: ProjectedQueues }) {
           ([key]) =>
             alwaysVisibleQueueKeys.has(key) || projected[key].length > 0,
         )
-        .map(([key, className, title, detail, query]) => (
+        .map(([key, className, title, query]) => (
           <Link
             key={key}
             to="/tasks"
@@ -166,10 +215,7 @@ function QueueStrip({ projected }: { projected: ProjectedQueues }) {
             className={`queue-meter ${className}`}
           >
             <span>{projected[key].length}</span>
-            <div>
-              <h2>{t(title)}</h2>
-              <p>{t(detail)}</p>
-            </div>
+            <h2>{t(title)}</h2>
           </Link>
         ))}
     </section>
@@ -229,66 +275,5 @@ function StateAction({ action }: { action: () => void }) {
       variant="secondary"
       onClick={action}
     />
-  );
-}
-
-function FeatureBoard({ features }: { features: Feature[] }) {
-  const { t } = useTranslation();
-  return (
-    <section className="feature-board">
-      <header>
-        <p className="section-label">{t("dashboard.featureTelemetry")}</p>
-        <h2>{t("dashboard.deliveryLines")}</h2>
-      </header>
-      {features.length === 0 ? (
-        <div className="empty compact">
-          <h3>{t("dashboard.noFeaturesTitle")}</h3>
-          <p>{t("dashboard.noFeaturesDetail")}</p>
-        </div>
-      ) : (
-        <div className="feature-table">
-          {features.map((feature) => (
-            <Link
-              key={feature.id}
-              to="/features/$featureId"
-              params={{ featureId: feature.id }}
-              className="feature-row"
-            >
-              <div>
-                <b>{feature.title}</b>
-                <small>{feature.slug}</small>
-              </div>
-              <div className="progress-track">
-                <i
-                  style={{
-                    width: `${feature.taskCount ? (feature.mergedCount / feature.taskCount) * 100 : 0}%`,
-                  }}
-                />
-              </div>
-              <span>
-                {feature.mergedCount}/{feature.taskCount}
-              </span>
-              <strong
-                className={
-                  feature.readyCount
-                    ? "status-ready"
-                    : feature.conflictCount
-                      ? "status-conflict"
-                      : "status-none"
-                }
-              >
-                {feature.readyCount
-                  ? t("dashboard.featureReady", { count: feature.readyCount })
-                  : feature.conflictCount
-                    ? t("dashboard.featureBlocked", {
-                        count: feature.conflictCount,
-                      })
-                    : t("dashboard.steady")}
-              </strong>
-            </Link>
-          ))}
-        </div>
-      )}
-    </section>
   );
 }

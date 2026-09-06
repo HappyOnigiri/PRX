@@ -1,6 +1,7 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import { featuresWithoutProject } from "../project";
+import { EntityIcon } from "./EntityIcon";
 import { ProjectFeatureList } from "./ProjectFeatureList";
 import { useProjectSnapshot } from "./useProjectSnapshot";
 
@@ -19,8 +20,10 @@ export function UnassignedFeaturesPage() {
     <div className="workspace">
       <header className="workspace-head">
         <div className="workspace-title">
-          <h1>{t("project.unassignedTitle")}</h1>
-          <p className="eyebrow">{t("project.unassignedDescription")}</p>
+          <h1>
+            <EntityIcon kind="project" size={17} />
+            {t("project.unassignedTitle")}
+          </h1>
         </div>
       </header>
       <div className="workspace-body project-body">

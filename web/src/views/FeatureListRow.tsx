@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import { useTranslation } from "react-i18next";
 import type { Feature } from "../gen/prx/v1/prx_pb";
 import { featureStatusLabel } from "../i18n/domain";
+import { EntityIcon } from "./EntityIcon";
 
 interface FeatureListRowProps {
   feature: Feature;
@@ -22,13 +23,16 @@ export function FeatureListRow({
       className="feature-list-row"
     >
       <div className="feature-list-row-title">
-        <b>{feature.title}</b>
+        <b>
+          <EntityIcon kind="feature" size={15} />
+          {feature.title}
+        </b>
         <small>{feature.slug}</small>
       </div>
       <div className="progress-track" aria-hidden="true">
         <i
           style={{
-            width: `${feature.taskCount ? (feature.mergedCount / feature.taskCount) * 100 : 0}%`,
+            width: `${feature.taskCount ? (feature.finishedCount / feature.taskCount) * 100 : 0}%`,
           }}
         />
       </div>

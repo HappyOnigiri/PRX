@@ -130,12 +130,10 @@ function DisplaySettingsPanel() {
   const [theme, setTheme] = useState(readThemePreference);
   return (
     <>
-      <p className="dialog-lead">{t("settings.display.description")}</p>
       <div className="settings-display-list">
         <label className="settings-display-row">
           <span className="settings-display-copy">
             <strong>{t("settings.display.language.label")}</strong>
-            <small>{t("settings.display.language.description")}</small>
           </span>
           <select
             aria-label={t("settings.display.language.label")}
@@ -154,7 +152,6 @@ function DisplaySettingsPanel() {
         <label className="settings-display-row">
           <span className="settings-display-copy">
             <strong>{t("settings.display.theme.label")}</strong>
-            <small>{t("settings.display.theme.description")}</small>
           </span>
           <select
             aria-label={t("settings.display.theme.label")}

@@ -109,6 +109,12 @@
   gap: 10px;
 }
 
+.task-result-title > svg {
+  flex: 0 0 auto;
+  align-self: center;
+  color: var(--text-3);
+}
+
 .task-result-title strong {
   min-width: 0;
   overflow: hidden;
@@ -123,6 +129,14 @@
   color: var(--text-3);
   font-family: var(--font-mono);
   font-size: var(--text-xs);
+}
+
+/* The icon sits inside the truncating line rather than in a flex row of its
+   own, so the feature name keeps its ellipsis. */
+.task-result-main > small > svg {
+  margin-right: 5px;
+  color: var(--text-3);
+  vertical-align: -2px;
 }
 
 .task-result-main > small {

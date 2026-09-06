@@ -5,10 +5,7 @@ export const tasks = {
       loadingDetail: "Reading active tasks and their latest GitHub state.",
       errorTitle: "Task search could not be loaded",
       noData: "No task data returned.",
-      eyebrow: "Active work",
       title: "Task search",
-      description:
-        "Find active tasks by status, GitHub state, task details, feature, or repository.",
       searchLabel: "Search active tasks",
       searchPlaceholder: "task-status:ready or payments",
       searchSubmit: "Search",
@@ -32,10 +29,7 @@ export const tasks = {
       loadingDetail: "アクティブなタスクと最新の GitHub 状態を確認しています。",
       errorTitle: "タスク検索を読み込めませんでした",
       noData: "タスクデータが返されませんでした。",
-      eyebrow: "進行中の作業",
       title: "タスク検索",
-      description:
-        "ステータス、GitHub の状態、タスク情報、フィーチャー、リポジトリからアクティブなタスクを探します。",
       searchLabel: "アクティブなタスクを検索",
       searchPlaceholder: "task-status:ready または payments",
       searchSubmit: "検索",
