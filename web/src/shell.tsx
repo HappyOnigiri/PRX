@@ -1,18 +1,14 @@
-import { Link, useNavigate } from "@tanstack/react-router";
-import { Plus, Settings, X } from "lucide-react";
-import { useState, type ReactNode, type SyntheticEvent } from "react";
+import { Link } from "@tanstack/react-router";
+import { Settings } from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
-import { mutations } from "./api";
 import { isDemoMode } from "./demo";
-import { formValue } from "./form";
 import type { Feature, Project } from "./gen/prx/v1/prx_pb";
-import { useAutoSync, useDomainMutation, useSnapshot } from "./hooks";
-import { formatError } from "./i18n/domain";
+import { useAutoSync, useSnapshot } from "./hooks";
 import { projectsByArchive } from "./project";
 import { AutoSyncStatusContext } from "./sync-status";
 import { appVersion } from "./version";
 import { IconButton } from "./views/IconButton";
-import { ProjectSelectField } from "./views/ProjectSelectField";
 import { ProjectTree } from "./views/ProjectTree";
 import { SettingsDialog } from "./views/SettingsDialog";
 
@@ -28,7 +24,6 @@ export function AppShell({ children }: { children: ReactNode }) {
 function AppShellLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const snapshot = useSnapshot();
-  const [showCreate, setShowCreate] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const features = snapshot.data?.features;
   const projects = snapshot.data?.projects;
@@ -56,15 +51,6 @@ function AppShellLayout({ children }: { children: ReactNode }) {
           </span>
         </Link>
         <RailNavigation features={features} projects={projects} />
-        <IconButton
-          icon={Plus}
-          label={t("nav.newFeature")}
-          variant="primary"
-          className="rail-action"
-          onClick={() => {
-            setShowCreate(true);
-          }}
-        />
         <RailSettings
           onOpenSettings={() => {
             setShowSettings(true);
@@ -80,14 +66,6 @@ function AppShellLayout({ children }: { children: ReactNode }) {
         )}
       </aside>
       <main className="main-stage">{children}</main>
-      {showCreate && (
-        <FeatureCreateDialog
-          projects={projects ?? []}
-          onClose={() => {
-            setShowCreate(false);
-          }}
-        />
-      )}
       {showSettings && (
         <SettingsDialog
           onClose={() => {
@@ -156,81 +134,5 @@ function RailSettings({ onOpenSettings }: { onOpenSettings: () => void }) {
       className="settings-trigger"
       onClick={onOpenSettings}
     />
-  );
-}
-
-function FeatureCreateDialog({
-  projects,
-  onClose,
-}: {
-  projects: Project[];
-  onClose: () => void;
-}) {
-  const { t } = useTranslation();
-  const navigate = useNavigate();
-  const createFeature = useDomainMutation(mutations.createFeature);
-
-  async function submit(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const data = new FormData(event.currentTarget);
-    const response = await createFeature.mutateAsync({
-      title: formValue(data, "title"),
-      description: formValue(data, "description"),
-      projectId: formValue(data, "projectId"),
-    });
-    onClose();
-    if (response.feature)
-      await navigate({
-        to: "/features/$featureId",
-        params: { featureId: response.feature.id },
-      });
-  }
-
-  return (
-    <div className="scrim" role="presentation">
-      <form
-        className="dialog"
-        onSubmit={submit}
-        aria-label={t("featureCreate.formLabel")}
-      >
-        <header>
-          <h2>{t("featureCreate.title")}</h2>
-        </header>
-        <label>
-          {t("common.title")}
-          <input
-            name="title"
-            required
-            placeholder={t("featureCreate.titlePlaceholder")}
-          />
-        </label>
-        <label>
-          {t("common.description")}
-          <textarea
-            name="description"
-            placeholder={t("featureCreate.descriptionPlaceholder")}
-          />
-        </label>
-        <ProjectSelectField projects={projects} />
-        {createFeature.error && (
-          <p className="form-error">{formatError(createFeature.error, t)}</p>
-        )}
-        <footer>
-          <IconButton
-            icon={X}
-            label={t("common.cancel")}
-            variant="secondary"
-            onClick={onClose}
-          />
-          <IconButton
-            icon={Plus}
-            label={t("featureCreate.submit")}
-            variant="primary"
-            type="submit"
-            disabled={createFeature.isPending}
-          />
-        </footer>
-      </form>
-    </div>
   );
 }

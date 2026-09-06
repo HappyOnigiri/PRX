@@ -352,7 +352,7 @@ describe("FeatureWorkspace", () => {
   });
 
   // Deleting returns to the list the feature was reachable from, which for a
-  // read-only one without a project is the unaffiliated archive tab.
+  // read-only one is its project's archived tab.
   it("makes archived workspaces read-only and returns deletion to the archive", () => {
     workspaceMocks.snapshot.data = makeSnapshot({
       features: [{ ...feature, archived: true, readOnly: true }],
@@ -380,7 +380,8 @@ describe("FeatureWorkspace", () => {
       screen.getByRole("button", { name: "Mock delete feature" }),
     );
     expect(workspaceMocks.navigate).toHaveBeenCalledWith({
-      to: "/projects/unassigned",
+      to: "/projects/$projectId",
+      params: { projectId: "project-1" },
       search: { features: "archived" },
     });
   });

@@ -5,8 +5,8 @@ import { useSnapshot } from "../hooks";
 import { formatError } from "../i18n/domain";
 import { StateMessage } from "./Dashboard";
 
-// The project list and the unaffiliated list read the same snapshot and report
-// the same two interruptions, so the wording and the retry live here once.
+// The project list reports two interruptions while it reads the snapshot, and
+// keeping the wording and the retry here leaves the page about the list itself.
 type ProjectSnapshotState =
   | { message: ReactElement; data?: undefined }
   | { message?: undefined; data: Snapshot };

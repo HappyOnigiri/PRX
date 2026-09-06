@@ -233,7 +233,8 @@ export type Feature = Message<"prx.v1.Feature"> & {
   finishedCount: number;
 
   /**
-   * project_id identifies the owning project by its public P-<number> ID, and is empty when unaffiliated.
+   * project_id identifies the owning project by its public P-<number> ID. Every feature belongs to
+   * a project, so this value is never empty.
    *
    * @generated from field: string project_id = 16;
    */
@@ -863,8 +864,9 @@ export type DeleteProjectRequest = Message<"prx.v1.DeleteProjectRequest"> & {
   id: string;
 
   /**
-   * cascade deletes the project's own documents and releases its features
-   * instead of failing; contained features are never deleted.
+   * cascade deletes the project's own documents and every feature it contains,
+   * with the tasks, dependencies, pull-request attachments, and documents
+   * inside them, instead of failing.
    *
    * @generated from field: bool cascade = 2;
    */
@@ -914,7 +916,8 @@ export type CreateFeatureRequest = Message<"prx.v1.CreateFeatureRequest"> & {
   description: string;
 
   /**
-   * project_id assigns the feature to a project by public ID; an empty value leaves it unaffiliated.
+   * project_id assigns the feature to a project by public ID. It is required: a feature always
+   * belongs to a project.
    *
    * @generated from field: string project_id = 4;
    */
@@ -993,8 +996,8 @@ export type UpdateFeatureRequest = Message<"prx.v1.UpdateFeatureRequest"> & {
   archived?: boolean | undefined;
 
   /**
-   * project_id is unchanged when unset; a public ID reassigns the
-   * feature, and an empty string removes it from its project.
+   * project_id is unchanged when unset; a public ID reassigns the feature.
+   * An empty string is refused, because a feature cannot leave every project.
    *
    * @generated from field: optional string project_id = 7;
    */
