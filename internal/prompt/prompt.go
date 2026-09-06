@@ -165,13 +165,25 @@ func Render(task domain.Task, templates Templates) (Kind, string, error) {
 		"task_id":    task.ID,
 		"feature_id": task.FeatureID,
 		"task_title": task.Title,
-		"task_scope": task.Scope,
+		"task_scope": describedScope(task.Scope),
 		"task_kind":  string(task.Kind),
 	}
 	body := placeholderPattern.ReplaceAllStringFunc(normalized.Template(kind), func(match string) string {
 		return values[placeholderName(match)]
 	})
 	return kind, body, nil
+}
+
+// unspecifiedScope stands in for a task created without a scope. The templates
+// point the agent at "the scope above", and a receiving agent that knows nothing
+// about PRX cannot tell a blank line apart from a value that failed to load.
+const unspecifiedScope = "(not specified)"
+
+func describedScope(scope string) string {
+	if strings.TrimSpace(scope) == "" {
+		return unspecifiedScope
+	}
+	return scope
 }
 
 // Error reports a rejected template. The field name is carried so a caller can

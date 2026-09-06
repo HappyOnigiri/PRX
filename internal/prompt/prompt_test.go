@@ -49,6 +49,19 @@ func TestRenderExpandsEveryPlaceholderOfTheSelectedTemplate(t *testing.T) {
 		t.Fatalf("body=%q, want %q", body, want)
 	}
 
+	// A task may be created without a scope, and the templates tell the agent to
+	// stay inside "the scope above", so a blank line there would read as a value
+	// that failed to load rather than as an absent constraint.
+	scopeless := designTask()
+	scopeless.Scope = "  "
+	_, body, err = prompt.Render(scopeless, templates)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if want := "design T-7 F-3 Add the checkout API (not specified) pr"; body != want {
+		t.Fatalf("body=%q, want %q", body, want)
+	}
+
 	planned := designTask()
 	planned.HasImplementationPlan = true
 	kind, body, err = prompt.Render(planned, templates)
