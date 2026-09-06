@@ -396,6 +396,53 @@ func TestPromptTemplatesLoadDefaultAndSurviveAWrite(t *testing.T) {
 	}
 }
 
+func TestDefaultPromptTemplatesStayOutOfTheFile(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A write that has nothing to do with prompts must not freeze the built-in
+	// wording into the file; the installation keeps following later versions.
+	if _, err := store.Update(func(settings *Config) error {
+		return settings.SetAutoSyncInterval(MinimumAutoSyncIntervalSeconds)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	body, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if strings.Contains(string(body), "prompts:") {
+		t.Fatalf("config file contains prompts:\n%s", body)
+	}
+
+	// Only one customized template is stored, and the other one keeps following
+	// the built-in wording.
+	custom := prompt.DefaultTemplates()
+	custom.Design = "Design {{task_id}}\n"
+	if _, err := store.Update(func(settings *Config) error { return settings.SetPrompts(custom) }); err != nil {
+		t.Fatal(err)
+	}
+	body, err = os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), "Design {{task_id}}") {
+		t.Fatalf("config file lost the customized design template:\n%s", body)
+	}
+	if strings.Contains(string(body), "implementation:") {
+		t.Fatalf("config file stored the built-in implementation template:\n%s", body)
+	}
+	reloaded, err := store.Load()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if reloaded.Prompts != custom {
+		t.Fatalf("prompts=%+v, want %+v", reloaded.Prompts, custom)
+	}
+}
+
 func TestInvalidPromptTemplateFailsTheConfiguration(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	store, err := NewStore(path)

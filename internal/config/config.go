@@ -85,6 +85,40 @@ type Config struct {
 	Prompts prompt.Templates `yaml:"prompts" json:"prompts"`
 }
 
+// yamlConfig mirrors Config for YAML output. Prompts is a pointer so a
+// configuration that still uses the built-in templates omits the key entirely.
+type yamlConfig struct {
+	Version int          `yaml:"version"`
+	GitHub  GitHubConfig `yaml:"github"`
+	Prompts *yamlPrompts `yaml:"prompts,omitempty"`
+}
+
+type yamlPrompts struct {
+	Design         string `yaml:"design,omitempty"`
+	Implementation string `yaml:"implementation,omitempty"`
+}
+
+// MarshalYAML drops any template that still matches the built-in default.
+// Normalize fills blank templates in on load, so writing them back would pin the
+// file to the wording of whichever PRX version first saved it: an installation
+// that never customized a template would stop receiving later improvements to
+// it, even though it never asked to hold the old text.
+func (c Config) MarshalYAML() (any, error) {
+	defaults := prompt.DefaultTemplates()
+	prompts := yamlPrompts{}
+	if c.Prompts.Design != defaults.Design {
+		prompts.Design = c.Prompts.Design
+	}
+	if c.Prompts.Implementation != defaults.Implementation {
+		prompts.Implementation = c.Prompts.Implementation
+	}
+	result := yamlConfig{Version: c.Version, GitHub: c.GitHub}
+	if prompts != (yamlPrompts{}) {
+		result.Prompts = &prompts
+	}
+	return result, nil
+}
+
 type PublicAuthMethod struct {
 	ID               string         `json:"id"`
 	Host             string         `json:"host"`
