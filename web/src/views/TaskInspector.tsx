@@ -15,7 +15,6 @@ import { PullRequestSection } from "./TaskInspectorPullRequest";
 import { ReferencesSection } from "./TaskInspectorReferences";
 import { TaskInspectorTaskForm } from "./TaskInspectorTaskForm";
 import { type TaskNodeDocument } from "./TaskNode";
-import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 
 export interface TaskInspectorProps {
   task: Task;
@@ -86,9 +85,6 @@ export function TaskInspector({
       {readOnly && (
         <p className="inspector-read-only">{t("inspector.readOnly")}</p>
       )}
-      {/* Copying stays available on an archived task: handing the work to an
-          agent reads PRX rather than changing it. */}
-      <TaskPromptCopyButton task={task} />
       <TaskInspectorTaskForm task={task} readOnly={readOnly} />
       <PullRequestSection
         taskId={task.id}

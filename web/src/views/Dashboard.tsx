@@ -9,6 +9,7 @@ import { formatError } from "../i18n/domain";
 import { useAutoSyncStatus } from "../sync-status";
 import { filterTaskSearchResults } from "../task-search";
 import { IconButton } from "./IconButton";
+import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 
 const queueNames = [
   [
@@ -131,6 +132,11 @@ export function Dashboard() {
                       </p>
                     </div>
                     <i>{t("common.ready")}</i>
+                    <TaskPromptCopyButton
+                      taskId={task.id}
+                      hasImplementationPlan={task.hasImplementationPlan}
+                      size="compact"
+                    />
                   </li>
                 );
               })}

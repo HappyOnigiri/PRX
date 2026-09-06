@@ -15,6 +15,7 @@ State colors are reserved for state communication rather than decoration.
 Identifiers and counts may use monospace, while normal content prioritizes readability in English and Japanese.
 Nonessential motion respects the reduced-motion preference.
 
+Controls are icon-first: a button carries an icon alone unless its meaning needs words.
 Icon-only controls require an accessible name and tooltip.
 Controls keep a visible label when an icon cannot communicate the target, result, or danger scope.
 Pointer interactions retain a keyboard-accessible alternative.

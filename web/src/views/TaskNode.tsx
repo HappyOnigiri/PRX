@@ -12,6 +12,7 @@ import { DocumentKind, type TaskDisplayState } from "../gen/prx/v1/prx_pb";
 import { taskDisplayStateLabel, taskDisplayStateToken } from "../i18n/domain";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { IconButton } from "./IconButton";
+import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 
 export interface TaskNodeDocument {
   id: string;
@@ -32,6 +33,7 @@ interface TaskNodeData extends Record<string, unknown> {
   title: string;
   assignee: string;
   state: TaskDisplayState;
+  hasImplementationPlan: boolean;
   ready: boolean;
   stale: boolean;
   syncError: boolean;
@@ -135,6 +137,13 @@ export function TaskNode({
         </div>
         <div className="task-node-actions nodrag nowheel nopan">
           <CopyableIdentifier label={t("common.taskId")} value={id} valueOnly />
+          {/* Copying stays available on an archived task: handing the work to
+              an agent reads PRX rather than changing it. */}
+          <TaskPromptCopyButton
+            taskId={id}
+            hasImplementationPlan={data.hasImplementationPlan}
+            size="compact"
+          />
           <IconButton
             icon={data.readOnly ? Eye : Pencil}
             label={

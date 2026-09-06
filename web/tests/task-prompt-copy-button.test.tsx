@@ -7,7 +7,6 @@ import {
   waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { type Task } from "../src/gen/prx/v1/prx_pb";
 import { setDisplayLanguage } from "../src/i18n";
 import { TaskPromptCopyButton } from "../src/views/TaskPromptCopyButton";
 
@@ -15,8 +14,13 @@ const promptMocks = vi.hoisted(() => ({ getTaskPrompt: vi.fn() }));
 
 vi.mock("../src/api", () => ({ getTaskPrompt: promptMocks.getTaskPrompt }));
 
-function makeTask(hasImplementationPlan: boolean): Task {
-  return { id: "T-1", hasImplementationPlan } as Task;
+function renderButton(hasImplementationPlan: boolean) {
+  return render(
+    <TaskPromptCopyButton
+      taskId="T-1"
+      hasImplementationPlan={hasImplementationPlan}
+    />,
+  );
 }
 
 function stubClipboard(writeText: ReturnType<typeof vi.fn>) {
@@ -40,7 +44,7 @@ describe("TaskPromptCopyButton", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     stubClipboard(writeText);
     promptMocks.getTaskPrompt.mockResolvedValue({ prompt: "Design T-1" });
-    render(<TaskPromptCopyButton task={makeTask(false)} />);
+    renderButton(false);
 
     fireEvent.click(screen.getByRole("button", { name: "Copy design prompt" }));
 
@@ -57,7 +61,7 @@ describe("TaskPromptCopyButton", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     stubClipboard(writeText);
     promptMocks.getTaskPrompt.mockResolvedValue({ prompt: "Build T-1" });
-    render(<TaskPromptCopyButton task={makeTask(true)} />);
+    renderButton(true);
 
     fireEvent.click(
       screen.getByRole("button", { name: "Copy implementation prompt" }),
@@ -74,7 +78,7 @@ describe("TaskPromptCopyButton", () => {
     promptMocks.getTaskPrompt.mockRejectedValue(
       new Error('task "T-1" was not found'),
     );
-    render(<TaskPromptCopyButton task={makeTask(false)} />);
+    renderButton(false);
 
     fireEvent.click(screen.getByRole("button", { name: "Copy design prompt" }));
 
@@ -89,7 +93,7 @@ describe("TaskPromptCopyButton", () => {
   it("reports a clipboard failure in the display language", async () => {
     stubClipboard(vi.fn().mockRejectedValue(new Error("clipboard blocked")));
     promptMocks.getTaskPrompt.mockResolvedValue({ prompt: "Design T-1" });
-    render(<TaskPromptCopyButton task={makeTask(false)} />);
+    renderButton(false);
 
     fireEvent.click(screen.getByRole("button", { name: "Copy design prompt" }));
 
@@ -109,7 +113,7 @@ describe("TaskPromptCopyButton", () => {
       value: undefined,
     });
     promptMocks.getTaskPrompt.mockResolvedValue({ prompt: "Design T-1" });
-    render(<TaskPromptCopyButton task={makeTask(false)} />);
+    renderButton(false);
 
     fireEvent.click(screen.getByRole("button", { name: "Copy design prompt" }));
 
@@ -125,7 +129,7 @@ describe("TaskPromptCopyButton", () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     stubClipboard(writeText);
     promptMocks.getTaskPrompt.mockResolvedValue({ prompt: "Design T-1" });
-    render(<TaskPromptCopyButton task={makeTask(false)} />);
+    renderButton(false);
 
     fireEvent.click(screen.getByRole("button", { name: "Copy design prompt" }));
     await vi.waitFor(() => {

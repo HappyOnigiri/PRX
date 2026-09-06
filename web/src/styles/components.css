@@ -169,6 +169,40 @@
   white-space: nowrap;
 }
 
+/* The prompt copy button sits inside dense task listings, so its outcome
+   floats over the layout instead of reserving a line that would shift the
+   surrounding rows on every click. */
+.task-prompt-copy {
+  position: relative;
+  display: inline-flex;
+  flex: 0 0 auto;
+}
+
+.task-prompt-copy-button.is-copied,
+.task-prompt-copy-button.is-copied:hover {
+  color: var(--status-ready);
+}
+
+.task-prompt-copy-status {
+  position: absolute;
+  top: calc(100% + 4px);
+  right: 0;
+  z-index: 3;
+  max-width: 240px;
+  width: max-content;
+  padding: 4px 8px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+}
+
+.task-prompt-copy-status:empty {
+  display: none;
+}
+
 .dialog h2 {
   margin: 0;
   font-size: var(--text-lg);

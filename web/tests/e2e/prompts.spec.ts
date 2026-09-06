@@ -71,22 +71,20 @@ test("copies a task prompt built from the configured template", async ({
   await expect(promptPanel.getByText("Prompt templates saved.")).toBeVisible();
   await settings.getByRole("button", { name: "Done" }).click();
 
-  await page
+  // The prompt is copied from the task listed on the feature screen, so the
+  // reader never has to open the task to hand it to an agent.
+  const node = page
     .locator(".task-node")
-    .filter({ hasText: "E2E prompt task" })
-    .getByRole("button", { name: "Edit E2E prompt task" })
-    .click();
-  const inspector = page.getByRole("complementary", { name: "Task inspector" });
-  const taskId = await inspector
+    .filter({ hasText: "E2E prompt task" });
+  const taskId = await node
     .locator(".copyable-identifier-value")
     .first()
     .innerText();
-  await inspector.getByRole("button", { name: "Copy design prompt" }).click();
-  await expect(inspector.getByText("Prompt copied.")).toBeVisible();
+  await node.getByRole("button", { name: "Copy design prompt" }).click();
+  await expect(node.getByText("Prompt copied.")).toBeVisible();
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   expect(copied).toBe(`${slug} designs ${taskId}: E2E prompt task`);
 
-  await page.getByRole("button", { name: "Close inspector" }).click();
   await page.getByRole("button", { name: "Settings" }).click();
   await settings.getByRole("tab", { name: "Prompts" }).click();
   await promptPanel
