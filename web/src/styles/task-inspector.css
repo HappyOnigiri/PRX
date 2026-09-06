@@ -158,11 +158,20 @@
   padding: 10px;
 }
 
+.linked-pr .pr-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
 .linked-pr a {
   display: block;
+  flex: 1 1 auto;
+  min-width: 0;
   color: var(--accent);
   font-family: var(--font-mono);
   font-size: var(--text-sm);
+  overflow-wrap: anywhere;
 }
 
 .linked-pr span {
@@ -208,6 +217,10 @@
   flex: 0 0 auto;
 }
 
+.linked-pr .pr-detach {
+  flex: 0 0 auto;
+}
+
 .implementation-plan-section {
   min-width: 0;
 }
@@ -245,19 +258,6 @@
   overflow: auto;
   border-top: 1px solid var(--border);
   padding-top: 12px;
-}
-
-.text-action {
-  min-height: 28px;
-  background: transparent;
-  color: var(--accent);
-  padding: 0;
-  font-size: var(--text-sm);
-}
-
-.text-action:hover {
-  background: transparent;
-  text-decoration: underline;
 }
 
 .danger-zone {

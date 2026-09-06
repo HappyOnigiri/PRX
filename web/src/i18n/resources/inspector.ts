@@ -47,7 +47,7 @@ export const inspector = {
       saveTask: "タスクを保存",
       pullRequest: "プルリクエスト",
       stale: "情報が古い",
-      detach: "関連付けを解除",
+      detach: "紐づけ解除",
       attach: "関連付ける",
       references: "参照資料",
       noReferences: "参照資料はありません。",
