@@ -100,6 +100,17 @@ func writeDebugConfig(out *debugText, config DebugConfig) {
 		out.subSubField("type", method.Type)
 		out.subSubField("secret_configured", debugYesNo(method.SecretConfigured))
 	}
+	out.field("prompts", "")
+	writeDebugConfigPrompt(out, "design", config.Prompts.Design)
+	writeDebugConfigPrompt(out, "implementation", config.Prompts.Implementation)
+}
+
+// writeDebugConfigPrompt reports the shape of one template without its body: the
+// text is user-authored and can be several kilobytes long.
+func writeDebugConfigPrompt(out *debugText, name string, value DebugConfigPrompt) {
+	out.subItem(name)
+	out.subSubField("customized", debugYesNo(value.Customized))
+	out.subSubField("bytes", strconv.Itoa(value.Bytes))
 }
 
 func writeDebugStorage(out *debugText, storage DebugStorage) {

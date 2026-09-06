@@ -582,6 +582,10 @@ func TestFormatDebugReportRendersEverySection(t *testing.T) {
 				{ID: "work", Host: "github.com", Type: "keychain", SecretConfigured: true},
 			},
 			AutoSyncIntervalSeconds: 3600,
+			Prompts: DebugConfigPrompts{
+				Design:         DebugConfigPrompt{Customized: true, Bytes: 42},
+				Implementation: DebugConfigPrompt{Bytes: 900},
+			},
 		},
 		Storage: DebugStorage{
 			AppliedSchemaVersion:  8,
@@ -681,6 +685,13 @@ config:
       host: github.com
       type: keychain
       secret_configured: yes
+  prompts:
+    - design
+      customized: yes
+      bytes: 42
+    - implementation
+      customized: no
+      bytes: 900
 
 storage:
   applied_schema_version: 8

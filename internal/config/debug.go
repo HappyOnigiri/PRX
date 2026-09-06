@@ -1,6 +1,9 @@
 package config
 
-import "github.com/HappyOnigiri/PRX/internal/domain"
+import (
+	"github.com/HappyOnigiri/PRX/internal/domain"
+	"github.com/HappyOnigiri/PRX/internal/prompt"
+)
 
 // DebugInput collects the configuration facts a diagnostic report presents. It
 // loads the file exactly as every other caller does, so the report describes the
@@ -31,5 +34,18 @@ func (s *Store) DebugInput() domain.DebugConfigInput {
 			SecretConfigured: method.SecretConfigured,
 		})
 	}
+	// The templates stay out of the public view because their bodies are long
+	// and user-authored. What a reader needs when a copied prompt looks wrong is
+	// whether the wording was edited at all, which these facts answer without
+	// putting the text into the report.
+	defaults := prompt.DefaultTemplates()
+	result.Prompts = domain.DebugConfigPrompts{
+		Design:         debugPrompt(value.Prompts.Design, defaults.Design),
+		Implementation: debugPrompt(value.Prompts.Implementation, defaults.Implementation),
+	}
 	return result
+}
+
+func debugPrompt(stored, builtIn string) domain.DebugConfigPrompt {
+	return domain.DebugConfigPrompt{Customized: stored != builtIn, Bytes: len(stored)}
 }

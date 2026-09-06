@@ -473,3 +473,33 @@ func TestInvalidPromptTemplateFailsTheConfiguration(t *testing.T) {
 		t.Fatalf("error=%v, want an unsupported placeholder failure", err)
 	}
 }
+
+func TestDebugInputReportsWhetherPromptsWereEdited(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	// A report on an untouched installation must not read as "someone edited
+	// the wording", which is the question a bad copied prompt raises.
+	input := store.DebugInput()
+	if input.Prompts.Design.Customized || input.Prompts.Implementation.Customized {
+		t.Fatalf("prompts=%+v, want neither reported as customized", input.Prompts)
+	}
+	if input.Prompts.Design.Bytes != len(prompt.DefaultTemplates().Design) {
+		t.Fatalf("design bytes=%d", input.Prompts.Design.Bytes)
+	}
+
+	custom := prompt.DefaultTemplates()
+	custom.Design = "Design {{task_id}}\n"
+	if _, err := store.Update(func(settings *Config) error { return settings.SetPrompts(custom) }); err != nil {
+		t.Fatal(err)
+	}
+	edited := store.DebugInput()
+	if !edited.Prompts.Design.Customized || edited.Prompts.Implementation.Customized {
+		t.Fatalf("prompts=%+v, want only the design template reported as customized", edited.Prompts)
+	}
+	if edited.Prompts.Design.Bytes != len(custom.Design) {
+		t.Fatalf("design bytes=%d, want %d", edited.Prompts.Design.Bytes, len(custom.Design))
+	}
+}

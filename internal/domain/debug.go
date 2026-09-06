@@ -161,6 +161,21 @@ type DebugConfigAuthMethod struct {
 	SecretConfigured bool   `json:"secret_configured"`
 }
 
+// DebugConfigPrompt describes one stored agent prompt template. The body is
+// user-authored and several kilobytes long, so the report says whether it still
+// matches the built-in text instead of reproducing it: that is what separates
+// "someone edited the wording" from "this is the template PRX ships".
+type DebugConfigPrompt struct {
+	Customized bool `json:"customized"`
+	Bytes      int  `json:"bytes"`
+}
+
+// DebugConfigPrompts holds one entry per stored template.
+type DebugConfigPrompts struct {
+	Design         DebugConfigPrompt `json:"design"`
+	Implementation DebugConfigPrompt `json:"implementation"`
+}
+
 // DebugConfigInput carries the configuration facts collected outside the domain,
 // which cannot import the configuration package.
 type DebugConfigInput struct {
@@ -168,6 +183,7 @@ type DebugConfigInput struct {
 	AutoSyncIntervalSeconds int64
 	Hosts                   []DebugConfigHost
 	AuthMethods             []DebugConfigAuthMethod
+	Prompts                 DebugConfigPrompts
 	Warnings                []string
 	LoadError               string
 }
@@ -181,6 +197,7 @@ type DebugConfig struct {
 	Hosts                   []DebugConfigHost       `json:"hosts"`
 	AuthMethods             []DebugConfigAuthMethod `json:"auth_methods"`
 	AutoSyncIntervalSeconds int64                   `json:"auto_sync_interval_seconds"`
+	Prompts                 DebugConfigPrompts      `json:"prompts"`
 }
 
 // DebugDatabaseFile reports the on-disk state of the SQLite database.
@@ -378,6 +395,7 @@ func NewDebugConfig(input DebugConfigInput) DebugConfig {
 		Hosts:                   input.Hosts,
 		AuthMethods:             input.AuthMethods,
 		AutoSyncIntervalSeconds: input.AutoSyncIntervalSeconds,
+		Prompts:                 input.Prompts,
 	}
 	if input.LoadError != "" {
 		result.Errors = append(result.Errors, shortener.Text(truncateDebugMessage(input.LoadError)))
