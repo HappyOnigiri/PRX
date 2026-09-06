@@ -636,9 +636,11 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(inspector.locator("input[name=assignee]")).toHaveValue("");
   await page.getByRole("button", { name: "Close inspector" }).click();
   await page.getByRole("button", { name: "Sync GitHub" }).click();
+  // The task was left in progress, which is an unfinished status, so the
+  // attached pull request decides what the node presents once it is synced.
   await expect(
     page.locator(".task-node").filter({ hasText: "E2E API" }),
-  ).toHaveClass(/state-in-progress/);
+  ).toHaveClass(/state-conflict/);
   await openTask(page, "E2E API");
   await expect(inspector.locator(".linked-pr")).toContainText("conflict");
   await page.getByRole("button", { name: "Close inspector" }).click();

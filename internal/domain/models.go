@@ -15,7 +15,6 @@ const (
 type TaskStatus string
 
 const (
-	TaskStatusAuto       TaskStatus = "auto"
 	TaskStatusNotStarted TaskStatus = "not_started"
 	TaskStatusInProgress TaskStatus = "in_progress"
 	TaskStatusCompleted  TaskStatus = "completed"

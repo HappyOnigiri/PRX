@@ -22,25 +22,24 @@ enum FeatureStatus {
   FEATURE_STATUS_AUTO = 5;
 }
 
-// TaskStatus is the stored workflow state of a task. Auto derives the task's
-// effective state from its pull request or implementation plan.
+// TaskStatus is the stored workflow state of a task. It is always set by hand.
+// The unfinished values yield to an attached pull request, and the finished
+// values take precedence over one.
 enum TaskStatus {
   // TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
   TASK_STATUS_UNSPECIFIED = 0;
-  // TASK_STATUS_AUTO derives the task's effective state from its linked data.
-  TASK_STATUS_AUTO = 1;
-  // TASK_STATUS_NOT_STARTED overrides automatic derivation with an unfinished task.
-  TASK_STATUS_NOT_STARTED = 2;
-  // TASK_STATUS_IN_PROGRESS overrides automatic derivation with an active task.
-  TASK_STATUS_IN_PROGRESS = 3;
-  // TASK_STATUS_COMPLETED overrides automatic derivation with a satisfied task.
-  TASK_STATUS_COMPLETED = 4;
-  // TASK_STATUS_CLOSED overrides automatic derivation with a closed task.
-  TASK_STATUS_CLOSED = 5;
+  // TASK_STATUS_NOT_STARTED is the default of a new task and means work has not begun.
+  TASK_STATUS_NOT_STARTED = 1;
+  // TASK_STATUS_IN_PROGRESS means the task is being implemented before a pull request exists.
+  TASK_STATUS_IN_PROGRESS = 2;
+  // TASK_STATUS_COMPLETED marks the task satisfied regardless of any attached pull request.
+  TASK_STATUS_COMPLETED = 3;
+  // TASK_STATUS_CLOSED marks the task closed regardless of any attached pull request.
+  TASK_STATUS_CLOSED = 4;
 }
 
 // TaskDisplayState is the derived state presented for a task.
-// Automatic pull-request states use priority merged, closed, draft, conflict,
+// Pull-request states use priority merged, closed, draft, conflict,
 // changes requested, approved, review waiting, open, then unknown.
 enum TaskDisplayState {
   // TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
@@ -49,11 +48,11 @@ enum TaskDisplayState {
   TASK_DISPLAY_STATE_NOT_STARTED = 1;
   // TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
   TASK_DISPLAY_STATE_DESIGNED = 2;
-  // TASK_DISPLAY_STATE_IN_PROGRESS is a manual in-progress override.
+  // TASK_DISPLAY_STATE_IN_PROGRESS means the task is in progress without a pull request.
   TASK_DISPLAY_STATE_IN_PROGRESS = 3;
-  // TASK_DISPLAY_STATE_COMPLETED is a manual completed override.
+  // TASK_DISPLAY_STATE_COMPLETED is a stored completed status.
   TASK_DISPLAY_STATE_COMPLETED = 4;
-  // TASK_DISPLAY_STATE_CLOSED is a manual closed override or a closed pull request.
+  // TASK_DISPLAY_STATE_CLOSED is a stored closed status or a closed pull request.
   TASK_DISPLAY_STATE_CLOSED = 5;
   // TASK_DISPLAY_STATE_MERGED means the attached pull request is merged.
   TASK_DISPLAY_STATE_MERGED = 6;

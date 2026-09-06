@@ -83,7 +83,7 @@ describe("TaskInspector", () => {
     const task = makeTask({
       title: "Current task",
       scope: "Initial scope",
-      status: TaskStatus.AUTO,
+      status: TaskStatus.NOT_STARTED,
       assignee: "Bob",
       blockedReason: {
         code: BlockedReasonCode.WAITING_FOR_BLOCKER,

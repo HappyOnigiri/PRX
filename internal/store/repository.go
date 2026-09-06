@@ -277,7 +277,7 @@ func (s *Store) CreateTask(
 		FeatureID: feature.ID,
 		Title:     title,
 		Scope:     scope,
-		Status:    string(domain.TaskStatusAuto),
+		Status:    string(domain.TaskStatusNotStarted),
 		Assignee:  assignee,
 		CreatedAt: now,
 		UpdatedAt: now,

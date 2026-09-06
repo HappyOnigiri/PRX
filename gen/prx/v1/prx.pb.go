@@ -88,42 +88,39 @@ func (FeatureStatus) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{0}
 }
 
-// TaskStatus is the stored workflow state of a task. Auto derives the task's
-// effective state from its pull request or implementation plan.
+// TaskStatus is the stored workflow state of a task. It is always set by hand.
+// The unfinished values yield to an attached pull request, and the finished
+// values take precedence over one.
 type TaskStatus int32
 
 const (
 	// TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
 	TaskStatus_TASK_STATUS_UNSPECIFIED TaskStatus = 0
-	// TASK_STATUS_AUTO derives the task's effective state from its linked data.
-	TaskStatus_TASK_STATUS_AUTO TaskStatus = 1
-	// TASK_STATUS_NOT_STARTED overrides automatic derivation with an unfinished task.
-	TaskStatus_TASK_STATUS_NOT_STARTED TaskStatus = 2
-	// TASK_STATUS_IN_PROGRESS overrides automatic derivation with an active task.
-	TaskStatus_TASK_STATUS_IN_PROGRESS TaskStatus = 3
-	// TASK_STATUS_COMPLETED overrides automatic derivation with a satisfied task.
-	TaskStatus_TASK_STATUS_COMPLETED TaskStatus = 4
-	// TASK_STATUS_CLOSED overrides automatic derivation with a closed task.
-	TaskStatus_TASK_STATUS_CLOSED TaskStatus = 5
+	// TASK_STATUS_NOT_STARTED is the default of a new task and means work has not begun.
+	TaskStatus_TASK_STATUS_NOT_STARTED TaskStatus = 1
+	// TASK_STATUS_IN_PROGRESS means the task is being implemented before a pull request exists.
+	TaskStatus_TASK_STATUS_IN_PROGRESS TaskStatus = 2
+	// TASK_STATUS_COMPLETED marks the task satisfied regardless of any attached pull request.
+	TaskStatus_TASK_STATUS_COMPLETED TaskStatus = 3
+	// TASK_STATUS_CLOSED marks the task closed regardless of any attached pull request.
+	TaskStatus_TASK_STATUS_CLOSED TaskStatus = 4
 )
 
 // Enum value maps for TaskStatus.
 var (
 	TaskStatus_name = map[int32]string{
 		0: "TASK_STATUS_UNSPECIFIED",
-		1: "TASK_STATUS_AUTO",
-		2: "TASK_STATUS_NOT_STARTED",
-		3: "TASK_STATUS_IN_PROGRESS",
-		4: "TASK_STATUS_COMPLETED",
-		5: "TASK_STATUS_CLOSED",
+		1: "TASK_STATUS_NOT_STARTED",
+		2: "TASK_STATUS_IN_PROGRESS",
+		3: "TASK_STATUS_COMPLETED",
+		4: "TASK_STATUS_CLOSED",
 	}
 	TaskStatus_value = map[string]int32{
 		"TASK_STATUS_UNSPECIFIED": 0,
-		"TASK_STATUS_AUTO":        1,
-		"TASK_STATUS_NOT_STARTED": 2,
-		"TASK_STATUS_IN_PROGRESS": 3,
-		"TASK_STATUS_COMPLETED":   4,
-		"TASK_STATUS_CLOSED":      5,
+		"TASK_STATUS_NOT_STARTED": 1,
+		"TASK_STATUS_IN_PROGRESS": 2,
+		"TASK_STATUS_COMPLETED":   3,
+		"TASK_STATUS_CLOSED":      4,
 	}
 )
 
@@ -155,7 +152,7 @@ func (TaskStatus) EnumDescriptor() ([]byte, []int) {
 }
 
 // TaskDisplayState is the derived state presented for a task.
-// Automatic pull-request states use priority merged, closed, draft, conflict,
+// Pull-request states use priority merged, closed, draft, conflict,
 // changes requested, approved, review waiting, open, then unknown.
 type TaskDisplayState int32
 
@@ -166,11 +163,11 @@ const (
 	TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED TaskDisplayState = 1
 	// TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
 	TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED TaskDisplayState = 2
-	// TASK_DISPLAY_STATE_IN_PROGRESS is a manual in-progress override.
+	// TASK_DISPLAY_STATE_IN_PROGRESS means the task is in progress without a pull request.
 	TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS TaskDisplayState = 3
-	// TASK_DISPLAY_STATE_COMPLETED is a manual completed override.
+	// TASK_DISPLAY_STATE_COMPLETED is a stored completed status.
 	TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED TaskDisplayState = 4
-	// TASK_DISPLAY_STATE_CLOSED is a manual closed override or a closed pull request.
+	// TASK_DISPLAY_STATE_CLOSED is a stored closed status or a closed pull request.
 	TaskDisplayState_TASK_DISPLAY_STATE_CLOSED TaskDisplayState = 5
 	// TASK_DISPLAY_STATE_MERGED means the attached pull request is merged.
 	TaskDisplayState_TASK_DISPLAY_STATE_MERGED TaskDisplayState = 6
@@ -8680,15 +8677,14 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x15FEATURE_STATUS_PAUSED\x10\x02\x12\x1c\n" +
 	"\x18FEATURE_STATUS_COMPLETED\x10\x03\x12\x1c\n" +
 	"\x18FEATURE_STATUS_CANCELLED\x10\x04\x12\x17\n" +
-	"\x13FEATURE_STATUS_AUTO\x10\x05*\xac\x01\n" +
+	"\x13FEATURE_STATUS_AUTO\x10\x05*\x96\x01\n" +
 	"\n" +
 	"TaskStatus\x12\x1b\n" +
-	"\x17TASK_STATUS_UNSPECIFIED\x10\x00\x12\x14\n" +
-	"\x10TASK_STATUS_AUTO\x10\x01\x12\x1b\n" +
-	"\x17TASK_STATUS_NOT_STARTED\x10\x02\x12\x1b\n" +
-	"\x17TASK_STATUS_IN_PROGRESS\x10\x03\x12\x19\n" +
-	"\x15TASK_STATUS_COMPLETED\x10\x04\x12\x16\n" +
-	"\x12TASK_STATUS_CLOSED\x10\x05*\xed\x03\n" +
+	"\x17TASK_STATUS_UNSPECIFIED\x10\x00\x12\x1b\n" +
+	"\x17TASK_STATUS_NOT_STARTED\x10\x01\x12\x1b\n" +
+	"\x17TASK_STATUS_IN_PROGRESS\x10\x02\x12\x19\n" +
+	"\x15TASK_STATUS_COMPLETED\x10\x03\x12\x16\n" +
+	"\x12TASK_STATUS_CLOSED\x10\x04*\xed\x03\n" +
 	"\x10TaskDisplayState\x12\"\n" +
 	"\x1eTASK_DISPLAY_STATE_UNSPECIFIED\x10\x00\x12\"\n" +
 	"\x1eTASK_DISPLAY_STATE_NOT_STARTED\x10\x01\x12\x1f\n" +

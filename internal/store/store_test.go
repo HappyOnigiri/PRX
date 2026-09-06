@@ -37,7 +37,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 11 {
+		migrations != 12 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -399,9 +399,10 @@ func TestLegacyTaskStatusMigrationPreservesRelatedRows(t *testing.T) {
 		}
 	})
 	wantStatuses := map[string]string{
-		"manual-cancelled": "closed", "manual-completed": "completed", "manual-planned": "auto",
-		"manual-progress": "in_progress", "pr-cancelled": "closed", "pr-completed": "completed",
-		"pr-planned": "auto", "pr-progress": "auto",
+		"manual-cancelled": "closed", "manual-completed": "completed",
+		"manual-planned": "not_started", "manual-progress": "in_progress",
+		"pr-cancelled": "closed", "pr-completed": "completed",
+		"pr-planned": "not_started", "pr-progress": "not_started",
 	}
 	for rows.Next() {
 		var id, status string
@@ -614,14 +615,14 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	var migrationCount int
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
-		Scan(&migrationCount); err != nil || migrationCount != 11 {
+		Scan(&migrationCount); err != nil || migrationCount != 12 {
 		t.Fatalf("migration count=%d err=%v", migrationCount, err)
 	}
 	var status string
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT status FROM tasks WHERE id='task'`).
-		Scan(&status); err != nil || status != "auto" {
-		t.Fatalf("task status=%q err=%v, want auto", status, err)
+		Scan(&status); err != nil || status != "not_started" {
+		t.Fatalf("task status=%q err=%v, want not_started", status, err)
 	}
 	// Migration 5 numbers the features by creation time, so the default active
 	// one becomes F-1 and the three chosen statuses follow in storage-ID order.
@@ -1425,7 +1426,7 @@ func TestTaskStatusOverridesAndAutomaticPRState(t *testing.T) {
 		t.Fatalf("manual task completion: %v", err)
 	}
 
-	auto := domain.TaskStatusAuto
+	auto := domain.TaskStatusNotStarted
 	if _, err := service.UpdateTask(ctx, prTask.ID, nil, nil, &auto, nil); err != nil {
 		t.Fatalf("clear PR task override: %v", err)
 	}

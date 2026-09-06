@@ -165,7 +165,7 @@ func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
 	if err != nil {
 		return err
 	}
-	hasAutomaticStatus, err := s.tasksUseAutomaticStatusSchema(ctx)
+	hasTaskStatusVocabulary, err := s.tasksUseTaskStatusVocabulary(ctx)
 	if err != nil {
 		return err
 	}
@@ -173,7 +173,7 @@ func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
 	if versions[2] && !hasHost {
 		staleVersions = append(staleVersions, 2)
 	}
-	if versions[3] && !hasAutomaticStatus {
+	if versions[3] && !hasTaskStatusVocabulary {
 		staleVersions = append(staleVersions, 3)
 	}
 	hasPublicIDs, err := s.tablesHavePublicIDs(ctx)
@@ -282,7 +282,12 @@ func (s *Store) pullRequestsHaveHostColumn(ctx context.Context) (bool, error) {
 	return false, rows.Err()
 }
 
-func (s *Store) tasksUseAutomaticStatusSchema(ctx context.Context) (bool, error) {
+// tasksUseTaskStatusVocabulary reports whether the tasks table already carries
+// the status vocabulary that migration 3 introduced. It looks for the member
+// that separates that vocabulary from the one migration 1 created rather than
+// matching the whole constraint, so later migrations that revise the members
+// keep answering the version-collision question correctly.
+func (s *Store) tasksUseTaskStatusVocabulary(ctx context.Context) (bool, error) {
 	var definition sql.NullString
 	if err := s.db.QueryRowContext(
 		ctx,
@@ -294,10 +299,7 @@ func (s *Store) tasksUseAutomaticStatusSchema(ctx context.Context) (bool, error)
 		return false, err
 	}
 	normalized := strings.Join(strings.Fields(strings.ToLower(definition.String)), "")
-	return strings.Contains(
-		normalized,
-		"statusin('auto','not_started','in_progress','completed','closed')",
-	), nil
+	return strings.Contains(normalized, "'not_started'"), nil
 }
 
 func timestamp(t time.Time) string { return t.UTC().Format(time.RFC3339Nano) }

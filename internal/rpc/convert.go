@@ -185,8 +185,6 @@ func domainFeatureStatus(value *prxv1.FeatureStatus) (*domain.FeatureStatus, err
 
 func protoTaskStatus(value domain.TaskStatus) prxv1.TaskStatus {
 	switch value {
-	case domain.TaskStatusAuto:
-		return prxv1.TaskStatus_TASK_STATUS_AUTO
 	case domain.TaskStatusNotStarted:
 		return prxv1.TaskStatus_TASK_STATUS_NOT_STARTED
 	case domain.TaskStatusInProgress:
@@ -208,8 +206,6 @@ func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 	}
 	var result domain.TaskStatus
 	switch *value {
-	case prxv1.TaskStatus_TASK_STATUS_AUTO:
-		result = domain.TaskStatusAuto
 	case prxv1.TaskStatus_TASK_STATUS_NOT_STARTED:
 		result = domain.TaskStatusNotStarted
 	case prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS:

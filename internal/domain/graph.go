@@ -129,29 +129,8 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 		task.BlockedReason = ""
 		task.BlockedCode = ""
 		task.BlockerTaskID = ""
-		if task.Status != TaskStatusAuto {
-			switch task.Status {
-			case TaskStatusAuto:
-				task.DisplayState = TaskDisplayStateNotStarted
-			case TaskStatusNotStarted:
-				task.DisplayState = TaskDisplayStateNotStarted
-			case TaskStatusInProgress:
-				task.DisplayState = TaskDisplayStateInProgress
-			case TaskStatusCompleted:
-				task.DisplayState = TaskDisplayStateCompleted
-			case TaskStatusClosed:
-				task.DisplayState = TaskDisplayStateClosed
-			default:
-				task.DisplayState = TaskDisplayStateNotStarted
-			}
-		} else if pr != nil {
-			task.DisplayState = PRDisplayState(pr)
-		} else if task.HasImplementationPlan {
-			task.DisplayState = TaskDisplayStateDesigned
-		} else {
-			task.DisplayState = TaskDisplayStateNotStarted
-		}
-		if !isReadyCandidate(task, task.DisplayState) {
+		task.DisplayState = displayStateFor(task, pr)
+		if !isReadyCandidate(task.DisplayState) {
 			result[i] = task
 			continue
 		}

@@ -40,7 +40,7 @@ const taskDefaults = {
   id: "task-1",
   featureId: "feature-1",
   title: "Build API",
-  status: TaskStatus.AUTO,
+  status: TaskStatus.NOT_STARTED,
   assignee: "Bob",
   ready: true,
   displayState: TaskDisplayState.NOT_STARTED,

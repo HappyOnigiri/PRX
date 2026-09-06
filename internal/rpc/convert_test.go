@@ -67,7 +67,6 @@ func TestProtoTaskStatusMapsEveryKnownValue(t *testing.T) {
 		value domain.TaskStatus
 		want  prxv1.TaskStatus
 	}{
-		{"auto", domain.TaskStatusAuto, prxv1.TaskStatus_TASK_STATUS_AUTO},
 		{"not started", domain.TaskStatusNotStarted, prxv1.TaskStatus_TASK_STATUS_NOT_STARTED},
 		{"in progress", domain.TaskStatusInProgress, prxv1.TaskStatus_TASK_STATUS_IN_PROGRESS},
 		{"completed", domain.TaskStatusCompleted, prxv1.TaskStatus_TASK_STATUS_COMPLETED},

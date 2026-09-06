@@ -6,11 +6,14 @@ Clients must not recreate that derivation independently.
 A task has no kind: any task may hold a pull request, and one without a pull request reaches completion through its stored status.
 Deciding that in advance changed nothing the server derives, so it is not asked for.
 
-Manual task-state overrides take precedence over automatic derivation.
+A task status is always chosen by hand; there is no automatic member to select.
+The unfinished statuses yield to an attached pull request, so linking one presents the pull request's state without a second edit.
+The finished statuses outrank a pull request, so a task settled by hand stays settled while its pull request is still open.
+A task left in progress without a pull request satisfies nothing and clears no dependent, because the work it names has not landed anywhere.
 Dependency satisfaction uses raw completion semantics rather than display labels.
 Presentation flags such as review, conflict, or staleness do not silently redefine completion.
 
-A feature's presented status follows the same two-layer rule as a task's.
+A feature is presented through the same two layers of stored status and derived status, but it keeps an automatic member that a task no longer has.
 Its stored status defaults to automatic, and an automatic feature is presented as completed once it owns at least one task and every one of them is finished.
 A stored status other than automatic is a manual decision and is presented unchanged, so a feature returned to active work stays active while its tasks remain finished.
 A feature has no separate derived vocabulary: the derived value is a stored status without the automatic member.

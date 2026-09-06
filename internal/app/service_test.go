@@ -316,7 +316,7 @@ func TestCreateFeatureNormalizesBeforeRepository(t *testing.T) {
 
 func TestUpdateTaskAcceptsManualOverrides(t *testing.T) {
 	repository := &taskRepository{
-		task: domain.Task{ID: "task-id", Title: "Ship", Status: domain.TaskStatusAuto},
+		task: domain.Task{ID: "task-id", Title: "Ship", Status: domain.TaskStatusNotStarted},
 	}
 	service := app.New(repository, nil)
 	completed := domain.TaskStatusCompleted
