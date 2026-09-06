@@ -38,5 +38,5 @@ Snapshots and list operations never include inline bodies.
 
 A task may designate at most one document as its implementation plan.
 That designation stays exclusive to tasks: a project or feature document can never be a plan.
-The designation moves an automatic task without a pull request from the not-started display state to the designed one, and leaves readiness, dependency satisfaction, and completion untouched.
+The designation moves a not-started task without a pull request from the not-started display state to the designed one, and leaves readiness, dependency satisfaction, and completion untouched.
 Non-plan documents, feature documents, and project documents have no application-level count limit.

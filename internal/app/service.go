@@ -282,7 +282,6 @@ func (s *Service) UpdateTask(
 	}
 	if !oneOf(
 		task.Status,
-		domain.TaskStatusAuto,
 		domain.TaskStatusNotStarted,
 		domain.TaskStatusInProgress,
 		domain.TaskStatusCompleted,

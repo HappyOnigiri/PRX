@@ -752,7 +752,7 @@ func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 	if len(snapshot.Msg.GetSnapshot().GetTasks()) != 1 {
 		t.Fatalf("rejected requests changed state: %+v", snapshot.Msg.GetSnapshot().GetTasks())
 	}
-	if snapshot.Msg.GetSnapshot().GetTasks()[0].GetStatus() != prxv1.TaskStatus_TASK_STATUS_AUTO {
+	if snapshot.Msg.GetSnapshot().GetTasks()[0].GetStatus() != prxv1.TaskStatus_TASK_STATUS_NOT_STARTED {
 		t.Fatalf("task status=%s", snapshot.Msg.GetSnapshot().GetTasks()[0].GetStatus())
 	}
 }

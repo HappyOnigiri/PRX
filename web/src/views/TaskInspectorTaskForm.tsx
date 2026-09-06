@@ -66,9 +66,6 @@ export function TaskInspectorTaskForm({
         <label>
           {t("common.status")}
           <select name="status" defaultValue={task.status}>
-            <option value={TaskStatus.AUTO}>
-              {taskStatusLabel(TaskStatus.AUTO, t)}
-            </option>
             <option value={TaskStatus.NOT_STARTED}>
               {taskStatusLabel(TaskStatus.NOT_STARTED, t)}
             </option>

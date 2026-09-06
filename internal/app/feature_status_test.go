@@ -45,8 +45,8 @@ func TestFeatureCompletesOnlyWhenEveryTaskIsFinished(t *testing.T) {
 			name: "merged and closed pull requests finish the work",
 			slug: "merged-and-closed",
 			tasks: []statusTask{
-				{status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
-				{status: domain.TaskStatusAuto, pr: domain.PullRequestStateClosed},
+				{status: domain.TaskStatusNotStarted, pr: domain.PullRequestStateMerged},
+				{status: domain.TaskStatusNotStarted, pr: domain.PullRequestStateClosed},
 			},
 			want: domain.FeatureStatusCompleted,
 		},
@@ -55,7 +55,7 @@ func TestFeatureCompletesOnlyWhenEveryTaskIsFinished(t *testing.T) {
 			slug: "mixed-finished",
 			tasks: []statusTask{
 				{status: domain.TaskStatusCompleted},
-				{status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
+				{status: domain.TaskStatusNotStarted, pr: domain.PullRequestStateMerged},
 			},
 			want: domain.FeatureStatusCompleted,
 		},
@@ -81,8 +81,8 @@ func TestFeatureCompletesOnlyWhenEveryTaskIsFinished(t *testing.T) {
 			name: "one open pull request keeps the feature active",
 			slug: "one-open-pull-request",
 			tasks: []statusTask{
-				{status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
-				{status: domain.TaskStatusAuto, pr: domain.PullRequestStateOpen},
+				{status: domain.TaskStatusNotStarted, pr: domain.PullRequestStateMerged},
+				{status: domain.TaskStatusNotStarted, pr: domain.PullRequestStateOpen},
 			},
 			want: domain.FeatureStatusActive,
 		},
@@ -142,7 +142,7 @@ func TestUnscopedSyncSkipsCompletedFeaturesAndExplicitScopeRefreshesThem(t *test
 	service, database := newAutoSyncTestService(t)
 	defer func() { _ = database.Close() }()
 	feature := createFeatureWithTasks(t, service, database, "completed-sync", []statusTask{
-		{status: domain.TaskStatusAuto, pr: domain.PullRequestStateMerged},
+		{status: domain.TaskStatusNotStarted, pr: domain.PullRequestStateMerged},
 	})
 	if got := snapshotFeature(t, service, feature.ID); got.DisplayStatus != domain.FeatureStatusCompleted {
 		t.Fatalf("display status=%q", got.DisplayStatus)
@@ -191,7 +191,7 @@ func createFeatureWithTasks(
 		if err != nil {
 			t.Fatal(err)
 		}
-		if value.status != domain.TaskStatusAuto {
+		if value.status != domain.TaskStatusNotStarted {
 			status := value.status
 			if _, err := service.UpdateTask(ctx, task.ID, nil, nil, &status, nil); err != nil {
 				t.Fatal(err)

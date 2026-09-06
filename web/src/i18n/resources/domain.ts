@@ -30,7 +30,6 @@ export const domain = {
       unknown: "Unknown",
     },
     taskStatus: {
-      auto: "Automatic",
       notStarted: "Not started",
       inProgress: "In progress",
       completed: "Completed",
@@ -90,9 +89,8 @@ export const domain = {
       unknown: "不明",
     },
     taskStatus: {
-      auto: "自動判定",
       notStarted: "未着手",
-      inProgress: "進行中",
+      inProgress: "実装中",
       completed: "完了",
       closed: "クローズ",
       unknown: "不明",
@@ -100,7 +98,7 @@ export const domain = {
     displayState: {
       notStarted: "未着手",
       designed: "設計済み",
-      inProgress: "進行中",
+      inProgress: "実装中",
       completed: "完了",
       closed: "クローズ済み",
       merged: "マージ済み",

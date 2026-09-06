@@ -31,7 +31,6 @@ export const featureStatusKeys = {
 } as const satisfies Record<FeatureStatus, string>;
 
 export const taskStatusKeys = {
-  [TaskStatus.AUTO]: "taskStatus.auto",
   [TaskStatus.NOT_STARTED]: "taskStatus.notStarted",
   [TaskStatus.IN_PROGRESS]: "taskStatus.inProgress",
   [TaskStatus.COMPLETED]: "taskStatus.completed",

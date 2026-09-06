@@ -193,7 +193,7 @@ func (s *Service) createPausedDemo(ctx context.Context, projectID string) error 
 		{
 			title:    "Complete general rollout",
 			scope:    "Merge both rollout branches",
-			status:   domain.TaskStatusAuto,
+			status:   domain.TaskStatusNotStarted,
 			assignee: "Alice",
 		},
 	})
@@ -322,7 +322,7 @@ func (s *Service) createDemoTasks(
 		if err != nil {
 			return nil, err
 		}
-		if value.status != domain.TaskStatusAuto {
+		if value.status != domain.TaskStatusNotStarted {
 			status := value.status
 			task, err = s.UpdateTask(ctx, task.ID, nil, nil, &status, nil)
 			if err != nil {
@@ -367,7 +367,7 @@ func completedDemoTasks() []demoTask {
 		tasks[index] = demoTask{
 			title:    fmt.Sprintf("Completed delivery slice %03d", index+1),
 			scope:    "A completed repository delivery boundary",
-			status:   domain.TaskStatusAuto,
+			status:   domain.TaskStatusNotStarted,
 			assignee: []string{"Alice", "Bob", "Carol"}[index%3],
 			pr: &domain.PullRequest{
 				Host: "github.com", Owner: "prx-demo", Repository: "prx-demo-scale",
@@ -389,7 +389,7 @@ func showcaseManualTasks() []demoTask {
 		{
 			title:    "Design dependency policy",
 			scope:    "A planned task waiting on scope",
-			status:   domain.TaskStatusAuto,
+			status:   domain.TaskStatusNotStarted,
 			assignee: "Bob",
 			plan:     "1. Confirm dependency direction.\n2. Document readiness rules.\n3. Verify the graph.",
 		},
@@ -448,7 +448,7 @@ func demoPullRequestTask(
 ) demoTask {
 	return demoTask{
 		title: title, scope: scope,
-		status: domain.TaskStatusAuto, assignee: assignee,
+		status: domain.TaskStatusNotStarted, assignee: assignee,
 		pr: &domain.PullRequest{
 			Host: "github.com", Owner: "prx-demo", Repository: repository,
 			Number: number, State: state, Draft: draft,

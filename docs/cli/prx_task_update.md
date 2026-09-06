@@ -18,7 +18,7 @@ prx task update TASK_ID --status completed
       --assignee string   new assignee
   -h, --help              help for update
       --scope string      new scope
-      --status string     auto, not_started, in_progress, completed, or closed
+      --status string     not_started, in_progress, completed, or closed
       --title string      new title
 ```
 
