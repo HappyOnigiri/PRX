@@ -15,8 +15,8 @@
     "lint:css": "stylelint \"src/**/*.css\"",
     "check:dead-code": "knip --no-progress",
     "check:duplicates": "jscpd --min-lines 20 --min-tokens 60 --reporters console --exit-code 1 --no-colors --no-tips --format typescript,tsx --ignore 'src/gen/**' src",
-    "format": "prettier --write src tests index.html *.ts *.json",
-    "format:check": "prettier --check src tests index.html *.ts *.json",
+    "format": "prettier --write src tests eslint-rules index.html *.js *.ts *.json",
+    "format:check": "prettier --check src tests eslint-rules index.html *.js *.ts *.json",
     "e2e": "playwright test",
     "clean": "rm -rf coverage playwright-report test-results"
   },

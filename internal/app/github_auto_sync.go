@@ -109,9 +109,8 @@ func (s *Service) SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus,
 		return true, domain.GitHubSyncStatus{}, statusErr
 	}
 	// The automatic path records errors but deliberately does not fail the CLI
-	// command or page load that happened to notice the expired interval.
-	// A refresh whose record was superseded reports the same way as one that
-	// never acquired the interval, because the status read back is another run's.
+	// command or page load that happened to notice the expired interval. A
+	// superseded record reports as one that never acquired the interval.
 	return recorded, syncStatus(interval, status), nil
 }
 

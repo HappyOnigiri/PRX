@@ -8,20 +8,9 @@ export interface BatchCandidate {
   pendingBlockerIds: string[];
 }
 
-// batchCandidates lists the tasks a batch may cover. A task needs a plan before
-// an agent can implement it, so only designed tasks are offered at all.
-//
-// Without the blocked tasks, the offer is what can start right now. With them,
-// it grows to the tasks whose blockers can travel in the same batch: an agent
-// implements those after the work they wait for and stacks the pull requests.
-// A task waiting on something the batch cannot carry — a task without a plan, or
-// one in another feature — stays out, because selecting it could never become
-// possible.
-//
-// A task waiting on more than one task stays out as well. Its pull request would
-// have to stack on several pull requests at once, and there is no single base to
-// open it against, so the handover it describes is not one an agent can carry
-// out.
+// batchCandidates lists the tasks a batch may cover: the designed ones, plus on
+// request the blocked ones whose single blocker can travel in the same batch.
+// See docs/design/agent-prompts.md.
 export function batchCandidates(
   tasks: Task[],
   includeBlocked: boolean,

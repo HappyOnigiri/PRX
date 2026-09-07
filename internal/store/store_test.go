@@ -844,8 +844,7 @@ func TestMigrationAddsGitHubHostAndHostScopedUniqueness(t *testing.T) {
 
 // An older build matched the task status vocabulary exactly, so it dropped the
 // record of migration 3 from a database migrated past it. Reopening then
-// replayed a migration that rebuilds the task table around a column the schema
-// no longer has, which left the database unopenable until the record came back.
+// replayed that migration against a schema past it, leaving the database shut.
 func TestDroppedTaskStatusMigrationRecordIsRestored(t *testing.T) {
 	ctx := context.Background()
 	databasePath := filepath.Join(t.TempDir(), "dropped.db")

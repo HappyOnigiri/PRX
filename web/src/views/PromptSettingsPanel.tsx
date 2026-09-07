@@ -86,8 +86,7 @@ export function PromptSettingsPanel() {
             onClick={() => {
               // The server would restore a blank template on its own, but the
               // editor shows what it is about to save, so the built-in text
-              // goes into the fields instead of leaving them empty until the
-              // write comes back.
+              // goes into the fields rather than waiting for the write.
               edit(builtIn);
             }}
           />
@@ -109,9 +108,8 @@ export function PromptSettingsPanel() {
 }
 
 // The vocabulary comes from the server so a hint can never advertise a
-// placeholder the server would reject. The batch template has its own, listed
-// under its own field: a reader who copied a placeholder from the list above it
-// would otherwise have the save rejected.
+// placeholder the server would reject, and each field lists its own.
+// See docs/design/agent-prompts.md.
 function TemplateFields({
   current,
   settings,

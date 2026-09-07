@@ -153,9 +153,8 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 }
 
 // addCommands holds every command registration so building the root command
-// stays readable. The two calls group the resource commands and the
-// whole-repository commands for a reader of this file only: the rendered help
-// sorts commands by name, so the registration order carries no meaning there.
+// stays readable. The two calls group resource and whole-repository commands for
+// a reader of this file only; the rendered help sorts commands by name.
 func (s *state) addCommands(root *cobra.Command) {
 	root.AddCommand(
 		s.schemaVersionCommand(),
@@ -184,10 +183,9 @@ func (s *state) addCommands(root *cobra.Command) {
 	)
 }
 
-// helpCommand replaces the default help command, which prints its own message
-// and the root usage to stdout and exits successfully when the topic is
-// unknown. Returning the error instead keeps every failure on the shared error
-// path, so stdout stays empty and JSON callers always parse the same shape.
+// helpCommand replaces the default help command, which prints to stdout and
+// exits successfully on an unknown topic. Returning the error keeps every
+// failure on the shared error path, so JSON callers parse one shape.
 func (s *state) helpCommand(root *cobra.Command) *cobra.Command {
 	return &cobra.Command{
 		Use:   "help [command]",
@@ -230,8 +228,7 @@ func resolvePathSource(value, variable string) (resolved, source string) {
 
 // warnAboutConfiguration reports the recoverable configuration problems once per
 // run, before any command reads the configuration. A load failure stays silent
-// here so the command that needs the configuration still owns its own error, and
-// so a command that never reads it keeps succeeding.
+// here, so the command that needs the configuration still owns its own error.
 func (s *state) warnAboutConfiguration() {
 	store, err := config.NewStore(s.configPath)
 	if err != nil {
@@ -270,8 +267,7 @@ func isConfigCommand(command *cobra.Command) bool {
 
 // isAutomaticSyncExcluded reports the commands the opportunistic refresh must
 // skip. `sync` performs the refresh itself, and `debug` reports the recorded
-// synchronization state, which a refresh would overwrite before the reader sees
-// the failure they were asked to send.
+// synchronization state, which a refresh would overwrite before it is read.
 func isAutomaticSyncExcluded(command *cobra.Command) bool {
 	for current := command; current != nil; current = current.Parent() {
 		if current.Name() == "sync" || current.Name() == "debug" {

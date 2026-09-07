@@ -15,6 +15,15 @@ PRX is a local-first tool for coordinating dependency graphs of tasks and GitHub
 - `internal/webui/dist/` is build output. Keep only `.gitkeep` tracked and produce assets through `make build` or `make web-build`.
 - Run `make ci` before handing off implementation changes.
 
+## Comments
+
+A comment is at most 3 lines and each line at most 200 display columns; both limits are enforced for Go and for everything ESLint reads under `web/`.
+
+- Adjacent comment lines count as one comment. A blank source line, or moving a paragraph next to the code it explains, splits them.
+- Tooling directives (`//go:*`, `//nolint`, `eslint-disable*`, `@ts-*`, …) count towards neither limit.
+- Move rationale that outgrows 3 lines into the matching `docs/design/` document and leave a pointer to it.
+- To keep a longer comment, put `commentlint:allow-long -- <reason>` on its own line in the same comment. It waives the line limit only, and one comment accepts one marker.
+
 ## Design documents
 
 | Document | Read it before changing |

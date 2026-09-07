@@ -1,7 +1,6 @@
 // Package prompt owns the agent prompt templates shared by the CLI, the RPC
-// server, and the WebUI. It holds the built-in templates, their validation, the
-// placeholder substitution, and the rule that selects a template for one task,
-// so no caller can drift from another by re-implementing any of them.
+// server, and the WebUI: the built-in templates, their validation, the
+// placeholder substitution, and the rule that selects a template for one task.
 package prompt
 
 import (
@@ -61,10 +60,9 @@ var supportedPlaceholders = []string{
 // worse than a task prompt missing its own identifier.
 const batchRequiredPlaceholder = "task_list"
 
-// batchSupportedPlaceholders is the batch vocabulary. It is deliberately
-// smaller than the task vocabulary: a batch covers several tasks, so no single
-// task's title or scope belongs in it, and the per-task text the agent needs
-// comes from `prx prompt TASK_ID` rather than from this template.
+// batchSupportedPlaceholders is the batch vocabulary, which carries no
+// single task's title or scope.
+// See docs/design/agent-prompts.md.
 var batchSupportedPlaceholders = []string{
 	batchRequiredPlaceholder,
 	"feature_id",
@@ -145,8 +143,7 @@ Report each task's outcome separately, including the ones that failed.
 
 // SupportedPlaceholders returns the substitution vocabulary, without the
 // surrounding braces. It exists so a client can present what the server accepts
-// instead of maintaining its own list, which would drift from this one without
-// anything failing.
+// instead of maintaining its own list, which would drift silently.
 func SupportedPlaceholders() []string {
 	return slices.Clone(supportedPlaceholders)
 }
@@ -246,11 +243,9 @@ func Render(task domain.Task, templates Templates) (Kind, string, error) {
 	return kind, body, nil
 }
 
-// RenderBatch expands the batch template over several tasks. The tasks arrive
-// in the order the caller listed them, and the rendered list keeps that order so
-// the reader hands the agent the batch they saw. The per-task instructions stay
-// out of the body: the template tells the agent to fetch each one with
-// `prx prompt TASK_ID`, so a batch stays the same length whatever it covers.
+// RenderBatch expands the batch template over several tasks, keeping the order
+// the caller listed them in and leaving the per-task instructions out.
+// See docs/design/agent-prompts.md.
 func RenderBatch(featureID string, tasks []domain.Task, templates Templates) (string, error) {
 	normalized, err := templates.Normalize()
 	if err != nil {

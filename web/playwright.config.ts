@@ -6,9 +6,8 @@ export default defineConfig({
   timeout: 45_000,
   expect: { timeout: 8_000 },
   // Tests create features with unique titles and otherwise only read the demo
-  // graphs, so they can share the single E2E server across workers. The one
-  // exception is prompts.spec.ts, which rewrites the shared prompt templates and
-  // restores them, so template-sensitive tests have to live in that file.
+  // graphs, so they share the single E2E server across workers. The exception is
+  // prompts.spec.ts, which rewrites the shared prompt templates.
   fullyParallel: true,
   retries: process.env["CI"] ? 1 : 0,
   reporter: process.env["CI"]

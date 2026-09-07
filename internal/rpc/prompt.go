@@ -58,9 +58,8 @@ func (h *Handler) UpdatePromptTemplates(
 }
 
 // GetTaskPrompt renders the prompt from the current server state rather than
-// from what the caller believes the task looks like. A WebUI snapshot may
-// predate a plan being registered or deleted, and the copied prompt has to
-// match the task as it is now.
+// from what the caller believes the task looks like: a WebUI snapshot may
+// predate a plan being registered or deleted.
 func (h *Handler) GetTaskPrompt(
 	ctx context.Context,
 	req *connect.Request[prxv1.GetTaskPromptRequest],
@@ -92,10 +91,9 @@ func (h *Handler) GetTaskPrompt(
 	}), nil
 }
 
-// GetBatchPrompt renders one prompt covering several tasks. Every task is
-// resolved from the current server state and checked against the named feature,
-// so a stale WebUI selection reports the task it can no longer hand over instead
-// of quietly rendering a shorter batch than the caller asked for.
+// GetBatchPrompt renders one prompt covering several tasks, each resolved from
+// the current server state and checked against the named feature.
+// See docs/design/agent-prompts.md.
 func (h *Handler) GetBatchPrompt(
 	ctx context.Context,
 	req *connect.Request[prxv1.GetBatchPromptRequest],
@@ -151,11 +149,9 @@ func (h *Handler) GetBatchPrompt(
 	}), nil
 }
 
-// requireBlockersInBatch rejects a batch that asks for a task without the work
-// it waits for. A blocked task can be handed over, because the agent implements
-// it after its blocker and stacks the pull requests, but only if that blocker
-// travels in the same batch. Anything else describes work the receiving agent
-// has no base to start from.
+// requireBlockersInBatch rejects a batch that asks for a blocked task without
+// the blocker it waits for.
+// See docs/design/agent-prompts.md.
 func requireBlockersInBatch(tasks []domain.Task) error {
 	included := make(map[string]struct{}, len(tasks))
 	for _, task := range tasks {

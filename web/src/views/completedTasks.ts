@@ -33,11 +33,9 @@ export interface VisibleGraph {
 // map it is handed and a fresh one on every render would relayout the canvas.
 export const emptyHiddenDependencies = new Map<string, HiddenDependencies>();
 
-// Hiding removes every finished task, including the ones that sit between two
-// unfinished tasks, so the reader never has to tell a finished node apart from
-// an unfinished one. The dependency that crossed a hidden node is not lost: it
-// is reported on the visible task at each end, following chains of hidden
-// tasks so a whole finished stretch is counted rather than only its first node.
+// Hiding removes every finished task, and a dependency that crossed one is
+// reported on the visible task at each end instead of being dropped.
+// See docs/design/webui.md.
 export function hideFinishedTasks(
   tasks: Task[],
   dependencies: Dependency[],

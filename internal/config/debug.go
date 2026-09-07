@@ -6,9 +6,8 @@ import (
 )
 
 // DebugInput collects the configuration facts a diagnostic report presents. It
-// loads the file exactly as every other caller does, so the report describes the
-// configuration PRX would actually use, and it copies only the public view so no
-// credential material can reach the report.
+// loads the file exactly as every other caller does, and copies only the public
+// view, so no credential material can reach the report.
 func (s *Store) DebugInput() domain.DebugConfigInput {
 	value, warnings, err := s.LoadWithWarnings()
 	result := domain.DebugConfigInput{Warnings: warnings}
@@ -35,9 +34,8 @@ func (s *Store) DebugInput() domain.DebugConfigInput {
 		})
 	}
 	// The templates stay out of the public view because their bodies are long
-	// and user-authored. What a reader needs when a copied prompt looks wrong is
-	// whether the wording was edited at all, which these facts answer without
-	// putting the text into the report.
+	// and user-authored. When a copied prompt looks wrong the reader only needs
+	// to know whether the wording was edited, which these facts answer.
 	defaults := prompt.DefaultTemplates()
 	result.Prompts = domain.DebugConfigPrompts{
 		Design:         debugPrompt(value.Prompts.Design, defaults.Design),

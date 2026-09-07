@@ -463,10 +463,9 @@ function FeatureStatusBadge({ status }: { status: FeatureStatus }) {
   );
 }
 
-// A feature can be read-only for two reasons, and the remedy differs: restore
-// the feature, or activate the project it belongs to. The notice says which,
-// and an archived project decides even when the feature is archived too:
-// restoring the feature alone would leave it read-only.
+// A feature can be read-only for two reasons with different remedies: restore
+// the feature, or activate its project. An archived project decides even when
+// the feature is archived too, because restoring it alone changes nothing.
 function ArchivedNotice({ project }: { project: Project | undefined }) {
   const { t } = useTranslation();
   if (project?.archived)

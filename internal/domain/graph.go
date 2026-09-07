@@ -10,10 +10,8 @@ func CyclePath(tasks []Task, deps []Dependency, blocker, blocked string) []strin
 		return []string{blocker, blocker}
 	}
 	// The stored graph is already acyclic, so adding blocker→blocked closes a
-	// cycle exactly when blocker is reachable from blocked. Walking that single
-	// question with a visited set keeps the search linear in the graph size;
-	// re-running a path-based DFS from every task revisits shared subgraphs once
-	// per distinct route, which is exponential on diamond-shaped graphs.
+	// cycle exactly when blocker is reachable from blocked. A visited set keeps
+	// that search linear; a path-based DFS is exponential on diamond graphs.
 	adj := make(map[string][]string, len(tasks))
 	for _, dep := range deps {
 		adj[dep.BlockerTaskID] = append(adj[dep.BlockerTaskID], dep.BlockedTaskID)
@@ -136,10 +134,9 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 		}
 		task.Ready = true
 		task.PendingBlockerTaskIDs = nil
-		// Every unsatisfied blocker is collected rather than only the first one,
-		// because handing a blocked task to an agent means handing over
-		// everything it waits for. The blocked reason still describes the first
-		// one alone, which is what a reader acts on.
+		// Every unsatisfied blocker is collected, while the blocked reason still
+		// describes the first one alone.
+		// See docs/design/domain.md.
 		for _, blockerID := range blockers[task.ID] {
 			blocker, ok := taskByID[blockerID]
 			if ok && IsSatisfied(blocker, prByTask[blockerID]) {

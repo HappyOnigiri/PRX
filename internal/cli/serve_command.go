@@ -73,9 +73,8 @@ func (s *state) serveCommand() *cobra.Command {
 }
 
 // localOnly rejects requests whose Host or Origin header does not belong to the
-// address the server listens on. Without it a page on an attacker-controlled
-// domain that resolves to the loopback address is same-origin from the
-// browser's point of view and can drive every mutation on the local database.
+// address the server listens on: an attacker-controlled domain resolving to the
+// loopback address is otherwise same-origin. See docs/design/security.md.
 func localOnly(addr net.Addr, next http.Handler) http.Handler {
 	allowed := map[string]struct{}{}
 	if host, port, err := net.SplitHostPort(addr.String()); err == nil {

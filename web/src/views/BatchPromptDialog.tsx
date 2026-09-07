@@ -16,10 +16,9 @@ type CopyStatus =
   | { case: "copied"; count: number }
   | { case: "failed"; message: string };
 
-// BatchPromptDialog hands several tasks to one agent in a single prompt. Like
-// the per-task button, the text comes from the server at the moment of the copy,
-// so neither an edited template nor a task that changed since the snapshot can
-// produce the wrong prompt.
+// BatchPromptDialog hands several tasks to one agent in a single prompt, with
+// the text rendered by the server at the moment of the copy.
+// See docs/design/agent-prompts.md.
 export function BatchPromptDialog({
   featureId,
   tasks,
@@ -210,11 +209,9 @@ function BatchPromptTaskList({
       <ul className="batch-prompt-list">
         {candidates.map((candidate) => (
           <li key={candidate.task.id}>
-            {/* The row itself is the control. A reader picks several tasks in a
-                run down the list, so the target is the line they are reading
-                rather than a box at its edge. The selection reaches assistive
-                technology through aria-pressed, because the accent edge and the
-                filled background state it by appearance alone. */}
+            {/* The row itself is the control, and aria-pressed carries the
+                selection that the accent edge and fill state by appearance.
+                See docs/design/webui.md. */}
             <button
               type="button"
               className="batch-prompt-task"

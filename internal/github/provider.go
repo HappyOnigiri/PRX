@@ -20,9 +20,8 @@ import (
 
 type Provider interface {
 	// Fetch returns the newest pull-request record. Implementations may return a
-	// partially updated record together with an error when the pull-request body
-	// was fetched but a later metadata request failed; callers persist that
-	// partial state and decide whether the known state still needs attention.
+	// partially updated record together with an error when a later metadata
+	// request failed; callers persist that partial state and judge it themselves.
 	Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error)
 }
 

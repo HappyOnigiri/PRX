@@ -21,8 +21,7 @@ const (
 
 // Repository is the persistence boundary used by the application service.
 // Keeping this interface in the app package lets the service be tested without
-// opening SQLite and leaves alternative persistence implementations free to
-// satisfy the same use cases.
+// opening SQLite and leaves other persistence implementations free to satisfy it.
 type Repository interface {
 	CreateProject(ctx context.Context, title, description string) (domain.Project, error)
 	UpdateProject(ctx context.Context, project domain.Project) (domain.Project, error)
@@ -143,9 +142,8 @@ func (s *Service) CreateFeature(
 }
 
 // UpdateFeature applies every field the caller supplied. A nil pointer means the
-// field was omitted; an empty string is a request to clear it. A nil ProjectID
-// leaves the membership alone, and an empty one is refused: a feature cannot
-// leave every project.
+// field was omitted; an empty string is a request to clear it. An empty
+// ProjectID is refused, because a feature cannot leave every project.
 func (s *Service) UpdateFeature(
 	ctx context.Context,
 	id string,
@@ -403,19 +401,12 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 
 // attachSyncTimeout bounds the refresh that follows an attachment. The refresh
 // is a side effect of the write rather than what the caller asked for, so an
-// unreachable host must not hold the attachment open for as long as its
-// credential lookups and requests take.
+// unreachable host must not hold the attachment open for as long as it takes.
 const attachSyncTimeout = 30 * time.Second
 
-// refreshAttachedPullRequest fetches the pull request that was just attached so
-// the task does not present freshly recorded work as stale until some later
-// refresh reaches it. It goes through the task-scoped refresh, which maintains
-// the pull request even on a completed or archived feature and leaves the
-// shared interval and the recorded run status untouched.
-//
-// The refresh is best effort: attaching succeeds even when GitHub cannot be
-// reached, and the value read back keeps the staleness and the synchronization
-// error that record why it could not be refreshed.
+// refreshAttachedPullRequest fetches the pull request that was just attached, so
+// freshly recorded work is not presented as stale. It uses the task-scoped
+// refresh, and is best effort: attaching succeeds even if GitHub is unreachable.
 func (s *Service) refreshAttachedPullRequest(
 	ctx context.Context,
 	attached domain.PullRequest,
@@ -770,10 +761,8 @@ func (s *Service) syncSelected(
 		taskFeature[task.ID] = task.FeatureID
 	}
 	// A completed feature leaves automatic and unscoped manual refreshes for the
-	// same reason an archived one does: its pull requests are no longer part of
-	// the work in flight. An explicit feature or task keeps maintaining them.
-	// ReadOnly covers a feature archived on its own and one inside an archived
-	// project, so both leave those refreshes together.
+	// same reason an archived one does: its pull requests are no longer in
+	// flight. ReadOnly covers both a feature and its archived project.
 	activeFeatures := map[string]bool{}
 	for _, feature := range snapshot.Features {
 		activeFeatures[feature.ID] = !feature.ReadOnly &&

@@ -32,10 +32,8 @@ func PRDisplayState(pr *PullRequest) TaskDisplayState {
 }
 
 // IsTaskFinished reports whether a derived task state ends the work the task
-// tracks. Stored completions and closures count, and so do merged and closed
-// pull requests, matching how IsSatisfied treats completion and closure alike.
-// It reads the derived state rather than the stored status so a task without a
-// finished status follows its pull request.
+// tracks. It reads the derived state rather than the stored status, so a task
+// without a finished status follows its pull request.
 func IsTaskFinished(display TaskDisplayState) bool {
 	return display == TaskDisplayStateCompleted ||
 		display == TaskDisplayStateClosed ||
@@ -43,10 +41,8 @@ func IsTaskFinished(display TaskDisplayState) bool {
 }
 
 // FeatureDisplayStatus derives the status presented for a feature. A stored
-// status other than auto is a manual override and is returned unchanged, so a
-// feature returned to active stays active while its tasks remain finished.
-// Auto reports completed once the feature owns at least one task and every one
-// of them is finished; a feature without tasks has nothing to complete.
+// status other than auto is a manual override and is returned unchanged.
+// docs/design/domain.md records what the automatic status derives.
 func FeatureDisplayStatus(stored FeatureStatus, taskCount, finishedCount int) FeatureStatus {
 	if stored != FeatureStatusAuto {
 		return stored
@@ -57,14 +53,9 @@ func FeatureDisplayStatus(stored FeatureStatus, taskCount, finishedCount int) Fe
 	return FeatureStatusActive
 }
 
-// displayStateFor derives the state presented for a task. A finished stored
-// status is a decision about the task itself and outranks the pull request, so
-// a task marked completed stays completed while its pull request is still open.
-// An unfinished status yields to an attached pull request instead, which is how
-// linking one moves a task from in progress on to review without a second edit.
-// Designing yields once more, to a registered implementation plan, so the task
-// an agent marked as being designed reaches designed by registering the plan
-// rather than by a second edit of the status.
+// displayStateFor derives the state presented for a task, in the order
+// docs/design/domain.md records: a finished stored status outranks the pull
+// request, an unfinished one yields to it, and designing yields to a plan.
 func displayStateFor(task Task, pr *PullRequest) TaskDisplayState {
 	if task.Status == TaskStatusCompleted {
 		return TaskDisplayStateCompleted
@@ -88,10 +79,8 @@ func displayStateFor(task Task, pr *PullRequest) TaskDisplayState {
 }
 
 // IsSatisfied reports whether a task settles the dependencies that wait on it.
-// A finished stored status settles them on its own, and so does an attached
-// pull request that reached open, closed, or merged. An unfinished status
-// without a pull request does not, so a task left in progress keeps its
-// dependents waiting.
+// A finished stored status settles them on its own, and so does a pull request
+// that reached open, closed, or merged. See docs/design/domain.md.
 func IsSatisfied(task Task, pr *PullRequest) bool {
 	if task.Status == TaskStatusCompleted || task.Status == TaskStatusClosed {
 		return true
@@ -100,11 +89,9 @@ func IsSatisfied(task Task, pr *PullRequest) bool {
 		pr.State == PullRequestStateClosed || pr.State == PullRequestStateMerged)
 }
 
-// isReadyCandidate reads the derived state alone. A task that reached a pull
-// request or a finished status is past the point readiness describes, and only
-// work whose implementation has not begun asks whether its blockers are clear.
-// Designing sits with not started and designed, because designing decides how
-// the work will be built rather than starting to build it.
+// isReadyCandidate reads the derived state alone: only work whose
+// implementation has not begun asks whether its blockers are clear. Designing
+// sits with not started and designed, as docs/design/domain.md records.
 func isReadyCandidate(display TaskDisplayState) bool {
 	return display == TaskDisplayStateNotStarted ||
 		display == TaskDisplayStateDesigning ||

@@ -1,7 +1,6 @@
 // Package config owns the versioned YAML configuration shared by the CLI,
 // server, and GitHub authentication resolver. A file written by a newer PRX
-// still loads: its unknown fields are reported as warnings and ignored, while
-// every other decoding failure keeps the configuration from loading.
+// still loads: unknown fields become warnings, other decoding failures do not.
 package config
 
 import (
@@ -76,9 +75,7 @@ func (c GitHubConfig) MarshalYAML() (any, error) {
 
 // Config is the on-disk configuration. AuthMethod.Token is deliberately not
 // serializable as JSON; callers should use Public for any human or RPC output.
-//
-// Prompts affect what the CLI prints and what the WebUI copies, so they live
-// here rather than in the browser's Local Storage.
+// Prompts live here, not in Local Storage, because the CLI also prints them.
 type Config struct {
 	Version int              `yaml:"version" json:"version"`
 	GitHub  GitHubConfig     `yaml:"github"  json:"github"`
@@ -101,9 +98,7 @@ type yamlPrompts struct {
 
 // MarshalYAML drops any template that still matches the built-in default.
 // Normalize fills blank templates in on load, so writing them back would pin the
-// file to the wording of whichever PRX version first saved it: an installation
-// that never customized a template would stop receiving later improvements to
-// it, even though it never asked to hold the old text.
+// file to the wording of whichever PRX version happened to save it first.
 func (c Config) MarshalYAML() (any, error) {
 	defaults := prompt.DefaultTemplates()
 	prompts := yamlPrompts{}

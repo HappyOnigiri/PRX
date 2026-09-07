@@ -8,10 +8,8 @@ export interface QueryDiagnostic {
 const versionMetaSelector = 'meta[name="prx-version"]';
 
 // formatBrowserDebugSection appends what only the browser knows to the report
-// the server rendered. It is not a second derivation of server state: every
-// value here is a fact about this tab that the server cannot observe.
-// The layout follows the server's own convention so the whole text reads as one
-// report: a section header at the left margin and two-space indented fields.
+// the server rendered: every value here is a fact about this tab. The layout
+// follows the server's convention so the whole text reads as one report.
 export function formatBrowserDebugSection(queries: QueryDiagnostic[]): string {
   const injected = serverVersion();
   // The bundle version is read directly rather than through appVersion, which

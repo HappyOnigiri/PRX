@@ -74,10 +74,9 @@ test("presents the demo projects and their shared references", async ({
   );
 });
 
-// A sidebar project row reuses the feature row's class, so its own single-column
-// track list has to outrank the feature one. Losing that override drops the
-// title into the 8px status-dot column, where the row still reads as present
-// but shows one clipped character.
+// A sidebar project row reuses the feature row's class, so its own
+// single-column track list has to outrank the feature one. Losing that override
+// clips the title into the 8px status-dot column instead of hiding the row.
 test("gives the sidebar project title the whole row", async ({ page }) => {
   await page.goto("/projects");
   const title = page
