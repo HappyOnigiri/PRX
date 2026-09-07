@@ -27,6 +27,8 @@ Controls are icon-first: a button carries an icon alone unless its meaning needs
 Icon-only controls require an accessible name and tooltip.
 Controls keep a visible label when an icon cannot communicate the target, result, or danger scope.
 Pointer interactions retain a keyboard-accessible alternative.
+A list whose rows are selected in a run makes the row itself the control, so the target is the line the reader is reading rather than a box at its edge.
+Such a selection is exposed through `aria-pressed`, because an accent edge or a filled background states it by appearance alone.
 
 Current screens, components, gestures, and control placement belong to the WebUI implementation and its tests.
 Task search operates over the current Snapshot in the browser; its q query stays in the URL so reload, history, and sharing reproduce the view.

@@ -394,6 +394,11 @@ message Task {
   BlockedReason blocked_reason = 12;
   // has_implementation_plan indicates whether a plan document is registered for this task.
   bool has_implementation_plan = 13;
+  // pending_blocker_task_ids names every blocker that is not satisfied yet, by
+  // its public T-<number> ID. blocked_reason names only the first of them, so a
+  // caller that has to hand over a task together with everything it waits for
+  // reads this instead.
+  repeated string pending_blocker_task_ids = 14;
 }
 
 // Dependency is a directed edge from a blocker task to a blocked task in one feature.
@@ -1022,12 +1027,15 @@ message ValidateConfigResponse {
 }
 
 // PromptTemplates holds the shared agent prompt templates.
-// Both templates are stored in the same configuration the CLI reads.
+// Every template is stored in the same configuration the CLI reads.
 message PromptTemplates {
   // design is used for a task that has no implementation plan yet.
   string design = 1;
   // implementation is used for a task that already has an implementation plan.
   string implementation = 2;
+  // batch is used for several tasks handed over in one prompt. It is selected by
+  // the caller asking for a batch rather than derived from any single task.
+  string batch = 3;
 }
 
 // GetPromptTemplatesRequest requests the stored agent prompt templates.
@@ -1041,21 +1049,29 @@ message GetPromptTemplatesResponse {
   // surrounding braces. A client presents this list rather than keeping its own
   // copy, which would drift from what the server accepts.
   repeated string supported_placeholders = 2;
-  // required_placeholder is the one placeholder every template must use.
+  // required_placeholder is the one placeholder every task template must use.
   string required_placeholder = 3;
   // built_in contains the templates PRX ships. An editor offering to restore
   // them shows the text they contain instead of leaving the field empty until a
   // write completes.
   PromptTemplates built_in = 4;
+  // batch_supported_placeholders is the substitution vocabulary of the batch
+  // template. It is smaller than the task vocabulary, because a batch has no
+  // single task to expand a task placeholder from.
+  repeated string batch_supported_placeholders = 5;
+  // batch_required_placeholder is the one placeholder every batch template must use.
+  string batch_required_placeholder = 6;
 }
 
-// UpdatePromptTemplatesRequest replaces both templates in one configuration write.
+// UpdatePromptTemplatesRequest replaces every template in one configuration write.
 // An empty template is restored to its built-in default.
 message UpdatePromptTemplatesRequest {
   // design replaces the template used for a task without an implementation plan.
   string design = 1;
   // implementation replaces the template used for a task with an implementation plan.
   string implementation = 2;
+  // batch replaces the template used for several tasks handed over in one prompt.
+  string batch = 3;
 }
 
 // UpdatePromptTemplatesResponse returns the templates the write produced.
@@ -1077,6 +1093,24 @@ message GetTaskPromptResponse {
   // kind reports which template produced the prompt.
   TaskPromptKind kind = 2;
   // prompt is the expanded template, ready to hand to another agent.
+  string prompt = 3;
+}
+
+// GetBatchPromptRequest asks for one prompt covering several tasks of one feature.
+message GetBatchPromptRequest {
+  // feature_id is the public identifier of the feature the tasks belong to.
+  string feature_id = 1;
+  // task_ids lists the tasks to cover, in the order they should appear.
+  repeated string task_ids = 2;
+}
+
+// GetBatchPromptResponse returns the expanded batch prompt.
+message GetBatchPromptResponse {
+  // feature_id is the feature the prompt covers.
+  string feature_id = 1;
+  // task_ids lists the covered tasks in the order the prompt names them.
+  repeated string task_ids = 2;
+  // prompt is the expanded batch template, ready to hand to another agent.
   string prompt = 3;
 }
 
@@ -1508,8 +1542,10 @@ service PRXService {
   rpc ValidateConfig(ValidateConfigRequest) returns (ValidateConfigResponse);
   // GetPromptTemplates returns the stored agent prompt templates.
   rpc GetPromptTemplates(GetPromptTemplatesRequest) returns (GetPromptTemplatesResponse);
-  // UpdatePromptTemplates replaces both agent prompt templates in one write.
+  // UpdatePromptTemplates replaces every agent prompt template in one write.
   rpc UpdatePromptTemplates(UpdatePromptTemplatesRequest) returns (UpdatePromptTemplatesResponse);
   // GetTaskPrompt returns the expanded agent prompt for one task.
   rpc GetTaskPrompt(GetTaskPromptRequest) returns (GetTaskPromptResponse);
+  // GetBatchPrompt returns one expanded prompt covering several tasks of one feature.
+  rpc GetBatchPrompt(GetBatchPromptRequest) returns (GetBatchPromptResponse);
 }

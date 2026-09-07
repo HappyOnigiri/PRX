@@ -18,6 +18,7 @@ import {
   DeleteTaskRequestSchema,
   DetachPullRequestRequestSchema,
   DocumentKind,
+  GetBatchPromptRequestSchema,
   GetConfigRequestSchema,
   GetDebugReportRequestSchema,
   GetDocumentRequestSchema,
@@ -43,6 +44,7 @@ import {
   ValidateConfigRequestSchema,
   type DebugReport,
   type FeatureStatus,
+  type GetBatchPromptResponse,
   type GetTaskPromptResponse,
   type GithubAuthMethodType,
   type GitHubConfig,
@@ -271,6 +273,10 @@ export const configMutations = {
 export interface PromptTemplateSettings extends PromptTemplates {
   supportedPlaceholders: string[];
   requiredPlaceholder: string;
+  // The batch template has its own vocabulary: it covers several tasks, so no
+  // single task's placeholder could be expanded in it.
+  batchSupportedPlaceholders: string[];
+  batchRequiredPlaceholder: string;
   builtIn: PromptTemplates;
 }
 
@@ -284,6 +290,8 @@ export async function getPromptTemplates(): Promise<PromptTemplateSettings> {
     ...response.templates,
     supportedPlaceholders: response.supportedPlaceholders,
     requiredPlaceholder: response.requiredPlaceholder,
+    batchSupportedPlaceholders: response.batchSupportedPlaceholders,
+    batchRequiredPlaceholder: response.batchRequiredPlaceholder,
     builtIn: response.builtIn,
   };
 }
@@ -297,8 +305,24 @@ export async function getTaskPrompt(
   return client.getTaskPrompt(create(GetTaskPromptRequestSchema, { taskId }));
 }
 
+// A batch prompt is rendered from the tasks the reader selected, for the same
+// reason one task's prompt is: the template and the tasks live on the server,
+// and a snapshot the browser is holding may already disagree with both.
+export async function getBatchPrompt(
+  featureId: string,
+  taskIds: string[],
+): Promise<GetBatchPromptResponse> {
+  return client.getBatchPrompt(
+    create(GetBatchPromptRequestSchema, { featureId, taskIds }),
+  );
+}
+
 export const promptMutations = {
-  updateTemplates: (input: { design: string; implementation: string }) =>
+  updateTemplates: (input: {
+    design: string;
+    implementation: string;
+    batch: string;
+  }) =>
     client.updatePromptTemplates(
       create(UpdatePromptTemplatesRequestSchema, input),
     ),

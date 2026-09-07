@@ -1,6 +1,7 @@
 package prompt_test
 
 import (
+	"slices"
 	"strings"
 	"testing"
 
@@ -158,5 +159,76 @@ func TestNormalizeKeepsWhitespaceOtherThanAnEmptyTemplate(t *testing.T) {
 	}
 	if got := normalized.Template(prompt.KindDesign); got != normalized.Design {
 		t.Fatalf("Template(design)=%q", got)
+	}
+}
+
+func batchTasks() []domain.Task {
+	return []domain.Task{
+		{ID: "T-7", FeatureID: "F-3", Title: "Add the checkout API"},
+		{ID: "T-9", FeatureID: "F-3", Title: "Bill the order"},
+	}
+}
+
+func TestRenderBatchNamesEveryTaskInTheOrderItWasGiven(t *testing.T) {
+	body, err := prompt.RenderBatch("F-3", batchTasks(), prompt.Templates{
+		Batch: "batch {{feature_id}}\n{{task_list}}",
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	want := "batch F-3\n- T-7: Add the checkout API\n- T-9: Bill the order"
+	if body != want {
+		t.Fatalf("body=%q, want %q", body, want)
+	}
+}
+
+// The batch template is stored beside the task templates, so an installation
+// that never customized it has to keep receiving the built-in wording.
+func TestRenderBatchFillsAnOmittedTemplateWithItsDefault(t *testing.T) {
+	body, err := prompt.RenderBatch("F-3", batchTasks(), prompt.Templates{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, want := range []string{"F-3", "T-7", "T-9", "SubAgent", "prx prompt TASK_ID"} {
+		if !strings.Contains(body, want) {
+			t.Fatalf("default batch prompt does not mention %q: %q", want, body)
+		}
+	}
+	if strings.Contains(body, "{{") {
+		t.Fatalf("default batch prompt kept a placeholder: %q", body)
+	}
+}
+
+// The batch vocabulary is not the task vocabulary: a batch covers several tasks,
+// so a task placeholder in it would have nothing to expand from.
+func TestNormalizeRejectsABatchTemplateOutsideItsOwnVocabulary(t *testing.T) {
+	for name, test := range map[string]struct {
+		batch   string
+		message string
+	}{
+		"without the task list": {
+			batch:   "batch of {{feature_id}}",
+			message: "prompts.batch: template must use {{task_list}}",
+		},
+		"with a task placeholder": {
+			batch:   "batch {{task_list}} {{task_title}}",
+			message: "prompts.batch: template uses unsupported placeholder {{task_title}}",
+		},
+	} {
+		t.Run(name, func(t *testing.T) {
+			templates := prompt.Templates{Batch: test.batch}
+			if _, err := templates.Normalize(); err == nil || err.Error() != test.message {
+				t.Fatalf("error=%v, want %q", err, test.message)
+			}
+			if _, err := prompt.RenderBatch("F-3", batchTasks(), templates); err == nil {
+				t.Fatal("RenderBatch accepted a template Normalize rejects")
+			}
+		})
+	}
+	if slices.Contains(prompt.BatchSupportedPlaceholders(), "task_id") {
+		t.Fatal("the batch vocabulary offers a placeholder no batch can expand")
+	}
+	if prompt.BatchRequiredPlaceholder() != "task_list" {
+		t.Fatalf("batch required placeholder=%q", prompt.BatchRequiredPlaceholder())
 	}
 }

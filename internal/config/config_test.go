@@ -370,6 +370,7 @@ func TestPromptTemplatesLoadDefaultAndSurviveAWrite(t *testing.T) {
 	custom := prompt.Templates{
 		Design:         "Design {{task_id}}\nsecond line\n",
 		Implementation: "Implement {{task_id}} of {{feature_id}}",
+		Batch:          "Implement {{task_list}} of {{feature_id}}",
 	}
 	if _, err := store.Update(func(settings *Config) error { return settings.SetPrompts(custom) }); err != nil {
 		t.Fatal(err)

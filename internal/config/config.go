@@ -93,6 +93,7 @@ type yamlConfig struct {
 type yamlPrompts struct {
 	Design         string `yaml:"design,omitempty"`
 	Implementation string `yaml:"implementation,omitempty"`
+	Batch          string `yaml:"batch,omitempty"`
 }
 
 // MarshalYAML drops any template that still matches the built-in default.
@@ -106,6 +107,9 @@ func (c Config) MarshalYAML() (any, error) {
 	}
 	if c.Prompts.Implementation != defaults.Implementation {
 		prompts.Implementation = c.Prompts.Implementation
+	}
+	if c.Prompts.Batch != defaults.Batch {
+		prompts.Batch = c.Prompts.Batch
 	}
 	result := yamlConfig{Version: c.Version, GitHub: c.GitHub}
 	if prompts != (yamlPrompts{}) {

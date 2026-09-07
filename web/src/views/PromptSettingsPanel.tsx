@@ -1,13 +1,14 @@
 import { RotateCcw, Save } from "lucide-react";
 import { useRef, useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
-import { promptMutations } from "../api";
+import { promptMutations, type PromptTemplateSettings } from "../api";
 import { usePromptTemplates, usePromptTemplatesMutation } from "../hooks";
 import { IconButton } from "./IconButton";
 
 interface TemplateDraft {
   design: string;
   implementation: string;
+  batch: string;
 }
 
 export function PromptSettingsPanel() {
@@ -38,22 +39,16 @@ export function PromptSettingsPanel() {
   const current = draft ?? {
     design: templates.data.design,
     implementation: templates.data.implementation,
+    batch: templates.data.batch,
   };
   const builtIn = {
     design: templates.data.builtIn.design,
     implementation: templates.data.builtIn.implementation,
+    batch: templates.data.builtIn.batch,
   };
 
-  // The vocabulary comes from the server so the hint can never advertise a
-  // placeholder the server would reject. Both are interpolation values so the
-  // braces survive; a translation containing them would be interpolated away.
-  const placeholderList = templates.data.supportedPlaceholders
-    .map((name) => `{{${name}}}`)
-    .join(", ");
-  const requiredPlaceholder = `{{${templates.data.requiredPlaceholder}}}`;
-
-  // Both templates travel in one request so a configuration write never leaves
-  // one of them updated and the other stale.
+  // Every template travels in one request so a configuration write never leaves
+  // one of them updated and another stale.
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaved(false);
@@ -76,28 +71,11 @@ export function PromptSettingsPanel() {
           void submit(event).catch(() => undefined);
         }}
       >
-        <TemplateField
-          hint={t("promptSettings.designHint")}
-          label={t("promptSettings.design")}
-          value={current.design}
-          onChange={(design) => {
-            edit({ ...current, design });
-          }}
+        <TemplateFields
+          current={current}
+          settings={templates.data}
+          onEdit={edit}
         />
-        <TemplateField
-          hint={t("promptSettings.implementationHint")}
-          label={t("promptSettings.implementation")}
-          value={current.implementation}
-          onChange={(implementation) => {
-            edit({ ...current, implementation });
-          }}
-        />
-        <small>
-          {t("promptSettings.placeholders", {
-            list: placeholderList,
-            required: requiredPlaceholder,
-          })}
-        </small>
         <div className="settings-form-actions">
           <IconButton
             icon={RotateCcw}
@@ -127,6 +105,67 @@ export function PromptSettingsPanel() {
       </p>
     </>
   );
+}
+
+// The vocabulary comes from the server so a hint can never advertise a
+// placeholder the server would reject, and each field lists its own.
+// See docs/design/agent-prompts.md.
+function TemplateFields({
+  current,
+  settings,
+  onEdit,
+}: {
+  current: TemplateDraft;
+  settings: PromptTemplateSettings;
+  onEdit: (next: TemplateDraft) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <>
+      <TemplateField
+        hint={t("promptSettings.designHint")}
+        label={t("promptSettings.design")}
+        value={current.design}
+        onChange={(design) => {
+          onEdit({ ...current, design });
+        }}
+      />
+      <TemplateField
+        hint={t("promptSettings.implementationHint")}
+        label={t("promptSettings.implementation")}
+        value={current.implementation}
+        onChange={(implementation) => {
+          onEdit({ ...current, implementation });
+        }}
+      />
+      <small>
+        {t("promptSettings.placeholders", {
+          list: placeholderList(settings.supportedPlaceholders),
+          required: `{{${settings.requiredPlaceholder}}}`,
+        })}
+      </small>
+      <TemplateField
+        hint={t("promptSettings.batchHint")}
+        label={t("promptSettings.batch")}
+        value={current.batch}
+        onChange={(batch) => {
+          onEdit({ ...current, batch });
+        }}
+      />
+      <small>
+        {t("promptSettings.batchPlaceholders", {
+          list: placeholderList(settings.batchSupportedPlaceholders),
+          required: `{{${settings.batchRequiredPlaceholder}}}`,
+        })}
+      </small>
+    </>
+  );
+}
+
+// Both the list and the required name are interpolation values, so the braces
+// survive: a translation containing them would itself be interpolated away.
+function placeholderList(names: string[]): string {
+  return names.map((name) => `{{${name}}}`).join(", ");
 }
 
 function TemplateField({

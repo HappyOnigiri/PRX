@@ -103,6 +103,7 @@ func writeDebugConfig(out *debugText, config DebugConfig) {
 	out.field("prompts", "")
 	writeDebugConfigPrompt(out, "design", config.Prompts.Design)
 	writeDebugConfigPrompt(out, "implementation", config.Prompts.Implementation)
+	writeDebugConfigPrompt(out, "batch", config.Prompts.Batch)
 }
 
 // writeDebugConfigPrompt reports the shape of one template without its body: the
