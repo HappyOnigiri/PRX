@@ -65,7 +65,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 15 {
+		migrations != 16 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -643,7 +643,7 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	var migrationCount int
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
-		Scan(&migrationCount); err != nil || migrationCount != 15 {
+		Scan(&migrationCount); err != nil || migrationCount != 16 {
 		t.Fatalf("migration count=%d err=%v", migrationCount, err)
 	}
 	var status string
@@ -807,10 +807,10 @@ func TestMigrationAddsGitHubHostAndHostScopedUniqueness(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
-	// 15 も取り消す。002 が pull_requests を作り直すため、レビュー時刻の列を足す
+	// 15 と 16 も取り消す。002 が pull_requests を作り直すため、この表に列を足す
 	// マイグレーションを再実行しないと、この表は現在のスキーマに追いつかない。
 	if _, err := database.DB().ExecContext(
-		ctx, `DELETE FROM schema_migrations WHERE version IN (2,15)`,
+		ctx, `DELETE FROM schema_migrations WHERE version IN (2,15,16)`,
 	); err != nil {
 		t.Fatal(err)
 	}
@@ -1241,8 +1241,8 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(snapshot.Features) != 5 || len(snapshot.Tasks) != 122 {
-		t.Fatalf("features=%d tasks=%d, want 5 and 122", len(snapshot.Features), len(snapshot.Tasks))
+	if len(snapshot.Features) != 5 || len(snapshot.Tasks) != 123 {
+		t.Fatalf("features=%d tasks=%d, want 5 and 123", len(snapshot.Features), len(snapshot.Tasks))
 	}
 	statuses := map[domain.FeatureStatus]bool{}
 	displayStatuses := map[domain.FeatureStatus]bool{}
@@ -1274,8 +1274,35 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 		t.Errorf("completed program status=%+v", completedProgram)
 	}
 	displayStates := map[domain.TaskDisplayState]bool{}
+	blockLabels := map[domain.TaskBlockLabel]bool{}
 	for _, task := range snapshot.Tasks {
 		displayStates[task.DisplayState] = true
+		for _, label := range task.BlockLabels {
+			blockLabels[label] = true
+		}
+	}
+	// デモを起動しただけで、ブロックラベルの見え方を全種類確かめられる状態にする。
+	for _, label := range []domain.TaskBlockLabel{
+		domain.TaskBlockLabelDependencyUnresolved,
+		domain.TaskBlockLabelConflict,
+		domain.TaskBlockLabelChangesRequested,
+		domain.TaskBlockLabelCIFailed,
+	} {
+		if !blockLabels[label] {
+			t.Errorf("missing block label %q", label)
+		}
+	}
+	checkStates := map[domain.CheckState]bool{}
+	for _, pullRequest := range snapshot.PullRequests {
+		checkStates[pullRequest.CheckState] = true
+	}
+	// PR パネルの CI 行も、成功・実行中・失敗をデモで一度に確かめられるようにする。
+	for _, state := range []domain.CheckState{
+		domain.CheckStateSuccess, domain.CheckStatePending, domain.CheckStateFailure,
+	} {
+		if !checkStates[state] {
+			t.Errorf("missing check state %q", state)
+		}
 	}
 	for _, state := range []domain.TaskDisplayState{
 		domain.TaskDisplayStateNotStarted,
@@ -1893,6 +1920,7 @@ func TestGetPullRequestRoundTripAndNotFound(t *testing.T) {
 		ReviewRequestPending: true,
 		ChangesRequestedAt:   &changesRequestedAt,
 		LastPushedAt:         &lastPushedAt,
+		CheckState:           domain.CheckStateFailure,
 	}
 	if _, err := database.UpsertPullRequest(ctx, want); err != nil {
 		t.Fatal(err)
@@ -1906,6 +1934,7 @@ func TestGetPullRequestRoundTripAndNotFound(t *testing.T) {
 		got.Number != want.Number || got.URL != want.URL || got.NodeID != want.NodeID || got.Author != want.Author ||
 		got.State != want.State || got.ReviewState != want.ReviewState ||
 		got.Mergeability != want.Mergeability ||
+		got.CheckState != want.CheckState ||
 		got.Stale != want.Stale ||
 		got.DisplayState != domain.PullRequestDisplayStateMerged {
 		t.Fatalf("pull request=%+v, want fields from %+v", got, want)
@@ -1928,6 +1957,19 @@ func TestGetPullRequestRoundTripAndNotFound(t *testing.T) {
 			got.ChangesRequestedAt,
 			got.LastPushedAt,
 		)
+	}
+	// CheckState を持たない呼び出し側の書き込みは unknown に寄せる。列に CHECK 制約が
+	// あるので、値を持たない upsert を生の SQLite エラーにしない。
+	want.CheckState = ""
+	if _, err := database.UpsertPullRequest(ctx, want); err != nil {
+		t.Fatal(err)
+	}
+	got, err = database.GetPullRequest(ctx, task.ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.CheckState != domain.CheckStateUnknown {
+		t.Fatalf("check state=%q, want unknown for an unset value", got.CheckState)
 	}
 	if _, err := database.GetPullRequest(ctx, "missing-task"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("missing pull request code=%s err=%v", domain.ErrorCode(err), err)

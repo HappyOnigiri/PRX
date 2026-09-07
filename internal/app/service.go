@@ -390,6 +390,7 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 			State:        domain.PullRequestStateUnknown,
 			ReviewState:  domain.ReviewStateUnknown,
 			Mergeability: domain.MergeabilityUnknown,
+			CheckState:   domain.CheckStateUnknown,
 			Stale:        true,
 		},
 	)

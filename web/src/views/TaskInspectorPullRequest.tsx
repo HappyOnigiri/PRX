@@ -5,6 +5,7 @@ import { formValue } from "../form";
 import type { PullRequest } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import {
+  checkStateLabel,
   pullRequestDisplayStateLabel,
   pullRequestDisplayStateToken,
 } from "../i18n/domain";
@@ -61,6 +62,10 @@ export function PullRequestSection({
           <span>
             {pullRequestDisplayStateLabel(pullRequest.displayState, t)}
           </span>
+          <small className="pr-check-state">
+            <strong>{t("inspector.checkState")}</strong>
+            {checkStateLabel(pullRequest.checkState, t)}
+          </small>
           {pullRequest.stale && (
             <small className="pr-stale">{t("inspector.stale")}</small>
           )}

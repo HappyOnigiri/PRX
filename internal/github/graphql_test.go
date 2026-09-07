@@ -282,7 +282,13 @@ func writeRESTPullRequestResponse(t *testing.T, writer http.ResponseWriter, requ
 	case strings.HasSuffix(request.URL.Path, "/requested_reviewers"):
 		_, _ = writer.Write([]byte(`{"users":[],"teams":[]}`))
 	case strings.HasSuffix(request.URL.Path, "/commits"):
-		_, _ = writer.Write([]byte(`[{"commit":{"committer":{"date":"2026-01-01T00:00:00Z"}}}]`))
+		_, _ = writer.Write([]byte(
+			`[{"sha":"c0ffee","commit":{"committer":{"date":"2026-01-01T00:00:00Z"}}}]`,
+		))
+	case strings.HasSuffix(request.URL.Path, "/status"):
+		_, _ = writer.Write([]byte(`{"state":"success","total_count":1}`))
+	case strings.HasSuffix(request.URL.Path, "/check-runs"):
+		_, _ = writer.Write([]byte(`{"total_count":0,"check_runs":[]}`))
 	default:
 		_, _ = writer.Write([]byte(`{"node_id":"PR_node","state":"open","merged":false,` +
 			`"draft":false,"mergeable":true,"updated_at":"2026-01-01T00:00:00Z",` +
@@ -342,6 +348,12 @@ func validGraphQLPullRequest() map[string]any {
 			"pageInfo": pageInfo,
 		},
 		"reviewRequests": map[string]any{"nodes": []any{}, "pageInfo": pageInfo},
+		"commits": map[string]any{"nodes": []any{map[string]any{
+			"commit": map[string]any{
+				"committedDate":     "2026-01-01T00:00:00Z",
+				"statusCheckRollup": map[string]any{"state": "SUCCESS"},
+			},
+		}}},
 	}
 }
 
@@ -495,5 +507,94 @@ func TestLiveProviderFetchBatchReportsQueryValidationErrors(t *testing.T) {
 	}
 	if result.Errors["invalid"] != nil {
 		t.Fatalf("item error=%v", result.Errors["invalid"])
+	}
+}
+
+// GraphQL のロールアップは 1 値に正規化する。rollup が null ならチェックが 1 件も
+// ないので none で、未知の値は成功と言い切らずに unknown へ落とす。
+func TestCheckStateFromGraphQL(t *testing.T) {
+	withRollup := func(commit map[string]any) graphQLPullRequest {
+		var value graphQLPullRequest
+		body, err := json.Marshal(map[string]any{
+			"commits": map[string]any{"nodes": []any{map[string]any{"commit": commit}}},
+		})
+		if err != nil {
+			t.Fatal(err)
+		}
+		if err := json.Unmarshal(body, &value); err != nil {
+			t.Fatal(err)
+		}
+		return value
+	}
+	rollup := func(state string) map[string]any {
+		return map[string]any{"statusCheckRollup": map[string]any{"state": state}}
+	}
+	tests := []struct {
+		name   string
+		commit map[string]any
+		want   domain.CheckState
+	}{
+		{name: "success", commit: rollup("SUCCESS"), want: domain.CheckStateSuccess},
+		{name: "pending", commit: rollup("PENDING"), want: domain.CheckStatePending},
+		{name: "expected", commit: rollup("EXPECTED"), want: domain.CheckStatePending},
+		{name: "failure", commit: rollup("FAILURE"), want: domain.CheckStateFailure},
+		{name: "error", commit: rollup("ERROR"), want: domain.CheckStateFailure},
+		{name: "unrecognised", commit: rollup("MYSTERY"), want: domain.CheckStateUnknown},
+		{
+			name:   "a null roll-up means no checks",
+			commit: map[string]any{"statusCheckRollup": nil},
+			want:   domain.CheckStateNone,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := checkStateFromGraphQL(withRollup(test.commit)); got != test.want {
+				t.Fatalf("check state=%q want %q", got, test.want)
+			}
+		})
+	}
+	// コミットが 1 件も返らなければ、紐づくチェックも存在しない。
+	if got := checkStateFromGraphQL(graphQLPullRequest{}); got != domain.CheckStateNone {
+		t.Fatalf("check state without commits=%q want none", got)
+	}
+}
+
+// GraphQL 経路も CI を埋め、終了した pull request では落とす。REST 経路が終了時に
+// 追加のリクエストをかけないため、値をそろえないと経路で結果が変わる。
+func TestLiveProviderFetchBatchReadsAndClearsCheckState(t *testing.T) {
+	var merged atomic.Bool
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		query := decodeGraphQLQuery(t, request)
+		data := graphQLDataForQuery(query)
+		pull := data["r0"].(map[string]any)["p0"].(map[string]any)
+		pull["commits"] = map[string]any{"nodes": []any{map[string]any{
+			"commit": map[string]any{
+				"committedDate":     "2026-03-02T00:00:00Z",
+				"statusCheckRollup": map[string]any{"state": "FAILURE"},
+			},
+		}}}
+		if merged.Load() {
+			pull["state"] = "MERGED"
+			pull["merged"] = true
+		}
+		writeGraphQLResponse(t, writer, map[string]any{"data": data})
+	}))
+	defer server.Close()
+	provider := newGraphQLTestProvider(t, server)
+	current := []domain.PullRequest{{TaskID: "ci", Owner: "acme", Repository: "api", Number: 9}}
+	result, err := provider.FetchBatch(context.Background(), current)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := result.PullRequests["ci"].CheckState; got != domain.CheckStateFailure {
+		t.Fatalf("check state=%q want failure", got)
+	}
+	merged.Store(true)
+	result, err = provider.FetchBatch(context.Background(), current)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := result.PullRequests["ci"].CheckState; got != domain.CheckStateUnknown {
+		t.Fatalf("check state=%q want unknown on a merged pull request", got)
 	}
 }

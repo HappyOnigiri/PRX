@@ -59,7 +59,15 @@ export const domain = {
       dependencyUnresolved: "dependency",
       conflict: "conflict",
       changesRequested: "changes requested",
+      ciFailed: "CI failed",
       unknown: "blocked",
+    },
+    checkState: {
+      none: "no checks",
+      pending: "running",
+      success: "passing",
+      failure: "failing",
+      unknown: "unknown",
     },
     blockedReason: {
       dependencyDataIncomplete: "Dependency data is incomplete",
@@ -128,7 +136,15 @@ export const domain = {
       dependencyUnresolved: "依存未解決",
       conflict: "コンフリクト",
       changesRequested: "修正依頼あり",
+      ciFailed: "CI 失敗",
       unknown: "ブロックあり",
+    },
+    checkState: {
+      none: "チェックなし",
+      pending: "実行中",
+      success: "成功",
+      failure: "失敗",
+      unknown: "不明",
     },
     blockedReason: {
       dependencyDataIncomplete: "依存関係のデータが不足しています",

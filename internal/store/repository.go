@@ -650,6 +650,7 @@ func (s *Store) UpsertPullRequest(ctx context.Context, value domain.PullRequest)
 		ReviewRequestPending: boolInt(value.ReviewRequestPending),
 		ChangesRequestedAt:   nullTime(value.ChangesRequestedAt),
 		LastPushedAt:         nullTime(value.LastPushedAt),
+		CheckState:           string(checkStateOrUnknown(value.CheckState)),
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {
@@ -1019,6 +1020,15 @@ func boolInt(value bool) int64 {
 		return 1
 	}
 	return 0
+}
+
+// checkStateOrUnknown は空の CheckState を unknown に寄せる。列に CHECK 制約があるので、
+// 値を持たない呼び出し側の書き込みを生の SQLite エラーにしない。
+func checkStateOrUnknown(value domain.CheckState) domain.CheckState {
+	if value == "" {
+		return domain.CheckStateUnknown
+	}
+	return value
 }
 
 func nullString(value string) sql.NullString {

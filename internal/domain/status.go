@@ -77,6 +77,11 @@ func blockLabelsFor(pr *PullRequest, dependencyUnresolved bool) []TaskBlockLabel
 	if pr != nil && pr.ReviewState == ReviewStateChangesRequested {
 		labels = append(labels, TaskBlockLabelChangesRequested)
 	}
+	// pending と none ではラベルを付けない。同期間隔で拾う値なので、実行中を妨害として
+	// 出すと表示が揺れるだけになる。docs/design/domain.md を参照。
+	if pr != nil && pr.CheckState == CheckStateFailure {
+		labels = append(labels, TaskBlockLabelCIFailed)
+	}
 	return labels
 }
 

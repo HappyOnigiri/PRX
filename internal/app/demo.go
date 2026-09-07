@@ -43,6 +43,7 @@ func WriteDemoFixture(path string) error {
 				Draft:        value.pr.Draft,
 				ReviewState:  value.pr.ReviewState,
 				Mergeability: value.pr.Mergeability,
+				CheckState:   value.pr.CheckState,
 				Author:       demoPullRequestAuthor(index),
 				Error:        value.pr.SyncError,
 
@@ -376,6 +377,7 @@ func completedDemoTasks() []demoTask {
 				Host: "github.com", Owner: "prx-demo", Repository: "prx-demo-scale",
 				Number: int64(1001 + index), State: domain.PullRequestStateMerged,
 				ReviewState: domain.ReviewStateApproved, Mergeability: domain.MergeabilityMergeable,
+				CheckState: domain.CheckStateSuccess,
 			},
 		}
 	}
@@ -434,6 +436,8 @@ func showcasePullRequestTasks() []demoTask {
 			domain.PullRequestStateOpen, false, domain.ReviewStateNone, domain.MergeabilityMergeable, ""),
 		demoPullRequestTask("Stale external state", "A failed sync preserving its last result", "prx-external", 108,
 			domain.PullRequestStateUnknown, false, domain.ReviewStateUnknown, domain.MergeabilityUnknown, "Carol"),
+		demoPullRequestTask("Fix failing pipeline", "Failing CI on an approved pull request", "prx-pipeline", 109,
+			domain.PullRequestStateOpen, false, domain.ReviewStateApproved, domain.MergeabilityMergeable, "Bob"),
 	}
 	values[7].pr.Stale = true
 	values[7].pr.SyncError = "demo fixture: repository temporarily unavailable"
@@ -444,6 +448,14 @@ func showcasePullRequestTasks() []demoTask {
 	values[3].pr.ChangesRequestedAt = &reviewedAt
 	values[3].pr.LastPushedAt = &pushedAt
 	values[5].pr.ReviewRequestPending = true
+	// CI は成功を既定にし、109 で失敗、106 で実行中を出す。未取得のままだと PR パネルの
+	// CI 行が空欄ばかりになり、デモで見え方を確かめられない。
+	for _, value := range values {
+		value.pr.CheckState = domain.CheckStateSuccess
+	}
+	values[5].pr.CheckState = domain.CheckStatePending
+	values[7].pr.CheckState = domain.CheckStateUnknown
+	values[8].pr.CheckState = domain.CheckStateFailure
 	return values
 }
 

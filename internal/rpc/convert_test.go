@@ -2,6 +2,7 @@ package rpc
 
 import (
 	"errors"
+	"slices"
 	"testing"
 
 	"connectrpc.com/connect"
@@ -169,6 +170,46 @@ func TestProtoMergeabilityMapsEveryKnownValue(t *testing.T) {
 				t.Fatalf("protoMergeability(%q)=%s, want %s", test.value, got, test.want)
 			}
 		})
+	}
+}
+
+func TestProtoCheckStateMapsEveryKnownValue(t *testing.T) {
+	tests := []struct {
+		name  string
+		value domain.CheckState
+		want  prxv1.CheckState
+	}{
+		{"unknown", domain.CheckStateUnknown, prxv1.CheckState_CHECK_STATE_UNKNOWN},
+		{"none", domain.CheckStateNone, prxv1.CheckState_CHECK_STATE_NONE},
+		{"pending", domain.CheckStatePending, prxv1.CheckState_CHECK_STATE_PENDING},
+		{"success", domain.CheckStateSuccess, prxv1.CheckState_CHECK_STATE_SUCCESS},
+		{"failure", domain.CheckStateFailure, prxv1.CheckState_CHECK_STATE_FAILURE},
+		{"unset", domain.CheckState(""), prxv1.CheckState_CHECK_STATE_UNSPECIFIED},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := protoCheckState(test.value); got != test.want {
+				t.Fatalf("protoCheckState(%q)=%s, want %s", test.value, got, test.want)
+			}
+		})
+	}
+}
+
+// ブロックラベルはドメインの並び順のまま送り、未知の値は落とす。
+func TestProtoTaskBlockLabelsKeepsDomainOrder(t *testing.T) {
+	got := protoTaskBlockLabels([]domain.TaskBlockLabel{
+		domain.TaskBlockLabelDependencyUnresolved, domain.TaskBlockLabelConflict,
+		domain.TaskBlockLabelChangesRequested, domain.TaskBlockLabelCIFailed,
+		domain.TaskBlockLabel("mystery"),
+	})
+	want := []prxv1.TaskBlockLabel{
+		prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_DEPENDENCY_UNRESOLVED,
+		prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_CONFLICT,
+		prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_CHANGES_REQUESTED,
+		prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_CI_FAILED,
+	}
+	if !slices.Equal(got, want) {
+		t.Fatalf("block labels=%v want %v", got, want)
 	}
 }
 

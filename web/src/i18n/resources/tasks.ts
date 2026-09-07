@@ -10,7 +10,7 @@ export const tasks = {
       searchPlaceholder: "task-status:ready or payments",
       searchSubmit: "Search",
       searchHint:
-        "Use task-status:ready, block:conflict, github-status:error, or a word. Combine conditions with spaces.",
+        "Use task-status:ready, block:ci-failed, github-status:error, or a word. Combine conditions with spaces.",
       resultCountLabel: "matching active tasks",
       listLabel: "Matching active tasks",
       emptyTitle: "No matching active tasks",
@@ -34,7 +34,7 @@ export const tasks = {
       searchPlaceholder: "task-status:ready または payments",
       searchSubmit: "検索",
       searchHint:
-        "task-status:ready、block:conflict、github-status:error、または語句を使えます。空白で条件を組み合わせます。",
+        "task-status:ready、block:ci-failed、github-status:error、または語句を使えます。空白で条件を組み合わせます。",
       resultCountLabel: "件の該当タスク",
       listLabel: "該当するアクティブなタスク",
       emptyTitle: "該当するアクティブなタスクはありません",

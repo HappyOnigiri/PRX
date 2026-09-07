@@ -1183,6 +1183,7 @@
 .status-badge.block-dependency-unresolved,
 .status-badge.block-conflict,
 .status-badge.block-changes-requested,
+.status-badge.block-ci-failed,
 .status-badge.state-conflict,
 .status-badge.state-changes-requested {
   border-color: var(--status-blocked);
