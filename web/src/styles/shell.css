@@ -1,9 +1,12 @@
 .app-shell {
   --demo-offset: 0px;
 
+  /* 幅は shell がインラインで注入する。ここの値は注入前の既定である。 */
+  --rail-width: 248px;
+
   min-height: 100vh;
   display: grid;
-  grid-template-columns: 248px minmax(0, 1fr);
+  grid-template-columns: var(--rail-width) minmax(0, 1fr);
 }
 
 .app-shell[data-demo] {
@@ -38,17 +41,29 @@
   position: fixed;
   inset: var(--demo-offset) auto 0 0;
   z-index: 30;
-  width: 248px;
+  width: var(--rail-width);
   display: flex;
   flex-direction: column;
   border-right: 1px solid var(--border);
   background: var(--bg-rail);
 }
 
+/* brand の行はリンクなので、隠すボタンは中に入れられない。行を 2 列の箱にして
+   隣に並べる。境界線は箱が持ち、ボタンの下も途切れない。 */
+.rail-head {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.rail-collapse {
+  margin-right: 12px;
+}
+
 .brand {
   height: 60px;
   padding: 10px 20px;
-  border-bottom: 1px solid var(--border);
   display: flex;
   flex-direction: column;
   justify-content: center;
@@ -257,10 +272,66 @@
   background: var(--text);
 }
 
+/* rail は position: fixed なのでハンドルの包含ブロックになり、右端に重ねた
+   ハンドルが rail と一緒に動く。左端起点なので横スクロールも出ない。 */
+.rail-resizer {
+  position: absolute;
+  inset: 0 -3px 0 auto;
+  width: 6px;
+  border: 0;
+  padding: 0;
+  background: transparent;
+  cursor: col-resize;
+  touch-action: none;
+}
+
+/* hover では色を出さない。ドラッグできることは col-resize のカーソルが伝える。
+   キーボードのフォーカスだけは、カーソルが出ないので面で示す。 */
+.rail-resizer:focus-visible {
+  background: var(--accent);
+}
+
+.app-shell[data-rail-resizing] {
+  cursor: col-resize;
+  user-select: none;
+}
+
+.rail-restore {
+  display: none;
+}
+
 .main-stage {
   grid-column: 2;
   min-width: 0;
   min-height: calc(100vh - var(--demo-offset));
+}
+
+/* 幅と最小化が意味を持つのは rail が縦列になる画面幅だけなので、折りたたみは
+   CSS 側で閉じる。JS でアンマウントすると狭い画面でナビゲーションが失われる。 */
+@media (width > 900px) {
+  .app-shell[data-rail-collapsed] {
+    grid-template-columns: 0 minmax(0, 1fr);
+  }
+
+  /* width: 0 では border とフォーカス可能な子が Tab 順に残ってしまう。 */
+  .app-shell[data-rail-collapsed] .rail {
+    display: none;
+  }
+
+  /* 復元ボタンが各画面の見出しに重ならないだけの余白。背景も境界線も持たない
+     ので「細い rail」にはならない。 */
+  .app-shell[data-rail-collapsed] .main-stage {
+    padding-left: 44px;
+  }
+
+  /* rail(30) より上、demo-banner(50) より下に浮かせる。 */
+  .app-shell[data-rail-collapsed] .rail-restore {
+    position: fixed;
+    top: calc(var(--demo-offset) + 12px);
+    left: 8px;
+    z-index: 31;
+    display: inline-flex;
+  }
 }
 
 @media (width <= 900px) {
@@ -278,10 +349,13 @@
     grid-template-columns: 140px minmax(0, 1fr) auto auto;
   }
 
+  .rail-head {
+    border-bottom: 0;
+  }
+
   .brand {
     height: 60px;
     padding: 10px 16px;
-    border-bottom: 0;
   }
 
   .rail nav {
@@ -295,7 +369,9 @@
      cannot sit in. The Projects link stays and its page carries the tree's
      job. */
   .nav-tree,
-  .rail-foot {
+  .rail-foot,
+  .rail-resizer,
+  .rail-collapse {
     display: none;
   }
 

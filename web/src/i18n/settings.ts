@@ -10,12 +10,20 @@ const defaultGraphZoom = 1;
 export const minGraphZoom = 0.08;
 export const maxGraphZoom = 1.7;
 
+// 下限は入れ子になった feature 名が省略記号だけにならない幅、上限はこれ以上広げ
+// ても main-stage を圧迫するだけの幅である。
+const defaultRailWidth = 248;
+export const minRailWidth = 200;
+export const maxRailWidth = 480;
+
 interface WebUISettings {
   language?: SupportedLanguage;
   graphZoom?: number;
   theme?: ThemePreference;
   collapsedProjects?: string[];
   hideCompletedTasks?: boolean;
+  railWidth?: number;
+  railCollapsed?: boolean;
 }
 
 function isSupportedLanguage(value: unknown): value is SupportedLanguage {
@@ -45,10 +53,21 @@ export function readWebUISettings(): WebUISettings {
       theme?: unknown;
       collapsedProjects?: unknown;
       hideCompletedTasks?: unknown;
+      railWidth?: unknown;
+      railCollapsed?: unknown;
     };
     const settings: WebUISettings = {};
     if (typeof candidate.hideCompletedTasks === "boolean")
       settings.hideCompletedTasks = candidate.hideCompletedTasks;
+    if (typeof candidate.railCollapsed === "boolean")
+      settings.railCollapsed = candidate.railCollapsed;
+    if (
+      typeof candidate.railWidth === "number" &&
+      Number.isFinite(candidate.railWidth) &&
+      candidate.railWidth >= minRailWidth &&
+      candidate.railWidth <= maxRailWidth
+    )
+      settings.railWidth = candidate.railWidth;
     if (isSupportedLanguage(candidate.language))
       settings.language = candidate.language;
     if (isThemePreference(candidate.theme)) settings.theme = candidate.theme;
@@ -123,6 +142,51 @@ export function writeHideCompletedTasks(hideCompletedTasks: boolean) {
     );
   } catch {
     // ストレージが使えなくても、このセッション中は絞り込みが効く。
+  }
+}
+
+// サイドバーの幅と最小化は画面を見ながら調整するので、グラフのズームと同じ方法
+// で保存する。幅 0 を最小化の印にはせず、復元先の幅を残すため別に持つ。
+export function clampRailWidth(width: number): number {
+  if (!Number.isFinite(width)) return defaultRailWidth;
+  return Math.min(maxRailWidth, Math.max(minRailWidth, Math.round(width)));
+}
+
+export function readRailWidth(): number {
+  return readWebUISettings().railWidth ?? defaultRailWidth;
+}
+
+export function writeRailWidth(railWidth: number) {
+  if (
+    !Number.isFinite(railWidth) ||
+    railWidth < minRailWidth ||
+    railWidth > maxRailWidth
+  )
+    return;
+  try {
+    const settings = readWebUISettings();
+    localStorage.setItem(
+      webUISettingsKey,
+      JSON.stringify({ ...settings, railWidth }),
+    );
+  } catch {
+    // ストレージが使えなくても、このセッション中は幅が変わる。
+  }
+}
+
+export function readRailCollapsed(): boolean {
+  return readWebUISettings().railCollapsed ?? false;
+}
+
+export function writeRailCollapsed(railCollapsed: boolean) {
+  try {
+    const settings = readWebUISettings();
+    localStorage.setItem(
+      webUISettingsKey,
+      JSON.stringify({ ...settings, railCollapsed }),
+    );
+  } catch {
+    // ストレージが使えなくても、このセッション中はサイドバーが隠れる。
   }
 }
 
