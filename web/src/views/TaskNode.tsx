@@ -99,10 +99,9 @@ function TaskEdgePorts({
   );
 }
 
-// A hidden completed task takes its edge off the canvas with it, which would
-// leave the task that waited on it looking like it never had a blocker. The
-// stub keeps that connection visible as a severed edge, and names the hidden
-// tasks so the reader can tell which work it stands for.
+// The stub keeps a dependency on a hidden completed task visible as a severed
+// edge and names the hidden tasks it stands for.
+// See docs/design/webui.md.
 function HiddenDependencyStub({
   direction,
   titles,

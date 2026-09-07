@@ -33,6 +33,10 @@ Task search operates over the current Snapshot in the browser; its q query stays
 The status tabs of the project list and of every feature list stay in the URL for the same reason.
 The navigation is a tree of projects and the features in flight inside them; which rows are collapsed is browser-local state.
 Whether the task graph hides completed tasks is browser-local state as well, so the next visit reads the graph the way it was left.
+Hiding removes every finished task, including one that sits between two unfinished tasks, so the reader never has to tell a finished node apart from an unfinished one.
+A dependency that crossed a hidden task is not lost: it is reported on the visible task at each end.
+Chains of hidden tasks are followed, so a whole finished stretch is counted rather than only its first node.
+Each end presents that dependency as a severed edge naming the hidden tasks, so a task that waited on a blocker still reads as having had one.
 
 Demo mode is injected through the served HTML metadata rather than RPC or domain state.
 The WebUI keeps a non-dismissible bilingual reset warning at the top of every demo screen.
