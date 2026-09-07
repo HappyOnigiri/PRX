@@ -113,9 +113,11 @@
   background: var(--border);
 }
 
+/* カードが自分の面を持つので、枠に貼り付かないよう地を回りに残す。 */
 .ready-board {
   min-height: 430px;
   background: var(--bg);
+  padding: 10px;
 }
 
 .empty {
