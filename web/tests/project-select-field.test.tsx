@@ -24,9 +24,9 @@ describe("ProjectSelectField", () => {
     ).not.toBeInTheDocument();
   });
 
-  // An uncontrolled select whose defaultValue is missing from its options
-  // silently shows the first one, which would move the feature out of the
-  // archived project the next time the form is saved.
+  // 非制御の select は defaultValue が options にないと黙って先頭を表示し、
+  // 次にフォームを保存したとき feature がアーカイブ済みプロジェクトから
+  // 外れてしまう。
   it("keeps the current membership among the options even when archived", () => {
     render(<ProjectSelectField projects={projects} currentProjectId="P-2" />);
     expect(screen.getByLabelText("Project")).toHaveValue("P-2");

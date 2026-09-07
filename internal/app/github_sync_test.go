@@ -516,9 +516,8 @@ func TestPersistSyncResultDoesNotCountTerminalPartialFailure(t *testing.T) {
 	}
 }
 
-// A chunked fetch stops at its first failing chunk, so the pull requests from
-// that position on were never attempted and must be retried rather than
-// recorded as refreshed.
+// chunk 分割した fetch は最初に失敗した chunk で止まるので、その位置以降の
+// pull request は試行すらされていない。更新済みとして記録せず、再試行すべき。
 func TestUnresolvedIndexMarksWhereAChunkedFetchStopped(t *testing.T) {
 	values := []domain.PullRequest{
 		{TaskID: "first"}, {TaskID: "second"}, {TaskID: "third"},

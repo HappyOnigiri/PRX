@@ -1,4 +1,4 @@
-// Package main checks Markdown line lengths.
+// Package main は Markdown の行長を検査する。
 package main
 
 import (

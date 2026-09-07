@@ -5,8 +5,8 @@ import { useSnapshot } from "../hooks";
 import { formatError } from "../i18n/domain";
 import { StateMessage } from "./Dashboard";
 
-// The project list reports two interruptions while it reads the snapshot, and
-// keeping the wording and the retry here leaves the page about the list itself.
+// プロジェクト一覧はスナップショットを読む間に 2 つの中断を報告する。文言と
+// 再試行をここに置けば、ページ側はリストそのものだけを扱える。
 type ProjectSnapshotState =
   | { message: ReactElement; data?: undefined }
   | { message?: undefined; data: Snapshot };

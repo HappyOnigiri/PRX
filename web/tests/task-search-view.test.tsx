@@ -85,8 +85,8 @@ describe("TaskSearch view", () => {
     });
   });
 
-  // The card is shared with the overview, so a result names its owners and
-  // opens the linked pull request on GitHub instead of restating its state.
+  // カードは概要画面と共通なので、検索結果は所属を示し、状態を書き直す
+  // 代わりに紐づく pull request を GitHub で開く。
   it("names the owners of a result and links its pull request", () => {
     render(<TaskSearch />);
 
@@ -96,8 +96,8 @@ describe("TaskSearch view", () => {
     expect(screen.getByText("Feature").nextElementSibling).toHaveTextContent(
       "Payments rollout",
     );
-    // The ID is what a reader pastes into a search or hands to an agent, so
-    // the card carries it next to the name and copies it on click.
+    // ID は検索に貼ったりエージェントに渡したりするものなので、カードは
+    // 名前の隣に ID を置き、クリックでコピーできるようにする。
     const identifier = screen.getAllByRole("button", {
       name: "Copy Task ID",
     })[0];

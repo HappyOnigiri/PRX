@@ -1,67 +1,67 @@
-# Development policies
+# 開発方針
 
-## Sources of truth
+## 一次情報
 
-The Makefile owns the available development commands and the composition of required checks.
-Tool configuration and test code own current thresholds, package scopes, fixture schemas, and scenario coverage.
-Generated CLI documentation owns the current command surface.
+利用できる開発コマンドと、必須チェックの構成は Makefile が所有する。
+現在の閾値、対象パッケージ、fixture のスキーマ、シナリオの網羅範囲は、ツールの設定とテストコードが所有する。
+現在のコマンド一覧は、生成された CLI ドキュメントが所有する。
 
-This document records why verification exists and which properties a change must preserve.
-Do not copy command inventories, test inventories, or configuration schemas here.
+この文書には、検証が存在する理由と、変更が保たなければならない性質を記録する。
+コマンド一覧、テスト一覧、設定スキーマをここに書き写さないこと。
 
-## Verification policy
+## 検証の方針
 
-Run `make ci` before handing off an implementation change.
-The target must remain a complete local representation of required pull-request checks.
+実装の変更を引き渡す前に `make ci` を実行する。
+このターゲットは、pull request で必須のチェックをローカルで完全に再現するものであり続けなければならない。
 
-Focused checks are useful during development, but they do not replace the complete verification run.
-A failing check should not prevent independent checks from reporting their results when the build tooling can continue safely.
+開発中は個別のチェックが役に立つが、完全な検証の実行を置き換えるものではない。
+ビルドツールが安全に処理を続けられる限り、あるチェックの失敗が、独立した他のチェックの結果報告を妨げてはならない。
 
-Generated artifacts are verified against their source definitions.
-Change the source and regenerate instead of repairing generated output by hand.
+生成物は、その元となる定義に対して検証する。
+生成された出力を手で直すのではなく、元を変更して生成し直すこと。
 
-Comment length is checked mechanically because durable rationale belongs in `docs/design/`, where it is versioned as policy and read once rather than re-read beside every call site.
-A comment that outgrows the limit is usually a design document that was written in the wrong file.
-The limits and the waiver marker live in `AGENTS.md`; the Go checker and the WebUI lint rule own their implementation.
+コメントの長さを機械的に検査するのは、恒久的な背景説明が `docs/design/` に属するからである。そこでは方針としてバージョン管理され、呼び出し箇所ごとに読み返すのではなく一度読めばよい。
+制限を超えたコメントは、たいてい書く場所を間違えた設計文書である。
+制限と waiver のマーカーは `AGENTS.md` にあり、Go のチェッカーと WebUI の lint ルールがそれぞれの実装を所有する。
 
-## Test and coverage policy
+## テストとカバレッジの方針
 
-Coverage baselines prevent unintentional regression.
-Raise a baseline when sustained coverage improves rather than treating spare coverage as a budget for later changes.
+カバレッジのベースラインは、意図しない劣化を防ぐためにある。
+カバレッジが持続的に改善したらベースラインを引き上げる。余剰分を後の変更のための予算として扱わないこと。
 
-Core handwritten packages require every function to execute in tests.
-Generated code and behavior already verified through a more appropriate public boundary may be excluded by the owning check.
+中核となる手書きパッケージでは、すべての関数がテストで実行されることを求める。
+生成コードと、より適切な公開境界ですでに検証済みの挙動は、それを所有するチェックで除外してよい。
 
-Tests should verify behavior through the narrowest stable public boundary that proves the contract.
-Avoid coupling policy tests to private implementation structure when a CLI, RPC, or domain boundary can express the same guarantee.
+テストは、契約を証明できる最も狭い安定した公開境界を通して挙動を検証する。
+CLI・RPC・ドメインの境界で同じ保証を表現できるなら、方針のテストを内部実装の構造に結び付けないこと。
 
-End-to-end tests cover representative cross-layer risks rather than duplicating every lower-level case.
-The browser test suite owns the current scenario inventory, viewport coverage, and artifact locations.
+エンドツーエンドテストは、下位のケースをすべて重複させるのではなく、層をまたぐ代表的なリスクを対象とする。
+現在のシナリオ一覧、viewport の網羅範囲、成果物の出力先は、ブラウザテストスイートが所有する。
 
-## Deterministic external integration
+## 外部連携の決定性
 
-Automated tests and demos use deterministic GitHub fixtures instead of live network state.
-The fixture provider implementation and CLI reference own the current fixture schema and available presets.
+自動テストと demo は、実際のネットワーク状態ではなく決定的な GitHub fixture を使う。
+現在の fixture のスキーマと利用できる preset は、fixture provider の実装と CLI リファレンスが所有する。
 
-Browser end-to-end tests start only `prx serve --demo` and use its built-in four-feature, 120-task dataset.
-The large completed feature owns scale checks, while the active showcase owns state, queue, plan, and document scenarios.
+ブラウザのエンドツーエンドテストは `prx serve --demo` だけを起動し、その組み込みの 4 feature・120 task のデータセットを使う。
+規模に関する検証は大きな完了済み feature が担い、状態・キュー・plan・document のシナリオは active な showcase が担う。
 
-Tests that exercise configuration or credential resolution must use isolated temporary configuration.
-They must not depend on the real Keychain, ambient token variables, authenticated `gh` accounts, or GitHub availability.
+設定や credential の解決を対象とするテストは、隔離された一時設定を使わなければならない。
+実際の Keychain、環境のトークン変数、認証済みの `gh` アカウント、GitHub の可用性に依存してはならない。
 
-Authentication tests use controlled HTTPS servers and explicit fake credential sources.
-They verify host isolation, safe fallback, and secret-free outputs without contacting production services.
+認証のテストは、制御下の HTTPS サーバと、明示的な偽の credential ソースを使う。
+本番サービスに接続せずに、ホストの分離、安全な fallback、秘密情報を含まない出力を検証する。
 
-External-integration tests preserve the fail-safe synchronization and trust-boundary policies documented in `docs/design/github-sync.md` and `docs/design/security.md`.
+外部連携のテストは、`docs/design/github-sync.md` と `docs/design/security.md` に記録された fail-safe な同期と信頼境界の方針を保つ。
 
-## Version and release policy
+## バージョンとリリースの方針
 
-The root `package.json` owns the PRX version used by every build surface.
-Development builds append `-dev` so diagnostic output identifies their release base without claiming to be an official release.
+すべてのビルド面で使う PRX のバージョンは、ルートの `package.json` が所有する。
+開発ビルドは `-dev` を付け、公式リリースを名乗らずに、診断出力からリリースの基点が分かるようにする。
 
-Only the release pipeline stamps a stable version into release artifacts.
-The release workflow accepts stable semantic versions and does not publish prerelease identifiers.
+安定版のバージョンをリリース成果物に刻むのは、リリースパイプラインだけである。
+リリースワークフローは安定版のセマンティックバージョンだけを受け付け、prerelease の識別子は公開しない。
 
-A release change updates the version, opens a release pull request, and derives its changelog from merged work.
-Merging that pull request creates the matching tag and GitHub Release.
-The workflow implementation owns credentials, branch cleanup, and other operational mechanics.
+リリースの変更では、バージョンを更新し、リリース用の pull request を開き、merge 済みの作業から changelog を導出する。
+その pull request を merge すると、対応するタグと GitHub Release が作られる。
+credential、ブランチの後片付け、その他の運用上の仕組みは、ワークフローの実装が所有する。

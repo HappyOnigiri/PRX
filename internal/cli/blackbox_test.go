@@ -877,8 +877,8 @@ func TestBlackBoxShowReportsMissingTargetsWithCurrentVocabulary(t *testing.T) {
 	}
 }
 
-// show resolves all three kinds its operand documents, so a project public ID
-// has to answer with the project itself rather than a missing feature.
+// show はオペランドが指しうる 3 種類すべてを解決するので、project の public ID には
+// 存在しない feature ではなく project 自身を返さなければならない。
 func TestBlackBoxShowResolvesProjectsByPublicID(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "show-project.db")
@@ -1692,8 +1692,8 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 		t.Fatal(err)
 	}
 	assertDirectObjectKeys(t, runDB("feature", "delete", deletableFeatureID, "--cascade"), "deleted")
-	// The checkout feature still belongs to the project, so the cascade is the
-	// form that deletes it along with the project instead of failing.
+	// checkout の feature はまだ project に属しているので、cascade は失敗させずに
+	// project ごと削除する形になる。
 	assertDirectObjectKeys(t, runDB("project", "delete", projectID, "--cascade"), "deleted")
 }
 
@@ -1928,9 +1928,9 @@ func runConfigCLI(
 	return decodeResult(t, []byte(result.stdout), result.stdout), result.stderr, result.exit
 }
 
-// TestConfigUnknownFieldsWarnWithoutFailing proves a configuration file written
-// by a newer PRX keeps working: commands still succeed, the fields this build
-// cannot represent are named on stderr, and validation reports them as data.
+// TestConfigUnknownFieldsWarnWithoutFailing は、新しい PRX が書いた設定ファイルでも動作が
+// 続くことを示す。コマンドは成功し、このビルドが表現できないフィールドは stderr に
+// 名前が出て、検証はそれらをデータとして報告する。
 func TestConfigUnknownFieldsWarnWithoutFailing(t *testing.T) {
 	binary := buildCLI(t)
 	root := t.TempDir()
@@ -1969,8 +1969,8 @@ func TestConfigUnknownFieldsWarnWithoutFailing(t *testing.T) {
 		t.Fatalf("validate warnings=%q", warnings)
 	}
 
-	// A file this build fully understands stays quiet, so the warning marks a real
-	// difference rather than appearing on every run.
+	// このビルドが完全に理解できるファイルでは何も出ないので、警告は毎回出るものではなく
+	// 実際の差異を示す。
 	quiet := filepath.Join(root, "known-config.yaml")
 	if err := os.WriteFile(quiet, []byte("version: 1\n"), 0o600); err != nil {
 		t.Fatal(err)
@@ -1981,9 +1981,9 @@ func TestConfigUnknownFieldsWarnWithoutFailing(t *testing.T) {
 	}
 }
 
-// TestBlackBoxDebugRunsWithoutStorageAndWithoutRefreshing proves the diagnostic
-// command works where it is needed: an unopenable database still produces a
-// report, and two runs leave the recorded synchronization status untouched.
+// TestBlackBoxDebugRunsWithoutStorageAndWithoutRefreshing は、診断コマンドが必要な場面で
+// 動くことを示す。開けないデータベースでもレポートは出力され、2 回実行しても記録済みの
+// 同期状態は変わらない。
 func TestBlackBoxDebugRunsWithoutStorageAndWithoutRefreshing(t *testing.T) {
 	binary := buildCLI(t)
 	root := t.TempDir()
@@ -2027,8 +2027,8 @@ func TestBlackBoxDebugRunsWithoutStorageAndWithoutRefreshing(t *testing.T) {
 	}
 }
 
-// TestBlackBoxDebugKeepsCredentialsOutOfItsReport pairs with the configuration
-// output rules: the report names the credential method and never its secret.
+// TestBlackBoxDebugKeepsCredentialsOutOfItsReport は設定出力の規則と対になる。レポートは
+// 認証方式の名前は出すが、その秘密情報は決して出さない。
 func TestBlackBoxDebugKeepsCredentialsOutOfItsReport(t *testing.T) {
 	binary := buildCLI(t)
 	root := t.TempDir()
@@ -2056,8 +2056,8 @@ func TestBlackBoxDebugKeepsCredentialsOutOfItsReport(t *testing.T) {
 	}
 }
 
-// Archiving is a write barrier at the CLI surface too, so a coding agent that
-// only has the CLI cannot edit work the WebUI presents as read-only.
+// アーカイブは CLI の表面でも書き込みの障壁になるので、CLI しか持たないコーディング
+// エージェントは、WebUI が読み取り専用として見せている作業を編集できない。
 func TestBlackBoxArchivedProjectAndFeatureRefuseWrites(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "archived.db")
@@ -2097,8 +2097,7 @@ func TestBlackBoxArchivedProjectAndFeatureRefuseWrites(t *testing.T) {
 		}
 	}
 
-	// Deleting the container is the operation the barrier lets through, and the
-	// cascade takes the features it holds with it.
+	// 入れ物の削除は障壁が通す操作であり、cascade は中に持つ feature も一緒に消す。
 	if _, _, exit := runCLI(t, binary, dbPath, "project", "archive", project); exit != 0 {
 		t.Fatalf("re-archive exit=%d", exit)
 	}
@@ -2126,9 +2125,9 @@ func TestBlackBoxArchivedProjectAndFeatureRefuseWrites(t *testing.T) {
 	}
 }
 
-// read_only accompanies every feature the CLI prints, not only the snapshot, so
-// a caller decides whether a write is allowed from the response it already has
-// instead of reassembling the feature's flag and its project's.
+// read_only はスナップショットに限らず CLI が出力する全ての feature に付く。呼び出し側は
+// feature とその project のフラグを組み立て直さず、手元のレスポンスだけで書き込みの
+// 可否を判断できる。
 func TestBlackBoxReadOnlyAccompaniesSingleFeatureReads(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "readonly.db")
@@ -2144,8 +2143,8 @@ func TestBlackBoxReadOnlyAccompaniesSingleFeatureReads(t *testing.T) {
 		}
 	}
 
-	// Unarchiving the feature is allowed while the project is archived, and its
-	// response has to admit that the feature is still read-only.
+	// project がアーカイブ中でも feature のアーカイブ解除はできるが、そのレスポンスは
+	// feature が依然として読み取り専用であることを示さなければならない。
 	for _, args := range [][]string{{"show", feature}, {"feature", "unarchive", feature}, {"show", feature}} {
 		if readOnly, archived := decodeFeatureState(t, runCLIData(t, binary, dbPath, args...)); !readOnly {
 			t.Errorf("%v read_only=%v archived=%v, want read_only while the project is archived",
@@ -2218,8 +2217,7 @@ func TestBlackBoxPromptFollowsThePlanAndTheConfiguredTemplates(t *testing.T) {
 	if design.exit != 0 || design.stderr != "" {
 		t.Fatalf("prompt failed: stdout=%q stderr=%q exit=%d", design.stdout, design.stderr, design.exit)
 	}
-	// The text output is the prompt and nothing else, so it can be handed to
-	// another agent without editing.
+	// テキスト出力はプロンプトそのものだけなので、編集せずに別のエージェントへ渡せる。
 	if !strings.HasPrefix(design.stdout, "Design PRX task T-1 of feature F-1.\n") {
 		t.Fatalf("design prompt=%q", design.stdout)
 	}
@@ -2243,7 +2241,7 @@ func TestBlackBoxPromptFollowsThePlanAndTheConfiguredTemplates(t *testing.T) {
 	if !strings.HasPrefix(implementation.stdout, "Implement PRX task T-1 of feature F-1.\n") {
 		t.Fatalf("implementation prompt=%q", implementation.stdout)
 	}
-	// The plan body stays out of the prompt; the agent is told to read it.
+	// プラン本文はプロンプトに含めず、エージェントには読むよう指示する。
 	if strings.Contains(implementation.stdout, "# Checkout plan") ||
 		!strings.Contains(implementation.stdout, "prx plan T-1") {
 		t.Fatalf("implementation prompt=%q", implementation.stdout)

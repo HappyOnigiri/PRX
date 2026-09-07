@@ -29,8 +29,8 @@ function selected(predicate: (feature: (typeof features)[number]) => boolean) {
 }
 
 describe("feature status predicates", () => {
-  // A feature that is both read-only and completed belongs to the archive, so
-  // the three predicates have to partition the set rather than overlap.
+  // 読み取り専用かつ完了の feature はアーカイブに属するため、3 つの述語は
+  // 重複せず集合を分割する必要がある。
   it("puts every feature in exactly one of the three states", () => {
     expect(selected(isActiveFeature)).toEqual(["active"]);
     expect(selected(isCompletedFeature)).toEqual(["completed"]);

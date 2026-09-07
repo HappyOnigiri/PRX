@@ -20,8 +20,8 @@ describe("project selectors", () => {
     ]);
   });
 
-  // An unaffiliated feature or document carries an empty project ID, so a
-  // caller holding one must not collect every unaffiliated record.
+  // 未所属の feature や document はプロジェクト ID が空なので、空 ID を
+  // 渡した呼び出し元が未所属のレコードを全部拾ってしまってはいけない。
   it("never matches unaffiliated records against an empty project ID", () => {
     const features = [
       makeFeature({ id: "F-1", projectId: "P-1" }),

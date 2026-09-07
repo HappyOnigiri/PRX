@@ -1,8 +1,8 @@
 import { Archive, ArchiveRestore, Trash2 } from "lucide-react";
 import { IconButton } from "./IconButton";
 
-// The archive-or-delete block is identical for a project and a feature, so the
-// wording arrives as props rather than being read from a fixed namespace.
+// アーカイブと削除のブロックは project と feature で同一なので、文言は固定の
+// namespace から読まずに props で受け取る。
 export interface LifecycleLabels {
   section: string;
   detail: string;
@@ -15,9 +15,9 @@ interface LifecycleActionsProps {
   labels: LifecycleLabels;
   updatePending: boolean;
   deletePending: boolean;
-  // At most one of these is supplied. Both are omitted when the record is
-  // read-only because its container is archived: neither archiving nor
-  // restoring it would be a write the server accepts.
+  // 渡されるのは最大 1 つ。コンテナがアーカイブ済みでレコードが読み取り専用の
+  // ときは両方とも省く。アーカイブも復元もサーバーが受け付ける書き込みには
+  // ならないため。
   onArchive?: () => void;
   onRestore?: () => void;
   onDelete: () => void;

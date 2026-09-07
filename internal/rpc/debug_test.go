@@ -59,8 +59,8 @@ func TestRPCReturnsTheDiagnosticReportAndItsText(t *testing.T) {
 	if !report.GetStorage().GetDatabaseFile().GetApplicable() {
 		t.Fatalf("database file=%+v", report.GetStorage().GetDatabaseFile())
 	}
-	// The rendered text is what the WebUI copies, so it has to arrive complete
-	// rather than being rebuilt in the browser.
+	// WebUI がコピーするのは描画済みのテキストなので、ブラウザ側で組み立て直す
+	// のではなく完全な形で届く必要がある。
 	for _, section := range []string{"problems:", "build:", "paths:", "storage:", "github_sync:"} {
 		if !strings.Contains(response.Msg.GetText(), section) {
 			t.Fatalf("text omitted %q:\n%s", section, response.Msg.GetText())
@@ -76,8 +76,8 @@ func TestRPCReturnsTheDiagnosticReportAndItsText(t *testing.T) {
 	}
 }
 
-// Every domain problem code has to reach the wire as a distinct enum member, or
-// a client cannot branch on what the server detected.
+// ドメインの問題コードはすべて個別の enum メンバーとして送られる必要がある。
+// でなければクライアントはサーバーの検出結果で分岐できない。
 func TestRPCMapsEveryDebugProblemCode(t *testing.T) {
 	client := newTestClientForService(t, allProblemsService{})
 	response, err := client.GetDebugReport(
@@ -126,8 +126,8 @@ func (allProblemsService) Debug(context.Context) (domain.DebugReport, error) {
 	return report, nil
 }
 
-// The report presents credentials without their secrets, and the schema is what
-// keeps that true for every future field.
+// レポートは資格情報を秘密の値抜きで提示する。今後追加されるフィールドでも
+// それが保たれるのはスキーマのおかげ。
 func TestDebugConfigAuthMethodSchemaCarriesNoSecretFields(t *testing.T) {
 	fields := (&prxv1.DebugConfigAuthMethod{}).ProtoReflect().Descriptor().Fields()
 	for index := range fields.Len() {

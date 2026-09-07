@@ -10,9 +10,8 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/prompt"
 )
 
-// promptResponse is the JSON form of `prx prompt`. The kind is carried so a
-// caller can tell a design request from an implementation request without
-// re-deriving it from the task.
+// promptResponse は `prx prompt` の JSON 形式。kind を持たせるのは、呼び出し側が
+// task から導出し直さずに設計依頼と実装依頼を区別できるようにするため。
 type promptResponse struct {
 	TaskID string `json:"task_id"`
 	Kind   string `json:"kind"`
@@ -65,8 +64,8 @@ func findSnapshotTask(snapshot domain.Snapshot, id string) (domain.Task, bool) {
 	return domain.Task{}, false
 }
 
-// renderPrompt prints the prompt body alone. Anything else would have to be
-// deleted by hand before the text could be handed to another agent.
+// renderPrompt はプロンプト本文だけを出力する。それ以外があると、別のエージェントに
+// 渡す前に手で消す必要が出てしまう。
 func renderPrompt(body string) humanRenderer {
 	return func(out io.Writer) error {
 		if _, err := io.WriteString(out, body); err != nil {

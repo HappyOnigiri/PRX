@@ -1,6 +1,6 @@
-// A document belongs to exactly one of a project, a feature, or a task. Each
-// arm marks the other keys as never so a caller cannot pass two parents at
-// once, which the server would reject at the far end of the request.
+// document は project・feature・task のいずれか 1 つにだけ属する。各分岐で他の
+// キーを never にしてあるので、呼び出し側は親を 2 つ渡せない。渡せてもサーバー
+// 側で拒否される。
 export type DocumentParent =
   | { projectId: string; featureId?: never; taskId?: never }
   | { projectId?: never; featureId: string; taskId?: never }

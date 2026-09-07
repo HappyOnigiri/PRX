@@ -46,8 +46,8 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests
 	if err != nil {
 		t.Fatal(err)
 	}
-	// A feature that is read-only only because its project is archived leaves
-	// the same refreshes as one archived on its own.
+	// project がアーカイブ済みであることだけを理由に読み取り専用になった feature も、
+	// 自身がアーカイブ済みの feature と同じ refresh から外れる。
 	projectTask, err := featureInArchivedProjectWithPullRequest(
 		t, service, "sunset", "project-sync", "https://github.com/acme/mobile/pull/4",
 	)
@@ -116,8 +116,8 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests
 	}
 }
 
-// archivedFeatureWithPullRequest builds the work first and archives afterwards,
-// because an archived feature refuses the writes that would create it.
+// archivedFeatureWithPullRequest は先に中身を作ってから archive する。
+// アーカイブ済み feature は、それを作る書き込みを拒むため。
 func archivedFeatureWithPullRequest(
 	t *testing.T,
 	service *app.Service,
@@ -140,8 +140,8 @@ func archivedFeatureWithPullRequest(
 	return task, nil
 }
 
-// featureInArchivedProjectWithPullRequest leaves the feature itself active, so
-// the only thing making it read-only is the project it belongs to.
+// featureInArchivedProjectWithPullRequest は feature 自体を active のままにし、
+// 読み取り専用の原因を、所属する project だけに限定する。
 func featureInArchivedProjectWithPullRequest(
 	t *testing.T,
 	service *app.Service,
@@ -171,8 +171,8 @@ func featureInArchivedProjectWithPullRequest(
 	return task, nil
 }
 
-// A refresh narrowed to one task says nothing about the pull requests it
-// skipped, so it must not consume the shared interval or publish its counts.
+// 単一 task に絞った refresh は、飛ばした pull request について何も語らない。
+// よって共有の interval を消費したり、その件数を公開したりしてはならない。
 func TestTargetedManualSyncLeavesTheAutomaticIntervalAndStatusUntouched(t *testing.T) {
 	ctx := context.Background()
 	service, database := newAutoSyncTestService(t)
@@ -200,9 +200,9 @@ func TestTargetedManualSyncLeavesTheAutomaticIntervalAndStatusUntouched(t *testi
 	}
 }
 
-// The refresh may end because the caller went away. Recording the outcome must
-// survive that, or the acquired attempt would hold the interval with nothing to
-// explain what stopped it.
+// 呼び出し側が消えたことで refresh が終わることがある。結果の記録はそれを生き延びる
+// 必要がある。さもないと取得済みの試行が、何に止められたかの説明もないまま
+// interval を握ってしまう。
 func TestAutomaticSyncRecordsTheRunAfterTheCallerCancels(t *testing.T) {
 	configStore, err := config.NewStore(filepath.Join(t.TempDir(), "config.yaml"))
 	if err != nil {
@@ -216,9 +216,9 @@ func TestAutomaticSyncRecordsTheRunAfterTheCallerCancels(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() { _ = database.Close() }()
-	// The refresh that follows the attachment must not spend the cancellation
-	// this test aims at the automatic run, so the provider starts cancelling
-	// only once the pull request is in place.
+	// attach 後の refresh が、このテストの狙いである自動実行向けのキャンセルを
+	// 使い切らないよう、provider は pull request が揃ってから
+	// キャンセルを始める。
 	var cancelAutomaticSync context.CancelFunc
 	service := app.NewWithConfig(
 		database,
@@ -258,8 +258,8 @@ func TestAutomaticSyncRecordsTheRunAfterTheCallerCancels(t *testing.T) {
 	}
 }
 
-// cancellingProvider ends the caller's context the way a disconnected RPC or an
-// interrupted command does, while the refresh is still running.
+// cancellingProvider は refresh の実行中に、切断された RPC や中断されたコマンドと
+// 同じように呼び出し側の context を終了させる。
 type cancellingProvider struct{ cancel context.CancelFunc }
 
 func (p cancellingProvider) Fetch(

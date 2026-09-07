@@ -7,9 +7,9 @@ GO_COVERAGE_PACKAGES := ./internal/domain ./internal/github ./internal/rpc ./int
 GO_COVERAGE_ZERO_PACKAGES := ./internal/app $(GO_COVERAGE_PACKAGES)
 GOLANGCI_LINT_VERSION := $(shell awk '$$1 == "golangci-lint" { print $$2 }' .tool-versions)
 GOLANGCI_LINT := bin/golangci-lint
-# `make ci` runs its checks in parallel with one job per CPU. Override with `make ci CI_JOBS=4`.
+# `make ci` は CPU 数だけジョブを並列に走らせる。`make ci CI_JOBS=4` で上書きできる。
 CI_JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
-# GNU make 4 prints each parallel job's output as one block; GNU make 3.81 (macOS) interleaves it.
+# GNU make 4 は並列ジョブの出力をまとめて表示するが、GNU make 3.81 (macOS) は混ざる。
 CI_MAKEFLAGS := -j$(CI_JOBS) --keep-going $(if $(filter output-sync,$(.FEATURES)),--output-sync=target)
 
 .PHONY: generate generated-check mod-tidy-check fmt lint go-lint go-deadcode markdown-lint web-lint check-web-quality \
@@ -23,8 +23,8 @@ generate: web-install
 	$(GO) tool buf generate
 	$(GO) run ./cmd/prxdoc docs/cli
 
-# Regenerates into a temporary directory and compares it with the tracked files, so this
-# never rewrites the working tree and can run alongside the other checks.
+# 一時ディレクトリに再生成して追跡中のファイルと比較する。作業ツリーを書き換えないので、
+# 他のチェックと並行して実行できる。
 generated-check: web-install
 	$(GO) tool buf format -d --exit-code proto
 	$(GO) tool buf lint
@@ -46,7 +46,7 @@ fmt: web-install $(GOLANGCI_LINT)
 
 lint: go-lint go-deadcode go-comment-lint markdown-lint web-lint
 
-# golangci-lint runs govet, so a separate `go vet` is redundant.
+# golangci-lint が govet を実行するので、別に `go vet` を走らせる必要はない。
 go-lint: $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) run ./...
 
@@ -54,7 +54,7 @@ go-deadcode:
 	@output="$$($(GO) tool deadcode -test ./...)"; \
 	if [ -n "$$output" ]; then printf '%s\n' "$$output"; echo "deadcode: unreachable functions found"; exit 1; fi
 
-# The matching check for TypeScript and JavaScript is an ESLint rule, so it runs in web-lint.
+# TypeScript と JavaScript に対する同じチェックは ESLint ルールなので web-lint で走る。
 go-comment-lint:
 	$(GO) run ./tools/checkcomments
 
@@ -94,7 +94,7 @@ go-coverage-zero-check:
 test-race:
 	$(GO) test -race ./...
 
-# One race-enabled run gives `make ci` the results of go-test, test-race, and go-coverage-check.
+# race 有効の 1 回の実行で、`make ci` は go-test・test-race・go-coverage-check の結果を得る。
 test-race-coverage:
 	@profile="$$(mktemp)" || exit $$?; \
 	trap 'rm -f "$$profile"' EXIT; \
@@ -107,18 +107,18 @@ test-cli:
 web-install:
 	$(PNPM) install --frozen-lockfile
 
-# Type checking belongs to web-lint; the production bundle only needs Vite.
+# 型チェックは web-lint の担当で、本番バンドルの生成には Vite だけあればよい。
 web-build: web-install
 	$(PNPM) --dir web build
 
-# The development middleware serves the license report emitted by web-build.
+# 開発用ミドルウェアは web-build が出力したライセンスレポートを配信する。
 dev: web-build
 	$(PNPM) --dir web dev:full
 
-# Extra Playwright flags, e.g. `make e2e E2E_FLAGS=--shard=1/3` to run one shard of the suite.
+# Playwright への追加フラグ。例えば `make e2e E2E_FLAGS=--shard=1/3` で 1 シャードだけ走る。
 E2E_FLAGS ?=
 
-# scripts/run-e2e-server.sh also writes bin/prx, so e2e waits for build instead of running beside it.
+# scripts/run-e2e-server.sh も bin/prx を書くので、e2e は build と並行せず終わるのを待つ。
 e2e: build
 	$(PNPM) --dir web e2e $(E2E_FLAGS)
 
@@ -136,9 +136,9 @@ install: build
 ci:
 	$(MAKE) $(CI_MAKEFLAGS) ci-checks
 
-# Every check is read-only or writes only to its own output (coverage/, test-results/, bin/prx,
-# internal/webui/dist), so they are safe to run concurrently. Dependencies serialize the writers.
-# The longest chain (web-build -> build -> e2e) comes first so make schedules it before the rest.
+# どのチェックも読み取り専用か、自分の出力先 (coverage/、test-results/、bin/prx、
+# internal/webui/dist) にしか書かないので、並行実行しても安全。書き込み側は依存関係で直列化する。
+# 最長の連鎖 (web-build -> build -> e2e) を先頭に置き、make が他より先に着手するようにしている。
 ci-checks: e2e version-check build lint test-race-coverage go-coverage-zero-check web-test check-web-quality \
     generated-check mod-tidy-check
 

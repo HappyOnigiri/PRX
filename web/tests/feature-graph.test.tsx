@@ -395,8 +395,8 @@ describe("FeatureGraph", () => {
       />,
     );
 
-    // The ports are measured one frame after the nodes commit, so the first
-    // render must not name handles that React Flow does not know yet.
+    // ポートの計測はノード確定の 1 フレーム後なので、初回描画では React Flow
+    // がまだ知らない handle を指定してはいけない。
     expect(graphMocks.edges[0]).toMatchObject({
       id: "blocker-blocked",
       sourceHandle: null,

@@ -1,2 +1,2 @@
-// Package github provides GitHub pull-request providers for live synchronization and fixtures.
+// Package github は実同期用とフィクスチャ用の GitHub プルリクエストプロバイダを提供する。
 package github

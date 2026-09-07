@@ -1,4 +1,4 @@
-// Package main checks the size of Web TypeScript files.
+// Package main は Web の TypeScript ファイルの大きさを検査する。
 package main
 
 import (

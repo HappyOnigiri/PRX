@@ -1,10 +1,9 @@
--- Projects and features no longer carry a slug: the public ID is the only
--- identifier callers name. SQLite cannot drop a column that a UNIQUE
--- constraint, a CHECK, and an index all depend on, so both tables are rebuilt.
--- Rebuilding features drags in tasks, documents, and the children of tasks,
--- because a DROP TABLE with foreign keys enabled runs an implicit DELETE FROM
--- that ON DELETE RESTRICT rejects while referencing rows exist. Every table
--- below other than projects and features is recreated exactly as it was.
+-- project と feature は slug を持たなくなり、呼び出し側が指定する識別子は public ID
+-- だけになる。SQLite は UNIQUE 制約・CHECK・インデックスが依存する列を削除できない
+-- ので、両テーブルを作り直す。features の作り直しは tasks・documents と tasks の子を
+-- 巻き込む。外部キーが有効な状態の DROP TABLE は暗黙の DELETE FROM を伴い、参照する
+-- 行が残っている間は ON DELETE RESTRICT がそれを拒むためである。以下のうち projects と
+-- features 以外のテーブルは、元とまったく同じ定義で作り直す。
 CREATE TEMP TABLE project_migration AS
 SELECT id, public_id, title, description, archived, created_at, updated_at
 FROM projects;
@@ -60,8 +59,8 @@ CREATE TABLE features (
 
 CREATE UNIQUE INDEX features_public_id_idx ON features(public_id);
 
--- The slug used to break ties in the project feature listing. The public ID
--- takes that place, so the listing keeps a stable total order.
+-- project 配下の feature 一覧では、同順のときの決着に slug を使っていた。その役割は
+-- public ID が引き継ぎ、一覧は安定した全順序を保つ。
 CREATE INDEX features_project_idx ON features(project_id, updated_at DESC, public_id);
 
 INSERT INTO features (
@@ -175,8 +174,8 @@ CREATE INDEX documents_project_idx ON documents(project_id, created_at, id);
 CREATE INDEX documents_feature_idx ON documents(feature_id, created_at, id);
 CREATE INDEX documents_task_idx ON documents(task_id, is_implementation_plan DESC, created_at, id);
 
--- The upsert of an implementation plan targets this partial index by name and
--- predicate, so both have to survive the rebuild unchanged.
+-- 実装計画の upsert はこの部分インデックスを名前と述語で指定するため、
+-- どちらも作り直しの前後で変えてはならない。
 CREATE UNIQUE INDEX documents_one_plan_per_task_idx
 ON documents(task_id) WHERE is_implementation_plan = 1;
 

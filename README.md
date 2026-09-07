@@ -1,5 +1,7 @@
 # PRX
 
+[日本語版は README.ja.md](README.ja.md)
+
 PRX is a local-first dependency control room for initiatives that span many GitHub pull requests.
 It stores a normalized DAG in SQLite and derives the next safe tasks.
 It refreshes pull-request state directly from GitHub.

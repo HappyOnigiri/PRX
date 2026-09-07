@@ -15,8 +15,8 @@ func (s *Service) CreateProject(ctx context.Context, title, description string) 
 	return s.repository.CreateProject(ctx, title, strings.TrimSpace(description))
 }
 
-// UpdateProject applies every field the caller supplied. A nil pointer means
-// the field was omitted; an empty string is a request to clear it.
+// UpdateProject は呼び出し側が指定した全フィールドを適用する。nil ポインタは
+// 未指定を意味し、空文字列はその値を消す要求を意味する。
 func (s *Service) UpdateProject(
 	ctx context.Context,
 	id string,
@@ -46,15 +46,14 @@ func (s *Service) UpdateProject(
 	return s.repository.UpdateProject(ctx, project)
 }
 
-// ResolveProject looks a project up by its public ID. It exists so callers
-// name one entry point for an operand that identifies a project, and so a
-// missing row is always reported with the operand the caller supplied.
+// ResolveProject は公開 ID で project を引く。project を指すオペランドの入口を
+// 1 つに定め、行がないときは常に呼び出し側が渡したオペランドで報告するために存在する。
 func (s *Service) ResolveProject(ctx context.Context, id string) (domain.Project, error) {
 	return s.repository.GetProject(ctx, id)
 }
 
-// DeleteProject removes the container. Deletion is one of the operations an
-// archived project still accepts, so it is deliberately unguarded.
+// DeleteProject はコンテナを削除する。削除はアーカイブ済み project でも受け付ける
+// 操作の 1 つなので、意図的にガードしていない。
 func (s *Service) DeleteProject(ctx context.Context, id string, cascade bool) error {
 	project, err := s.ResolveProject(ctx, id)
 	if err != nil {

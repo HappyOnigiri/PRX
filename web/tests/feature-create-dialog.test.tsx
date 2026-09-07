@@ -40,8 +40,8 @@ describe("FeatureCreateDialog", () => {
     dialogMocks.mutation.error = null;
   });
 
-  // The dialog is opened from a project, so the membership comes from the page
-  // rather than from a field the caller has to fill in.
+  // ダイアログはプロジェクトから開くため、所属は入力欄ではなくページ側から
+  // 決まる。
   it("creates the feature in the project it was opened from", async () => {
     const onClose = vi.fn();
     render(<FeatureCreateDialog projectId="P-1" onClose={onClose} />);
@@ -69,8 +69,8 @@ describe("FeatureCreateDialog", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
-  // A refused write leaves the dialog open with the reason on screen, so the
-  // caller can correct the form instead of losing what they typed.
+  // 書き込みが拒否されたときは理由を出したままダイアログを開いておき、入力を
+  // 失わずに修正できるようにする。
   it("keeps the dialog open and reports a refused creation", async () => {
     const onClose = vi.fn();
     dialogMocks.mutation.mutateAsync.mockRejectedValue(new Error("refused"));

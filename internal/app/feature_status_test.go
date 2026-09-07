@@ -10,8 +10,7 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/store"
 )
 
-// statusTask describes one task to create for a feature whose derived status is
-// under test.
+// statusTask は、導出ステータスを検証する feature 用に作る task 1 件を表す。
 type statusTask struct {
 	status domain.TaskStatus
 	pr     domain.PullRequestState
@@ -135,8 +134,8 @@ func TestManualFeatureStatusOverridesAutomaticCompletion(t *testing.T) {
 	}
 }
 
-// A completed feature leaves the refreshes that maintain work in flight, so its
-// pull requests stop changing until a caller asks for that feature by name.
+// 完了した feature は進行中の作業を保守する refresh の対象から外れるので、
+// その pull request は名指しで要求されるまで変化しない。
 func TestUnscopedSyncSkipsCompletedFeaturesAndExplicitScopeRefreshesThem(t *testing.T) {
 	ctx := context.Background()
 	service, database := newAutoSyncTestService(t)
@@ -168,9 +167,8 @@ func TestUnscopedSyncSkipsCompletedFeaturesAndExplicitScopeRefreshesThem(t *test
 	}
 }
 
-// demoPullRequestNumber keeps every attached pull request in these tests
-// distinct, because storage rejects a repeated host, owner, repository, and
-// number.
+// demoPullRequestNumber は、これらのテストで attach する pull request を互いに
+// 区別する。ストレージが host・owner・repository・number の重複を拒むため。
 var demoPullRequestNumber = 0
 
 func createFeatureWithTasks(
@@ -204,9 +202,9 @@ func createFeatureWithTasks(
 			t.Fatal(err)
 		}
 		attached.State = value.pr
-		// Attaching refreshes the pull request, and these tests observe which
-		// pull requests a later refresh reaches, so the stored value goes back
-		// to the never-refreshed one the caller asked for.
+		// attach は pull request を refresh するが、これらのテストは後続の refresh が
+		// どれに届くかを観察する。そこで保存値を、呼び出し側が指定した
+		// 未 refresh の状態に戻す。
 		attached.LastSyncedAt = nil
 		attached.SyncError = ""
 		attached.Stale = true
@@ -217,8 +215,8 @@ func createFeatureWithTasks(
 	return feature
 }
 
-// clearSyncMarkers forgets what the refresh that follows an attachment
-// recorded, so a test can tell which pull requests a later refresh reaches.
+// clearSyncMarkers は attach 後の refresh が記録した内容を消し、
+// 後続の refresh がどの pull request に届くかをテストが判別できるようにする。
 func clearSyncMarkers(t *testing.T, database *store.Store) {
 	t.Helper()
 	ctx := context.Background()

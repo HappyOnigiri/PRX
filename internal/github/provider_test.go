@@ -268,8 +268,8 @@ func TestLiveProviderBoundsRequestsAndKeepsSyncing(t *testing.T) {
 		t.Fatal("the GitHub HTTP client has no timeout; an unresponsive endpoint would stall the sync")
 	}
 
-	// A stalled endpoint must fail that pull request rather than hang forever, so
-	// the caller can record the failure and move on to the next one.
+	// 応答が止まったエンドポイントは永久に待つのではなくその PR を失敗させる。
+	// 呼び出し元が失敗を記録して次に進めるようにするため。
 	block := make(chan struct{})
 	server := httptest.NewServer(http.HandlerFunc(func(_ http.ResponseWriter, _ *http.Request) {
 		<-block
@@ -289,7 +289,7 @@ func TestLiveProviderBoundsRequestsAndKeepsSyncing(t *testing.T) {
 		t.Fatal("expected the stalled request to fail")
 	}
 
-	// The next pull request still syncs through a healthy endpoint.
+	// 次の PR は正常なエンドポイント経由で問題なく同期される。
 	healthy := newReviewServer(t, `[{"state":"APPROVED","user":{"login":"reviewer"}}]`)
 	got, err := healthy.Fetch(context.Background(), domain.PullRequest{Owner: "acme", Repository: "api", Number: 7})
 	if err != nil || got.Stale {
@@ -313,7 +313,7 @@ func TestLiveProviderFollowsReviewPagination(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		reviewPages++
 		if r.URL.Query().Get("page") == "" {
-			// The decisive review lives on the second page.
+			// 決め手になるレビューは 2 ページ目にある。
 			w.Header().Set("Link", `<`+r.URL.Path+`?page=2>; rel="next"`)
 			_, _ = w.Write([]byte(`[{"state":"COMMENTED","user":{"login":"reviewer"}}]`))
 			return

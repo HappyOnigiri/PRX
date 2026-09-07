@@ -1,12 +1,12 @@
--- A task status is now always set by hand. The automatic member is gone, and
--- its role moved into the derivation: an unfinished status yields to an
--- attached pull request, so a stored 'not_started' derives exactly what 'auto'
--- used to derive and every automatic row is rewritten to it.
--- SQLite cannot change a CHECK constraint in place, so the table is rebuilt.
--- Rebuilding tasks drags in dependencies, pull requests, and documents, because
--- a DROP TABLE with foreign keys enabled runs an implicit DELETE FROM that
--- ON DELETE RESTRICT rejects while referencing rows exist. Every table below
--- other than tasks is recreated exactly as it was.
+-- task の status は常に手動で設定するものになる。自動を表す値はなくなり、その役割は
+-- 導出側に移った。未完了の status は紐づく pull request に譲るため、格納された
+-- 'not_started' は以前の 'auto' とまったく同じ結果を導く。自動だった行はすべて
+-- 'not_started' に書き換える。
+-- SQLite は CHECK 制約をその場で変更できないので、テーブルを作り直す。tasks の
+-- 作り直しは dependencies・pull_requests・documents を巻き込む。外部キーが有効な状態の
+-- DROP TABLE は暗黙の DELETE FROM を伴い、参照する行が残っている間は
+-- ON DELETE RESTRICT がそれを拒むためである。以下のうち tasks 以外のテーブルは、
+-- 元とまったく同じ定義で作り直す。
 CREATE TEMP TABLE task_migration AS
 SELECT
   id, feature_id, title, scope, status, assignee, created_at, updated_at,
@@ -124,8 +124,8 @@ CREATE INDEX documents_project_idx ON documents(project_id, created_at, id);
 CREATE INDEX documents_feature_idx ON documents(feature_id, created_at, id);
 CREATE INDEX documents_task_idx ON documents(task_id, is_implementation_plan DESC, created_at, id);
 
--- The upsert of an implementation plan targets this partial index by name and
--- predicate, so both have to survive the rebuild unchanged.
+-- 実装計画の upsert はこの部分インデックスを名前と述語で指定するため、
+-- どちらも作り直しの前後で変えてはならない。
 CREATE UNIQUE INDEX documents_one_plan_per_task_idx
 ON documents(task_id) WHERE is_implementation_plan = 1;
 

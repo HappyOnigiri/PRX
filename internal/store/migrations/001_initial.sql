@@ -36,8 +36,8 @@ CREATE INDEX dependencies_blocked_idx ON dependencies(blocked_task_id);
 
 CREATE TABLE pull_requests (
   task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE RESTRICT,
-  -- GitHub treats owner and repository names case-insensitively, so the unique
-  -- constraint has to as well; otherwise the same PR can be attached twice.
+  -- GitHub は owner と repository の名前を大文字小文字を区別せずに扱うため、
+  -- UNIQUE 制約も同様にする。さもないと同じ PR を二重に紐付けられてしまう。
   owner TEXT NOT NULL COLLATE NOCASE,
   repository TEXT NOT NULL COLLATE NOCASE,
   number INTEGER NOT NULL CHECK(number > 0),

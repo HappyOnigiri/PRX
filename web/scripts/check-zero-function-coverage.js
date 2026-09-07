@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-/* global console, process -- This script runs as a Node.js CLI. */
+/* global console, process -- このスクリプトは Node.js の CLI として動く。 */
 
 import { readFileSync } from "node:fs";
 import { isAbsolute, relative, resolve, sep } from "node:path";

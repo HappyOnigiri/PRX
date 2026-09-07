@@ -178,9 +178,9 @@ describe("RPC API wrappers", () => {
       batchRequiredPlaceholder: "task_list",
       builtIn,
     });
-    // The vocabulary and the built-in text travel with the templates so the
-    // editor never has to keep its own copy of either. The batch template
-    // carries its own vocabulary, which is not the task one.
+    // 語彙と組み込みテキストはテンプレートと一緒に返るため、エディタ側で
+    // 個別に保持する必要はない。batch テンプレートは task とは別の語彙を
+    // 持つ。
     await expect(getPromptTemplates()).resolves.toEqual({
       ...templates,
       supportedPlaceholders: ["task_id", "feature_id"],
@@ -265,8 +265,8 @@ describe("RPC API wrappers", () => {
       expect.objectContaining({ id: "P-1", archived: true }),
     );
 
-    // The cascade releases the project's features instead of deleting them, so
-    // it is the only form the WebUI sends.
+    // cascade はプロジェクトの feature を削除せず切り離すため、WebUI が
+    // 送る形はこれだけ。
     await mutations.deleteProject("P-1");
     expect(apiMocks.client.deleteProject).toHaveBeenCalledWith(
       expect.objectContaining({ id: "P-1", cascade: true }),

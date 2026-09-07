@@ -1,13 +1,11 @@
--- The stored feature status gains an automatic mode, but SQLite cannot extend
--- the status CHECK constraint in place and rebuilding features would drag in
--- tasks, documents, and their own children. Keep the automatic flag in its own
--- column instead: status_auto = 1 means the feature derives its presented
--- status from its tasks, and the status column is normalized to 'active' and
--- carries no meaning until an explicit status replaces it.
+-- feature の格納 status に自動モードを加えるが、SQLite は status の CHECK 制約を
+-- その場で拡張できず、features を作り直すと tasks や documents、さらにその子まで
+-- 巻き込む。そこで自動かどうかは専用の列で持つ。status_auto = 1 は feature が
+-- 表示上の status を配下の task から導くことを意味し、status 列は 'active' に
+-- 正規化されて、明示的な status に置き換わるまで意味を持たない。
 ALTER TABLE features ADD COLUMN status_auto INTEGER NOT NULL DEFAULT 1 CHECK(status_auto IN (0,1));
 
--- Existing paused, completed, and cancelled features were chosen by a person,
--- so they keep their status as a manual override. Active features move to the
--- automatic mode. ADD COLUMN does not evaluate the CHECK against existing rows,
--- so this correction is about meaning rather than constraint satisfaction.
+-- 既存の paused・completed・cancelled は人が選んだ status なので、手動指定と
+-- して残す。active の feature は自動モードに移す。ADD COLUMN は既存行に対して
+-- CHECK を評価しないため、この補正は制約を満たすためではなく意味を揃えるもの。
 UPDATE features SET status_auto = 0 WHERE status <> 'active';

@@ -22,8 +22,8 @@ func newOpenService(_ io.Writer) cli.OpenService {
 		fixturePath := options.FixturePath
 		configPath := config.PathFromContext(ctx)
 		var temporaryRoot string
-		// The default location is resolved here rather than inside the store so
-		// a failed open can still report which database was attempted.
+		// 既定の場所を store 内ではなくここで解決するのは、オープンに失敗しても
+		// どのデータベースを試したか報告できるようにするため。
 		if dbPath == "" && !options.Demo {
 			if resolved, resolveErr := store.DefaultPath(); resolveErr == nil {
 				dbPath = resolved
@@ -67,9 +67,9 @@ func newOpenService(_ io.Writer) cli.OpenService {
 			return nil, nil, configErr
 		}
 		if options.Live && fixturePath == "" {
-			// Resolver construction is deliberately lazy: credentials are read
-			// only when a repository is synchronized, so local CRUD and serve
-			// startup do not require a working Keychain or gh session.
+			// resolver の構築は意図的に遅延させる。認証情報はリポジトリ同期時に
+			// しか読まないので、ローカルの CRUD や serve の起動に Keychain や
+			// gh セッションが動いている必要はない。
 			if _, loadErr := configStore.Load(); loadErr != nil {
 				_ = closer.Close()
 				return nil, nil, loadErr

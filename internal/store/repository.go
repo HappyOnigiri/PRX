@@ -53,9 +53,8 @@ func publicProjectID(ctx context.Context, q *db.Queries, storageID string) strin
 	return value.PublicID
 }
 
-// projectStorageID translates a public project ID into the storage UUID the
-// foreign key needs. Membership is required, so an empty public ID is reported
-// as a missing project rather than stored.
+// projectStorageID は公開プロジェクト ID を、外部キーが必要とする保存用 UUID に
+// 変換する。所属は必須なので、空の公開 ID は保存せずプロジェクト不在として扱う。
 func projectStorageID(ctx context.Context, q *db.Queries, publicID string) (string, error) {
 	project, err := q.GetProjectByPublicID(ctx, publicID)
 	if err != nil {
@@ -119,9 +118,9 @@ func (s *Store) UpdateProject(ctx context.Context, project domain.Project) (doma
 	return domainProject(value), mapNotFound(err, "project", project.ID)
 }
 
-// DeleteProject removes the container. A cascade removes what it holds: the
-// project's own documents and every feature inside it, with everything those
-// features own. Releasing the features instead is not an option any more.
+// DeleteProject は入れ物そのものを削除する。cascade では中身、つまりプロジェクト
+// 自身のドキュメントと全 feature、および feature が持つ一切を削除する。
+// feature を切り離して残す選択肢はもうない。
 func (s *Store) DeleteProject(ctx context.Context, id string, cascade bool) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -510,7 +509,7 @@ func (s *Store) DeleteTask(ctx context.Context, id string, cascade bool) error {
 		); err != nil {
 			return err
 		}
-		// Cascading removal does not require a pull request to be present.
+		// cascade による削除では pull request が存在しなくてもよい。
 		if _, err := q.DeletePullRequest(ctx, storageID); err != nil {
 			return err
 		}
@@ -559,9 +558,9 @@ func (s *Store) DeleteFeature(ctx context.Context, id string, cascade bool) erro
 	return tx.Commit()
 }
 
-// deleteFeatureContents removes everything a feature owns, leaving the feature
-// row itself. A project cascade reaches the same work through its features, so
-// the order the foreign keys require is written once.
+// deleteFeatureContents は feature が持つものを全て削除し、feature 行自体は残す。
+// プロジェクトの cascade も feature 経由で同じ処理に行き着くため、
+// 外部キーが要求する順序はここに一度だけ書く。
 func deleteFeatureContents(ctx context.Context, q *db.Queries, storageID string) error {
 	if err := q.DeleteDependenciesForFeature(ctx, storageID); err != nil {
 		return err
@@ -805,8 +804,8 @@ func (s *Store) CreateDocument(
 	return domainDocument(row, projectIDs, featureIDs, taskIDs), nil
 }
 
-// UpdateDocument writes only the requested fields so that concurrent updates of
-// independent fields cannot overwrite each other with stale values.
+// UpdateDocument は指定されたフィールドだけを書く。独立したフィールドへの同時更新が
+// 古い値で互いを上書きしないようにするため。
 func (s *Store) UpdateDocument(
 	ctx context.Context,
 	id string,
@@ -851,8 +850,8 @@ func (s *Store) GetDocument(ctx context.Context, id string) (domain.Document, er
 	return domainDocument(row, projectIDs, featureIDs, taskIDs), nil
 }
 
-// documentPublicIDs resolves the public identifier of whichever parent the
-// document row carries, as the single-entry lookup maps domainDocument reads.
+// documentPublicIDs は document 行が持つ親の公開識別子を解決する。domainDocument が
+// 読む単一エントリのマップとして返す。
 func documentPublicIDs(
 	ctx context.Context,
 	q *db.Queries,
@@ -988,8 +987,8 @@ func (s *Store) Validate(ctx context.Context) []string {
 }
 
 func (s *Store) integrityErrors(ctx context.Context) []string {
-	// integrity_check reports corruption as result rows, not as an error, and
-	// returns the single row "ok" when the database is sound.
+	// integrity_check は破損をエラーではなく結果行として返し、
+	// データベースが健全なら "ok" の 1 行だけを返す。
 	integrity, err := s.db.QueryContext(ctx, `PRAGMA integrity_check`)
 	if err != nil {
 		return []string{err.Error()}

@@ -12,8 +12,8 @@ function flattenKeys(value: object, prefix = ""): string[] {
 }
 
 describe("translation resources", () => {
-  // Only the English resource types the t() calls, so a key missing from another
-  // language passes type checking and silently falls back at runtime.
+  // t() の型付けは英語リソースだけを見るので、他言語で欠けたキーは型検査を
+  // 通り、実行時に黙ってフォールバックする。
   it("defines the same keys in every supported language", () => {
     const english = flattenKeys(resources.en.translation).sort();
     for (const language of supportedLanguages) {

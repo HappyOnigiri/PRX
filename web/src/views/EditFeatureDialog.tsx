@@ -26,8 +26,8 @@ interface EditFeatureDialogProps {
 
 type Confirmation = "archive" | "complete" | "delete";
 
-// The confirmation replaces the submit, so the values the form held when it was
-// submitted are kept until the person confirms or cancels.
+// 確認が送信の代わりになるため、送信時点のフォームの値は確認かキャンセルまで
+// 保持する。
 type FeatureUpdate = Parameters<typeof mutations.updateFeature>[0];
 
 export function EditFeatureDialog({
@@ -142,8 +142,8 @@ interface FeatureDialogContentProps {
   onDelete: () => void;
 }
 
-// A read-only feature cannot be edited, whether it is archived itself or sits
-// inside an archived project, so the editable form is replaced entirely.
+// 読み取り専用の feature は、自身がアーカイブでもアーカイブ済みプロジェクト配下でも
+// 編集できないので、編集フォームごと差し替える。
 function FeatureDialogContent(props: FeatureDialogContentProps) {
   return props.feature.readOnly ? (
     <ReadOnlyFeatureDialog {...props} />
@@ -177,8 +177,8 @@ function ReadOnlyFeatureDialog({
 }: FeatureDialogContentProps) {
   const { t } = useTranslation();
   const labels = useFeatureLifecycleLabels(true);
-  // An archived project keeps the feature read-only after its own flag is
-  // cleared, so the restore is offered only when the feature is the sole cause.
+  // プロジェクトがアーカイブ済みだと feature 側のフラグを解除しても読み取り
+  // 専用のままなので、原因が feature 自身だけのときにだけ復元を出す。
   const projectArchived =
     projects.find((item) => item.id === feature.projectId)?.archived ?? false;
   const restorable = feature.archived && !projectArchived;
@@ -216,8 +216,8 @@ function ReadOnlyFeatureDialog({
         }
         updatePending={updatePending}
         deletePending={deletePending}
-        // Restoring is only meaningful when the feature carries the archive
-        // itself; one inherited from a project is lifted on the project.
+        // 復元が意味を持つのは feature 自身がアーカイブされている場合だけ。
+        // プロジェクトから継いだものはプロジェクト側で解除する。
         {...(restorable ? { onRestore } : {})}
         onDelete={onDelete}
       />

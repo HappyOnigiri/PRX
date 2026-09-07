@@ -71,8 +71,8 @@ func TestRPCPromptTemplatesRoundTripAndDriveTheTaskPrompt(t *testing.T) {
 	if stored.Msg.GetTemplates().GetDesign() != prompt.DefaultTemplates().Design {
 		t.Fatalf("design template=%q, want the built-in template", stored.Msg.GetTemplates().GetDesign())
 	}
-	// The vocabulary travels with the templates so an editor never has to keep
-	// its own copy of what this server accepts.
+	// 語彙はテンプレートと一緒に届く。エディタがこのサーバーの受理内容を
+	// 自前で持たなくて済むようにするため。
 	if !slices.Equal(stored.Msg.GetSupportedPlaceholders(), prompt.SupportedPlaceholders()) {
 		t.Fatalf("supported placeholders=%v, want %v",
 			stored.Msg.GetSupportedPlaceholders(), prompt.SupportedPlaceholders())
@@ -93,8 +93,8 @@ func TestRPCPromptTemplatesRoundTripAndDriveTheTaskPrompt(t *testing.T) {
 		t.Fatalf("implementation template=%q", updated.Msg.GetTemplates().GetImplementation())
 	}
 
-	// The built-in pair is served alongside the stored one, so an editor can
-	// show what restoring would write without first performing the write.
+	// 組み込みの組は保存済みの組と併せて提供される。エディタが実際に書き込む
+	// 前に、復元したら何が書かれるかを見せられるようにするため。
 	customized, err := client.GetPromptTemplates(ctx, connect.NewRequest(&prxv1.GetPromptTemplatesRequest{}))
 	if err != nil {
 		t.Fatal(err)
@@ -114,8 +114,8 @@ func TestRPCPromptTemplatesRoundTripAndDriveTheTaskPrompt(t *testing.T) {
 		t.Fatalf("design prompt=%+v", design.Msg)
 	}
 
-	// Registering a plan changes which template the same request renders, with
-	// no other input from the caller.
+	// 計画を登録すると、呼び出し元からの他の入力なしに、同じリクエストが
+	// 描画するテンプレートが変わる。
 	if _, err := client.AddDocument(ctx, connect.NewRequest(&prxv1.AddDocumentRequest{
 		TaskId:               taskID,
 		Title:                "Plan",
@@ -150,7 +150,7 @@ func TestRPCPromptFailuresUseTheConfigurationVocabulary(t *testing.T) {
 	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_CONFIG {
 		t.Fatalf("invalid template error=%v", err)
 	}
-	// The rejected write left the stored pair alone.
+	// 拒否された書き込みは保存済みの組をそのままにしている。
 	stored, err := client.GetPromptTemplates(ctx, connect.NewRequest(&prxv1.GetPromptTemplatesRequest{}))
 	if err != nil || stored.Msg.GetTemplates().GetDesign() != prompt.DefaultTemplates().Design {
 		t.Fatalf("stored templates=%+v err=%v", stored.Msg.GetTemplates(), err)
@@ -193,9 +193,9 @@ func TestRPCPromptMethodsAreUnavailableWithoutConfigStore(t *testing.T) {
 	}
 }
 
-// The batch prompt is rendered from the tasks the caller selected, so the test
-// follows one selection through the stored template and then checks the two ways
-// a selection can stop describing the feature it was taken from.
+// batch プロンプトは呼び出し元が選んだタスクから生成される。そこでこのテストは
+// 1 つの選択を保存済みテンプレート経由で追い、選択が元の feature を表さなくなる
+// 2 通りのケースを確認する。
 func TestRPCBatchPromptCoversTheSelectedTasksOfOneFeature(t *testing.T) {
 	ctx := context.Background()
 	client := newPromptClient(t)
@@ -251,8 +251,8 @@ func TestRPCBatchPromptRejectsASelectionTheFeatureDoesNotOwn(t *testing.T) {
 		t.Fatalf("missing task error=%v", err)
 	}
 
-	// A task of another feature is not a missing task: the reader selected work
-	// that exists, and the message has to say which feature it belongs to.
+	// 別の feature のタスクは存在しないタスクとは違う。読み手は実在する作業を
+	// 選んだのだから、メッセージはそれがどの feature のものかを伝える必要がある。
 	_, err = client.GetBatchPrompt(ctx, connect.NewRequest(&prxv1.GetBatchPromptRequest{
 		FeatureId: featureID, TaskIds: []string{taskIDs[0], otherTaskIDs[0]},
 	}))
@@ -272,9 +272,9 @@ func TestRPCBatchPromptRejectsASelectionTheFeatureDoesNotOwn(t *testing.T) {
 	}
 }
 
-// A blocked task may be handed over, because the agent implements it after the
-// work it waits for and stacks the pull requests. That only holds while the
-// blocker travels in the same batch, so a selection without it is rejected.
+// ブロックされたタスクも渡してよい。エージェントは待ち相手の作業のあとに実装し、
+// PR を積み重ねるため。ただしそれはブロッカーが同じ batch にある間だけ成り立つので、
+// ブロッカーを含まない選択は拒否する。
 func TestRPCBatchPromptRejectsASelectionMissingABlocker(t *testing.T) {
 	ctx := context.Background()
 	client := newPromptClient(t)
@@ -293,7 +293,7 @@ func TestRPCBatchPromptRejectsASelectionMissingABlocker(t *testing.T) {
 		t.Fatalf("missing blocker error=%v", err)
 	}
 
-	// The same task renders as soon as the batch carries what it waits for.
+	// batch が待ち相手を含んだ途端、同じタスクが描画されるようになる。
 	batch, err := client.GetBatchPrompt(ctx, connect.NewRequest(&prxv1.GetBatchPromptRequest{
 		FeatureId: featureID, TaskIds: taskIDs,
 	}))

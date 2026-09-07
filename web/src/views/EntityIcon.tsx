@@ -6,9 +6,9 @@ import {
   User,
 } from "lucide-react";
 
-// One glyph per kind of record, shared by every screen. A reader who learns
-// the folder on the sidebar reads the same folder in a queue row, so the icon
-// replaces the field name instead of decorating it.
+// レコードの種類ごとに 1 つの図形を、全画面で共有する。サイドバーで覚えた
+// フォルダはキューの行でも同じものとして読めるので、アイコンは飾りではなく
+// 項目名の代わりになる。
 const entityIcons = {
   project: Folder,
   feature: GitBranch,
@@ -19,9 +19,8 @@ const entityIcons = {
 
 export type EntityKind = keyof typeof entityIcons;
 
-// The icon never carries meaning on its own: every caller keeps a name, a
-// heading, or a visually hidden field label next to it for assistive
-// technology, which cannot read a glyph.
+// アイコン単体では意味を持たせない。支援技術は図形を読めないので、呼び出し側は
+// 必ず名前・見出し・視覚的に隠したラベルのいずれかを隣に置く。
 export function EntityIcon({ kind, size }: { kind: EntityKind; size: number }) {
   const Icon = entityIcons[kind];
   return (

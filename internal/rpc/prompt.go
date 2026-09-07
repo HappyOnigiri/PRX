@@ -57,9 +57,9 @@ func (h *Handler) UpdatePromptTemplates(
 	}), nil
 }
 
-// GetTaskPrompt renders the prompt from the current server state rather than
-// from what the caller believes the task looks like: a WebUI snapshot may
-// predate a plan being registered or deleted.
+// GetTaskPrompt は呼び出し元が思っているタスクの姿ではなく、現在のサーバー状態から
+// プロンプトを生成する。WebUI のスナップショットは計画の登録や削除より前の
+// 時点のものかもしれないため。
 func (h *Handler) GetTaskPrompt(
 	ctx context.Context,
 	req *connect.Request[prxv1.GetTaskPromptRequest],
@@ -91,9 +91,9 @@ func (h *Handler) GetTaskPrompt(
 	}), nil
 }
 
-// GetBatchPrompt renders one prompt covering several tasks, each resolved from
-// the current server state and checked against the named feature.
-// See docs/design/agent-prompts.md.
+// GetBatchPrompt は複数タスクをまとめた 1 つのプロンプトを生成する。各タスクは
+// 現在のサーバー状態から解決し、指定された feature に属するか検査する。
+// docs/design/agent-prompts.md を参照。
 func (h *Handler) GetBatchPrompt(
 	ctx context.Context,
 	req *connect.Request[prxv1.GetBatchPromptRequest],
@@ -108,9 +108,9 @@ func (h *Handler) GetBatchPrompt(
 	}
 	featureID := req.Msg.GetFeatureId()
 	taskIDs := req.Msg.GetTaskIds()
-	// Both selection failures are reported as an invalid parent: the request
-	// says which tasks belong to this batch, and either it named none of them or
-	// it named one the feature does not own.
+	// 選択の失敗はどちらも親が不正として報告する。リクエストはこの batch に
+	// 含むタスクを指定するもので、1 つも指定していないか、feature が持たない
+	// タスクを指定したかのいずれか。
 	if len(taskIDs) == 0 {
 		return nil, rpcError(domain.NewError(
 			domain.DomainErrorCodeInvalidParent,
@@ -149,9 +149,9 @@ func (h *Handler) GetBatchPrompt(
 	}), nil
 }
 
-// requireBlockersInBatch rejects a batch that asks for a blocked task without
-// the blocker it waits for.
-// See docs/design/agent-prompts.md.
+// requireBlockersInBatch は、待ち相手のブロッカーを含まないままブロックされた
+// タスクを要求する batch を拒否する。
+// docs/design/agent-prompts.md を参照。
 func requireBlockersInBatch(tasks []domain.Task) error {
 	included := make(map[string]struct{}, len(tasks))
 	for _, task := range tasks {

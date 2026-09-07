@@ -1,2 +1,2 @@
-// Package app implements PRX use cases shared by the CLI and ConnectRPC layers.
+// Package app は CLI と ConnectRPC 層が共有する PRX のユースケースを実装する。
 package app

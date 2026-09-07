@@ -61,8 +61,8 @@ describe("WebUI settings", () => {
     });
   });
 
-  // The graph filter is off unless a stored boolean says otherwise, so a value
-  // of another type has to read back as "show every task".
+  // グラフのフィルタは保存された真偽値がない限り無効なので、別の型の値は
+  // 「全タスクを表示」として読み戻す必要がある。
   it("restores the graph filter and ignores a non-boolean saved value", () => {
     expect(readHideCompletedTasks()).toBe(false);
     writeHideCompletedTasks(true);
@@ -76,8 +76,8 @@ describe("WebUI settings", () => {
     expect(readHideCompletedTasks()).toBe(false);
   });
 
-  // Only the collapsed rows are stored, so anything the file cannot vouch for
-  // has to read back as "nothing is collapsed" and leave the tree expanded.
+  // 保存するのは畳んだ行だけなので、内容を保証できない値は「どこも畳んで
+  // いない」として読み戻し、ツリーは展開したままにする。
   it("restores the collapsed sidebar rows and rejects a malformed list", () => {
     expect(readCollapsedProjects()).toEqual([]);
     writeCollapsedProjects(["P-2", "unassigned"]);

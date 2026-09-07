@@ -29,9 +29,9 @@ func TestStoreReportsResolvedPathAndSchemaVersions(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// A freshly opened database has every embedded migration applied, so the two
-	// versions must agree; a difference is what identifies a database written by
-	// another PRX build.
+	// 新規に開いたデータベースは埋め込みマイグレーションが全て適用済みなので、
+	// 2 つのバージョンは一致するはず。差があれば、別の PRX ビルドが書いた
+	// データベースだと分かる。
 	if applied != embedded || embedded != 14 {
 		t.Fatalf("applied=%d embedded=%d, want 14", applied, embedded)
 	}
@@ -50,7 +50,7 @@ func TestStoreReportsDatabaseFileState(t *testing.T) {
 	if !file.Applicable || file.SizeBytes == 0 || !file.Writable || file.WriteError != "" {
 		t.Fatalf("database file=%+v", file)
 	}
-	// The store opens SQLite in WAL mode, so the log file is expected beside it.
+	// store は SQLite を WAL モードで開くので、ログファイルが隣にあるはず。
 	if !file.WALPresent {
 		t.Fatalf("write-ahead log was not detected: %+v", file)
 	}

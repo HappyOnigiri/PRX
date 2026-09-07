@@ -7,9 +7,9 @@ import { IconButton } from "./IconButton";
 type CopyStatus =
   { case: "idle" } | { case: "copied" } | { case: "failed"; message: string };
 
-// TaskPromptCopyButton hands the task to another agent. It is icon-only with a
-// floating status, its accessible name follows the snapshot's plan flag, and the
-// copied text always comes from the server, which picks the template.
+// TaskPromptCopyButton はタスクを別のエージェントに渡す。アイコンのみで状態を
+// 浮かせて表示し、アクセシブル名はスナップショットの plan フラグに従う。コピー
+// されるテキストは常にサーバー由来で、テンプレートもサーバーが選ぶ。
 export function TaskPromptCopyButton({
   taskId,
   hasImplementationPlan,
@@ -26,16 +26,16 @@ export function TaskPromptCopyButton({
   const label = hasImplementationPlan
     ? t("inspector.copyImplementationPrompt")
     : t("inspector.copyDesignPrompt");
-  // Which prompt a task gets is not visible on the task itself, so the outcome
-  // names it rather than reporting that something was copied.
+  // どのプロンプトになるかはタスク自体からは見えないので、結果は何かをコピー
+  // したとだけ言わずプロンプトの名前を示す。
   const copiedLabel = hasImplementationPlan
     ? t("inspector.implementationPromptCopied")
     : t("inspector.designPromptCopied");
 
   function settle(next: CopyStatus) {
     setStatus(next);
-    // Like the other copy controls, the outcome clears itself so the button
-    // does not keep reporting a result from an earlier click.
+    // 他のコピー操作と同じく結果表示は自動で消え、前回のクリックの結果を
+    // ボタンが示し続けないようにする。
     window.setTimeout(() => {
       setStatus({ case: "idle" });
     }, 1600);
@@ -45,9 +45,9 @@ export function TaskPromptCopyButton({
     setPending(true);
     setStatus({ case: "idle" });
     try {
-      // The server's message names the task or the template at fault, so it is
-      // shown verbatim. A clipboard failure carries no such detail, so it is
-      // reported through the translated text instead of a raw TypeError.
+      // サーバーのメッセージは原因となったタスクやテンプレートを名指しするので
+      // そのまま見せる。クリップボードの失敗にはそうした情報がないので、生の
+      // TypeError ではなく翻訳済みのテキストで伝える。
       const response = await getTaskPrompt(taskId);
       try {
         await navigator.clipboard.writeText(response.prompt);

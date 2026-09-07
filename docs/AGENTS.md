@@ -1,11 +1,11 @@
 # Documentation instructions
 
-- Use `docs/` for durable decision history, rationale, policies, public contracts, and important constraints.
-- Keep important constraints explicit when relying on inference from the code could lead to an incompatible or unsafe change.
-- For details that evolve with feature work, refer to the owning implementation or generated reference instead of translating current features, schemas, or tests into prose.
-- Keep each prose sentence within 200 Unicode characters.
-- Split independent ideas into separate sentences, list items, or table rows instead of wrapping one long sentence across multiple lines.
-- Use physical line wrapping only when a single sentence cannot be shortened or structured without losing necessary meaning.
-- After applying these rules, use `make markdown-lint` to validate the remaining physical-line constraints.
-- Keep structurally significant long lines in fenced code blocks or outer-pipe tables.
-- Standalone indivisible tokens are also accepted.
+- `docs/` は、恒久的な決定の記録、背景、方針、公開契約、重要な制約に使う。
+- コードからの推測に頼ると互換性のない変更や危険な変更につながる場合、重要な制約は明示する。
+- 機能開発に伴って変わる詳細は、現時点の機能・スキーマ・テストを散文に書き写さず、それを所有する実装や生成リファレンスを参照する。
+- 散文の 1 文は 200 Unicode 文字以内に収める。
+- 独立した内容は、1 文を複数行に折り返さず、別々の文・リスト項目・表の行に分ける。
+- 物理的な改行での折り返しは、1 文を短縮も構造化もできず意味を失う場合にだけ使う。
+- 以上を適用したうえで、残る物理行の制約は `make markdown-lint` で検証する。
+- フェンス付きコードブロックや外側のパイプを持つ表では、構造上意味のある長い行をそのまま残す。
+- 分割できない単独のトークンも許容する。

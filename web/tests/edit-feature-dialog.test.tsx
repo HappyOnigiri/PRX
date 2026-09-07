@@ -283,8 +283,8 @@ describe("EditFeatureDialog", () => {
     });
   });
 
-  // Restoring a feature whose project is archived leaves it read-only, so the
-  // dialog points at the project instead of offering that restore.
+  // プロジェクトがアーカイブ済みの feature は復元しても読み取り専用のままな
+  // ので、ダイアログは復元を出さずプロジェクト側を案内する。
   it("withholds the restore when the project is archived too", () => {
     render(
       <EditFeatureDialog

@@ -97,8 +97,8 @@ describe("PromptSettingsPanel", () => {
     expect(screen.getByText("config file is unreadable")).toBeInTheDocument();
   });
 
-  // The vocabulary is whatever the server reports, so adding or removing a
-  // placeholder there never leaves this hint advertising a rejected name.
+  // 語彙はサーバーが返すものがすべてなので、そこで placeholder を増減しても
+  // このヒントが拒否される名前を案内し続けることはない。
   it("lists the placeholders the server reported", () => {
     panelMocks.templates.data = {
       design: "Design {{task_id}}",
@@ -121,8 +121,8 @@ describe("PromptSettingsPanel", () => {
     expect(
       screen.getByText(/\{\{task_ref\}\} is required/),
     ).toBeInTheDocument();
-    // The batch template accepts a vocabulary of its own, so the batch field
-    // carries its own hint rather than sharing the one above it.
+    // batch テンプレートは独自の語彙を受け付けるので、batch 欄は上の
+    // ヒントを共有せず自分のヒントを持つ。
     expect(
       screen.getByText(/\{\{task_group\}\} is required/),
     ).toBeInTheDocument();
@@ -153,8 +153,8 @@ describe("PromptSettingsPanel", () => {
     ).toBeInTheDocument();
   });
 
-  // The built-in text comes from the server, so restoring shows what the save
-  // will write instead of emptying the fields until the write comes back.
+  // 組み込みの文面はサーバー由来なので、復元時は書き込みの応答を待って欄を
+  // 空にするのではなく、保存される内容をそのまま表示する。
   it("puts the built-in templates in the fields before saving them", async () => {
     render(<PromptSettingsPanel />);
     fireEvent.click(
@@ -181,8 +181,8 @@ describe("PromptSettingsPanel", () => {
     });
   });
 
-  // The response carries the text that was sent, so it is older than anything
-  // typed while the request was in flight.
+  // 応答は送信した文面を返すだけなので、リクエスト中に入力された内容より
+  // 古い。
   it("keeps text typed while a save is in flight", async () => {
     let settle: (result: { templates: PromptDraft }) => void = () => undefined;
     panelMocks.mutation.mutateAsync.mockImplementation(

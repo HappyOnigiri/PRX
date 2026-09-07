@@ -1,4 +1,4 @@
-// Package filepicker opens an operating-system file chooser for the local PRX server.
+// Package filepicker はローカルの PRX サーバー向けに OS のファイル選択画面を開く。
 package filepicker
 
 import (
@@ -11,7 +11,7 @@ import (
 	"unicode"
 )
 
-// Kind classifies failures that callers can present without exposing command output.
+// Kind は、コマンド出力を晒さずに呼び出し側が提示できる失敗の分類。
 type Kind string
 
 const (
@@ -20,7 +20,7 @@ const (
 	KindInvalidResult Kind = "invalid_result"
 )
 
-// Error describes a native chooser failure.
+// Error はネイティブの選択画面の失敗を表す。
 type Error struct {
 	Kind Kind
 	Err  error
@@ -37,14 +37,14 @@ type (
 	pathLookup    func(string) (string, error)
 )
 
-// Picker opens the native chooser for one operating system.
+// Picker は 1 つの OS 向けにネイティブの選択画面を開く。
 type Picker struct {
 	goos     string
 	run      commandRunner
 	lookPath pathLookup
 }
 
-// New returns a picker for the current operating system.
+// New は現在の OS 向けの picker を返す。
 func New() *Picker {
 	return &Picker{
 		goos: runtime.GOOS,
@@ -55,7 +55,7 @@ func New() *Picker {
 	}
 }
 
-// SelectFile opens the chooser and returns an absolute path, or canceled=true.
+// SelectFile は選択画面を開き、絶対パスを返す。取り消された場合は canceled=true。
 func (p *Picker) SelectFile(ctx context.Context) (path string, canceled bool, err error) {
 	command, args, cancelCodes, err := p.command()
 	if err != nil {

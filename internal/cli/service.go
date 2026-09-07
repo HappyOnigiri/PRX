@@ -7,9 +7,8 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// ServiceOptions carries the runtime boundaries selected by the CLI.
-// The path sources are carried so the diagnostic report can explain which of the
-// flag, the environment, or the default selected each location.
+// ServiceOptions は CLI が選んだ実行時の境界条件を運ぶ。パスの出所も含めるのは、
+// 各場所をフラグ・環境変数・既定値のどれが決めたかを診断レポートが説明できるようにするため。
 type ServiceOptions struct {
 	DatabasePath       string
 	DatabasePathSource string
@@ -19,9 +18,8 @@ type ServiceOptions struct {
 	Demo               bool
 }
 
-// ServiceOpenError reports the database location an unsuccessful open attempted.
-// `prx debug` is expected to run when opening fails, and the resolved path is
-// the first thing its reader needs.
+// ServiceOpenError はオープンに失敗したデータベースの場所を伝える。オープンが失敗した
+// ときこそ `prx debug` が実行される想定であり、解決済みのパスは読み手が最初に必要とする情報。
 type ServiceOpenError struct {
 	DatabasePath string
 	Err          error
@@ -31,12 +29,12 @@ func (e *ServiceOpenError) Error() string { return e.Err.Error() }
 
 func (e *ServiceOpenError) Unwrap() error { return e.Err }
 
-// OpenService constructs the application service and returns the resource that
-// must be closed after one CLI command finishes.
+// OpenService はアプリケーションサービスを構築し、CLI コマンド 1 回の終了後に
+// クローズすべきリソースを返す。
 type OpenService func(context.Context, ServiceOptions) (Service, io.Closer, error)
 
-// Service is the application boundary used by CLI commands and the RPC server
-// exposed by the serve command.
+// Service は CLI コマンドと serve コマンドが公開する RPC サーバーが使う
+// アプリケーション境界。
 type Service interface {
 	CreateProject(ctx context.Context, title, description string) (domain.Project, error)
 	UpdateProject(ctx context.Context, id string, update domain.ProjectUpdate) (domain.Project, error)

@@ -158,8 +158,8 @@ func protoFeatureStatus(value domain.FeatureStatus) prxv1.FeatureStatus {
 	}
 }
 
-// domainFeatureStatus rejects values the server cannot map instead of falling
-// back to the empty string, which the service layer reads as "field omitted".
+// domainFeatureStatus はサーバーがマップできない値を、空文字列にフォールバック
+// せず拒否する。空文字列はサービス層が「フィールド省略」と解釈するため。
 func domainFeatureStatus(value *prxv1.FeatureStatus) (*domain.FeatureStatus, error) {
 	if value == nil {
 		return nil, nil
@@ -201,8 +201,8 @@ func protoTaskStatus(value domain.TaskStatus) prxv1.TaskStatus {
 	}
 }
 
-// domainTaskStatus rejects values the server cannot map instead of falling back
-// to the empty string, which the service layer reads as "field omitted".
+// domainTaskStatus はサーバーがマップできない値を、空文字列にフォールバック
+// せず拒否する。空文字列はサービス層が「フィールド省略」と解釈するため。
 func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 	if value == nil {
 		return nil, nil
@@ -425,9 +425,8 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 	}
 }
 
-// optionalValue preserves a proto3 optional field's presence for the service
-// layer, where a nil pointer means the field was omitted and a pointer to the
-// zero value is a request to clear it.
+// optionalValue は proto3 の optional フィールドの有無をサービス層向けに保つ。
+// nil ポインタはフィールドの省略を、ゼロ値へのポインタはクリア要求を意味する。
 func optionalValue[T any](present bool, value T) *T {
 	if !present {
 		return nil

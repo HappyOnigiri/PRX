@@ -1,6 +1,6 @@
--- Projects group features. The order below matters: projects has to exist
--- before features can reference it, and documents is rebuilt last so its new
--- foreign key finds every parent table already in place.
+-- project は feature をまとめる。以下の順序には意味がある。features が参照する
+-- 前に projects が存在している必要があり、documents を最後に作り直すことで
+-- 新しい外部キーの参照先がすべて揃った状態になる。
 CREATE TABLE projects (
   id TEXT PRIMARY KEY,
   public_id TEXT NOT NULL,
@@ -14,16 +14,16 @@ CREATE TABLE projects (
 
 CREATE UNIQUE INDEX projects_public_id_idx ON projects(public_id);
 
--- Migrations run inside a transaction, which cannot disable foreign keys, so
--- this column must stay nullable: SQLite only allows ADD COLUMN with a
--- reference when the default is NULL. A feature without a project is also the
--- normal case, because membership is optional.
+-- マイグレーションはトランザクション内で走り、その中では外部キーを無効化できない
+-- ため、この列は NULL 許容にしておく必要がある。SQLite は参照付きの ADD COLUMN を
+-- デフォルトが NULL のときしか許さない。所属は任意なので、project を持たない
+-- feature が存在するのも通常の状態である。
 ALTER TABLE features ADD COLUMN project_id TEXT REFERENCES projects(id) ON DELETE RESTRICT;
 
 CREATE INDEX features_project_idx ON features(project_id, updated_at DESC, slug);
 
--- The entity CHECK has to be widened, and SQLite cannot alter it in place.
--- id_sequences has no children, so rebuilding it drags nothing along.
+-- entity の CHECK を広げる必要があるが、SQLite はその場で変更できない。
+-- id_sequences には子テーブルがないので、作り直しても何も巻き込まない。
 CREATE TABLE id_sequences_new (
   entity TEXT PRIMARY KEY CHECK(entity IN ('feature', 'task', 'project')),
   next_value INTEGER NOT NULL CHECK(next_value > 0)
@@ -35,11 +35,11 @@ SELECT entity, next_value FROM id_sequences;
 DROP TABLE id_sequences;
 ALTER TABLE id_sequences_new RENAME TO id_sequences;
 
--- nextPublicID returns next_value - 1 after incrementing, so 1 hands out P-1.
+-- nextPublicID は加算後に next_value - 1 を返すので、1 なら P-1 が払い出される。
 INSERT INTO id_sequences (entity, next_value) VALUES ('project', 1);
 
--- documents gains a third parent. The exclusive CHECK becomes a three-way
--- choice, and the plan designation stays restricted to tasks.
+-- documents に 3 つ目の親が加わる。排他の CHECK は 3 択になり、実装計画の
+-- 指定は task に限られたままとする。
 CREATE TABLE documents_new (
   id TEXT PRIMARY KEY,
   project_id TEXT REFERENCES projects(id) ON DELETE RESTRICT,
@@ -80,7 +80,7 @@ CREATE INDEX documents_project_idx ON documents(project_id, created_at, id);
 CREATE INDEX documents_feature_idx ON documents(feature_id, created_at, id);
 CREATE INDEX documents_task_idx ON documents(task_id, is_implementation_plan DESC, created_at, id);
 
--- The upsert of an implementation plan targets this partial index by name and
--- predicate, so both have to survive the rebuild unchanged.
+-- 実装計画の upsert はこの部分インデックスを名前と述語で指定するため、
+-- どちらも作り直しの前後で変えてはならない。
 CREATE UNIQUE INDEX documents_one_plan_per_task_idx
 ON documents(task_id) WHERE is_implementation_plan = 1;

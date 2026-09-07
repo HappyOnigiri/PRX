@@ -1,28 +1,28 @@
-# Diagnostic output policy
+# 診断出力の方針
 
-`prx debug` and its RPC are a public contract with one audience: whoever, or whatever, is asked to explain why PRX is not working.
-The report leads with the problems it detected, each carrying the value that triggered it and the command whose output explains it in full.
-Problem identifiers are a stable enumeration so a reader may branch on them, and the sections that follow are supporting evidence.
+`prx debug` とその RPC は公開契約であり、読み手は 1 種類しかいない。PRX が動かない理由の説明を求められた人、あるいはエージェントである。
+レポートは検出した問題を先頭に置き、各問題にはそれを引き起こした値と、詳細を出力するコマンドを添える。
+問題の識別子は安定した列挙であり、読み手はそれで分岐できる。後続のセクションは裏付けとなる材料である。
 
-The report never contains credential material.
-It reports environment variables by name and whether they are set, and it presents credential methods without their secrets or secret hints.
-Paths are shortened to `~` under the home directory, in structured values and inside error messages alike, and a demo run reports the word `demo` instead of its temporary locations.
-The diagnostic report is the one place that describes the ambient environment; every other command's text output stays independent of it.
+レポートに credential そのものが含まれることはない。
+環境変数は名前と設定の有無だけを報告し、credential の方式は秘密情報もそのヒントも伴わずに提示する。
+パスはホームディレクトリ配下なら `~` に短縮する。構造化された値でもエラーメッセージの中でも同様である。demo 実行では一時的な場所ではなく `demo` という語を報告する。
+周囲の環境を記述するのはこの診断レポートだけであり、他のコマンドのテキスト出力は環境から独立している。
 
-Collecting the report changes nothing.
-It never starts a synchronization run, because a refresh would clear the recorded failure the reader was asked to send, rewrite the staleness of every pull request, and block on an unreachable host.
-It never creates the database file it probes for writability.
+レポートの収集は何も変更しない。
+同期の実行を開始することは決してない。refresh すると、読み手が送るよう求められた失敗の記録が消え、すべての pull request の staleness が書き換わり、到達できないホストでブロックしてしまうからである。
+書き込み可能かを調べる対象のデータベースファイルを作成することもない。
 
-A failure in one section does not remove the others: a report is most valuable when something is broken.
-`prx debug` therefore succeeds even when the database cannot be opened, and reports the failure as its storage section.
+あるセクションが失敗しても他のセクションは残る。レポートは何かが壊れているときにこそ価値がある。
+そのため `prx debug` はデータベースを開けなくても成功し、その失敗をストレージのセクションとして報告する。
 
-The record counts cover every stored kind, including projects and how many of them are archived, because an archived container is a reason a write was refused.
+レコード件数は保存されているすべての種類を対象とし、project の数とそのうち archive された数も含む。archive されたコンテナは書き込みが拒否される理由の 1 つだからである。
 
-The report is bounded, and every bounded list is ordered so the same data always produces the same output, including how it is truncated.
-A truncated list states how many rows were omitted rather than reading as a complete one.
-Callers that need every row use `prx snapshot --json` instead.
+レポートには上限があり、上限付きのリストはすべて順序が定まっている。同じデータからは、切り詰め方も含めて常に同じ出力が得られる。
+切り詰められたリストは、完全なリストのように見せず、省略した行数を明示する。
+すべての行が必要な呼び出し側は代わりに `prx snapshot --json` を使う。
 
-The rendered report text crosses the RPC boundary, which is otherwise reserved for structured state.
-This is a deliberate exception: the CLI and the WebUI must hand a reader exactly the same text, and a second rendering in the browser would drift from the first.
-The response also carries the structured sections, so the browser presents them without re-deriving anything.
-Problem descriptions are not part of that contract: the CLI writes English, and the WebUI translates the identifiers it receives.
+レンダリング済みのレポートテキストは RPC 境界を越える。この境界は本来、構造化された状態のためのものである。
+これは意図的な例外である。CLI と WebUI は読み手にまったく同じテキストを渡さなければならず、ブラウザ側で 2 度目のレンダリングをすれば 1 つ目とずれていくためである。
+レスポンスには構造化されたセクションも含まれるので、ブラウザは何も再導出せずに提示できる。
+問題の説明文はこの契約に含まれない。CLI は英語を書き、WebUI は受け取った識別子を翻訳する。

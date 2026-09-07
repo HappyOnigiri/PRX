@@ -22,8 +22,8 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/store"
 )
 
-// newRPCProject creates the project a feature has to belong to, for the tests
-// whose subject is the feature rather than its container.
+// newRPCProject は feature が所属すべき project を作る。主題が入れ物ではなく
+// feature 自体であるテスト向け。
 func newRPCProject(
 	t *testing.T,
 	ctx context.Context,
@@ -583,16 +583,16 @@ func TestRPCLifecyclePersistsAndDeletesResources(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Attaching refreshes the pull request it recorded, so the response already
-	// carries the GitHub state instead of the stale placeholder.
+	// 紐付け時に記録した PR を更新するため、レスポンスには古いプレースホルダ
+	// ではなく GitHub 上の状態がすでに載っている。
 	attachedPR := attached.Msg.GetPullRequest()
 	if attachedPR.GetOwner() != "acme" || attachedPR.GetRepository() != "api" || attachedPR.GetNumber() != 42 ||
 		attachedPR.GetUrl() != mergedURL || attachedPR.GetState() != prxv1.PullRequestState_PULL_REQUEST_STATE_MERGED ||
 		attachedPR.GetStale() || attachedPR.GetGithubUpdatedAt() == "" || attachedPR.GetLastSyncedAt() == "" {
 		t.Fatalf("attached pull request=%+v", attachedPR)
 	}
-	// A pull request GitHub cannot answer for is still attached, and keeps the
-	// staleness and the failure that record why it holds no state.
+	// GitHub が応答できない PR も紐付けは維持され、状態を持たない理由を記録する
+	// stale フラグと失敗内容を保持する。
 	attachedFailed, err := client.AttachPullRequest(
 		ctx,
 		connect.NewRequest(&prxv1.AttachPullRequestRequest{TaskId: failedTask.GetId(), Url: failedURL}),
@@ -934,8 +934,8 @@ func errorDetailCode(t *testing.T, err error) prxv1.DomainErrorCode {
 	return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
 }
 
-// The project RPCs carry the whole life cycle: creation, archiving through
-// UpdateProject, membership visible on the feature, and deletion.
+// project の RPC はライフサイクル全体を担う。作成、UpdateProject によるアーカイブ、
+// feature 側から見える所属関係、そして削除。
 func TestRPCProjectLifecycleAndArchiveEnforcement(t *testing.T) {
 	ctx := context.Background()
 	client := newTestClient(t)
@@ -1013,7 +1013,7 @@ func TestRPCProjectLifecycleAndArchiveEnforcement(t *testing.T) {
 	}
 }
 
-// A project document uses the same one-parent rule as a feature or task one.
+// project のドキュメントも feature やタスクのものと同じ「親は 1 つ」の規則に従う。
 func TestRPCProjectDocumentUsesTheSharedDocumentModel(t *testing.T) {
 	ctx := context.Background()
 	client := newTestClient(t)

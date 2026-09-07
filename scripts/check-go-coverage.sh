@@ -1,9 +1,9 @@
 #!/bin/sh
 # Usage: check-go-coverage.sh PROFILE MINIMUM PACKAGE...
 #
-# Restricts the Go coverage PROFILE to the files of PACKAGE... and fails when their
-# total statement coverage is below MINIMUM percent. Restricting the profile lets one
-# `go test -coverprofile ./...` run measure only the handwritten packages.
+# Go のカバレッジ PROFILE を PACKAGE... のファイルだけに絞り込み、その合計の
+# ステートメントカバレッジが MINIMUM パーセントを下回ったら失敗する。絞り込むことで、
+# 1 回の `go test -coverprofile ./...` で手書きのパッケージだけを計測できる。
 set -eu
 
 if [ "$#" -lt 3 ]; then
@@ -19,7 +19,7 @@ GO=${GO:-go}
 filtered="$(mktemp)"
 trap 'rm -f "$filtered"' EXIT
 
-# Match files directly inside each package directory: <import path>/<file>:<positions>.
+# 各パッケージ直下のファイルにマッチさせる: <import path>/<file>:<positions>。
 pattern="$("$GO" list "$@" | sed 's|[.]|\\.|g' | paste -sd '|' -)"
 {
 	head -n 1 "$profile"

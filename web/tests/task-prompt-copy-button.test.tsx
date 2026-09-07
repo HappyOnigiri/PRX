@@ -55,8 +55,8 @@ describe("TaskPromptCopyButton", () => {
     expect(writeText).toHaveBeenCalledWith("Design T-1");
   });
 
-  // The label follows the snapshot, but the copied text is whatever the server
-  // renders, so the two are asserted independently.
+  // ラベルはスナップショットに従うが、コピーされる文面はサーバーが生成する
+  // ものなので、両者は別々に検証する。
   it("offers the implementation prompt once the task has a plan", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     stubClipboard(writeText);
@@ -91,8 +91,8 @@ describe("TaskPromptCopyButton", () => {
     expect(writeText).not.toHaveBeenCalled();
   });
 
-  // A clipboard rejection carries a browser-internal message, so the reader is
-  // told what happened in their own language instead.
+  // クリップボードの失敗はブラウザ内部のメッセージを伴うので、読み手には
+  // 表示言語で何が起きたかを伝える。
   it("reports a clipboard failure in the display language", async () => {
     stubClipboard(vi.fn().mockRejectedValue(new Error("clipboard blocked")));
     promptMocks.getTaskPrompt.mockResolvedValue({ prompt: "Design T-1" });
@@ -108,8 +108,8 @@ describe("TaskPromptCopyButton", () => {
     expect(screen.queryByText("clipboard blocked")).not.toBeInTheDocument();
   });
 
-  // Outside a secure context the whole clipboard API is missing, which would
-  // otherwise surface as a raw TypeError.
+  // secure context 外では clipboard API 自体が存在せず、そのままだと生の
+  // TypeError が表に出てしまう。
   it("reports a missing clipboard API", async () => {
     Object.defineProperty(navigator, "clipboard", {
       configurable: true,

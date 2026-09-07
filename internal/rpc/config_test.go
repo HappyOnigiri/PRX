@@ -305,9 +305,8 @@ func (noopRepository) Snapshot(context.Context) (domain.Snapshot, error) {
 }
 func (noopRepository) Validate(context.Context) []string { return nil }
 
-// TestRPCValidateConfigReportsUnknownFields keeps the server usable against a
-// configuration written by a newer PRX and gives the WebUI the same warnings the
-// CLI prints.
+// TestRPCValidateConfigReportsUnknownFields は、新しい PRX が書いた設定でも
+// サーバーが使えることを保ち、CLI が出すのと同じ警告を WebUI にも渡す。
 func TestRPCValidateConfigReportsUnknownFields(t *testing.T) {
 	ctx := context.Background()
 	database, err := store.Open(ctx, filepath.Join(t.TempDir(), "rpc-warning.db"))

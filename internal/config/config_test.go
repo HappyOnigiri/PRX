@@ -98,8 +98,8 @@ func TestNormalizeDefaultsAndRejectsUnsafeValues(t *testing.T) {
 	if err := maximum.SetAutoSyncInterval(int64(^uint64(0) >> 1)); err != nil {
 		t.Fatalf("maximum interval was rejected: %v", err)
 	}
-	// Normalize reads an omitted interval as the default, so 0 must be rejected
-	// here rather than silently becoming 3600.
+	// Normalize は省略された間隔を既定値として扱うため、0 は黙って 3600 に
+	// なるのではなくここで拒否されなければならない。
 	for _, seconds := range []int64{0, -1, MinimumAutoSyncIntervalSeconds - 1} {
 		below := Default()
 		if err := below.SetAutoSyncInterval(seconds); ErrorCodeOf(err) != ErrorCodeInvalid {
@@ -213,8 +213,8 @@ func TestConfigStoreWarnsAboutUnknownFieldsAndRejectsInsecureFiles(t *testing.T)
 	if err != nil {
 		t.Fatal(err)
 	}
-	// A file a newer PRX wrote must keep loading, with the fields this build does
-	// not know reported instead of refused.
+	// 新しい PRX が書いたファイルも読み込め続ける必要がある。このビルドが
+	// 知らないフィールドは拒否せず報告する。
 	newer := "version: 1\nunknown: true\ngithub:\n  hosts:\n" +
 		"    - host: ghe.example.com\n      future_url: https://ghe.example.com/future\n"
 	if err := os.WriteFile(path, []byte(newer), 0o600); err != nil {
@@ -264,8 +264,8 @@ func TestConfigStoreWarnsAboutUnknownFieldsAndRejectsInsecureFiles(t *testing.T)
 	}
 }
 
-// TestConfigStoreUpdateDropsUnknownFields records that a write by an older build
-// removes what it could not represent, which is what the load warning announces.
+// TestConfigStoreUpdateDropsUnknownFields は、古いビルドによる書き込みが表現
+// できなかった内容を落とすことを記録する。読み込み時の警告が告げるとおり。
 func TestConfigStoreUpdateDropsUnknownFields(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
 	store, err := NewStore(path)
@@ -349,8 +349,8 @@ func TestConfigCRUDAndPathPrecedence(t *testing.T) {
 
 func TestPromptTemplatesLoadDefaultAndSurviveAWrite(t *testing.T) {
 	path := filepath.Join(t.TempDir(), "config.yaml")
-	// A file written before prompts existed still loads, and the built-in
-	// templates fill the gap instead of leaving the CLI without a prompt.
+	// prompts がなかった頃のファイルも読み込め、CLI がプロンプトなしになる
+	// のではなく組み込みテンプレートが穴を埋める。
 	legacy := "version: 1\ngithub:\n  hosts:\n    - host: github.com\n"
 	if err := os.WriteFile(path, []byte(legacy), 0o600); err != nil {
 		t.Fatal(err)
@@ -382,7 +382,7 @@ func TestPromptTemplatesLoadDefaultAndSurviveAWrite(t *testing.T) {
 	if reloaded.Prompts != custom {
 		t.Fatalf("prompts=%+v, want %+v", reloaded.Prompts, custom)
 	}
-	// An unrelated configuration write must not disturb the stored templates.
+	// 無関係な設定の書き込みが保存済みテンプレートを乱してはならない。
 	if _, err := store.Update(func(settings *Config) error {
 		return settings.SetAutoSyncInterval(MinimumAutoSyncIntervalSeconds)
 	}); err != nil {
@@ -403,8 +403,8 @@ func TestDefaultPromptTemplatesStayOutOfTheFile(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// A write that has nothing to do with prompts must not freeze the built-in
-	// wording into the file; the installation keeps following later versions.
+	// prompts と無関係な書き込みが組み込みの文言をファイルに固定してはならない。
+	// インストール先は以後のバージョンに追従し続ける。
 	if _, err := store.Update(func(settings *Config) error {
 		return settings.SetAutoSyncInterval(MinimumAutoSyncIntervalSeconds)
 	}); err != nil {
@@ -418,8 +418,8 @@ func TestDefaultPromptTemplatesStayOutOfTheFile(t *testing.T) {
 		t.Fatalf("config file contains prompts:\n%s", body)
 	}
 
-	// Only one customized template is stored, and the other one keeps following
-	// the built-in wording.
+	// カスタマイズされたテンプレートだけが保存され、もう一方は組み込みの
+	// 文言に追従し続ける。
 	custom := prompt.DefaultTemplates()
 	custom.Design = "Design {{task_id}}\n"
 	if _, err := store.Update(func(settings *Config) error { return settings.SetPrompts(custom) }); err != nil {
@@ -458,7 +458,7 @@ func TestInvalidPromptTemplateFailsTheConfiguration(t *testing.T) {
 	if ErrorCodeOf(err) != ErrorCodeInvalid {
 		t.Fatalf("code=%q, want %q", ErrorCodeOf(err), ErrorCodeInvalid)
 	}
-	// The rejected pair is not kept, so the caller still holds a valid value.
+	// 拒否された組は保持されないため、呼び出し元は妥当な値を持ったままになる。
 	if settings.Prompts != prompt.DefaultTemplates() {
 		t.Fatalf("prompts=%+v, want the previous templates", settings.Prompts)
 	}
@@ -481,8 +481,8 @@ func TestDebugInputReportsWhetherPromptsWereEdited(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// A report on an untouched installation must not read as "someone edited
-	// the wording", which is the question a bad copied prompt raises.
+	// 手つかずのインストールに対するレポートが「誰かが文言を編集した」と
+	// 読めてはならない。それがコピーしたプロンプトの不具合時に問われる点。
 	input := store.DebugInput()
 	if input.Prompts.Design.Customized || input.Prompts.Implementation.Customized {
 		t.Fatalf("prompts=%+v, want neither reported as customized", input.Prompts)

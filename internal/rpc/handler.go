@@ -14,7 +14,7 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/filepicker"
 )
 
-// LocalFilePicker opens a server-local native chooser without reading the file.
+// LocalFilePicker はファイルを読まずに、サーバーローカルのネイティブ選択ダイアログを開く。
 type LocalFilePicker interface {
 	SelectFile(ctx context.Context) (path string, canceled bool, err error)
 }
@@ -31,7 +31,7 @@ func New(service Service) (string, http.Handler) {
 	return NewWithFilePicker(service, filepicker.New())
 }
 
-// NewWithFilePicker constructs the RPC handler with an injectable native chooser.
+// NewWithFilePicker は差し替え可能なネイティブ選択ダイアログを使う RPC ハンドラを構築する。
 func NewWithFilePicker(service Service, picker LocalFilePicker) (string, http.Handler) {
 	var configStore *config.Store
 	if configStore == nil {
@@ -39,8 +39,8 @@ func NewWithFilePicker(service Service, picker LocalFilePicker) (string, http.Ha
 			configStore = provider.ConfigStore()
 		}
 	}
-	// Requiring the Connect protocol header keeps the RPCs out of reach of
-	// simple cross-origin requests, which browsers send without a preflight.
+	// Connect プロトコルヘッダを必須にすることで、ブラウザがプリフライトなしに
+	// 送る単純なクロスオリジンリクエストから RPC を遠ざける。
 	return prxv1connect.NewPRXServiceHandler(
 		&Handler{
 			service: service, configStore: configStore, filePicker: picker,
@@ -434,9 +434,9 @@ func (h *Handler) SyncGitHubIfDue(
 	}), nil
 }
 
-// GetDebugReport returns the diagnostic report together with the text the CLI
-// prints. The rendered text crosses the RPC boundary on purpose, so the report
-// the WebUI copies is the same one `prx debug` produces.
+// GetDebugReport は診断レポートを、CLI が出力するテキストと併せて返す。描画済み
+// テキストを意図的に RPC 境界の向こうへ渡すことで、WebUI がコピーするレポートを
+// `prx debug` の出力と同一にしている。
 func (h *Handler) GetDebugReport(
 	ctx context.Context,
 	_ *connect.Request[prxv1.GetDebugReportRequest],

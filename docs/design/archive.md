@@ -1,20 +1,20 @@
-# Archive policy
+# アーカイブ方針
 
-The application layer refuses creates, updates, and deletes inside archived projects or features, including changes to the containers themselves.
-Refusals report one stable error code, because the caller's remedy is the same whichever container is archived.
+アプリケーション層は、archive された project や feature の内部での作成・更新・削除を拒否する。コンテナ自体への変更も同様である。
+どのコンテナが archive されていても呼び出し側の対処は同じなので、拒否は 1 つの安定したエラーコードで報告する。
 
-The barrier lifts for exactly three operations:
+この壁が外れるのは、次の 3 つの操作に限られる。
 
-- Moving the archived flag, in either direction, so archiving an already archived record is a no-op instead of an error.
-  A request that also changes another field stays refused, so unarchiving cannot smuggle an edit past the barrier.
-- Deleting a project or a feature, which is how archived work is finally discarded.
-- A GitHub refresh that names a feature or a task explicitly, because that imports external fact rather than changing recorded intent.
+- archived フラグの切り替え。方向は問わない。すでに archive 済みのレコードを archive しても、エラーではなく no-op になる。
+  他のフィールドも変更するリクエストは拒否したままにし、unarchive に編集を紛れ込ませられないようにする。
+- project または feature の削除。archive した作業を最終的に破棄する手段である。
+- feature または task を明示的に指定した GitHub の refresh。記録された意図を変えるのではなく、外部の事実を取り込む操作だからである。
 
-The refusal is an application-layer decision taken before the write, not a database constraint, and it does not share a transaction with the write it guards.
-Two processes on one database therefore have a window: a write that passed the barrier can land immediately after another process archived its container.
-The archive is a coordination rule between people and their agents, not a lock, so recovering from that window is a manual deletion rather than a guarantee the store enforces.
+この拒否は書き込み前にアプリケーション層が下す判断であって、データベースの制約ではなく、守る対象の書き込みとトランザクションを共有しない。
+そのため 1 つのデータベースに 2 つのプロセスが接続していると隙間が生じる。壁を通過した書き込みが、別プロセスがコンテナを archive した直後に着地しうる。
+archive は人とそのエージェントの間の調整ルールであってロックではないので、この隙間からの回復はストアが保証するものではなく手動の削除になる。
 
-Moving a feature into or out of an archived project is a write and is therefore refused; activating the project comes first.
-A project's cascade deletion is the exception: it deletes the features it holds, which is a deletion rather than a membership change.
+feature を archive された project へ移す操作、およびそこから出す操作は書き込みなので拒否される。まず project を有効化する必要がある。
+例外は project の cascade 削除で、これは保持する feature を削除する。所属の変更ではなく削除だからである。
 
-How an archived container is presented, and how it reaches the features inside it, is recorded in [domain.md](domain.md).
+archive されたコンテナをどう提示するか、その内部の feature にどう到達するかは [domain.md](domain.md) に記録する。

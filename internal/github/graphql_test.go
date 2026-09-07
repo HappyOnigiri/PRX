@@ -189,9 +189,8 @@ func TestLiveProviderFetchBatchPreservesPartialPullRequestOnPaginationError(t *t
 	}
 }
 
-// A proxy or GitHub Enterprise deployment may answer the GraphQL endpoint with
-// a permission or method error while REST still serves pull requests, so the
-// fallback must not be limited to 404.
+// プロキシや GitHub Enterprise は、REST は PR を返すのに GraphQL には権限や
+// メソッドのエラーを返すことがある。フォールバックを 404 に限ってはならない。
 func TestLiveProviderFetchBatchFallsBackToRESTOnAnyGraphQLHTTPError(t *testing.T) {
 	for name, status := range map[string]int{
 		"forbidden":          http.StatusForbidden,
@@ -237,8 +236,8 @@ func TestLiveProviderFetchBatchFallsBackToRESTOnAnyGraphQLHTTPError(t *testing.T
 	}
 }
 
-// FetchBatch reports what earlier chunks produced alongside a later chunk's
-// failure, so callers can persist the pull requests it did refresh.
+// FetchBatch は後続チャンクの失敗と併せて、それ以前のチャンクの結果も報告する。
+// 呼び出し元が実際に更新できた PR を保存できるようにするため。
 func TestLiveProviderFetchBatchKeepsEarlierChunksWhenALaterChunkFails(t *testing.T) {
 	var requests atomic.Int32
 	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {

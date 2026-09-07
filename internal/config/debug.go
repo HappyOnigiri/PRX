@@ -5,9 +5,9 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/prompt"
 )
 
-// DebugInput collects the configuration facts a diagnostic report presents. It
-// loads the file exactly as every other caller does, and copies only the public
-// view, so no credential material can reach the report.
+// DebugInput は診断レポートが提示する設定情報を集める。他の呼び出し元と
+// まったく同じ手順でファイルを読み込み、公開ビューだけを複製するため、
+// 資格情報がレポートに漏れることはない。
 func (s *Store) DebugInput() domain.DebugConfigInput {
 	value, warnings, err := s.LoadWithWarnings()
 	result := domain.DebugConfigInput{Warnings: warnings}
@@ -33,9 +33,9 @@ func (s *Store) DebugInput() domain.DebugConfigInput {
 			SecretConfigured: method.SecretConfigured,
 		})
 	}
-	// The templates stay out of the public view because their bodies are long
-	// and user-authored. When a copied prompt looks wrong the reader only needs
-	// to know whether the wording was edited, which these facts answer.
+	// テンプレート本体は長くユーザーが書き換えるため公開ビューには含めない。
+	// コピーしたプロンプトが変に見えるとき、読み手は文言が編集されたか
+	// どうかだけ分かればよく、ここの情報がそれに答える。
 	defaults := prompt.DefaultTemplates()
 	result.Prompts = domain.DebugConfigPrompts{
 		Design:         debugPrompt(value.Prompts.Design, defaults.Design),

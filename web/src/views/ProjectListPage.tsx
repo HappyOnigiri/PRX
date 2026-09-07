@@ -37,8 +37,8 @@ export function ProjectListPage() {
           />
         </div>
       </header>
-      {/* A project is either in play or archived; it has no completed state,
-          so this strip carries two tabs where a feature list carries three. */}
+      {/* プロジェクトは進行中かアーカイブ済みのどちらかで完了状態を持たない。
+          そのため feature リストの 3 タブに対しここは 2 タブになる。 */}
       <TabList
         tabs={[
           { id: "active", label: t("project.tabs.active") },
@@ -46,8 +46,8 @@ export function ProjectListPage() {
         ]}
         active={archived ? "archived" : "active"}
         onSelect={(id) => {
-          // The selection lives in the URL so reload, history, and a shared
-          // link reproduce the view, as task search does with its query.
+          // 選択は URL に持たせ、リロード・履歴・共有リンクで同じ表示を
+          // 再現する。タスク検索がクエリでそうしているのと同じ。
           void navigate({
             to: "/projects",
             search: { archived: id === "archived" },
@@ -131,8 +131,8 @@ function ProjectListRow({
       search={{ features: project.archived ? "archived" : "active" }}
       className="feature-list-row project-list-row"
     >
-      {/* A project has only the two states, and both are stated so the badge
-          opens every titled row at the same place. */}
+      {/* プロジェクトは 2 状態しかなく、その両方を明示することで、タイトル付き
+          の行はどれも同じ位置からバッジで始まる。 */}
       <div className="feature-list-row-title">
         <StatusBadge
           className={project.archived ? "status-archived" : "status-active"}

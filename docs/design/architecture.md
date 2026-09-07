@@ -1,14 +1,14 @@
-# Architectural policy
+# アーキテクチャ方針
 
-Business rules have one application-level implementation shared by the CLI and RPC handlers.
-Adapters translate that implementation instead of introducing alternate validation or status semantics.
+ビジネスルールの実装はアプリケーション層に 1 つだけ置き、CLI と RPC ハンドラで共有する。
+adapter はその実装を変換するだけで、別系統の検証やステータス意味論を持ち込まない。
 
-Dependencies point inward toward domain policy.
-Persistence owns storage and transactions, but it does not define competing business rules.
-External providers remain replaceable behind application-facing interfaces.
+依存の向きは内側のドメイン方針へ向ける。
+永続化層はストレージとトランザクションを所有するが、競合するビジネスルールは定義しない。
+外部プロバイダは、アプリケーション層向けのインターフェースの背後で差し替え可能なままにする。
 
-The browser uses RPC and never opens SQLite or invokes the CLI.
-The server remains authoritative for validation and derived business state.
-The browser may translate and arrange structured state for presentation.
-Known states and expected failure reasons cross RPC boundaries as enums or structured details.
-Only unexpected diagnostics may remain unstructured English.
+ブラウザは RPC だけを使い、SQLite を直接開いたり CLI を呼び出したりしない。
+検証と派生したビジネス状態については、サーバが権威を持つ。
+ブラウザは構造化された状態を表示用に変換・整列してよい。
+既知の状態と想定される失敗理由は、enum または構造化された詳細として RPC 境界を越える。
+構造化されない英語のままでよいのは、想定外の diagnostics だけである。

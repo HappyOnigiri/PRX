@@ -8,15 +8,14 @@ import type { Feature } from "../gen/prx/v1/prx_pb";
 import { FeatureListRow } from "./FeatureListRow";
 import { TabList, TabPanel } from "./TabList";
 
-// The list receives every feature of its owner and narrows them itself, so the
-// counts and the empty wording follow the tab without the page having to
-// filter twice.
+// リストは所有者の feature をすべて受け取って自分で絞り込む。おかげで件数と
+// 空表示の文言がタブに追従し、ページ側で二重に絞り込まずに済む。
 interface ProjectFeatureListProps {
   features: Feature[];
   tab: FeatureTabId;
   onSelectTab: (tab: FeatureTabId) => void;
-  // A page may hold only one of these lists, but the DOM ids still have to be
-  // distinct from every other tab strip on the screen.
+  // 1 ページにこのリストが 1 つしかない場合でも、DOM id は画面上の他のタブ
+  // ストリップと区別できなければならない。
   idPrefix: string;
 }
 
@@ -28,8 +27,8 @@ export function ProjectFeatureList(props: ProjectFeatureListProps) {
   }));
   return (
     <section className="feature-list" aria-label={t("project.featuresLabel")}>
-      {/* The tabs open the list directly: the section is named by its owner's
-          page title, and the rows themselves show how many there are. */}
+      {/* タブはリストを直接開く。セクションの名前は所有者のページタイトルが
+          示し、件数は行そのものが示す。 */}
       <TabList
         tabs={tabs}
         active={props.tab}

@@ -1,4 +1,4 @@
-// Package main checks the size of Go comment groups.
+// Package main は Go のコメントグループの大きさを検査する。
 package main
 
 import (
@@ -21,12 +21,12 @@ const (
 	tabWidth        = 8
 )
 
-// checkedDirectories lists the trees that hold hand-written Go code. Repository-root files are
-// added separately because walking "." would also descend into gen/ and web/.
+// checkedDirectories は手書きの Go コードを含むツリーを列挙する。"." を辿ると gen/ や web/ にも
+// 降りてしまうため、リポジトリ直下のファイルは別途追加する。
 var checkedDirectories = []string{"cmd", "internal", "tools"}
 
-// fullWidthPattern keeps the same East Asian Width W/F ranges the Markdown check uses. It is split
-// into several literals so that each source line stays inside the line-length limit.
+// fullWidthPattern は Markdown 側の検査と同じ East Asian Width W/F の範囲を保持する。各ソース行を
+// 行長制限に収めるため、複数のリテラルに分割してある。
 const fullWidthPattern = "[ᄀ-ᅟ⌚-⌛〈-〉⏩-⏬⏰⏳◽-◾☔-☕♈-♓♿⚓⚡⚪-⚫⚽-⚾⛄-⛅⛎⛔⛪⛲-⛳⛵⛺⛽" +
 	"✅✊-✋✨❌❎❓-❕❗➕-➗➰➿⬛-⬜⭐⭕⺀-⺙⺛-⻳⼀-⿕⿰-⿻　-〾ぁ-ゖ゙-ヿ" +
 	"ㄅ-ㄯㄱ-ㆎ㆐-㇣ㇰ-㈞㈠-㉇㉐-㋿㌀-䶿一-꓆ꥠ-ꥼ가-힣豈-﫿" +
@@ -54,8 +54,8 @@ type bodyLine struct {
 	directive bool
 }
 
-// displayWidth counts terminal columns: tabs advance to the next tab stop and full-width runes
-// take two columns.
+// displayWidth は端末のカラム数を数える。タブは次のタブストップまで進み、全角の
+// rune は 2 カラム分になる。
 func displayWidth(text string) int {
 	width := 0
 	for _, r := range text {
@@ -71,7 +71,7 @@ func displayWidth(text string) int {
 	return width
 }
 
-// commentLines strips the comment delimiters of one group and returns the remaining body lines.
+// commentLines は 1 グループのコメント区切り記号を取り除き、残った本文の行を返す。
 func commentLines(fset *token.FileSet, group *ast.CommentGroup) []bodyLine {
 	var result []bodyLine
 	for _, comment := range group.List {
@@ -86,7 +86,7 @@ func commentLines(fset *token.FileSet, group *ast.CommentGroup) []bodyLine {
 			if block {
 				text = strings.TrimPrefix(text, "*")
 				text = strings.TrimLeft(text, " \t\r")
-				// A block comment that opens or closes on its own line contributes no body there.
+				// 単独の行で開始・終了するブロックコメントは、その行に本文を持たない。
 				if strings.TrimSpace(text) == "" && (i == 0 || i == len(lines)-1) {
 					continue
 				}
@@ -101,8 +101,8 @@ func commentLines(fset *token.FileSet, group *ast.CommentGroup) []bodyLine {
 	return result
 }
 
-// checkGroup reports the violations of one comment group. Directive lines count towards neither
-// limit, and a valid marker waives the line limit only.
+// checkGroup は 1 つのコメントグループの違反を報告する。ディレクティブ行はどちらの制限にも
+// 数えず、正しいマーカーは行長の制限だけを免除する。
 func checkGroup(path string, lines []bodyLine) []violation {
 	var issues []violation
 	var body []bodyLine

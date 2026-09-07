@@ -1,52 +1,60 @@
 # Repository instructions
 
-PRX is a local-first tool for coordinating dependency graphs of tasks and GitHub pull requests. It is delivered as a Go CLI/server with an embedded React UI and SQLite storage.
+PRX は、タスクと GitHub プルリクエストの依存グラフを扱うローカルファーストのツールである。React UI を埋め込んだ Go の CLI / サーバーと SQLite ストレージとして提供する。
 
-- Treat the CLI, JSON, and state behavior documented under `docs/` as public contracts. Update implementation, tests, and documentation together when they change.
-- Keep `README.md` minimal so that parallel branches rarely touch it. It holds only what someone needs to build, start, and develop PRX, plus links to the documentation.
-- Put durable design policy and rationale in `docs/design/`, non-obvious verification policy in `docs/development.md`, and the generated CLI surface in `docs/cli/`.
-- Edit `README.md` only when a change makes something it already states wrong.
-- RPC schemas and behavior may change without backward compatibility.
-- Apply each RPC change to the Protocol Buffer source, server, in-repository clients, and tests.
-- Update documentation in the same change when the recorded public contract or policy changes.
-- Read the design documents a change touches, not the whole directory.
-- Edit Protocol Buffer, migration, and SQL query sources, then run `make generate`.
-- Do not hand-edit generated files under `gen/`, `internal/db/`, or `web/src/gen/`.
-- `internal/webui/dist/` is build output. Keep only `.gitkeep` tracked and produce assets through `make build` or `make web-build`.
-- Run `make ci` before handing off implementation changes.
+- `docs/` に記載した CLI・JSON・状態の振る舞いは公開契約として扱う。変更するときは実装・テスト・ドキュメントを同時に更新する。
+- `README.md` は並行ブランチが衝突しにくいよう最小限に保つ。ビルド・起動・開発に必要な内容とドキュメントへのリンクだけを置く。
+- 恒久的な設計方針と背景は `docs/design/` に、自明でない検証方針は `docs/development.md` に、生成された CLI リファレンスは `docs/cli/` に置く。
+- `README.md` は、変更によって記載内容が誤りになるときだけ編集する。
+- RPC のスキーマと振る舞いは後方互換性なしに変更してよい。
+- RPC の変更は Protocol Buffer の定義、サーバー、リポジトリ内のクライアント、テストにすべて反映する。
+- 記録済みの公開契約や方針が変わるときは、同じ変更でドキュメントも更新する。
+- 変更が触れる設計ドキュメントだけを読む。ディレクトリ全体を読む必要はない。
+- Protocol Buffer・マイグレーション・SQL のソースを編集したら `make generate` を実行する。
+- `gen/`、`internal/db/`、`web/src/gen/` 配下の生成ファイルは手で編集しない。
+- `internal/webui/dist/` はビルド成果物である。`.gitkeep` だけを追跡し、資産は `make build` または `make web-build` で生成する。
+- 実装の変更を引き渡す前に `make ci` を実行する。
+
+## 記載言語
+
+- コメント、`AGENTS.md` などのエージェント向け指示、`docs/` 配下のドキュメントは日本語で書く。既存の英語記述を編集するときも日本語に置き換える。
+- 識別子、型名、CLI のコマンド名やフラグ、JSON キー、設定キーは原語のまま残す。
+- CLI のヘルプ文言・標準出力・エラーメッセージは英語のままにする。`docs/cli/` の生成物と一致させるため、翻訳しない。
+- WebUI の表示文字列は `web/src/i18n/` の en と ja の両方を維持する。
+- `README.md` は英語、`README.ja.md` は日本語で、内容を同期する。片方を変更したらもう片方も更新する。
 
 ## Comments
 
-A comment is at most 3 lines and each line at most 200 display columns; both limits are enforced for Go and for everything ESLint reads under `web/`.
+コメントは 1 つあたり 3 行以内、1 行あたり 200 表示カラム以内とする。どちらの上限も Go と、`web/` 配下で ESLint が読むすべてのファイルで強制される。
 
-- Adjacent comment lines count as one comment. A blank source line, or moving a paragraph next to the code it explains, splits them.
-- Tooling directives (`//go:*`, `//nolint`, `eslint-disable*`, `@ts-*`, …) count towards neither limit.
-- Move rationale that outgrows 3 lines into the matching `docs/design/` document and leave a pointer to it.
-- To keep a longer comment, put `commentlint:allow-long -- <reason>` on its own line in the same comment. It waives the line limit only, and one comment accepts one marker.
+- 隣接するコメント行は 1 つのコメントとして数える。空行を挟むか、説明対象のコードの隣へ段落を移すと分割される。
+- ツールのディレクティブ（`//go:*`、`//nolint`、`eslint-disable*`、`@ts-*` など）はどちらの上限にも数えない。
+- 3 行に収まらない背景説明は対応する `docs/design/` のドキュメントへ移し、コメントにはその参照だけを残す。
+- 長いコメントを残したいときは、同じコメント内の独立した行に `commentlint:allow-long -- <理由>` を置く。これは行の長さの上限だけを免除し、1 つのコメントにマーカーは 1 つだけ置ける。
 
 ## Design documents
 
-| Document | Read it before changing |
+| ドキュメント | 変更前に読む対象 |
 |---|---|
-| `docs/design/README.md` | Product direction, and which source owns a detail this directory does not record |
-| `docs/design/architecture.md` | Layering, adapter responsibilities, or what crosses the RPC boundary |
-| `docs/design/cli-contract.md` | CLI command shape, output modes, JSON schema, identifiers, or mutation rules |
-| `docs/design/diagnostics.md` | `prx debug` and its RPC |
-| `docs/design/agent-prompts.md` | Agent prompt templates, their vocabulary, or template selection |
-| `docs/design/domain.md` | Display state derivation, status semantics, dependencies, or project membership |
-| `docs/design/archive.md` | Archived projects or features and the writes they forbid |
-| `docs/design/persistence.md` | Storage, configuration files, demo mode, documents, or implementation plans |
-| `docs/design/github-sync.md` | Pull-request identity, synchronization scope, scheduling, or failure handling |
-| `docs/design/github-credentials.md` | Credential resolution, fallback, or secret handling |
-| `docs/design/security.md` | The local trust boundary, server exposure, or local file access |
-| `docs/design/webui.md` | WebUI structure, presentation state, or accessibility rules |
+| `docs/design/README.md` | プロダクトの方向性、およびこのディレクトリに記録がない詳細をどのソースが持つか |
+| `docs/design/architecture.md` | レイヤ構成、アダプタの責務、RPC 境界を越えるもの |
+| `docs/design/cli-contract.md` | CLI コマンドの形、出力モード、JSON スキーマ、識別子、変更操作のルール |
+| `docs/design/diagnostics.md` | `prx debug` とその RPC |
+| `docs/design/agent-prompts.md` | エージェントのプロンプトテンプレート、その語彙、テンプレートの選択 |
+| `docs/design/domain.md` | 表示状態の導出、ステータスの意味、依存関係、プロジェクトの所属 |
+| `docs/design/archive.md` | アーカイブ済みのプロジェクトやフィーチャー、およびそれらが禁止する書き込み |
+| `docs/design/persistence.md` | ストレージ、設定ファイル、デモモード、ドキュメント、実装計画 |
+| `docs/design/github-sync.md` | プルリクエストの同一性、同期の範囲、スケジューリング、失敗時の扱い |
+| `docs/design/github-credentials.md` | 認証情報の解決、フォールバック、シークレットの扱い |
+| `docs/design/security.md` | ローカルの信頼境界、サーバーの公開範囲、ローカルファイルへのアクセス |
+| `docs/design/webui.md` | WebUI の構造、表示状態、アクセシビリティのルール |
 
 ## Git workflow
 
-- User approval is not required before committing or pushing changes.
-- When updating an existing pull request, commit and push the changes.
+- コミットとプッシュにユーザーの承認は不要である。
+- 既存のプルリクエストを更新するときは、変更をコミットしてプッシュする。
 
 ## Settings storage
 
-- Store settings that affect CLI behavior in a config file accessible to the CLI. This config does not exist yet. Introduce it when such settings are implemented.
-- Store settings that affect only WebUI presentation in the browser's Local Storage.
+- CLI の振る舞いに影響する設定は、CLI から参照できる設定ファイルに保存する。この設定ファイルはまだ存在しない。そうした設定を実装するときに導入する。
+- WebUI の表示だけに影響する設定は、ブラウザの Local Storage に保存する。

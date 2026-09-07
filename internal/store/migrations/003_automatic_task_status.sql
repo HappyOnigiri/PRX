@@ -1,8 +1,8 @@
--- SQLite cannot add a CHECK constraint to an existing table in place. Keep
--- every dependent row while rebuilding the task table and its foreign-key
--- children around the new stored status values. The implementation plan table
--- may already exist when repairing a database from the pre-merge feature
--- branch, so preserve it across the rebuild as well.
+-- SQLite は既存テーブルに CHECK 制約をその場で追加できない。依存する行をすべて
+-- 保ったまま、新しい status の格納値に合わせて tasks テーブルと外部キーで
+-- 紐づく子テーブルを作り直す。マージ前の feature ブランチのデータベースを
+-- 修復する場合は implementation_plans が既に存在しうるので、作り直しの
+-- 過程でも保持する。
 CREATE TABLE IF NOT EXISTS implementation_plans (
   task_id TEXT PRIMARY KEY REFERENCES tasks(id) ON DELETE RESTRICT,
   content TEXT NOT NULL CHECK(length(trim(content)) > 0),

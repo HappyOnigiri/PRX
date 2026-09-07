@@ -102,8 +102,8 @@ func (s *Service) syncUncachedHostGroups(
 ) (processed map[repositoryKey]bool, succeeded, failed int, err error) {
 	processed = make(map[repositoryKey]bool)
 	keysByHost := make(map[string][]repositoryKey)
-	// keys is already sorted, and hosts are visited in that same order so a
-	// failure stops after the same hosts on every run.
+	// keys はソート済みで、host も同じ順に辿る。これにより失敗したとき、
+	// どの実行でも同じ host まで処理して止まる。
 	hosts := make([]string, 0, len(keys))
 	for _, key := range keys {
 		if _, seen := keysByHost[key.host]; !seen {
@@ -167,9 +167,9 @@ func (s *Service) syncRepositoryGroups(
 	return succeeded, failed, nil
 }
 
-// persistSyncResult stores every refreshed pull request and records the rest as
-// stale with the failure that kept them from refreshing. A known terminal pull
-// request stays stale without becoming an actionable failure.
+// persistSyncResult は更新できた pull request をすべて保存し、残りは更新を妨げた
+// 失敗とともに stale として記録する。終端状態が既知の pull request は、
+// 対処が必要な失敗にはせず stale のままにする。
 func (s *Service) persistSyncResult(
 	ctx context.Context,
 	values []domain.PullRequest,
@@ -287,9 +287,9 @@ func (s *Service) syncHostBatch(
 			break
 		}
 		batch, batchErr := provider.FetchBatch(ctx, work)
-		// A chunked fetch reports what earlier chunks already produced alongside
-		// the failure, so take those results before deciding what the failure
-		// means for the pull requests it never reached.
+		// chunk 分割した fetch は、先行 chunk の成果を失敗と一緒に返す。
+		// 失敗が未到達の pull request に何を意味するかを決める前に、
+		// その成果を取り込む。
 		next := make([]domain.PullRequest, 0)
 		for _, current := range work {
 			itemErr := batch.Errors[current.TaskID]
@@ -518,9 +518,9 @@ func (s *Service) attemptCandidate(
 	for taskID, value := range batchResult.PartialPullRequests {
 		result.partials[taskID] = value
 	}
-	// A chunked fetch stops at the first failing chunk and reports the earlier
-	// chunks with the failure, so keep what it produced and let the caller retry
-	// only from the first pull request the failure reached.
+	// chunk 分割した fetch は最初に失敗した chunk で止まり、先行 chunk の結果を
+	// 失敗と一緒に返す。その成果は残し、失敗が及んだ最初の pull request 以降だけを
+	// 呼び出し側が再試行できるようにする。
 	resolved := values
 	if batchErr != nil {
 		resolved = values[:unresolvedIndex(values, batchResult)]
@@ -571,9 +571,9 @@ func (s *Service) attemptCandidate(
 	return result, nil
 }
 
-// unresolvedIndex reports the position of the first pull request the batch
-// neither updated nor reported an item error for. A chunked fetch stops at its
-// first failing chunk, so nothing from that position on was attempted.
+// unresolvedIndex は、batch が更新も個別エラー報告もしなかった最初の pull request の
+// 位置を返す。chunk 分割した fetch は最初に失敗した chunk で止まるので、
+// その位置以降は何も試行されていない。
 func unresolvedIndex(values []domain.PullRequest, batch githubprovider.BatchResult) int {
 	for index, value := range values {
 		if _, ok := batch.PullRequests[value.TaskID]; ok {

@@ -145,83 +145,83 @@ const (
 
 // PRXServiceClient is a client for the prx.v1.PRXService service.
 type PRXServiceClient interface {
-	// GetSnapshot returns the current normalized dataset and derived queues.
+	// GetSnapshot は現在の正規化データと導出キューを返す。
 	GetSnapshot(context.Context, *connect.Request[v1.GetSnapshotRequest]) (*connect.Response[v1.GetSnapshotResponse], error)
-	// CreateProject creates a new project.
+	// CreateProject は project を新規作成する。
 	CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v1.CreateProjectResponse], error)
-	// UpdateProject applies the fields present in the request to an existing project, including archiving.
+	// UpdateProject はリクエストにあるフィールドを既存の project に適用し、アーカイブも含む。
 	UpdateProject(context.Context, *connect.Request[v1.UpdateProjectRequest]) (*connect.Response[v1.UpdateProjectResponse], error)
-	// DeleteProject deletes a project, subject to the cascade option.
+	// DeleteProject は cascade の指定に従って project を削除する。
 	DeleteProject(context.Context, *connect.Request[v1.DeleteProjectRequest]) (*connect.Response[v1.DeleteProjectResponse], error)
-	// CreateFeature creates a new feature.
+	// CreateFeature は feature を新規作成する。
 	CreateFeature(context.Context, *connect.Request[v1.CreateFeatureRequest]) (*connect.Response[v1.CreateFeatureResponse], error)
-	// UpdateFeature applies the fields present in the request to an existing feature.
+	// UpdateFeature はリクエストにあるフィールドを既存の feature に適用する。
 	UpdateFeature(context.Context, *connect.Request[v1.UpdateFeatureRequest]) (*connect.Response[v1.UpdateFeatureResponse], error)
-	// DeleteFeature deletes a feature, subject to the cascade option.
+	// DeleteFeature は cascade の指定に従って feature を削除する。
 	DeleteFeature(context.Context, *connect.Request[v1.DeleteFeatureRequest]) (*connect.Response[v1.DeleteFeatureResponse], error)
-	// CreateTask creates a task within an existing feature.
+	// CreateTask は既存の feature の中に task を作成する。
 	CreateTask(context.Context, *connect.Request[v1.CreateTaskRequest]) (*connect.Response[v1.CreateTaskResponse], error)
-	// UpdateTask applies the fields present in the request to an existing task.
+	// UpdateTask はリクエストにあるフィールドを既存の task に適用する。
 	UpdateTask(context.Context, *connect.Request[v1.UpdateTaskRequest]) (*connect.Response[v1.UpdateTaskResponse], error)
-	// DeleteTask deletes a task, subject to the cascade option.
+	// DeleteTask は cascade の指定に従って task を削除する。
 	DeleteTask(context.Context, *connect.Request[v1.DeleteTaskRequest]) (*connect.Response[v1.DeleteTaskResponse], error)
-	// AddDependency adds a same-feature dependency when it does not create a cycle.
+	// AddDependency は循環を作らない場合に、同じ feature 内の依存を追加する。
 	AddDependency(context.Context, *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error)
-	// RemoveDependency removes an existing dependency edge.
+	// RemoveDependency は既存の依存の辺を取り除く。
 	RemoveDependency(context.Context, *connect.Request[v1.RemoveDependencyRequest]) (*connect.Response[v1.RemoveDependencyResponse], error)
-	// AttachPullRequest attaches a GitHub pull request to a pull-request task.
+	// AttachPullRequest は GitHub の pull request を pull request 用の task に紐づける。
 	AttachPullRequest(context.Context, *connect.Request[v1.AttachPullRequestRequest]) (*connect.Response[v1.AttachPullRequestResponse], error)
-	// DetachPullRequest removes the pull request attached to a task.
+	// DetachPullRequest は task に紐づく pull request を外す。
 	DetachPullRequest(context.Context, *connect.Request[v1.DetachPullRequestRequest]) (*connect.Response[v1.DetachPullRequestResponse], error)
-	// AddDocument registers a URL, local file, or stored Markdown document.
+	// AddDocument は URL、ローカルファイル、保存する Markdown の document を登録する。
 	AddDocument(context.Context, *connect.Request[v1.AddDocumentRequest]) (*connect.Response[v1.AddDocumentResponse], error)
-	// GetDocument returns one document and stored Markdown content when applicable.
+	// GetDocument は document を 1 件返し、該当すれば保存された Markdown も返す。
 	GetDocument(context.Context, *connect.Request[v1.GetDocumentRequest]) (*connect.Response[v1.GetDocumentResponse], error)
-	// UpdateDocument changes document metadata, source, or plan designation.
+	// UpdateDocument は document のメタデータ・取得元・計画指定を変更する。
 	UpdateDocument(context.Context, *connect.Request[v1.UpdateDocumentRequest]) (*connect.Response[v1.UpdateDocumentResponse], error)
-	// DeleteDocument removes a registered document reference.
+	// DeleteDocument は登録済みの document 参照を削除する。
 	DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error)
-	// ReadDocumentContent reads bounded UTF-8 content for a local file or stored Markdown document.
+	// ReadDocumentContent はローカルファイルか保存された Markdown の内容を上限つきの UTF-8 で読む。
 	ReadDocumentContent(context.Context, *connect.Request[v1.ReadDocumentContentRequest]) (*connect.Response[v1.ReadDocumentContentResponse], error)
-	// SelectLocalFile opens a native file chooser on the PRX server without registering a document.
+	// SelectLocalFile は document を登録せず、PRX サーバーでネイティブのファイル選択画面を開く。
 	SelectLocalFile(context.Context, *connect.Request[v1.SelectLocalFileRequest]) (*connect.Response[v1.SelectLocalFileResponse], error)
-	// Sync refreshes selected pull requests from GitHub and records successes and failures independently.
+	// Sync は選ばれた pull request を GitHub から更新し、成功と失敗を個別に記録する。
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
-	// GetGitHubSyncStatus returns automatic synchronization diagnostics.
+	// GetGitHubSyncStatus は自動同期の診断情報を返す。
 	GetGitHubSyncStatus(context.Context, *connect.Request[v1.GetGitHubSyncStatusRequest]) (*connect.Response[v1.GetGitHubSyncStatusResponse], error)
-	// SyncGitHubIfDue claims and runs an automatic refresh only when due.
+	// SyncGitHubIfDue は期限が来たときだけ自動更新を確保して実行する。
 	SyncGitHubIfDue(context.Context, *connect.Request[v1.SyncGitHubIfDueRequest]) (*connect.Response[v1.SyncGitHubIfDueResponse], error)
-	// Validate checks database integrity and returns any detected errors.
+	// Validate はデータベースの整合性を調べ、検出したエラーを返す。
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
-	// GetDebugReport returns the diagnostic report without starting a synchronization run.
+	// GetDebugReport は同期を開始せずに診断レポートを返す。
 	GetDebugReport(context.Context, *connect.Request[v1.GetDebugReportRequest]) (*connect.Response[v1.GetDebugReportResponse], error)
-	// GetConfig returns the public GitHub configuration.
+	// GetConfig は公開の GitHub 設定を返す。
 	GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error)
-	// UpdateGitHubSyncConfig changes the shared automatic refresh interval.
+	// UpdateGitHubSyncConfig は共有の自動更新間隔を変更する。
 	UpdateGitHubSyncConfig(context.Context, *connect.Request[v1.UpdateGitHubSyncConfigRequest]) (*connect.Response[v1.UpdateGitHubSyncConfigResponse], error)
-	// AddGitHubHost adds a host boundary.
+	// AddGitHubHost は host の境界を追加する。
 	AddGitHubHost(context.Context, *connect.Request[v1.AddGitHubHostRequest]) (*connect.Response[v1.AddGitHubHostResponse], error)
-	// UpdateGitHubHost updates a host boundary.
+	// UpdateGitHubHost は host の境界を更新する。
 	UpdateGitHubHost(context.Context, *connect.Request[v1.UpdateGitHubHostRequest]) (*connect.Response[v1.UpdateGitHubHostResponse], error)
-	// DeleteGitHubHost removes a host boundary.
+	// DeleteGitHubHost は host の境界を削除する。
 	DeleteGitHubHost(context.Context, *connect.Request[v1.DeleteGitHubHostRequest]) (*connect.Response[v1.DeleteGitHubHostResponse], error)
-	// AddGitHubAuthMethod adds a host-scoped credential.
+	// AddGitHubAuthMethod は host 単位の資格情報を追加する。
 	AddGitHubAuthMethod(context.Context, *connect.Request[v1.AddGitHubAuthMethodRequest]) (*connect.Response[v1.AddGitHubAuthMethodResponse], error)
-	// UpdateGitHubAuthMethod updates a host-scoped credential.
+	// UpdateGitHubAuthMethod は host 単位の資格情報を更新する。
 	UpdateGitHubAuthMethod(context.Context, *connect.Request[v1.UpdateGitHubAuthMethodRequest]) (*connect.Response[v1.UpdateGitHubAuthMethodResponse], error)
-	// DeleteGitHubAuthMethod removes a host-scoped credential.
+	// DeleteGitHubAuthMethod は host 単位の資格情報を削除する。
 	DeleteGitHubAuthMethod(context.Context, *connect.Request[v1.DeleteGitHubAuthMethodRequest]) (*connect.Response[v1.DeleteGitHubAuthMethodResponse], error)
-	// ReorderGitHubAuthMethods changes credential priority.
+	// ReorderGitHubAuthMethods は資格情報の優先順位を変更する。
 	ReorderGitHubAuthMethods(context.Context, *connect.Request[v1.ReorderGitHubAuthMethodsRequest]) (*connect.Response[v1.ReorderGitHubAuthMethodsResponse], error)
-	// ValidateConfig validates the YAML configuration without changing it.
+	// ValidateConfig は YAML 設定を変更せずに検証する。
 	ValidateConfig(context.Context, *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error)
-	// GetPromptTemplates returns the stored agent prompt templates.
+	// GetPromptTemplates は保存されたエージェント用テンプレートを返す。
 	GetPromptTemplates(context.Context, *connect.Request[v1.GetPromptTemplatesRequest]) (*connect.Response[v1.GetPromptTemplatesResponse], error)
-	// UpdatePromptTemplates replaces every agent prompt template in one write.
+	// UpdatePromptTemplates は 1 回の書き込みで全テンプレートを置き換える。
 	UpdatePromptTemplates(context.Context, *connect.Request[v1.UpdatePromptTemplatesRequest]) (*connect.Response[v1.UpdatePromptTemplatesResponse], error)
-	// GetTaskPrompt returns the expanded agent prompt for one task.
+	// GetTaskPrompt は task 1 件分の展開済みエージェントプロンプトを返す。
 	GetTaskPrompt(context.Context, *connect.Request[v1.GetTaskPromptRequest]) (*connect.Response[v1.GetTaskPromptResponse], error)
-	// GetBatchPrompt returns one expanded prompt covering several tasks of one feature.
+	// GetBatchPrompt は 1 つの feature の複数 task をまとめた展開済みプロンプトを返す。
 	GetBatchPrompt(context.Context, *connect.Request[v1.GetBatchPromptRequest]) (*connect.Response[v1.GetBatchPromptResponse], error)
 }
 
@@ -713,83 +713,83 @@ func (c *pRXServiceClient) GetBatchPrompt(ctx context.Context, req *connect.Requ
 
 // PRXServiceHandler is an implementation of the prx.v1.PRXService service.
 type PRXServiceHandler interface {
-	// GetSnapshot returns the current normalized dataset and derived queues.
+	// GetSnapshot は現在の正規化データと導出キューを返す。
 	GetSnapshot(context.Context, *connect.Request[v1.GetSnapshotRequest]) (*connect.Response[v1.GetSnapshotResponse], error)
-	// CreateProject creates a new project.
+	// CreateProject は project を新規作成する。
 	CreateProject(context.Context, *connect.Request[v1.CreateProjectRequest]) (*connect.Response[v1.CreateProjectResponse], error)
-	// UpdateProject applies the fields present in the request to an existing project, including archiving.
+	// UpdateProject はリクエストにあるフィールドを既存の project に適用し、アーカイブも含む。
 	UpdateProject(context.Context, *connect.Request[v1.UpdateProjectRequest]) (*connect.Response[v1.UpdateProjectResponse], error)
-	// DeleteProject deletes a project, subject to the cascade option.
+	// DeleteProject は cascade の指定に従って project を削除する。
 	DeleteProject(context.Context, *connect.Request[v1.DeleteProjectRequest]) (*connect.Response[v1.DeleteProjectResponse], error)
-	// CreateFeature creates a new feature.
+	// CreateFeature は feature を新規作成する。
 	CreateFeature(context.Context, *connect.Request[v1.CreateFeatureRequest]) (*connect.Response[v1.CreateFeatureResponse], error)
-	// UpdateFeature applies the fields present in the request to an existing feature.
+	// UpdateFeature はリクエストにあるフィールドを既存の feature に適用する。
 	UpdateFeature(context.Context, *connect.Request[v1.UpdateFeatureRequest]) (*connect.Response[v1.UpdateFeatureResponse], error)
-	// DeleteFeature deletes a feature, subject to the cascade option.
+	// DeleteFeature は cascade の指定に従って feature を削除する。
 	DeleteFeature(context.Context, *connect.Request[v1.DeleteFeatureRequest]) (*connect.Response[v1.DeleteFeatureResponse], error)
-	// CreateTask creates a task within an existing feature.
+	// CreateTask は既存の feature の中に task を作成する。
 	CreateTask(context.Context, *connect.Request[v1.CreateTaskRequest]) (*connect.Response[v1.CreateTaskResponse], error)
-	// UpdateTask applies the fields present in the request to an existing task.
+	// UpdateTask はリクエストにあるフィールドを既存の task に適用する。
 	UpdateTask(context.Context, *connect.Request[v1.UpdateTaskRequest]) (*connect.Response[v1.UpdateTaskResponse], error)
-	// DeleteTask deletes a task, subject to the cascade option.
+	// DeleteTask は cascade の指定に従って task を削除する。
 	DeleteTask(context.Context, *connect.Request[v1.DeleteTaskRequest]) (*connect.Response[v1.DeleteTaskResponse], error)
-	// AddDependency adds a same-feature dependency when it does not create a cycle.
+	// AddDependency は循環を作らない場合に、同じ feature 内の依存を追加する。
 	AddDependency(context.Context, *connect.Request[v1.AddDependencyRequest]) (*connect.Response[v1.AddDependencyResponse], error)
-	// RemoveDependency removes an existing dependency edge.
+	// RemoveDependency は既存の依存の辺を取り除く。
 	RemoveDependency(context.Context, *connect.Request[v1.RemoveDependencyRequest]) (*connect.Response[v1.RemoveDependencyResponse], error)
-	// AttachPullRequest attaches a GitHub pull request to a pull-request task.
+	// AttachPullRequest は GitHub の pull request を pull request 用の task に紐づける。
 	AttachPullRequest(context.Context, *connect.Request[v1.AttachPullRequestRequest]) (*connect.Response[v1.AttachPullRequestResponse], error)
-	// DetachPullRequest removes the pull request attached to a task.
+	// DetachPullRequest は task に紐づく pull request を外す。
 	DetachPullRequest(context.Context, *connect.Request[v1.DetachPullRequestRequest]) (*connect.Response[v1.DetachPullRequestResponse], error)
-	// AddDocument registers a URL, local file, or stored Markdown document.
+	// AddDocument は URL、ローカルファイル、保存する Markdown の document を登録する。
 	AddDocument(context.Context, *connect.Request[v1.AddDocumentRequest]) (*connect.Response[v1.AddDocumentResponse], error)
-	// GetDocument returns one document and stored Markdown content when applicable.
+	// GetDocument は document を 1 件返し、該当すれば保存された Markdown も返す。
 	GetDocument(context.Context, *connect.Request[v1.GetDocumentRequest]) (*connect.Response[v1.GetDocumentResponse], error)
-	// UpdateDocument changes document metadata, source, or plan designation.
+	// UpdateDocument は document のメタデータ・取得元・計画指定を変更する。
 	UpdateDocument(context.Context, *connect.Request[v1.UpdateDocumentRequest]) (*connect.Response[v1.UpdateDocumentResponse], error)
-	// DeleteDocument removes a registered document reference.
+	// DeleteDocument は登録済みの document 参照を削除する。
 	DeleteDocument(context.Context, *connect.Request[v1.DeleteDocumentRequest]) (*connect.Response[v1.DeleteDocumentResponse], error)
-	// ReadDocumentContent reads bounded UTF-8 content for a local file or stored Markdown document.
+	// ReadDocumentContent はローカルファイルか保存された Markdown の内容を上限つきの UTF-8 で読む。
 	ReadDocumentContent(context.Context, *connect.Request[v1.ReadDocumentContentRequest]) (*connect.Response[v1.ReadDocumentContentResponse], error)
-	// SelectLocalFile opens a native file chooser on the PRX server without registering a document.
+	// SelectLocalFile は document を登録せず、PRX サーバーでネイティブのファイル選択画面を開く。
 	SelectLocalFile(context.Context, *connect.Request[v1.SelectLocalFileRequest]) (*connect.Response[v1.SelectLocalFileResponse], error)
-	// Sync refreshes selected pull requests from GitHub and records successes and failures independently.
+	// Sync は選ばれた pull request を GitHub から更新し、成功と失敗を個別に記録する。
 	Sync(context.Context, *connect.Request[v1.SyncRequest]) (*connect.Response[v1.SyncResponse], error)
-	// GetGitHubSyncStatus returns automatic synchronization diagnostics.
+	// GetGitHubSyncStatus は自動同期の診断情報を返す。
 	GetGitHubSyncStatus(context.Context, *connect.Request[v1.GetGitHubSyncStatusRequest]) (*connect.Response[v1.GetGitHubSyncStatusResponse], error)
-	// SyncGitHubIfDue claims and runs an automatic refresh only when due.
+	// SyncGitHubIfDue は期限が来たときだけ自動更新を確保して実行する。
 	SyncGitHubIfDue(context.Context, *connect.Request[v1.SyncGitHubIfDueRequest]) (*connect.Response[v1.SyncGitHubIfDueResponse], error)
-	// Validate checks database integrity and returns any detected errors.
+	// Validate はデータベースの整合性を調べ、検出したエラーを返す。
 	Validate(context.Context, *connect.Request[v1.ValidateRequest]) (*connect.Response[v1.ValidateResponse], error)
-	// GetDebugReport returns the diagnostic report without starting a synchronization run.
+	// GetDebugReport は同期を開始せずに診断レポートを返す。
 	GetDebugReport(context.Context, *connect.Request[v1.GetDebugReportRequest]) (*connect.Response[v1.GetDebugReportResponse], error)
-	// GetConfig returns the public GitHub configuration.
+	// GetConfig は公開の GitHub 設定を返す。
 	GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error)
-	// UpdateGitHubSyncConfig changes the shared automatic refresh interval.
+	// UpdateGitHubSyncConfig は共有の自動更新間隔を変更する。
 	UpdateGitHubSyncConfig(context.Context, *connect.Request[v1.UpdateGitHubSyncConfigRequest]) (*connect.Response[v1.UpdateGitHubSyncConfigResponse], error)
-	// AddGitHubHost adds a host boundary.
+	// AddGitHubHost は host の境界を追加する。
 	AddGitHubHost(context.Context, *connect.Request[v1.AddGitHubHostRequest]) (*connect.Response[v1.AddGitHubHostResponse], error)
-	// UpdateGitHubHost updates a host boundary.
+	// UpdateGitHubHost は host の境界を更新する。
 	UpdateGitHubHost(context.Context, *connect.Request[v1.UpdateGitHubHostRequest]) (*connect.Response[v1.UpdateGitHubHostResponse], error)
-	// DeleteGitHubHost removes a host boundary.
+	// DeleteGitHubHost は host の境界を削除する。
 	DeleteGitHubHost(context.Context, *connect.Request[v1.DeleteGitHubHostRequest]) (*connect.Response[v1.DeleteGitHubHostResponse], error)
-	// AddGitHubAuthMethod adds a host-scoped credential.
+	// AddGitHubAuthMethod は host 単位の資格情報を追加する。
 	AddGitHubAuthMethod(context.Context, *connect.Request[v1.AddGitHubAuthMethodRequest]) (*connect.Response[v1.AddGitHubAuthMethodResponse], error)
-	// UpdateGitHubAuthMethod updates a host-scoped credential.
+	// UpdateGitHubAuthMethod は host 単位の資格情報を更新する。
 	UpdateGitHubAuthMethod(context.Context, *connect.Request[v1.UpdateGitHubAuthMethodRequest]) (*connect.Response[v1.UpdateGitHubAuthMethodResponse], error)
-	// DeleteGitHubAuthMethod removes a host-scoped credential.
+	// DeleteGitHubAuthMethod は host 単位の資格情報を削除する。
 	DeleteGitHubAuthMethod(context.Context, *connect.Request[v1.DeleteGitHubAuthMethodRequest]) (*connect.Response[v1.DeleteGitHubAuthMethodResponse], error)
-	// ReorderGitHubAuthMethods changes credential priority.
+	// ReorderGitHubAuthMethods は資格情報の優先順位を変更する。
 	ReorderGitHubAuthMethods(context.Context, *connect.Request[v1.ReorderGitHubAuthMethodsRequest]) (*connect.Response[v1.ReorderGitHubAuthMethodsResponse], error)
-	// ValidateConfig validates the YAML configuration without changing it.
+	// ValidateConfig は YAML 設定を変更せずに検証する。
 	ValidateConfig(context.Context, *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error)
-	// GetPromptTemplates returns the stored agent prompt templates.
+	// GetPromptTemplates は保存されたエージェント用テンプレートを返す。
 	GetPromptTemplates(context.Context, *connect.Request[v1.GetPromptTemplatesRequest]) (*connect.Response[v1.GetPromptTemplatesResponse], error)
-	// UpdatePromptTemplates replaces every agent prompt template in one write.
+	// UpdatePromptTemplates は 1 回の書き込みで全テンプレートを置き換える。
 	UpdatePromptTemplates(context.Context, *connect.Request[v1.UpdatePromptTemplatesRequest]) (*connect.Response[v1.UpdatePromptTemplatesResponse], error)
-	// GetTaskPrompt returns the expanded agent prompt for one task.
+	// GetTaskPrompt は task 1 件分の展開済みエージェントプロンプトを返す。
 	GetTaskPrompt(context.Context, *connect.Request[v1.GetTaskPromptRequest]) (*connect.Response[v1.GetTaskPromptResponse], error)
-	// GetBatchPrompt returns one expanded prompt covering several tasks of one feature.
+	// GetBatchPrompt は 1 つの feature の複数 task をまとめた展開済みプロンプトを返す。
 	GetBatchPrompt(context.Context, *connect.Request[v1.GetBatchPromptRequest]) (*connect.Response[v1.GetBatchPromptResponse], error)
 }
 

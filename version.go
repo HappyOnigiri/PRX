@@ -1,4 +1,4 @@
-// Package prx exposes the version of the PRX build.
+// Package prx は PRX ビルドのバージョンを公開する。
 package prx
 
 import (
@@ -9,12 +9,12 @@ import (
 //go:embed package.json
 var packageManifest []byte
 
-// releaseVersion is populated by the supported production build. An unstamped
-// build identifies the release it is based on without claiming to be that release.
+// releaseVersion は正式なプロダクションビルドで埋め込まれる。埋め込みのないビルドは、
+// そのリリースそのものだとは主張せず、基にしたリリースを示す。
 var releaseVersion string
 
-// Version returns the release version for a production build and the base
-// release with a -dev suffix for an unstamped development build.
+// Version は、プロダクションビルドではリリースバージョンを返し、埋め込みのない
+// 開発ビルドでは基にしたリリースに -dev を付けた文字列を返す。
 func Version() string {
 	if releaseVersion != "" {
 		return releaseVersion

@@ -21,8 +21,8 @@ func TestKindFollowsOnlyTheImplementationPlan(t *testing.T) {
 	if got := prompt.KindFor(task); got != prompt.KindDesign {
 		t.Fatalf("kind=%q, want %q", got, prompt.KindDesign)
 	}
-	// A finished task without a plan is still a design request: progress does not
-	// answer the question the prompt asks.
+	// 計画のない完了タスクも依然として設計依頼になる。進捗はプロンプトが
+	// 投げる問いの答えにはならない。
 	task.Status = domain.TaskStatusCompleted
 	if got := prompt.KindFor(task); got != prompt.KindDesign {
 		t.Fatalf("kind=%q, want %q", got, prompt.KindDesign)
@@ -49,9 +49,9 @@ func TestRenderExpandsEveryPlaceholderOfTheSelectedTemplate(t *testing.T) {
 		t.Fatalf("body=%q, want %q", body, want)
 	}
 
-	// A task may be created without a scope, and the templates tell the agent to
-	// stay inside "the scope above", so a blank line there would read as a value
-	// that failed to load rather than as an absent constraint.
+	// タスクはスコープなしでも作れるが、テンプレートは「上記のスコープ」内に
+	// 留まるよう指示する。そこが空行だと、制約がないのではなく値の読み込みに
+	// 失敗したと読めてしまう。
 	scopeless := designTask()
 	scopeless.Scope = "  "
 	_, body, err = prompt.Render(scopeless, templates)
@@ -89,8 +89,8 @@ func TestRenderFillsAnOmittedTemplateWithItsDefault(t *testing.T) {
 	}
 }
 
-// The default templates are what most installations copy, so they have to name
-// the commands their step depends on.
+// 既定テンプレートは多くのインストールがそのまま使うため、各手順が依存する
+// コマンドを明示しなければならない。
 func TestDefaultTemplatesGuideTheAgentThroughPRX(t *testing.T) {
 	defaults := prompt.DefaultTemplates()
 	for _, command := range []string{
@@ -182,8 +182,8 @@ func TestRenderBatchNamesEveryTaskInTheOrderItWasGiven(t *testing.T) {
 	}
 }
 
-// The batch template is stored beside the task templates, so an installation
-// that never customized it has to keep receiving the built-in wording.
+// batch テンプレートはタスク用テンプレートと並べて保存されるため、一度も
+// カスタマイズしていないインストールには組み込みの文言が届き続ける必要がある。
 func TestRenderBatchFillsAnOmittedTemplateWithItsDefault(t *testing.T) {
 	body, err := prompt.RenderBatch("F-3", batchTasks(), prompt.Templates{})
 	if err != nil {
@@ -199,8 +199,8 @@ func TestRenderBatchFillsAnOmittedTemplateWithItsDefault(t *testing.T) {
 	}
 }
 
-// The batch vocabulary is not the task vocabulary: a batch covers several tasks,
-// so a task placeholder in it would have nothing to expand from.
+// batch の語彙はタスクの語彙とは別物。batch は複数タスクを対象にするため、
+// タスク用プレースホルダを置いても展開元がない。
 func TestNormalizeRejectsABatchTemplateOutsideItsOwnVocabulary(t *testing.T) {
 	for name, test := range map[string]struct {
 		batch   string

@@ -117,8 +117,8 @@ export function filterTaskSearchResults(
   return snapshot.tasks.flatMap((task) => {
     const feature = featuresByID.get(task.featureId);
     if (
-      // A read-only feature is out of the working set, whether it is archived
-      // itself or sits inside an archived project.
+      // read-only の feature は、自身がアーカイブ済みでも、アーカイブ済み
+      // project の配下にあっても、作業対象外。
       !feature ||
       feature.readOnly ||
       !matchesQualifiers(

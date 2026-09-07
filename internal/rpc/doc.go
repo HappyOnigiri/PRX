@@ -1,2 +1,2 @@
-// Package rpc adapts ConnectRPC requests and responses to the application service.
+// Package rpc は ConnectRPC のリクエストとレスポンスをアプリケーションサービスに橋渡しする。
 package rpc

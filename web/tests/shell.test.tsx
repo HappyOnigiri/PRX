@@ -93,8 +93,8 @@ vi.mock("../src/hooks", () => ({
 
 describe("AppShell", () => {
   afterEach(cleanup);
-  // isDemoMode reads the document directly, so a meta left behind by a failed
-  // assertion would render every later case in demo mode.
+  // isDemoMode は document を直接見るので、失敗した検証が meta を残すと
+  // 以降のケースがすべてデモモードで動いてしまう。
   afterEach(() => {
     document.querySelector('meta[name="prx-demo"]')?.remove();
   });
@@ -118,8 +118,8 @@ describe("AppShell", () => {
       </AppShell>,
     );
 
-    // The tree lists the projects still in play and, under them, the features
-    // still in flight. Everything else belongs to the tabs on the pages.
+    // ツリーには進行中のプロジェクトと、その下に進行中の feature が並ぶ。
+    // それ以外は各ページのタブが受け持つ。
     expect(screen.getByText("Delivery platform")).toBeInTheDocument();
     expect(screen.getByText("Active feature")).toBeInTheDocument();
     expect(screen.getByText("Conflict feature")).toBeInTheDocument();

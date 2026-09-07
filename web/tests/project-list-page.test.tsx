@@ -83,8 +83,8 @@ describe("ProjectListPage", () => {
     ).toBeInTheDocument();
   });
 
-  // A project is either in play or archived, so the strip carries two tabs and
-  // the selection travels through the URL rather than component state.
+  // プロジェクトは進行中かアーカイブ済みのどちらかなのでタブは 2 つで、
+  // 選択状態はコンポーネントの state ではなく URL で持ち回る。
   it("moves between the two tabs by navigating", () => {
     listMocks.state.isPending = false;
     listMocks.state.data = makeSnapshot({

@@ -23,8 +23,8 @@ var migrations embed.FS
 
 type Store struct {
 	db *sql.DB
-	// path is the location Open resolved, kept so diagnostics can report which
-	// database a process actually opened.
+	// path は Open が解決した位置。プロセスが実際に開いたデータベースを
+	// 診断で報告できるよう保持する。
 	path string
 	now  func() time.Time
 }
@@ -60,16 +60,16 @@ func Open(ctx context.Context, path string) (*Store, error) {
 	if strings.Contains(dsn, "?") {
 		separator = "&"
 	}
-	// _txlock=immediate takes the write lock when the transaction starts. With the
-	// default deferred BEGIN, a read-modify-write transaction that reads first
-	// fails with SQLITE_BUSY_SNAPSHOT on write, which busy_timeout does not retry.
+	// _txlock=immediate はトランザクション開始時に書き込みロックを取る。既定の
+	// deferred BEGIN だと、先に読む read-modify-write が書き込み時に
+	// SQLITE_BUSY_SNAPSHOT で失敗し、busy_timeout では再試行されない。
 	dsn += separator + "_pragma=foreign_keys(1)&_pragma=busy_timeout(5000)&_pragma=journal_mode(WAL)&_txlock=immediate"
 	database, err := sql.Open("sqlite", dsn)
 	if err != nil {
 		return nil, fmt.Errorf("open sqlite: %w", err)
 	}
-	// SQLite gives every connection to :memory: its own private database, so a
-	// second pooled connection would reach an empty, unmigrated one.
+	// SQLite は :memory: への接続ごとに専用のデータベースを与えるため、プールの
+	// 2 本目の接続は空でマイグレーション未適用のものに繋がってしまう。
 	if path == ":memory:" {
 		database.SetMaxOpenConns(1)
 		database.SetMaxIdleConns(1)
@@ -139,9 +139,9 @@ func (s *Store) migrate(ctx context.Context) error {
 	return nil
 }
 
-// repairMigrationVersionCollisions reconciles versions 2 and 3, which two
-// branches once used for different schemas, and restores a version an older
-// build dropped. The schema decides the record, per docs/design/persistence.md.
+// repairMigrationVersionCollisions は、かつて 2 つのブランチが別スキーマに使った
+// バージョン 2・3 を整合させ、古いビルドが消した記録を復元する。
+// docs/design/persistence.md のとおり、記録の是非はスキーマが決める。
 func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
 	rows, err := s.db.QueryContext(
 		ctx,
@@ -191,8 +191,8 @@ func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
 		return err
 	}
 	missingVersions := make([]int, 0, 2)
-	// A stale version 3 is being removed just above, so only a schema that keeps
-	// the vocabulary asks for the record back.
+	// 古いバージョン 3 はすぐ上で削除しているので、記録の復元を求めるのは
+	// 語彙を保持しているスキーマだけになる。
 	if !versions[3] && hasTaskStatusVocabulary {
 		missingVersions = append(missingVersions, taskStatusMigration)
 	}
@@ -292,9 +292,9 @@ func (s *Store) pullRequestsHaveHostColumn(ctx context.Context) (bool, error) {
 	return false, rows.Err()
 }
 
-// tasksUseTaskStatusVocabulary reports whether the tasks table already carries
-// the status vocabulary that migration 3 introduced. It looks for the one member
-// that separates it from migration 1 rather than matching the whole constraint.
+// tasksUseTaskStatusVocabulary は tasks テーブルがマイグレーション 3 の status
+// 語彙を既に持つかを返す。制約全体を照合せず、マイグレーション 1 と区別できる
+// 値 1 つの有無だけを見る。
 func (s *Store) tasksUseTaskStatusVocabulary(ctx context.Context) (bool, error) {
 	var definition sql.NullString
 	if err := s.db.QueryRowContext(
@@ -325,9 +325,9 @@ func nullableTime(value sql.NullString) *time.Time {
 	return &t
 }
 
-// domainFeature folds the two stored columns back into the single status the
-// rest of the application uses. The status column is only meaningful while
-// status_auto is 0, because its CHECK constraint predates the automatic value.
+// domainFeature は保存された 2 列を、アプリケーションが使う単一の status に畳む。
+// status 列が意味を持つのは status_auto が 0 のときだけで、その CHECK 制約は
+// 自動値より前からあるため。
 func domainFeature(value db.Feature, projectID string) domain.Feature {
 	status := domain.FeatureStatus(value.Status)
 	if value.StatusAuto != 0 {
@@ -346,7 +346,7 @@ func domainFeature(value db.Feature, projectID string) domain.Feature {
 	}
 }
 
-// storedFeatureStatus splits the domain status into the stored pair.
+// storedFeatureStatus はドメインの status を保存用の 2 値に分ける。
 func storedFeatureStatus(status domain.FeatureStatus) (column string, auto int64) {
 	if status == domain.FeatureStatusAuto {
 		return string(domain.FeatureStatusActive), 1

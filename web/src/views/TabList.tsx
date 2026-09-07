@@ -3,7 +3,7 @@ import { useEffect, useRef, type KeyboardEvent, type ReactNode } from "react";
 interface TabDescriptor<Id extends string> {
   id: Id;
   label: string;
-  // Some strips prefix the label with an icon; the rest render text alone.
+  // ラベルの前にアイコンを置くストリップもあれば、テキストだけのものもある。
   icon?: ReactNode;
 }
 
@@ -11,20 +11,19 @@ interface TabListProps<Id extends string> {
   tabs: readonly TabDescriptor<Id>[];
   active: Id;
   onSelect: (id: Id) => void;
-  // The DOM ids are `<idPrefix>-tab-<id>` and `<idPrefix>-panel-<id>`, which
-  // TabPanel rebuilds from the same two values.
+  // DOM id は `<idPrefix>-tab-<id>` と `<idPrefix>-panel-<id>` で、TabPanel が
+  // 同じ 2 つの値から組み立て直す。
   idPrefix: string;
   className: string;
   tabClassName: string;
   label?: string;
-  // Dialogs that open onto their tabs move focus there; a strip on a page does
-  // not, because taking focus on load would move the reader off the heading.
+  // タブを開いた状態で表示するダイアログはそこへフォーカスを移すが、ページ上の
+  // ストリップは移さない。読み手が見出しから外れてしまうため。
   focusOnMount?: boolean;
 }
 
-// The tab strips of the settings dialog, the reference dialog, and the feature
-// lists differ only in wording and styling, so the roles, the roving tabindex,
-// and the arrow keys live here once.
+// 設定ダイアログ・参照ダイアログ・feature リストのタブストリップは文言と見た目
+// しか違わないので、role と roving tabindex、矢印キーはここに 1 度だけ置く。
 export function TabList<Id extends string>({
   tabs,
   active,
@@ -89,9 +88,9 @@ export function TabList<Id extends string>({
   );
 }
 
-// The panel only carries the wiring back to its tab. Whether its children are
-// mounted at all stays with the caller, which is what lets one dialog keep an
-// unsaved form alive and another mount its panel only while it is open.
+// パネルはタブへの結線だけを担う。子をマウントするかどうかは呼び出し元に残る。
+// これにより、あるダイアログは未保存のフォームを生かし、別のダイアログは開いて
+// いる間だけパネルをマウントできる。
 export function TabPanel({
   children,
   active,

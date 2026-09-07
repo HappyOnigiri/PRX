@@ -12,8 +12,8 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/store"
 )
 
-// Attaching records work that is current by definition, so the pull request
-// must not wait for the next refresh to stop being presented as stale.
+// attach が記録するのは定義上その時点で最新の情報なので、pull request が stale 表示を
+// やめるのに次の refresh を待たせてはならない。
 func TestAttachPullRequestRefreshesTheAttachedPullRequest(t *testing.T) {
 	ctx := context.Background()
 	service, database := newAutoSyncTestService(t)
@@ -41,8 +41,8 @@ func TestAttachPullRequestRefreshesTheAttachedPullRequest(t *testing.T) {
 		t.Fatalf("stale tasks after attaching=%+v", snapshot.StaleTasks)
 	}
 
-	// The refresh covers one task, so the shared interval and the counts of the
-	// last refresh that covered every pull request stay as they were.
+	// この refresh は 1 つの task だけを対象とするので、共有の interval と、
+	// 全 pull request を対象にした直近の refresh の件数はそのまま残る。
 	status, err := service.SyncStatus(ctx)
 	if err != nil {
 		t.Fatal(err)
@@ -52,9 +52,8 @@ func TestAttachPullRequestRefreshesTheAttachedPullRequest(t *testing.T) {
 	}
 }
 
-// A refresh that cannot reach GitHub is not a reason to reject the attachment:
-// the pull request is recorded, and holds the staleness and the failure that
-// say why it carries no state yet.
+// GitHub に到達できない refresh は attach を拒む理由にならない。pull request は記録され、
+// なぜまだ状態を持たないかを示す stale フラグと失敗内容を保持する。
 func TestAttachPullRequestKeepsAFailedRefreshVisible(t *testing.T) {
 	ctx := context.Background()
 	configStore, err := config.NewStore(filepath.Join(t.TempDir(), "config.yaml"))
@@ -93,7 +92,7 @@ func createTaskForAttach(t *testing.T, service *app.Service, title string) domai
 	return task
 }
 
-// failingProvider stands for a GitHub host that answers no request.
+// failingProvider は、どのリクエストにも応答しない GitHub host を表す。
 type failingProvider struct{}
 
 func (failingProvider) Fetch(

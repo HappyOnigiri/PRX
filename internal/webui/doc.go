@@ -1,2 +1,2 @@
-// Package webui serves the embedded production WebUI.
+// Package webui は埋め込まれた本番用 WebUI を配信する。
 package webui

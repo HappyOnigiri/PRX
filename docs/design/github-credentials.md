@@ -1,18 +1,18 @@
-# GitHub credential policy
+# GitHub credential の方針
 
-Credential methods are scoped to one normalized host and evaluated in explicit order.
-An omitted method list may use documented compatibility defaults.
-An explicitly empty method list disables implicit credentials.
+credential の方式は正規化された 1 つのホストに紐づき、明示された順序で評価する。
+方式の一覧を省略した場合は、文書化された互換性のための既定値を使ってよい。
+方式の一覧を明示的に空にした場合は、暗黙の credential を無効にする。
 
-An explicitly selected account must not inherit ambient credentials from another source.
-Authorization-bearing requests must not follow redirects to another origin.
+明示的に選ばれたアカウントが、別の供給源から周囲の credential を継承してはならない。
+認証情報を伴うリクエストは、別 origin へのリダイレクトに追従してはならない。
 
-Fallback is appropriate for authentication and permission failures that another credential may resolve.
-Rate limits, transport failures, and server failures do not trigger credential rotation.
-The provider implementation owns the current error classification and disambiguation probes.
+fallback が妥当なのは、別の credential で解決しうる認証エラーと権限エラーである。
+rate limit、通信の失敗、サーバ側の失敗では credential を切り替えない。
+現在のエラー分類と切り分けのための probe は、provider の実装が所有する。
 
-Caches may remember which credential method succeeded, but they must never contain credential material or token-derived secrets.
-Removing a credential method invalidates its cached selection without requiring manual database repair.
+キャッシュはどの credential 方式が成功したかを覚えてよいが、credential そのものやトークンから導かれる秘密情報を含めてはならない。
+credential 方式を削除すると、そのキャッシュされた選択は無効になる。データベースを手作業で修復する必要はない。
 
-Public CLI, RPC, WebUI, log, error, and cache reads remain secret-free.
-Inline credentials are an explicit local-trust trade-off that favors local automation, not permission to expose stored values.
+公開された CLI・RPC・WebUI・ログ・エラー・キャッシュの読み取りには、秘密情報が現れない。
+credential のインライン指定はローカル信頼を前提としたトレードオフであり、ローカル自動化を優先するためのものであって、保存された値を露出してよいという意味ではない。

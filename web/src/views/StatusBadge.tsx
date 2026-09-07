@@ -1,6 +1,6 @@
-// One badge states a status wherever a task or a feature is listed, so the
-// shape stays here and each caller only names the class that colours it. The
-// badge carries no glyph: an icon names the kind of record, not its state.
+// タスクや feature が並ぶ場所ではこのバッジ 1 つが状態を示す。形はここに集約
+// し、呼び出し元は色付けのクラス名だけを指定する。バッジにグリフは付けない。
+// アイコンが示すのはレコードの状態ではなく種別だから。
 export function StatusBadge({
   className,
   label,

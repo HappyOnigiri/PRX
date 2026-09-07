@@ -401,8 +401,8 @@ describe("FeatureWorkspace", () => {
       name: "Copy Feature ID",
     });
     expect(featureIdButton).toHaveTextContent("feature-1");
-    // The header states the status the server derived, so a feature left on
-    // automatic reads the same here as it does in a feature list.
+    // ヘッダーはサーバーが導出した状態を出すため、自動のままの feature は
+    // 一覧と同じ表示になる。
     const status = document.querySelector(".status-badge");
     expect(status).toHaveTextContent("Active");
     expect(status).toHaveAttribute("title", "Feature status");
@@ -417,8 +417,8 @@ describe("FeatureWorkspace", () => {
     ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "Sync GitHub" }));
     expect(mutationAt(0).mutate).toHaveBeenCalledWith("feature-1");
-    // The batch prompt is opened from the header and reads the feature the
-    // workspace is showing.
+    // batch プロンプトはヘッダーから開き、ワークスペースが表示中の feature を
+    // 読む。
     fireEvent.click(screen.getByRole("button", { name: "Copy batch prompt" }));
     expect(
       screen.getByRole("dialog", { name: "Mock batch prompt feature-1" }),
@@ -498,8 +498,8 @@ describe("FeatureWorkspace", () => {
     expect(screen.getByRole("button", { name: "Syncing…" })).toBeDisabled();
   });
 
-  // Deleting returns to the list the feature was reachable from, which for a
-  // read-only one is its project's archived tab.
+  // 削除後はその feature に辿り着けた一覧へ戻る。読み取り専用ならプロジェクト
+  // のアーカイブタブになる。
   it("makes archived workspaces read-only and returns deletion to the archive", () => {
     workspaceMocks.snapshot.data = makeSnapshot({
       features: [{ ...feature, archived: true, readOnly: true }],
@@ -554,9 +554,9 @@ describe("FeatureWorkspace", () => {
     });
   });
 
-  // A feature can be read-only without being archived itself. The remedy is on
-  // the project, so the notice names it and links there instead of offering a
-  // restore the server would refuse.
+  // feature 自体がアーカイブでなくても読み取り専用になりうる。対処は
+  // プロジェクト側なので、サーバーが拒否する復元を出さず、プロジェクト名と
+  // リンクを示す。
   it("attributes read-only state to an archived project and links to it", () => {
     workspaceMocks.snapshot.data = makeSnapshot({
       projects: [
@@ -587,8 +587,8 @@ describe("FeatureWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
-  // Both flags can be set at once, and then restoring the feature alone would
-  // leave it read-only, so the project keeps deciding what the notice says.
+  // 両方のフラグが立つこともあり、feature だけ復元しても読み取り専用のままな
+  // ので、通知の内容はプロジェクト側が決め続ける。
   it("names the archived project even when the feature is archived too", () => {
     workspaceMocks.snapshot.data = makeSnapshot({
       projects: [

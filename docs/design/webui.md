@@ -1,38 +1,38 @@
-# WebUI policy
+# WebUI 方針
 
-The dependency canvas was selected because causal relationships are the product's defining information.
-Navigation and inspection should preserve that context instead of replacing it with a generic dashboard workflow.
+依存関係のキャンバスを選んだのは、因果関係こそがこのプロダクトを特徴づける情報だからである。
+画面遷移と詳細表示は、その文脈を汎用的なダッシュボードの操作に置き換えず、保つべきである。
 
-Server authority and credential handling follow [architecture.md](architecture.md) and [github-credentials.md](github-credentials.md).
+サーバの権威と credential の扱いは、[architecture.md](architecture.md) と [github-credentials.md](github-credentials.md) に従う。
 
-Persistent WebUI preferences use the Settings dialog as their single entry point unless adjusted frequently during work.
-Frequent adjustments, such as graph zoom and sidebar project expansion, may stay at their point of use.
+WebUI の永続的な設定は、作業中に頻繁に切り替えるものを除き、Settings ダイアログを唯一の入口とする。
+グラフのズームやサイドバーの project 展開のように頻繁に調整するものは、使う場所に置いたままでよい。
 
-State colors are reserved for state communication rather than decoration.
-Identifiers and counts may use monospace, while normal content prioritizes readability in English and Japanese.
-Nonessential motion respects the reduced-motion preference.
+状態を表す色は、装飾ではなく状態の伝達のために確保する。
+識別子と数値には等幅フォントを使ってよいが、通常のコンテンツは英語と日本語での読みやすさを優先する。
+本質的でないモーションは、reduced-motion の設定を尊重する。
 
-Ordinal numbers appear only where their order is the information.
-A row does not carry a running index, a record identifier, or any other number the reader cannot act on.
-A field name is dropped wherever position, shape, or color already tells the reader which field a value belongs to.
-The name stays in the markup for assistive technology when the visual distinction is color or placement alone.
-A visible label is kept when the value would otherwise be ambiguous, or when the reader must match it against wording used elsewhere.
+序数は、その順序自体が情報である場所にだけ表示する。
+行に通し番号やレコード識別子など、読み手が使えない数値を持たせない。
+位置・形・色がすでにどのフィールドの値かを伝えている場合、フィールド名は落とす。
+視覚的な区別が色や配置だけの場合は、支援技術のために名前をマークアップに残す。
+値だけでは曖昧になる場合や、他の場所の表現と読み手が突き合わせる必要がある場合は、可視のラベルを残す。
 
-Controls are icon-first: a button carries an icon alone unless its meaning needs words.
-Icon-only controls require an accessible name and tooltip.
-Controls keep a visible label when an icon cannot communicate the target, result, or danger scope.
-Pointer interactions retain a keyboard-accessible alternative.
-A list whose rows are selected in a run makes the row itself the control, so the target is the line the reader is reading rather than a box at its edge.
-Such a selection is exposed through `aria-pressed`, because an accent edge or a filled background states it by appearance alone.
+コントロールはアイコン優先とし、意味を伝えるのに言葉が要らない限りボタンはアイコンだけを持つ。
+アイコンのみのコントロールには、アクセシブルな名前と tooltip を付ける。
+対象・結果・危険の範囲をアイコンで伝えられない場合は、可視のラベルを残す。
+ポインタ操作には、キーボードでも到達できる代替手段を用意する。
+一連の作業で行を選択するリストでは、行自体をコントロールにする。対象は端のチェックボックスではなく、読み手が読んでいるその行だからである。
+この選択状態は `aria-pressed` で公開する。アクセントの縁取りや塗りつぶしの背景は、見た目だけで状態を表しているためである。
 
-Current screens, components, gestures, and control placement belong to the WebUI implementation and its tests.
-Task search operates over the current Snapshot in the browser; its q query stays in the URL so reload, history, and sharing reproduce the view.
-The status tabs of the project list and of every feature list stay in the URL for the same reason.
-The navigation is a tree of projects and the features in flight inside them; which rows are collapsed is browser-local state.
-Whether the task graph hides completed tasks is browser-local state as well, so the next visit reads the graph the way it was left.
-Hiding removes every finished task, including those between unfinished tasks.
-Dependencies through hidden chains appear at both visible ends as severed edges naming all hidden tasks, preserving the full dependency context.
+現在の画面・コンポーネント・ジェスチャ・コントロールの配置は、WebUI の実装とそのテストが所有する。
+task 検索はブラウザ上で現在の Snapshot に対して動作する。q クエリは URL に残るので、再読み込み・履歴・共有で同じ表示が再現できる。
+project 一覧および各 feature 一覧のステータスタブも、同じ理由で URL に残る。
+ナビゲーションは project と、その中で進行中の feature のツリーである。どの行を折りたたんでいるかはブラウザローカルの状態とする。
+task グラフが完了済みの task を隠すかどうかもブラウザローカルの状態とし、次回訪問時も前回のままのグラフを表示する。
+非表示にすると、未完了の task に挟まれたものも含め、完了した task はすべて消える。
+隠れた連鎖をまたぐ依存関係は、見えている両端に、隠れている task をすべて挙げた切断エッジとして現れ、依存の文脈を余さず保つ。
 
-Demo mode is injected through the served HTML metadata rather than RPC or domain state.
-The WebUI keeps a non-dismissible bilingual reset warning at the top of every demo screen.
-Browser-local language, theme, and zoom preferences remain outside the temporary demo environment.
+demo モードは、RPC やドメインの状態ではなく、配信される HTML のメタデータで注入する。
+WebUI は、すべての demo 画面の最上部に、閉じられない二言語のリセット警告を表示し続ける。
+ブラウザローカルの言語・テーマ・ズームの設定は、一時的な demo 環境の外に置く。

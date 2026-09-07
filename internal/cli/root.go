@@ -19,9 +19,8 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// automaticSyncTimeout bounds the opportunistic refresh that runs before an
-// ordinary command. Expiring it records an automatic failure and leaves the
-// command itself successful.
+// automaticSyncTimeout は通常のコマンド実行前に走る日和見的な更新の上限。
+// 超過した場合は自動同期の失敗として記録し、コマンド自体は成功のままにする。
 const automaticSyncTimeout = 30 * time.Second
 
 type state struct {
@@ -37,8 +36,8 @@ type state struct {
 	runStarted       bool
 	openService      OpenService
 	service          Service
-	// serviceOpenErr holds the failure `debug` is allowed to report instead of
-	// failing on, so the command that explains a broken installation still runs.
+	// serviceOpenErr は `debug` が失敗せずに報告してよいエラーを保持する。
+	// 壊れたインストールを説明するコマンドは動き続ける必要がある。
 	serviceOpenErr error
 	closer         io.Closer
 	closeOnce      sync.Once
@@ -46,9 +45,9 @@ type state struct {
 	standardHelp   func(*cobra.Command, []string)
 }
 
-// closeService releases what opening the service reserved. A demo reserves a
-// temporary directory, and Cobra skips its post-run hooks once a command
-// returns an error, so this has to be reachable from the failing path too.
+// closeService はサービスのオープンで確保した資源を解放する。デモは一時ディレクトリを
+// 確保し、Cobra はコマンドがエラーを返すと post-run フックを飛ばすため、
+// 失敗経路からも到達できる必要がある。
 func (s *state) closeService() error {
 	s.closeOnce.Do(func() {
 		if s.closer != nil {
@@ -89,8 +88,8 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			if cmd.Name() == "help" || cmd.Name() == "schema-version" {
 				return nil
 			}
-			// A demo never reads the normal configuration, so warning about it
-			// would report a file the demo run does not use.
+			// デモは通常の設定を読まないので、それを警告してもデモ実行が
+			// 使わないファイルについて報告することになる。
 			if !s.demo {
 				s.warnAboutConfiguration()
 			}
@@ -112,9 +111,9 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 				Demo:               s.demo,
 			})
 			if err != nil {
-				// A broken installation is exactly when the diagnostic report is
-				// needed, so `debug` keeps the failure and reports it as the
-				// storage section instead of failing the command.
+				// 壊れたインストールこそ診断レポートが必要な場面なので、`debug` は
+				// 失敗を保持し、コマンドを失敗させる代わりに storage セクションとして
+				// 報告する。
 				if !isDebugCommand(cmd) {
 					return domain.NewError(domain.DomainErrorCodeInternal, "%s", err)
 				}
@@ -124,9 +123,9 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			s.service = service
 			s.closer = closer
 			if !s.demo && !isAutomaticSyncExcluded(cmd) && service != nil {
-				// The per-request client timeout does not bound the whole run, so
-				// an unreachable host would otherwise block an ordinary command
-				// for as long as its credential lookups and requests take.
+				// リクエスト単位のクライアントタイムアウトは実行全体を縛らないので、
+				// 到達できないホストがあると、認証情報の探索とリクエストにかかる時間だけ
+				// 通常のコマンドが止まってしまう。
 				syncContext, cancel := context.WithTimeout(baseContext, automaticSyncTimeout)
 				_, _, _ = service.SyncIfDue(syncContext)
 				cancel()
@@ -152,9 +151,9 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 	return root, s
 }
 
-// addCommands holds every command registration so building the root command
-// stays readable. The two calls group resource and whole-repository commands for
-// a reader of this file only; the rendered help sorts commands by name.
+// addCommands は全コマンドの登録をまとめ、ルートコマンドの構築を読みやすく保つ。
+// 2 回の呼び出しはリソース系と全リポジトリ系をこのファイルの読み手向けに分けたもので、
+// 実際のヘルプは名前順に並ぶ。
 func (s *state) addCommands(root *cobra.Command) {
 	root.AddCommand(
 		s.schemaVersionCommand(),
@@ -183,9 +182,9 @@ func (s *state) addCommands(root *cobra.Command) {
 	)
 }
 
-// helpCommand replaces the default help command, which prints to stdout and
-// exits successfully on an unknown topic. Returning the error keeps every
-// failure on the shared error path, so JSON callers parse one shape.
+// helpCommand は既定の help コマンドを置き換える。既定版は未知のトピックでも stdout に
+// 出力して成功終了してしまう。エラーを返せば全ての失敗が共通のエラー経路に乗り、
+// JSON の呼び出し側は 1 つの形だけを解釈すればよくなる。
 func (s *state) helpCommand(root *cobra.Command) *cobra.Command {
 	return &cobra.Command{
 		Use:   "help [command]",
@@ -205,17 +204,15 @@ func (s *state) helpCommand(root *cobra.Command) *cobra.Command {
 	}
 }
 
-// applyEnvironmentPaths resolves the environment fallbacks at run time instead
-// of registering them as flag defaults, because a flag default is printed in
-// the rendered help that failures now carry in their hint.
+// applyEnvironmentPaths は環境変数のフォールバックをフラグの既定値としてではなく
+// 実行時に解決する。フラグの既定値は、失敗時のヒントに含まれるヘルプに出てしまうため。
 func (s *state) applyEnvironmentPaths() {
 	s.dbPath, s.dbPathSource = resolvePathSource(s.dbPath, "PRX_DB")
 	s.configPath, s.configPathSource = resolvePathSource(s.configPath, "PRX_CONFIG")
 }
 
-// resolvePathSource records which of the flag, the environment, or the default
-// selected a location. The fallback overwrites an empty flag value, so nothing
-// downstream could tell the three apart afterwards.
+// resolvePathSource は場所を決めたのがフラグ・環境変数・既定値のどれかを記録する。
+// フォールバックは空のフラグ値を上書きするので、後段ではこの 3 つを区別できない。
 func resolvePathSource(value, variable string) (resolved, source string) {
 	if value != "" {
 		return value, "flag"
@@ -226,9 +223,9 @@ func resolvePathSource(value, variable string) (resolved, source string) {
 	return "", "default"
 }
 
-// warnAboutConfiguration reports the recoverable configuration problems once per
-// run, before any command reads the configuration. A load failure stays silent
-// here, so the command that needs the configuration still owns its own error.
+// warnAboutConfiguration は回復可能な設定の問題を、どのコマンドが設定を読むより前に
+// 実行あたり 1 回報告する。読み込み失敗はここでは黙って通し、設定を必要とする
+// コマンド自身にエラーを持たせる。
 func (s *state) warnAboutConfiguration() {
 	store, err := config.NewStore(s.configPath)
 	if err != nil {
@@ -265,9 +262,9 @@ func isConfigCommand(command *cobra.Command) bool {
 	return false
 }
 
-// isAutomaticSyncExcluded reports the commands the opportunistic refresh must
-// skip. `sync` performs the refresh itself, and `debug` reports the recorded
-// synchronization state, which a refresh would overwrite before it is read.
+// isAutomaticSyncExcluded は日和見的な更新を飛ばすべきコマンドを判定する。`sync` は
+// 更新自体を行い、`debug` は記録済みの同期状態を報告するので、更新すると読む前に
+// 上書きしてしまう。
 func isAutomaticSyncExcluded(command *cobra.Command) bool {
 	for current := command; current != nil; current = current.Parent() {
 		if current.Name() == "sync" || current.Name() == "debug" {
@@ -286,9 +283,9 @@ func isDebugCommand(command *cobra.Command) bool {
 	return false
 }
 
-// Execute runs the CLI and formats any error according to the parsed --json
-// flag. Deciding that from os.Args would miss --json=true and would misread a
-// flag value that happens to be the literal string.
+// Execute は CLI を実行し、解析済みの --json フラグに従ってエラーを整形する。
+// os.Args から判断すると --json=true を取りこぼし、たまたま同じ文字列になった
+// フラグ値を誤読する。
 func Execute(
 	ctx context.Context,
 	args []string,
@@ -334,9 +331,9 @@ func (s *state) renderHelp(command *cobra.Command) string {
 	return buffer.String()
 }
 
-// preScanOutputFlags preserves explicit output selection when Cobra cannot
-// finish command discovery. Known value-taking flags consume the following
-// argument so a literal --json value is not mistaken for a flag.
+// preScanOutputFlags は Cobra がコマンド解決を完了できないときにも、明示された出力形式の
+// 指定を保つ。値を取ると分かっているフラグは次の引数を消費するので、値としての
+// --json をフラグと取り違えない。
 func (s *state) preScanOutputFlags(root *cobra.Command, args []string) {
 	current := root
 	for index := 0; index < len(args); index++ {

@@ -1,7 +1,7 @@
-// Keeps comment groups short, mirroring tools/checkcomments for Go.
-// AGENTS.md states the limits and the waiver marker this rule accepts.
+// Go 向けの tools/checkcomments と同じく、コメントの塊を短く保つ。
+// 上限とこのルールが受け付ける免除マーカーは AGENTS.md に記載している。
 
-// The same East Asian Width W/F ranges tools/checkcomments applies to Go comments.
+// tools/checkcomments が Go のコメントに使うのと同じ East Asian Width W/F の範囲。
 const FULL_WIDTH_RANGES = [
   [0x1100, 0x115f],
   [0x231a, 0x231b],
@@ -77,11 +77,11 @@ const FULL_WIDTH_RANGES = [
 
 const MARKER = /^commentlint:allow-long -- (.+)$/u;
 
-// Tooling directives carry no prose, so they count towards neither limit.
+// ツール向けディレクティブは文章ではないので、どちらの上限にも数えない。
 const DIRECTIVE =
   /^(?:eslint-disable(?:-next-line|-line)?(?:\s|$)|eslint-enable(?:\s|$)|eslint-env(?:\s|$)|@ts-(?:ignore|expect-error|nocheck)(?:\s|$)|prettier-ignore(?:\s|$)|\/\s*<reference\b|[vc]8\s+ignore(?:\s|$)|istanbul\s+ignore(?:\s|$)|@vitest-environment(?:\s|$)|@__PURE__(?:\s|$)|@vite-ignore(?:\s|$)|webpackIgnore(?:\s|:|$))/u;
 
-// These exist only in block form, where the words cannot be mistaken for prose.
+// これらはブロック形式にしかなく、その中では文章と取り違えようがない。
 const BLOCK_DIRECTIVE = /^(?:eslint\s|globals?\s|exported\s)/u;
 
 const LEADING_SPACE = /^[ \t\r]+/u;
@@ -111,7 +111,7 @@ function displayWidth(text, tabWidth) {
   return width;
 }
 
-// commentBody strips the delimiters of one comment and returns its remaining lines.
+// commentBody はコメント 1 つから区切り記号を取り除き、残った行を返す。
 function commentBody(comment) {
   const block = comment.type === "Block";
   const rawLines = comment.value.split("\n");
@@ -123,7 +123,7 @@ function commentBody(comment) {
     let text = trimLeft(rawLine);
     if (block) {
       text = trimLeft(text.startsWith("*") ? text.slice(1) : text);
-      // A block comment that opens or closes on its own line contributes no body there.
+      // ブロックコメントの開始・終了だけの行は本文を持たない。
       if (
         text.trim() === "" &&
         (index === 0 || index === rawLines.length - 1)
@@ -136,7 +136,7 @@ function commentBody(comment) {
   return result;
 }
 
-// commentGroups joins comments that sit on adjacent lines with no other token between them.
+// commentGroups は、間に他のトークンがない隣接行のコメントを 1 つにまとめる。
 function commentGroups(sourceCode) {
   const groups = [];
   let previous = null;
@@ -168,7 +168,7 @@ function reportAt(context, line, messageId, data) {
   });
 }
 
-// splitBody separates marker lines from prose and reports the marker violations it finds.
+// splitBody はマーカー行を本文と分け、見つけたマーカーの違反を報告する。
 function splitBody(context, lines, options) {
   const body = [];
   let markers = 0;

@@ -16,9 +16,9 @@ type CopyStatus =
   | { case: "copied"; count: number }
   | { case: "failed"; message: string };
 
-// BatchPromptDialog hands several tasks to one agent in a single prompt, with
-// the text rendered by the server at the moment of the copy.
-// See docs/design/agent-prompts.md.
+// BatchPromptDialog は複数のタスクを 1 つのプロンプトにまとめて
+// エージェントへ渡す。本文はコピー時にサーバーが生成する。
+// docs/design/agent-prompts.md を参照。
 export function BatchPromptDialog({
   featureId,
   tasks,
@@ -29,8 +29,8 @@ export function BatchPromptDialog({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  // Whether the blocked tasks are offered is a choice about this one handover,
-  // not a preference the reader keeps, so it starts closed on every open.
+  // ブロック中タスクを候補に含めるかはこの受け渡し限りの判断で、
+  // 保持する設定ではないため、開くたびにオフから始める。
   const [includeBlocked, setIncludeBlocked] = useState(false);
   const candidates = useMemo(
     () => batchCandidates(tasks, includeBlocked),
@@ -45,8 +45,8 @@ export function BatchPromptDialog({
   function toggle(taskId: string) {
     setSelected((current) => {
       const next = new Set(current);
-      // Dropping a task strands whatever was stacked on it, so the selection is
-      // pruned rather than left describing work with no base.
+      // タスクを外すとその上に積まれた作業が土台を失うので、
+      // 選択を残さず刈り込む。
       if (next.delete(taskId)) return prunedSelection(candidates, next);
       next.add(taskId);
       return next;
@@ -54,8 +54,8 @@ export function BatchPromptDialog({
   }
 
   function toggleAll() {
-    // Every offered task can be selected at once: the offer already excludes
-    // anything whose blockers the batch cannot carry.
+    // 候補はすべて同時に選べる。バッチで運べないブロッカーを持つものは
+    // 候補の時点で除外済み。
     setSelected(
       allSelected
         ? new Set()
@@ -71,8 +71,8 @@ export function BatchPromptDialog({
   }
 
   async function copyPrompts() {
-    // The list order is the order the reader sees, so the copy follows it
-    // rather than the order the checkboxes were clicked in.
+    // リストの並びが読み手に見える順序なので、コピーはチェックした順ではなく
+    // その並びに従う。
     const targets = candidates.filter((candidate) =>
       selected.has(candidate.task.id),
     );
@@ -91,8 +91,8 @@ export function BatchPromptDialog({
       }
       setStatus({ case: "copied", count: targets.length });
     } catch (error) {
-      // The server names the task or the template at fault, so its message is
-      // worth showing verbatim.
+      // サーバーは原因となったタスクやテンプレートを示すので、
+      // メッセージはそのまま表示する価値がある。
       setStatus({
         case: "failed",
         message:
@@ -170,8 +170,8 @@ function BatchPromptTaskList({
   onIncludeBlockedChange: (include: boolean) => void;
 }) {
   const { t } = useTranslation();
-  // A feature with nothing ready has nothing the dependent tasks could stack
-  // on either, so the option to reveal them is left out with the list.
+  // 着手可能なタスクがない feature では依存側が積む土台もないので、
+  // それらを表示する選択肢もリストごと省く。
   if (candidates.length === 0)
     return <p className="batch-prompt-empty">{t("batchPrompt.empty")}</p>;
   return (
@@ -186,9 +186,8 @@ function BatchPromptTaskList({
           size="compact"
           onClick={onToggleAll}
         />
-        {/* The blocked tasks are a checkbox rather than a row control: it turns
-            an option on for the whole list instead of joining the selection the
-            rows carry. */}
+        {/* ブロック中タスクは行の操作ではなくチェックボックスにする。行が持つ
+            選択に加わるのではなく、リスト全体の表示を切り替えるため。 */}
         <label className="batch-prompt-include-blocked">
           <input
             type="checkbox"
@@ -209,15 +208,14 @@ function BatchPromptTaskList({
       <ul className="batch-prompt-list">
         {candidates.map((candidate) => (
           <li key={candidate.task.id}>
-            {/* The row itself is the control, and aria-pressed carries the
-                selection that the accent edge and fill state by appearance.
-                See docs/design/webui.md. */}
+            {/* 行そのものが操作要素で、見た目ではアクセント枠と塗りが示す選択を
+                aria-pressed が伝える。docs/design/webui.md を参照。 */}
             <button
               type="button"
               className="batch-prompt-task"
               aria-pressed={selected.has(candidate.task.id)}
-              // A task whose blockers are not being handed over has no base to
-              // start from, so it stays out of reach until they are selected.
+              // ブロッカーを一緒に渡さないタスクは着手の土台がないので、
+              // それらが選ばれるまで選択できない。
               disabled={!isSelectable(candidate, selected)}
               onClick={() => {
                 onToggle(candidate.task.id);

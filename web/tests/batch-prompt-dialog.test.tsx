@@ -28,10 +28,10 @@ function renderDialog(onClose = vi.fn()) {
       tasks={[
         makeTask({ id: "task-1", title: "Build API", ...designed }),
         makeTask({ id: "task-2", title: "Bill the order", ...designed }),
-        // Not started: nothing has been designed for it yet.
+        // 未着手。まだ何も設計されていない。
         makeTask({ id: "task-3", title: "Draft the schema" }),
-        // Designed, and waiting on a task the batch can carry, so it can be
-        // handed over behind that task.
+        // 設計済みで、batch に含められる task を待っているため、その task の
+        // 後ろに続けて引き渡せる。
         makeTask({
           id: "task-4",
           title: "Ship the change",
@@ -39,8 +39,8 @@ function renderDialog(onClose = vi.fn()) {
           ready: false,
           pendingBlockerTaskIds: ["task-1"],
         }),
-        // Waiting on a task without a plan, which no batch can hand over, so
-        // selecting this one could never become possible.
+        // 計画のない task を待っている。どの batch も引き渡せないので、これを
+        // 選べるようになることはない。
         makeTask({
           id: "task-5",
           title: "Archive the ledger",
@@ -48,8 +48,8 @@ function renderDialog(onClose = vi.fn()) {
           ready: false,
           pendingBlockerTaskIds: ["task-3"],
         }),
-        // Waiting on two tasks the batch could carry, which leaves its pull
-        // request no single base to stack on.
+        // batch に含められる task を 2 つ待っているため、pull request を積む
+        // 起点が 1 つに定まらない。
         makeTask({
           id: "task-6",
           title: "Close the books",
@@ -63,8 +63,8 @@ function renderDialog(onClose = vi.fn()) {
   );
 }
 
-// The row is the control now, so a task is addressed by the button carrying its
-// title and identifier rather than by a checkbox label.
+// 行そのものがコントロールなので、task はチェックボックスのラベルではなく
+// タイトルと識別子を持つボタンで指定する。
 function taskRow(title: string) {
   return screen.getByRole("button", { name: new RegExp(title) });
 }
@@ -90,8 +90,8 @@ describe("BatchPromptDialog", () => {
     cleanup();
   });
 
-  // Readiness and the plan are both server derivations, so the dialog offers a
-  // task only when the server says the work can start now.
+  // 着手可否と計画の有無はどちらもサーバー側の導出なので、ダイアログは今すぐ
+  // 着手できるとサーバーが示した task だけを出す。
   it("offers the designed tasks whose blockers are clear", () => {
     renderDialog();
 
@@ -105,7 +105,7 @@ describe("BatchPromptDialog", () => {
     ).not.toBeInTheDocument();
     expect(includeBlocked()).not.toBeChecked();
     expect(screen.getByText("0 of 2 selected")).toBeInTheDocument();
-    // Nothing is selected yet, so there is no prompt to copy.
+    // まだ何も選択していないので、コピーするプロンプトがない。
     expect(screen.getByRole("button", { name: "Copy prompt" })).toBeDisabled();
   });
 
@@ -119,8 +119,8 @@ describe("BatchPromptDialog", () => {
     });
     renderDialog();
 
-    // Clicking the later task first must not reorder the request: the reader
-    // hands over the batch in the order they saw it.
+    // 後ろの task を先にクリックしてもリクエストの順序は変わらない。読み手は
+    // 見えていた順に batch を引き渡す。
     fireEvent.click(taskRow("Bill the order"));
     fireEvent.click(taskRow("Build API"));
     fireEvent.click(screen.getByRole("button", { name: "Copy prompt" }));
@@ -149,8 +149,8 @@ describe("BatchPromptDialog", () => {
     expect(taskRow("Build API")).toHaveAttribute("aria-pressed", "false");
   });
 
-  // Selecting a row is a pointer gesture with no checkbox behind it, so the
-  // row has to be a control a keyboard reaches and activates on its own.
+  // 行の選択は背後にチェックボックスのないポインタ操作なので、行自体が
+  // キーボードで到達して操作できるコントロールである必要がある。
   it("offers each row as a focusable toggle", () => {
     renderDialog();
 
@@ -161,8 +161,8 @@ describe("BatchPromptDialog", () => {
     expect(row).toHaveFocus();
   });
 
-  // A blocked task can be handed over as long as the work it waits for travels
-  // with it, so it is offered only once the reader asks for the dependent tasks.
+  // ブロックされた task も待ち先の作業が一緒に渡るなら引き渡せるため、依存
+  // task を含める指示があったときだけ選択肢に出す。
   it("offers a blocked task behind the work it waits for", () => {
     renderDialog();
 
@@ -172,12 +172,12 @@ describe("BatchPromptDialog", () => {
     expect(blocked).toBeDisabled();
     expect(blocked).toHaveTextContent("after task-1");
     expect(screen.getByText("0 of 3 selected")).toBeInTheDocument();
-    // Its blocker has no plan, so no batch could ever carry this one.
+    // ブロッカーに計画がないので、どの batch もこれを運べない。
     expect(
       screen.queryByRole("button", { name: /Archive the ledger/ }),
     ).not.toBeInTheDocument();
-    // Two blockers leave no single pull request to stack on, so the task is
-    // not offered even though the batch could carry both of them.
+    // ブロッカーが 2 つあると積む先の pull request が定まらないため、batch が
+    // 両方を運べても選択肢には出さない。
     expect(
       screen.queryByRole("button", { name: /Close the books/ }),
     ).not.toBeInTheDocument();
@@ -188,8 +188,8 @@ describe("BatchPromptDialog", () => {
     expect(taskRow("Ship the change")).toHaveAttribute("aria-pressed", "true");
   });
 
-  // Dropping a blocker strands whatever was stacked on it, so the selection
-  // cannot be left describing work with no base.
+  // ブロッカーを外すとその上に積んだ作業が宙に浮くため、土台のない作業を
+  // 選択に残してはいけない。
   it("clears a dependent task when its blocker leaves the selection", () => {
     renderDialog();
 
@@ -217,8 +217,8 @@ describe("BatchPromptDialog", () => {
     ).not.toBeInTheDocument();
   });
 
-  // The batch names a blocker before the work stacked on it, so the receiving
-  // agent reads the list in an order it can act on.
+  // batch はブロッカーをその上に積んだ作業より先に並べるため、受け取る agent
+  // は実行できる順序でリストを読める。
   it("copies the tasks with each blocker ahead of what waits for it", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     stubClipboard(writeText);
@@ -245,8 +245,8 @@ describe("BatchPromptDialog", () => {
     ]);
   });
 
-  // The server names the task or the template at fault, so its message reaches
-  // the reader unchanged.
+  // サーバーは原因の task やテンプレートを名指しするので、そのメッセージは
+  // そのまま読み手に届ける。
   it("reports a server failure without writing to the clipboard", async () => {
     const writeText = vi.fn().mockResolvedValue(undefined);
     stubClipboard(writeText);
@@ -266,8 +266,8 @@ describe("BatchPromptDialog", () => {
     expect(writeText).not.toHaveBeenCalled();
   });
 
-  // A clipboard rejection carries a browser-internal message, and outside a
-  // secure context the API is missing altogether.
+  // クリップボードの拒否はブラウザ内部のメッセージを伴い、セキュアコンテキスト
+  // 外では API 自体が存在しない。
   it("reports a clipboard failure in the display language", async () => {
     stubClipboard(vi.fn().mockRejectedValue(new Error("clipboard blocked")));
     batchMocks.getBatchPrompt.mockResolvedValue({

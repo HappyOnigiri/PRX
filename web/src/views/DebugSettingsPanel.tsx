@@ -17,8 +17,8 @@ export function DebugSettingsPanel() {
 
   async function copy(text: string) {
     try {
-      // The server text is copied verbatim so a report pasted from the browser
-      // is the same one `prx debug` prints, with this tab's own facts appended.
+      // サーバーの本文はそのままコピーする。ブラウザから貼ったレポートが
+      // `prx debug` の出力と一致し、末尾にこのタブ固有の情報が付く。
       await navigator.clipboard.writeText(
         text + formatBrowserDebugSection(queries),
       );

@@ -29,9 +29,9 @@ func (s *state) debugCommand() *cobra.Command {
 	}
 }
 
-// debugReport prefers the service, which can read storage and stored data. When
-// the service could not be opened, the report is assembled from what a CLI run
-// can still see, because that is the situation the report exists for.
+// debugReport はストレージと保存データを読めるサービスを優先して使う。サービスを
+// 開けなかった場合は、CLI 実行から見える範囲でレポートを組み立てる。
+// レポートはまさにその状況のために存在するため。
 func (s *state) debugReport(ctx context.Context) domain.DebugReport {
 	if s.service != nil {
 		report, err := s.service.Debug(ctx)
@@ -76,8 +76,8 @@ func (s *state) debugPathsInput(cause error) domain.DebugPathsInput {
 		ConfigPathSource:   s.configPathSource,
 		Demo:               s.demo,
 	}
-	// The open failure knows the location it resolved, which is the value the
-	// reader needs when the CLI itself was given no explicit path.
+	// オープン失敗のエラーは解決済みの場所を持っており、CLI に明示的なパスが
+	// 渡されなかったときに読み手が必要とするのはその値。
 	var openErr *ServiceOpenError
 	if errors.As(cause, &openErr) && openErr.DatabasePath != "" {
 		input.DatabasePath = openErr.DatabasePath

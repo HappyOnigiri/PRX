@@ -1,42 +1,42 @@
-# GitHub synchronization policy
+# GitHub 同期の方針
 
-Pull-request identity includes the normalized host.
-Repositories with the same owner and name on different GitHub hosts must remain distinct.
+pull request の同一性には、正規化されたホストを含める。
+owner と名前が同じでも、GitHub のホストが異なるリポジトリは別物として扱う。
 
-Synchronization preserves each field's last successful value when it cannot be refreshed and marks stale data visibly.
-Item-level failures leave unrelated successes intact; failure reporting depends on the last known state as described under Failure handling.
+同期は、更新できなかったフィールドについては最後に成功した値を保ち、古いデータであることを目に見える形で示す。
+項目単位の失敗は、無関係な成功をそのまま残す。失敗の報告方法は、最後に判明していた状態によって変わる。詳細は「失敗の扱い」を参照。
 
-## Scheduling
+## スケジューリング
 
-GitHub synchronization is opportunistic rather than daemon-driven, so no background worker is introduced.
-Commands that open the database and a visible WebUI check whether the shared interval has expired.
-No refresh occurs while both the CLI and WebUI are idle.
+GitHub 同期は daemon 駆動ではなく日和見的に行うので、バックグラウンドワーカーは導入しない。
+データベースを開くコマンドと、表示中の WebUI が、共有の間隔が満了しているかを確認する。
+CLI と WebUI がどちらも idle の間は refresh は起きない。
 
-The YAML configuration owns the shared interval and each host's GraphQL endpoint.
-The interval defaults to 3600 seconds and cannot be lower than 600 seconds.
-SQLite records the latest attempt and completion, and atomically grants one caller the right to run an expired refresh.
+共有の間隔と各ホストの GraphQL エンドポイントは、YAML の設定が所有する。
+間隔の既定値は 3600 秒で、600 秒より短くはできない。
+SQLite は直近の試行と完了を記録し、満了した refresh を実行する権利を 1 つの呼び出し側にアトミックに与える。
 
-Pull requests are fetched through GraphQL in batches that group the repositories of one host into a single request.
-A host whose GraphQL endpoint answers with an HTTP error falls back to fetching each pull request over REST.
+pull request は GraphQL でまとめて取得し、同一ホストのリポジトリを 1 リクエストに束ねる。
+GraphQL エンドポイントが HTTP エラーを返すホストについては、pull request を 1 件ずつ REST で取得する方式に fallback する。
 
-## Scope
+## 対象範囲
 
-Automatic and unscoped manual refreshes include only active features, excluding completed features and those archived individually or through their project.
-Explicit feature or task refreshes may still maintain archived and completed history.
-An automatically completed feature does not return to active work on its own; changing its status or its tasks does that.
-Attaching a pull request refreshes that pull request at once, so a task never presents freshly recorded work as stale while it waits for the next refresh.
-That refresh is scoped to the task.
-It is best effort and bounded by a deadline, like an automatic refresh.
-Attaching succeeds even when GitHub is unreachable, and the pull request then keeps the staleness and the synchronization error that record why.
-Merged and closed pull requests remain eligible so state changes and prior errors can be detected.
-Only a refresh that covers every eligible pull request records a run and resets the interval; one narrowed to a feature or task leaves the recorded run status untouched.
+自動 refresh と、範囲を指定しない手動 refresh は active な feature だけを対象とし、完了した feature と、個別またはその project を通じて archive された feature は除く。
+feature や task を明示した refresh であれば、archive 済み・完了済みの履歴も引き続き更新できる。
+自動的に完了した feature がひとりでに active に戻ることはない。そうするのはステータスの変更か task の変更である。
+pull request を紐づけると、その pull request をただちに refresh する。記録したばかりの作業が、次の refresh を待つ間に古い扱いで提示されないようにするためである。
+この refresh は task の範囲に限られる。
+自動 refresh と同じく、ベストエフォートであり、deadline で打ち切られる。
+GitHub に到達できなくても紐づけ自体は成功し、pull request にはその理由を示す staleness と同期エラーが残る。
+merge・close された pull request も対象に含める。状態の変化と以前のエラーを検出できるようにするためである。
+実行を記録して間隔をリセットするのは、対象となるすべての pull request を網羅した refresh だけであり、feature や task に絞った refresh は記録された実行状態に触れない。
 
-## Failure handling
+## 失敗の扱い
 
-When a refresh fails after a closed or merged state is known, that state is preserved, SyncError is cleared, Stale is set, and the item is excluded from failed counts.
-Open or unknown failures preserve partial fields, record SyncError, set Stale, and count as failed.
+close または merge の状態が判明した後に refresh が失敗した場合、その状態は保持し、SyncError はクリアし、Stale を立て、失敗件数からは除外する。
+open または状態不明での失敗は、取得できた分のフィールドを保持し、SyncError を記録し、Stale を立て、失敗として数える。
 
-Automatic failures are best effort and never fail the command or page load that noticed the expired interval.
-An automatic refresh is bounded by a deadline so an unreachable host cannot block the command that noticed the expired interval; exceeding it is recorded as an automatic failure.
-They remain visible in the persisted run status and the stale state of affected pull requests.
-Manual refreshes continue to return operation-level failures while preserving successful item updates.
+自動 refresh の失敗はベストエフォートであり、間隔の満了に気づいたコマンドやページ読み込みを失敗させることはない。
+自動 refresh は deadline で打ち切られるので、到達できないホストが、間隔の満了に気づいたコマンドをブロックすることはない。deadline の超過は自動 refresh の失敗として記録する。
+失敗は、永続化された実行状態と、該当する pull request の stale な状態として引き続き見える。
+手動 refresh は、成功した項目の更新を保ちつつ、操作単位の失敗を返し続ける。

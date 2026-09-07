@@ -11,8 +11,8 @@ import (
 	"testing"
 )
 
-// TestMain resolves symlinks in the temporary directory so that the paths the checker reports
-// match the paths the tests build.
+// TestMain は一時ディレクトリのシンボリックリンクを解決し、チェッカーが報告するパスと
+// テストが組み立てるパスを一致させる。
 func TestMain(m *testing.M) {
 	root, err := filepath.EvalSymlinks(os.TempDir())
 	if err != nil {

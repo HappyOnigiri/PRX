@@ -9,9 +9,9 @@ func CyclePath(tasks []Task, deps []Dependency, blocker, blocked string) []strin
 	if blocker == blocked {
 		return []string{blocker, blocker}
 	}
-	// The stored graph is already acyclic, so adding blocker→blocked closes a
-	// cycle exactly when blocker is reachable from blocked. A visited set keeps
-	// that search linear; a path-based DFS is exponential on diamond graphs.
+	// 保存済みグラフは非巡回なので、blocker→blocked の追加が閉路を作るのは blocked から
+	// blocker に到達できるときに限る。visited 集合で探索は線形になる。経路ベースの DFS は
+	// ダイヤモンド型グラフで指数的になる。
 	adj := make(map[string][]string, len(tasks))
 	for _, dep := range deps {
 		adj[dep.BlockerTaskID] = append(adj[dep.BlockerTaskID], dep.BlockedTaskID)
@@ -93,9 +93,8 @@ func TopologicalOrder(tasks []Task, deps []Dependency) ([]string, error) {
 	return order, nil
 }
 
-// BlockedReasonText renders the CLI-facing wording from the structured reason,
-// so the JSON output and the code carried over RPC always describe the same
-// blocker.
+// BlockedReasonText は構造化された理由から CLI 向けの文言を組み立てる。これにより
+// JSON 出力と RPC で運ばれるコードが常に同じ blocker を示す。
 func BlockedReasonText(code BlockedReasonCode, blockerTitle string) string {
 	switch code {
 	case BlockedReasonCodeDependencyDataIncomplete:
@@ -134,9 +133,8 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 		}
 		task.Ready = true
 		task.PendingBlockerTaskIDs = nil
-		// Every unsatisfied blocker is collected, while the blocked reason still
-		// describes the first one alone.
-		// See docs/design/domain.md.
+		// 未解消の blocker はすべて集めるが、blocked reason は最初の 1 件だけを表す。
+		// docs/design/domain.md を参照。
 		for _, blockerID := range blockers[task.ID] {
 			blocker, ok := taskByID[blockerID]
 			if ok && IsSatisfied(blocker, prByTask[blockerID]) {

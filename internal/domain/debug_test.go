@@ -215,8 +215,8 @@ func TestNewDebugDataCountsStoredRecords(t *testing.T) {
 		data.Documents != 1 || data.Projects != 3 {
 		t.Fatalf("data=%+v", data)
 	}
-	// An archived project is why a write into a feature that looks active can be
-	// refused, so the breakdown has to name that state.
+	// active に見える feature への書き込みが拒否される原因は archived な project なので、
+	// 内訳にはその状態を出す必要がある。
 	if len(data.ProjectStates) != 2 || data.ProjectStates[0] != (DebugCount{Name: "archived", Count: 2}) ||
 		data.ProjectStates[1] != (DebugCount{Name: "active", Count: 1}) {
 		t.Fatalf("project states=%+v", data.ProjectStates)
@@ -224,7 +224,7 @@ func TestNewDebugDataCountsStoredRecords(t *testing.T) {
 	if len(data.FeatureStatuses) != 2 || data.FeatureStatuses[0] != (DebugCount{Name: "active", Count: 2}) {
 		t.Fatalf("feature statuses=%+v", data.FeatureStatuses)
 	}
-	// Equal counts fall back to the name so the order never depends on the map.
+	// 件数が同じときは名前順にするため、順序が map に左右されることはない。
 	if data.PullRequestHosts[0].Name != "ghe.example.com" || data.PullRequestHosts[1].Name != "github.com" {
 		t.Fatalf("hosts=%+v", data.PullRequestHosts)
 	}
@@ -282,8 +282,8 @@ func TestNewDebugGitHubSyncGroupsFailuresAndReportsSchedule(t *testing.T) {
 	if len(value.RepositoryFailures) != 2 || value.RepositoryFailures[0].Scope != "github.com/acme/web" {
 		t.Fatalf("repository failures=%+v", value.RepositoryFailures)
 	}
-	// The two "not found" messages differ only in the pull request number, so
-	// they must be reported as one group of two rather than two of one.
+	// 2 つの "not found" メッセージは pull request 番号しか違わないので、1 件ずつの
+	// 2 グループではなく 2 件の 1 グループとして報告しなければならない。
 	if len(value.ErrorGroups) != 2 || value.ErrorGroups[0].Count != 2 {
 		t.Fatalf("error groups=%+v", value.ErrorGroups)
 	}
@@ -324,7 +324,7 @@ func TestNewDebugGitHubSyncAppliesDeterministicLimits(t *testing.T) {
 	if len(first.ErrorGroups) != DebugMaxErrorGroups || first.OmittedErrorGroups != 3 {
 		t.Fatalf("error groups=%d omitted=%d", len(first.ErrorGroups), first.OmittedErrorGroups)
 	}
-	// The most frequent group comes first, and each group lists a bounded sample.
+	// 最も件数の多いグループが先頭に来て、各グループは件数を制限した例を挙げる。
 	if first.ErrorGroups[0].Count != DebugMaxErrorGroups+3 {
 		t.Fatalf("groups are not ordered by count: %+v", first.ErrorGroups[0])
 	}
@@ -522,8 +522,8 @@ func TestDetectDebugProblemsReportsNothingForAHealthyInstallation(t *testing.T) 
 	}
 }
 
-// A storage failure hides the values every other storage check reads, so it is
-// reported alone instead of with the derived findings it would invalidate.
+// ストレージの失敗は他のストレージ検査が読む値をすべて隠すため、無効になる導出結果を
+// 添えずに単独で報告する。
 func TestDetectDebugProblemsReportsStorageFailureAlone(t *testing.T) {
 	report := DebugReport{
 		Config: DebugConfig{Valid: true},

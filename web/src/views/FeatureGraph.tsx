@@ -197,8 +197,8 @@ function useTaskTitle(tasks: Task[]) {
   );
 }
 
-// React Flow compares the edge array by reference, so a fresh array on every
-// render rebuilds its connection lookup and re-renders every store consumer.
+// React Flow はエッジ配列を参照で比較するので、描画のたびに新しい配列を渡すと
+// 接続の索引が作り直され、ストアの利用側がすべて再描画される。
 function useDependencyEdges(options: {
   dependencies: Dependency[];
   edgeRoutes: Map<string, DependencyEdgeRoute>;
@@ -244,9 +244,9 @@ function useDependencyEdges(options: {
   );
 }
 
-// React Flow measures the endpoint ports one animation frame after the nodes
-// that carry them commit. Waiting for that frame keeps the edges from naming
-// handles that do not exist yet, which would drop them from the canvas.
+// React Flow は端点のポートを、それを持つノードの確定から 1 フレーム後に測る。
+// このフレームを待つことで、まだ存在しないハンドルを指してエッジが
+// キャンバスから落ちるのを防ぐ。
 function useMeasuredEdgeRoutes(edgeRoutes: Map<string, DependencyEdgeRoute>) {
   const [measured, setMeasured] = useState<Map<string, DependencyEdgeRoute>>(
     () => new Map(),
@@ -270,8 +270,8 @@ function useDependencySelection(dependencies: Dependency[]) {
       requestedId,
   );
   const selectedId = stillPresent ? requestedId : undefined;
-  // Dropping the id keeps a re-added dependency from reappearing as selected
-  // without the user ever picking it.
+  // ID を捨てることで、再追加された依存がユーザーの操作なしに選択済みとして
+  // 現れるのを防ぐ。
   if (requestedId !== undefined && !stillPresent) setSelectedId(undefined);
   const clear = useCallback(() => {
     setSelectedId(undefined);
@@ -282,9 +282,9 @@ function useDependencySelection(dependencies: Dependency[]) {
     },
     [],
   );
-  // React Flow drops its own selection updates because the edges are
-  // controlled, so Enter and Space on a focused edge only reach the toolbar and
-  // the Delete key once the change is applied here.
+  // エッジは制御下にあるため React Flow 自身の選択更新は捨てられる。ここで
+  // 変更を適用して初めて、フォーカス中のエッジでの Enter や Space が
+  // ツールバーと Delete キーに届く。
   const applyChanges = useCallback(
     (changes: EdgeChange<DependencyFlowEdge>[]) => {
       for (const change of changes) {
@@ -580,9 +580,9 @@ function GraphState({
   readOnly: boolean;
 }) {
   const { t } = useTranslation();
-  // A feature whose every task is finished still has a graph; hiding it is a
-  // view the reader chose. Offering the first-node prompt there would claim the
-  // feature is empty and put an Add task button where the remedy is the toggle.
+  // 全タスクが完了した feature にもグラフはあり、非表示は読み手が選んだ見え方
+  // にすぎない。ここで最初のノードを促すと feature が空だと言うことになり、
+  // 本来はトグルで解決する場面にタスク追加ボタンを置いてしまう。
   if (taskCount === 0 && hiddenTaskCount > 0 && !layoutError)
     return (
       <div className="graph-empty">

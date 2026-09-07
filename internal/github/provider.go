@@ -19,16 +19,16 @@ import (
 )
 
 type Provider interface {
-	// Fetch returns the newest pull-request record. Implementations may return a
-	// partially updated record together with an error when a later metadata
-	// request failed; callers persist that partial state and judge it themselves.
+	// Fetch は最新の PR レコードを返す。後続のメタデータ取得が失敗した場合、
+	// 実装は部分的に更新したレコードをエラーと共に返してよい。呼び出し元は
+	// その部分状態を保存し、扱いを自分で判断する。
 	Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error)
 }
 
 type BatchResult struct {
 	PullRequests map[string]domain.PullRequest
-	// PartialPullRequests contains the newest fields known before an item-level
-	// error stopped the rest of its refresh.
+	// PartialPullRequests は、項目単位のエラーで更新が止まる直前まで判明していた
+	// 最新のフィールドを保持する。
 	PartialPullRequests map[string]domain.PullRequest
 	Errors              map[string]error
 }
@@ -52,9 +52,8 @@ type LiveProviderOptions struct {
 	HTTPClient *http.Client
 }
 
-// NewLiveProvider constructs a provider from already-resolved credentials.
-// Credential discovery belongs to Resolver so every candidate remains scoped
-// to its configured host.
+// NewLiveProvider は解決済みの資格情報からプロバイダを構築する。資格情報の探索は
+// Resolver の担当で、どの候補も設定されたホストの範囲に留まるようにしている。
 func NewLiveProvider(ctx context.Context, options LiveProviderOptions) (*LiveProvider, error) {
 	return NewConfiguredLiveProvider(
 		ctx, options.Token, options.APIURL, options.UploadURL, options.GraphQLURL, options.HTTPClient,
@@ -260,9 +259,9 @@ func (p *LiveProvider) Probe(ctx context.Context, owner, repository string) erro
 	return nil
 }
 
-// allPages walks every page of a GitHub list endpoint. Stopping at the first
-// page silently truncates long-lived pull requests, and the resulting review
-// state is stored as if it were fresh.
+// allPages は GitHub のリストエンドポイントの全ページをたどる。1 ページ目で
+// 止めると長寿命の PR を黙って切り捨て、その結果のレビュー状態が最新の
+// ものとして保存されてしまう。
 func allPages[T any](
 	ctx context.Context,
 	fetch func(context.Context, *gh.ListOptions) ([]T, *gh.Response, error),
@@ -284,7 +283,7 @@ func allPages[T any](
 
 type FixtureProvider struct{ values map[string]Fixture }
 
-// Fixture is one pull-request state a fixture file records for a URL.
+// Fixture はフィクスチャファイルが URL ごとに記録する PR の状態 1 件。
 type Fixture struct {
 	State        domain.PullRequestState `json:"state"`
 	Draft        bool                    `json:"draft"`
@@ -295,9 +294,8 @@ type Fixture struct {
 	Error        string                  `json:"error"`
 }
 
-// The persisted columns carry CHECK constraints, so a typo in a hand-written
-// fixture has to fail while reading the file rather than as a raw SQLite error
-// halfway through a sync.
+// 保存先のカラムには CHECK 制約があるため、手書きフィクスチャの誤記は同期の
+// 途中で生の SQLite エラーになるのではなく、ファイル読み込み時に失敗させる。
 var fixtureFields = []struct {
 	name    string
 	value   func(Fixture) string

@@ -1,22 +1,22 @@
-# Local trust boundary
+# ローカルの信頼境界
 
-`prx serve` is a local tool for one trusted user, not an authenticated multi-user service.
-Its threat model treats the network and browser as untrusted.
+`prx serve` は信頼された 1 人のユーザーのためのローカルツールであり、認証付きのマルチユーザーサービスではない。
+その脅威モデルでは、ネットワークとブラウザを信頼しない。
 
-The server binds to loopback by default.
-Non-loopback exposure requires an explicit listen address.
-Requests must be bound to the configured origin and RPC protocol so another origin cannot drive the local database.
+サーバは既定で loopback にバインドする。
+loopback 以外に公開するには、listen アドレスを明示する必要がある。
+リクエストは設定された origin と RPC プロトコルに束縛しなければならない。別の origin がローカルのデータベースを操作できないようにするためである。
 
-Local file preview is limited to explicitly registered document paths.
-It must not become a general filesystem reader.
-Local file reads remain bounded to 1 MiB and must contain valid UTF-8 text.
-URL documents are never fetched by the content-read API.
+ローカルファイルのプレビューは、明示的に登録された document のパスに限る。
+汎用のファイルシステム読み取り手段にしてはならない。
+ローカルファイルの読み取りは 1 MiB までとし、内容は妥当な UTF-8 テキストでなければならない。
+URL の document を content 読み取り API が取得することはない。
 
-The WebUI may ask the local server to open an operating-system file chooser.
-The chooser returns only a selected absolute path and does not read or register the file.
-Only one chooser may be open at a time.
-Cancellation is a normal result, while unavailable native helpers leave manual path entry available.
-The RPC remains subject to the same Host, Origin, and Connect protocol checks as every mutation.
+WebUI は、OS のファイル選択ダイアログを開くようローカルサーバに依頼できる。
+このダイアログが返すのは選択された絶対パスだけで、ファイルを読むことも登録することもない。
+同時に開けるダイアログは 1 つだけである。
+キャンセルは正常な結果として扱い、ネイティブのヘルパーが使えない場合も手入力によるパス指定は残る。
+この RPC も、他のすべての変更操作と同じ Host・Origin・Connect プロトコルの検査を受ける。
 
-Production responses use restrictive browser security headers.
-The server implementation owns the current header set and request-validation mechanics.
+本番のレスポンスには制限の強いブラウザ用セキュリティヘッダを付ける。
+現在のヘッダ一式とリクエスト検証の仕組みは、サーバの実装が所有する。

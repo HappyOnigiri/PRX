@@ -85,13 +85,13 @@ export function writeGraphZoom(graphZoom: number) {
       JSON.stringify({ ...settings, graphZoom }),
     );
   } catch {
-    // The zoom still changes for this session when storage is unavailable.
+    // ストレージが使えなくても、このセッション中はズームが変わる。
   }
 }
 
-// Which sidebar projects are collapsed is adjusted while working rather than
-// from the Settings dialog, so it is stored the way graph zoom is. Only the
-// collapsed IDs are kept, which makes an unknown project expanded by default.
+// サイドバーの project の折りたたみは設定ダイアログではなく作業中に切り替えるの
+// で、グラフのズームと同じ方法で保存する。折りたたみ中の ID だけを持つため、未知
+// の project は既定で展開される。
 export function readCollapsedProjects(): string[] {
   return readWebUISettings().collapsedProjects ?? [];
 }
@@ -104,13 +104,12 @@ export function writeCollapsedProjects(collapsedProjects: string[]) {
       JSON.stringify({ ...settings, collapsedProjects }),
     );
   } catch {
-    // The rows still fold for this session when storage is unavailable.
+    // ストレージが使えなくても、このセッション中は行が折りたたまれる。
   }
 }
 
-// Hiding finished tasks is toggled while reading the graph rather than from the
-// Settings dialog, so it is stored the way graph zoom is. The graph shows every
-// task when nothing is stored.
+// 完了 task の非表示は設定ダイアログではなくグラフを見ながら切り替えるので、
+// グラフのズームと同じ方法で保存する。未保存ならグラフは全 task を表示する。
 export function readHideCompletedTasks(): boolean {
   return readWebUISettings().hideCompletedTasks ?? false;
 }
@@ -123,7 +122,7 @@ export function writeHideCompletedTasks(hideCompletedTasks: boolean) {
       JSON.stringify({ ...settings, hideCompletedTasks }),
     );
   } catch {
-    // The graph still filters for this session when storage is unavailable.
+    // ストレージが使えなくても、このセッション中は絞り込みが効く。
   }
 }
 
@@ -135,7 +134,7 @@ export function writeDisplayLanguage(language: SupportedLanguage) {
       JSON.stringify({ ...settings, language }),
     );
   } catch {
-    // The language still changes for this session when storage is unavailable.
+    // ストレージが使えなくても、このセッション中は言語が変わる。
   }
 }
 
@@ -158,7 +157,7 @@ export function writeThemePreference(theme: ThemePreference) {
       JSON.stringify({ ...settings, theme }),
     );
   } catch {
-    // The theme still changes for this session when storage is unavailable.
+    // ストレージが使えなくても、このセッション中はテーマが変わる。
   }
 }
 

@@ -10,8 +10,8 @@ import { MutationError } from "./MutationError";
 import { DocumentRow, MarkdownEditForm } from "./TaskInspectorReferences";
 import type { TaskNodeDocument } from "./TaskNode";
 
-// The panel and its editing flow do not depend on which parent owns the
-// documents, so the parent is passed straight through to the add dialog.
+// パネルと編集の流れはドキュメントの所属先に依存しないので、親はそのまま
+// 追加ダイアログへ渡す。
 interface DocumentReferencesProps {
   parent: DocumentParent;
   documents: TaskNodeDocument[];

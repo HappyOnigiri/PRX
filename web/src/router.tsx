@@ -32,8 +32,8 @@ const featureRoute = createRoute({
 const projectsRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/projects",
-  // The archive toggle stays in the URL so reload, history, and a shared link
-  // reproduce the view instead of depending on browser-local state.
+  // アーカイブ切り替えは URL に持たせる。ブラウザ側の状態に頼らず、リロード・
+  // 履歴・共有リンクで同じ表示を再現するため。
   validateSearch: (search: Record<string, unknown>) => ({
     archived: search["archived"] === true || search["archived"] === "true",
   }),
@@ -42,8 +42,7 @@ const projectsRoute = createRoute({
 const projectRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/projects/$projectId",
-  // The status tab stays in the URL for the same reason the archive toggle
-  // above does.
+  // ステータスタブも上のアーカイブ切り替えと同じ理由で URL に持たせる。
   validateSearch: validateFeatureTabSearch,
   component: ProjectWorkspace,
 });

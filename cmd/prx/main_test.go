@@ -87,8 +87,8 @@ func assertFileContent(t *testing.T, path, want string) {
 	}
 }
 
-// Cobra skips its post-run hooks once a command returns an error, so a serve
-// that fails after the demo is built has to release the temporary root itself.
+// Cobra はコマンドがエラーを返すと post-run フックを飛ばすので、デモ構築後に
+// 失敗した serve は一時ルートを自分で解放しなければならない。
 func TestDemoServeFailureRemovesTemporaryRoot(t *testing.T) {
 	var listenConfig net.ListenConfig
 	listener, err := listenConfig.Listen(context.Background(), "tcp", "127.0.0.1:0")

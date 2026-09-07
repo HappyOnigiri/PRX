@@ -1,4 +1,4 @@
-// Package main generates the PRX CLI reference documentation.
+// Package main は PRX CLI のリファレンスドキュメントを生成する。
 package main
 
 import (

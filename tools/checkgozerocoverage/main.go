@@ -1,5 +1,5 @@
-// Package main fails when a target Go package contains a function that tests
-// never execute.
+// Package main は、対象の Go パッケージにテストが一度も実行しない関数があれば
+// 失敗させる。
 package main
 
 import (
