@@ -12,6 +12,7 @@ import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
+import { StatusBadge } from "./StatusBadge";
 import { PullRequestSection } from "./TaskInspectorPullRequest";
 import { ReferencesSection } from "./TaskInspectorReferences";
 import { TaskInspectorTaskForm } from "./TaskInspectorTaskForm";
@@ -35,10 +36,17 @@ function TaskInspectorHeader({
   return (
     <header>
       <div className="inspector-heading">
-        <h2>
-          <EntityIcon kind="task" size={16} />
-          {task.title}
-        </h2>
+        {/* The state opens the heading, as it does on every card and row. */}
+        <div className="inspector-heading-line">
+          <StatusBadge
+            className={`state-${taskDisplayStateToken(task.displayState)}`}
+            label={taskDisplayStateLabel(task.displayState, t)}
+          />
+          <h2>
+            <EntityIcon kind="task" size={16} />
+            {task.title}
+          </h2>
+        </div>
         <CopyableIdentifier
           label={t("common.taskId")}
           value={task.id}
@@ -71,21 +79,17 @@ export function TaskInspector({
   return (
     <aside className="inspector" aria-label={t("inspector.label")}>
       <TaskInspectorHeader task={task} onClose={onClose} />
-      <div
-        className={`inspector-state state-${taskDisplayStateToken(task.displayState)}`}
-      >
-        <i />
-        {taskDisplayStateLabel(task.displayState, t)}
-        {task.blockedReason && (
-          <small>
-            {blockedReasonLabel(
-              task.blockedReason,
-              (id) => tasks.find((item) => item.id === id)?.title,
-              t,
-            )}
-          </small>
-        )}
-      </div>
+      {/* The state moved into the heading, so the strip is left with the one
+          thing the state cannot say: why the task is waiting. */}
+      {task.blockedReason && (
+        <p className="inspector-blocked">
+          {blockedReasonLabel(
+            task.blockedReason,
+            (id) => tasks.find((item) => item.id === id)?.title,
+            t,
+          )}
+        </p>
+      )}
       {readOnly && (
         <p className="inspector-read-only">{t("inspector.readOnly")}</p>
       )}
