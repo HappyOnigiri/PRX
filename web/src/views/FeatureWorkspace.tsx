@@ -154,11 +154,6 @@ export function FeatureWorkspace() {
 
 function deletedFeatureDestination(feature: Feature) {
   if (!feature.readOnly) return { to: "/" } as const;
-  if (feature.projectId === "")
-    return {
-      to: "/projects/unassigned",
-      search: { features: "archived" },
-    } as const;
   return {
     to: "/projects/$projectId",
     params: { projectId: feature.projectId },

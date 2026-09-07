@@ -49,7 +49,6 @@ export const shell = {
       overview: "Overview",
       toggleProject: "Expand or collapse {{title}}",
       taskSearch: "Task search",
-      newFeature: "New feature",
       serverUnavailable: "Server unavailable",
     },
     serverSettings: {
@@ -91,13 +90,6 @@ export const shell = {
       removeAuthAction: "Remove {{id}}",
       removeHostConfirm: "Remove GitHub host {{host}}?",
       removeAuthConfirm: "Remove authentication method {{id}}?",
-    },
-    featureCreate: {
-      formLabel: "Create feature",
-      title: "Create feature",
-      titlePlaceholder: "Payments rollout",
-      descriptionPlaceholder: "What must this feature deliver?",
-      submit: "Create feature",
     },
   },
   ja: {
@@ -154,7 +146,6 @@ export const shell = {
       overview: "概要",
       toggleProject: "{{title}}を展開または折りたたむ",
       taskSearch: "タスク検索",
-      newFeature: "フィーチャーを作成",
       serverUnavailable: "サーバーに接続できません",
     },
     serverSettings: {
@@ -195,13 +186,6 @@ export const shell = {
       removeAuthAction: "{{id}}を削除",
       removeHostConfirm: "GitHubホスト {{host}} を削除しますか？",
       removeAuthConfirm: "認証方法 {{id}} を削除しますか？",
-    },
-    featureCreate: {
-      formLabel: "フィーチャーを作成",
-      title: "フィーチャーを作成",
-      titlePlaceholder: "決済機能の展開",
-      descriptionPlaceholder: "このフィーチャーで実現すること",
-      submit: "フィーチャーを作成",
     },
   },
 } as const;

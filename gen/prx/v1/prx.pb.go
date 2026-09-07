@@ -1215,7 +1215,8 @@ type Feature struct {
 	DisplayStatus FeatureStatus `protobuf:"varint,14,opt,name=display_status,json=displayStatus,proto3,enum=prx.v1.FeatureStatus" json:"display_status,omitempty"`
 	// finished_count is the number of tasks the automatic completion rule counts as finished.
 	FinishedCount int32 `protobuf:"varint,15,opt,name=finished_count,json=finishedCount,proto3" json:"finished_count,omitempty"`
-	// project_id identifies the owning project by its public P-<number> ID, and is empty when unaffiliated.
+	// project_id identifies the owning project by its public P-<number> ID. Every feature belongs to
+	// a project, so this value is never empty.
 	ProjectId string `protobuf:"bytes,16,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	// read_only is derived: the feature is archived, or its project is. Clients present read-only
 	// state from this value instead of combining the feature's own flag with its project's.
@@ -2341,8 +2342,9 @@ type DeleteProjectRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
 	// id identifies the project to delete by public ID.
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// cascade deletes the project's own documents and releases its features
-	// instead of failing; contained features are never deleted.
+	// cascade deletes the project's own documents and every feature it contains,
+	// with the tasks, dependencies, pull-request attachments, and documents
+	// inside them, instead of failing.
 	Cascade       bool `protobuf:"varint,2,opt,name=cascade,proto3" json:"cascade,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2436,7 +2438,8 @@ type CreateFeatureRequest struct {
 	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
 	// description is optional explanatory text for the feature.
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// project_id assigns the feature to a project by public ID; an empty value leaves it unaffiliated.
+	// project_id assigns the feature to a project by public ID. It is required: a feature always
+	// belongs to a project.
 	ProjectId     string `protobuf:"bytes,4,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2554,8 +2557,8 @@ type UpdateFeatureRequest struct {
 	// archived is unchanged when unset; a supplied value explicitly sets it.
 	// Clearing it is the only update an archived feature accepts.
 	Archived *bool `protobuf:"varint,6,opt,name=archived,proto3,oneof" json:"archived,omitempty"`
-	// project_id is unchanged when unset; a public ID reassigns the
-	// feature, and an empty string removes it from its project.
+	// project_id is unchanged when unset; a public ID reassigns the feature.
+	// An empty string is refused, because a feature cannot leave every project.
 	ProjectId     *string `protobuf:"bytes,7,opt,name=project_id,json=projectId,proto3,oneof" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

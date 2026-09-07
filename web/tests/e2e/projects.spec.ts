@@ -94,11 +94,13 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
   const title = `E2E project ${crypto.randomUUID()}`;
   await createProject(page, title);
 
+  // The project page is where a feature is created, so the membership follows
+  // from the page instead of a field in the dialog.
   const featureTitle = `E2E member ${crypto.randomUUID()}`;
-  await page.getByRole("button", { name: "New feature" }).click();
+  await page.getByRole("button", { name: "Create feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
+  await expect(featureDialog.getByLabel("Project")).toHaveCount(0);
   await featureDialog.getByLabel("Title").fill(featureTitle);
-  await featureDialog.getByLabel("Project").selectOption({ label: title });
   await featureDialog.getByRole("button", { name: "Create feature" }).click();
   await expect(page.getByRole("heading", { name: featureTitle })).toBeVisible();
   // The feature header names the project it now belongs to.
@@ -143,7 +145,7 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
   await page.getByRole("tabpanel").getByText(featureTitle).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toBeVisible();
 
-  // Deleting the project releases the feature rather than removing it.
+  // Deleting the project takes the feature it holds with it.
   await page.locator(".workspace-project-link").click();
   await page.getByRole("button", { name: "Edit project" }).click();
   await page.getByRole("button", { name: "Delete project" }).click();
@@ -154,9 +156,13 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Projects", exact: true }),
   ).toBeVisible();
-  // Deleting the project released the feature, so it is now unaffiliated.
-  await page.goto("/projects/unassigned?features=active");
-  await expect(page.getByRole("tabpanel")).toContainText(featureTitle);
+  // The feature went with the project, so nothing on the projects screen or in
+  // task search still names it.
+  await expect(
+    page.getByRole("region", { name: "Project list" }),
+  ).not.toContainText(title);
+  await page.goto("/tasks");
+  await expect(page.locator("body")).not.toContainText(featureTitle);
 });
 
 // The sidebar tree folds a project away and remembers that across a reload,
@@ -207,22 +213,4 @@ test("drops the sidebar tree once the rail turns horizontal", async ({
   await expect(rail.locator(".nav-tree")).toBeHidden();
   await expect(rail.getByRole("link", { name: /Projects/ })).toBeVisible();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 800);
-});
-
-test("lists the unaffiliated features under their own three tabs", async ({
-  page,
-}) => {
-  await page.goto("/projects/unassigned?features=active");
-  await expect(
-    page.getByRole("heading", { name: "No project", level: 1 }),
-  ).toBeVisible();
-  await expect(page.getByRole("tab", { name: "Active" })).toHaveAttribute(
-    "aria-selected",
-    "true",
-  );
-
-  await page.getByRole("tab", { name: "Completed" }).click();
-  await expect(page).toHaveURL(/features=completed/);
-  await page.getByRole("tab", { name: "Archived" }).click();
-  await expect(page).toHaveURL(/features=archived/);
 });

@@ -118,7 +118,11 @@ func newSyncService(t *testing.T) (*Service, *store.Store, domain.Snapshot, map[
 		t.Fatal(err)
 	}
 	t.Cleanup(func() { _ = database.Close() })
-	feature, err := database.CreateFeature(context.Background(), "Sync", "", "")
+	project, err := database.CreateProject(context.Background(), "Sync", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	feature, err := database.CreateFeature(context.Background(), "Sync", "", project.ID)
 	if err != nil {
 		t.Fatal(err)
 	}

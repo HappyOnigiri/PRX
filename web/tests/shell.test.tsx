@@ -39,13 +39,20 @@ const snapshot = makeSnapshot({
     makeFeature({
       id: "conflict",
       title: "Conflict feature",
+      projectId: "P-1",
       conflictCount: 1,
       readyCount: 0,
     }),
-    makeFeature({ id: "archived", title: "Archived feature", archived: true }),
+    makeFeature({
+      id: "archived",
+      title: "Archived feature",
+      projectId: "P-1",
+      archived: true,
+    }),
     makeFeature({
       id: "completed",
       title: "Completed feature",
+      projectId: "P-1",
       displayStatus: FeatureStatus.COMPLETED,
       taskCount: 2,
       finishedCount: 2,
@@ -116,7 +123,6 @@ describe("AppShell", () => {
     expect(screen.getByText("Delivery platform")).toBeInTheDocument();
     expect(screen.getByText("Active feature")).toBeInTheDocument();
     expect(screen.getByText("Conflict feature")).toBeInTheDocument();
-    expect(screen.getByText("No project")).toBeInTheDocument();
     expect(screen.queryByText("Archived feature")).not.toBeInTheDocument();
     expect(screen.queryByText("Completed feature")).not.toBeInTheDocument();
     expect(screen.getByText("Overview")).toBeInTheDocument();
@@ -180,41 +186,6 @@ describe("AppShell", () => {
       screen.queryByText("Temporary demo database"),
     ).not.toBeInTheDocument();
     expect(document.querySelector(".rail-foot")).not.toBeInTheDocument();
-  });
-
-  it("creates a feature, navigates to it, and supports cancellation", async () => {
-    render(
-      <AppShell>
-        <p>Workspace</p>
-      </AppShell>,
-    );
-    fireEvent.click(screen.getByRole("button", { name: "New feature" }));
-    fireEvent.change(screen.getByLabelText("Title"), {
-      target: { value: "Release" },
-    });
-    fireEvent.change(screen.getByLabelText("Description"), {
-      target: { value: "Ship it" },
-    });
-    fireEvent.submit(screen.getByRole("form", { name: "Create feature" }));
-
-    await waitFor(() => {
-      expect(shellMocks.navigate).toHaveBeenCalledOnce();
-    });
-    expect(shellMocks.mutation.mutateAsync).toHaveBeenCalledWith({
-      title: "Release",
-      description: "Ship it",
-      projectId: "",
-    });
-    expect(shellMocks.navigate).toHaveBeenCalledWith({
-      to: "/features/$featureId",
-      params: { featureId: "created" },
-    });
-
-    fireEvent.click(screen.getByRole("button", { name: "New feature" }));
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    expect(
-      screen.queryByRole("form", { name: "Create feature" }),
-    ).not.toBeInTheDocument();
   });
 
   it("opens and closes Settings from the rail", () => {

@@ -54,17 +54,14 @@ func publicProjectID(ctx context.Context, q *db.Queries, storageID string) strin
 }
 
 // projectStorageID translates a public project ID into the storage UUID the
-// foreign key needs. An empty public ID means no project, which the schema
-// records as NULL.
-func projectStorageID(ctx context.Context, q *db.Queries, publicID string) (sql.NullString, error) {
-	if publicID == "" {
-		return sql.NullString{}, nil
-	}
+// foreign key needs. Membership is required, so an empty public ID is reported
+// as a missing project rather than stored.
+func projectStorageID(ctx context.Context, q *db.Queries, publicID string) (string, error) {
 	project, err := q.GetProjectByPublicID(ctx, publicID)
 	if err != nil {
-		return sql.NullString{}, mapNotFound(err, "project", publicID)
+		return "", mapNotFound(err, "project", publicID)
 	}
-	return sql.NullString{String: project.ID, Valid: true}, nil
+	return project.ID, nil
 }
 
 func (s *Store) CreateProject(ctx context.Context, title, description string) (domain.Project, error) {
@@ -122,10 +119,11 @@ func (s *Store) UpdateProject(ctx context.Context, project domain.Project) (doma
 	return domainProject(value), mapNotFound(err, "project", project.ID)
 }
 
-// DeleteProject removes the container, not its contents. A cascade deletes the
-// project's own documents and releases its features, because a feature has a
-// longer life and a public ID of its own; `feature delete --cascade` is the
-// operation that removes contained work.
+// DeleteProject removes the container. A cascade removes what it holds: the
+// project's own documents and every feature inside it, with the tasks,
+// dependencies, pull-request attachments, and documents those features own.
+// Releasing the features is no longer an option, because a feature cannot exist
+// outside a project.
 func (s *Store) DeleteProject(ctx context.Context, id string, cascade bool) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {
@@ -137,8 +135,7 @@ func (s *Store) DeleteProject(ctx context.Context, id string, cascade bool) erro
 	if err != nil {
 		return mapNotFound(err, "project", id)
 	}
-	storageID := sql.NullString{String: project.ID, Valid: true}
-	references, err := q.CountProjectReferences(ctx, storageID)
+	references, err := q.CountProjectReferences(ctx, project.ID)
 	if err != nil {
 		return err
 	}
@@ -149,14 +146,20 @@ func (s *Store) DeleteProject(ctx context.Context, id string, cascade bool) erro
 		)
 	}
 	if cascade {
-		if err := q.DeleteDocumentsForProject(ctx, storageID); err != nil {
+		if err := q.DeleteDocumentsForProject(ctx, sql.NullString{String: project.ID, Valid: true}); err != nil {
 			return err
 		}
-		if err := q.DetachFeaturesFromProject(ctx, db.DetachFeaturesFromProjectParams{
-			UpdatedAt: timestamp(s.now()),
-			ProjectID: storageID,
-		}); err != nil {
+		features, err := q.ListFeaturesByProject(ctx, project.ID)
+		if err != nil {
 			return err
+		}
+		for _, feature := range features {
+			if err := deleteFeatureContents(ctx, q, feature.ID); err != nil {
+				return err
+			}
+			if err := q.DeleteFeature(ctx, feature.ID); err != nil {
+				return err
+			}
 		}
 	}
 	if err := q.DeleteProject(ctx, project.ID); err != nil {
@@ -217,10 +220,7 @@ func (s *Store) GetFeature(ctx context.Context, id string) (domain.Feature, erro
 }
 
 func featureProjectPublicID(ctx context.Context, q *db.Queries, value db.Feature) string {
-	if !value.ProjectID.Valid {
-		return ""
-	}
-	return publicProjectID(ctx, q, value.ProjectID.String)
+	return publicProjectID(ctx, q, value.ProjectID)
 }
 
 func (s *Store) UpdateFeature(ctx context.Context, feature domain.Feature) (domain.Feature, error) {
@@ -551,16 +551,7 @@ func (s *Store) DeleteFeature(ctx context.Context, id string, cascade bool) erro
 		return domain.NewError(domain.DomainErrorCodeReferencesExist, "feature has tasks or documents; pass --cascade")
 	}
 	if cascade {
-		if err := q.DeleteDependenciesForFeature(ctx, storageID); err != nil {
-			return err
-		}
-		if err := q.DeletePullRequestsForFeature(ctx, storageID); err != nil {
-			return err
-		}
-		if err := q.DeleteDocumentsForFeature(ctx, sql.NullString{String: storageID, Valid: true}); err != nil {
-			return err
-		}
-		if err := q.DeleteTasksForFeature(ctx, storageID); err != nil {
+		if err := deleteFeatureContents(ctx, q, storageID); err != nil {
 			return err
 		}
 	}
@@ -568,6 +559,22 @@ func (s *Store) DeleteFeature(ctx context.Context, id string, cascade bool) erro
 		return err
 	}
 	return tx.Commit()
+}
+
+// deleteFeatureContents removes everything a feature owns, leaving the feature
+// row itself. A project cascade reaches the same work through its features, so
+// the order the foreign keys require is written once.
+func deleteFeatureContents(ctx context.Context, q *db.Queries, storageID string) error {
+	if err := q.DeleteDependenciesForFeature(ctx, storageID); err != nil {
+		return err
+	}
+	if err := q.DeletePullRequestsForFeature(ctx, storageID); err != nil {
+		return err
+	}
+	if err := q.DeleteDocumentsForFeature(ctx, sql.NullString{String: storageID, Valid: true}); err != nil {
+		return err
+	}
+	return q.DeleteTasksForFeature(ctx, storageID)
 }
 
 func (s *Store) GetGitHubRepositoryAuthCache(
@@ -924,7 +931,7 @@ func (s *Store) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 		result.Projects[i] = domainProject(row)
 	}
 	for i, row := range features {
-		result.Features[i] = domainFeature(row, projectIDs[row.ProjectID.String])
+		result.Features[i] = domainFeature(row, projectIDs[row.ProjectID])
 	}
 	for i, row := range tasks {
 		result.Tasks[i] = domainTask(row, featureIDs[row.FeatureID])

@@ -247,7 +247,8 @@ func decodeDataObject(t *testing.T, envelope resultEnvelope) map[string]json.Raw
 func TestBlackBoxCRUDAndCycle(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "blackbox.db")
-	feature, stderr, exit := runCLI(t, binary, dbPath, "feature", "create", "Release")
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "Releases"))
+	feature, stderr, exit := runCLI(t, binary, dbPath, "feature", "create", "Release", "--project", project)
 	if exit != 0 || stderr != "" || !feature.OK {
 		t.Fatalf("feature result=%+v stderr=%q exit=%d", feature, stderr, exit)
 	}
@@ -340,7 +341,8 @@ func TestBlackBoxTargetedSyncByID(t *testing.T) {
 	binary := buildCLI(t)
 	t.Setenv("PRX_CONFIG", filepath.Join(t.TempDir(), "missing-config.yaml"))
 	dbPath := filepath.Join(t.TempDir(), "targeted-sync.db")
-	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "Targeted")
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "Sync"))
+	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "Targeted", "--project", project)
 	if exit != 0 || !feature.OK {
 		t.Fatalf("feature create: %+v exit=%d", feature, exit)
 	}
@@ -433,7 +435,8 @@ func TestBlackBoxTargetedSyncByID(t *testing.T) {
 func TestBlackBoxImplementationPlanCommands(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "plans.db")
-	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "Plans")
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "Plans"))
+	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "Plans", "--project", project)
 	if exit != 0 || !feature.OK {
 		t.Fatalf("feature result=%+v exit=%d", feature, exit)
 	}
@@ -602,7 +605,8 @@ func TestBlackBoxServerAndCLIShareDatabase(t *testing.T) {
 		}
 		time.Sleep(25 * time.Millisecond)
 	}
-	created, _, exit := runCLI(t, binary, dbPath, "feature", "create", "Live write")
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "Live"))
+	created, _, exit := runCLI(t, binary, dbPath, "feature", "create", "Live write", "--project", project)
 	if exit != 0 || !created.OK {
 		cancel()
 		_ = server.Wait()
@@ -683,7 +687,8 @@ func TestBlackBoxJSONFlagFormsAgree(t *testing.T) {
 func TestBlackBoxReadAliasesAndFeatureOperands(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "aliases.db")
-	created, _, exit := runCLI(t, binary, dbPath, "feature", "create", "Checkout")
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "Payments"))
+	created, _, exit := runCLI(t, binary, dbPath, "feature", "create", "Checkout", "--project", project)
 	if exit != 0 || !created.OK {
 		t.Fatalf("create feature: %+v exit=%d", created, exit)
 	}
@@ -962,8 +967,9 @@ func TestBlackBoxErrorHintDoesNotVaryWithAmbientEnvironment(t *testing.T) {
 func TestBlackBoxEnvironmentSuppliesStoragePathWithoutFlag(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "env.db")
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "From environment"))
 	result := executeCLIWithEnv(t, binary, "", []string{"PRX_DB=" + dbPath},
-		"--json", "feature", "create", "From environment")
+		"--json", "feature", "create", "From environment", "--project", project)
 	if result.exit != 0 || result.stderr != "" {
 		t.Fatalf("result=%+v", result)
 	}
@@ -1124,7 +1130,11 @@ func TestBlackBoxDefaultTextOutputCoversResourcesAndSummaries(t *testing.T) {
 		return result
 	}
 
-	createdFeature := run("feature", "create", "Checkout rollout")
+	createdProject := run("project", "create", "Payments")
+	if !strings.Contains(createdProject.stdout, "Created project P-1 (Payments).") {
+		t.Fatalf("project create output=%q", createdProject.stdout)
+	}
+	createdFeature := run("feature", "create", "Checkout rollout", "--project", "P-1")
 	if !strings.Contains(createdFeature.stdout, "Created feature F-1 (Checkout rollout).") {
 		t.Fatalf("feature create output=%q", createdFeature.stdout)
 	}
@@ -1316,7 +1326,10 @@ func TestBlackBoxRequiredOperandsRejectOldFlagsAndWrongCounts(t *testing.T) {
 func TestBlackBoxDoubleDashPreservesLiteralPositionalValue(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "literal.db")
-	created := executeCLI(t, binary, "", "--db", dbPath, "feature", "create", "--", "--json")
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "Literals"))
+	created := executeCLI(
+		t, binary, "", "--db", dbPath, "feature", "create", "--project", project, "--", "--json",
+	)
 	if created.exit != 0 || created.stderr != "" || !strings.Contains(created.stdout, "Created feature F-1") ||
 		json.Valid([]byte(created.stdout)) {
 		t.Fatalf("create result=%+v", created)
@@ -1339,7 +1352,8 @@ func TestBlackBoxDoubleDashPreservesLiteralPositionalValue(t *testing.T) {
 func TestBlackBoxDocumentAddResolvesPublicParentForms(t *testing.T) {
 	binary := buildCLI(t)
 	dbPath := filepath.Join(t.TempDir(), "documents.db")
-	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "Checkout")
+	project := decodeID(t, runCLIData(t, binary, dbPath, "project", "create", "Payments"))
+	feature, _, exit := runCLI(t, binary, dbPath, "feature", "create", "Checkout", "--project", project)
 	if exit != 0 || !feature.OK {
 		t.Fatalf("feature=%+v exit=%d", feature, exit)
 	}
@@ -1672,14 +1686,14 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	assertDirectObjectKeys(t, runDB("task", "delete", taskBID), "deleted")
 	assertDirectObjectKeys(t, runDB("task", "delete", taskAID, "--cascade"), "deleted")
 
-	deletableFeature := runDB("feature", "create", "Deletable")
+	deletableFeature := runDB("feature", "create", "Deletable", "--project", projectID)
 	var deletableFeatureID string
 	if err := json.Unmarshal(deletableFeature["id"], &deletableFeatureID); err != nil {
 		t.Fatal(err)
 	}
 	assertDirectObjectKeys(t, runDB("feature", "delete", deletableFeatureID, "--cascade"), "deleted")
 	// The checkout feature still belongs to the project, so the cascade is the
-	// form that releases it instead of failing.
+	// form that deletes it along with the project instead of failing.
 	assertDirectObjectKeys(t, runDB("project", "delete", projectID, "--cascade"), "deleted")
 }
 
@@ -2086,7 +2100,7 @@ func TestBlackBoxArchivedProjectAndFeatureRefuseWrites(t *testing.T) {
 	}
 
 	// Deleting the container is the operation the barrier lets through, and the
-	// project cascade releases its features instead of removing them.
+	// cascade takes the features it holds with it.
 	if _, _, exit := runCLI(t, binary, dbPath, "project", "archive", project); exit != 0 {
 		t.Fatalf("re-archive exit=%d", exit)
 	}
@@ -2104,15 +2118,13 @@ func TestBlackBoxArchivedProjectAndFeatureRefuseWrites(t *testing.T) {
 			ProjectID string `json:"project_id"`
 			ReadOnly  bool   `json:"read_only"`
 		} `json:"features"`
+		Tasks []struct{ ID string } `json:"tasks"`
 	}
 	if err := json.Unmarshal(runCLIData(t, binary, dbPath, "snapshot"), &snapshot); err != nil {
 		t.Fatal(err)
 	}
-	if len(snapshot.Projects) != 0 || len(snapshot.Features) != 1 {
+	if len(snapshot.Projects) != 0 || len(snapshot.Features) != 0 || len(snapshot.Tasks) != 0 {
 		t.Fatalf("snapshot=%+v", snapshot)
-	}
-	if snapshot.Features[0].ProjectID != "" || snapshot.Features[0].ReadOnly {
-		t.Fatalf("released feature=%+v", snapshot.Features[0])
 	}
 }
 
@@ -2194,7 +2206,10 @@ func TestBlackBoxPromptFollowsThePlanAndTheConfiguredTemplates(t *testing.T) {
 		return executeCLI(t, binary, "", append([]string{"--db", dbPath, "--config", configPath}, args...)...)
 	}
 
-	if result := run("feature", "create", "Prompts"); result.exit != 0 {
+	if result := run("project", "create", "Prompts"); result.exit != 0 {
+		t.Fatalf("create project: stderr=%q", result.stderr)
+	}
+	if result := run("feature", "create", "Prompts", "--project", "P-1"); result.exit != 0 {
 		t.Fatalf("create feature: stderr=%q", result.stderr)
 	}
 	if result := run("task", "create", "F-1", "Add the checkout API", "--scope", "Server only"); result.exit != 0 {
@@ -2268,7 +2283,10 @@ func TestBlackBoxPromptUsesTheConfiguredTemplateAndReportsABrokenOne(t *testing.
 	run := func(args ...string) commandOutput {
 		return executeCLI(t, binary, "", append([]string{"--db", dbPath, "--config", configPath}, args...)...)
 	}
-	if result := run("feature", "create", "Prompts"); result.exit != 0 {
+	if result := run("project", "create", "Prompts"); result.exit != 0 {
+		t.Fatalf("create project: stderr=%q", result.stderr)
+	}
+	if result := run("feature", "create", "Prompts", "--project", "P-1"); result.exit != 0 {
 		t.Fatalf("create feature: stderr=%q", result.stderr)
 	}
 	if result := run("task", "create", "F-1", "Ship it"); result.exit != 0 {

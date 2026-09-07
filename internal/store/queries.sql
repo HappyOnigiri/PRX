@@ -22,8 +22,8 @@ DELETE FROM projects WHERE id=?;
 SELECT (SELECT COUNT(*) FROM features WHERE features.project_id=sqlc.arg(project_id))
   + (SELECT COUNT(*) FROM documents WHERE documents.project_id=sqlc.arg(project_id)) AS total;
 
--- name: DetachFeaturesFromProject :exec
-UPDATE features SET project_id=NULL, updated_at=? WHERE project_id=?;
+-- name: ListFeaturesByProject :many
+SELECT * FROM features WHERE project_id=? ORDER BY updated_at DESC, public_id;
 
 -- name: DeleteDocumentsForProject :exec
 DELETE FROM documents WHERE project_id=?;

@@ -10,7 +10,7 @@ prx feature update FEATURE_ID [flags]
 
 ```
 prx feature update F-1 --archived=false
-prx feature update F-1 --project=
+prx feature update F-1 --project P-2
 ```
 
 ### Options
@@ -19,7 +19,7 @@ prx feature update F-1 --project=
       --archived             archive (true) or unarchive (false) the feature
       --description string   new description
   -h, --help                 help for update
-      --project string       project ID; an empty value leaves the project
+      --project string       project ID to move the feature to
       --status string        auto, active, paused, completed, or cancelled
       --title string         new title
 ```

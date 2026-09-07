@@ -66,7 +66,7 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 	platform, err := s.CreateProject(
 		ctx,
 		"Delivery platform",
-		"Two related features and the brief they share.",
+		"The features in flight and the brief they share.",
 	)
 	if err != nil {
 		return err
@@ -93,7 +93,7 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 	for _, initialize := range []func(context.Context) error{
 		func(ctx context.Context) error { return s.createShowcaseDemo(ctx, markdownPath, platform.ID) },
 		func(ctx context.Context) error { return s.createPausedDemo(ctx, platform.ID) },
-		s.createCompletedDemo,
+		func(ctx context.Context) error { return s.createCompletedDemo(ctx, platform.ID) },
 		func(ctx context.Context) error { return s.createCancelledDemo(ctx, sunset.ID) },
 		func(ctx context.Context) error { return s.createSunsetPostmortemDemo(ctx, sunset.ID) },
 	} {
@@ -208,12 +208,12 @@ func (s *Service) createPausedDemo(ctx context.Context, projectID string) error 
 	return nil
 }
 
-func (s *Service) createCompletedDemo(ctx context.Context) error {
+func (s *Service) createCompletedDemo(ctx context.Context, projectID string) error {
 	completed, err := s.CreateFeature(
 		ctx,
 		"Completed 100-task program",
 		"A large balanced graph for checking layout and navigation at scale.",
-		"",
+		projectID,
 	)
 	if err != nil {
 		return err

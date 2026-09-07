@@ -11,10 +11,11 @@ const projects = [
 describe("ProjectSelectField", () => {
   afterEach(cleanup);
 
-  it("offers the active projects and no membership by default", () => {
-    render(<ProjectSelectField projects={projects} />);
+  it("offers the active projects and no empty membership", () => {
+    render(<ProjectSelectField projects={projects} currentProjectId="P-1" />);
     const select = screen.getByLabelText("Project");
-    expect(select).toHaveValue("");
+    expect(select).toHaveValue("P-1");
+    expect(select).not.toHaveTextContent("No project");
     expect(
       screen.getByRole("option", { name: "Delivery platform" }),
     ).toBeInTheDocument();
@@ -24,7 +25,7 @@ describe("ProjectSelectField", () => {
   });
 
   // An uncontrolled select whose defaultValue is missing from its options
-  // silently shows the first one, which would drop the feature out of the
+  // silently shows the first one, which would move the feature out of the
   // archived project the next time the form is saved.
   it("keeps the current membership among the options even when archived", () => {
     render(<ProjectSelectField projects={projects} currentProjectId="P-2" />);

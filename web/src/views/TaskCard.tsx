@@ -95,20 +95,14 @@ export function TaskCard({
   );
 }
 
-// A task whose feature has no project belongs to the unaffiliated list, which
-// is a page of its own rather than a project route.
+// Every feature belongs to a project, so a missing one means the snapshot did
+// not carry it; there is nowhere to link, and the value stays plain text.
 function ProjectValue({ project }: { project: Project | undefined }) {
   const { t } = useTranslation();
   if (!project)
     return (
       <MetaValue kind="project">
-        <Link
-          to="/projects/unassigned"
-          search={{ features: "active" }}
-          className="task-card-meta-name"
-        >
-          {t("project.unassignedTitle")}
-        </Link>
+        <span className="task-card-meta-name">{t("taskCard.unknown")}</span>
       </MetaValue>
     );
   return (

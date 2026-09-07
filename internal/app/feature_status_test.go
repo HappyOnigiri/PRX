@@ -182,10 +182,7 @@ func createFeatureWithTasks(
 ) domain.Feature {
 	t.Helper()
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, slug, "", "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	feature := newFeature(t, ctx, service, slug)
 	for index, value := range tasks {
 		task, err := service.CreateTask(ctx, feature.ID, fmt.Sprintf("Task %d", index+1), "", "")
 		if err != nil {

@@ -1,17 +1,16 @@
 ## prx feature create
 
-Create a feature
+Create a feature in a project
 
 ```
-prx feature create TITLE [flags]
+prx feature create TITLE --project PROJECT_ID [flags]
 ```
 
 ### Examples
 
 ```
-prx feature create "Checkout rollout"
 prx feature create "Checkout rollout" --project P-1
-prx feature create -- "-fix checkout"
+prx feature create -- "-fix checkout" --project P-1
 ```
 
 ### Options
@@ -19,7 +18,7 @@ prx feature create -- "-fix checkout"
 ```
       --description string   feature description
   -h, --help                 help for create
-      --project string       project ID to join
+      --project string       project ID to join; required
 ```
 
 ### Options inherited from parent commands

@@ -121,8 +121,8 @@ func NewWithConfig(repository Repository, provider githubprovider.Provider, conf
 
 func (s *Service) ConfigStore() *config.Store { return s.configStore }
 
-// CreateFeature accepts an optional project membership. An empty projectID
-// leaves the feature unaffiliated, which is the normal case.
+// CreateFeature requires a project: a feature always belongs to one, so a
+// caller names the container up front instead of assigning it afterwards.
 func (s *Service) CreateFeature(
 	ctx context.Context,
 	title, description, projectID string,
@@ -144,7 +144,8 @@ func (s *Service) CreateFeature(
 
 // UpdateFeature applies every field the caller supplied. A nil pointer means the
 // field was omitted; an empty string is a request to clear it. A nil ProjectID
-// leaves the membership alone, and an empty one detaches the feature.
+// leaves the membership alone, and an empty one is refused: a feature cannot
+// leave every project.
 func (s *Service) UpdateFeature(
 	ctx context.Context,
 	id string,

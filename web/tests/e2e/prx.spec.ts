@@ -266,6 +266,22 @@ test("follows the system theme unless the user selects an override", async ({
   await expect.poll(background).toBe("rgb(245, 246, 248)");
 });
 
+// Every feature belongs to a project, so a feature is created from a project's
+// page rather than from the rail. The demo's first project is the container
+// these tests build in.
+const demoProjectPath = "/projects/P-1?features=active";
+
+async function createFeature(page: Page, title: string, description?: string) {
+  await page.goto(demoProjectPath);
+  await page.getByRole("button", { name: "Create feature" }).click();
+  const dialog = page.getByRole("form", { name: "Create feature" });
+  await dialog.getByLabel("Title").fill(title);
+  if (description !== undefined)
+    await dialog.getByLabel("Description").fill(description);
+  await dialog.getByRole("button", { name: "Create feature" }).click();
+  await expect(page.getByRole("heading", { name: title })).toBeVisible();
+}
+
 async function addTask(page: Page, title: string, trigger?: Locator) {
   await (
     trigger ?? page.getByRole("button", { name: "Add task" }).first()
@@ -456,15 +472,7 @@ test("creates and edits a feature DAG while preserving state", async ({
   // conflicting pull request. Keeping it unique avoids colliding with the pull
   // request a previous attempt attached to a task that still exists.
   const prNumber = Math.floor(Math.random() * 1_000_000) * 4 + 2;
-  await page.goto("/");
-  await page.getByRole("button", { name: "New feature" }).click();
-  const featureDialog = page.getByRole("form", { name: "Create feature" });
-  await featureDialog.getByLabel("Title").fill(title);
-  await featureDialog
-    .getByLabel("Description")
-    .fill("Browser-tested delivery circuit");
-  await featureDialog.getByRole("button", { name: "Create feature" }).click();
-  await expect(page.getByRole("heading", { name: title })).toBeVisible();
+  await createFeature(page, title, "Browser-tested delivery circuit");
   await page.getByRole("button", { name: "Edit feature" }).click();
   const editFeature = page.getByRole("form", { name: "Edit feature" });
   await editFeature
@@ -699,13 +707,7 @@ test("creates and edits a feature DAG while preserving state", async ({
 });
 
 test("visually separates disconnected dependency chains", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: "New feature" }).click();
-  const featureDialog = page.getByRole("form", { name: "Create feature" });
-  await featureDialog
-    .getByLabel("Title")
-    .fill(`Disconnected chains ${crypto.randomUUID()}`);
-  await featureDialog.getByRole("button", { name: "Create feature" }).click();
+  await createFeature(page, `Disconnected chains ${crypto.randomUUID()}`);
 
   for (const title of ["Chain A1", "Chain A2", "Chain B1", "Chain B2"])
     await addTask(page, title);
@@ -723,12 +725,8 @@ test("visually separates disconnected dependency chains", async ({ page }) => {
 });
 
 test("archives and safely deletes a feature", async ({ page }) => {
-  await page.goto("/");
-  await page.getByRole("button", { name: "New feature" }).click();
   const title = `Temporary feature ${crypto.randomUUID()}`;
-  const dialog = page.getByRole("form", { name: "Create feature" });
-  await dialog.getByLabel("Title").fill(title);
-  await dialog.getByRole("button", { name: "Create feature" }).click();
+  await createFeature(page, title);
   await addTask(page, "Archived E2E task");
   await page.getByRole("button", { name: "Edit feature" }).click();
   await page.getByRole("button", { name: "Archive feature" }).click();
@@ -740,11 +738,11 @@ test("archives and safely deletes a feature", async ({ page }) => {
     .click();
   await expect(page.getByText("Archived · read-only")).toBeVisible();
   // The rail tree shows the features in flight, so archiving from the
-  // workspace drops this one out of it. The feature belongs to no project, so
-  // the unaffiliated page is where it is now listed.
+  // workspace drops this one out of it. Its project's archived tab is where it
+  // is now listed.
   const rail = page.getByRole("navigation", { name: "PRX navigation" });
   await expect(rail.getByText(title)).toHaveCount(0);
-  await page.goto("/projects/unassigned?features=archived");
+  await page.goto("/projects/P-1?features=archived");
   await page.getByRole("tabpanel").getByText(title).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toHaveCount(
     0,
@@ -785,7 +783,7 @@ test("archives and safely deletes a feature", async ({ page }) => {
     .getByRole("button", { name: "Delete permanently" })
     .click();
   await expect(
-    page.getByRole("heading", { name: "No project", level: 1 }),
+    page.getByRole("heading", { name: "Delivery platform", level: 1 }),
   ).toBeVisible();
   await expect(page.getByText(title)).toHaveCount(0);
 });
@@ -797,7 +795,7 @@ for (const { title, size, from } of [
   {
     title: "Completed 100-task program",
     size: 100,
-    from: "/projects/unassigned?features=completed",
+    from: "/projects/P-1?features=completed",
   },
 ]) {
   test(`renders and inspects the ${size}-node graph`, async ({ page }) => {
@@ -891,7 +889,7 @@ test("keeps the user's graph zoom across features and reloads", async ({
   await expect.poll(() => graphZoom(page)).toBeLessThan(1);
   const savedZoom = await graphZoom(page);
 
-  await page.goto("/projects/unassigned?features=completed");
+  await page.goto("/projects/P-1?features=completed");
   await page
     .getByRole("link", { name: /Completed 100-task program/ })
     .first()

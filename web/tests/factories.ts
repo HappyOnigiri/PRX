@@ -23,6 +23,7 @@ import {
 
 const featureDefaults = {
   id: "feature-1",
+  projectId: "project-1",
   title: "Payments rollout",
   status: FeatureStatus.AUTO,
   displayStatus: FeatureStatus.ACTIVE,
