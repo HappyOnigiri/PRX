@@ -3,6 +3,7 @@ import {
   detectDisplayLanguage,
   readCollapsedProjects,
   readGraphZoom,
+  readHideCompletedTasks,
   readThemePreference,
   readWebUISettings,
   resolveThemePreference,
@@ -10,6 +11,7 @@ import {
   writeCollapsedProjects,
   writeDisplayLanguage,
   writeGraphZoom,
+  writeHideCompletedTasks,
   writeThemePreference,
 } from "../src/i18n/settings";
 
@@ -49,12 +51,29 @@ describe("WebUI settings", () => {
     writeGraphZoom(0.64);
     writeDisplayLanguage("ja");
     writeCollapsedProjects(["P-1"]);
+    writeHideCompletedTasks(true);
     expect(readWebUISettings()).toEqual({
       language: "ja",
       graphZoom: 0.64,
       theme: "dark",
       collapsedProjects: ["P-1"],
+      hideCompletedTasks: true,
     });
+  });
+
+  // The graph filter is off unless a stored boolean says otherwise, so a value
+  // of another type has to read back as "show every task".
+  it("restores the graph filter and ignores a non-boolean saved value", () => {
+    expect(readHideCompletedTasks()).toBe(false);
+    writeHideCompletedTasks(true);
+    expect(readHideCompletedTasks()).toBe(true);
+    writeHideCompletedTasks(false);
+    expect(readHideCompletedTasks()).toBe(false);
+    localStorage.setItem(
+      webUISettingsKey,
+      JSON.stringify({ hideCompletedTasks: "true" }),
+    );
+    expect(readHideCompletedTasks()).toBe(false);
   });
 
   // Only the collapsed rows are stored, so anything the file cannot vouch for

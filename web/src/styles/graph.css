@@ -511,3 +511,40 @@
     max-width: calc(100% - 16px);
   }
 }
+
+/* A hidden completed task leaves its edge behind as a severed stub, so the
+   task that waited on it still reads as connected to work that came before. */
+.node-hidden-dependency {
+  position: absolute;
+  top: 50%;
+  display: block;
+  height: 12px;
+  transform: translateY(-50%);
+  color: var(--border-strong);
+  pointer-events: auto;
+}
+
+.node-hidden-dependency-in {
+  left: -32px;
+}
+
+.node-hidden-dependency-out {
+  right: -32px;
+}
+
+/* The stub's icon is type-qualified so it keeps at least the specificity of
+   the title's glyph rule, which comes earlier in this file. */
+span.node-hidden-dependency svg {
+  display: block;
+}
+
+.node-hidden-dependency path {
+  fill: currentcolor;
+  stroke: currentcolor;
+  stroke-dasharray: 4 3;
+  stroke-width: 1.5;
+}
+
+.node-hidden-dependency path + path {
+  stroke-dasharray: none;
+}

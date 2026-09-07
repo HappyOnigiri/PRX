@@ -7,7 +7,8 @@ import {
 } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import type { Snapshot } from "../src/gen/prx/v1/prx_pb";
+import { TaskDisplayState, type Snapshot } from "../src/gen/prx/v1/prx_pb";
+import { readHideCompletedTasks } from "../src/i18n/settings";
 import { FeatureWorkspace } from "../src/views/FeatureWorkspace";
 import {
   makeDependency,
@@ -89,12 +90,18 @@ vi.mock("../src/hooks", () => ({
 }));
 vi.mock("../src/views/FeatureGraph", () => ({
   FeatureGraph: ({
+    tasks,
+    hiddenDependencies,
+    hiddenTaskCount,
     onCreateTask,
     onEditTask,
     onPreviewDocument,
     onAddDocument,
     readOnly,
   }: {
+    tasks: { id: string }[];
+    hiddenDependencies: Map<string, { blockers: string[] }>;
+    hiddenTaskCount: number;
     onCreateTask: () => void;
     onEditTask: (taskId: string) => void;
     onPreviewDocument: (document: unknown) => void;
@@ -103,6 +110,15 @@ vi.mock("../src/views/FeatureGraph", () => ({
   }) => (
     <div data-testid="feature-graph">
       <span>{readOnly ? "Mock read-only graph" : "Mock active graph"}</span>
+      <span data-testid="mock-graph-tasks">
+        {tasks.map((task) => task.id).join(",")}
+      </span>
+      <span data-testid="mock-graph-hidden">{hiddenTaskCount}</span>
+      <span data-testid="mock-graph-hidden-blockers">
+        {[...hiddenDependencies]
+          .map(([id, hidden]) => `${id}:${hidden.blockers.join("|")}`)
+          .join(",")}
+      </span>
       {!readOnly && <button onClick={onCreateTask}>Mock create task</button>}
       {!readOnly && (
         <button
@@ -234,6 +250,7 @@ describe("FeatureWorkspace", () => {
   });
 
   beforeEach(() => {
+    localStorage.clear();
     workspaceMocks.hookIndex = 0;
     workspaceMocks.snapshot.data = populatedSnapshot();
     workspaceMocks.snapshot.isPending = false;
@@ -245,6 +262,105 @@ describe("FeatureWorkspace", () => {
       mutation.isPending = false;
       mutation.error = null;
     }
+  });
+
+  it("hides completed tasks only while the header switch is on", () => {
+    const open = makeTask({
+      id: "open",
+      featureId: "feature-1",
+      title: "Ship API",
+      displayState: TaskDisplayState.NOT_STARTED,
+    });
+    const done = makeTask({
+      id: "done",
+      featureId: "feature-1",
+      title: "Migrate schema",
+      displayState: TaskDisplayState.COMPLETED,
+    });
+    workspaceMocks.snapshot.data = makeSnapshot({
+      features: [feature],
+      tasks: [done, open],
+      dependencies: [
+        makeDependency({ blockerTaskId: done.id, blockedTaskId: open.id }),
+      ],
+    });
+    render(<FeatureWorkspace />);
+
+    const toggle = screen.getByRole("switch", { name: "Hide completed" });
+    expect(toggle).not.toBeChecked();
+    expect(screen.getByTestId("mock-graph-tasks")).toHaveTextContent(
+      "done,open",
+    );
+    expect(screen.getByTestId("mock-graph-hidden")).toHaveTextContent("0");
+
+    fireEvent.click(toggle);
+    expect(toggle).toBeChecked();
+    expect(screen.getByTestId("mock-graph-tasks")).toHaveTextContent("open");
+    expect(screen.getByTestId("mock-graph-hidden")).toHaveTextContent("1");
+    expect(screen.getByTestId("mock-graph-hidden-blockers")).toHaveTextContent(
+      "open:Migrate schema",
+    );
+
+    fireEvent.click(toggle);
+    expect(toggle).not.toBeChecked();
+    expect(screen.getByTestId("mock-graph-tasks")).toHaveTextContent(
+      "done,open",
+    );
+  });
+
+  it("restores the header switch from browser-local settings on the next visit", () => {
+    workspaceMocks.snapshot.data = makeSnapshot({
+      features: [feature],
+      tasks: [
+        makeTask({
+          id: "open",
+          featureId: "feature-1",
+          displayState: TaskDisplayState.NOT_STARTED,
+        }),
+        makeTask({
+          id: "done",
+          featureId: "feature-1",
+          displayState: TaskDisplayState.COMPLETED,
+        }),
+      ],
+    });
+    render(<FeatureWorkspace />);
+
+    fireEvent.click(screen.getByRole("switch", { name: "Hide completed" }));
+    expect(readHideCompletedTasks()).toBe(true);
+
+    cleanup();
+    workspaceMocks.hookIndex = 0;
+    render(<FeatureWorkspace />);
+
+    expect(
+      screen.getByRole("switch", { name: "Hide completed" }),
+    ).toBeChecked();
+    expect(screen.getByTestId("mock-graph-tasks")).toHaveTextContent("open");
+  });
+
+  it("closes the inspector when hiding takes the selected task off the canvas", () => {
+    workspaceMocks.snapshot.data = makeSnapshot({
+      features: [feature],
+      tasks: [
+        makeTask({
+          id: "task-1",
+          featureId: "feature-1",
+          displayState: TaskDisplayState.MERGED,
+        }),
+      ],
+    });
+    render(<FeatureWorkspace />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Mock edit task" }));
+    expect(
+      screen.getByRole("complementary", { name: "Mock task inspector" }),
+    ).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole("switch", { name: "Hide completed" }));
+    expect(
+      screen.queryByRole("complementary", { name: "Mock task inspector" }),
+    ).not.toBeInTheDocument();
   });
 
   it("coordinates active sync, feature management, task inspection, and previews", () => {

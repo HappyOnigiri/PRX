@@ -574,6 +574,34 @@ describe("FeatureGraph", () => {
     expect(onCreateTask).toHaveBeenCalledOnce();
   });
 
+  it("explains an empty canvas that hiding produced instead of offering a first task", () => {
+    const onCreateTask = vi.fn();
+    render(
+      <FeatureGraph
+        tasks={[]}
+        dependencies={[]}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        hiddenTaskCount={3}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={onCreateTask}
+      />,
+    );
+
+    expect(
+      screen.getByRole("heading", { name: "Every task is completed" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByText(
+        "3 completed tasks are hidden. Turn off Hide completed to see them.",
+      ),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Add task" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("keeps an archived empty graph read-only", () => {
     render(
       <FeatureGraph
