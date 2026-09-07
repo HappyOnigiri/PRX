@@ -3,6 +3,10 @@ import ELK from "elkjs/lib/elk-api.js";
 import elkWorkerUrl from "elkjs/lib/elk-worker.min.js?url";
 import { useEffect, useMemo, useState } from "react";
 import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
+import {
+  emptyHiddenDependencies,
+  type HiddenDependencies,
+} from "./completedTasks";
 import { dependencyEdgeId, type DependencyEdgeRoute } from "./dependencyGraph";
 import { type TaskFlowNode, type TaskNodeDocument } from "./TaskNode";
 
@@ -11,6 +15,7 @@ interface GraphLayoutOptions {
   dependencies: Dependency[];
   pullRequests: Map<string, PullRequest>;
   documentsByTask: Map<string, TaskNodeDocument[]>;
+  hiddenDependencies?: Map<string, HiddenDependencies>;
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onAddDocument?: (taskId: string, trigger: HTMLButtonElement) => void;
@@ -30,6 +35,7 @@ function isSameLayoutRequest(
     completed.dependencies === requested.dependencies &&
     completed.pullRequests === requested.pullRequests &&
     completed.documentsByTask === requested.documentsByTask &&
+    completed.hiddenDependencies === requested.hiddenDependencies &&
     completed.onEditTask === requested.onEditTask &&
     completed.onPreviewDocument === requested.onPreviewDocument &&
     completed.onAddDocument === requested.onAddDocument &&
@@ -42,6 +48,7 @@ function buildRawNodes({
   tasks,
   pullRequests,
   documentsByTask,
+  hiddenDependencies = emptyHiddenDependencies,
   onEditTask,
   onPreviewDocument,
   onAddDocument,
@@ -70,6 +77,7 @@ function buildRawNodes({
             }
           : undefined,
         documents,
+        ...hiddenDependencyData(hiddenDependencies.get(task.id)),
         readOnly,
         onEdit: () => {
           onEditTask(task.id);
@@ -81,6 +89,12 @@ function buildRawNodes({
       },
     };
   });
+}
+
+// A task with nothing hidden behind it leaves the key out entirely rather than
+// carrying an undefined one, which the node data type refuses.
+function hiddenDependencyData(hidden: HiddenDependencies | undefined) {
+  return hidden ? { hiddenDependencies: hidden } : {};
 }
 
 type RawNode = ReturnType<typeof buildRawNodes>[number];
@@ -178,6 +192,7 @@ export function useGraphLayout({
   dependencies,
   pullRequests,
   documentsByTask,
+  hiddenDependencies = emptyHiddenDependencies,
   onEditTask,
   onPreviewDocument,
   onAddDocument,
@@ -200,6 +215,7 @@ export function useGraphLayout({
       dependencies,
       pullRequests,
       documentsByTask,
+      hiddenDependencies,
       onEditTask,
       onPreviewDocument,
       ...(onAddDocument ? { onAddDocument } : {}),
@@ -211,6 +227,7 @@ export function useGraphLayout({
       dependencies,
       pullRequests,
       documentsByTask,
+      hiddenDependencies,
       onEditTask,
       onPreviewDocument,
       onAddDocument,

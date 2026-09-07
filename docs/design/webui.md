@@ -32,6 +32,7 @@ Current screens, components, gestures, and control placement belong to the WebUI
 Task search operates over the current Snapshot in the browser; its q query stays in the URL so reload, history, and sharing reproduce the view.
 The status tabs of the project list and of every feature list stay in the URL for the same reason.
 The navigation is a tree of projects and the features in flight inside them; which rows are collapsed is browser-local state.
+Whether the task graph hides completed tasks is browser-local state as well, so the next visit reads the graph the way it was left.
 
 Demo mode is injected through the served HTML metadata rather than RPC or domain state.
 The WebUI keeps a non-dismissible bilingual reset warning at the top of every demo screen.
