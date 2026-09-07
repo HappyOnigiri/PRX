@@ -10,6 +10,7 @@ import (
 	"strings"
 	"sync/atomic"
 	"testing"
+	"time"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
@@ -349,5 +350,123 @@ func writeGraphQLResponse(t *testing.T, writer http.ResponseWriter, value any) {
 	writer.Header().Set("Content-Type", "application/json")
 	if err := json.NewEncoder(writer).Encode(value); err != nil {
 		t.Fatal(err)
+	}
+}
+
+// GraphQL 経路の 3 項目は、レビュー中の判定に直接効く。変更要求だけを時刻の対象に
+// し、pushedAt が null ならコミット日時へ落とす。
+func TestLiveProviderFetchBatchReadsReviewTimingFields(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		query := decodeGraphQLQuery(t, request)
+		data := graphQLDataForQuery(query)
+		pull := data["r0"].(map[string]any)["p0"].(map[string]any)
+		pageInfo := map[string]any{"hasNextPage": false, "endCursor": ""}
+		pull["latestReviews"] = map[string]any{
+			"nodes": []any{
+				map[string]any{
+					"author": map[string]any{"login": "commenter"},
+					"state":  "COMMENTED", "submittedAt": "2026-03-05T00:00:00Z",
+				},
+				map[string]any{
+					"author": map[string]any{"login": "reviewer"},
+					"state":  "CHANGES_REQUESTED", "submittedAt": "2026-03-01T00:00:00Z",
+				},
+			},
+			"pageInfo": pageInfo,
+		}
+		pull["reviewRequests"] = map[string]any{
+			"nodes":    []any{map[string]any{"requestedReviewer": map[string]any{"login": "mona"}}},
+			"pageInfo": pageInfo,
+		}
+		pull["commits"] = map[string]any{"nodes": []any{map[string]any{
+			"commit": map[string]any{"pushedAt": nil, "committedDate": "2026-03-02T00:00:00Z"},
+		}}}
+		writeGraphQLResponse(t, writer, map[string]any{"data": data})
+	}))
+	defer server.Close()
+	provider := newGraphQLTestProvider(t, server)
+	result, err := provider.FetchBatch(context.Background(), []domain.PullRequest{{
+		TaskID: "timing", Owner: "acme", Repository: "api", Number: 9,
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := result.PullRequests["timing"]
+	if !got.ReviewRequestPending ||
+		got.ChangesRequestedAt == nil || got.ChangesRequestedAt.Format(time.RFC3339) != "2026-03-01T00:00:00Z" ||
+		got.LastPushedAt == nil || got.LastPushedAt.Format(time.RFC3339) != "2026-03-02T00:00:00Z" {
+		t.Fatalf("timing result=%+v", got)
+	}
+}
+
+// latestReviews の後続ページを取得できないときは、先頭ページだけで変更要求時刻を
+// 上書きしない。巻き戻すと、未対応の task がレビュー中に見える。
+func TestLiveProviderFetchBatchKeepsChangesRequestedAtWhenReviewPagesFail(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		query := decodeGraphQLQuery(t, request)
+		if regexp.MustCompile(`node\(id:`).MatchString(query) {
+			writeGraphQLResponse(t, writer, map[string]any{
+				"errors": []any{map[string]any{"message": "review metadata unavailable"}},
+			})
+			return
+		}
+		data := graphQLDataForQuery(query)
+		pull := data["r0"].(map[string]any)["p0"].(map[string]any)
+		pull["latestReviews"] = map[string]any{
+			"nodes": []any{map[string]any{
+				"author": map[string]any{"login": "reviewer"},
+				"state":  "CHANGES_REQUESTED", "submittedAt": "2026-01-01T00:00:00Z",
+			}},
+			"pageInfo": map[string]any{"hasNextPage": true, "endCursor": "review-cursor"},
+		}
+		writeGraphQLResponse(t, writer, map[string]any{"data": data})
+	}))
+	defer server.Close()
+	provider := newGraphQLTestProvider(t, server)
+	known := time.Date(2026, 4, 1, 0, 0, 0, 0, time.UTC)
+	result, err := provider.FetchBatch(context.Background(), []domain.PullRequest{{
+		TaskID: "pages", Owner: "acme", Repository: "api", Number: 10,
+		ChangesRequestedAt: &known,
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	partial := result.PartialPullRequests["pages"]
+	if result.Errors["pages"] == nil || partial.ChangesRequestedAt == nil ||
+		!partial.ChangesRequestedAt.Equal(known) {
+		t.Fatalf("partial=%+v errors=%v", partial, result.Errors)
+	}
+}
+
+// 終了した pull request では、REST 経路と同じく 3 項目を落とす。
+func TestLiveProviderFetchBatchClearsReviewTimingForFinishedPullRequests(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		query := decodeGraphQLQuery(t, request)
+		data := graphQLDataForQuery(query)
+		pull := data["r0"].(map[string]any)["p0"].(map[string]any)
+		pull["state"] = "MERGED"
+		pull["merged"] = true
+		pull["reviewRequests"] = map[string]any{
+			"nodes":    []any{map[string]any{"requestedReviewer": map[string]any{"login": "mona"}}},
+			"pageInfo": map[string]any{"hasNextPage": false, "endCursor": ""},
+		}
+		pull["commits"] = map[string]any{"nodes": []any{map[string]any{
+			"commit": map[string]any{"pushedAt": "2026-03-02T00:00:00Z", "committedDate": ""},
+		}}}
+		writeGraphQLResponse(t, writer, map[string]any{"data": data})
+	}))
+	defer server.Close()
+	provider := newGraphQLTestProvider(t, server)
+	known := time.Date(2026, 4, 1, 0, 0, 0, 0, time.UTC)
+	result, err := provider.FetchBatch(context.Background(), []domain.PullRequest{{
+		TaskID: "merged", Owner: "acme", Repository: "api", Number: 11,
+		ChangesRequestedAt: &known, LastPushedAt: &known, ReviewRequestPending: true,
+	}})
+	if err != nil {
+		t.Fatal(err)
+	}
+	got := result.PullRequests["merged"]
+	if got.ReviewRequestPending || got.ChangesRequestedAt != nil || got.LastPushedAt != nil {
+		t.Fatalf("merged result=%+v", got)
 	}
 }

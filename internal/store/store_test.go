@@ -1870,6 +1870,8 @@ func TestGetPullRequestRoundTripAndNotFound(t *testing.T) {
 	}
 	githubUpdatedAt := time.Date(2026, 8, 29, 1, 2, 3, 456000000, time.UTC)
 	lastSyncedAt := time.Date(2026, 8, 29, 2, 3, 4, 567000000, time.UTC)
+	changesRequestedAt := time.Date(2026, 8, 28, 3, 4, 5, 678000000, time.UTC)
+	lastPushedAt := time.Date(2026, 8, 28, 4, 5, 6, 789000000, time.UTC)
 	want := domain.PullRequest{
 		TaskID:          task.ID,
 		Host:            "github.com",
@@ -1886,6 +1888,11 @@ func TestGetPullRequestRoundTripAndNotFound(t *testing.T) {
 		GitHubUpdatedAt: &githubUpdatedAt,
 		LastSyncedAt:    &lastSyncedAt,
 		Stale:           false,
+		// レビュー中の判定に使う 3 列も往復させる。マイグレーションと
+		// スキャンのどちらが欠けても、判定は静かに効かなくなる。
+		ReviewRequestPending: true,
+		ChangesRequestedAt:   &changesRequestedAt,
+		LastPushedAt:         &lastPushedAt,
 	}
 	if _, err := database.UpsertPullRequest(ctx, want); err != nil {
 		t.Fatal(err)
@@ -1911,6 +1918,16 @@ func TestGetPullRequestRoundTripAndNotFound(t *testing.T) {
 	}
 	if got.LastSyncedAt == nil || !got.LastSyncedAt.Equal(lastSyncedAt) {
 		t.Fatalf("last synced at=%v, want %v", got.LastSyncedAt, lastSyncedAt)
+	}
+	if !got.ReviewRequestPending ||
+		got.ChangesRequestedAt == nil || !got.ChangesRequestedAt.Equal(changesRequestedAt) ||
+		got.LastPushedAt == nil || !got.LastPushedAt.Equal(lastPushedAt) {
+		t.Fatalf(
+			"review timing pending=%t changes=%v pushed=%v",
+			got.ReviewRequestPending,
+			got.ChangesRequestedAt,
+			got.LastPushedAt,
+		)
 	}
 	if _, err := database.GetPullRequest(ctx, "missing-task"); domain.ErrorCode(err) != domain.DomainErrorCodeNotFound {
 		t.Fatalf("missing pull request code=%s err=%v", domain.ErrorCode(err), err)

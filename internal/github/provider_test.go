@@ -353,3 +353,103 @@ func TestLiveProviderFollowsReviewPagination(t *testing.T) {
 		t.Fatalf("review state = %q, want changes_requested from the second page", got.ReviewState)
 	}
 }
+
+// REST 経路の 3 項目。コミットには push 時刻がないので committer の日時を使い、
+// 変更要求以外のレビューでは時刻を残さない。
+func TestLiveProviderReadsReviewTimingOverREST(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(
+			`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7",` +
+				`"user":{"login":"octocat"},"updated_at":"2026-01-01T00:00:00Z"}`,
+		))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/reviews", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(
+			`[{"state":"CHANGES_REQUESTED","user":{"login":"reviewer"},"submitted_at":"2026-01-20T00:00:00Z"},` +
+				`{"state":"COMMENTED","user":{"login":"commenter"},"submitted_at":"2026-01-25T00:00:00Z"}]`,
+		))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/requested_reviewers", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"users":[{"login":"mona"}],"teams":[]}`))
+	})
+	handleRESTCommits(mux)
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := gh.NewClient(nil)
+	base, _ := client.BaseURL.Parse(server.URL + "/")
+	client.BaseURL = base
+	provider := &LiveProvider{client: client}
+	got, err := provider.Fetch(context.Background(), domain.PullRequest{Owner: "acme", Repository: "api", Number: 7})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !got.ReviewRequestPending ||
+		got.ChangesRequestedAt == nil || got.ChangesRequestedAt.Format(time.RFC3339) != "2026-01-20T00:00:00Z" ||
+		got.LastPushedAt == nil || got.LastPushedAt.Format(time.RFC3339) != "2026-02-01T00:00:00Z" {
+		t.Fatalf("timing result=%+v", got)
+	}
+}
+
+// 変更要求以外のレビューだけなら、変更要求時刻は残らない。
+func TestLiveProviderLeavesChangesRequestedAtEmptyWithoutChangeRequests(t *testing.T) {
+	provider := newReviewServer(
+		t,
+		`[{"state":"APPROVED","user":{"login":"reviewer"},"submitted_at":"2026-01-20T00:00:00Z"}]`,
+	)
+	got, err := provider.Fetch(context.Background(), domain.PullRequest{Owner: "acme", Repository: "api", Number: 7})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ChangesRequestedAt != nil || got.ReviewRequestPending {
+		t.Fatalf("timing result=%+v", got)
+	}
+}
+
+// コミット取得だけが失敗しても、取得できたレビュー結果は捨てない。最新 push 時刻は
+// 前回成功した値のまま残す。
+func TestLiveProviderKeepsReviewResultWhenCommitFetchFails(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(
+			`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7",` +
+				`"user":{"login":"octocat"},"updated_at":"2026-01-01T00:00:00Z"}`,
+		))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/reviews", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(
+			`[{"state":"CHANGES_REQUESTED","user":{"login":"reviewer"},"submitted_at":"2026-01-20T00:00:00Z"}]`,
+		))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/requested_reviewers", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"users":[],"teams":[]}`))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/commits", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := gh.NewClient(nil)
+	base, _ := client.BaseURL.Parse(server.URL + "/")
+	client.BaseURL = base
+	provider := &LiveProvider{client: client}
+	known := time.Date(2026, 1, 5, 0, 0, 0, 0, time.UTC)
+	got, err := provider.Fetch(context.Background(), domain.PullRequest{
+		Owner: "acme", Repository: "api", Number: 7,
+		ReviewState: domain.ReviewStateApproved, LastPushedAt: &known,
+	})
+	if err == nil {
+		t.Fatal("commit fetch failure must be reported")
+	}
+	if got.ReviewState != domain.ReviewStateChangesRequested ||
+		got.ChangesRequestedAt == nil || got.ChangesRequestedAt.Format(time.RFC3339) != "2026-01-20T00:00:00Z" ||
+		got.LastPushedAt == nil || !got.LastPushedAt.Equal(known) {
+		t.Fatalf("partial result=%+v", got)
+	}
+}
