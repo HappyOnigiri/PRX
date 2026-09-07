@@ -1,12 +1,10 @@
 # Domain policy
 
-The server derives display state from stored state and external facts.
-Clients must not recreate that derivation independently.
+The server derives display state from stored state and external facts under [architecture.md](architecture.md).
 
 A task has no kind: any task may hold a pull request, and one without a pull request reaches completion through its stored status.
-Deciding that in advance changed nothing the server derives, so it is not asked for.
 
-A task status is always chosen by hand; there is no automatic member to select.
+Task status is chosen manually.
 The unfinished statuses yield to an attached pull request, so linking one presents the pull request's state without a second edit.
 The designing status yields once more, to a registered implementation plan, so a task marked as being designed is presented as designed the moment its plan is registered.
 The finished statuses outrank a pull request, so a task settled by hand stays settled while its pull request is still open.
@@ -15,25 +13,22 @@ Designing describes deciding how the work will be built rather than building it,
 Dependency satisfaction uses raw completion semantics rather than display labels.
 Presentation flags such as review, conflict, or staleness do not silently redefine completion.
 
-A feature is presented through the same two layers of stored status and derived status, but it keeps an automatic member that a task no longer has.
+A feature also separates stored and derived status, with an automatic stored status.
 Its stored status defaults to automatic, and an automatic feature is presented as completed once it owns at least one task and every one of them is finished.
 A stored status other than automatic is a manual decision and is presented unchanged, so a feature returned to active work stays active while its tasks remain finished.
 A feature has no separate derived vocabulary: the derived value is a stored status without the automatic member.
 
 A project is the unit above a feature: it groups features and holds the documents they share.
-Membership is required, a feature belongs to exactly one project, and dependencies stay inside one feature regardless of project.
-A feature is created in a project and can only move to another one, so there is no state in which work sits outside every project.
+A feature always belongs to exactly one project, including at creation and after a move; dependencies stay inside one feature regardless of project.
 A project's only state is whether it is archived; it is deliberately outside the two-layer status rule that features and tasks share.
-Archiving reaches into a project: a feature inside an archived project is presented as read-only even when its own archived flag is false.
-The server derives that as `Feature.ReadOnly` and clients read it directly instead of combining the feature's flag with its project's.
-Every read that carries a feature derives it, including the ones that return a single feature, so a client never has to know which read produced the value.
+Every read carrying a feature supplies `Feature.ReadOnly`, true when either the feature or its project is archived.
+Clients use this value directly.
 A read-only feature is presented in the archived category and leaves the active feature lists, the overview, and task search, which is the same treatment an individually archived feature receives.
 The writes archiving forbids are recorded in [archive.md](archive.md).
 
 Dependencies point from blocker to blocked.
 Dependency mutations preserve feature ownership and DAG integrity.
 Cycle rejection includes enough context for callers to explain the failure.
-A blocked task carries every unsatisfied blocker, while its blocked reason names only the first of them.
-The reason is what a reader acts on, and the full set is what a caller needs when it hands a blocked task over together with the work it waits for.
+A blocked task carries every unsatisfied blocker for batch handover, while its blocked reason names only the first for the reader to act on.
 
 Current state values, display precedence, and readiness conditions belong to the domain implementation and its tests.
