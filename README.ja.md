@@ -1,6 +1,6 @@
 # PRX
 
-[English version is README.md](README.md)
+[English](README.md)
 
 PRX は、多数の GitHub プルリクエストにまたがる施策のためのローカルファーストな依存関係コントロールルームである。
 正規化した DAG を SQLite に保存し、次に着手して安全なタスクを導出する。
