@@ -285,7 +285,8 @@
   touch-action: none;
 }
 
-.rail-resizer:hover,
+/* hover では色を出さない。ドラッグできることは col-resize のカーソルが伝える。
+   キーボードのフォーカスだけは、カーソルが出ないので面で示す。 */
 .rail-resizer:focus-visible {
   background: var(--accent);
 }
