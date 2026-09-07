@@ -18,6 +18,15 @@ The per-task text is therefore absent from the batch body: a batch stays the sam
 The caller names the feature and the tasks, and a task the feature does not own is rejected rather than rendered, so a stale selection reports what it can no longer hand over.
 Rendering a batch is a read like every other prompt: it changes no task, and the WebUI is the only surface that asks for one.
 It offers the tasks the server presents as designed and ready, because those are the ones whose implementation can start now; the selection itself stays with the reader.
+A batch may also cover a task that is still blocked, as long as every blocker it waits for travels in the same batch.
+The receiving agent implements such a task after the work it waits for and stacks its pull request on that work, so the chain lands as stacked pull requests rather than one merge conflict.
+A selection that leaves a blocker out is rejected like a task the feature does not own, because it describes work the agent has no base to start from.
+The reader is offered the blocked tasks only on request, since a handover of what can start now is the common case.
+A blocked task whose blocker no batch could carry is never offered, because selecting it could not become possible.
+
+The built-in implementation and batch templates both tell the agent to branch from the base the work belongs on rather than from the default branch.
+A task whose blocker is still open belongs on that blocker's branch, so the wording is the same whether one task or a whole chain is handed over.
+That keeps the instruction independent of what a batch happens to contain: a rendered prompt does not change shape because the selection included a dependency.
 
 The templates are shared configuration rather than browser state, because the CLI and the WebUI must emit the same text.
 Every template is written together, so one configuration write never leaves a task with a stale half of the set.

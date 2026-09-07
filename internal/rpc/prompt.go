@@ -139,6 +139,9 @@ func (h *Handler) GetBatchPrompt(
 		}
 		tasks = append(tasks, task)
 	}
+	if err := requireBlockersInBatch(tasks); err != nil {
+		return nil, err
+	}
 	body, err := prompt.RenderBatch(featureID, tasks, settings.Prompts)
 	if err != nil {
 		return nil, configRPCError(err)
@@ -146,6 +149,30 @@ func (h *Handler) GetBatchPrompt(
 	return connect.NewResponse(&prxv1.GetBatchPromptResponse{
 		FeatureId: featureID, TaskIds: taskIDs, Prompt: body,
 	}), nil
+}
+
+// requireBlockersInBatch rejects a batch that asks for a task without the work
+// it waits for. A blocked task can be handed over, because the agent implements
+// it after its blocker and stacks the pull requests, but only if that blocker
+// travels in the same batch. Anything else describes work the receiving agent
+// has no base to start from.
+func requireBlockersInBatch(tasks []domain.Task) error {
+	included := make(map[string]struct{}, len(tasks))
+	for _, task := range tasks {
+		included[task.ID] = struct{}{}
+	}
+	for _, task := range tasks {
+		for _, blockerID := range task.PendingBlockerTaskIDs {
+			if _, ok := included[blockerID]; ok {
+				continue
+			}
+			return rpcError(domain.NewError(
+				domain.DomainErrorCodeInvalidParent,
+				"task %q waits for task %q, which the batch does not include", task.ID, blockerID,
+			))
+		}
+	}
+	return nil
 }
 
 func findTask(snapshot domain.Snapshot, id string) (domain.Task, bool) {

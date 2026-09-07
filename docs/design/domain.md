@@ -33,5 +33,7 @@ The writes archiving forbids are recorded in [archive.md](archive.md).
 Dependencies point from blocker to blocked.
 Dependency mutations preserve feature ownership and DAG integrity.
 Cycle rejection includes enough context for callers to explain the failure.
+A blocked task carries every unsatisfied blocker, while its blocked reason names only the first of them.
+The reason is what a reader acts on, and the full set is what a caller needs when it hands a blocked task over together with the work it waits for.
 
 Current state values, display precedence, and readiness conditions belong to the domain implementation and its tests.

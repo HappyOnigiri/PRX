@@ -272,6 +272,41 @@ func TestRPCBatchPromptRejectsASelectionTheFeatureDoesNotOwn(t *testing.T) {
 	}
 }
 
+// A blocked task may be handed over, because the agent implements it after the
+// work it waits for and stacks the pull requests. That only holds while the
+// blocker travels in the same batch, so a selection without it is rejected.
+func TestRPCBatchPromptRejectsASelectionMissingABlocker(t *testing.T) {
+	ctx := context.Background()
+	client := newPromptClient(t)
+	featureID, taskIDs := createBatchFeature(t, client, "Batch", "First task", "Second task")
+	if _, err := client.AddDependency(ctx, connect.NewRequest(&prxv1.AddDependencyRequest{
+		BlockerTaskId: taskIDs[0], BlockedTaskId: taskIDs[1],
+	})); err != nil {
+		t.Fatal(err)
+	}
+
+	_, err := client.GetBatchPrompt(ctx, connect.NewRequest(&prxv1.GetBatchPromptRequest{
+		FeatureId: featureID, TaskIds: []string{taskIDs[1]},
+	}))
+	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT ||
+		!strings.Contains(err.Error(), taskIDs[0]) {
+		t.Fatalf("missing blocker error=%v", err)
+	}
+
+	// The same task renders as soon as the batch carries what it waits for.
+	batch, err := client.GetBatchPrompt(ctx, connect.NewRequest(&prxv1.GetBatchPromptRequest{
+		FeatureId: featureID, TaskIds: taskIDs,
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, id := range taskIDs {
+		if !strings.Contains(batch.Msg.GetPrompt(), id) {
+			t.Fatalf("batch prompt=%q, want it to name %q", batch.Msg.GetPrompt(), id)
+		}
+	}
+}
+
 func createBatchFeature(
 	t *testing.T,
 	client prxv1connect.PRXServiceClient,

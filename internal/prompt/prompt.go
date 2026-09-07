@@ -107,8 +107,11 @@ Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact su
 2. Mark the task as being worked on before you change anything.
    - ` + "`prx task update {{task_id}} --status in_progress`" + `
 3. Implement the plan, staying inside the scope above.
+   Branch from the base the work actually belongs on rather than from main or master by default.
+   A task whose blocker is still open belongs on that blocker's branch, so the two pull requests stack.
 4. Record the result in PRX.
-   - Work that lands as a pull request: open it, then run ` + "`prx pr attach {{task_id}} PULL_REQUEST_URL`" + `.
+   - Work that lands as a pull request: open it against the base you branched from,
+     then run ` + "`prx pr attach {{task_id}} PULL_REQUEST_URL`" + `.
      Its state then follows the pull request, so do not set the status by hand.
    - Work without a pull request: run ` + "`prx task update {{task_id}} --status completed`" + ` once it is done.
 
@@ -129,9 +132,13 @@ Tasks:
    Each SubAgent takes its instructions from PRX rather than from you.
    - It runs ` + "`prx prompt TASK_ID`" + ` for the task it was given and follows the prompt that prints.
    - It reports what it changed and anything the prompt did not cover.
-   Nothing in the list is waiting on anything else in it, so the SubAgents may run in parallel.
+   Tasks the graph shows as independent may run in parallel.
+   A task that depends on another task of this list is implemented after that task is finished,
+   and its pull request is stacked on the pull request of the task it depends on.
+   Branch from the base the work belongs on rather than from main or master by default.
 3. Wait for every SubAgent and read what each one reported.
    A task whose SubAgent failed stays unfinished: report it instead of implementing it yourself.
+   Whatever depends on it stays unstarted as well, because its base is not there.
 
 Report each task's outcome separately, including the ones that failed.
 `

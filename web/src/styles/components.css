@@ -993,9 +993,22 @@
 }
 
 .batch-prompt-count {
+  margin-left: auto;
   color: var(--text-2);
   font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
+}
+
+.dialog .batch-prompt-include-blocked {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  margin: 0;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  cursor: pointer;
 }
 
 .batch-prompt-list {
@@ -1035,13 +1048,11 @@
   cursor: pointer;
 }
 
-.batch-prompt-task:hover {
-  background: var(--surface-2);
-}
-
-.batch-prompt-task[aria-pressed="true"] {
-  border-left-color: var(--accent);
-  background: var(--surface-2);
+/* A row out of reach still has to be readable: it names the work and what it
+   waits for, which is how the reader learns what to select first. */
+.batch-prompt-task:disabled {
+  color: var(--text-2);
+  cursor: not-allowed;
 }
 
 /* The list clips its own scroll area, so the ring sits inside the row instead
@@ -1050,9 +1061,26 @@
   outline-offset: -2px;
 }
 
+.batch-prompt-task[aria-pressed="true"] {
+  border-left-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.batch-prompt-task:hover:not(:disabled) {
+  background: var(--surface-2);
+}
+
 .batch-prompt-task-title {
   flex: 1 1 auto;
   overflow-wrap: anywhere;
+}
+
+/* The dependency sits between the title and the identifier, so a reader
+   scanning the list sees what a row waits for without reading the graph. */
+.batch-prompt-task-after {
+  flex: 0 0 auto;
+  color: var(--text-2);
+  font-size: var(--text-xs);
 }
 
 .batch-prompt-task-id {

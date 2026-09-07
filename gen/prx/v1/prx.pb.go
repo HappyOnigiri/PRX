@@ -1397,6 +1397,11 @@ type Task struct {
 	BlockedReason *BlockedReason `protobuf:"bytes,12,opt,name=blocked_reason,json=blockedReason,proto3" json:"blocked_reason,omitempty"`
 	// has_implementation_plan indicates whether a plan document is registered for this task.
 	HasImplementationPlan bool `protobuf:"varint,13,opt,name=has_implementation_plan,json=hasImplementationPlan,proto3" json:"has_implementation_plan,omitempty"`
+	// pending_blocker_task_ids names every blocker that is not satisfied yet, by
+	// its public T-<number> ID. blocked_reason names only the first of them, so a
+	// caller that has to hand over a task together with everything it waits for
+	// reads this instead.
+	PendingBlockerTaskIds []string `protobuf:"bytes,14,rep,name=pending_blocker_task_ids,json=pendingBlockerTaskIds,proto3" json:"pending_blocker_task_ids,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
 }
@@ -1513,6 +1518,13 @@ func (x *Task) GetHasImplementationPlan() bool {
 		return x.HasImplementationPlan
 	}
 	return false
+}
+
+func (x *Task) GetPendingBlockerTaskIds() []string {
+	if x != nil {
+		return x.PendingBlockerTaskIds
+	}
+	return nil
 }
 
 // Dependency is a directed edge from a blocker task to a blocked task in one feature.
@@ -8326,7 +8338,7 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	"\x0efinished_count\x18\x0f \x01(\x05R\rfinishedCount\x12\x1d\n" +
 	"\n" +
 	"project_id\x18\x10 \x01(\tR\tprojectId\x12\x1b\n" +
-	"\tread_only\x18\x11 \x01(\bR\breadOnlyJ\x04\b\x02\x10\x03R\x04slug\"\xbe\x03\n" +
+	"\tread_only\x18\x11 \x01(\bR\breadOnlyJ\x04\b\x02\x10\x03R\x04slug\"\xf7\x03\n" +
 	"\x04Task\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
@@ -8343,7 +8355,8 @@ const file_prx_v1_prx_proto_rawDesc = "" +
 	" \x01(\bR\x05ready\x12=\n" +
 	"\rdisplay_state\x18\v \x01(\x0e2\x18.prx.v1.TaskDisplayStateR\fdisplayState\x12<\n" +
 	"\x0eblocked_reason\x18\f \x01(\v2\x15.prx.v1.BlockedReasonR\rblockedReason\x126\n" +
-	"\x17has_implementation_plan\x18\r \x01(\bR\x15hasImplementationPlanJ\x04\b\x05\x10\x06R\x04kind\"{\n" +
+	"\x17has_implementation_plan\x18\r \x01(\bR\x15hasImplementationPlan\x127\n" +
+	"\x18pending_blocker_task_ids\x18\x0e \x03(\tR\x15pendingBlockerTaskIdsJ\x04\b\x05\x10\x06R\x04kind\"{\n" +
 	"\n" +
 	"Dependency\x12&\n" +
 	"\x0fblocker_task_id\x18\x01 \x01(\tR\rblockerTaskId\x12&\n" +

@@ -2,18 +2,14 @@ import { ClipboardCopy, Square, SquareCheckBig, X } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { getBatchPrompt } from "../api";
-import { TaskDisplayState, type Task } from "../gen/prx/v1/prx_pb";
+import { type Task } from "../gen/prx/v1/prx_pb";
+import {
+  batchCandidates,
+  isSelectable,
+  prunedSelection,
+  type BatchCandidate,
+} from "./batchPromptTasks";
 import { IconButton } from "./IconButton";
-
-// A task is offered when the server derived both that it has a plan and that
-// nothing blocks it. Readiness is a server derivation, so the dialog reads the
-// two flags instead of recomputing them from the dependencies it happens to
-// hold.
-function implementableTasks(tasks: Task[]): Task[] {
-  return tasks.filter(
-    (task) => task.displayState === TaskDisplayState.DESIGNED && task.ready,
-  );
-}
 
 type CopyStatus =
   | { case: "idle" }
@@ -34,7 +30,13 @@ export function BatchPromptDialog({
   onClose: () => void;
 }) {
   const { t } = useTranslation();
-  const candidates = useMemo(() => implementableTasks(tasks), [tasks]);
+  // Whether the blocked tasks are offered is a choice about this one handover,
+  // not a preference the reader keeps, so it starts closed on every open.
+  const [includeBlocked, setIncludeBlocked] = useState(false);
+  const candidates = useMemo(
+    () => batchCandidates(tasks, includeBlocked),
+    [tasks, includeBlocked],
+  );
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set());
   const [status, setStatus] = useState<CopyStatus>({ case: "idle" });
   const [pending, setPending] = useState(false);
@@ -44,27 +46,43 @@ export function BatchPromptDialog({
   function toggle(taskId: string) {
     setSelected((current) => {
       const next = new Set(current);
-      if (!next.delete(taskId)) next.add(taskId);
+      // Dropping a task strands whatever was stacked on it, so the selection is
+      // pruned rather than left describing work with no base.
+      if (next.delete(taskId)) return prunedSelection(candidates, next);
+      next.add(taskId);
       return next;
     });
   }
 
   function toggleAll() {
+    // Every offered task can be selected at once: the offer already excludes
+    // anything whose blockers the batch cannot carry.
     setSelected(
-      allSelected ? new Set() : new Set(candidates.map((task) => task.id)),
+      allSelected
+        ? new Set()
+        : new Set(candidates.map((candidate) => candidate.task.id)),
+    );
+  }
+
+  function changeIncludeBlocked(include: boolean) {
+    setIncludeBlocked(include);
+    setSelected((current) =>
+      prunedSelection(batchCandidates(tasks, include), current),
     );
   }
 
   async function copyPrompts() {
     // The list order is the order the reader sees, so the copy follows it
     // rather than the order the checkboxes were clicked in.
-    const targets = candidates.filter((task) => selected.has(task.id));
+    const targets = candidates.filter((candidate) =>
+      selected.has(candidate.task.id),
+    );
     setPending(true);
     setStatus({ case: "idle" });
     try {
       const response = await getBatchPrompt(
         featureId,
-        targets.map((task) => task.id),
+        targets.map((candidate) => candidate.task.id),
       );
       try {
         await navigator.clipboard.writeText(response.prompt);
@@ -111,8 +129,10 @@ export function BatchPromptDialog({
           candidates={candidates}
           selected={selected}
           allSelected={allSelected}
+          includeBlocked={includeBlocked}
           onToggle={toggle}
           onToggleAll={toggleAll}
+          onIncludeBlockedChange={changeIncludeBlocked}
         />
         <footer>
           <p className="batch-prompt-status" aria-live="polite">
@@ -137,16 +157,22 @@ function BatchPromptTaskList({
   candidates,
   selected,
   allSelected,
+  includeBlocked,
   onToggle,
   onToggleAll,
+  onIncludeBlockedChange,
 }: {
-  candidates: Task[];
+  candidates: BatchCandidate[];
   selected: ReadonlySet<string>;
   allSelected: boolean;
+  includeBlocked: boolean;
   onToggle: (taskId: string) => void;
   onToggleAll: () => void;
+  onIncludeBlockedChange: (include: boolean) => void;
 }) {
   const { t } = useTranslation();
+  // A feature with nothing ready has nothing the dependent tasks could stack
+  // on either, so the option to reveal them is left out with the list.
   if (candidates.length === 0)
     return <p className="batch-prompt-empty">{t("batchPrompt.empty")}</p>;
   return (
@@ -161,6 +187,19 @@ function BatchPromptTaskList({
           size="compact"
           onClick={onToggleAll}
         />
+        {/* The blocked tasks are a checkbox rather than a row control: it turns
+            an option on for the whole list instead of joining the selection the
+            rows carry. */}
+        <label className="batch-prompt-include-blocked">
+          <input
+            type="checkbox"
+            checked={includeBlocked}
+            onChange={(event) => {
+              onIncludeBlockedChange(event.target.checked);
+            }}
+          />
+          {t("batchPrompt.includeBlocked")}
+        </label>
         <span className="batch-prompt-count">
           {t("batchPrompt.selectedCount", {
             selected: selected.size,
@@ -169,8 +208,8 @@ function BatchPromptTaskList({
         </span>
       </div>
       <ul className="batch-prompt-list">
-        {candidates.map((task) => (
-          <li key={task.id}>
+        {candidates.map((candidate) => (
+          <li key={candidate.task.id}>
             {/* The row itself is the control. A reader picks several tasks in a
                 run down the list, so the target is the line they are reading
                 rather than a box at its edge. The selection reaches assistive
@@ -179,13 +218,25 @@ function BatchPromptTaskList({
             <button
               type="button"
               className="batch-prompt-task"
-              aria-pressed={selected.has(task.id)}
+              aria-pressed={selected.has(candidate.task.id)}
+              // A task whose blockers are not being handed over has no base to
+              // start from, so it stays out of reach until they are selected.
+              disabled={!isSelectable(candidate, selected)}
               onClick={() => {
-                onToggle(task.id);
+                onToggle(candidate.task.id);
               }}
             >
-              <span className="batch-prompt-task-title">{task.title}</span>
-              <span className="batch-prompt-task-id">{task.id}</span>
+              <span className="batch-prompt-task-title">
+                {candidate.task.title}
+              </span>
+              {candidate.pendingBlockerIds.length > 0 && (
+                <span className="batch-prompt-task-after">
+                  {t("batchPrompt.afterTasks", {
+                    tasks: candidate.pendingBlockerIds.join(", "),
+                  })}
+                </span>
+              )}
+              <span className="batch-prompt-task-id">{candidate.task.id}</span>
             </button>
           </li>
         ))}

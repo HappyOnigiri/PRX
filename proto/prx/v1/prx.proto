@@ -394,6 +394,11 @@ message Task {
   BlockedReason blocked_reason = 12;
   // has_implementation_plan indicates whether a plan document is registered for this task.
   bool has_implementation_plan = 13;
+  // pending_blocker_task_ids names every blocker that is not satisfied yet, by
+  // its public T-<number> ID. blocked_reason names only the first of them, so a
+  // caller that has to hand over a task together with everything it waits for
+  // reads this instead.
+  repeated string pending_blocker_task_ids = 14;
 }
 
 // Dependency is a directed edge from a blocker task to a blocked task in one feature.
