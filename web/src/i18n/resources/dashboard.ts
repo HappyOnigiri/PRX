@@ -16,7 +16,7 @@ export const dashboard = {
         "Create a feature and connect its tasks, or clear an upstream blocker.",
       queues: {
         ready: { title: "Ready now" },
-        review: { title: "Review line" },
+        review: { title: "In review" },
         conflicts: { title: "Conflicts" },
         syncError: { title: "Sync errors" },
       },
@@ -39,7 +39,7 @@ export const dashboard = {
         "フィーチャーを作成してタスクを接続するか、上流のブロッカーを解消してください。",
       queues: {
         ready: { title: "着手可能" },
-        review: { title: "レビュー待ち" },
+        review: { title: "レビュー中" },
         conflicts: { title: "コンフリクト" },
         syncError: { title: "同期エラー" },
       },

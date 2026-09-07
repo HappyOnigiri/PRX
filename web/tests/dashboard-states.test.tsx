@@ -281,7 +281,7 @@ describe("Dashboard states", () => {
     });
     renderDashboard();
 
-    const reviewLink = screen.getByRole("link", { name: /Review line/ });
+    const reviewLink = screen.getByRole("link", { name: /In review/ });
     const conflictLink = screen.getByRole("link", { name: /Conflicts/ });
     expect(reviewLink).toHaveAttribute(
       "href",
