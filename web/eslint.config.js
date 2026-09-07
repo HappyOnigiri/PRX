@@ -4,6 +4,7 @@ import jsxA11y from "eslint-plugin-jsx-a11y";
 import reactHooks from "eslint-plugin-react-hooks";
 import reactRefresh from "eslint-plugin-react-refresh";
 import tseslint from "typescript-eslint";
+import commentLimits from "./eslint-rules/comment-limits.js";
 
 export default tseslint.config(
   { ignores: ["dist", "coverage", "src/gen"] },
@@ -11,11 +12,13 @@ export default tseslint.config(
   {
     plugins: {
       "@eslint-community/eslint-comments": eslintComments,
+      local: { rules: { "comment-limits": commentLimits } },
     },
     rules: {
       "@eslint-community/eslint-comments/require-description": "error",
       "@eslint-community/eslint-comments/no-unlimited-disable": "error",
       "@eslint-community/eslint-comments/disable-enable-pair": "error",
+      "local/comment-limits": "error",
     },
     linterOptions: {
       reportUnusedDisableDirectives: "error",

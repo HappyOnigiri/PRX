@@ -13,7 +13,7 @@ CI_JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 CI_MAKEFLAGS := -j$(CI_JOBS) --keep-going $(if $(filter output-sync,$(.FEATURES)),--output-sync=target)
 
 .PHONY: generate generated-check mod-tidy-check fmt lint go-lint go-deadcode markdown-lint web-lint check-web-quality \
-    test go-test web-test go-coverage-check go-coverage-zero-check test-race test-race-coverage test-cli \
+    go-comment-lint test go-test web-test go-coverage-check go-coverage-zero-check test-race test-race-coverage test-cli \
     web-install web-build dev e2e build version-check install ci ci-checks clean $(GOLANGCI_LINT)
 
 generate: web-install
@@ -44,7 +44,7 @@ fmt: web-install $(GOLANGCI_LINT)
 	$(GOLANGCI_LINT) fmt ./...
 	$(PNPM) --dir web format
 
-lint: go-lint go-deadcode markdown-lint web-lint
+lint: go-lint go-deadcode go-comment-lint markdown-lint web-lint
 
 # golangci-lint runs govet, so a separate `go vet` is redundant.
 go-lint: $(GOLANGCI_LINT)
@@ -53,6 +53,10 @@ go-lint: $(GOLANGCI_LINT)
 go-deadcode:
 	@output="$$($(GO) tool deadcode -test ./...)"; \
 	if [ -n "$$output" ]; then printf '%s\n' "$$output"; echo "deadcode: unreachable functions found"; exit 1; fi
+
+# The matching check for TypeScript and JavaScript is an ESLint rule, so it runs in web-lint.
+go-comment-lint:
+	$(GO) run ./tools/checkcomments
 
 markdown-lint:
 	$(GO) run ./tools/checkmarkdownlines
