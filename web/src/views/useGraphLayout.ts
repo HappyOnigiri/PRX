@@ -3,6 +3,7 @@ import ELK from "elkjs/lib/elk-api.js";
 import elkWorkerUrl from "elkjs/lib/elk-worker.min.js?url";
 import { useEffect, useMemo, useState } from "react";
 import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
+import { isDependencyBlockedTask, isDormantTask } from "../task-attention";
 import {
   emptyHiddenDependencies,
   type HiddenDependencies,
@@ -54,34 +55,33 @@ function buildRawNodes({
   onAddDocument,
   readOnly = false,
 }: GraphLayoutOptions) {
+  const omitOwner = hasSingleOwner(pullRequests);
   return tasks.map((task) => {
     const pr = pullRequests.get(task.id);
     const documents = documentsByTask.get(task.id) ?? [];
     const assetCount = documents.length + (pr ? 1 : 0) + (readOnly ? 0 : 1);
-    const hasSyncError = Boolean(pr?.syncError);
+    const syncError = pr?.syncError ?? "";
     return {
       id: task.id,
       width: 284,
-      // ブロックラベルの行はヘッダの下に 1 行だけ増える。ノード幅は固定なので、
-      // ラベルが 3 個でも 1 行に収まる。
+      // バッジの行は常に 1 行あり、ノード幅は固定なのでステータスとラベル 2 個
+      // までは収まる。3 個目からもう 1 行に折り返す。
       height:
-        148 +
+        170 +
         Math.min(assetCount, 4) * 34 +
-        (hasSyncError ? 22 : 0) +
-        (task.blockLabels.length > 0 ? 26 : 0),
+        (task.blockLabels.length > 2 ? 26 : 0),
       data: {
         title: task.title,
         assignee: task.assignee,
         state: task.displayState,
+        dormant: isDormantTask(task),
+        blocked: isDependencyBlockedTask(task),
         blockLabels: task.blockLabels,
         hasImplementationPlan: task.hasImplementationPlan,
         stale: pr?.stale ?? false,
-        syncError: hasSyncError,
+        syncError,
         pullRequest: pr
-          ? {
-              label: `${pr.host && pr.host !== "github.com" ? `${pr.host}/` : ""}${pr.owner}/${pr.repository} #${String(pr.number)}`,
-              url: pr.url,
-            }
+          ? { label: pullRequestLabel(pr, omitOwner), url: pr.url }
           : undefined,
         documents,
         ...hiddenDependencyData(hiddenDependencies.get(task.id)),
@@ -96,6 +96,23 @@ function buildRawNodes({
       },
     };
   });
+}
+
+// フィーチャーの pull request がすべて同じ host と owner にあるなら、その部分は
+// どの pull request かを分けない。ノードは幅が狭いので落とし、番号の側を残す。
+function hasSingleOwner(pullRequests: Map<string, PullRequest>) {
+  // 判定はフィーチャーの全 pull request で行う。完了済みを隠しても名前が
+  // 変わらないようにするためである。
+  const owners = new Set(
+    [...pullRequests.values()].map((pr) => `${pr.host}/${pr.owner}`),
+  );
+  return owners.size === 1;
+}
+
+function pullRequestLabel(pr: PullRequest, omitOwner: boolean) {
+  if (omitOwner) return `${pr.repository} #${String(pr.number)}`;
+  const host = pr.host && pr.host !== "github.com" ? `${pr.host}/` : "";
+  return `${host}${pr.owner}/${pr.repository} #${String(pr.number)}`;
 }
 
 // 背後に隠れているものがないタスクは、undefined を持たせずキー自体を省く。

@@ -108,7 +108,10 @@ describe("TaskSearch view", () => {
       "https://github.com/acme/prx/pull/42",
     );
     expect(screen.getByText("open")).toBeInTheDocument();
-    expect(screen.getByText("offline")).toBeInTheDocument();
+    // pull request 自身の異常はアイコンで示し、理由は tooltip と名前が持つ。
+    expect(
+      screen.getByRole("button", { name: "GitHub sync error: offline" }),
+    ).toHaveClass("pr-flag", "is-sync-error");
   });
 
   it("distinguishes invalid syntax from an empty result", () => {

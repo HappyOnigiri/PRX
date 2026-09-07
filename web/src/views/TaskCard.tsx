@@ -4,8 +4,10 @@ import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { Feature, Project, PullRequest, Task } from "../gen/prx/v1/prx_pb";
 import { pullRequestDisplayStateLabel } from "../i18n/domain";
+import { isDependencyBlockedTask, isDormantTask } from "../task-attention";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon, type EntityKind } from "./EntityIcon";
+import { PullRequestFlags } from "./PullRequestFlags";
 import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 import { TaskBlockLabels, TaskStatusBadge } from "./TaskStateBadges";
 
@@ -27,10 +29,21 @@ export function TaskCard({
   pullRequest,
 }: TaskCardProps) {
   const { t } = useTranslation();
+  const dormant = isDormantTask(task);
+  // 沈んだカードのうち blocker 待ちのものは枠を破線で残す。決着済みと違って
+  // 作業は残っているので、地に溶けきらせない。
+  const blocked = isDependencyBlockedTask(task);
   return (
-    <li className="task-card">
+    <li
+      className={`task-card ${dormant ? "is-dormant" : ""} ${blocked ? "is-dependency-blocked" : ""}`}
+    >
       <div>
         <p className="task-card-title">
+          {/* 今見なくてよいことはカードの明るさで示すので、明暗を読めない
+              支援技術のために名前を残す。 */}
+          {dormant && (
+            <span className="task-card-dormant">{t("taskCard.dormant")}</span>
+          )}
           {/* 状態を行頭に置くことで、各行末のバッジを探し回らずに状態の列を
               1 本追うだけで済む。ブロックラベルはこの行に足すとタイトルを潰すので
               meta の先頭に置く。 */}
@@ -161,9 +174,10 @@ function PullRequestValue({ pullRequest }: { pullRequest: PullRequest }) {
         <ExternalLink aria-hidden="true" focusable="false" size={13} />
       </a>
       <small>{pullRequestDisplayStateLabel(pullRequest.displayState, t)}</small>
-      {pullRequest.syncError && (
-        <em title={pullRequest.syncError}>{pullRequest.syncError}</em>
-      )}
+      <PullRequestFlags
+        stale={pullRequest.stale}
+        syncError={pullRequest.syncError}
+      />
     </dd>
   );
 }

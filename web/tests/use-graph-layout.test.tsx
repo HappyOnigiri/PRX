@@ -98,8 +98,9 @@ describe("useGraphLayout", () => {
         title: "Build API",
         assignee: "Carol",
         stale: true,
+        // フィーチャーの pull request が 1 つの owner に揃うので名前から落ちる。
         pullRequest: {
-          label: "acme/prx #42",
+          label: "prx #42",
           url: "https://github.com/acme/prx/pull/42",
         },
         documents: [document],
@@ -124,6 +125,40 @@ describe("useGraphLayout", () => {
 
     unmount();
     expect(layoutMocks.terminateWorker).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the owner in a node label when the feature spans owners", async () => {
+    layoutMocks.layout.mockResolvedValue({
+      children: [
+        { id: "task-1", x: 0, y: 0 },
+        { id: "task-2", x: 400, y: 0 },
+      ],
+    });
+    const options = {
+      tasks: [makeTask({ id: "task-1" }), makeTask({ id: "task-2" })],
+      dependencies: [],
+      pullRequests: new Map([
+        ["task-1", makePullRequest({ taskId: "task-1" })],
+        [
+          "task-2",
+          makePullRequest({ taskId: "task-2", owner: "other", number: 7n }),
+        ],
+      ]),
+      documentsByTask: new Map(),
+      onEditTask: vi.fn(),
+      onPreviewDocument: vi.fn(),
+    };
+    const { result } = renderHook(() => useGraphLayout(options));
+
+    await waitFor(() => {
+      expect(result.current.nodes).toHaveLength(2);
+    });
+    expect(result.current.nodes[0]?.data.pullRequest?.label).toBe(
+      "acme/prx #42",
+    );
+    expect(result.current.nodes[1]?.data.pullRequest?.label).toBe(
+      "other/prx #7",
+    );
   });
 
   it("carries hidden dependencies to the node that stands in for them", async () => {

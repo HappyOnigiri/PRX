@@ -31,10 +31,12 @@ describe("TaskNode", () => {
         title: "Merge billing schema",
         assignee: "Carol",
         state: TaskDisplayState.IN_REVIEW,
+        dormant: false,
+        blocked: false,
         blockLabels: [TaskBlockLabel.CONFLICT],
         hasImplementationPlan: true,
         stale: true,
-        syncError: false,
+        syncError: "",
         pullRequest: {
           label: "acme/api #42",
           url: "https://github.com/acme/api/pull/42",
@@ -91,7 +93,13 @@ describe("TaskNode", () => {
     expect(container.querySelector(".state-in-review")).toBeInTheDocument();
     // ステータスとブロックラベルは別の系統なので、ノードには両方が出る。
     expect(container.querySelector(".block-conflict")).toBeInTheDocument();
-    expect(container.querySelector(".is-stale")).toBeInTheDocument();
+    // pull request 自身の異常は、その行の印として理由つきで出る。
+    expect(
+      screen.getByRole("button", {
+        name: "Stale: this pull request may no longer match its state on GitHub.",
+      }),
+    ).toHaveClass("pr-flag", "is-stale");
+    expect(container.querySelector(".pr-flag.is-sync-error")).toBeNull();
     const edgePorts = container.querySelectorAll(".task-edge-port");
     expect(edgePorts).toHaveLength(2);
     expect(edgePorts[0]).toHaveStyle({ top: "44px" });
@@ -140,10 +148,12 @@ describe("TaskNode", () => {
         title: "Archived task",
         assignee: "",
         state: TaskDisplayState.NOT_STARTED,
+        dormant: false,
+        blocked: false,
         blockLabels: [],
         hasImplementationPlan: false,
         stale: false,
-        syncError: false,
+        syncError: "",
         pullRequest: undefined,
         documents: [],
         readOnly: true,
@@ -184,11 +194,13 @@ describe("TaskNode", () => {
         title: "Ship API",
         assignee: "",
         state: TaskDisplayState.NOT_STARTED,
+        dormant: false,
+        blocked: false,
         blockLabels: [],
         hasImplementationPlan: false,
         ready: false,
         stale: false,
-        syncError: false,
+        syncError: "",
         pullRequest: undefined,
         documents: [],
         hiddenDependencies: {
@@ -240,11 +252,13 @@ describe("TaskNode", () => {
         title: "Ship API",
         assignee: "",
         state: TaskDisplayState.NOT_STARTED,
+        dormant: false,
+        blocked: false,
         blockLabels: [],
         hasImplementationPlan: false,
         ready: false,
         stale: false,
-        syncError: false,
+        syncError: "",
         pullRequest: undefined,
         documents: [],
         hiddenDependencies: { blockers: [], blocked: [] },
@@ -271,5 +285,47 @@ describe("TaskNode", () => {
     expect(
       container.querySelector(".node-hidden-dependency"),
     ).not.toBeInTheDocument();
+  });
+
+  it("sinks the surface of a task that waits on a blocker", () => {
+    const props = {
+      id: "task",
+      data: {
+        title: "Ship API",
+        assignee: "",
+        state: TaskDisplayState.IMPLEMENTED,
+        dormant: true,
+        blocked: true,
+        blockLabels: [TaskBlockLabel.DEPENDENCY_UNRESOLVED],
+        hasImplementationPlan: false,
+        stale: false,
+        syncError: "",
+        pullRequest: undefined,
+        documents: [],
+        readOnly: true,
+        onEdit: vi.fn(),
+        onPreview: vi.fn(),
+      },
+      selected: false,
+      isConnectable: false,
+      zIndex: 0,
+      dragging: false,
+      draggable: false,
+      selectable: true,
+      deletable: false,
+      type: "task",
+      positionAbsoluteX: 0,
+      positionAbsoluteY: 0,
+    } as NodeProps<TaskFlowNode>;
+    const { container } = render(
+      <ReactFlowProvider>
+        <TaskNode {...props} />
+      </ReactFlowProvider>,
+    );
+    // 決着済みと違って作業は残っているので、沈んだ面に枠を残す印も付く。
+    expect(container.querySelector(".task-node")).toHaveClass(
+      "is-dormant",
+      "is-dependency-blocked",
+    );
   });
 });
