@@ -28,6 +28,7 @@ import { EntityIcon } from "./EntityIcon";
 import { FeatureGraph } from "./FeatureGraph";
 import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
+import { StatusBadge } from "./StatusBadge";
 import { TaskInspector } from "./TaskInspector";
 import { type TaskNodeDocument } from "./TaskNode";
 
@@ -321,6 +322,7 @@ function FeatureWorkspaceHead({
         className="workspace-title"
         title={props.feature.description || t("workspace.noDescription")}
       >
+        <FeatureStatusBadge status={props.feature.displayStatus} />
         <h1>
           <EntityIcon kind="feature" size={17} />
           {props.feature.title}
@@ -330,7 +332,6 @@ function FeatureWorkspaceHead({
           value={props.feature.id}
           valueOnly
         />
-        <FeatureStatusBadge status={props.feature.displayStatus} />
         {props.project && (
           <p className="eyebrow">
             <Link
@@ -425,13 +426,11 @@ function HideCompletedToggle({
 function FeatureStatusBadge({ status }: { status: FeatureStatus }) {
   const { t } = useTranslation();
   return (
-    <span
-      className={`feature-status-badge status-${featureStatusToken(status)}`}
+    <StatusBadge
+      className={`status-${featureStatusToken(status)}`}
+      label={featureStatusLabel(status, t)}
       title={t("workspace.featureStatus")}
-    >
-      <i aria-hidden="true" />
-      {featureStatusLabel(status, t)}
-    </span>
+    />
   );
 }
 

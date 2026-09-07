@@ -30,10 +30,6 @@ export function TaskInspectorTaskForm({
           <dd>{task.scope || t("inspector.notSet")}</dd>
         </div>
         <div>
-          <dt>{t("common.status")}</dt>
-          <dd>{taskStatusLabel(task.status, t)}</dd>
-        </div>
-        <div>
           <dt>{t("common.assignee")}</dt>
           <dd>{task.assignee || t("common.unassigned")}</dd>
         </div>

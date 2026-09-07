@@ -351,7 +351,7 @@ describe("FeatureWorkspace", () => {
     expect(featureIdButton).toHaveTextContent("feature-1");
     // The header states the status the server derived, so a feature left on
     // automatic reads the same here as it does in a feature list.
-    const status = document.querySelector(".feature-status-badge");
+    const status = document.querySelector(".status-badge");
     expect(status).toHaveTextContent("Active");
     expect(status).toHaveAttribute("title", "Feature status");
     expect(featureIdButton.querySelector("svg")).not.toBeInTheDocument();

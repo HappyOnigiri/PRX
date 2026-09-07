@@ -8,7 +8,7 @@
 
 .task-card {
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: center;
   padding: 14px 18px;
@@ -118,39 +118,4 @@
   font-style: normal;
   text-overflow: ellipsis;
   white-space: nowrap;
-}
-
-.task-card > i {
-  border: 1px solid var(--status-none);
-  border-radius: 3px;
-  color: var(--text-2);
-  padding: 3px 6px;
-  font-size: var(--text-xs);
-  font-style: normal;
-  font-weight: 500;
-  white-space: nowrap;
-}
-
-.task-card > i.state-designed,
-.task-card > i.state-in-progress,
-.task-card > i.state-completed,
-.task-card > i.state-approved {
-  border-color: var(--status-ready);
-  color: var(--status-ready);
-}
-
-.task-card > i.state-review-waiting,
-.task-card > i.state-changes-requested {
-  border-color: var(--status-review);
-  color: var(--status-review);
-}
-
-.task-card > i.state-conflict {
-  border-color: var(--status-conflict);
-  color: var(--status-conflict);
-}
-
-.task-card > i.state-merged {
-  border-color: var(--status-merged);
-  color: var(--status-merged);
 }

@@ -14,6 +14,7 @@ import type { HiddenDependencies } from "./completedTasks";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
+import { StatusBadge } from "./StatusBadge";
 import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 
 export interface TaskNodeDocument {
@@ -36,7 +37,6 @@ interface TaskNodeData extends Record<string, unknown> {
   assignee: string;
   state: TaskDisplayState;
   hasImplementationPlan: boolean;
-  ready: boolean;
   stale: boolean;
   syncError: boolean;
   pullRequest: { label: string; url: string } | undefined;
@@ -151,7 +151,7 @@ export function TaskNode({
 
   return (
     <div
-      className={`task-node state-${taskDisplayStateToken(data.state)} ${data.ready ? "is-ready" : ""} ${data.stale ? "is-stale" : ""} ${selected ? "is-selected" : ""}`}
+      className={`task-node state-${taskDisplayStateToken(data.state)} ${data.stale ? "is-stale" : ""} ${selected ? "is-selected" : ""}`}
     >
       <Handle
         type="target"
@@ -176,10 +176,10 @@ export function TaskNode({
         titles={data.hiddenDependencies?.blocked ?? []}
       />
       <div className="task-node-head">
-        <div className="node-state">
-          <EntityIcon kind="task" size={13} />
-          {taskDisplayStateLabel(data.state, t)}
-        </div>
+        <StatusBadge
+          className={`state-${taskDisplayStateToken(data.state)}`}
+          label={taskDisplayStateLabel(data.state, t)}
+        />
         <div className="task-node-actions nodrag nowheel nopan">
           <CopyableIdentifier label={t("common.taskId")} value={id} valueOnly />
           {/* Copying stays available on an archived task: handing the work to
@@ -204,7 +204,10 @@ export function TaskNode({
           />
         </div>
       </div>
-      <h3>{data.title}</h3>
+      <h3>
+        <EntityIcon kind="task" size={13} />
+        {data.title}
+      </h3>
       {/* The owner belongs to the title rather than to the assets, so it reads
           directly under the name it answers for. */}
       {data.assignee && (
