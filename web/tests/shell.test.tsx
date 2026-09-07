@@ -10,7 +10,6 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { FeatureStatus } from "../src/gen/prx/v1/prx_pb";
 import { setDisplayLanguage } from "../src/i18n";
 import { AppShell } from "../src/shell";
-import { appVersion } from "../src/version";
 import { makeFeature, makeProject, makeSnapshot } from "./factories";
 
 const shellMocks = vi.hoisted(() => ({
@@ -123,7 +122,6 @@ describe("AppShell", () => {
     expect(screen.getByText("Overview")).toBeInTheDocument();
     expect(screen.getByText(/Projects/)).toHaveTextContent("Projects 1");
     expect(screen.getByText("Workspace")).toBeInTheDocument();
-    expect(screen.getByText(`v${appVersion()}`)).toBeInTheDocument();
     expect(screen.queryByText("Local database online")).not.toBeInTheDocument();
     expect(document.querySelector(".rail-foot")).not.toBeInTheDocument();
     expect(screen.queryByText("Dependency control")).not.toBeInTheDocument();

@@ -24,6 +24,12 @@
   background: var(--surface);
 }
 
+/* The title shrinks inside the heading line instead of pushing the state
+   badge out of the header. */
+.inspector-heading-line > h2 {
+  min-width: 0;
+}
+
 .inspector > header h2 {
   margin: 0;
   font-size: var(--text-lg);
@@ -38,31 +44,20 @@
   gap: 4px;
 }
 
-.inspector-state {
+/* The state opens the heading line, then the kind icon and the title. */
+.inspector-heading-line {
+  min-width: 0;
   display: flex;
-  align-items: center;
+  align-items: baseline;
   gap: 8px;
+}
+
+.inspector-blocked {
+  margin: 0;
   padding: 10px 16px;
   background: var(--surface-2);
   color: var(--text-2);
-  font-size: var(--text-sm);
-  font-weight: 500;
-}
-
-.inspector-state i {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--status-none);
-}
-
-.inspector-state small {
-  max-width: 210px;
-  margin-left: auto;
-  color: var(--text-2);
   font-size: var(--text-xs);
-  font-weight: 400;
-  text-align: right;
 }
 
 .inspector form,
@@ -271,36 +266,6 @@
 
 .danger-zone:hover {
   background: var(--surface-2);
-}
-
-.inspector-state.state-conflict,
-.inspector-state.state-conflict i {
-  color: var(--status-conflict);
-}
-
-.inspector-state.state-conflict i {
-  background: var(--status-conflict);
-}
-
-.inspector-state.state-merged,
-.inspector-state.state-merged i {
-  color: var(--status-merged);
-}
-
-.inspector-state.state-merged i {
-  background: var(--status-merged);
-}
-
-.inspector-state.state-review-waiting,
-.inspector-state.state-approved,
-.inspector-state.state-changes-requested {
-  color: var(--status-review);
-}
-
-.inspector-state.state-review-waiting i,
-.inspector-state.state-approved i,
-.inspector-state.state-changes-requested i {
-  background: var(--status-review);
 }
 
 .document-chip > a,
