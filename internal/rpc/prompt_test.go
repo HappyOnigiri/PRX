@@ -282,7 +282,10 @@ func createBatchFeature(
 	ctx := context.Background()
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: featureTitle}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{
+			Title:     featureTitle,
+			ProjectId: newRPCProject(t, ctx, client, featureTitle),
+		}),
 	)
 	if err != nil {
 		t.Fatal(err)

@@ -114,8 +114,10 @@ test("copies one batch prompt for the tasks selected on a feature", async ({
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const title = `E2E batch ${crypto.randomUUID()}`;
 
-  await page.goto("/");
-  await page.getByRole("button", { name: "New feature" }).click();
+  // A feature belongs to a project, so it is created from the demo's first
+  // project rather than from the rail.
+  await page.goto("/projects/P-1?features=active");
+  await page.getByRole("button", { name: "Create feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
   await featureDialog.getByLabel("Title").fill(title);
   await featureDialog.getByRole("button", { name: "Create feature" }).click();
