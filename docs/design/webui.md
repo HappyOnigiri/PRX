@@ -3,15 +3,10 @@
 The dependency canvas was selected because causal relationships are the product's defining information.
 Navigation and inspection should preserve that context instead of replacing it with a generic dashboard workflow.
 
-Business state and credentials stay on the server.
-The browser presents the values the server derived, such as a feature's read-only state, rather than recombining the flags behind them.
-A feature inside an archived project is therefore read-only without the browser ever consulting the project.
-Language, theme, zoom, and similar presentation-only preferences may remain browser-local.
+Server authority and credential handling follow [architecture.md](architecture.md) and [github-credentials.md](github-credentials.md).
 
-Persistent WebUI preferences use the Settings dialog as their single change entry point.
-Other screens and navigation do not duplicate controls for those preferences.
-Preferences adjusted frequently during work may remain at their point of use.
-Graph zoom and the sidebar's project expansion state are the current examples of this exception.
+Persistent WebUI preferences use the Settings dialog as their single entry point unless adjusted frequently during work.
+Frequent adjustments, such as graph zoom and sidebar project expansion, may stay at their point of use.
 
 State colors are reserved for state communication rather than decoration.
 Identifiers and counts may use monospace, while normal content prioritizes readability in English and Japanese.
@@ -35,10 +30,8 @@ Task search operates over the current Snapshot in the browser; its q query stays
 The status tabs of the project list and of every feature list stay in the URL for the same reason.
 The navigation is a tree of projects and the features in flight inside them; which rows are collapsed is browser-local state.
 Whether the task graph hides completed tasks is browser-local state as well, so the next visit reads the graph the way it was left.
-Hiding removes every finished task, including one that sits between two unfinished tasks, so the reader never has to tell a finished node apart from an unfinished one.
-A dependency that crossed a hidden task is not lost: it is reported on the visible task at each end.
-Chains of hidden tasks are followed, so a whole finished stretch is counted rather than only its first node.
-Each end presents that dependency as a severed edge naming the hidden tasks, so a task that waited on a blocker still reads as having had one.
+Hiding removes every finished task, including those between unfinished tasks.
+Dependencies through hidden chains appear at both visible ends as severed edges naming all hidden tasks, preserving the full dependency context.
 
 Demo mode is injected through the served HTML metadata rather than RPC or domain state.
 The WebUI keeps a non-dismissible bilingual reset warning at the top of every demo screen.

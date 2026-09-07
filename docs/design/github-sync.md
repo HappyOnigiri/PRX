@@ -3,14 +3,8 @@
 Pull-request identity includes the normalized host.
 Repositories with the same owner and name on different GitHub hosts must remain distinct.
 
-Stale synchronization data preserves the last known state and remains visibly marked as stale.
-An external failure must not rewrite known state as unknown.
-
-Synchronization fails safely:
-
-- Preserve each field's last successful value when that field cannot be refreshed.
-- Record staleness and the failure without replacing known state with guesses.
-- Isolate item-level failures so one inaccessible repository does not discard unrelated successes.
+Synchronization preserves each field's last successful value when it cannot be refreshed and marks stale data visibly.
+Item-level failures leave unrelated successes intact; failure reporting depends on the last known state as described under Failure handling.
 
 ## Scheduling
 
@@ -27,14 +21,11 @@ A host whose GraphQL endpoint answers with an HTTP error falls back to fetching 
 
 ## Scope
 
-Automatic and unscoped manual refreshes include pull requests from active features only.
-A feature presented as completed leaves those refreshes for the same reason an archived one does.
-A feature that is read-only because its project is archived leaves them on the same terms as one archived on its own.
+Automatic and unscoped manual refreshes include only active features, excluding completed features and those archived individually or through their project.
 Explicit feature or task refreshes may still maintain archived and completed history.
-A completed feature therefore keeps its recorded pull-request state even when GitHub changes it.
 An automatically completed feature does not return to active work on its own; changing its status or its tasks does that.
 Attaching a pull request refreshes that pull request at once, so a task never presents freshly recorded work as stale while it waits for the next refresh.
-That refresh is scoped to the task, so it maintains archived and completed history and leaves the recorded run status and the shared interval untouched.
+That refresh is scoped to the task.
 It is best effort and bounded by a deadline, like an automatic refresh.
 Attaching succeeds even when GitHub is unreachable, and the pull request then keeps the staleness and the synchronization error that record why.
 Merged and closed pull requests remain eligible so state changes and prior errors can be detected.

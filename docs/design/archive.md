@@ -1,9 +1,6 @@
 # Archive policy
 
-Archiving is a state that forbids writes, not a presentation flag.
-The application layer refuses every create, update, and delete that lands inside an archived project or an archived feature.
-The CLI, the RPC surface, and the WebUI therefore inherit the rule instead of each enforcing it.
-That covers tasks, dependencies, pull-request attachments, documents, implementation plans, the feature itself, and the project itself.
+The application layer refuses creates, updates, and deletes inside archived projects or features, including changes to the containers themselves.
 Refusals report one stable error code, because the caller's remedy is the same whichever container is archived.
 
 The barrier lifts for exactly three operations:

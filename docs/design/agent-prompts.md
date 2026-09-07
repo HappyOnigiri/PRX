@@ -1,52 +1,45 @@
 # Agent prompt policy
 
-PRX hands one task to an AI agent that does not know PRX, so the prompt has to carry the task, its identifiers, and the commands the agent needs.
-Rendering a prompt never changes task state, readiness, dependencies, or the implementation plan.
-`prx prompt TASK_ID` is still an ordinary read command, so it shares the expired-interval GitHub refresh every other read runs.
+PRX hands tasks to agents that do not know PRX, so prompts must carry task identifiers and the commands needed to act on them.
+Rendering task or batch prompts changes no task state, readiness, dependencies, or implementation plan.
+Like other read commands, `prx prompt TASK_ID` checks the shared GitHub refresh interval under [github-sync.md](github-sync.md).
 
-Which prompt a task gets is derived from one fact only.
-A task without an implementation plan gets the design prompt, which marks the task `designing` before anything else and ends by registering a plan.
-A task with one gets the implementation prompt, which moves the task to `in_progress` before any change and ends by recording the result.
-Both prompts set that status first so a task being designed or worked on is visible while the work is still running, rather than only once it lands.
-The design prompt leaves the status alone after that first step, because registering the plan is what presents the task as designed.
-Display state and readiness describe progress rather than the question being asked, so they never select the template.
+## Task prompts
 
-A batch prompt covers several tasks at once and has its own template, because it answers a different question: which tasks are being handed over, and how the receiving agent should split them up.
-It is selected by the caller asking for a batch rather than derived from any task, so it is not a third member of the pair a task chooses between.
-The built-in batch template gives each task to its own SubAgent and tells that SubAgent to take its instructions from `prx prompt TASK_ID`.
-The per-task text is therefore absent from the batch body: a batch stays the same length whatever it covers, and the task prompts it leads to are the same ones a reader would copy one at a time.
-The caller names the feature and the tasks, and a task the feature does not own is rejected rather than rendered, so a stale selection reports what it can no longer hand over.
-Rendering a batch is a read like every other prompt: it changes no task, and the WebUI is the only surface that asks for one.
-It offers the tasks the server presents as designed and ready, because those are the ones whose implementation can start now; the selection itself stays with the reader.
-A batch may also cover a task that is still blocked, as long as every blocker it waits for travels in the same batch.
-The receiving agent implements such a task after the work it waits for and stacks its pull request on that work, so the chain lands as stacked pull requests rather than one merge conflict.
-A selection that leaves a blocker out is rejected like a task the feature does not own, because it describes work the agent has no base to start from.
-The reader is offered the blocked tasks only on request, since a handover of what can start now is the common case.
-A blocked task whose blocker no batch could carry is never offered, because selecting it could not become possible.
-A task waiting on more than one task is not offered either, because its pull request would have to stack on several at once and no single base describes where it belongs.
-Such a task is handed over on its own once its blockers have landed, which is the only form the receiving agent can act on.
+Only the presence of an implementation plan selects the task template; display state and readiness do not.
 
-The built-in implementation and batch templates both tell the agent to branch from the base the work belongs on rather than from the default branch.
-A task whose blocker is still open belongs on that blocker's branch, so the wording is the same whether one task or a whole chain is handed over.
-That keeps the instruction independent of what a batch happens to contain: a rendered prompt does not change shape because the selection included a dependency.
+| Implementation plan | Template | Status timing | Final action |
+|---|---|---|---|
+| Absent | Design | Set `designing` before anything else | Register a plan, leaving the stored status unchanged |
+| Present | Implementation | Set `in_progress` before any change | Record the result |
 
-The templates are shared configuration rather than browser state, because the CLI and the WebUI must emit the same text.
-Every template is written together, so one configuration write never leaves a task with a stale half of the set.
-An omitted or blank template is restored to its built-in default, which keeps a configuration file written before prompts existed loading unchanged.
-A template that still matches its built-in default is left out of the file.
-An installation that never customized one then keeps following the built-in wording after an upgrade, rather than being pinned to whichever version first wrote the file.
+Setting status before work makes ongoing work visible; registering the plan then presents a designing task as designed.
+The built-in implementation and batch templates direct agents to branch from the work's base, including an open blocker's branch for stacked pull requests.
 
-A template is plain substitution over a closed vocabulary: `{{task_id}}`, `{{feature_id}}`, `{{task_title}}`, and `{{task_scope}}`.
-An unsupported placeholder is rejected instead of being emitted verbatim, and `{{task_id}}` is required so a rendered prompt always names its target.
-The batch template has a vocabulary of its own, `{{task_list}}` and `{{feature_id}}`, with `{{task_list}}` required.
-A task placeholder is rejected there because a batch has no single task to expand it from, and the list names every task by the identifier its SubAgent passes back to `prx prompt`.
-Plan bodies are deliberately absent from that vocabulary: a plan may reach 1 MiB or live behind a locator, so the prompt tells the agent to read it with `prx plan TASK_ID`.
-A task created without a scope renders as `(not specified)` rather than an empty line.
-The templates go on to reference that scope, and a receiving agent cannot tell a blank apart from a value that failed to load.
-The vocabulary is served with the stored templates so an editor presents what its own server accepts rather than a copy that could drift from it.
-The built-in pair is served with them for the same reason, so an editor offering to restore the defaults shows the text it is about to write rather than an empty field.
+## Batch prompts
 
-The WebUI copies what the server renders at the moment of the copy rather than what its snapshot last recorded, so a plan registered or deleted meanwhile cannot produce the wrong prompt.
-`prx prompt TASK_ID` prints the prompt body alone, with no header a caller would have to delete before using it.
-The diagnostic report says whether each stored template, the batch one included, still matches its built-in text and how long it is.
-That separates an edited template from the one PRX ships without putting user-authored text into the report.
+The WebUI explicitly requests a batch template for a feature and selected tasks.
+The built-in template delegates each task to its own SubAgent, which obtains its instructions through `prx prompt TASK_ID` instead of duplicated task text in the batch body.
+
+Every selected task must belong to the named feature, and every unsatisfied blocker must accompany its blocked task; otherwise rendering fails.
+The receiving agent implements blockers first and stacks dependent pull requests on them.
+The WebUI offers designed, ready tasks by default and offers blocked tasks on request, leaving selection to the user.
+It excludes tasks whose blockers cannot be included and tasks with multiple unsatisfied blockers, since a pull request needs a single base.
+Such tasks are handed over individually once their blockers have landed.
+
+## Template configuration and rendering
+
+Templates are shared configuration so the CLI and WebUI emit the same text.
+All templates are written together to avoid a partially updated set.
+Omitted or blank templates restore built-in defaults so older configuration files continue to load.
+Templates matching built-in defaults are omitted from the file so uncustomized installations follow wording updates after upgrades.
+
+Templates use plain substitution over separate, closed vocabularies for task and batch prompts, defined in `internal/prompt/prompt.go`.
+Unknown placeholders are rejected; task templates require `{{task_id}}` and batch templates require `{{task_list}}` so every target is identified.
+Plan bodies are excluded: they may reach 1 MiB or live behind a locator, so prompts direct agents to `prx plan TASK_ID`.
+An absent scope renders as `(not specified)` to distinguish it from a value that failed to load.
+The server supplies the vocabulary and built-in defaults alongside stored templates so the editor validates and restores what its server accepts.
+
+The WebUI copies a freshly rendered prompt so a plan registered or deleted since its snapshot cannot select the wrong template.
+`prx prompt TASK_ID` prints only the prompt body, ready to use.
+Diagnostics report each template's length and whether it matches its built-in default, identifying customization without exposing user-authored text.
