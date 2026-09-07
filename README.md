@@ -37,9 +37,12 @@ Tasks and dependencies work the same way without it.
 ## Develop
 
 ```sh
-make dev # start the development server: http://127.0.0.1:7331
-make ci  # run every check before handing off a change
+make dev  # start the development server: http://127.0.0.1:7331
+make demo # same, backed by isolated demo data
+make ci   # run every check before handing off a change
 ```
+
+`make demo` restarts the API on Go changes, which recreates the demo data from scratch.
 
 Building requires Go 1.27 or newer, plus the Node.js and pnpm versions pinned in `.tool-versions` and `package.json`.
 Browser checks during development use Chromium.

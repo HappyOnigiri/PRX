@@ -37,9 +37,12 @@ GitHub と同期するには、`prx config`、`GITHUB_TOKEN`、`GH_TOKEN`、認�
 ## 開発
 
 ```sh
-make dev # 開発サーバーを起動する: http://127.0.0.1:7331
-make ci  # 変更を引き渡す前のチェック一式を実行する
+make dev  # 開発サーバーを起動する: http://127.0.0.1:7331
+make demo # 同じものを、隔離されたデモデータで起動する
+make ci   # 変更を引き渡す前のチェック一式を実行する
 ```
+
+`make demo` は Go の変更で API を再起動するため、そのたびにデモデータを作り直します。
 
 ビルドには Go 1.27 以降と、`.tool-versions` および `package.json` で固定した Node.js と pnpm が必要です。
 開発時のブラウザチェックには Chromium を使います。

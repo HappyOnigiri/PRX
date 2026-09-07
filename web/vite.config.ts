@@ -27,6 +27,8 @@ const devOrigins = new Set([
   "http://localhost:7331",
   "http://[::1]:7331",
 ]);
+const demoPlaceholder = /__PRX_DEMO__/g;
+const demoMode = process.env["PRX_DEMO"] === "true";
 
 function serveLicenseReport(): Plugin {
   return {
@@ -48,8 +50,25 @@ function serveLicenseReport(): Plugin {
   };
 }
 
+// 本番の index.html は Go のハンドラがプレースホルダを埋める。開発サーバは Vite が配信するので、
+// demo の API を相手にしているときは同じメタデータをここで注入する。
+function injectDemoMode(): Plugin {
+  return {
+    name: "inject-demo-mode",
+    apply: "serve",
+    transformIndexHtml(html) {
+      return html.replace(demoPlaceholder, String(demoMode));
+    },
+  };
+}
+
 export default defineConfig({
-  plugins: [react(), createViteLicensePlugin(), serveLicenseReport()],
+  plugins: [
+    react(),
+    createViteLicensePlugin(),
+    serveLicenseReport(),
+    injectDemoMode(),
+  ],
   define: {
     "import.meta.env.APP_VERSION": JSON.stringify(developmentVersion),
   },
