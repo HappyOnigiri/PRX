@@ -61,6 +61,12 @@
   background: var(--surface-2);
 }
 
+.inspector-blocks-detail {
+  flex: 1 0 100%;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+
 .inspector form,
 .inspector section,
 .inspector-values {

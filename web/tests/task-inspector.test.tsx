@@ -137,11 +137,17 @@ describe("TaskInspector", () => {
     expect(taskIdButton).toHaveTextContent(task.id);
     expect(taskIdButton.querySelector("svg")).not.toBeInTheDocument();
     expect(screen.queryByText("Task ID")).not.toBeInTheDocument();
-    // ブロックラベルは短い語で出し、どの blocker を待つかは補足の title に置く。
+    // ブロックラベルは短い語で出し、どの blocker を待つかは可視のテキストで
+    // 添える（title はホバーできる環境向けの補足）。
     expect(screen.getByText("dependency")).toHaveAttribute(
       "title",
       "Waiting for Blocker task",
     );
+    expect(
+      screen.getByText("Waiting for Blocker task", {
+        selector: ".inspector-blocks-detail",
+      }),
+    ).toBeInTheDocument();
     expect(screen.getByText("GitHub data is old")).toBeInTheDocument();
     expect(screen.getByText("merged")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "acme/prx #42" })).toHaveAttribute(

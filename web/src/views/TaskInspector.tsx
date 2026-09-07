@@ -24,6 +24,21 @@ export interface TaskInspectorProps {
   readOnly?: boolean;
 }
 
+function TaskInspectorBlocks({ task, tasks }: { task: Task; tasks: Task[] }) {
+  const { t } = useTranslation();
+  const detail = blockedReasonLabel(
+    task.blockedReason,
+    (id) => tasks.find((item) => item.id === id)?.title,
+    t,
+  );
+  return (
+    <p className="inspector-blocks">
+      <TaskBlockLabels labels={task.blockLabels} dependencyDetail={detail} />
+      {detail && <span className="inspector-blocks-detail">{detail}</span>}
+    </p>
+  );
+}
+
 function TaskInspectorHeader({
   task,
   onClose,
@@ -73,18 +88,10 @@ export function TaskInspector({
     <aside className="inspector" aria-label={t("inspector.label")}>
       <TaskInspectorHeader task={task} onClose={onClose} />
       {/* ステータスは見出しにあるので、このストリップには進行を妨げている事情
-          だけが並ぶ。待ち相手はラベルの補足として添える。 */}
+          だけが並ぶ。待ち相手はラベルの語だけでは特定できないため、可視の
+          テキストとしても添える。 */}
       {task.blockLabels.length > 0 && (
-        <p className="inspector-blocks">
-          <TaskBlockLabels
-            labels={task.blockLabels}
-            dependencyDetail={blockedReasonLabel(
-              task.blockedReason,
-              (id) => tasks.find((item) => item.id === id)?.title,
-              t,
-            )}
-          />
-        </p>
+        <TaskInspectorBlocks task={task} tasks={tasks} />
       )}
       {readOnly && (
         <p className="inspector-read-only">{t("inspector.readOnly")}</p>
