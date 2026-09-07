@@ -16,8 +16,8 @@ const layoutMocks = vi.hoisted(() => ({
 vi.mock("elkjs/lib/elk-api.js", () => ({
   default: class {
     constructor(options: { workerFactory?: (url?: string) => Worker }) {
-      // ELK creates the worker in its constructor, so a factory that throws
-      // surfaces as a constructor failure just like the real implementation.
+      // ELK は constructor で worker を作るので、例外を投げる factory は
+      // 実装と同じく constructor の失敗として現れる。
       options.workerFactory?.(undefined);
     }
 
@@ -335,7 +335,7 @@ describe("useGraphLayout", () => {
   });
 
   it("reports a failure when the worker fails to load", async () => {
-    // A worker that fails to load never answers, so ELK's promise stays pending.
+    // 読み込みに失敗した worker は応答しないので、ELK の promise は pending のまま。
     layoutMocks.layout
       .mockReturnValueOnce(new Promise(() => undefined))
       .mockResolvedValueOnce({ children: [] });

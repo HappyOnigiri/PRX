@@ -19,9 +19,9 @@ const (
 	maxDocumentContentBytes = 1 << 20
 )
 
-// Repository is the persistence boundary used by the application service.
-// Keeping this interface in the app package lets the service be tested without
-// opening SQLite and leaves other persistence implementations free to satisfy it.
+// Repository は application service が使う永続化の境界。
+// このインタフェースを app パッケージに置くことで、SQLite を開かずに service を
+// テストでき、他の永続化実装も自由に満たせる。
 type Repository interface {
 	CreateProject(ctx context.Context, title, description string) (domain.Project, error)
 	UpdateProject(ctx context.Context, project domain.Project) (domain.Project, error)
@@ -69,9 +69,9 @@ type Repository interface {
 	Validate(ctx context.Context) []string
 }
 
-// GitHubAuthCache is implemented by the SQLite repository when live GitHub
-// synchronization is enabled. Keeping it optional preserves the small
-// repository fakes used by application-level tests.
+// GitHubAuthCache は、実際の GitHub 同期が有効なとき SQLite repository が実装する。
+// 任意のままにすることで、application 層のテストが使う小さな repository の fake を
+// そのまま保てる。
 type GitHubAuthCache interface {
 	GetGitHubRepositoryAuthCache(ctx context.Context, host, owner, repository string) (string, bool, error)
 	UpsertGitHubRepositoryAuthCache(ctx context.Context, host, owner, repository, authMethodID string) error
@@ -82,9 +82,9 @@ type GitHubSyncStateRepository interface {
 	GitHubSyncState(ctx context.Context) (domain.GitHubSyncState, error)
 	AcquireGitHubAutoSync(ctx context.Context, runID string, attemptedAt time.Time, dueBeforeUnix int64) (bool, error)
 	StartGitHubSync(ctx context.Context, runID string, attemptedAt time.Time) error
-	// CompleteGitHubSync reports whether the run still owned the shared state.
-	// A concurrent refresh overwrites the run identifier, and the caller must
-	// not present the state it reads back afterwards as its own outcome.
+	// CompleteGitHubSync は、その実行がまだ共有状態を保持していたかを返す。
+	// 並行する refresh は run identifier を上書きするので、呼び出し側は後から
+	// 読み戻した状態を自分の結果として提示してはならない。
 	CompleteGitHubSync(
 		ctx context.Context,
 		runID string,
@@ -99,11 +99,10 @@ type Service struct {
 	provider    githubprovider.Provider
 	configStore *config.Store
 	now         func() time.Time
-	// processInfo is written once while the service is wired and read only by
-	// the diagnostic report.
+	// processInfo は service の配線中に一度だけ書かれ、診断レポートだけが読む。
 	processInfo ProcessInfo
-	// serveEndpoint is the only mutable field: the listen address is known after
-	// the listener is bound, and HTTP handlers read it afterwards.
+	// serveEndpoint は唯一の可変フィールド。listen アドレスは listener の bind 後に
+	// 判明し、その後 HTTP ハンドラが読む。
 	serveEndpoint atomic.Pointer[serveEndpoint]
 }
 
@@ -120,8 +119,8 @@ func NewWithConfig(repository Repository, provider githubprovider.Provider, conf
 
 func (s *Service) ConfigStore() *config.Store { return s.configStore }
 
-// CreateFeature requires a project: a feature always belongs to one, so a
-// caller names the container up front instead of assigning it afterwards.
+// CreateFeature は project を必須とする。feature は必ずどこかに属するので、
+// 後から割り当てるのではなく、呼び出し側が最初にコンテナを指定する。
 func (s *Service) CreateFeature(
 	ctx context.Context,
 	title, description, projectID string,
@@ -141,9 +140,9 @@ func (s *Service) CreateFeature(
 	return s.withReadOnly(ctx, created)
 }
 
-// UpdateFeature applies every field the caller supplied. A nil pointer means the
-// field was omitted; an empty string is a request to clear it. An empty
-// ProjectID is refused, because a feature cannot leave every project.
+// UpdateFeature は呼び出し側が指定した全フィールドを適用する。nil ポインタは未指定、
+// 空文字列は値を消す要求を意味する。空の ProjectID は拒否する。
+// feature はどの project にも属さない状態にはなれないため。
 func (s *Service) UpdateFeature(
 	ctx context.Context,
 	id string,
@@ -194,9 +193,9 @@ func (s *Service) UpdateFeature(
 	return s.withReadOnly(ctx, updated)
 }
 
-// ResolveFeature looks a feature up by its public ID. The resolved feature
-// carries the derived ReadOnly flag, so a caller that reports a single feature
-// publishes the same value a snapshot read would.
+// ResolveFeature は公開 ID で feature を引く。解決した feature は導出済みの
+// ReadOnly を持つので、単一 feature を報告する呼び出し側も snapshot 読み取りと
+// 同じ値を公開できる。
 func (s *Service) ResolveFeature(ctx context.Context, id string) (domain.Feature, error) {
 	feature, err := s.repository.GetFeature(ctx, id)
 	if err != nil {
@@ -205,9 +204,9 @@ func (s *Service) ResolveFeature(ctx context.Context, id string) (domain.Feature
 	return s.withReadOnly(ctx, feature)
 }
 
-// GetNode resolves a public project, feature, or task ID without exposing the
-// storage UUID or requiring callers to choose the resource first. The public ID
-// prefix names the kind, so no operand is ambiguous.
+// GetNode は project・feature・task の公開 ID を、ストレージの UUID を晒さず、
+// 呼び出し側に種別を先に選ばせることもなく解決する。
+// 公開 ID の接頭辞が種別を示すので、オペランドが曖昧になることはない。
 func (s *Service) GetNode(ctx context.Context, id string) (any, error) {
 	switch {
 	case strings.HasPrefix(id, "T-"):
@@ -220,8 +219,8 @@ func (s *Service) GetNode(ctx context.Context, id string) (any, error) {
 	return nil, domain.NewError(domain.DomainErrorCodeNotFound, "project, feature, or task %q was not found", id)
 }
 
-// DeleteFeature is deliberately unguarded: discarding archived work is one of
-// the operations the read-only barrier lets through.
+// DeleteFeature は意図的にガードしていない。アーカイブ済みの作業を捨てる操作は、
+// 読み取り専用の障壁が通すものの 1 つ。
 func (s *Service) DeleteFeature(ctx context.Context, id string, cascade bool) error {
 	feature, err := s.ResolveFeature(ctx, id)
 	if err != nil {
@@ -248,8 +247,8 @@ func (s *Service) CreateTask(
 	return s.repository.CreateTask(ctx, feature.ID, title, strings.TrimSpace(scope), strings.TrimSpace(assignee))
 }
 
-// UpdateTask applies every field the caller supplied. A nil pointer means the
-// field was omitted; an empty string is a request to clear it.
+// UpdateTask は呼び出し側が指定した全フィールドを適用する。nil ポインタは未指定、
+// 空文字列は値を消す要求を意味する。
 func (s *Service) UpdateTask(
 	ctx context.Context,
 	id string,
@@ -331,8 +330,8 @@ func (s *Service) DeleteImplementationPlan(ctx context.Context, taskID string) e
 	return s.repository.DeleteImplementationPlan(ctx, taskID)
 }
 
-// AddDependency guards the blocker only: the repository rejects edges that
-// cross features, so both endpoints share one feature and one read-only state.
+// AddDependency は blocker だけをガードする。repository が feature をまたぐ辺を
+// 拒むので、両端は同じ feature と同じ読み取り専用状態を共有する。
 func (s *Service) AddDependency(ctx context.Context, blocker, blocked string) (domain.Dependency, error) {
 	if err := s.guardTaskID(ctx, blocker); err != nil {
 		return domain.Dependency{}, err
@@ -399,14 +398,14 @@ func (s *Service) AttachPullRequest(ctx context.Context, taskID, rawURL string) 
 	return s.refreshAttachedPullRequest(ctx, attached), nil
 }
 
-// attachSyncTimeout bounds the refresh that follows an attachment. The refresh
-// is a side effect of the write rather than what the caller asked for, so an
-// unreachable host must not hold the attachment open for as long as it takes.
+// attachSyncTimeout は attach 後の refresh に上限を設ける。この refresh は書き込みの
+// 副作用であって呼び出し側が求めたものではないので、到達できない host のせいで
+// attach をいつまでも待たせてはならない。
 const attachSyncTimeout = 30 * time.Second
 
-// refreshAttachedPullRequest fetches the pull request that was just attached, so
-// freshly recorded work is not presented as stale. It uses the task-scoped
-// refresh, and is best effort: attaching succeeds even if GitHub is unreachable.
+// refreshAttachedPullRequest は attach 直後の pull request を取得し、記録したばかりの
+// 作業が stale として表示されないようにする。task 単位の refresh を使うベストエフォート
+// 処理で、GitHub に到達できなくても attach 自体は成功する。
 func (s *Service) refreshAttachedPullRequest(
 	ctx context.Context,
 	attached domain.PullRequest,
@@ -469,8 +468,8 @@ func (s *Service) AddDocument(
 	)
 }
 
-// resolveDocumentParent checks that the named parent exists and accepts writes,
-// and returns it with its public identifier normalized.
+// resolveDocumentParent は指定された親が存在し書き込みを受け付けるかを確認し、
+// 公開識別子を正規化して返す。
 func (s *Service) resolveDocumentParent(
 	ctx context.Context,
 	parent domain.DocumentParent,
@@ -576,9 +575,9 @@ func (s *Service) DeleteDocument(ctx context.Context, id string) error {
 	return s.repository.DeleteDocument(ctx, id)
 }
 
-// ReadDocumentContent only reads paths that were explicitly registered or
-// Markdown stored by PRX. The size limit keeps a preview request from consuming an
-// unbounded amount of memory in the server or browser.
+// ReadDocumentContent は、明示的に登録されたパスと PRX が保存した Markdown だけを読む。
+// サイズ上限により、プレビュー要求がサーバーやブラウザのメモリを
+// 無制限に消費するのを防ぐ。
 func (s *Service) ReadDocumentContent(ctx context.Context, id string) (string, error) {
 	document, err := s.repository.GetDocument(ctx, id)
 	if err != nil {
@@ -661,9 +660,9 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 	return deriveSnapshot(snapshot), nil
 }
 
-// deriveSnapshot turns a stored snapshot into the derived one every caller
-// needs. Synchronization shares it with the read path so the feature statuses
-// it selects on are the same ones clients see.
+// deriveSnapshot は保存済み snapshot を、全呼び出し側が必要とする導出済みの形に変える。
+// 同期処理も読み取り経路とこれを共有するため、選別に使う feature のステータスは
+// クライアントが見るものと一致する。
 func deriveSnapshot(snapshot domain.Snapshot) domain.Snapshot {
 	snapshot.Tasks = domain.Derive(snapshot.Tasks, snapshot.Dependencies, snapshot.PullRequests)
 	taskIndex := map[string]int{}
@@ -691,9 +690,8 @@ func deriveSnapshot(snapshot domain.Snapshot) domain.Snapshot {
 		featureIndex[snapshot.Features[i].ID] = i
 	}
 	for _, task := range snapshot.Tasks {
-		// A task whose feature is missing means the database has lost referential
-		// integrity; skip it rather than crediting feature zero or indexing past
-		// the end of an empty slice.
+		// feature が見つからない task は、データベースの参照整合性が壊れた印。
+		// 先頭 feature に加算したり空スライスの範囲外を参照したりせず、読み飛ばす。
 		i, ok := featureIndex[task.FeatureID]
 		if !ok {
 			continue
@@ -723,8 +721,8 @@ func deriveSnapshot(snapshot domain.Snapshot) domain.Snapshot {
 	for i := range snapshot.Features {
 		feature := &snapshot.Features[i]
 		feature.DisplayStatus = domain.FeatureDisplayStatus(feature.Status, feature.TaskCount, feature.FinishedCount)
-		// Archiving a project reaches its features, and this is the only place
-		// that combines the two flags: clients read ReadOnly and never redo it.
+		// project のアーカイブは配下の feature にも及ぶ。2 つのフラグを合成するのは
+		// ここだけで、クライアントは ReadOnly を読むだけでよい。
 		feature.ReadOnly = feature.Archived || archivedProjects[feature.ProjectID]
 	}
 	return snapshot
@@ -760,9 +758,9 @@ func (s *Service) syncSelected(
 	for _, task := range snapshot.Tasks {
 		taskFeature[task.ID] = task.FeatureID
 	}
-	// A completed feature leaves automatic and unscoped manual refreshes for the
-	// same reason an archived one does: its pull requests are no longer in
-	// flight. ReadOnly covers both a feature and its archived project.
+	// 完了した feature は、アーカイブ済みと同じ理由で自動 refresh と範囲指定なしの
+	// 手動 refresh の対象から外れる。pull request がもう進行中ではないため。
+	// ReadOnly は feature 自身とアーカイブ済み project の両方を覆う。
 	activeFeatures := map[string]bool{}
 	for _, feature := range snapshot.Features {
 		activeFeatures[feature.ID] = !feature.ReadOnly &&

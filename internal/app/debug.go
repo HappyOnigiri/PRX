@@ -8,9 +8,9 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// DiagnosticsRepository is implemented by the SQLite repository when a real
-// database is open. It stays optional for the same reason the GitHub sync state
-// interface does: otherwise every small repository fake would grow these.
+// DiagnosticsRepository は実データベースを開いているとき SQLite repository が実装する。
+// GitHub sync state のインタフェースと同じ理由で任意のままにしている。
+// そうしないと小さな repository の fake すべてがこれらを持つことになる。
 type DiagnosticsRepository interface {
 	Path() string
 	AppliedSchemaVersion(ctx context.Context) (int, error)
@@ -19,8 +19,8 @@ type DiagnosticsRepository interface {
 	ListGitHubRepositoryAuthCache(ctx context.Context) ([]domain.DebugAuthCacheEntry, error)
 }
 
-// ProcessInfo carries the facts only the wiring layer knows: how this process
-// was started and which locations it was pointed at.
+// ProcessInfo は配線層だけが知る事実、すなわちこのプロセスの起動方法と、
+// 指し示されたパスを運ぶ。
 type ProcessInfo struct {
 	Mode               string
 	Demo               bool
@@ -30,27 +30,25 @@ type ProcessInfo struct {
 	ConfigPathSource   string
 }
 
-// serveEndpoint is the address the server accepted, which is known only after
-// the listener is bound.
+// serveEndpoint はサーバーが受け付けたアドレス。listener を bind した後にしか
+// 判明しない。
 type serveEndpoint struct {
 	address   string
 	startedAt time.Time
 }
 
-// SetProcessInfo records how this process was started. It is called once while
-// the service is being wired, before any request can reach it.
+// SetProcessInfo はこのプロセスの起動方法を記録する。service の配線中に一度だけ、
+// リクエストが到達しうる前に呼ばれる。
 func (s *Service) SetProcessInfo(info ProcessInfo) { s.processInfo = info }
 
-// SetServeEndpoint records the bound listen address. Alone among the service's
-// fields it is written after construction, once the listener exists, so it is
-// stored atomically rather than relying on the ordering of server startup.
+// SetServeEndpoint は bind した listen アドレスを記録する。service のフィールドで
+// 唯一、listener 生成後に書かれるため、サーバー起動順序に頼らず atomic に保存する。
 func (s *Service) SetServeEndpoint(address string, startedAt time.Time) {
 	s.serveEndpoint.Store(&serveEndpoint{address: address, startedAt: startedAt.UTC()})
 }
 
-// Debug assembles the diagnostic report. Every section fails independently,
-// because a report matters most when something is broken, and no section
-// synchronizes: a refresh would erase the run error the reader asked about.
+// Debug は診断レポートを組み立てる。壊れているときこそ価値があるので各セクションは
+// 独立に失敗し、同期は行わない。同期すると読み手が知りたい実行エラーが消えてしまう。
 func (s *Service) Debug(ctx context.Context) (domain.DebugReport, error) {
 	now := s.currentTime()
 	report := domain.DebugReport{

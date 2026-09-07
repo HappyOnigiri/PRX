@@ -15,15 +15,15 @@ import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 
 export interface TaskCardProps {
   task: Task;
-  // A queue can outlive the snapshot that named the owners, so both stay
-  // optional and the card falls back rather than dropping the task.
+  // キューは所有者を示したスナップショットより長く残りうるので、どちらも
+  // optional にし、タスクを落とさずフォールバックする。
   feature: Feature | undefined;
   project: Project | undefined;
   pullRequest: PullRequest | undefined;
 }
 
-// One card presents a task wherever a list of tasks appears, so the overview
-// queue and the search results stay the same object to read and to scan.
+// タスクの一覧が現れる場所ではこのカード 1 つがタスクを示す。おかげで概要の
+// キューと検索結果は、読むときも眺めるときも同じものになる。
 export function TaskCard({
   task,
   feature,
@@ -35,8 +35,8 @@ export function TaskCard({
     <li className="task-card">
       <div>
         <p className="task-card-title">
-          {/* The state leads the line, so a reader scans one column of states
-              instead of hunting for a badge at the end of each row. */}
+          {/* 状態を行頭に置くことで、各行末のバッジを探し回らずに状態の列を
+              1 本追うだけで済む。 */}
           <StatusBadge
             className={`state-${taskDisplayStateToken(task.displayState)}`}
             label={taskDisplayStateLabel(task.displayState, t)}
@@ -48,17 +48,16 @@ export function TaskCard({
           >
             {task.title}
           </Link>
-          {/* The ID is what a reader hands to an agent or a search, so it sits
-              next to the name and copies on click, as it does on the graph. */}
+          {/* ID はエージェントや検索に渡すものなので、グラフ上と同じく名前の
+              隣に置き、クリックでコピーできるようにする。 */}
           <CopyableIdentifier
             label={t("common.taskId")}
             value={task.id}
             valueOnly
           />
         </p>
-        {/* Values of the same size read as one sentence, so an icon marks
-            which field each one belongs to. The names stay for assistive
-            technology, which cannot read a glyph. */}
+        {/* 同じ大きさの値が並ぶと 1 つの文に見えるので、どのフィールドの値かを
+            アイコンで示す。グリフを読めない支援技術のために名前は残す。 */}
         <dl className="task-card-meta">
           <div>
             <dt>{t("taskCard.project")}</dt>
@@ -68,8 +67,8 @@ export function TaskCard({
             <dt>{t("taskCard.feature")}</dt>
             <FeatureValue feature={feature} />
           </div>
-          {/* An unassigned task says nothing by naming an empty owner, so the
-              pair is dropped instead of carrying a placeholder. */}
+          {/* 未割り当てのタスクは空の担当者を示しても意味がないので、プレース
+              ホルダを出さずペアごと落とす。 */}
           {task.assignee && (
             <div>
               <dt>{t("taskCard.assignee")}</dt>
@@ -95,8 +94,8 @@ export function TaskCard({
   );
 }
 
-// Every feature belongs to a project, so a missing one means the snapshot did
-// not carry it; there is nowhere to link, and the value stays plain text.
+// feature は必ずプロジェクトに属するので、見つからないのはスナップショットが
+// 運んでいないということ。リンク先がないので値はただのテキストにする。
 function ProjectValue({ project }: { project: Project | undefined }) {
   const { t } = useTranslation();
   if (!project)
@@ -119,8 +118,8 @@ function ProjectValue({ project }: { project: Project | undefined }) {
   );
 }
 
-// Without the feature there is nothing to name and nowhere to go, so the value
-// stays plain text instead of a link to a page that cannot be built.
+// feature がなければ示す名前も行き先もないので、組み立てられないページへの
+// リンクにせず、値はただのテキストにする。
 function FeatureValue({ feature }: { feature: Feature | undefined }) {
   const { t } = useTranslation();
   if (!feature)
@@ -142,8 +141,8 @@ function FeatureValue({ feature }: { feature: Feature | undefined }) {
   );
 }
 
-// The pull request lives on GitHub rather than in PRX, so the value opens the
-// canonical URL the server recorded and states the review state next to it.
+// pull request は PRX ではなく GitHub 上にあるので、値はサーバーが記録した正規
+// の URL を開き、その隣にレビュー状態を示す。
 function PullRequestValue({ pullRequest }: { pullRequest: PullRequest }) {
   const { t } = useTranslation();
   const host =

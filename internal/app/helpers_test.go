@@ -8,8 +8,8 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// newFeature creates a feature together with the project it has to belong to,
-// for the tests whose subject is the feature rather than its container.
+// newFeature は feature を、所属先の project ごと作る。コンテナではなく feature 自体を
+// 対象とするテスト向け。
 func newFeature(
 	t *testing.T,
 	ctx context.Context,

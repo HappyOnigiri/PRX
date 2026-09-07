@@ -31,18 +31,18 @@ func PRDisplayState(pr *PullRequest) TaskDisplayState {
 	return TaskDisplayStateUnknown
 }
 
-// IsTaskFinished reports whether a derived task state ends the work the task
-// tracks. It reads the derived state rather than the stored status, so a task
-// without a finished status follows its pull request.
+// IsTaskFinished は、導出されたタスク状態がそのタスクの作業の終了を表すかを返す。
+// 保存済み status ではなく導出状態を見るため、終了状態の status を持たないタスクは
+// pull request に従う。
 func IsTaskFinished(display TaskDisplayState) bool {
 	return display == TaskDisplayStateCompleted ||
 		display == TaskDisplayStateClosed ||
 		display == TaskDisplayStateMerged
 }
 
-// FeatureDisplayStatus derives the status presented for a feature. A stored
-// status other than auto is a manual override and is returned unchanged.
-// docs/design/domain.md records what the automatic status derives.
+// FeatureDisplayStatus は feature の表示用 status を導出する。auto 以外の保存済み
+// status は手動の上書きとみなし、そのまま返す。
+// 自動導出の内容は docs/design/domain.md に記載する。
 func FeatureDisplayStatus(stored FeatureStatus, taskCount, finishedCount int) FeatureStatus {
 	if stored != FeatureStatusAuto {
 		return stored
@@ -53,9 +53,9 @@ func FeatureDisplayStatus(stored FeatureStatus, taskCount, finishedCount int) Fe
 	return FeatureStatusActive
 }
 
-// displayStateFor derives the state presented for a task, in the order
-// docs/design/domain.md records: a finished stored status outranks the pull
-// request, an unfinished one yields to it, and designing yields to a plan.
+// displayStateFor は docs/design/domain.md の順序でタスクの表示状態を導出する。
+// 終了状態の保存済み status は pull request より優先し、未終了なら pull request に
+// 譲り、designing は plan に譲る。
 func displayStateFor(task Task, pr *PullRequest) TaskDisplayState {
 	if task.Status == TaskStatusCompleted {
 		return TaskDisplayStateCompleted
@@ -78,9 +78,9 @@ func displayStateFor(task Task, pr *PullRequest) TaskDisplayState {
 	return TaskDisplayStateNotStarted
 }
 
-// IsSatisfied reports whether a task settles the dependencies that wait on it.
-// A finished stored status settles them on its own, and so does a pull request
-// that reached open, closed, or merged. See docs/design/domain.md.
+// IsSatisfied は、タスクがそれを待つ依存を解消するかを返す。終了状態の保存済み
+// status だけでも解消し、open・closed・merged に達した pull request も同様。
+// docs/design/domain.md を参照。
 func IsSatisfied(task Task, pr *PullRequest) bool {
 	if task.Status == TaskStatusCompleted || task.Status == TaskStatusClosed {
 		return true
@@ -89,9 +89,9 @@ func IsSatisfied(task Task, pr *PullRequest) bool {
 		pr.State == PullRequestStateClosed || pr.State == PullRequestStateMerged)
 }
 
-// isReadyCandidate reads the derived state alone: only work whose
-// implementation has not begun asks whether its blockers are clear. Designing
-// sits with not started and designed, as docs/design/domain.md records.
+// isReadyCandidate は導出状態だけを見る。実装が始まっていない作業だけが blocker の
+// 解消を問う。docs/design/domain.md のとおり designing は not started や designed と
+// 同じ扱いとする。
 func isReadyCandidate(display TaskDisplayState) bool {
 	return display == TaskDisplayStateNotStarted ||
 		display == TaskDisplayStateDesigning ||

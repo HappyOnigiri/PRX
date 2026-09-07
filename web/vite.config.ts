@@ -63,8 +63,8 @@ export default defineConfig({
         configure(proxy) {
           proxy.on("proxyReq", (proxyRequest, request) => {
             const origin = request.headers.origin;
-            // Preserve the API's origin check for every caller except the
-            // known local Vite development origins.
+            // 既知のローカル Vite 開発オリジン以外の呼び出し元には、
+            // API の origin チェックをそのまま効かせる。
             if (origin && devOrigins.has(origin))
               proxyRequest.setHeader("origin", apiOrigin);
           });

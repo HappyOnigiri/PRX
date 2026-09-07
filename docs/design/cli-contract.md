@@ -1,49 +1,49 @@
-# Public contract policy
+# 公開契約の方針
 
-Machine-readable CLI output must be deterministic and versioned, and its success data must stay free of presentation text.
-Errors use stderr and leave stdout empty so automation cannot confuse a failed command with data.
+機械可読な CLI 出力は決定的かつバージョン管理されていなければならず、成功時のデータに表示用のテキストを混ぜてはならない。
+エラーは stderr に出し stdout は空のままにする。失敗したコマンドを自動処理がデータと取り違えないようにするためである。
 
-| Condition | Output policy |
+| 条件 | 出力方針 |
 |---|---|
-| No output flag | Concise text regardless of stdout |
-| `--json` | JSON regardless of stdout |
+| 出力フラグなし | stdout の種類によらず簡潔なテキスト |
+| `--json` | stdout の種類によらず JSON |
 
-Use JSON when a caller needs fields omitted from the text presentation or a stable schema for programmatic parsing.
+テキスト表示に含まれないフィールドが必要な場合や、プログラムで解析するために安定したスキーマが必要な場合に JSON を使う。
 
-Successful JSON commands emit their data object directly without a `schema_version`, `ok`, or `data` envelope.
-Empty collections are `[]`, never `null`.
-Failed JSON commands emit the versioned error object.
-The current CLI response schema version is `2`.
-Its error object contains `code`, `message`, and the failed command's complete help in `hint`, the only machine-readable field that carries presentation text.
-Failures return a non-zero exit status.
-Warnings go to stderr as text in both output modes and leave the exit status and the stdout contract untouched.
-Text output does not vary with terminal width or ambient environment.
-The CLI implementation and black-box tests own current field names and presentation details.
+成功した JSON コマンドは、`schema_version`・`ok`・`data` といったエンベロープを介さず、データオブジェクトを直接出力する。
+空のコレクションは `[]` であり、`null` にはしない。
+失敗した JSON コマンドはバージョン付きのエラーオブジェクトを出力する。
+現在の CLI レスポンススキーマのバージョンは `2` である。
+エラーオブジェクトは `code`、`message`、そして失敗したコマンドの完全なヘルプを収めた `hint` を持つ。`hint` は表示用テキストを含む唯一の機械可読フィールドである。
+失敗時は 0 以外の終了ステータスを返す。
+警告はどちらの出力モードでもテキストとして stderr に出し、終了ステータスと stdout の契約には影響しない。
+テキスト出力は端末幅や周囲の環境によって変わらない。
+現在のフィールド名と表示の詳細は、CLI の実装とブラックボックステストが所有する。
 
-Text failures print the error followed by the same complete command help used by normal help.
-An explicit `--json` makes successful help a JSON object with the complete help in `hint`.
-Help succeeds without opening configuration or storage resources.
+テキスト出力の失敗時は、エラーに続けて通常のヘルプと同じ完全なコマンドヘルプを出力する。
+`--json` を明示した場合、成功したヘルプは完全なヘルプを `hint` に収めた JSON オブジェクトになる。
+ヘルプは設定やストレージのリソースを開かずに成功する。
 
-Resource commands use shallow forms for routine reads and explicit verbs for mutations so state-changing intent remains visible.
-The [generated CLI reference](../cli/prx.md) owns per-command read forms.
+リソース系コマンドは、日常的な読み取りには浅い形を使い、変更には明示的な動詞を使う。状態を変える意図が見えるようにするためである。
+コマンドごとの読み取り形式は [生成された CLI リファレンス](../cli/prx.md) が所有する。
 
-Mutations remain non-interactive so people and coding agents use the same surface.
-A missing mutation target fails instead of reporting a successful no-op.
-Destructive traversal of referenced data requires an explicit cascade request.
-A cascade on a project deletes the project's own documents and every feature it holds, together with the work inside those features.
-Deleting contained work is what a cascade on a feature or a task does.
-Values every invocation of an operation requires are positional operands.
-Flags are reserved for optional modifiers, filters, partial updates, secret-safe input methods, execution settings, and output formats.
-Flags also carry values another operand makes necessary and values chosen from mutually exclusive alternatives.
-An operand value that begins with `-` is passed after `--` so it is not parsed as a flag.
+変更操作は非対話のままにし、人とコーディングエージェントが同じ操作面を使えるようにする。
+変更対象が存在しない場合は、成功した no-op として報告せず失敗させる。
+参照されたデータを破壊的にたどる操作には、明示的な cascade の指定を必要とする。
+project への cascade は、その project 自身の document と、保持するすべての feature、およびそれらの feature の中の作業を削除する。
+feature や task への cascade が行うのは、内部の作業の削除である。
+操作のたびに必ず必要になる値は位置引数にする。
+フラグは、任意の修飾子、フィルタ、部分更新、秘密情報を安全に渡す入力方式、実行設定、出力形式に予約する。
+別の operand があることで必要になる値と、排他的な選択肢から選ぶ値もフラグで受け取る。
+`-` で始まる operand の値は `--` の後ろに置き、フラグとして解釈されないようにする。
 
-Projects, features, and tasks carry public identifiers that remain distinct from their storage identifiers.
-They are `P-<number>`, `F-<number>`, and `T-<number>`, and their storage UUIDs must not cross the CLI, RPC, or WebUI boundary.
-An operand that accepts any of the three kinds, as `show` and `document add` do, resolves by public ID prefix, so no operand is ambiguous and a value without a known prefix is reported as not found.
-A command named after one kind resolves only that kind: `project`, `feature`, and `graph` each accept the public ID of their own resource and report the operand as not found otherwise.
-Documents are the deliberate exception: they have no separate public identifier,
-so their storage identifier is the identifier callers pass to `document get`, `document update`, and `document delete`.
-That identifier is opaque, and migrated documents may carry a value that is not formatted as a UUID.
+project、feature、task は、ストレージ上の識別子とは別の公開識別子を持つ。
+それぞれ `P-<number>`、`F-<number>`、`T-<number>` であり、ストレージの UUID は CLI・RPC・WebUI の境界を越えてはならない。
+`show` や `document add` のように 3 種類のいずれも受け付ける operand は公開 ID の接頭辞で解決するので、operand が曖昧になることはなく、既知の接頭辞を持たない値は not found として報告する。
+種類の名前が付いたコマンドはその種類だけを解決する。`project`、`feature`、`graph` はそれぞれ自分のリソースの公開 ID だけを受け付け、それ以外は operand を not found として報告する。
+document は意図的な例外で、独立した公開識別子を持たない。
+そのため `document get`、`document update`、`document delete` に渡す識別子はストレージの識別子そのものである。
+この識別子は不透明であり、移行された document は UUID の形式ではない値を持つことがある。
 
-A bulk operation may report item-level failures without discarding successful items.
-Command-level failure is reserved for failure of the operation itself.
+一括操作は、成功した項目を捨てずに項目単位の失敗を報告してよい。
+コマンド単位の失敗は、操作そのものが失敗した場合に限る。

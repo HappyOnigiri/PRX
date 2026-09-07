@@ -6,12 +6,12 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// The guards below are the only place that decides what an archived project or
-// feature refuses, so the CLI, the RPC handlers, and the WebUI inherit one rule.
-// docs/design/archive.md records the barrier, its exceptions, and its limits.
+// 以下のガードが、アーカイブ済みの project や feature が何を拒むかを決める唯一の場所であり、
+// CLI・RPC ハンドラ・WebUI は同じルールを引き継ぐ。
+// 障壁と例外、その限界は docs/design/archive.md に記録している。
 
-// archivedReadOnly is the single error every refused write returns, so a caller
-// branches on one code without needing to know which container is archived.
+// archivedReadOnly は拒否された書き込みが必ず返す唯一のエラー。呼び出し側は
+// どのコンテナがアーカイブ済みかを知らずに、1 つのコードだけで分岐できる。
 func archivedReadOnly() error {
 	return domain.NewError(
 		domain.DomainErrorCodeArchivedReadOnly,
@@ -19,9 +19,9 @@ func archivedReadOnly() error {
 	)
 }
 
-// archivedFeatureFlagOnly and archivedProjectFlagOnly report whether a request
-// carries the archived flag and changes nothing else. Each clears the flag and
-// compares the rest with the zero value, so a new field is covered by default.
+// archivedFeatureFlagOnly と archivedProjectFlagOnly は、リクエストが archived フラグ
+// だけを変えるかを判定する。フラグを消して残りをゼロ値と比較するため、
+// フィールドが増えても自動的に対象になる。
 func archivedFeatureFlagOnly(update domain.FeatureUpdate) bool {
 	if update.Archived == nil {
 		return false
@@ -38,8 +38,8 @@ func archivedProjectFlagOnly(update domain.ProjectUpdate) bool {
 	return update == domain.ProjectUpdate{}
 }
 
-// featureReadOnly derives, for a feature read outside a snapshot, the value
-// Snapshot publishes as Feature.ReadOnly.
+// featureReadOnly は、snapshot 外で読んだ feature について、Snapshot が
+// Feature.ReadOnly として公開する値を導出する。
 func (s *Service) featureReadOnly(ctx context.Context, feature domain.Feature) (bool, error) {
 	if feature.Archived {
 		return true, nil
@@ -51,9 +51,8 @@ func (s *Service) featureReadOnly(ctx context.Context, feature domain.Feature) (
 	return project.Archived, nil
 }
 
-// withReadOnly returns the feature with ReadOnly derived, so a feature that
-// leaves the application layer outside a snapshot carries the same value
-// Snapshot publishes instead of the stored zero value.
+// withReadOnly は ReadOnly を導出した feature を返す。snapshot 以外で application 層を
+// 出る feature も、保存されたゼロ値ではなく Snapshot と同じ値を持つ。
 func (s *Service) withReadOnly(ctx context.Context, feature domain.Feature) (domain.Feature, error) {
 	readOnly, err := s.featureReadOnly(ctx, feature)
 	if err != nil {
@@ -63,8 +62,8 @@ func (s *Service) withReadOnly(ctx context.Context, feature domain.Feature) (dom
 	return feature, nil
 }
 
-// guardFeature refuses a write that lands inside an archived feature or inside
-// a feature whose project is archived.
+// guardFeature は、アーカイブ済みの feature 内、または project がアーカイブ済みの
+// feature 内への書き込みを拒む。
 func (s *Service) guardFeature(ctx context.Context, feature domain.Feature) error {
 	readOnly, err := s.featureReadOnly(ctx, feature)
 	if err != nil {
@@ -76,8 +75,8 @@ func (s *Service) guardFeature(ctx context.Context, feature domain.Feature) erro
 	return nil
 }
 
-// guardTask refuses a write to a task, its dependencies, its pull request, or
-// its documents when the owning feature is read-only.
+// guardTask は、所属する feature が読み取り専用のとき、task とその依存・
+// pull request・document への書き込みを拒む。
 func (s *Service) guardTask(ctx context.Context, task domain.Task) error {
 	feature, err := s.ResolveFeature(ctx, task.FeatureID)
 	if err != nil {
@@ -86,8 +85,8 @@ func (s *Service) guardTask(ctx context.Context, task domain.Task) error {
 	return s.guardFeature(ctx, feature)
 }
 
-// guardTaskID guards a write aimed at a task the caller named by public ID, and
-// reports the missing task when there is none.
+// guardTaskID は、呼び出し側が公開 ID で指定した task への書き込みをガードし、
+// 該当がなければ task が存在しないことを報告する。
 func (s *Service) guardTaskID(ctx context.Context, taskID string) error {
 	task, err := s.repository.GetTask(ctx, taskID)
 	if err != nil {
@@ -103,8 +102,8 @@ func (s *Service) guardProject(project domain.Project) error {
 	return nil
 }
 
-// guardDocument refuses a write to a document whose parent is read-only,
-// whichever of the three parents the document carries.
+// guardDocument は、親が読み取り専用の document への書き込みを拒む。
+// 3 種類の親のいずれを持つ場合も対象になる。
 func (s *Service) guardDocument(ctx context.Context, document domain.Document) error {
 	switch {
 	case document.ProjectID != "":
@@ -125,9 +124,8 @@ func (s *Service) guardDocument(ctx context.Context, document domain.Document) e
 	return nil
 }
 
-// resolveProjectAssignment turns the requested membership into the public
-// project ID to store. Membership is required, so an empty request is refused,
-// and an archived project refuses to take a feature in.
+// resolveProjectAssignment は、要求された所属を保存用の公開 project ID に変換する。
+// 所属は必須なので空の要求は拒否し、アーカイブ済みの project は feature を受け入れない。
 func (s *Service) resolveProjectAssignment(ctx context.Context, requested string) (string, error) {
 	if requested == "" {
 		return "", domain.NewError(domain.DomainErrorCodeInvalidParent, "feature project is required")

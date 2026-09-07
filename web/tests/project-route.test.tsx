@@ -55,8 +55,8 @@ describe("Project list route", () => {
     await router.load();
   });
 
-  // The archived view is a URL state so reload, history, and a shared link
-  // reproduce it, and the sidebar reaches the page at every viewport width.
+  // アーカイブ表示は URL の状態なのでリロード・履歴・共有リンクで再現でき、
+  // サイドバーからはどの画面幅でもこのページへ辿り着ける。
   it("keeps the archive tab in the URL and links from the sidebar", async () => {
     render(<RouterProvider router={router} />);
 
@@ -70,8 +70,8 @@ describe("Project list route", () => {
     const list = screen.getByRole("region", { name: "Project list" });
     expect(list).toHaveTextContent("Delivery platform");
     expect(list).not.toHaveTextContent("Sunset initiative");
-    // The count is a plural key, so a project with one feature must not read
-    // "1 features".
+    // 件数は複数形キーなので、feature が 1 つのプロジェクトが
+    // "1 features" と表示されてはいけない。
     expect(list).toHaveTextContent("1 feature");
     expect(list).not.toHaveTextContent("1 features");
 

@@ -28,8 +28,8 @@ test.afterEach(() => {
   expect(browserErrors, browserErrors.join("\n")).toEqual([]);
 });
 
-// The filter only reads the shared demo graph, so this spec runs against the
-// same server as the rest in parallel.
+// フィルタは共有のデモグラフを読むだけなので、この spec は他と同じ
+// サーバーに対して並列に実行する。
 test("hides completed tasks and leaves their dependency visible", async ({
   page,
 }) => {
@@ -50,8 +50,8 @@ test("hides completed tasks and leaves their dependency visible", async ({
 
   await expect(finished).toHaveCount(0);
   await expect(nodes).toHaveCount(10, { timeout: 25_000 });
-  // The completed task that blocked the draft pull request is gone, so the
-  // draft carries a stub naming what it waits on.
+  // draft の pull request を塞いでいた完了タスクが消えるので、draft 側には
+  // 何を待っているかを示すスタブが付く。
   const stub = nodes
     .filter({ hasText: "Draft WebUI shell" })
     .locator(".node-hidden-dependency-in");
@@ -60,7 +60,7 @@ test("hides completed tasks and leaves their dependency visible", async ({
     "Hidden completed blockers: Verify storage boundary",
   );
 
-  // The switch is browser-local state, so a reload comes back filtered.
+  // スイッチはブラウザローカルの状態なので、リロードしても絞り込みが残る。
   await page.reload();
   await expect(toggle).toBeChecked();
   await expect(nodes).toHaveCount(10, { timeout: 25_000 });

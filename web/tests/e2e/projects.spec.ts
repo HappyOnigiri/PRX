@@ -28,8 +28,8 @@ test.afterEach(() => {
   expect(browserErrors, browserErrors.join("\n")).toEqual([]);
 });
 
-// The demo data is shared by every worker, so each test builds its own project
-// and feature and never archives one the other tests read.
+// デモデータは全ワーカーで共有するため、各テストは自前の project と feature を
+// 作り、他のテストが読むものはアーカイブしない。
 async function createProject(page: Page, title: string) {
   await page.goto("/projects");
   await page.getByRole("button", { name: "New project" }).click();
@@ -53,8 +53,8 @@ test("presents the demo projects and their shared references", async ({
     page.getByRole("region", { name: "Project list" }),
   ).toContainText("Sunset initiative");
 
-  // Reloading has to reproduce the archived view, which is why the tab lives
-  // in the URL rather than in browser-local state.
+  // リロードしてもアーカイブ表示を再現する必要があるため、タブの状態は
+  // ブラウザローカルではなく URL に持たせている。
   await page.reload();
   await expect(
     page.getByRole("region", { name: "Project list" }),
@@ -74,9 +74,9 @@ test("presents the demo projects and their shared references", async ({
   );
 });
 
-// A sidebar project row reuses the feature row's class, so its own
-// single-column track list has to outrank the feature one. Losing that override
-// clips the title into the 8px status-dot column instead of hiding the row.
+// サイドバーの project 行は feature 行のクラスを流用するので、1 カラムの
+// track 指定が feature 側に勝つ必要がある。この上書きが失われると、行が隠れる
+// のではなくタイトルが 8px のステータスドット列に押し込まれる。
 test("gives the sidebar project title the whole row", async ({ page }) => {
   await page.goto("/projects");
   const title = page
@@ -93,8 +93,8 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
   const title = `E2E project ${crypto.randomUUID()}`;
   await createProject(page, title);
 
-  // The project page is where a feature is created, so the membership follows
-  // from the page instead of a field in the dialog.
+  // feature は project ページから作るので、所属はダイアログの入力欄ではなく
+  // ページから決まる。
   const featureTitle = `E2E member ${crypto.randomUUID()}`;
   await page.getByRole("button", { name: "Create feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
@@ -102,10 +102,10 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
   await featureDialog.getByLabel("Title").fill(featureTitle);
   await featureDialog.getByRole("button", { name: "Create feature" }).click();
   await expect(page.getByRole("heading", { name: featureTitle })).toBeVisible();
-  // The feature header names the project it now belongs to.
+  // feature のヘッダーには、所属することになった project 名が出る。
   await expect(page.locator(".workspace-project-link")).toHaveText(title);
 
-  // The sidebar links to the project too, so follow the one in the header.
+  // サイドバーにも project へのリンクがあるので、ヘッダー側をたどる。
   await page.locator(".workspace-project-link").click();
   await expect(page.getByRole("tabpanel")).toContainText(featureTitle);
   await page.getByRole("button", { name: "Edit project" }).click();
@@ -116,9 +116,9 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
     .click();
   await expect(page.getByText("Archived · read-only")).toBeVisible();
 
-  // The feature itself is not archived, so the notice has to say the archive
-  // came from the project and link back to it instead of offering a restore.
-  // A project's archived tab is where a read-only member is now listed.
+  // feature 自体はアーカイブされていないので、通知は復元を促すのではなく
+  // project 由来のアーカイブであることを示し、project へ戻すリンクを出す。
+  // read-only になったメンバーは project のアーカイブタブに並ぶ。
   await page.getByRole("tab", { name: "Archived" }).click();
   await page.getByRole("tabpanel").getByText(featureTitle).click();
   await expect(page.getByText("Project archived · read-only")).toBeVisible();
@@ -138,13 +138,13 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
   await page.getByRole("button", { name: "Manage project" }).click();
   await page.getByRole("button", { name: "Activate project" }).click();
   await expect(page.getByText("Archived · read-only")).toHaveCount(0);
-  // The member is back in flight, so it leaves the archived tab it was on.
+  // メンバーが進行中に戻るので、いたアーカイブタブから外れる。
   await expect(page.getByRole("tabpanel")).not.toContainText(featureTitle);
   await page.getByRole("tab", { name: "Active" }).click();
   await page.getByRole("tabpanel").getByText(featureTitle).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toBeVisible();
 
-  // Deleting the project takes the feature it holds with it.
+  // project を削除すると、抱えている feature も一緒に消える。
   await page.locator(".workspace-project-link").click();
   await page.getByRole("button", { name: "Edit project" }).click();
   await page.getByRole("button", { name: "Delete project" }).click();
@@ -155,8 +155,8 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "Projects", exact: true }),
   ).toBeVisible();
-  // The feature went with the project, so nothing on the projects screen or in
-  // task search still names it.
+  // feature は project と一緒に消えるので、projects 画面にもタスク検索にも
+  // その名前は残らない。
   await expect(
     page.getByRole("region", { name: "Project list" }),
   ).not.toContainText(title);
@@ -164,8 +164,8 @@ test("archives a project and makes its feature read-only", async ({ page }) => {
   await expect(page.locator("body")).not.toContainText(featureTitle);
 });
 
-// The sidebar tree folds a project away and remembers that across a reload,
-// and its feature rows open the workspaces directly.
+// サイドバーのツリーは project を畳めて、その状態をリロード後も覚えている。
+// feature 行からはワークスペースを直接開ける。
 test("folds a sidebar project and restores the fold after a reload", async ({
   page,
 }) => {
@@ -197,9 +197,8 @@ test("folds a sidebar project and restores the fold after a reload", async ({
   ).toBeVisible();
 });
 
-// Between 601px and 900px the rail is one horizontal row of links, which a
-// nested list cannot sit in. The tree goes away there and the Projects link
-// stays, so the page keeps carrying the tree's job.
+// 601px〜900px では rail がリンク 1 行の横並びになり、入れ子のリストは置けない。
+// そこではツリーが消えて Projects リンクが残り、ツリーの役割はページ側が担う。
 test("drops the sidebar tree once the rail turns horizontal", async ({
   page,
 }) => {

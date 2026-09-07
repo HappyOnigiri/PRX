@@ -481,8 +481,8 @@ describe("SettingsDialog", () => {
     ).toBeInTheDocument();
   });
 
-  // The interval form owns its own mutation, so the dialog's shared error area
-  // never sees its failures.
+  // 間隔のフォームは自前の mutation を持つので、その失敗はダイアログ共通の
+  // エラー表示には出ない。
   it("shows why saving the synchronization interval failed", () => {
     settingsMocks.mutations.updateSync.error = new Error(
       "config file is read-only",

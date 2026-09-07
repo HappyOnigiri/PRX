@@ -8,9 +8,8 @@ import (
 	"time"
 )
 
-// FormatDebugReport renders the report the CLI prints and the WebUI copies to
-// the clipboard. Both surfaces share this single rendering so a report pasted
-// into an issue reads the same whichever one produced it.
+// FormatDebugReport は CLI が出力し WebUI がクリップボードにコピーするレポートを描画する。
+// 両者がこの 1 つの描画を共有するため、issue に貼ったレポートはどちらで作っても同じになる。
 func FormatDebugReport(report DebugReport) string {
 	out := &debugText{}
 	out.line("PRX diagnostic report")
@@ -106,8 +105,8 @@ func writeDebugConfig(out *debugText, config DebugConfig) {
 	writeDebugConfigPrompt(out, "batch", config.Prompts.Batch)
 }
 
-// writeDebugConfigPrompt reports the shape of one template without its body: the
-// text is user-authored and can be several kilobytes long.
+// writeDebugConfigPrompt はテンプレート 1 件の概要を本文抜きで報告する。本文はユーザー
+// 作成で数キロバイトになりうるため。
 func writeDebugConfigPrompt(out *debugText, name string, value DebugConfigPrompt) {
 	out.subItem(name)
 	out.subSubField("customized", debugYesNo(value.Customized))
@@ -222,9 +221,8 @@ func writeDebugStringList(out *debugText, key string, values []string) {
 	}
 }
 
-// debugText builds the report body. Section headers sit at the left margin and
-// every value below one is indented, so a reader can tell where a section ends
-// even when a value wraps in a terminal.
+// debugText はレポート本文を組み立てる。セクション見出しを左端に置き配下の値を字下げする
+// ため、端末で値が折り返してもセクションの切れ目が分かる。
 type debugText struct {
 	builder strings.Builder
 }
@@ -304,8 +302,8 @@ func debugEmptyWhenZero(count int) string {
 	return ""
 }
 
-// debugOmitted reports how many rows an output limit dropped, so a truncated
-// breakdown never reads as a complete one.
+// debugOmitted は出力上限で落とした行数を報告する。これにより、切り詰めた内訳が
+// 完全なものに見えることはない。
 func debugOmitted(shown, omitted int) string {
 	if omitted > 0 {
 		return fmt.Sprintf("%d shown, %d omitted", shown, omitted)
@@ -313,8 +311,8 @@ func debugOmitted(shown, omitted int) string {
 	return debugEmptyWhenZero(shown)
 }
 
-// SortedDebugProblemCodes lists every problem code in a stable order. Tests and
-// enum translation tables use it to prove no member was forgotten.
+// SortedDebugProblemCodes は全 problem code を安定した順序で列挙する。テストや enum の
+// 変換表は、これを使って漏れがないことを確かめる。
 func SortedDebugProblemCodes() []DebugProblemCode {
 	result := make([]DebugProblemCode, 0, len(debugProblemSummaries))
 	for code := range debugProblemSummaries {

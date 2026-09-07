@@ -15,8 +15,8 @@ func (s *state) projectCommand() *cobra.Command {
 		Example: "prx project\nprx project P-1\nprx proj P-1",
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Both forms read the snapshot so the features listed with a project
-			// are the ones the server reports, matching prx feature.
+			// どちらの形でもスナップショットを読むので、project とともに並ぶ feature は
+			// サーバーが報告したものになり、prx feature と一致する。
 			value, err := s.service.Snapshot(cmd.Context())
 			if err != nil {
 				return err

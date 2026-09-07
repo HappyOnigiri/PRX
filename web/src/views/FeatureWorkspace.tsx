@@ -59,8 +59,8 @@ export function FeatureWorkspace() {
   const [showBatchPrompt, setShowBatchPrompt] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<TaskNodeDocument>();
   const [documentTarget, setDocumentTarget] = useState<DocumentTarget>();
-  // Hiding finished tasks is how the graph was last read, so it is restored on
-  // the next visit from browser-local settings.
+  // 完了タスクの非表示は前回グラフをどう読んだかを表すので、次回の訪問時に
+  // ブラウザローカルの設定から復元する。
   const [hideCompleted, setHideCompleted] = useState(readHideCompletedTasks);
   const changeHideCompleted = useCallback((hide: boolean) => {
     setHideCompleted(hide);
@@ -108,8 +108,8 @@ export function FeatureWorkspace() {
       </div>
     );
 
-  // The inspector follows the canvas: a task the reader hid leaves the screen
-  // with its node rather than staying open in the panel beside it.
+  // インスペクタはキャンバスに従う。読み手が隠したタスクは、隣のパネルに
+  // 開いたまま残らずノードと一緒に画面から消える。
   const selectedTask = visible.tasks.find((task) => task.id === selected);
   return (
     <WorkspaceContent
@@ -166,9 +166,8 @@ export function FeatureWorkspace() {
         setShowFeatureEdit(false);
       }}
       onFeatureDeleted={() => {
-        // Deleting returns to the list the feature was reachable from, which
-        // for a read-only one is its owner's archived tab rather than the
-        // overview it never appeared on.
+        // 削除後はその feature へ辿れたリストへ戻る。読み取り専用なら、そもそも
+        // 現れない概要ではなく、所有プロジェクトのアーカイブタブ。
         void navigate(deletedFeatureDestination(feature));
       }}
     />
@@ -184,8 +183,8 @@ function deletedFeatureDestination(feature: Feature) {
   } as const;
 }
 
-// The workspace narrows one snapshot to a single feature. Keeping the memos
-// together lets the component itself stay about rendering and state.
+// ワークスペースはスナップショットを 1 つの feature に絞り込む。memo をここに
+// まとめることで、コンポーネント本体は描画と状態に専念できる。
 function useFeatureWorkspaceData(
   data: Snapshot | undefined,
   featureId: string,
@@ -216,8 +215,8 @@ function useFeatureWorkspaceData(
     }
     return result;
   }, [data]);
-  // A document with no feature carries an empty ID rather than an absent one,
-  // so the comparison has to reject the empty value.
+  // feature に属さないドキュメントは ID が欠けるのではなく空文字になるので、
+  // 比較では空の値を弾く必要がある。
   const featureDocuments = useMemo(
     () =>
       data?.documents.filter(
@@ -235,9 +234,8 @@ function useFeatureWorkspaceData(
   };
 }
 
-// The layout keys off the identity of what it is handed, so leaving the filter
-// off has to give back the very arrays the snapshot produced rather than fresh
-// copies of them.
+// レイアウトは渡されたものの同一性を見るので、フィルタを使わないときは複製では
+// なくスナップショットが作った配列そのものを返す必要がある。
 function useVisibleGraph(
   tasks: Task[],
   dependencies: Dependency[],
@@ -291,8 +289,8 @@ interface WorkspaceContentProps {
 }
 
 function WorkspaceContent(props: WorkspaceContentProps) {
-  // The server decides read-only, so the workspace never combines the
-  // feature's own archived flag with the state of its project.
+  // 読み取り専用かはサーバーが決めるので、ワークスペースは feature 自身の
+  // アーカイブフラグとプロジェクトの状態を組み合わせない。
   const readOnly = props.feature.readOnly;
   return (
     <div className={readOnly ? "workspace is-archived" : "workspace"}>
@@ -390,8 +388,8 @@ function FeatureWorkspaceHead({
             disabled={props.syncPending}
           />
         )}
-        {/* Copying stays available on an archived feature: handing work to an
-            agent reads PRX rather than changing it. */}
+        {/* アーカイブ済みの feature でもコピーは使える。エージェントへの受け渡しは
+            PRX を変更せず読むだけだから。 */}
         <IconButton
           icon={ClipboardList}
           label={t("batchPrompt.open")}
@@ -420,9 +418,8 @@ function FeatureWorkspaceHead({
   );
 }
 
-// The filter is adjusted while reading one graph and reverts on the next
-// visit, so it stays at the canvas it acts on instead of moving to the
-// Settings dialog the persistent preferences share.
+// このフィルタは 1 つのグラフを読む間に切り替えるもので次回の訪問では戻るため、
+// 永続設定が集まる設定ダイアログではなく、対象のキャンバスに置く。
 function HideCompletedToggle({
   checked,
   onChange,
@@ -433,8 +430,8 @@ function HideCompletedToggle({
   const { t } = useTranslation();
   return (
     <label className="hide-completed-toggle">
-      {/* The wording gives way at a narrow viewport, so the control names
-          itself rather than relying on the text beside it. */}
+      {/* 狭い画面では文言が省かれるので、隣のテキストに頼らず
+          コントロール自身が名前を持つ。 */}
       <input
         type="checkbox"
         role="switch"
@@ -450,8 +447,8 @@ function HideCompletedToggle({
   );
 }
 
-// The header shows the status the server derived, the same value the feature
-// lists show, so a feature left on automatic reads the same in both places.
+// ヘッダーはサーバーが導出した状態を、feature 一覧と同じ値で表示する。自動の
+// ままの feature もどちらの場所でも同じに読める。
 function FeatureStatusBadge({ status }: { status: FeatureStatus }) {
   const { t } = useTranslation();
   return (
@@ -463,9 +460,9 @@ function FeatureStatusBadge({ status }: { status: FeatureStatus }) {
   );
 }
 
-// A feature can be read-only for two reasons with different remedies: restore
-// the feature, or activate its project. An archived project decides even when
-// the feature is archived too, because restoring it alone changes nothing.
+// 読み取り専用の理由は 2 つあり、対処も違う。feature の復元か、プロジェクトの
+// 再開。feature もアーカイブ済みならプロジェクト側が優先される。feature だけ
+// 戻しても何も変わらないため。
 function ArchivedNotice({ project }: { project: Project | undefined }) {
   const { t } = useTranslation();
   if (project?.archived)

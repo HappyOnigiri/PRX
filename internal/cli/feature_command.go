@@ -15,8 +15,8 @@ func (s *state) featureCommand() *cobra.Command {
 		Example: "prx feature\nprx feature F-1\nprx f F-1",
 		Args:    cobra.MaximumNArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
-			// Both forms read the snapshot so the derived status and the task
-			// counts are the ones the server computes, matching prx task.
+			// どちらの形でもスナップショットを読むので、導出ステータスと task 数は
+			// サーバーが計算したものになり、prx task と一致する。
 			value, err := s.service.Snapshot(cmd.Context())
 			if err != nil {
 				return err

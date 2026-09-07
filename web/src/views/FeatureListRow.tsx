@@ -7,8 +7,8 @@ import { StatusBadge } from "./StatusBadge";
 
 interface FeatureListRowProps {
   feature: Feature;
-  // The progress wording belongs to the page the row appears on, so the caller
-  // resolves it and the row stays free of a fixed translation namespace.
+  // 進捗の文言は行が現れるページ側のものなので、呼び出し元で解決し、行は
+  // 特定の翻訳名前空間に縛られないようにする。
   progressLabel: string;
 }
 
@@ -23,8 +23,8 @@ export function FeatureListRow({
       params={{ featureId: feature.id }}
       className="feature-list-row"
     >
-      {/* The state opens the line everywhere a titled row appears, so a reader
-          scans one column of states down the list. */}
+      {/* タイトル付きの行ではどこでも状態を行頭に置く。読み手は状態の列を
+          縦に追える。 */}
       <div className="feature-list-row-title">
         <StatusBadge
           className={`status-${featureStatusToken(feature.displayStatus)}`}

@@ -61,8 +61,8 @@ func (s *state) documentCommand() *cobra.Command {
 	return command
 }
 
-// resolveDocumentFilter turns the list filters into public identifiers, so the
-// listing compares against the same values the snapshot carries.
+// resolveDocumentFilter は一覧の絞り込み条件を public identifier に変換し、
+// スナップショットが持つ値と同じもので比較できるようにする。
 func (s *state) resolveDocumentFilter(
 	cmd *cobra.Command,
 	snapshot domain.Snapshot,

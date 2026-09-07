@@ -13,8 +13,8 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// The report exists for the run that cannot open its database, so a failed open
-// must not fail the command that explains why.
+// レポートはデータベースを開けない実行のためにあるので、オープンの失敗が
+// その理由を説明するコマンド自体を失敗させてはならない。
 func TestDebugSucceedsWhenTheServiceCannotBeOpened(t *testing.T) {
 	var out, errOut bytes.Buffer
 	err := Execute(
@@ -37,7 +37,7 @@ func TestDebugSucceedsWhenTheServiceCannotBeOpened(t *testing.T) {
 		!strings.Contains(text, "create database directory: permission denied") {
 		t.Fatalf("report did not explain the failure:\n%s", text)
 	}
-	// The resolved location the open attempted is the first thing a reader needs.
+	// オープンが試みた解決済みの場所は、読み手が最初に必要とする情報。
 	if !strings.Contains(text, "database_path: /nonexistent/directory/prx.db") {
 		t.Fatalf("report omitted the attempted database path:\n%s", text)
 	}
@@ -69,9 +69,8 @@ func TestDebugJSONReportsTheSameProblems(t *testing.T) {
 	}
 }
 
-// A refresh would clear the run error the reader was asked to send and rewrite
-// the staleness of every pull request, so the diagnostic command never triggers
-// one.
+// 更新をかけると、送ってもらう対象の実行エラーが消え、全 pull request の
+// 鮮度も書き換わってしまうので、診断コマンドは決して更新を起動しない。
 func TestDebugDoesNotStartAnAutomaticSync(t *testing.T) {
 	service := &recordingDebugService{}
 	root, state := newRootWithState(
@@ -96,8 +95,8 @@ func TestDebugDoesNotStartAnAutomaticSync(t *testing.T) {
 }
 
 func TestDebugRecordsHowEachLocationWasSelected(t *testing.T) {
-	// The configuration store creates a lock file beside the path it is given,
-	// so the environment value points into a temporary directory.
+	// 設定ストアは渡されたパスの隣にロックファイルを作るので、環境変数の値は
+	// 一時ディレクトリを指す。
 	t.Setenv("PRX_CONFIG", filepath.Join(t.TempDir(), "from-environment.yaml"))
 	var got ServiceOptions
 	root, _ := newRootWithState(

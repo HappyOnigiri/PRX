@@ -97,9 +97,8 @@ const (
 	BlockedReasonCodeWaitingForBlocker        BlockedReasonCode = "waiting_for_blocker"
 )
 
-// Project groups features. Every feature belongs to one, and a project's only
-// state is whether it is archived: it has no two-layer status the way a feature
-// does.
+// Project は feature をまとめる。feature は必ずいずれかに属し、project が持つ状態は
+// archived かどうかだけで、feature のような 2 層の status は持たない。
 type Project struct {
 	ID          string    `json:"id"`
 	StorageID   string    `json:"-"`
@@ -110,17 +109,17 @@ type Project struct {
 	UpdatedAt   time.Time `json:"updated_at"`
 }
 
-// ProjectUpdate carries every field a project update may change. A nil pointer
-// means the field was omitted; an empty string is a request to clear it. One
-// comparable value lets the archive barrier ask what changed without naming it.
+// ProjectUpdate は project 更新で変更しうる全フィールドを運ぶ。nil ポインタは省略、空文字は
+// クリア要求を表す。1 つの比較可能な値にまとめることで、archive の防壁は個々のフィールドを
+// 挙げずに変更の有無を判定できる。
 type ProjectUpdate struct {
 	Title       *string
 	Description *string
 	Archived    *bool
 }
 
-// FeatureUpdate carries every field a feature update may change, with the same
-// pointer convention and the same reason for being one value as ProjectUpdate.
+// FeatureUpdate は feature 更新で変更しうる全フィールドを運ぶ。ポインタの規約と、
+// 1 つの値にまとめる理由は ProjectUpdate と同じ。
 type FeatureUpdate struct {
 	Title       *string
 	Description *string
@@ -136,9 +135,9 @@ type Feature struct {
 	Title       string        `json:"title"`
 	Description string        `json:"description"`
 	Status      FeatureStatus `json:"status"`
-	// ReadOnly is derived: the feature is archived, or the project it belongs to
-	// is. Clients present read-only state from this value instead of combining
-	// the feature's own flag with its project's.
+	// ReadOnly は導出値で、feature 自身か所属 project が archived であることを表す。
+	// クライアントは feature と project のフラグを組み合わせず、この値から読み取り専用
+	// 状態を表示する。
 	ReadOnly           bool          `json:"read_only"`
 	DisplayStatus      FeatureStatus `json:"display_status"`
 	Archived           bool          `json:"archived"`
@@ -169,9 +168,9 @@ type Task struct {
 	BlockedReason         string            `json:"blocked_reason,omitempty"`
 	BlockedCode           BlockedReasonCode `json:"-"`
 	BlockerTaskID         string            `json:"-"`
-	// PendingBlockerTaskIDs names every blocker that is not satisfied yet, while
-	// BlockerTaskID names only the first one the blocked reason is worded from.
-	// See docs/design/domain.md.
+	// PendingBlockerTaskIDs は未解消の blocker をすべて挙げる。BlockerTaskID は
+	// blocked reason の文言の元になった最初の 1 件だけを指す。
+	// docs/design/domain.md を参照。
 	PendingBlockerTaskIDs []string `json:"-"`
 }
 
@@ -219,16 +218,16 @@ type GitHubSyncStatus struct {
 	Error           string     `json:"error,omitempty"`
 }
 
-// DocumentParent names the single owner of a document. Exactly one field may
-// carry a value; Count lets callers reject the other combinations, and one value
-// keeps the three identifiers from being swapped at a call site.
+// DocumentParent は document の唯一の所有者を指す。値を持てるフィールドはちょうど 1 つで、
+// それ以外の組み合わせは Count を使って呼び出し側が弾く。1 つの値にまとめることで、
+// 呼び出し箇所で 3 つの識別子を取り違えずに済む。
 type DocumentParent struct {
 	ProjectID string
 	FeatureID string
 	TaskID    string
 }
 
-// Count reports how many parents the value names.
+// Count は値が指し示す親の数を返す。
 func (p DocumentParent) Count() int {
 	count := 0
 	for _, value := range []string{p.ProjectID, p.FeatureID, p.TaskID} {

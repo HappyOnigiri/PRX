@@ -33,9 +33,9 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
 
   function openTab(tab: SettingsTab) {
     setActiveTab(tab);
-    // The prompt panel holds unsaved edits in component state, so once it has
-    // been opened it stays mounted until the dialog closes: leaving the tab and
-    // coming back must not discard what the user typed without warning.
+    // プロンプトのパネルは未保存の編集をコンポーネント state に持つので、一度
+    // 開いたらダイアログを閉じるまでマウントしたままにする。タブを離れて戻った
+    // だけで入力内容を警告なく捨ててはならないため。
     if (tab === "prompts") setPromptsMounted(true);
   }
 
@@ -73,18 +73,18 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
           <ServerSettingsPanel />
         </SettingsPanel>
         <SettingsPanel active={activeTab === "prompts"} tab="prompts">
-          {/* Like the debug panel, this one reads the configuration file, so it
-              mounts only once the tab is opened. Unlike it, it stays mounted
-              afterwards so unsaved edits survive a trip to another tab. */}
+          {/* debug パネルと同じく設定ファイルを読むので、タブを開いたときだけ
+              マウントする。ただし未保存の編集が他タブへの移動で消えないよう、
+              以後はマウントしたままにする。 */}
           {promptsMounted && <PromptSettingsPanel />}
         </SettingsPanel>
         <SettingsPanel active={activeTab === "display"} tab="display">
           <DisplaySettingsPanel />
         </SettingsPanel>
         <SettingsPanel active={activeTab === "debug"} tab="debug">
-          {/* Unlike the other panels, this one mounts only while it is active:
-              collecting a report reads the database and the configuration file,
-              and opening the dialog must not do that on its own. */}
+          {/* 他のパネルと違い、これはアクティブな間だけマウントする。レポート
+              の収集はデータベースと設定ファイルを読むので、ダイアログを開いた
+              だけでそれを行ってはならない。 */}
           {activeTab === "debug" && <DebugSettingsPanel />}
         </SettingsPanel>
         <SettingsPanel active={activeTab === "licenses"} tab="licenses">

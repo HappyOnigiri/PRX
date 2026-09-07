@@ -56,9 +56,8 @@ func TestReadyReportsStructuredWaitingReason(t *testing.T) {
 	}
 }
 
-// A caller handing a blocked task to an agent has to hand over everything it
-// waits for, so the whole set is derived even though the reason names the first
-// blocker alone.
+// blocked なタスクをエージェントに渡す側は、待っている対象をすべて渡す必要がある。そのため
+// 理由が最初の blocker だけを挙げる場合でも、集合全体を導出する。
 func TestReadyCollectsEveryPendingBlocker(t *testing.T) {
 	tasks := []Task{
 		{ID: "a", Title: "API", Status: TaskStatusNotStarted},
@@ -77,13 +76,13 @@ func TestReadyCollectsEveryPendingBlocker(t *testing.T) {
 	if ui.Ready {
 		t.Fatalf("task waiting on three blockers should not be ready: %+v", ui)
 	}
-	// "b" is completed, so it is satisfied and stays out; "missing" is carried
-	// because a blocker the graph cannot resolve is not satisfied either.
+	// "b" は completed なので解消済みとして除外する。グラフで解決できない blocker も
+	// 解消済みではないため、"missing" は残す。
 	want := []string{"a", "c", "missing"}
 	if !slices.Equal(ui.PendingBlockerTaskIDs, want) {
 		t.Fatalf("pending blockers=%v want %v", ui.PendingBlockerTaskIDs, want)
 	}
-	// The reason still describes the first unsatisfied blocker on its own.
+	// 理由は依然として、未解消の最初の blocker だけを表す。
 	if ui.BlockedCode != BlockedReasonCodeWaitingForBlocker || ui.BlockerTaskID != "a" {
 		t.Fatalf("unexpected blocked reason: %+v", ui)
 	}
@@ -312,8 +311,8 @@ func TestSelfDependencyIsCycle(t *testing.T) {
 	}
 }
 
-// A diamond chain merges and splits at every level, so a path-based search that
-// does not remember settled nodes revisits shared subgraphs once per route.
+// ダイヤモンド連鎖は各段で合流と分岐を繰り返すため、確定済みノードを覚えない経路ベースの
+// 探索は、共有する部分グラフを経路の数だけ再訪する。
 func buildDiamondChain(levels int) ([]Task, []Dependency, string, string) {
 	tasks := []Task{{ID: "a00"}}
 	deps := []Dependency{}
@@ -350,8 +349,8 @@ func TestCyclePathOnDiamondChainReturnsPromptly(t *testing.T) {
 func TestCyclePathClearsDiamondChainPromptly(t *testing.T) {
 	tasks, deps, last, first := buildDiamondChain(40)
 	result := make(chan []string, 1)
-	// Adding an edge along the existing direction closes no cycle, so the search
-	// has to settle the whole graph before it can answer.
+	// 既存の向きに沿った辺を足しても閉路にならないため、探索は答えを出す前に
+	// グラフ全体を調べ切る必要がある。
 	go func() { result <- CyclePath(tasks, deps, first, last) }()
 	select {
 	case path := <-result:

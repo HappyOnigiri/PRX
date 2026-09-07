@@ -11,14 +11,13 @@ import (
 	"time"
 )
 
-// CLIResponseSchemaVersion is the version of the machine-readable CLI response
-// schema. The diagnostic report and the CLI itself must agree on it, and the CLI
-// cannot be imported from the packages that assemble the report.
+// CLIResponseSchemaVersion は機械可読な CLI レスポンススキーマのバージョン。診断レポートと
+// CLI 本体で一致させる必要があるが、レポートを組み立てるパッケージから CLI は import
+// できないためここに置く。
 const CLIResponseSchemaVersion = "2"
 
-// Diagnostic output limits keep the report bounded and its ordering total, so a
-// database with many failing repositories still produces deterministic output.
-// A caller that needs everything reads `prx snapshot --json` instead.
+// 診断出力の上限はレポートの大きさと順序を確定させ、失敗中のリポジトリが多いデータベースでも
+// 決定的な出力にする。すべてが必要な呼び出し側は代わりに `prx snapshot --json` を読む。
 const (
 	DebugMaxErrorGroups      = 5
 	DebugMaxTasksPerGroup    = 3
@@ -27,13 +26,12 @@ const (
 	DebugMaxErrorMessageRune = 300
 )
 
-// debugOverdueFactor multiplies the configured interval before a missed
-// automatic refresh is reported. One expired interval is normal between two
-// commands; several in a row means nothing is refreshing.
+// debugOverdueFactor は自動更新の遅延を報告する前に、設定された間隔に掛ける倍率。
+// コマンド間で 1 回分の間隔切れは正常だが、何度も続くなら更新が動いていない。
 const debugOverdueFactor = 3
 
-// DebugEnvironmentNames are the variables that change how PRX resolves paths or
-// authenticates. Only their presence is ever reported, never their values.
+// DebugEnvironmentNames は PRX のパス解決や認証を変える環境変数。
+// 報告するのは設定の有無だけで、値は決して報告しない。
 var DebugEnvironmentNames = []string{
 	"PRX_DB",
 	"PRX_CONFIG",
@@ -43,8 +41,8 @@ var DebugEnvironmentNames = []string{
 	"GH_ENTERPRISE_TOKEN",
 }
 
-// DebugProblemCode identifies a problem the diagnostic report detected. The
-// values are a public contract: they are stable, and a reader may branch on them.
+// DebugProblemCode は診断レポートが検出した問題を識別する。値は公開契約であり、
+// 安定していて、読み手が分岐に使ってよい。
 type DebugProblemCode string
 
 const (
@@ -62,9 +60,8 @@ const (
 	DebugProblemCodePullRequestsStale          DebugProblemCode = "pull_requests_stale"
 )
 
-// debugProblemSummaries explain each problem in the rendered report. The report
-// text is shared by the CLI and the WebUI clipboard, so it stays English while
-// the WebUI translates its own on-screen labels.
+// debugProblemSummaries は出力されるレポート内で各問題を説明する。レポート本文は CLI と
+// WebUI のクリップボードで共通なので英語のままとし、WebUI は画面表示のラベルだけを訳す。
 var debugProblemSummaries = map[DebugProblemCode]string{
 	DebugProblemCodeStorageUnavailable:         "the database could not be opened, so most sections are unavailable",
 	DebugProblemCodeSchemaVersionAheadOfBinary: "the database was migrated by a newer PRX than this binary",
@@ -80,8 +77,7 @@ var debugProblemSummaries = map[DebugProblemCode]string{
 	DebugProblemCodePullRequestsStale:          "at least one pull request is holding stale state",
 }
 
-// DebugProblem is one detected problem with the evidence behind it and the
-// command whose output explains it in full.
+// DebugProblem は検出した 1 件の問題と、その根拠、および詳細を出力するコマンドを表す。
 type DebugProblem struct {
 	Code        DebugProblemCode `json:"code"`
 	Target      string           `json:"target,omitempty"`
@@ -89,7 +85,7 @@ type DebugProblem struct {
 	NextCommand string           `json:"next_command,omitempty"`
 }
 
-// DebugBuild describes the running PRX build.
+// DebugBuild は実行中の PRX ビルドを表す。
 type DebugBuild struct {
 	Version     string `json:"version"`
 	Development bool   `json:"development"`
@@ -98,7 +94,7 @@ type DebugBuild struct {
 	Arch        string `json:"arch"`
 }
 
-// DebugRuntimeInput carries the process facts only the wiring layer knows.
+// DebugRuntimeInput は配線層だけが知るプロセスの情報を運ぶ。
 type DebugRuntimeInput struct {
 	Mode          string
 	Demo          bool
@@ -107,7 +103,7 @@ type DebugRuntimeInput struct {
 	StartedAt     *time.Time
 }
 
-// DebugRuntime describes the process that produced the report.
+// DebugRuntime はレポートを生成したプロセスを表す。
 type DebugRuntime struct {
 	Mode          string     `json:"mode"`
 	Demo          bool       `json:"demo"`
@@ -119,13 +115,13 @@ type DebugRuntime struct {
 	UptimeSeconds int64      `json:"uptime_seconds,omitempty"`
 }
 
-// DebugEnvironmentVariable reports whether one variable is set, never its value.
+// DebugEnvironmentVariable は環境変数が設定済みかだけを表し、値は持たない。
 type DebugEnvironmentVariable struct {
 	Name string `json:"name"`
 	Set  bool   `json:"set"`
 }
 
-// DebugPathsInput carries the resolved locations and how they were selected.
+// DebugPathsInput は解決済みのパスと、それがどう選ばれたかを運ぶ。
 type DebugPathsInput struct {
 	DatabasePath       string
 	DatabasePathSource string
@@ -134,7 +130,7 @@ type DebugPathsInput struct {
 	Demo               bool
 }
 
-// DebugPaths reports resolved locations and the ambient environment behind them.
+// DebugPaths は解決済みのパスと、その背後にある環境の状態を報告する。
 type DebugPaths struct {
 	DatabasePath         string                     `json:"database_path"`
 	DatabasePathSource   string                     `json:"database_path_source"`
@@ -146,14 +142,14 @@ type DebugPaths struct {
 	EnvironmentVariables []DebugEnvironmentVariable `json:"environment_variables"`
 }
 
-// DebugConfigHost is a host boundary as the report presents it.
+// DebugConfigHost はレポートが提示する host の境界を表す。
 type DebugConfigHost struct {
 	Host       string `json:"host"`
 	APIURL     string `json:"api_url"`
 	GraphQLURL string `json:"graphql_url"`
 }
 
-// DebugConfigAuthMethod is a credential method without any secret material.
+// DebugConfigAuthMethod は秘密情報を含まない認証方式を表す。
 type DebugConfigAuthMethod struct {
 	ID               string `json:"id"`
 	Host             string `json:"host"`
@@ -161,23 +157,22 @@ type DebugConfigAuthMethod struct {
 	SecretConfigured bool   `json:"secret_configured"`
 }
 
-// DebugConfigPrompt describes one stored agent prompt template. The body is
-// user-authored and several kilobytes long, so the report only says whether it
-// still matches the built-in text instead of reproducing it.
+// DebugConfigPrompt は保存済みのエージェント prompt テンプレート 1 件を表す。本文はユーザー
+// 作成で数キロバイトあるため、レポートは本文を載せず組み込みテキストと一致するかだけを示す。
 type DebugConfigPrompt struct {
 	Customized bool `json:"customized"`
 	Bytes      int  `json:"bytes"`
 }
 
-// DebugConfigPrompts holds one entry per stored template.
+// DebugConfigPrompts は保存済みテンプレートごとに 1 エントリを持つ。
 type DebugConfigPrompts struct {
 	Design         DebugConfigPrompt `json:"design"`
 	Implementation DebugConfigPrompt `json:"implementation"`
 	Batch          DebugConfigPrompt `json:"batch"`
 }
 
-// DebugConfigInput carries the configuration facts collected outside the domain,
-// which cannot import the configuration package.
+// DebugConfigInput は domain の外で集めた設定情報を運ぶ。domain は設定パッケージを
+// import できないため。
 type DebugConfigInput struct {
 	Version                 int
 	AutoSyncIntervalSeconds int64
@@ -188,7 +183,7 @@ type DebugConfigInput struct {
 	LoadError               string
 }
 
-// DebugConfig reports the loaded configuration without secret material.
+// DebugConfig は読み込んだ設定を、秘密情報を除いて報告する。
 type DebugConfig struct {
 	Version                 int                     `json:"version"`
 	Valid                   bool                    `json:"valid"`
@@ -200,7 +195,7 @@ type DebugConfig struct {
 	Prompts                 DebugConfigPrompts      `json:"prompts"`
 }
 
-// DebugDatabaseFile reports the on-disk state of the SQLite database.
+// DebugDatabaseFile は SQLite データベースのディスク上の状態を報告する。
 type DebugDatabaseFile struct {
 	Applicable   bool   `json:"applicable"`
 	SizeBytes    int64  `json:"size_bytes"`
@@ -211,7 +206,7 @@ type DebugDatabaseFile struct {
 	WriteError   string `json:"write_error,omitempty"`
 }
 
-// DebugStorageInput carries the storage facts persistence reported.
+// DebugStorageInput は persistence が報告したストレージの情報を運ぶ。
 type DebugStorageInput struct {
 	AppliedSchemaVersion  int
 	EmbeddedSchemaVersion int
@@ -220,7 +215,7 @@ type DebugStorageInput struct {
 	Error                 string
 }
 
-// DebugStorage reports schema state and database integrity.
+// DebugStorage はスキーマの状態とデータベースの整合性を報告する。
 type DebugStorage struct {
 	AppliedSchemaVersion  int               `json:"applied_schema_version"`
 	EmbeddedSchemaVersion int               `json:"embedded_schema_version"`
@@ -231,13 +226,13 @@ type DebugStorage struct {
 	Error                 string            `json:"error,omitempty"`
 }
 
-// DebugCount is one named count in a breakdown.
+// DebugCount は内訳の中の名前付きカウント 1 件を表す。
 type DebugCount struct {
 	Name  string `json:"name"`
 	Count int    `json:"count"`
 }
 
-// DebugData reports stored record counts and their breakdowns.
+// DebugData は保存済みレコード数とその内訳を報告する。
 type DebugData struct {
 	Projects                 int          `json:"projects"`
 	Features                 int          `json:"features"`
@@ -254,13 +249,13 @@ type DebugData struct {
 	Error                    string       `json:"error,omitempty"`
 }
 
-// DebugSyncFailure counts synchronization failures within one host or repository.
+// DebugSyncFailure は host または repository 単位の同期失敗数を表す。
 type DebugSyncFailure struct {
 	Scope string `json:"scope"`
 	Count int    `json:"count"`
 }
 
-// DebugErrorGroup is one representative synchronization error and its tasks.
+// DebugErrorGroup は代表的な同期エラー 1 件と、それに該当する task を表す。
 type DebugErrorGroup struct {
 	Message        string   `json:"message"`
 	Count          int      `json:"count"`
@@ -268,7 +263,7 @@ type DebugErrorGroup struct {
 	TotalTaskCount int      `json:"total_task_count"`
 }
 
-// DebugAuthCacheEntry records which credential last succeeded for a repository.
+// DebugAuthCacheEntry は repository ごとに最後に成功した認証情報を記録する。
 type DebugAuthCacheEntry struct {
 	Host            string    `json:"host"`
 	Owner           string    `json:"owner"`
@@ -277,7 +272,7 @@ type DebugAuthCacheEntry struct {
 	LastSucceededAt time.Time `json:"last_succeeded_at"`
 }
 
-// DebugGitHubSyncInput carries the synchronization facts collected elsewhere.
+// DebugGitHubSyncInput は他所で集めた同期の情報を運ぶ。
 type DebugGitHubSyncInput struct {
 	Status       GitHubSyncStatus
 	PullRequests []PullRequest
@@ -285,7 +280,7 @@ type DebugGitHubSyncInput struct {
 	Error        string
 }
 
-// DebugGitHubSync reports synchronization state and the failures behind it.
+// DebugGitHubSync は同期の状態と、その背後にある失敗を報告する。
 type DebugGitHubSync struct {
 	Status                    GitHubSyncStatus      `json:"status"`
 	NextRunAt                 *time.Time            `json:"next_run_at,omitempty"`
@@ -303,7 +298,7 @@ type DebugGitHubSync struct {
 	Error                     string                `json:"error,omitempty"`
 }
 
-// DebugReport is the whole diagnostic report, with the detected problems first.
+// DebugReport は診断レポート全体で、検出した問題を先頭に置く。
 type DebugReport struct {
 	Problems   []DebugProblem  `json:"problems"`
 	Build      DebugBuild      `json:"build"`
@@ -315,8 +310,8 @@ type DebugReport struct {
 	GitHubSync DebugGitHubSync `json:"github_sync"`
 }
 
-// NewDebugBuild describes the running build. The version is passed in because
-// the domain does not depend on the package that embeds it.
+// NewDebugBuild は実行中のビルドを表す値を作る。domain はバージョンを埋め込む
+// パッケージに依存しないため、バージョンは引数で受け取る。
 func NewDebugBuild(version string) DebugBuild {
 	return DebugBuild{
 		Version:     version,
@@ -327,8 +322,8 @@ func NewDebugBuild(version string) DebugBuild {
 	}
 }
 
-// NewDebugRuntime records when the report was produced and, for a server, how
-// long it has been listening.
+// NewDebugRuntime はレポートの生成時刻と、server の場合は待ち受けを開始してからの
+// 経過時間を記録する。
 func NewDebugRuntime(input DebugRuntimeInput, now time.Time) DebugRuntime {
 	zone, _ := now.Local().Zone()
 	result := DebugRuntime{
@@ -346,8 +341,8 @@ func NewDebugRuntime(input DebugRuntimeInput, now time.Time) DebugRuntime {
 	return result
 }
 
-// NewDebugPaths resolves the reported locations. A demo run reports the literal
-// word demo instead of the temporary directory it was given.
+// NewDebugPaths は報告対象のパスを解決する。demo 実行では、渡された一時ディレクトリでは
+// なく demo という語をそのまま報告する。
 func NewDebugPaths(input DebugPathsInput) DebugPaths {
 	shortener := NewDebugPathShortener()
 	result := DebugPaths{
@@ -372,8 +367,8 @@ func NewDebugPaths(input DebugPathsInput) DebugPaths {
 	return result
 }
 
-// DebugEnvironmentVariables reports which PRX-relevant variables are set. The
-// diagnostic report is the one place that describes the ambient environment.
+// DebugEnvironmentVariables は PRX に関係する環境変数のうち設定済みのものを報告する。
+// 環境の状態を説明する場所は診断レポートだけとする。
 func DebugEnvironmentVariables() []DebugEnvironmentVariable {
 	result := make([]DebugEnvironmentVariable, 0, len(DebugEnvironmentNames))
 	for _, name := range DebugEnvironmentNames {
@@ -382,8 +377,8 @@ func DebugEnvironmentVariables() []DebugEnvironmentVariable {
 	return result
 }
 
-// NewDebugConfig derives the configuration section. Both the server and a CLI
-// run that could not open the database reach this single derivation.
+// NewDebugConfig は設定セクションを導出する。server も、データベースを開けなかった
+// CLI 実行も、この 1 か所の導出を通る。
 func NewDebugConfig(input DebugConfigInput) DebugConfig {
 	shortener := NewDebugPathShortener()
 	result := DebugConfig{
@@ -408,7 +403,7 @@ func NewDebugConfig(input DebugConfigInput) DebugConfig {
 	return result
 }
 
-// NewDebugStorage derives the storage section from what persistence reported.
+// NewDebugStorage は persistence が報告した内容からストレージセクションを導出する。
 func NewDebugStorage(input DebugStorageInput) DebugStorage {
 	shortener := NewDebugPathShortener()
 	return DebugStorage{
@@ -422,9 +417,8 @@ func NewDebugStorage(input DebugStorageInput) DebugStorage {
 	}
 }
 
-// NewDebugData counts the stored records. The counts come from the snapshot the
-// rest of the application reads, so a reported count always matches what a
-// caller can list.
+// NewDebugData は保存済みレコードを数える。件数はアプリケーションの他の部分が読むのと同じ
+// snapshot に由来するため、報告される件数は呼び出し側が一覧できる内容と常に一致する。
 func NewDebugData(snapshot Snapshot) DebugData {
 	projects := newDebugTally()
 	features := newDebugTally()
@@ -432,8 +426,8 @@ func NewDebugData(snapshot Snapshot) DebugData {
 	pullRequestStates := newDebugTally()
 	pullRequestHosts := newDebugTally()
 	documentKinds := newDebugTally()
-	// An archived project makes every feature under it read-only, so the reader
-	// needs the archived count to explain a refused write.
+	// archived な project は配下の feature をすべて読み取り専用にするため、書き込みが
+	// 拒否された理由を説明するには archived の件数が要る。
 	for _, project := range snapshot.Projects {
 		projects.add(debugProjectState(project.Archived))
 	}
@@ -466,9 +460,8 @@ func NewDebugData(snapshot Snapshot) DebugData {
 	}
 }
 
-// NewDebugGitHubSync derives the synchronization section, including the bounded
-// failure breakdowns a reader needs to tell one broken repository from a broken
-// installation.
+// NewDebugGitHubSync は同期セクションを導出する。壊れた repository 1 つと壊れた環境全体を
+// 読み手が区別できるよう、件数を制限した失敗の内訳も含める。
 func NewDebugGitHubSync(input DebugGitHubSyncInput, now time.Time) DebugGitHubSync {
 	shortener := NewDebugPathShortener()
 	result := DebugGitHubSync{
@@ -512,9 +505,8 @@ func NewDebugGitHubSync(input DebugGitHubSyncInput, now time.Time) DebugGitHubSy
 	return result
 }
 
-// DetectDebugProblems reports what a reader should look at first. Every problem
-// carries the value that triggered it so the finding can be checked without
-// re-reading the whole report.
+// DetectDebugProblems は読み手が最初に見るべき点を報告する。各問題は検出の元になった値を
+// 持つため、レポート全体を読み直さずに確認できる。
 func DetectDebugProblems(report DebugReport, now time.Time) []DebugProblem {
 	problems := make([]DebugProblem, 0)
 	problems = append(problems, detectDebugStorageProblems(report)...)
@@ -646,9 +638,9 @@ func detectDebugSyncProblems(report DebugReport, now time.Time) []DebugProblem {
 	return problems
 }
 
-// debugHostsWithoutCredentials reports hosts that carry pull requests and have
-// no credential method. An omitted method list keeps GitHub.com's compatibility
-// defaults, so an empty configuration is not by itself a problem.
+// debugHostsWithoutCredentials は pull request を持つのに認証方式がない host を報告する。
+// 方式の一覧を省略した場合は GitHub.com の互換既定が効くため、設定が空であること自体は
+// 問題ではない。
 func debugHostsWithoutCredentials(report DebugReport) []string {
 	if !report.Config.Valid || len(report.Config.AuthMethods) == 0 {
 		return nil
@@ -667,8 +659,8 @@ func debugHostsWithoutCredentials(report DebugReport) []string {
 	return result
 }
 
-// debugPermissionsArePrivate mirrors the configuration loader's own rule, which
-// rejects any mode that grants access to the group or to others.
+// debugPermissionsArePrivate は設定ローダーと同じ規則に従い、group や other に
+// アクセスを与えるモードをすべて拒否する。
 func debugPermissionsArePrivate(mode string) bool {
 	var parsed int64
 	if _, err := fmt.Sscanf(mode, "%o", &parsed); err != nil {
@@ -677,14 +669,14 @@ func debugPermissionsArePrivate(mode string) bool {
 	return parsed&0o077 == 0
 }
 
-// DebugPathShortener replaces the home directory with ~ so a report can be
-// pasted into an issue without disclosing the account name.
+// DebugPathShortener はホームディレクトリを ~ に置き換え、アカウント名を明かさずに
+// レポートを issue へ貼れるようにする。
 type DebugPathShortener struct {
 	home string
 }
 
-// NewDebugPathShortener reads the home directory once. A system without one
-// leaves every path untouched rather than guessing a prefix.
+// NewDebugPathShortener はホームディレクトリを一度だけ読む。ホームがない環境では
+// prefix を推測せず、すべてのパスをそのままにする。
 func NewDebugPathShortener() DebugPathShortener {
 	home, err := os.UserHomeDir()
 	if err != nil {
@@ -693,8 +685,8 @@ func NewDebugPathShortener() DebugPathShortener {
 	return DebugPathShortener{home: home}
 }
 
-// Path shortens one path. It requires an exact match or a separator after the
-// home directory so a sibling such as /home/user2 is left alone.
+// Path はパス 1 件を短縮する。完全一致か、ホームディレクトリの直後が区切り文字である
+// ことを要求するため、/home/user2 のような別ディレクトリはそのまま残る。
 func (s DebugPathShortener) Path(value string) string {
 	if s.home == "" || value == "" {
 		return value
@@ -709,9 +701,8 @@ func (s DebugPathShortener) Path(value string) string {
 	return value
 }
 
-// Text shortens the paths embedded in a message. Failures such as a directory
-// that could not be created carry the path inside their text, so shortening the
-// structured fields alone would still disclose it.
+// Text はメッセージ中に埋め込まれたパスを短縮する。ディレクトリを作成できなかった等の失敗は
+// 本文中にパスを含むため、構造化フィールドだけを短縮しても漏れてしまう。
 func (s DebugPathShortener) Text(value string) string {
 	if s.home == "" || value == "" {
 		return value
@@ -729,9 +720,8 @@ func (s DebugPathShortener) Text(value string) string {
 	return builder.String()
 }
 
-// continuesPathSegment reports whether the text following a home-directory match
-// extends the name, as in /home/user2. That is a different directory and must
-// keep its own name.
+// continuesPathSegment は、ホームディレクトリに一致した直後の文字が /home/user2 のように
+// 名前を続けているかを返す。それは別のディレクトリなので、名前を保たなければならない。
 func continuesPathSegment(rest string) bool {
 	if rest == "" {
 		return false
@@ -751,8 +741,8 @@ func debugStrings(shortener DebugPathShortener, values []string) []string {
 	return result
 }
 
-// truncateDebugMessage bounds one message so a single pathological error cannot
-// dominate the report.
+// truncateDebugMessage はメッセージ 1 件の長さを制限し、極端に長いエラーがレポートを
+// 占有しないようにする。
 func truncateDebugMessage(value string) string {
 	runes := []rune(value)
 	if len(runes) <= DebugMaxErrorMessageRune {
@@ -761,7 +751,7 @@ func truncateDebugMessage(value string) string {
 	return string(runes[:DebugMaxErrorMessageRune]) + "…"
 }
 
-// debugTally counts values without letting map iteration order reach the output.
+// debugTally は値を集計し、map の反復順が出力に漏れないようにする。
 type debugTally struct {
 	counted map[string]int
 }
@@ -772,8 +762,8 @@ func newDebugTally() *debugTally {
 
 func (t *debugTally) add(name string) { t.counted[name]++ }
 
-// debugProjectState names the only state a project has, because a project is
-// outside the two-layer status rule features and tasks share.
+// debugProjectState は project が持つ唯一の状態を返す。project は feature や task が
+// 共有する 2 層 status の規則の外にあるため。
 func debugProjectState(archived bool) string {
 	if archived {
 		return "archived"
@@ -781,8 +771,7 @@ func debugProjectState(archived bool) string {
 	return "active"
 }
 
-// counts orders by descending count and then by name, so equal counts still
-// produce one deterministic order.
+// counts は件数の降順、次に名前順で並べる。件数が同じでも順序は 1 つに定まる。
 func (t *debugTally) counts() []DebugCount {
 	result := make([]DebugCount, 0, len(t.counted))
 	for name, count := range t.counted {
@@ -812,9 +801,9 @@ func limitDebugRows[T any](values []T, limit int) ([]T, int) {
 	return values[:limit], len(values) - limit
 }
 
-// debugErrorNoise matches the parts of a synchronization error that differ per
-// pull request. Without removing them every message is unique and grouping
-// reports one representative per failure instead of one per shape.
+// debugErrorNoise は同期エラーのうち pull request ごとに異なる部分に一致する。これを
+// 取り除かないと全メッセージが一意になり、グループ化しても形ごとではなく失敗ごとに
+// 代表が 1 件出てしまう。
 var debugErrorNoise = regexp.MustCompile(`https?://\S+|"[^"]*"|'[^']*'|#?\d+`)
 
 type debugErrorGroups struct {
@@ -841,8 +830,8 @@ func (g *debugErrorGroups) add(message, taskID string) {
 	}
 }
 
-// result orders by descending count and then by message so the limit drops the
-// same groups on every run.
+// result は件数の降順、次にメッセージ順で並べる。これにより上限で切り落とすグループが
+// 実行ごとに変わらない。
 func (g *debugErrorGroups) result() []DebugErrorGroup {
 	result := make([]DebugErrorGroup, 0, len(g.order))
 	for _, key := range g.order {

@@ -8,9 +8,8 @@ import { useDomainMutation } from "../hooks";
 import { formatError } from "../i18n/domain";
 import { IconButton } from "./IconButton";
 
-// A feature always belongs to a project, so it is created from the project's
-// own page and the membership needs no field: the page the caller is on names
-// it.
+// feature は必ずプロジェクトに属する。作成はそのプロジェクトのページから行うので、
+// 所属を入力する欄は要らない。呼び出し元のページが所属を示している。
 export function FeatureCreateDialog({
   projectId,
   onClose,

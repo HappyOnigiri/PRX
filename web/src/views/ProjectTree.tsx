@@ -17,9 +17,8 @@ interface TreeRow {
   features: Feature[];
 }
 
-// The tree presents the working set: the projects still in play and the
-// features inside them that are still in flight. Everything else is reached
-// through the tabs on the pages the tree links to.
+// ツリーは作業中の集合を示す。進行中のプロジェクトと、その中でまだ動いている
+// feature だけ。それ以外はツリーのリンク先ページのタブから辿る。
 function treeRows(projects: Project[], features: Feature[]): TreeRow[] {
   return projects.map((project) => ({
     projectId: project.id,
@@ -41,9 +40,8 @@ export function ProjectTree({
   const rows = treeRows(projects, features);
 
   function toggle(key: string) {
-    // Deriving the next list from the rows on screen is also what keeps a
-    // deleted project from lingering in storage: an ID that no longer has a row
-    // cannot be carried over, so no separate sweep is needed.
+    // 次のリストを画面上の行から導くことで、削除済みプロジェクトがストレージ
+    // に残るのも防げる。行のない ID は引き継げないので、別途の掃除は要らない。
     const next = rows
       .map((row) => row.projectId)
       .filter((id) =>
@@ -105,8 +103,7 @@ function ProjectTreeRow({
           <b>{row.features.length}</b>
         </ProjectRowLink>
       </div>
-      {/* The list stays in the DOM while collapsed so that aria-controls keeps
-          pointing at something. */}
+      {/* 折りたたみ中もリストを DOM に残し、aria-controls の参照先を保つ。 */}
       <ul className="nav-tree-children" hidden={!expanded} id={childrenId}>
         {row.features.map((feature) => (
           <li key={feature.id}>
@@ -145,8 +142,8 @@ function FeatureRowLink({ feature }: { feature: Feature }) {
       params={{ featureId: feature.id }}
       className="feature-link"
       activeProps={{ "data-active": true }}
-      // The row carries the same glyph a feature gets everywhere else, so its
-      // state rides on the icon's color instead of a second mark of its own.
+      // 行は feature がどこでも使うのと同じグリフを持つので、状態は別の印では
+      // なくアイコンの色に乗せる。
       data-state={
         feature.conflictCount ? "conflict" : feature.readyCount ? "ready" : ""
       }

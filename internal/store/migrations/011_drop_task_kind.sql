@@ -1,10 +1,9 @@
--- Tasks no longer carry a kind: every task can hold a pull request, and a task
--- without one is completed by hand, so the stored value decided nothing.
--- SQLite cannot drop a column that a CHECK constraint and an index depend on,
--- so the table is rebuilt. Rebuilding tasks drags in dependencies, pull
--- requests, and documents, because a DROP TABLE with foreign keys enabled runs
--- an implicit DELETE FROM that ON DELETE RESTRICT rejects while referencing
--- rows exist. Every table below other than tasks is recreated exactly as it was.
+-- task は kind を持たなくなる。どの task も pull request を持てるうえ、持たない task は
+-- 手動で完了させるので、格納した値は何も決めていなかった。SQLite は CHECK 制約と
+-- インデックスが依存する列を削除できないので、テーブルを作り直す。tasks の作り直しは
+-- dependencies・pull_requests・documents を巻き込む。外部キーが有効な状態の DROP TABLE は
+-- 暗黙の DELETE FROM を伴い、参照する行が残っている間は ON DELETE RESTRICT がそれを
+-- 拒むためである。以下のうち tasks 以外のテーブルは、元とまったく同じ定義で作り直す。
 CREATE TEMP TABLE task_migration AS
 SELECT
   id, feature_id, title, scope, status, assignee, created_at, updated_at,
@@ -121,8 +120,8 @@ CREATE INDEX documents_project_idx ON documents(project_id, created_at, id);
 CREATE INDEX documents_feature_idx ON documents(feature_id, created_at, id);
 CREATE INDEX documents_task_idx ON documents(task_id, is_implementation_plan DESC, created_at, id);
 
--- The upsert of an implementation plan targets this partial index by name and
--- predicate, so both have to survive the rebuild unchanged.
+-- 実装計画の upsert はこの部分インデックスを名前と述語で指定するため、
+-- どちらも作り直しの前後で変えてはならない。
 CREATE UNIQUE INDEX documents_one_plan_per_task_idx
 ON documents(task_id) WHERE is_implementation_plan = 1;
 

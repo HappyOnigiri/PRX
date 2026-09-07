@@ -1,2 +1,2 @@
-// Package cli defines the PRX command-line interface and its output formats.
+// Package cli は PRX のコマンドラインインターフェースと出力形式を定義する。
 package cli

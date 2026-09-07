@@ -13,9 +13,8 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// SchemaVersion is the CLI response schema version. The diagnostic report has
-// to state the same value from a package the CLI cannot be imported into, so the
-// constant itself lives in the domain.
+// SchemaVersion は CLI レスポンスのスキーマバージョン。診断レポートは CLI を
+// import できないパッケージから同じ値を示す必要があるため、定数自体は domain に置く。
 const SchemaVersion = domain.CLIResponseSchemaVersion
 
 type humanRenderer func(io.Writer) error
@@ -119,8 +118,8 @@ func errorMessage(err error) string {
 	return "command failed"
 }
 
-// changedFlag returns the flag value only when it was given on the command line,
-// so an omitted flag leaves the field untouched while --flag "" clears it.
+// changedFlag はコマンドラインで指定されたときだけフラグの値を返す。省略された
+// フラグはフィールドを変更せず、--flag "" は値を消す。
 func changedFlag(cmd *cobra.Command, name string, value *string) *string {
 	if !cmd.Flags().Changed(name) {
 		return nil

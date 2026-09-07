@@ -12,9 +12,8 @@ import { MutationError } from "./MutationError";
 
 interface EditProjectDialogProps {
   project: Project;
-  // referenceCount is what the cascade will delete: the project's own
-  // documents. Its features are released rather than deleted, so they are not
-  // part of the count the confirmation states.
+  // referenceCount は連鎖削除の対象、つまりプロジェクト自身のドキュメント数。
+  // 配下の feature は削除ではなく所属解除なので、確認が示すこの数には含めない。
   referenceCount: number;
   onClose: () => void;
   onDeleted: () => void;

@@ -86,9 +86,9 @@ func (p *LiveProvider) FetchBatch(
 		end := min(start+graphQLBatchSize, len(current))
 		chunk, err := p.fetchGraphQLChunk(ctx, current[start:end])
 		if err != nil {
-			// A host may reject the GraphQL endpoint with any client or server
-			// status, not just 404, while REST still works. Retrying the whole
-			// set over REST is cheaper than losing the host entirely.
+			// ホストは 404 に限らず任意のクライアント/サーバーステータスで
+			// GraphQL を拒否しつつ REST は動くことがある。まとめて REST で
+			// やり直すほうが、ホストごと失うより安上がり。
 			if StatusCodeOf(err) >= http.StatusBadRequest {
 				return p.fetchRESTBatch(ctx, current)
 			}

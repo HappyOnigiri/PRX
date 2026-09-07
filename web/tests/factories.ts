@@ -69,9 +69,9 @@ const documentDefaults = {
   locator: "https://example.com/runbook",
 } satisfies MessageInitShape<typeof DocumentSchema>;
 
-// The server reports every archived feature as read-only, so a fixture setting
-// only archived would describe a snapshot the server never sends. An explicit
-// readOnly still wins, which expresses read-only through an archived project.
+// サーバーはアーカイブ済み feature を必ず読み取り専用として返すため、archived
+// だけ設定した fixture は実在しない snapshot になる。明示した readOnly が優先
+// され、アーカイブ済みプロジェクト由来の読み取り専用を表現できる。
 export function makeFeature(
   overrides: MessageInitShape<typeof FeatureSchema> = {},
 ): Feature {

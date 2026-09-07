@@ -21,8 +21,8 @@ export function taskStatusLabel(value: TaskStatus, t: TFunction): string {
   return t(taskStatusKeys[value]);
 }
 
-// The token names a CSS class, so it mirrors taskDisplayStateToken rather than
-// letting each caller derive its own spelling of the enum name.
+// token は CSS クラス名になるので、呼び出し側ごとに enum 名の綴りを導出させず、
+// taskDisplayStateToken と同じ形に揃える。
 export function featureStatusToken(value: FeatureStatus): string {
   return FeatureStatus[value].toLowerCase().replaceAll("_", "-");
 }
@@ -154,9 +154,8 @@ export const debugProblemKeys = {
   [DebugProblemCode.PULL_REQUESTS_STALE]: "debugProblem.pullRequestsStale",
 } as const satisfies Record<DebugProblemCode, string>;
 
-// A report from a newer server may carry a code this bundle does not know, so
-// an unmapped value falls back to the generic label instead of rendering a
-// missing translation key.
+// 新しいサーバーのレポートにはこの bundle が知らない code が含まれうるので、
+// 未対応の値は存在しない翻訳キーを表示せず汎用ラベルにフォールバックする。
 export function debugProblemLabel(
   value: DebugProblemCode,
   t: TFunction,
@@ -196,8 +195,8 @@ export const errorKeys = {
   [DomainErrorCode.REFERENCES_EXIST]: "error.referencesExist",
 } as const satisfies Record<DomainErrorCode, string>;
 
-// The cycle path arrives as task IDs, so callers that know the tasks on screen
-// pass a resolver to show titles instead of raw identifiers.
+// 循環経路は task ID で届くので、画面上の task を知る呼び出し側は resolver を
+// 渡して ID ではなくタイトルを表示する。
 export function formatError(
   error: Error,
   t: TFunction,

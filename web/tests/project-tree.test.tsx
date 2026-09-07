@@ -69,8 +69,8 @@ describe("ProjectTree", () => {
     localStorage.clear();
   });
 
-  // The tree is the working set: projects still in play with the features
-  // inside them that are still in flight. Everything else lives behind a tab.
+  // ツリーは作業中の集合、つまり進行中のプロジェクトと、その中で進行中の
+  // feature だけを表す。それ以外はすべてタブの向こう側にある。
   it("shows only the features in flight and folds the rest away", () => {
     render(tree());
 
@@ -79,7 +79,7 @@ describe("ProjectTree", () => {
     expect(screen.queryByText("Finished indexing")).not.toBeInTheDocument();
     expect(screen.getByText("Loose end")).toBeInTheDocument();
 
-    // A project with nothing in flight keeps its row but offers no toggle.
+    // 進行中のものがないプロジェクトも行は残るが、トグルは出さない。
     expect(
       screen.queryByRole("button", {
         name: "Expand or collapse Delivery platform",
@@ -128,8 +128,8 @@ describe("ProjectTree", () => {
     expect(childList("P-1")).toHaveAttribute("hidden");
   });
 
-  // Every write rebuilds the list from the rows on screen, so an ID that no
-  // longer has a row cannot survive the next toggle.
+  // 書き込みのたびに画面上の行から一覧を作り直すので、行がなくなった ID は
+  // 次のトグルで消える。
   it("drops a stored ID that no longer names a row", () => {
     localStorage.setItem(
       webUISettingsKey,

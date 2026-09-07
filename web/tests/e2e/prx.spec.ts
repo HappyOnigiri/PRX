@@ -57,8 +57,8 @@ test("keeps the bilingual demo reset warning visible", async ({ page }) => {
   await page.evaluate(() => {
     document.body.style.zoom = "2";
   });
-  // toContainText reads textContent, so the hidden wide-viewport wording would
-  // satisfy it even when nothing is left for a screen reader to announce.
+  // toContainText は textContent を見るため、スクリーンリーダーに読む内容が
+  // 残っていなくても、隠れた広幅用の文言だけで条件を満たしてしまう。
   const compact = banner.locator(".demo-banner-compact");
   await expect(compact).toBeVisible();
   await expect(banner.locator(".demo-banner-full")).toBeHidden();
@@ -71,9 +71,8 @@ test("keeps the bilingual demo reset warning visible", async ({ page }) => {
   ).toBe(0);
 });
 
-// The demo banner takes its height from the viewport, so a workspace still
-// sized to the full viewport pushes its own bottom edge — the graph canvas and
-// its zoom controls — off screen.
+// デモバナーはビューポートから高さを取るので、ワークスペースがビューポート全体の
+// サイズのままだと、自身の下端であるグラフキャンバスとズーム操作が画面外に出る。
 test("keeps the demo workspace inside the viewport", async ({ page }) => {
   const overflow = () =>
     page.evaluate(() => {
@@ -209,9 +208,9 @@ test("keeps the Settings dialog size while switching tabs", async ({
   expect(await dialog.boundingBox()).toEqual(serverBounds);
 });
 
-// The debug panel is the only one that mounts on demand, and collecting its
-// report reads the database and the configuration file. This proves the whole
-// path works in a real browser and that opening the dialog alone does not.
+// debug パネルだけは必要になった時点でマウントされ、レポート収集ではデータベース
+// と設定ファイルを読む。実ブラウザでこの経路が動くこと、ダイアログを開いただけ
+// では走らないことを確かめる。
 test("collects a diagnostic report when the debug tab is opened", async ({
   page,
 }) => {
@@ -266,9 +265,8 @@ test("follows the system theme unless the user selects an override", async ({
   await expect.poll(background).toBe("rgb(245, 246, 248)");
 });
 
-// Every feature belongs to a project, so a feature is created from a project's
-// page rather than from the rail. The demo's first project is the container
-// these tests build in.
+// feature は必ず project に属するので、rail からではなく project のページから
+// 作る。これらのテストはデモの最初の project の中に作る。
 const demoProjectPath = "/projects/P-1?features=active";
 
 async function createFeature(page: Page, title: string, description?: string) {
@@ -465,12 +463,12 @@ test("creates and edits a feature DAG while preserving state", async ({
   context,
 }) => {
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
-  // The server keeps one database for the whole run, so a fixed title would
-  // make the assertions below match a feature a previous attempt left behind.
+  // サーバーは実行全体で 1 つのデータベースを使うため、固定タイトルにすると
+  // 以前の試行が残した feature に下の検証が引っかかる。
   const title = `E2E rollout ${crypto.randomUUID()}`;
-  // The demo fixture derives the PR state from the number, and 4k+2 maps to a
-  // conflicting pull request. Keeping it unique avoids colliding with the pull
-  // request a previous attempt attached to a task that still exists.
+  // デモ fixture は番号から PR の状態を決めており、4k+2 は conflict の pull
+  // request になる。一意にしておけば、以前の試行が既存タスクに紐づけた pull
+  // request との衝突を避けられる。
   const prNumber = Math.floor(Math.random() * 1_000_000) * 4 + 2;
   await createFeature(page, title, "Browser-tested delivery circuit");
   await page.getByRole("button", { name: "Edit feature" }).click();
@@ -511,13 +509,13 @@ test("creates and edits a feature DAG while preserving state", async ({
     .getByRole("button", { name: "Close Markdown preview" })
     .click();
 
-  // The empty state covers the canvas and passes pointer events through so the
-  // graph stays pannable, so its own button has to opt back in to receive them.
+  // 空状態はキャンバスを覆いつつ、グラフを動かせるようポインタイベントを
+  // 透過させるので、その中のボタンだけは受け取る側に戻す必要がある。
   const emptyStateAddTask = page
     .locator(".graph-empty")
     .getByRole("button", { name: "Add task" });
-  // The muted color the empty state gives its icon must not reach the label
-  // inside the button, where it would sit on the filled accent background.
+  // 空状態がアイコンに与える淡い色は、塗りつぶしのアクセント背景に載る
+  // ボタン内のラベルにまで及んではならない。
   expect(
     await emptyStateAddTask.evaluate((button) => {
       const label = button.querySelector(".icon-button-label");
@@ -644,8 +642,8 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(inspector.locator("input[name=assignee]")).toHaveValue("");
   await page.getByRole("button", { name: "Close inspector" }).click();
   await page.getByRole("button", { name: "Sync GitHub" }).click();
-  // The task was left in progress, which is an unfinished status, so the
-  // attached pull request decides what the node presents once it is synced.
+  // タスクは未完了である in progress のままなので、同期後にノードが何を示すかは
+  // 紐づいた pull request が決める。
   await expect(
     page.locator(".task-node").filter({ hasText: "E2E API" }),
   ).toHaveClass(/state-conflict/);
@@ -666,8 +664,8 @@ test("creates and edits a feature DAG while preserving state", async ({
   await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
     2,
   );
-  // Keyboard users reach the toolbar and the Delete key only when React Flow's
-  // own selection change is applied back to the controlled edges.
+  // キーボード操作でツールバーや Delete キーが効くのは、React Flow 側の選択変更が
+  // 制御下の edge に反映されている場合だけ。
   await settleGraph(page);
   const keyboardEdge = page.locator(
     `.react-flow__edge[data-id="${await taskNodeId(page, "E2E worker")}-${await taskNodeId(page, "E2E UI")}"]`,
@@ -737,9 +735,8 @@ test("archives and safely deletes a feature", async ({ page }) => {
     .getByRole("button", { name: "Archive feature" })
     .click();
   await expect(page.getByText("Archived · read-only")).toBeVisible();
-  // The rail tree shows the features in flight, so archiving from the
-  // workspace drops this one out of it. Its project's archived tab is where it
-  // is now listed.
+  // rail のツリーには進行中の feature が並ぶので、ワークスペースからアーカイブ
+  // すればここから消える。以降は project のアーカイブタブに並ぶ。
   const rail = page.getByRole("navigation", { name: "PRX navigation" });
   await expect(rail.getByText(title)).toHaveCount(0);
   await page.goto("/projects/P-1?features=archived");
@@ -758,8 +755,8 @@ test("archives and safely deletes a feature", async ({ page }) => {
   await page.getByRole("button", { name: "Manage feature" }).click();
   await page.getByRole("button", { name: "Restore feature" }).click();
   await expect(page.getByRole("button", { name: "Sync GitHub" })).toBeVisible();
-  // Restoring returns the feature to the working set, so the rail tree picks
-  // it up again without any navigation.
+  // 復元すると feature は作業対象に戻るので、画面遷移なしで rail のツリーに
+  // 再び現れる。
   await expect(rail.getByText(title)).toHaveCount(1);
 
   await page.getByRole("button", { name: "Edit feature" }).click();
@@ -788,8 +785,8 @@ test("archives and safely deletes a feature", async ({ page }) => {
   await expect(page.getByText(title)).toHaveCount(0);
 });
 
-// The 100-task program has every task finished, so the automatic status moves
-// it off the overview and onto the completed list.
+// 100 タスクのプログラムは全タスクが完了しているため、自動判定の状態により
+// 概要から外れて完了リストに移る。
 for (const { title, size, from } of [
   { title: "Delivery control showcase", size: 13, from: "/" },
   {
@@ -924,8 +921,8 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
     expect(
       dashboardSyncBounds.x + dashboardSyncBounds.width,
     ).toBeLessThanOrEqual(320);
-  // The tree cannot sit in the one-row rail at this width, but the Projects
-  // link stays and its page carries the tree's job.
+  // この幅では 1 行の rail にツリーを置けないが、Projects リンクは残り、その
+  // ページがツリーの役割を担う。
   await expect(page.getByRole("link", { name: /Projects/ })).toBeVisible();
   await expect(page.locator(".rail .nav-tree")).toBeHidden();
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
@@ -951,8 +948,8 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
     .getByRole("dialog", { name: "Settings" })
     .getByRole("button", { name: "Done" })
     .click();
-  // The tree is hidden at this width, so the feature is reached through the
-  // Projects page instead of the sidebar.
+  // この幅ではツリーが隠れるので、feature へはサイドバーではなく Projects
+  // ページから辿る。
   await page.getByRole("link", { name: /Projects/ }).click();
   await page
     .getByRole("region", { name: "Project list" })

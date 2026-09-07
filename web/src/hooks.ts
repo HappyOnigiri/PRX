@@ -16,9 +16,9 @@ const promptTemplatesKey = ["prompt-templates"] as const;
 const syncStatusKey = ["github-sync-status"] as const;
 const debugReportKey = ["debug-report"] as const;
 
-// Returning the query object itself keeps React Query's property tracking
-// intact. Spreading it would read every getter and re-render each consumer on
-// unrelated changes such as isFetching, which every poll touches.
+// query オブジェクトをそのまま返して React Query のプロパティ追跡を保つ。分解す
+// ると全 getter を読むため、ポーリングのたびに変わる isFetching のような無関係な
+// 変化でも利用側が再描画される。
 export function useSnapshot() {
   return useQuery({ queryKey: snapshotKey, queryFn: getSnapshot });
 }
@@ -27,8 +27,8 @@ export function useConfig() {
   return useQuery({ queryKey: configKey, queryFn: getConfig });
 }
 
-// The templates are only read by the settings panel, so they stay out of the
-// queries the shell keeps alive and load when that panel first mounts.
+// テンプレートは設定パネルでしか読まないので、shell が保持し続ける query には
+// 含めず、パネルが初めてマウントされたときに読み込む。
 export function usePromptTemplates() {
   return useQuery({
     queryKey: promptTemplatesKey,
@@ -47,9 +47,9 @@ export function usePromptTemplatesMutation<TVariables, TData>(
   });
 }
 
-// The report is a snapshot of the moment it was taken, so it is never refetched
-// on its own. `enabled` keeps the request from firing until the debug tab is
-// opened, because collecting the report reads the database and the config file.
+// レポートは取得時点のスナップショットなので、自動で再取得はしない。収集時に
+// データベースと設定ファイルを読むため、`enabled` で debug タブが開かれるまで
+// リクエストを発行しない。
 export function useDebugReport(enabled: boolean) {
   return useQuery({
     queryKey: debugReportKey,
@@ -104,9 +104,9 @@ export function useAutoSync(enabled = true) {
   return { status, checking: check.isPending, error: check.error };
 }
 
-// useQueryDiagnostics reports the cached state of the queries the shell keeps
-// alive. It reads the cache rather than subscribing, so opening the debug tab
-// never starts a fetch of its own and never hides a query that already failed.
+// useQueryDiagnostics は shell が保持する query のキャッシュ状態を返す。購読では
+// なくキャッシュを読むので、debug タブを開いても新たな取得は始まらず、すでに失敗
+// している query も隠れない。
 export function useQueryDiagnostics(): QueryDiagnostic[] {
   const queryClient = useQueryClient();
   return [snapshotKey, configKey, syncStatusKey].map((key) => {

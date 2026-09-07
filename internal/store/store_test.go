@@ -341,9 +341,9 @@ func TestLegacyTaskStatusMigrationPreservesRelatedRows(t *testing.T) {
 		_ = legacy.Close()
 		t.Fatal(err)
 	}
-	// A person chose each of these statuses, so the automatic mode must not
-	// claim them while the default active feature above moves onto derivation.
-	// They are created later so the migrated public IDs keep their order.
+	// これらの status は人が選んだものなので、上の既定 active な feature が導出に
+	// 移っても自動モードが横取りしてはならない。
+	// 移行後の公開 ID の順序を保つため、後から作成する。
 	const later = "2026-08-31T00:00:00Z"
 	if _, err := legacy.ExecContext(
 		ctx,
@@ -577,9 +577,9 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 		_ = legacy.Close()
 		t.Fatal(err)
 	}
-	// A person chose each of these statuses, so the automatic mode must not
-	// claim them while the default active feature above moves onto derivation.
-	// They are created later so the migrated public IDs keep their order.
+	// これらの status は人が選んだものなので、上の既定 active な feature が導出に
+	// 移っても自動モードが横取りしてはならない。
+	// 移行後の公開 ID の順序を保つため、後から作成する。
 	const later = "2026-08-31T00:00:00Z"
 	if _, err := legacy.ExecContext(
 		ctx,
@@ -652,8 +652,8 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 		Scan(&status); err != nil || status != "not_started" {
 		t.Fatalf("task status=%q err=%v, want not_started", status, err)
 	}
-	// Migration 5 numbers the features by creation time, so the default active
-	// one becomes F-1 and the three chosen statuses follow in storage-ID order.
+	// マイグレーション 5 は feature を作成時刻順に採番するため、既定 active のものが
+	// F-1 になり、人が選んだ 3 つの status がストレージ ID 順で続く。
 	for publicID, want := range map[string]struct {
 		title  string
 		status domain.FeatureStatus
@@ -1037,8 +1037,8 @@ func TestValidateReportsCorruption(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Overwrite payload pages while leaving the header and the schema page
-	// intact, so the database still opens but no longer passes integrity_check.
+	// ヘッダーとスキーマページは残したままデータページを壊し、
+	// データベースは開けるが integrity_check は通らない状態にする。
 	const pageSize = 4096
 	if len(body) < 4*pageSize {
 		t.Fatalf("database is only %d bytes; expected several pages", len(body))
@@ -1209,7 +1209,7 @@ func TestConcurrentDependencyWritesDoNotLock(t *testing.T) {
 	wait.Wait()
 	close(errorsCh)
 	for err := range errorsCh {
-		// Domain errors are acceptable outcomes; a raw lock error is not.
+		// ドメインエラーは許容される結果だが、生のロックエラーは許容しない。
 		if err != nil && domain.ErrorCode(err) == "" {
 			t.Fatalf("concurrent dependency write: %v", err)
 		}
@@ -1261,8 +1261,8 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 			t.Errorf("missing feature display status %q", status)
 		}
 	}
-	// The 100-task program reaches completion from its merged pull requests
-	// alone, so the demo exercises the derivation rather than a manual status.
+	// 100 タスクのプログラムはマージ済み pull request だけで完了に到達するため、
+	// デモは手動の status ではなく導出を確認できる。
 	completedProgram := featuresByTitle["Completed 100-task program"]
 	if completedProgram.Status != domain.FeatureStatusAuto ||
 		completedProgram.DisplayStatus != domain.FeatureStatusCompleted ||
@@ -1305,15 +1305,15 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 		}
 		references++
 	}
-	// Two feature documents plus the shared charter on the active project.
+	// feature のドキュメント 2 件と、active なプロジェクト上の共有チャーター。
 	if references != 3 || plans != 1 {
 		t.Errorf("documents: references=%d plans=%d, want 3 and 1", references, plans)
 	}
 	if !featuresByTitle["Cancelled experiment"].Archived {
 		t.Error("cancelled feature is not archived")
 	}
-	// The walkthrough points at a feature that is read-only because of its
-	// project rather than its own flag, so the demo has to contain one.
+	// ウォークスルーは、自身のフラグではなく所属プロジェクトのせいで読み取り専用に
+	// なる feature を指すので、デモにはそれを 1 つ含める必要がある。
 	postmortem := featuresByTitle["Sunset postmortem"]
 	if postmortem.Archived || !postmortem.ReadOnly {
 		t.Errorf("sunset postmortem=%+v, want read-only without being archived", postmortem)
@@ -1442,8 +1442,8 @@ func TestSnapshotSurvivesOrphanedTask(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	// Break referential integrity the way a damaged database would: foreign key
-	// enforcement is what normally prevents this, and Validate exists to find it.
+	// 壊れたデータベースと同じように参照整合性を崩す。通常これを防ぐのは外部キーの
+	// 強制であり、Validate はそれが崩れた状態を見つけるためにある。
 	if _, err := database.DB().ExecContext(ctx, `PRAGMA foreign_keys = OFF`); err != nil {
 		t.Fatal(err)
 	}
@@ -1546,9 +1546,9 @@ func TestSyncByTaskID(t *testing.T) {
 		if err != nil {
 			t.Fatal(err)
 		}
-		// Attaching refreshes what it attached, and this test observes which
-		// pull requests the targeted refresh reaches, so both go back to the
-		// never-refreshed state.
+		// attach は attach したものを更新する。このテストは指定した更新が
+		// どの pull request に届くかを見るため、
+		// 両方を未更新の状態に戻す。
 		attached.LastSyncedAt = nil
 		attached.SyncError = ""
 		attached.Stale = true
@@ -1959,7 +1959,7 @@ func TestStoreUpdateDocumentWritesOnlyRequestedFields(t *testing.T) {
 	if _, err := database.UpdateDocument(ctx, document.ID, &title, nil, nil); err != nil {
 		t.Fatal(err)
 	}
-	// A caller that read the document before the rename must not restore the old title.
+	// リネーム前にドキュメントを読んだ呼び出し元が、古いタイトルを復活させてはならない。
 	source := domain.Document{Kind: domain.DocumentKindURL, Locator: "https://example.com/runbook"}
 	updated, err := database.UpdateDocument(ctx, document.ID, nil, &source, nil)
 	if err != nil {

@@ -7,13 +7,13 @@ export interface QueryDiagnostic {
 
 const versionMetaSelector = 'meta[name="prx-version"]';
 
-// formatBrowserDebugSection appends what only the browser knows to the report
-// the server rendered: every value here is a fact about this tab. The layout
-// follows the server's convention so the whole text reads as one report.
+// formatBrowserDebugSection は、サーバーが出力したレポートにブラウザしか知らな
+// い情報を追記する。ここの値はすべてこのタブの事実。全体が 1 つのレポートとして
+// 読めるよう、体裁はサーバーの流儀に合わせる。
 export function formatBrowserDebugSection(queries: QueryDiagnostic[]): string {
   const injected = serverVersion();
-  // The bundle version is read directly rather than through appVersion, which
-  // prefers the injected value and would compare a version with itself.
+  // bundle のバージョンは appVersion を介さず直接読む。appVersion は注入値を
+  // 優先するため、同じ値どうしを比較してしまう。
   const bundle = import.meta.env.APP_VERSION;
   const lines = [
     "",
@@ -21,7 +21,7 @@ export function formatBrowserDebugSection(queries: QueryDiagnostic[]): string {
     `  route: ${window.location.pathname}${window.location.search}`,
     `  server_version: ${injected || "unset"}`,
     `  bundle_version: ${bundle}`,
-    // A mismatch means this tab is running a cached bundle from an older build.
+    // 不一致なら、このタブは古いビルドのキャッシュ済み bundle で動いている。
     `  version_match: ${injected === bundle ? "yes" : "no"}`,
     `  user_agent: ${navigator.userAgent}`,
     `  viewport: ${window.innerWidth}x${window.innerHeight}`,

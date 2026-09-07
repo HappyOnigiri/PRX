@@ -101,7 +101,7 @@ func TestFeatureProjectMembershipIsRequiredAndMovable(t *testing.T) {
 	if err != nil || moved.ProjectID != second.ID {
 		t.Fatalf("moved feature=%+v err=%v", moved, err)
 	}
-	// An omitted membership leaves the current one alone.
+	// 所属を省略した場合は現在の所属をそのまま保つ。
 	renamed, err := service.UpdateFeature(ctx, feature.ID, domain.FeatureUpdate{Title: stringPointer("Renamed")})
 	if err != nil || renamed.ProjectID != second.ID {
 		t.Fatalf("renamed feature=%+v err=%v", renamed, err)
@@ -257,7 +257,7 @@ func TestArchivedProjectRefusesEveryWriteInsideIt(t *testing.T) {
 	if len(snapshot.Projects) != 1 || !snapshot.Projects[0].Archived {
 		t.Fatalf("projects=%+v", snapshot.Projects)
 	}
-	// The feature is presented as read-only without being archived itself.
+	// feature 自体はアーカイブされないまま、読み取り専用として提示される。
 	if snapshot.Features[0].Archived || !snapshot.Features[0].ReadOnly {
 		t.Fatalf("feature=%+v, want read-only but not archived", snapshot.Features[0])
 	}
@@ -266,8 +266,8 @@ func TestArchivedProjectRefusesEveryWriteInsideIt(t *testing.T) {
 			t.Errorf("%s: code=%s err=%v, want archived_read_only", name, domain.ErrorCode(err), err)
 		}
 	}
-	// Lifting the archive is the one update the project accepts, and it restores
-	// writes to everything inside it.
+	// アーカイブ解除だけはプロジェクトが受け付ける更新で、
+	// 中身すべてへの書き込みを回復させる。
 	active := false
 	if _, err := fixture.service.UpdateProject(
 		ctx, fixture.project.ID, domain.ProjectUpdate{Archived: &active},
@@ -298,7 +298,7 @@ func TestArchivedFeatureRefusesWritesButStaysDeletable(t *testing.T) {
 		t.Fatalf("feature=%+v", snapshot.Features[0])
 	}
 	for name, err := range fixture.refusedWrites(ctx) {
-		// The project itself is still active, so its own writes stay allowed.
+		// プロジェクト自体はまだ active なので、自身への書き込みは許可される。
 		if name == "update project" || name == "add project document" || name == "update project document" ||
 			name == "delete project document" {
 			if err != nil {
@@ -310,7 +310,7 @@ func TestArchivedFeatureRefusesWritesButStaysDeletable(t *testing.T) {
 			t.Errorf("%s: code=%s err=%v, want archived_read_only", name, domain.ErrorCode(err), err)
 		}
 	}
-	// Discarding archived work is the exception that keeps the archive usable.
+	// アーカイブ済みの作業を捨てられることが、アーカイブを実用に保つ例外。
 	if err := fixture.service.DeleteFeature(ctx, fixture.feature.ID, true); err != nil {
 		t.Fatalf("delete archived feature: %v", err)
 	}
@@ -346,8 +346,8 @@ func TestArchivedFlagMovesInBothDirectionsPastTheBarrier(t *testing.T) {
 		}
 	}
 
-	// Only the flag passes: clearing it together with another change is still a
-	// write into an archived container.
+	// 通るのはフラグだけ。他の変更と一緒に解除するのは、
+	// アーカイブ済みの入れ物への書き込みに変わりない。
 	if _, err := fixture.service.UpdateFeature(
 		ctx, fixture.feature.ID, domain.FeatureUpdate{Title: stringPointer("Renamed"), Archived: &active},
 	); domain.ErrorCode(err) != domain.DomainErrorCodeArchivedReadOnly {
@@ -388,8 +388,8 @@ func TestProjectDeleteRemovesItsDocumentsAndTheFeaturesItHolds(t *testing.T) {
 		domain.DomainErrorCodeReferencesExist {
 		t.Fatalf("delete without cascade code=%s err=%v", domain.ErrorCode(err), err)
 	}
-	// An archived project is still deletable; deletion is how archived work is
-	// finally discarded.
+	// アーカイブ済みプロジェクトも削除できる。削除こそが、
+	// アーカイブした作業を最終的に捨てる手段。
 	archived := true
 	if _, err := fixture.service.UpdateProject(
 		ctx, fixture.project.ID, domain.ProjectUpdate{Archived: &archived},

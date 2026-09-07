@@ -1,12 +1,12 @@
--- A feature now always belongs to a project: membership is no longer optional,
--- so project_id becomes NOT NULL. Rows that carried no project are collected in
--- one project created here, named after the concept it replaces, so no feature
--- is lost and every existing database keeps the same working set.
+-- feature は必ず project に属するようになる。所属は任意ではなくなるので、project_id は
+-- NOT NULL になる。project を持たなかった行は、ここで作る 1 つの project にまとめる。
+-- その project には置き換え元の概念にちなんだ名前を付け、feature を失わせず、既存の
+-- データベースの作業対象をそのまま保つ。
 --
--- The receiving project is created only when a feature needs it, which keeps a
--- database that already assigns every feature free of an empty container. Its
--- public ID is drawn from id_sequences the same way the application draws one,
--- so the next `project create` does not reuse it.
+-- 受け皿の project は、必要とする feature があるときだけ作る。こうすれば、すべての
+-- feature に project が割り当て済みのデータベースに空の入れ物ができない。public ID は
+-- アプリケーションと同じ方法で id_sequences から採番するので、次の `project create` が
+-- 同じ ID を再利用することはない。
 CREATE TEMP TABLE unassigned_project AS
 SELECT lower(hex(randomblob(16))) AS id, '' AS public_id
 WHERE EXISTS (SELECT 1 FROM features WHERE project_id IS NULL);
@@ -35,11 +35,11 @@ UPDATE features
 SET project_id = (SELECT id FROM unassigned_project)
 WHERE project_id IS NULL;
 
--- SQLite cannot add NOT NULL to an existing column, so features is rebuilt.
--- Rebuilding features drags in tasks, documents, and the children of tasks,
--- because a DROP TABLE with foreign keys enabled runs an implicit DELETE FROM
--- that ON DELETE RESTRICT rejects while referencing rows exist. Every table
--- below other than features is recreated exactly as it was.
+-- SQLite は既存の列に NOT NULL を追加できないので、features を作り直す。features の
+-- 作り直しは tasks・documents と tasks の子を巻き込む。外部キーが有効な状態の
+-- DROP TABLE は暗黙の DELETE FROM を伴い、参照する行が残っている間は
+-- ON DELETE RESTRICT がそれを拒むためである。以下のうち features 以外のテーブルは、
+-- 元とまったく同じ定義で作り直す。
 CREATE TEMP TABLE feature_migration AS
 SELECT
   id, title, description, status, archived, created_at, updated_at,
@@ -183,8 +183,8 @@ CREATE INDEX documents_project_idx ON documents(project_id, created_at, id);
 CREATE INDEX documents_feature_idx ON documents(feature_id, created_at, id);
 CREATE INDEX documents_task_idx ON documents(task_id, is_implementation_plan DESC, created_at, id);
 
--- The upsert of an implementation plan targets this partial index by name and
--- predicate, so both have to survive the rebuild unchanged.
+-- 実装計画の upsert はこの部分インデックスを名前と述語で指定するため、
+-- どちらも作り直しの前後で変えてはならない。
 CREATE UNIQUE INDEX documents_one_plan_per_task_idx
 ON documents(task_id) WHERE is_implementation_plan = 1;
 

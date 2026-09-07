@@ -70,8 +70,8 @@ func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 	if report.Build.Version == "" || report.Runtime.Mode != "cli" {
 		t.Fatalf("report=%+v", report)
 	}
-	// The report shortens the home directory, so the expectation is built with
-	// the same rule rather than with the raw path.
+	// レポートはホームディレクトリを短縮するので、期待値も生パスではなく
+	// 同じ規則で組み立てる。
 	shortener := domain.NewDebugPathShortener()
 	if report.Paths.DatabasePath != shortener.Path(databasePath) ||
 		report.Paths.ConfigPath != shortener.Path(configPath) {
@@ -90,9 +90,9 @@ func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 	if report.Records.Features != 1 || report.Records.Tasks != 1 || report.Records.PullRequests != 1 {
 		t.Fatalf("records=%+v", report.Records)
 	}
-	// A refused write is explained by the archived project it landed in, so the
-	// report has to carry the project count and the states in play. Equal counts
-	// are ordered by name, so the active project comes first.
+	// 書き込みが拒否された理由は、行き先のアーカイブ済み project で説明される。
+	// よってレポートは project 数と現れている状態を持つ必要がある。
+	// 件数が同じなら名前順なので、active な project が先に来る。
 	if report.Records.Projects != 2 ||
 		len(report.Records.ProjectStates) != 2 ||
 		report.Records.ProjectStates[0].Name != "active" ||
@@ -102,8 +102,8 @@ func TestDebugReportsStorageConfigurationAndData(t *testing.T) {
 	if !report.Config.Valid || len(report.Config.Hosts) != 1 {
 		t.Fatalf("config=%+v", report.Config)
 	}
-	// The pull request has never been refreshed, so the report has to say so
-	// rather than presenting an installation with nothing to look at.
+	// pull request は一度も更新されていないので、レポートはその事実を示すべきで、
+	// 見るものが何もない環境のように見せてはならない。
 	if report.GitHubSync.Status.LastUpdatedAt != nil {
 		t.Fatalf("sync=%+v", report.GitHubSync)
 	}
@@ -175,15 +175,14 @@ func TestDebugReportsAnUnreadableConfiguration(t *testing.T) {
 	if !hasDebugProblem(report, domain.DebugProblemCodeConfigUnreadable) {
 		t.Fatalf("problems=%+v", report.Problems)
 	}
-	// The rest of the report still has to be usable when one section fails.
+	// 1 つのセクションが失敗しても、レポートの残りは使えなければならない。
 	if !report.Storage.IntegrityValid || report.Storage.Error != "" {
 		t.Fatalf("storage=%+v", report.Storage)
 	}
 }
 
-// A repository that implements neither the diagnostics nor the synchronization
-// interface still produces a report, because a partial report is what makes a
-// broken installation diagnosable.
+// 診断用インタフェースも同期用インタフェースも実装しない repository でも
+// レポートは生成される。壊れた環境を診断可能にするのは、部分的なレポートだから。
 func TestDebugReportsPartialSectionsForALimitedRepository(t *testing.T) {
 	service := app.New(&debugRepository{}, nil)
 	report, err := service.Debug(context.Background())

@@ -72,16 +72,16 @@ describe("Dashboard", () => {
     ).not.toBeInTheDocument();
     expect(screen.queryByText("nodes under control")).not.toBeInTheDocument();
     expect(screen.getByText("Build API")).toBeInTheDocument();
-    // A queued task names the project it belongs to, and every value is
-    // introduced by its own field name.
+    // キューの task は所属プロジェクトを示し、どの値もフィールド名を伴って
+    // 表示される。
     expect(
       screen.getAllByText("Project")[0]?.nextElementSibling,
     ).toHaveTextContent("Delivery platform");
     expect(
       screen.getAllByText("Feature")[0]?.nextElementSibling,
     ).toHaveTextContent("Payments rollout");
-    // The second queued task has no owner, so only the owned one carries the
-    // assignee pair.
+    // 2 つ目の task には担当者がいないため、担当者の組は担当ありの task だけ
+    // が持つ。
     expect(screen.getByText("Assignee").nextElementSibling).toHaveTextContent(
       "Bob",
     );
@@ -91,15 +91,15 @@ describe("Dashboard", () => {
     expect(
       screen.getByRole("button", { name: "Sync GitHub" }),
     ).toBeInTheDocument();
-    // A queued task that already has a pull request links straight to it, so
-    // a reader reaches the review without opening the feature first.
+    // pull request がある task は直接リンクするため、feature を開かずに
+    // レビューへ辿り着ける。
     const pullRequest = screen.getByRole("link", { name: /acme\/prx #42/ });
     expect(pullRequest).toHaveAttribute(
       "href",
       "https://github.com/acme/prx/pull/42",
     );
-    // The ready board is where a reader picks the next task, so the prompt
-    // that hands it to an agent is copied there instead of one screen deeper.
+    // 次の task を選ぶのは ready ボードなので、agent に渡すプロンプトは
+    // 1 画面奥ではなくここでコピーする。
     expect(
       screen.getAllByRole("button", { name: "Copy design prompt" }),
     ).toHaveLength(2);

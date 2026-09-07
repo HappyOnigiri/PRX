@@ -6,9 +6,9 @@ interface ProjectSelectFieldProps {
   currentProjectId: string;
 }
 
-// The options are the active projects plus the current membership, because an
-// uncontrolled select whose defaultValue is missing falls back to the first
-// option and would move the feature. Membership is required, so none is empty.
+// 選択肢はアクティブなプロジェクトと現在の所属先。defaultValue が候補にない
+// 非制御 select は先頭の選択肢に落ちて feature を移動させてしまうため。所属は
+// 必須なので「なし」は用意しない。
 export function ProjectSelectField({
   projects,
   currentProjectId,

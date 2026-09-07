@@ -4,9 +4,9 @@ import {
   type Task,
 } from "../gen/prx/v1/prx_pb";
 
-// The graph filter reads the derived state, the same value the server's
-// IsTaskFinished reads, so a task settled by a merged or closed pull request
-// counts as finished without the browser recreating that derivation.
+// グラフのフィルタはサーバーの IsTaskFinished と同じ導出状態を読む。これにより
+// マージ済み・クローズ済みの PR で決着したタスクも、ブラウザ側で導出を
+// 作り直すことなく完了として扱える。
 function isFinishedTask(task: Task): boolean {
   return (
     task.displayState === TaskDisplayState.COMPLETED ||
@@ -15,9 +15,8 @@ function isFinishedTask(task: Task): boolean {
   );
 }
 
-// The titles of the finished tasks a visible task depends on, split by the
-// direction the dependency points, so the node can say which work it waits on
-// and which work waits on it.
+// 表示中のタスクが依存する完了済みタスクのタイトルを、依存の向きで分けたもの。
+// ノードは待っている作業と待たれている作業を示せる。
 export interface HiddenDependencies {
   blockers: string[];
   blocked: string[];
@@ -29,19 +28,18 @@ export interface VisibleGraph {
   hiddenDependencies: Map<string, HiddenDependencies>;
 }
 
-// One shared empty map, because the graph layout keys off the identity of the
-// map it is handed and a fresh one on every render would relayout the canvas.
+// 空のマップは共有する。グラフのレイアウトは渡されたマップの同一性を見るので、
+// 描画ごとに新しく作るとキャンバスが組み直しになる。
 export const emptyHiddenDependencies = new Map<string, HiddenDependencies>();
 
-// Hiding removes every finished task, and a dependency that crossed one is
-// reported on the visible task at each end instead of being dropped.
-// See docs/design/webui.md.
+// 非表示にすると完了済みタスクはすべて消える。それを経由していた依存は捨てず、
+// 両端の表示中タスクに報告する。docs/design/webui.md を参照。
 export function hideFinishedTasks(
   tasks: Task[],
   dependencies: Dependency[],
 ): VisibleGraph {
-  // The hidden tasks carry their titles, because the stub that stands in for
-  // one names the work it replaced.
+  // 隠したタスクはタイトルも持たせる。代わりに表示するスタブが、置き換えた
+  // 作業の名前を示すため。
   const hidden = new Map(
     tasks.filter(isFinishedTask).map((task) => [task.id, task.title]),
   );
@@ -81,9 +79,8 @@ function push(index: Map<string, string[]>, key: string, value: string) {
   else index.set(key, [value]);
 }
 
-// The walk only ever steps onto hidden tasks, so it stops at the first visible
-// one: a dependency that reaches another visible task is still drawn and does
-// not belong in the count.
+// 探索は隠したタスクの上だけを進み、最初の表示中タスクで止まる。表示中の
+// タスクに届く依存は今も描かれるので、この集計には含めない。
 function reachHidden(
   start: string,
   neighbours: Map<string, string[]>,

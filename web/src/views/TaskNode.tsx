@@ -51,9 +51,9 @@ interface TaskNodeData extends Record<string, unknown> {
 }
 export type TaskFlowNode = Node<TaskNodeData, "task">;
 
-// React Flow picks the connection target by distance without filtering on
-// connectability, so a port that refuses connections would steal the snap
-// radius. They accept connection ends instead, resolving to the same task pair.
+// React Flow は接続可否で絞らず距離だけで接続先を選ぶため、接続を拒む port が
+// スナップ半径を奪ってしまう。そこで port は接続の終端を受け入れ、結果として
+// 同じタスクの組に解決される。
 function TaskEdgePorts({
   incoming,
   isConnectable,
@@ -99,9 +99,9 @@ function TaskEdgePorts({
   );
 }
 
-// The stub keeps a dependency on a hidden completed task visible as a severed
-// edge and names the hidden tasks it stands for.
-// See docs/design/webui.md.
+// このスタブは、非表示の完了タスクへの依存を切れたエッジとして見せ、代表して
+// いる非表示タスクの名前を示す。
+// docs/design/webui.md を参照。
 function HiddenDependencyStub({
   direction,
   titles,
@@ -180,8 +180,8 @@ export function TaskNode({
         />
         <div className="task-node-actions nodrag nowheel nopan">
           <CopyableIdentifier label={t("common.taskId")} value={id} valueOnly />
-          {/* Copying stays available on an archived task: handing the work to
-              an agent reads PRX rather than changing it. */}
+          {/* コピーはアーカイブ済みのタスクでも使える。エージェントに作業を
+              渡すのは PRX を読むだけで、変更はしないため。 */}
           <TaskPromptCopyButton
             taskId={id}
             hasImplementationPlan={data.hasImplementationPlan}
@@ -206,8 +206,8 @@ export function TaskNode({
         <EntityIcon kind="task" size={13} />
         {data.title}
       </h3>
-      {/* The owner belongs to the title rather than to the assets, so it reads
-          directly under the name it answers for. */}
+      {/* 担当者はアセットではなくタイトルに属するので、責任を負う名前の
+          すぐ下に置く。 */}
       {data.assignee && (
         <p className="node-assignee">
           <EntityIcon kind="assignee" size={13} />
@@ -231,8 +231,8 @@ export function TaskNode({
   );
 }
 
-// Adding a reference is an action, not one more entry, so it sits below the
-// list of assets in a shape of its own rather than repeating their row.
+// 参照の追加は項目がもう 1 つ増えることではなく操作なので、アセット一覧の行を
+// 繰り返さず、その下に独自の形で置く。
 function NodeAssets({ data }: { data: TaskNodeData }) {
   const { t } = useTranslation();
   const hasAssets = Boolean(data.pullRequest) || data.documents.length > 0;

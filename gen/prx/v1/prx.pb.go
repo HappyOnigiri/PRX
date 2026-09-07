@@ -21,23 +21,23 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-// FeatureStatus is the stored lifecycle state of a feature. Every value other
-// than auto is a manual override that takes precedence over derivation.
+// FeatureStatus は feature の保存されたライフサイクル状態。
+// auto 以外の値はすべて、導出より優先される手動の上書き。
 type FeatureStatus int32
 
 const (
-	// FEATURE_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
+	// FEATURE_STATUS_UNSPECIFIED はサーバーが返さず、リクエストでは拒否される。
 	FeatureStatus_FEATURE_STATUS_UNSPECIFIED FeatureStatus = 0
-	// FEATURE_STATUS_ACTIVE means the feature is currently being worked on.
+	// FEATURE_STATUS_ACTIVE は feature が作業中であることを表す。
 	FeatureStatus_FEATURE_STATUS_ACTIVE FeatureStatus = 1
-	// FEATURE_STATUS_PAUSED means work on the feature is temporarily paused.
+	// FEATURE_STATUS_PAUSED は feature の作業が一時停止中であることを表す。
 	FeatureStatus_FEATURE_STATUS_PAUSED FeatureStatus = 2
-	// FEATURE_STATUS_COMPLETED means the feature has been completed.
+	// FEATURE_STATUS_COMPLETED は feature が完了したことを表す。
 	FeatureStatus_FEATURE_STATUS_COMPLETED FeatureStatus = 3
-	// FEATURE_STATUS_CANCELLED means the feature will not be completed.
+	// FEATURE_STATUS_CANCELLED は feature を完了させないことを表す。
 	FeatureStatus_FEATURE_STATUS_CANCELLED FeatureStatus = 4
-	// FEATURE_STATUS_AUTO is the default of a new feature and presents the
-	// feature as completed once it has tasks and every one of them is finished.
+	// FEATURE_STATUS_AUTO は新しい feature の既定値で、task が 1 つ以上あり
+	// そのすべてが終わっているとき feature を完了として表示する。
 	FeatureStatus_FEATURE_STATUS_AUTO FeatureStatus = 5
 )
 
@@ -88,23 +88,23 @@ func (FeatureStatus) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{0}
 }
 
-// TaskStatus is the stored workflow state of a task. It is always set by hand.
-// The unfinished values yield to an attached pull request, and the finished
-// values take precedence over one.
+// TaskStatus は task の保存されたワークフロー状態で、常に手動で設定する。
+// 未完了を表す値は紐づく pull request に譲り、完了を表す値は
+// pull request より優先される。
 type TaskStatus int32
 
 const (
-	// TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
+	// TASK_STATUS_UNSPECIFIED はサーバーが返さず、リクエストでは拒否される。
 	TaskStatus_TASK_STATUS_UNSPECIFIED TaskStatus = 0
-	// TASK_STATUS_NOT_STARTED is the default of a new task and means work has not begun.
+	// TASK_STATUS_NOT_STARTED は新しい task の既定値で、未着手を表す。
 	TaskStatus_TASK_STATUS_NOT_STARTED TaskStatus = 1
-	// TASK_STATUS_IN_PROGRESS means the task is being implemented before a pull request exists.
+	// TASK_STATUS_IN_PROGRESS は pull request がない段階で実装中であることを表す。
 	TaskStatus_TASK_STATUS_IN_PROGRESS TaskStatus = 2
-	// TASK_STATUS_DESIGNING means the task is being designed before an implementation plan exists.
+	// TASK_STATUS_DESIGNING は実装計画がない段階で設計中であることを表す。
 	TaskStatus_TASK_STATUS_DESIGNING TaskStatus = 5
-	// TASK_STATUS_COMPLETED marks the task satisfied regardless of any attached pull request.
+	// TASK_STATUS_COMPLETED は pull request の状態によらず task を完了とする。
 	TaskStatus_TASK_STATUS_COMPLETED TaskStatus = 3
-	// TASK_STATUS_CLOSED marks the task closed regardless of any attached pull request.
+	// TASK_STATUS_CLOSED は pull request の状態によらず task をクローズとする。
 	TaskStatus_TASK_STATUS_CLOSED TaskStatus = 4
 )
 
@@ -155,41 +155,41 @@ func (TaskStatus) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{1}
 }
 
-// TaskDisplayState is the derived state presented for a task.
-// Pull-request states use priority merged, closed, draft, conflict,
-// changes requested, approved, review waiting, open, then unknown.
+// TaskDisplayState は task の表示用に導出された状態。
+// pull request 由来の状態の優先順位は merged, closed, draft, conflict,
+// changes requested, approved, review waiting, open, unknown の順。
 type TaskDisplayState int32
 
 const (
-	// TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
+	// TASK_DISPLAY_STATE_UNSPECIFIED は有効な task では返らず、リクエストのフィールドでもない。
 	TaskDisplayState_TASK_DISPLAY_STATE_UNSPECIFIED TaskDisplayState = 0
-	// TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached and no implementation plan exists.
+	// TASK_DISPLAY_STATE_NOT_STARTED は pull request も実装計画もないことを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED TaskDisplayState = 1
-	// TASK_DISPLAY_STATE_DESIGNING means the task is being designed without an implementation plan.
+	// TASK_DISPLAY_STATE_DESIGNING は実装計画がないまま設計中であることを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_DESIGNING TaskDisplayState = 14
-	// TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
+	// TASK_DISPLAY_STATE_DESIGNED は pull request はないが実装計画があることを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED TaskDisplayState = 2
-	// TASK_DISPLAY_STATE_IN_PROGRESS means the task is in progress without a pull request.
+	// TASK_DISPLAY_STATE_IN_PROGRESS は pull request がないまま作業中であることを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS TaskDisplayState = 3
-	// TASK_DISPLAY_STATE_COMPLETED is a stored completed status.
+	// TASK_DISPLAY_STATE_COMPLETED は保存された完了ステータスを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED TaskDisplayState = 4
-	// TASK_DISPLAY_STATE_CLOSED is a stored closed status or a closed pull request.
+	// TASK_DISPLAY_STATE_CLOSED は保存されたクローズか、クローズされた pull request を表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_CLOSED TaskDisplayState = 5
-	// TASK_DISPLAY_STATE_MERGED means the attached pull request is merged.
+	// TASK_DISPLAY_STATE_MERGED は紐づく pull request がマージ済みであることを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_MERGED TaskDisplayState = 6
-	// TASK_DISPLAY_STATE_DRAFT means the attached pull request is a draft.
+	// TASK_DISPLAY_STATE_DRAFT は紐づく pull request が draft であることを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_DRAFT TaskDisplayState = 7
-	// TASK_DISPLAY_STATE_CONFLICT means the attached pull request has a merge conflict.
+	// TASK_DISPLAY_STATE_CONFLICT は紐づく pull request にコンフリクトがあることを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_CONFLICT TaskDisplayState = 8
-	// TASK_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
+	// TASK_DISPLAY_STATE_CHANGES_REQUESTED はレビュアーが変更を要求したことを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_CHANGES_REQUESTED TaskDisplayState = 9
-	// TASK_DISPLAY_STATE_APPROVED means the attached pull request has an approval.
+	// TASK_DISPLAY_STATE_APPROVED は紐づく pull request が承認済みであることを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_APPROVED TaskDisplayState = 10
-	// TASK_DISPLAY_STATE_REVIEW_WAITING means the attached open pull request is waiting for review.
+	// TASK_DISPLAY_STATE_REVIEW_WAITING は open な pull request がレビュー待ちであることを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_REVIEW_WAITING TaskDisplayState = 11
-	// TASK_DISPLAY_STATE_OPEN means the attached pull request is open without a higher-priority state.
+	// TASK_DISPLAY_STATE_OPEN は上位の状態がない open な pull request を表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_OPEN TaskDisplayState = 12
-	// TASK_DISPLAY_STATE_UNKNOWN means the attached pull request state or relevant data is unknown.
+	// TASK_DISPLAY_STATE_UNKNOWN は pull request の状態や必要な情報が不明であることを表す。
 	TaskDisplayState_TASK_DISPLAY_STATE_UNKNOWN TaskDisplayState = 13
 )
 
@@ -258,19 +258,19 @@ func (TaskDisplayState) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{2}
 }
 
-// PullRequestState is the raw lifecycle state reported for a GitHub pull request.
+// PullRequestState は GitHub の pull request について報告される生のライフサイクル状態。
 type PullRequestState int32
 
 const (
-	// PULL_REQUEST_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+	// PULL_REQUEST_STATE_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
 	PullRequestState_PULL_REQUEST_STATE_UNSPECIFIED PullRequestState = 0
-	// PULL_REQUEST_STATE_OPEN means GitHub reports the pull request as open.
+	// PULL_REQUEST_STATE_OPEN は GitHub が open と報告していることを表す。
 	PullRequestState_PULL_REQUEST_STATE_OPEN PullRequestState = 1
-	// PULL_REQUEST_STATE_CLOSED means GitHub reports the pull request as closed without merge.
+	// PULL_REQUEST_STATE_CLOSED は GitHub がマージなしのクローズと報告していることを表す。
 	PullRequestState_PULL_REQUEST_STATE_CLOSED PullRequestState = 2
-	// PULL_REQUEST_STATE_MERGED means GitHub reports the pull request as merged.
+	// PULL_REQUEST_STATE_MERGED は GitHub がマージ済みと報告していることを表す。
 	PullRequestState_PULL_REQUEST_STATE_MERGED PullRequestState = 3
-	// PULL_REQUEST_STATE_UNKNOWN means the pull request state could not be determined.
+	// PULL_REQUEST_STATE_UNKNOWN は pull request の状態を判定できなかったことを表す。
 	PullRequestState_PULL_REQUEST_STATE_UNKNOWN PullRequestState = 4
 )
 
@@ -319,21 +319,21 @@ func (PullRequestState) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{3}
 }
 
-// ReviewState summarizes the current review decision and requested reviewers.
+// ReviewState は現在のレビュー判定とレビュー依頼状況をまとめたもの。
 type ReviewState int32
 
 const (
-	// REVIEW_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+	// REVIEW_STATE_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
 	ReviewState_REVIEW_STATE_UNSPECIFIED ReviewState = 0
-	// REVIEW_STATE_NONE means no approval or change request is currently active.
+	// REVIEW_STATE_NONE は承認も変更要求も有効でないことを表す。
 	ReviewState_REVIEW_STATE_NONE ReviewState = 1
-	// REVIEW_STATE_REQUIRED means the pull request has requested reviewers.
+	// REVIEW_STATE_REQUIRED は pull request にレビュー依頼があることを表す。
 	ReviewState_REVIEW_STATE_REQUIRED ReviewState = 2
-	// REVIEW_STATE_APPROVED means at least one current review approves the pull request.
+	// REVIEW_STATE_APPROVED は有効なレビューに承認が 1 件以上あることを表す。
 	ReviewState_REVIEW_STATE_APPROVED ReviewState = 3
-	// REVIEW_STATE_CHANGES_REQUESTED means at least one current review requests changes.
+	// REVIEW_STATE_CHANGES_REQUESTED は有効なレビューに変更要求が 1 件以上あることを表す。
 	ReviewState_REVIEW_STATE_CHANGES_REQUESTED ReviewState = 4
-	// REVIEW_STATE_UNKNOWN means review information could not be determined.
+	// REVIEW_STATE_UNKNOWN はレビュー情報を判定できなかったことを表す。
 	ReviewState_REVIEW_STATE_UNKNOWN ReviewState = 5
 )
 
@@ -384,17 +384,17 @@ func (ReviewState) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{4}
 }
 
-// Mergeability is the current mergeability reported for a GitHub pull request.
+// Mergeability は GitHub の pull request について報告される現在のマージ可否。
 type Mergeability int32
 
 const (
-	// MERGEABILITY_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+	// MERGEABILITY_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
 	Mergeability_MERGEABILITY_UNSPECIFIED Mergeability = 0
-	// MERGEABILITY_MERGEABLE means GitHub reports no merge conflict.
+	// MERGEABILITY_MERGEABLE は GitHub がコンフリクトなしと報告していることを表す。
 	Mergeability_MERGEABILITY_MERGEABLE Mergeability = 1
-	// MERGEABILITY_CONFLICTING means GitHub reports a merge conflict.
+	// MERGEABILITY_CONFLICTING は GitHub がコンフリクトありと報告していることを表す。
 	Mergeability_MERGEABILITY_CONFLICTING Mergeability = 2
-	// MERGEABILITY_UNKNOWN means mergeability could not be determined.
+	// MERGEABILITY_UNKNOWN はマージ可否を判定できなかったことを表す。
 	Mergeability_MERGEABILITY_UNKNOWN Mergeability = 3
 )
 
@@ -441,30 +441,30 @@ func (Mergeability) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{5}
 }
 
-// PullRequestDisplayState is the derived presentation state of a pull request.
-// Its priority is merged, closed, draft, conflict, changes requested, approved, review waiting, open, then unknown.
+// PullRequestDisplayState は pull request の導出された表示状態。
+// 優先度は merged, closed, draft, conflict, changes requested, approved, review waiting, open, unknown。
 type PullRequestDisplayState int32
 
 const (
-	// PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+	// PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED PullRequestDisplayState = 0
-	// PULL_REQUEST_DISPLAY_STATE_MERGED means the pull request is merged.
+	// PULL_REQUEST_DISPLAY_STATE_MERGED は pull request がマージ済みであることを表す。
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_MERGED PullRequestDisplayState = 1
-	// PULL_REQUEST_DISPLAY_STATE_CLOSED means the pull request is closed without being merged.
+	// PULL_REQUEST_DISPLAY_STATE_CLOSED はマージされずにクローズされたことを表す。
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CLOSED PullRequestDisplayState = 2
-	// PULL_REQUEST_DISPLAY_STATE_DRAFT means the pull request is a draft.
+	// PULL_REQUEST_DISPLAY_STATE_DRAFT は pull request が draft であることを表す。
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_DRAFT PullRequestDisplayState = 3
-	// PULL_REQUEST_DISPLAY_STATE_CONFLICT means the pull request has a merge conflict.
+	// PULL_REQUEST_DISPLAY_STATE_CONFLICT はコンフリクトがあることを表す。
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CONFLICT PullRequestDisplayState = 4
-	// PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
+	// PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED はレビュアーが変更を要求したことを表す。
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED PullRequestDisplayState = 5
-	// PULL_REQUEST_DISPLAY_STATE_APPROVED means the pull request has an approval.
+	// PULL_REQUEST_DISPLAY_STATE_APPROVED は pull request が承認済みであることを表す。
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_APPROVED PullRequestDisplayState = 6
-	// PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING means the open, non-draft pull request needs review.
+	// PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING は draft でない open な pull request がレビューを要することを表す。
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING PullRequestDisplayState = 7
-	// PULL_REQUEST_DISPLAY_STATE_OPEN means the pull request is open without a higher-priority state.
+	// PULL_REQUEST_DISPLAY_STATE_OPEN は上位の状態がない open な pull request を表す。
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_OPEN PullRequestDisplayState = 8
-	// PULL_REQUEST_DISPLAY_STATE_UNKNOWN means the pull request state or relevant data is unknown.
+	// PULL_REQUEST_DISPLAY_STATE_UNKNOWN は pull request の状態や必要な情報が不明であることを表す。
 	PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_UNKNOWN PullRequestDisplayState = 9
 )
 
@@ -523,17 +523,17 @@ func (PullRequestDisplayState) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{6}
 }
 
-// DocumentKind identifies the type of reference stored in a document.
+// DocumentKind は document に保存された参照の種類を表す。
 type DocumentKind int32
 
 const (
-	// DOCUMENT_KIND_UNSPECIFIED is never returned by the server and is rejected in requests.
+	// DOCUMENT_KIND_UNSPECIFIED はサーバーが返さず、リクエストでは拒否される。
 	DocumentKind_DOCUMENT_KIND_UNSPECIFIED DocumentKind = 0
-	// DOCUMENT_KIND_URL stores an HTTP or HTTPS URL.
+	// DOCUMENT_KIND_URL は HTTP または HTTPS の URL を保持する。
 	DocumentKind_DOCUMENT_KIND_URL DocumentKind = 1
-	// DOCUMENT_KIND_LOCAL_FILE stores a registered local file path.
+	// DOCUMENT_KIND_LOCAL_FILE は登録済みのローカルファイルパスを保持する。
 	DocumentKind_DOCUMENT_KIND_LOCAL_FILE DocumentKind = 3
-	// DOCUMENT_KIND_MARKDOWN stores Markdown content in the database.
+	// DOCUMENT_KIND_MARKDOWN は Markdown の本文をデータベースに保持する。
 	DocumentKind_DOCUMENT_KIND_MARKDOWN DocumentKind = 4
 )
 
@@ -580,15 +580,15 @@ func (DocumentKind) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{7}
 }
 
-// BlockedReasonCode explains why a task is not ready.
+// BlockedReasonCode は task が ready でない理由を表す。
 type BlockedReasonCode int32
 
 const (
-	// BLOCKED_REASON_CODE_UNSPECIFIED is never returned; no BlockedReason is sent when there is no structured reason.
+	// BLOCKED_REASON_CODE_UNSPECIFIED は返らない。構造化された理由がなければ BlockedReason 自体を送らない。
 	BlockedReasonCode_BLOCKED_REASON_CODE_UNSPECIFIED BlockedReasonCode = 0
-	// BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE means a referenced blocker is missing.
+	// BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE は参照先の blocker が存在しないことを表す。
 	BlockedReasonCode_BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE BlockedReasonCode = 1
-	// BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER means a dependency has not been satisfied.
+	// BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER は依存が満たされていないことを表す。
 	BlockedReasonCode_BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER BlockedReasonCode = 3
 )
 
@@ -633,57 +633,57 @@ func (BlockedReasonCode) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{8}
 }
 
-// DomainErrorCode identifies a known validation, state, storage, or GitHub error exposed over RPC.
+// DomainErrorCode は RPC で公開する検証・状態・保存・GitHub の既知エラーを表す。
 type DomainErrorCode int32
 
 const (
-	// DOMAIN_ERROR_CODE_UNSPECIFIED is never returned for a recognized domain error; it is the unmapped fallback.
+	// DOMAIN_ERROR_CODE_UNSPECIFIED は既知のドメインエラーでは返らない、未対応時のフォールバック。
 	DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED DomainErrorCode = 0
-	// DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY means a dependency crosses feature boundaries.
+	// DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY は依存が feature をまたいでいることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY DomainErrorCode = 2
-	// DOMAIN_ERROR_CODE_CYCLE means adding a dependency would create a cycle.
+	// DOMAIN_ERROR_CODE_CYCLE は依存の追加で循環が生じることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_CYCLE DomainErrorCode = 3
-	// DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY means the dependency already exists.
+	// DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY は依存がすでに存在することを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY DomainErrorCode = 4
-	// DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST means the pull request is already attached to another task.
+	// DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST は他の task にすでに紐づいていることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST DomainErrorCode = 5
-	// DOMAIN_ERROR_CODE_GITHUB_AUTH means GitHub credentials or a provider are unavailable.
+	// DOMAIN_ERROR_CODE_GITHUB_AUTH は GitHub の資格情報かプロバイダが使えないことを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_GITHUB_AUTH DomainErrorCode = 6
-	// DOMAIN_ERROR_CODE_INVALID_DATABASE means database validation failed.
+	// DOMAIN_ERROR_CODE_INVALID_DATABASE はデータベースの検証に失敗したことを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DATABASE DomainErrorCode = 7
-	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT means a document value is missing or invalid.
+	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT は document の値が欠けているか不正であることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT DomainErrorCode = 8
-	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND means the document kind is unsupported.
+	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND は document の種類が未対応であることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND DomainErrorCode = 9
-	// DOMAIN_ERROR_CODE_INVALID_PARENT means a document does not have exactly one valid parent.
+	// DOMAIN_ERROR_CODE_INVALID_PARENT は document の親がちょうど 1 つでないことを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PARENT DomainErrorCode = 11
-	// DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL means the pull request URL cannot be parsed.
+	// DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL は pull request の URL を解析できないことを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL DomainErrorCode = 12
-	// DOMAIN_ERROR_CODE_INVALID_STATUS means a feature or task status is unsupported.
+	// DOMAIN_ERROR_CODE_INVALID_STATUS は feature か task のステータスが未対応であることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_STATUS DomainErrorCode = 15
-	// DOMAIN_ERROR_CODE_INVALID_TITLE means a required feature or task title is empty.
+	// DOMAIN_ERROR_CODE_INVALID_TITLE は必須の feature か task のタイトルが空であることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE DomainErrorCode = 16
-	// DOMAIN_ERROR_CODE_NOT_FOUND means the requested record does not exist.
+	// DOMAIN_ERROR_CODE_NOT_FOUND は要求されたレコードが存在しないことを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND DomainErrorCode = 17
-	// DOMAIN_ERROR_CODE_REFERENCES_EXIST means deletion is blocked by referencing records.
+	// DOMAIN_ERROR_CODE_REFERENCES_EXIST は参照するレコードがあり削除できないことを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST DomainErrorCode = 18
-	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL means a document URL is not HTTP or HTTPS.
+	// DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL は document の URL が HTTP でも HTTPS でもないことを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL DomainErrorCode = 21
-	// DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED means a registered Markdown file could not be read.
+	// DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED は登録済みの Markdown ファイルを読めないことを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED DomainErrorCode = 22
-	// DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE means a Markdown preview exceeds the 1 MiB limit.
+	// DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE は Markdown プレビューが 1 MiB を超えることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE DomainErrorCode = 23
-	// DOMAIN_ERROR_CODE_INVALID_CONFIG means the GitHub YAML configuration is invalid.
+	// DOMAIN_ERROR_CODE_INVALID_CONFIG は GitHub の YAML 設定が不正であることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_CONFIG DomainErrorCode = 24
-	// DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN means plan content is empty or invalid.
+	// DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN は計画の内容が空か不正であることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN DomainErrorCode = 25
-	// DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE means plan content exceeds 1 MiB.
+	// DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE は計画の内容が 1 MiB を超えることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE DomainErrorCode = 26
-	// DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT means document content is not valid UTF-8 text.
+	// DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT は document の内容が正しい UTF-8 でないことを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT DomainErrorCode = 27
-	// DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN means the task already has a plan document.
+	// DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN は task にすでに計画文書があることを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN DomainErrorCode = 28
-	// DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY means the write targets an archived project or feature.
+	// DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY はアーカイブ済みの project か feature への書き込みを表す。
 	DomainErrorCode_DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY DomainErrorCode = 29
 )
 
@@ -770,19 +770,19 @@ func (DomainErrorCode) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{9}
 }
 
-// GitHubAuthMethodType identifies how a GitHub token is obtained.
+// GitHubAuthMethodType は GitHub のトークンの取得方法を表す。
 type GithubAuthMethodType int32
 
 const (
-	// GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED is never returned and is rejected in requests.
+	// GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED は返らず、リクエストでは拒否される。
 	GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED GithubAuthMethodType = 0
-	// GITHUB_AUTH_METHOD_TYPE_KEYCHAIN reads a macOS generic password.
+	// GITHUB_AUTH_METHOD_TYPE_KEYCHAIN は macOS の generic password を読む。
 	GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_KEYCHAIN GithubAuthMethodType = 1
-	// GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT reads a configured environment variable.
+	// GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT は設定された環境変数を読む。
 	GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT GithubAuthMethodType = 2
-	// GITHUB_AUTH_METHOD_TYPE_INLINE reads a token stored in the YAML file.
+	// GITHUB_AUTH_METHOD_TYPE_INLINE は YAML ファイルに保存したトークンを読む。
 	GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_INLINE GithubAuthMethodType = 3
-	// GITHUB_AUTH_METHOD_TYPE_GH_CLI invokes gh auth token for the host.
+	// GITHUB_AUTH_METHOD_TYPE_GH_CLI は host に対して gh auth token を実行する。
 	GithubAuthMethodType_GITHUB_AUTH_METHOD_TYPE_GH_CLI GithubAuthMethodType = 4
 )
 
@@ -831,16 +831,16 @@ func (GithubAuthMethodType) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{10}
 }
 
-// TaskPromptKind identifies which prompt template a task was rendered with.
-// The presence of an implementation plan is the only input to that choice.
+// TaskPromptKind は task をどのプロンプトテンプレートで展開したかを表す。
+// 選択の材料は実装計画の有無だけである。
 type TaskPromptKind int32
 
 const (
-	// TASK_PROMPT_KIND_UNSPECIFIED is never returned by the server and is not a request field.
+	// TASK_PROMPT_KIND_UNSPECIFIED はサーバーが返さず、リクエストのフィールドでもない。
 	TaskPromptKind_TASK_PROMPT_KIND_UNSPECIFIED TaskPromptKind = 0
-	// TASK_PROMPT_KIND_DESIGN asks an agent to produce the implementation plan.
+	// TASK_PROMPT_KIND_DESIGN は実装計画の作成をエージェントに求める。
 	TaskPromptKind_TASK_PROMPT_KIND_DESIGN TaskPromptKind = 1
-	// TASK_PROMPT_KIND_IMPLEMENTATION asks an agent to carry out the registered plan.
+	// TASK_PROMPT_KIND_IMPLEMENTATION は登録済みの計画の実行をエージェントに求める。
 	TaskPromptKind_TASK_PROMPT_KIND_IMPLEMENTATION TaskPromptKind = 2
 )
 
@@ -885,36 +885,36 @@ func (TaskPromptKind) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{11}
 }
 
-// DebugProblemCode identifies a problem the diagnostic report detected.
-// Every member is a stable public identifier that callers may branch on.
+// DebugProblemCode は診断レポートが検出した問題を表す。
+// すべての値は呼び出し側が分岐に使える安定した公開識別子である。
 type DebugProblemCode int32
 
 const (
-	// DEBUG_PROBLEM_CODE_UNSPECIFIED is never returned by the server; it is the unmapped fallback.
+	// DEBUG_PROBLEM_CODE_UNSPECIFIED はサーバーが返さない、未対応時のフォールバック。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_UNSPECIFIED DebugProblemCode = 0
-	// DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE means the database could not be opened.
+	// DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE はデータベースを開けなかったことを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE DebugProblemCode = 1
-	// DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY means the database was migrated by a newer PRX.
+	// DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY は新しい PRX が移行したことを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY DebugProblemCode = 2
-	// DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE means the database file exists but cannot be written.
+	// DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE はファイルはあるが書き込めないことを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE DebugProblemCode = 3
-	// DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS means stored dependency data failed validation.
+	// DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS は依存データの検証に失敗したことを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS DebugProblemCode = 4
-	// DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE means the YAML configuration could not be loaded.
+	// DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE は YAML 設定を読み込めなかったことを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE DebugProblemCode = 5
-	// DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN means the configuration file is readable by others.
+	// DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN は設定ファイルを他者が読めることを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN DebugProblemCode = 6
-	// DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS means the configuration contains fields PRX ignores.
+	// DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS は設定に PRX が無視する項目があることを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS DebugProblemCode = 7
-	// DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST means a host with pull requests has no credential.
+	// DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST は pull request のある host に資格情報がないことを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST DebugProblemCode = 8
-	// DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR means the latest recorded synchronization run failed.
+	// DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR は直近の同期実行が失敗したことを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR DebugProblemCode = 9
-	// DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE means the automatic interval expired well before the report.
+	// DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE は自動実行の間隔がかなり前に切れたことを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE DebugProblemCode = 10
-	// DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED means pull requests exist but no run ever completed.
+	// DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED は pull request はあるが完了実行がないことを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED DebugProblemCode = 11
-	// DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE means at least one pull request holds stale state.
+	// DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE は古い状態の pull request が 1 件以上あることを表す。
 	DebugProblemCode_DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE DebugProblemCode = 12
 )
 
@@ -979,12 +979,12 @@ func (DebugProblemCode) EnumDescriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{12}
 }
 
-// BlockedReason is the structured reason a task is not ready.
+// BlockedReason は task が ready でない理由を構造化したもの。
 type BlockedReason struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// code identifies the dependency condition preventing readiness.
+	// code は ready を妨げている依存の状況を表す。
 	Code BlockedReasonCode `protobuf:"varint,1,opt,name=code,proto3,enum=prx.v1.BlockedReasonCode" json:"code,omitempty"`
-	// blocker_task_id identifies the specific blocking task when one is known.
+	// blocker_task_id は特定できる場合に、妨げている task を示す。
 	BlockerTaskId string `protobuf:"bytes,2,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1034,12 +1034,12 @@ func (x *BlockedReason) GetBlockerTaskId() string {
 	return ""
 }
 
-// ErrorDetail carries a stable domain error code and optional dependency context.
+// ErrorDetail は安定したドメインエラーコードと、任意の依存情報を運ぶ。
 type ErrorDetail struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// code identifies the domain error reported by the server.
+	// code はサーバーが報告するドメインエラーを示す。
 	Code DomainErrorCode `protobuf:"varint,1,opt,name=code,proto3,enum=prx.v1.DomainErrorCode" json:"code,omitempty"`
-	// path contains the task IDs along a detected dependency cycle, with the starting task repeated at the end.
+	// path は検出した依存の循環に沿った task ID の並びで、末尾に起点の task を繰り返す。
 	Path          []string `protobuf:"bytes,2,rep,name=path,proto3" json:"path,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1089,22 +1089,22 @@ func (x *ErrorDetail) GetPath() []string {
 	return nil
 }
 
-// Project is a container that groups features and their shared documents.
-// Its only state is whether it is archived; it has no derived status.
+// Project は feature と共有 document をまとめる入れ物。
+// 状態はアーカイブ済みかどうかだけで、導出されるステータスはない。
 type Project struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id is the public stable identifier of the project in the form P-<number>.
-	// The storage UUID is internal and is never exposed through this API.
+	// id は P-<number> 形式の project の公開安定識別子。
+	// 保存用の UUID は内部のもので、この API では公開しない。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// title is the human-readable project name.
+	// title は人が読む project 名。
 	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	// description explains what the project groups.
+	// description は project が何をまとめているかを説明する。
 	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	// archived makes the project and every feature in it read-only.
+	// archived は project と配下のすべての feature を読み取り専用にする。
 	Archived bool `protobuf:"varint,5,opt,name=archived,proto3" json:"archived,omitempty"`
-	// created_at is the creation time in RFC 3339 format.
+	// created_at は RFC 3339 形式の作成時刻。
 	CreatedAt string `protobuf:"bytes,6,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// updated_at is the last update time in RFC 3339 format.
+	// updated_at は RFC 3339 形式の最終更新時刻。
 	UpdatedAt     string `protobuf:"bytes,7,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1182,46 +1182,46 @@ func (x *Project) GetUpdatedAt() string {
 	return ""
 }
 
-// Feature is a roadmap unit that owns tasks and dependency graphs.
+// Feature は task と依存グラフを持つロードマップの単位。
 type Feature struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id is the public stable identifier of the feature in the form F-<number>.
-	// The storage UUID is internal and is never exposed through this API.
+	// id は F-<number> 形式の feature の公開安定識別子。
+	// 保存用の UUID は内部のもので、この API では公開しない。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// title is the human-readable feature name.
+	// title は人が読む feature 名。
 	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	// description explains the feature's scope or goal.
+	// description は feature の範囲や目的を説明する。
 	Description string `protobuf:"bytes,4,opt,name=description,proto3" json:"description,omitempty"`
-	// status is the feature's stored lifecycle state.
+	// status は feature の保存されたライフサイクル状態。
 	Status FeatureStatus `protobuf:"varint,5,opt,name=status,proto3,enum=prx.v1.FeatureStatus" json:"status,omitempty"`
-	// archived separates the feature from active WebUI views and queues.
+	// archived は feature を WebUI の通常ビューやキューから切り離す。
 	Archived bool `protobuf:"varint,6,opt,name=archived,proto3" json:"archived,omitempty"`
-	// created_at is the creation time in RFC 3339 format.
+	// created_at は RFC 3339 形式の作成時刻。
 	CreatedAt string `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// updated_at is the last update time in RFC 3339 format.
+	// updated_at は RFC 3339 形式の最終更新時刻。
 	UpdatedAt string `protobuf:"bytes,8,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	// task_count is the number of tasks belonging to the feature.
+	// task_count は feature に属する task の数。
 	TaskCount int32 `protobuf:"varint,9,opt,name=task_count,json=taskCount,proto3" json:"task_count,omitempty"`
-	// ready_count is the number of tasks currently ready to work on.
+	// ready_count は今すぐ着手できる task の数。
 	ReadyCount int32 `protobuf:"varint,10,opt,name=ready_count,json=readyCount,proto3" json:"ready_count,omitempty"`
-	// review_waiting_count is the number of tasks whose pull requests are waiting for review.
+	// review_waiting_count は pull request がレビュー待ちの task の数。
 	ReviewWaitingCount int32 `protobuf:"varint,11,opt,name=review_waiting_count,json=reviewWaitingCount,proto3" json:"review_waiting_count,omitempty"`
-	// conflict_count is the number of tasks whose pull requests have conflicts.
+	// conflict_count は pull request にコンフリクトがある task の数。
 	ConflictCount int32 `protobuf:"varint,12,opt,name=conflict_count,json=conflictCount,proto3" json:"conflict_count,omitempty"`
-	// merged_count is the number of tasks whose pull requests are merged.
+	// merged_count は pull request がマージ済みの task の数。
 	MergedCount int32 `protobuf:"varint,13,opt,name=merged_count,json=mergedCount,proto3" json:"merged_count,omitempty"`
-	// display_status is the status presented for the feature. Snapshot reads derive it and never
-	// report AUTO; responses that echo the stored feature alone leave it UNSPECIFIED.
+	// display_status は feature の表示用ステータス。snapshot の読み取りでは導出され AUTO を返さない。
+	// 保存された feature をそのまま返すレスポンスでは UNSPECIFIED のままになる。
 	DisplayStatus FeatureStatus `protobuf:"varint,14,opt,name=display_status,json=displayStatus,proto3,enum=prx.v1.FeatureStatus" json:"display_status,omitempty"`
-	// finished_count is the number of tasks the automatic completion rule counts as finished.
+	// finished_count は自動完了の規則が終了とみなす task の数。
 	FinishedCount int32 `protobuf:"varint,15,opt,name=finished_count,json=finishedCount,proto3" json:"finished_count,omitempty"`
-	// project_id identifies the owning project by its public P-<number> ID. Every feature belongs to
-	// a project, so this value is never empty.
+	// project_id は所属する project を公開 ID の P-<number> で示す。feature は必ず project に
+	// 属するので、この値が空になることはない。
 	ProjectId string `protobuf:"bytes,16,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
-	// read_only is derived: the feature is archived, or its project is. Clients present read-only
-	// state from this value instead of combining the feature's own flag with its project's.
-	// Every response that carries a feature derives it, including the ones that echo a single
-	// stored feature, so a caller never has to know which read it came from.
+	// read_only は導出値で、feature 自身かその project がアーカイブ済みであることを表す。クライアントは
+	// feature 自身のフラグと project のフラグを組み合わせず、この値から読み取り専用かを判断する。
+	// feature を含むレスポンスはすべて、保存された feature をそのまま返すものも含めてこれを導出するので、
+	// 呼び出し側はどの読み取り由来かを気にしなくてよい。
 	ReadOnly      bool `protobuf:"varint,17,opt,name=read_only,json=readOnly,proto3" json:"read_only,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1369,38 +1369,37 @@ func (x *Feature) GetReadOnly() bool {
 	return false
 }
 
-// Task is a unit of work belonging to a feature.
+// Task は feature に属する作業の単位。
 type Task struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id is the public stable identifier of the task in the form T-<number>.
-	// The storage UUID is internal and is never exposed through this API.
+	// id は T-<number> 形式の task の公開安定識別子。
+	// 保存用の UUID は内部のもので、この API では公開しない。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// feature_id identifies the owning feature by its public F-<number> ID.
+	// feature_id は所属する feature を公開 ID の F-<number> で示す。
 	FeatureId string `protobuf:"bytes,2,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	// title is the human-readable task name.
+	// title は人が読む task 名。
 	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	// scope describes the work covered by the task.
+	// scope は task が扱う作業内容を説明する。
 	Scope string `protobuf:"bytes,4,opt,name=scope,proto3" json:"scope,omitempty"`
-	// status is the stored workflow control value.
+	// status は保存されたワークフロー制御用の値。
 	Status TaskStatus `protobuf:"varint,6,opt,name=status,proto3,enum=prx.v1.TaskStatus" json:"status,omitempty"`
-	// assignee is the person responsible for the task, when assigned.
+	// assignee は担当者が割り当てられている場合のその人物。
 	Assignee string `protobuf:"bytes,7,opt,name=assignee,proto3" json:"assignee,omitempty"`
-	// created_at is the creation time in RFC 3339 format.
+	// created_at は RFC 3339 形式の作成時刻。
 	CreatedAt string `protobuf:"bytes,8,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// updated_at is the last update time in RFC 3339 format.
+	// updated_at は RFC 3339 形式の最終更新時刻。
 	UpdatedAt string `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	// ready indicates that the task is not started and has no unsatisfied blockers.
+	// ready は task が未着手で、未解決の blocker がないことを表す。
 	Ready bool `protobuf:"varint,10,opt,name=ready,proto3" json:"ready,omitempty"`
-	// display_state is the derived state intended for task presentation.
+	// display_state は task の表示のために導出された状態。
 	DisplayState TaskDisplayState `protobuf:"varint,11,opt,name=display_state,json=displayState,proto3,enum=prx.v1.TaskDisplayState" json:"display_state,omitempty"`
-	// blocked_reason explains why a task is not ready, when applicable.
+	// blocked_reason は該当する場合に task が ready でない理由を説明する。
 	BlockedReason *BlockedReason `protobuf:"bytes,12,opt,name=blocked_reason,json=blockedReason,proto3" json:"blocked_reason,omitempty"`
-	// has_implementation_plan indicates whether a plan document is registered for this task.
+	// has_implementation_plan はこの task に計画文書が登録されているかを表す。
 	HasImplementationPlan bool `protobuf:"varint,13,opt,name=has_implementation_plan,json=hasImplementationPlan,proto3" json:"has_implementation_plan,omitempty"`
-	// pending_blocker_task_ids names every blocker that is not satisfied yet, by
-	// its public T-<number> ID. blocked_reason names only the first of them, so a
-	// caller that has to hand over a task together with everything it waits for
-	// reads this instead.
+	// pending_blocker_task_ids は未解決の blocker をすべて公開 ID の T-<number> で
+	// 並べる。blocked_reason はその先頭 1 件しか示さないので、task を待ち相手ごと
+	// 引き渡す必要がある呼び出し側はこちらを読む。
 	PendingBlockerTaskIds []string `protobuf:"bytes,14,rep,name=pending_blocker_task_ids,json=pendingBlockerTaskIds,proto3" json:"pending_blocker_task_ids,omitempty"`
 	unknownFields         protoimpl.UnknownFields
 	sizeCache             protoimpl.SizeCache
@@ -1527,14 +1526,14 @@ func (x *Task) GetPendingBlockerTaskIds() []string {
 	return nil
 }
 
-// Dependency is a directed edge from a blocker task to a blocked task in one feature.
+// Dependency は 1 つの feature 内で blocker task から blocked task への有向辺を表す。
 type Dependency struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// blocker_task_id identifies the task by its public T-<number> ID.
+	// blocker_task_id は task を公開 ID の T-<number> で示す。
 	BlockerTaskId string `protobuf:"bytes,1,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
-	// blocked_task_id identifies the task by its public T-<number> ID.
+	// blocked_task_id は task を公開 ID の T-<number> で示す。
 	BlockedTaskId string `protobuf:"bytes,2,opt,name=blocked_task_id,json=blockedTaskId,proto3" json:"blocked_task_id,omitempty"`
-	// created_at is the time the dependency was added in RFC 3339 format.
+	// created_at は RFC 3339 形式の依存を追加した時刻。
 	CreatedAt     string `protobuf:"bytes,3,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1591,44 +1590,44 @@ func (x *Dependency) GetCreatedAt() string {
 	return ""
 }
 
-// PullRequest is the GitHub record attached to a pull-request task.
+// PullRequest は pull request 用の task に紐づく GitHub のレコード。
 type PullRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// task_id identifies the linked task by its public T-<number> ID.
+	// task_id は紐づく task を公開 ID の T-<number> で示す。
 	TaskId string `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	// owner is the GitHub account or organization that owns the repository.
+	// owner はリポジトリを所有する GitHub アカウントまたは組織。
 	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
-	// repository is the GitHub repository name.
+	// repository は GitHub のリポジトリ名。
 	Repository string `protobuf:"bytes,3,opt,name=repository,proto3" json:"repository,omitempty"`
-	// number is the pull request number within the repository.
+	// number はリポジトリ内での pull request 番号。
 	Number int64 `protobuf:"varint,4,opt,name=number,proto3" json:"number,omitempty"`
-	// url is the canonical pull request URL.
+	// url は pull request の正規 URL。
 	Url string `protobuf:"bytes,5,opt,name=url,proto3" json:"url,omitempty"`
-	// node_id is GitHub's stable node identifier for the pull request.
+	// node_id は pull request に対する GitHub の安定したノード識別子。
 	NodeId string `protobuf:"bytes,6,opt,name=node_id,json=nodeId,proto3" json:"node_id,omitempty"`
-	// author is the GitHub login of the pull request author.
+	// author は pull request 作成者の GitHub ログイン名。
 	Author string `protobuf:"bytes,7,opt,name=author,proto3" json:"author,omitempty"`
-	// assignees contains the GitHub logins assigned to the pull request.
+	// assignees は pull request に割り当てられた GitHub ログイン名。
 	Assignees []string `protobuf:"bytes,8,rep,name=assignees,proto3" json:"assignees,omitempty"`
-	// state is the raw lifecycle state reported by GitHub.
+	// state は GitHub が報告する生のライフサイクル状態。
 	State PullRequestState `protobuf:"varint,9,opt,name=state,proto3,enum=prx.v1.PullRequestState" json:"state,omitempty"`
-	// draft indicates whether the pull request is a draft.
+	// draft は pull request が draft かどうかを表す。
 	Draft bool `protobuf:"varint,10,opt,name=draft,proto3" json:"draft,omitempty"`
-	// review_state summarizes current review decisions and requested reviewers.
+	// review_state は現在のレビュー判定とレビュー依頼状況をまとめる。
 	ReviewState ReviewState `protobuf:"varint,11,opt,name=review_state,json=reviewState,proto3,enum=prx.v1.ReviewState" json:"review_state,omitempty"`
-	// mergeability is the current mergeability reported by GitHub.
+	// mergeability は GitHub が報告する現在のマージ可否。
 	Mergeability Mergeability `protobuf:"varint,12,opt,name=mergeability,proto3,enum=prx.v1.Mergeability" json:"mergeability,omitempty"`
-	// github_updated_at is the last update time reported by GitHub in RFC 3339 format.
+	// github_updated_at は GitHub が報告する RFC 3339 形式の最終更新時刻。
 	GithubUpdatedAt string `protobuf:"bytes,13,opt,name=github_updated_at,json=githubUpdatedAt,proto3" json:"github_updated_at,omitempty"`
-	// last_synced_at is the last time PR data was fetched in RFC 3339 format.
+	// last_synced_at は PR データを最後に取得した RFC 3339 形式の時刻。
 	LastSyncedAt string `protobuf:"bytes,14,opt,name=last_synced_at,json=lastSyncedAt,proto3" json:"last_synced_at,omitempty"`
-	// sync_error contains the most recent refresh error, when one occurred.
+	// sync_error は直近の更新エラーがあればその内容。
 	SyncError string `protobuf:"bytes,15,opt,name=sync_error,json=syncError,proto3" json:"sync_error,omitempty"`
-	// stale indicates that the pull request data may not represent the current GitHub state.
+	// stale は pull request のデータが現在の GitHub の状態と異なりうることを表す。
 	Stale bool `protobuf:"varint,16,opt,name=stale,proto3" json:"stale,omitempty"`
-	// display_state is the derived presentation state using the documented priority order.
+	// display_state は文書化された優先順位で導出した表示状態。
 	DisplayState PullRequestDisplayState `protobuf:"varint,17,opt,name=display_state,json=displayState,proto3,enum=prx.v1.PullRequestDisplayState" json:"display_state,omitempty"`
-	// host is the case-insensitive GitHub or GitHub Enterprise Server host key.
+	// host は大文字小文字を区別しない GitHub / GitHub Enterprise Server の host キー。
 	Host          string `protobuf:"bytes,18,opt,name=host,proto3" json:"host,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1790,28 +1789,28 @@ func (x *PullRequest) GetHost() string {
 	return ""
 }
 
-// Document is a reference attached to exactly one project, feature, or task.
+// Document は project、feature、task のいずれか 1 つだけに紐づく参照。
 type Document struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id is the stable identifier of the document reference.
+	// id は document 参照の安定識別子。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// feature_id identifies the parent feature by its public F-<number> ID when the document is feature-scoped.
+	// feature_id は feature 単位の document のとき、親 feature を公開 ID の F-<number> で示す。
 	FeatureId string `protobuf:"bytes,2,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	// task_id identifies the parent task by its public T-<number> ID when the document is task-scoped.
+	// task_id は task 単位の document のとき、親 task を公開 ID の T-<number> で示す。
 	TaskId string `protobuf:"bytes,3,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	// kind identifies the document source.
+	// kind は document の取得元を表す。
 	Kind DocumentKind `protobuf:"varint,4,opt,name=kind,proto3,enum=prx.v1.DocumentKind" json:"kind,omitempty"`
-	// title is the human-readable document label.
+	// title は人が読む document のラベル。
 	Title string `protobuf:"bytes,5,opt,name=title,proto3" json:"title,omitempty"`
-	// locator is the URL or local file path; stored Markdown leaves it empty.
+	// locator は URL かローカルファイルパス。保存された Markdown では空になる。
 	Locator string `protobuf:"bytes,6,opt,name=locator,proto3" json:"locator,omitempty"`
-	// created_at is the creation time in RFC 3339 format.
+	// created_at は RFC 3339 形式の作成時刻。
 	CreatedAt string `protobuf:"bytes,7,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	// is_implementation_plan marks the task's single plan document.
+	// is_implementation_plan は task に 1 つだけの計画文書であることを示す。
 	IsImplementationPlan bool `protobuf:"varint,8,opt,name=is_implementation_plan,json=isImplementationPlan,proto3" json:"is_implementation_plan,omitempty"`
-	// updated_at is the last update time in RFC 3339 format.
+	// updated_at は RFC 3339 形式の最終更新時刻。
 	UpdatedAt string `protobuf:"bytes,9,opt,name=updated_at,json=updatedAt,proto3" json:"updated_at,omitempty"`
-	// project_id identifies the parent project by its public P-<number> ID when the document is project-scoped.
+	// project_id は project 単位の document のとき、親 project を公開 ID の P-<number> で示す。
 	ProjectId     string `protobuf:"bytes,10,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -1917,28 +1916,28 @@ func (x *Document) GetProjectId() string {
 	return ""
 }
 
-// Snapshot is the complete normalized dataset plus derived task queues.
+// Snapshot は正規化されたデータ一式と、導出した task のキュー。
 type Snapshot struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// features contains all stored features.
+	// features は保存されたすべての feature。
 	Features []*Feature `protobuf:"bytes,1,rep,name=features,proto3" json:"features,omitempty"`
-	// tasks contains all stored tasks with derived readiness and display state.
+	// tasks は保存されたすべての task で、導出した ready と表示状態を含む。
 	Tasks []*Task `protobuf:"bytes,2,rep,name=tasks,proto3" json:"tasks,omitempty"`
-	// dependencies contains all directed task dependencies.
+	// dependencies は task 間のすべての有向依存。
 	Dependencies []*Dependency `protobuf:"bytes,3,rep,name=dependencies,proto3" json:"dependencies,omitempty"`
-	// pull_requests contains all attached pull requests and their latest known data.
+	// pull_requests は紐づくすべての pull request と、その最新の既知データ。
 	PullRequests []*PullRequest `protobuf:"bytes,4,rep,name=pull_requests,json=pullRequests,proto3" json:"pull_requests,omitempty"`
-	// documents contains all registered document references without file contents.
+	// documents は登録済みのすべての document 参照で、ファイルの内容は含まない。
 	Documents []*Document `protobuf:"bytes,5,rep,name=documents,proto3" json:"documents,omitempty"`
-	// ready_tasks contains tasks whose effective state is not started and whose blockers are satisfied.
+	// ready_tasks は実効状態が未着手で blocker が満たされている task。
 	ReadyTasks []*Task `protobuf:"bytes,6,rep,name=ready_tasks,json=readyTasks,proto3" json:"ready_tasks,omitempty"`
-	// review_waiting_tasks contains tasks whose pull requests are waiting for review.
+	// review_waiting_tasks は pull request がレビュー待ちの task。
 	ReviewWaitingTasks []*Task `protobuf:"bytes,7,rep,name=review_waiting_tasks,json=reviewWaitingTasks,proto3" json:"review_waiting_tasks,omitempty"`
-	// conflict_tasks contains tasks whose pull requests have merge conflicts.
+	// conflict_tasks は pull request にコンフリクトがある task。
 	ConflictTasks []*Task `protobuf:"bytes,8,rep,name=conflict_tasks,json=conflictTasks,proto3" json:"conflict_tasks,omitempty"`
-	// stale_tasks contains tasks whose pull request data is stale or has a sync error.
+	// stale_tasks は pull request のデータが古いか同期エラーを持つ task。
 	StaleTasks []*Task `protobuf:"bytes,9,rep,name=stale_tasks,json=staleTasks,proto3" json:"stale_tasks,omitempty"`
-	// projects contains all stored projects.
+	// projects は保存されたすべての project。
 	Projects      []*Project `protobuf:"bytes,10,rep,name=projects,proto3" json:"projects,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2044,7 +2043,7 @@ func (x *Snapshot) GetProjects() []*Project {
 	return nil
 }
 
-// GetSnapshotRequest requests the current normalized dataset and derived queues.
+// GetSnapshotRequest は現在の正規化データと導出キューを要求する。
 type GetSnapshotRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -2081,10 +2080,10 @@ func (*GetSnapshotRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{9}
 }
 
-// GetSnapshotResponse returns the requested application snapshot.
+// GetSnapshotResponse は要求された snapshot を返す。
 type GetSnapshotResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// snapshot contains normalized records and derived task queues.
+	// snapshot は正規化されたレコードと導出した task のキューを含む。
 	Snapshot      *Snapshot `protobuf:"bytes,1,opt,name=snapshot,proto3" json:"snapshot,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2127,12 +2126,12 @@ func (x *GetSnapshotResponse) GetSnapshot() *Snapshot {
 	return nil
 }
 
-// CreateProjectRequest contains the required and descriptive values for a project.
+// CreateProjectRequest は project に必要な値と説明的な値を持つ。
 type CreateProjectRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// title is the required human-readable project name.
+	// title は必須の、人が読む project 名。
 	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	// description is optional explanatory text for the project.
+	// description は project の任意の説明文。
 	Description   string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2182,10 +2181,10 @@ func (x *CreateProjectRequest) GetDescription() string {
 	return ""
 }
 
-// CreateProjectResponse returns the newly created project.
+// CreateProjectResponse は作成された project を返す。
 type CreateProjectResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// project is the created project with its generated identifier and timestamps.
+	// project は生成された識別子とタイムスタンプを持つ、作成された project。
 	Project       *Project `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2228,18 +2227,18 @@ func (x *CreateProjectResponse) GetProject() *Project {
 	return nil
 }
 
-// UpdateProjectRequest updates only the supplied project fields.
-// An unset optional field is unchanged, while an empty string requests clearing a string field.
+// UpdateProjectRequest は指定された project のフィールドだけを更新する。
+// 未設定の optional は変更なし、空文字列は文字列フィールドのクリアを意味する。
 type UpdateProjectRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the project to update by public ID.
+	// id は更新する project を公開 ID で示す。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// title is unchanged when unset; an empty string requests clearing it.
+	// title は未設定なら変更なし、空文字列ならクリアを要求する。
 	Title *string `protobuf:"bytes,3,opt,name=title,proto3,oneof" json:"title,omitempty"`
-	// description is unchanged when unset; an empty string clears it.
+	// description は未設定なら変更なし、空文字列ならクリアする。
 	Description *string `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
-	// archived is unchanged when unset; a supplied value explicitly sets it.
-	// Clearing it is the only update an archived project accepts.
+	// archived は未設定なら変更なし、値があればそのとおりに設定する。
+	// アーカイブ済みの project が受け付ける更新はこれを外すことだけ。
 	Archived      *bool `protobuf:"varint,5,opt,name=archived,proto3,oneof" json:"archived,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2303,10 +2302,10 @@ func (x *UpdateProjectRequest) GetArchived() bool {
 	return false
 }
 
-// UpdateProjectResponse returns the updated project.
+// UpdateProjectResponse は更新後の project を返す。
 type UpdateProjectResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// project is the project after applying the requested updates.
+	// project は要求された更新を適用したあとの project。
 	Project       *Project `protobuf:"bytes,1,opt,name=project,proto3" json:"project,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2349,14 +2348,14 @@ func (x *UpdateProjectResponse) GetProject() *Project {
 	return nil
 }
 
-// DeleteProjectRequest requests deletion of a project.
+// DeleteProjectRequest は project の削除を要求する。
 type DeleteProjectRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the project to delete by public ID.
+	// id は削除する project を公開 ID で示す。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// cascade deletes the project's own documents and every feature it contains,
-	// with the tasks, dependencies, pull-request attachments, and documents
-	// inside them, instead of failing.
+	// cascade は失敗させる代わりに、project 自身の document と配下のすべての
+	// feature を、その中の task・依存・pull request の紐づけ・document ごと
+	// 削除する。
 	Cascade       bool `protobuf:"varint,2,opt,name=cascade,proto3" json:"cascade,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2406,7 +2405,7 @@ func (x *DeleteProjectRequest) GetCascade() bool {
 	return false
 }
 
-// DeleteProjectResponse confirms that the project was deleted.
+// DeleteProjectResponse は project が削除されたことを示す。
 type DeleteProjectResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -2443,15 +2442,15 @@ func (*DeleteProjectResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{16}
 }
 
-// CreateFeatureRequest contains the required and descriptive values for a feature.
+// CreateFeatureRequest は feature に必要な値と説明的な値を持つ。
 type CreateFeatureRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// title is the required human-readable feature name.
+	// title は必須の、人が読む feature 名。
 	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	// description is optional explanatory text for the feature.
+	// description は feature の任意の説明文。
 	Description string `protobuf:"bytes,3,opt,name=description,proto3" json:"description,omitempty"`
-	// project_id assigns the feature to a project by public ID. It is required: a feature always
-	// belongs to a project.
+	// project_id は feature を公開 ID で project に割り当てる。feature は必ず project に属するので
+	// 必須である。
 	ProjectId     string `protobuf:"bytes,4,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2508,10 +2507,10 @@ func (x *CreateFeatureRequest) GetProjectId() string {
 	return ""
 }
 
-// CreateFeatureResponse returns the newly created feature.
+// CreateFeatureResponse は作成された feature を返す。
 type CreateFeatureResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// feature is the created feature with its generated identifier and timestamps.
+	// feature は生成された識別子とタイムスタンプを持つ、作成された feature。
 	Feature       *Feature `protobuf:"bytes,1,opt,name=feature,proto3" json:"feature,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2554,23 +2553,23 @@ func (x *CreateFeatureResponse) GetFeature() *Feature {
 	return nil
 }
 
-// UpdateFeatureRequest updates only the supplied feature fields.
-// An unset optional field is unchanged, while an empty string requests clearing a string field.
+// UpdateFeatureRequest は指定された feature のフィールドだけを更新する。
+// 未設定の optional は変更なし、空文字列は文字列フィールドのクリアを意味する。
 type UpdateFeatureRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the feature to update.
+	// id は更新する feature を示す。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// title is unchanged when unset; an empty string requests clearing it.
+	// title は未設定なら変更なし、空文字列ならクリアを要求する。
 	Title *string `protobuf:"bytes,3,opt,name=title,proto3,oneof" json:"title,omitempty"`
-	// description is unchanged when unset; an empty string clears it.
+	// description は未設定なら変更なし、空文字列ならクリアする。
 	Description *string `protobuf:"bytes,4,opt,name=description,proto3,oneof" json:"description,omitempty"`
-	// status is unchanged when unset; a supplied value replaces it.
+	// status は未設定なら変更なし、値があれば置き換える。
 	Status *FeatureStatus `protobuf:"varint,5,opt,name=status,proto3,enum=prx.v1.FeatureStatus,oneof" json:"status,omitempty"`
-	// archived is unchanged when unset; a supplied value explicitly sets it.
-	// Clearing it is the only update an archived feature accepts.
+	// archived は未設定なら変更なし、値があればそのとおりに設定する。
+	// アーカイブ済みの feature が受け付ける更新はこれを外すことだけ。
 	Archived *bool `protobuf:"varint,6,opt,name=archived,proto3,oneof" json:"archived,omitempty"`
-	// project_id is unchanged when unset; a public ID reassigns the feature.
-	// An empty string is refused, because a feature cannot leave every project.
+	// project_id は未設定なら変更なし、公開 ID があれば feature を付け替える。
+	// feature はどの project にも属さない状態になれないので、空文字列は拒否する。
 	ProjectId     *string `protobuf:"bytes,7,opt,name=project_id,json=projectId,proto3,oneof" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2648,10 +2647,10 @@ func (x *UpdateFeatureRequest) GetProjectId() string {
 	return ""
 }
 
-// UpdateFeatureResponse returns the updated feature.
+// UpdateFeatureResponse は更新後の feature を返す。
 type UpdateFeatureResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// feature is the feature after applying the requested updates.
+	// feature は要求された更新を適用したあとの feature。
 	Feature       *Feature `protobuf:"bytes,1,opt,name=feature,proto3" json:"feature,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2694,12 +2693,12 @@ func (x *UpdateFeatureResponse) GetFeature() *Feature {
 	return nil
 }
 
-// DeleteFeatureRequest requests deletion of a feature and optionally its references.
+// DeleteFeatureRequest は feature と、必要ならその参照の削除を要求する。
 type DeleteFeatureRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the feature to delete.
+	// id は削除する feature を示す。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// cascade permits deletion of the feature's dependent tasks and records.
+	// cascade は feature に従属する task やレコードの削除を許可する。
 	Cascade       bool `protobuf:"varint,2,opt,name=cascade,proto3" json:"cascade,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2749,7 +2748,7 @@ func (x *DeleteFeatureRequest) GetCascade() bool {
 	return false
 }
 
-// DeleteFeatureResponse confirms that the feature was deleted.
+// DeleteFeatureResponse は feature が削除されたことを示す。
 type DeleteFeatureResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -2786,16 +2785,16 @@ func (*DeleteFeatureResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{22}
 }
 
-// CreateTaskRequest contains the values for a task within a feature.
+// CreateTaskRequest は feature 内の task の値を持つ。
 type CreateTaskRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// feature_id identifies the feature that owns the task.
+	// feature_id は task を持つ feature を示す。
 	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	// title is the required human-readable task name.
+	// title は必須の、人が読む task 名。
 	Title string `protobuf:"bytes,2,opt,name=title,proto3" json:"title,omitempty"`
-	// scope describes the work covered by the task.
+	// scope は task が扱う作業内容を説明する。
 	Scope string `protobuf:"bytes,3,opt,name=scope,proto3" json:"scope,omitempty"`
-	// assignee is the optional person responsible for the task.
+	// assignee は task の担当者で、任意。
 	Assignee      string `protobuf:"bytes,5,opt,name=assignee,proto3" json:"assignee,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2859,10 +2858,10 @@ func (x *CreateTaskRequest) GetAssignee() string {
 	return ""
 }
 
-// CreateTaskResponse returns the newly created task.
+// CreateTaskResponse は作成された task を返す。
 type CreateTaskResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// task is the created task with its generated identifier and timestamps.
+	// task は生成された識別子とタイムスタンプを持つ、作成された task。
 	Task          *Task `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2905,19 +2904,19 @@ func (x *CreateTaskResponse) GetTask() *Task {
 	return nil
 }
 
-// UpdateTaskRequest updates only the supplied task fields.
-// An unset optional field is unchanged, while an empty string requests clearing a string field.
+// UpdateTaskRequest は指定された task のフィールドだけを更新する。
+// 未設定の optional は変更なし、空文字列は文字列フィールドのクリアを意味する。
 type UpdateTaskRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the task to update.
+	// id は更新する task を示す。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// title is unchanged when unset; an empty string requests clearing it.
+	// title は未設定なら変更なし、空文字列ならクリアを要求する。
 	Title *string `protobuf:"bytes,2,opt,name=title,proto3,oneof" json:"title,omitempty"`
-	// scope is unchanged when unset; an empty string clears it.
+	// scope は未設定なら変更なし、空文字列ならクリアする。
 	Scope *string `protobuf:"bytes,3,opt,name=scope,proto3,oneof" json:"scope,omitempty"`
-	// status is unchanged when unset; a supplied value replaces it.
+	// status は未設定なら変更なし、値があれば置き換える。
 	Status *TaskStatus `protobuf:"varint,4,opt,name=status,proto3,enum=prx.v1.TaskStatus,oneof" json:"status,omitempty"`
-	// assignee is unchanged when unset; an empty string clears it.
+	// assignee は未設定なら変更なし、空文字列ならクリアする。
 	Assignee      *string `protobuf:"bytes,5,opt,name=assignee,proto3,oneof" json:"assignee,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -2988,10 +2987,10 @@ func (x *UpdateTaskRequest) GetAssignee() string {
 	return ""
 }
 
-// UpdateTaskResponse returns the updated task.
+// UpdateTaskResponse は更新後の task を返す。
 type UpdateTaskResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// task is the task after applying the requested updates.
+	// task は要求された更新を適用したあとの task。
 	Task          *Task `protobuf:"bytes,1,opt,name=task,proto3" json:"task,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3034,12 +3033,12 @@ func (x *UpdateTaskResponse) GetTask() *Task {
 	return nil
 }
 
-// DeleteTaskRequest requests deletion of a task and optionally its references.
+// DeleteTaskRequest は task と、必要ならその参照の削除を要求する。
 type DeleteTaskRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the task to delete.
+	// id は削除する task を示す。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// cascade permits deletion of the task's dependencies, pull request, plan, and documents.
+	// cascade は task の依存・pull request・計画・document の削除を許可する。
 	Cascade       bool `protobuf:"varint,2,opt,name=cascade,proto3" json:"cascade,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3089,7 +3088,7 @@ func (x *DeleteTaskRequest) GetCascade() bool {
 	return false
 }
 
-// DeleteTaskResponse confirms that the task was deleted.
+// DeleteTaskResponse は task が削除されたことを示す。
 type DeleteTaskResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -3126,12 +3125,12 @@ func (*DeleteTaskResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{28}
 }
 
-// AddDependencyRequest creates a same-feature dependency edge.
+// AddDependencyRequest は同じ feature 内に依存の辺を作る。
 type AddDependencyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// blocker_task_id identifies the task that must be satisfied first.
+	// blocker_task_id は先に満たす必要がある task を示す。
 	BlockerTaskId string `protobuf:"bytes,1,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
-	// blocked_task_id identifies the task that will wait for the blocker.
+	// blocked_task_id は blocker を待つ側の task を示す。
 	BlockedTaskId string `protobuf:"bytes,2,opt,name=blocked_task_id,json=blockedTaskId,proto3" json:"blocked_task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3181,10 +3180,10 @@ func (x *AddDependencyRequest) GetBlockedTaskId() string {
 	return ""
 }
 
-// AddDependencyResponse returns the newly created dependency.
+// AddDependencyResponse は作成された依存を返す。
 type AddDependencyResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// dependency is the persisted directed edge.
+	// dependency は保存された有向の辺。
 	Dependency    *Dependency `protobuf:"bytes,1,opt,name=dependency,proto3" json:"dependency,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3227,12 +3226,12 @@ func (x *AddDependencyResponse) GetDependency() *Dependency {
 	return nil
 }
 
-// RemoveDependencyRequest identifies a dependency edge to remove.
+// RemoveDependencyRequest は取り除く依存の辺を示す。
 type RemoveDependencyRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// blocker_task_id identifies the dependency's blocker.
+	// blocker_task_id は依存の blocker を示す。
 	BlockerTaskId string `protobuf:"bytes,1,opt,name=blocker_task_id,json=blockerTaskId,proto3" json:"blocker_task_id,omitempty"`
-	// blocked_task_id identifies the dependency's blocked task.
+	// blocked_task_id は依存で待つ側の task を示す。
 	BlockedTaskId string `protobuf:"bytes,2,opt,name=blocked_task_id,json=blockedTaskId,proto3" json:"blocked_task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3282,7 +3281,7 @@ func (x *RemoveDependencyRequest) GetBlockedTaskId() string {
 	return ""
 }
 
-// RemoveDependencyResponse confirms that the dependency was removed.
+// RemoveDependencyResponse は依存が取り除かれたことを示す。
 type RemoveDependencyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -3319,12 +3318,12 @@ func (*RemoveDependencyResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{32}
 }
 
-// AttachPullRequestRequest links a GitHub pull request to a pull-request task.
+// AttachPullRequestRequest は GitHub の pull request を task に紐づける。
 type AttachPullRequestRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// task_id identifies the pull-request task.
+	// task_id は pull request 用の task を示す。
 	TaskId string `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	// url is the GitHub pull request URL to attach.
+	// url は紐づける GitHub の pull request URL。
 	Url           string `protobuf:"bytes,2,opt,name=url,proto3" json:"url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3374,10 +3373,10 @@ func (x *AttachPullRequestRequest) GetUrl() string {
 	return ""
 }
 
-// AttachPullRequestResponse returns the attached pull request.
+// AttachPullRequestResponse は紐づけた pull request を返す。
 type AttachPullRequestResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// pull_request is the newly attached record with unknown initial GitHub state.
+	// pull_request は GitHub 側の状態が未取得のまま新たに紐づいたレコード。
 	PullRequest   *PullRequest `protobuf:"bytes,1,opt,name=pull_request,json=pullRequest,proto3" json:"pull_request,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3420,10 +3419,10 @@ func (x *AttachPullRequestResponse) GetPullRequest() *PullRequest {
 	return nil
 }
 
-// DetachPullRequestRequest identifies the task whose pull request should be detached.
+// DetachPullRequestRequest は pull request の紐づけを外す task を示す。
 type DetachPullRequestRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// task_id identifies the task whose pull request is removed.
+	// task_id は pull request を外す task を示す。
 	TaskId        string `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3466,7 +3465,7 @@ func (x *DetachPullRequestRequest) GetTaskId() string {
 	return ""
 }
 
-// DetachPullRequestResponse confirms that the pull request was detached.
+// DetachPullRequestResponse は pull request の紐づけが外れたことを示す。
 type DetachPullRequestResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -3503,16 +3502,16 @@ func (*DetachPullRequestResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{36}
 }
 
-// AddDocumentRequest registers one document source under exactly one parent.
+// AddDocumentRequest は document の取得元を 1 つの親のもとに登録する。
 type AddDocumentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// feature_id identifies the parent feature when project_id and task_id are empty.
+	// feature_id は project_id と task_id が空のとき、親 feature を示す。
 	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	// task_id identifies the parent task when project_id and feature_id are empty.
+	// task_id は project_id と feature_id が空のとき、親 task を示す。
 	TaskId string `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	// title is the human-readable document label.
+	// title は人が読む document のラベル。
 	Title string `protobuf:"bytes,3,opt,name=title,proto3" json:"title,omitempty"`
-	// source contains exactly one URL, local path, or stored Markdown body.
+	// source は URL、ローカルパス、保存する Markdown 本文のいずれか 1 つだけを持つ。
 	//
 	// Types that are valid to be assigned to Source:
 	//
@@ -3520,9 +3519,9 @@ type AddDocumentRequest struct {
 	//	*AddDocumentRequest_LocalFile
 	//	*AddDocumentRequest_Markdown
 	Source isAddDocumentRequest_Source `protobuf_oneof:"source"`
-	// is_implementation_plan marks this task document as its plan.
+	// is_implementation_plan はこの task document を計画として印付ける。
 	IsImplementationPlan bool `protobuf:"varint,7,opt,name=is_implementation_plan,json=isImplementationPlan,proto3" json:"is_implementation_plan,omitempty"`
-	// project_id identifies the parent project when feature_id and task_id are empty.
+	// project_id は feature_id と task_id が空のとき、親 project を示す。
 	ProjectId     string `protobuf:"bytes,8,opt,name=project_id,json=projectId,proto3" json:"project_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3632,17 +3631,17 @@ type isAddDocumentRequest_Source interface {
 }
 
 type AddDocumentRequest_Url struct {
-	// url stores an HTTP or HTTPS locator.
+	// url は HTTP または HTTPS の locator を保持する。
 	Url string `protobuf:"bytes,4,opt,name=url,proto3,oneof"`
 }
 
 type AddDocumentRequest_LocalFile struct {
-	// local_file stores a path read only through this document ID.
+	// local_file はこの document ID 経由でのみ読めるパスを保持する。
 	LocalFile string `protobuf:"bytes,5,opt,name=local_file,json=localFile,proto3,oneof"`
 }
 
 type AddDocumentRequest_Markdown struct {
-	// markdown stores the inline Markdown body.
+	// markdown はインラインの Markdown 本文を保持する。
 	Markdown string `protobuf:"bytes,6,opt,name=markdown,proto3,oneof"`
 }
 
@@ -3652,10 +3651,10 @@ func (*AddDocumentRequest_LocalFile) isAddDocumentRequest_Source() {}
 
 func (*AddDocumentRequest_Markdown) isAddDocumentRequest_Source() {}
 
-// AddDocumentResponse returns the newly registered document.
+// AddDocumentResponse は登録された document を返す。
 type AddDocumentResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// document is the persisted document reference.
+	// document は保存された document 参照。
 	Document      *Document `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3698,10 +3697,10 @@ func (x *AddDocumentResponse) GetDocument() *Document {
 	return nil
 }
 
-// GetDocumentRequest identifies a document to return with content when applicable.
+// GetDocumentRequest は、該当すれば内容も返す document を示す。
 type GetDocumentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the document.
+	// id は document を示す。
 	Id            string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3744,12 +3743,12 @@ func (x *GetDocumentRequest) GetId() string {
 	return ""
 }
 
-// GetDocumentResponse returns document metadata and stored Markdown content separately.
+// GetDocumentResponse は document のメタデータと、保存された Markdown を分けて返す。
 type GetDocumentResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// document contains document metadata without inline content.
+	// document は内容を含まない document のメタデータ。
 	Document *Document `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
-	// content contains stored Markdown and is empty for locator-backed documents.
+	// content は保存された Markdown で、locator 由来の document では空。
 	Content       string `protobuf:"bytes,2,opt,name=content,proto3" json:"content,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3799,14 +3798,14 @@ func (x *GetDocumentResponse) GetContent() string {
 	return ""
 }
 
-// UpdateDocumentRequest replaces only supplied metadata or source fields.
+// UpdateDocumentRequest は指定されたメタデータか取得元のみを置き換える。
 type UpdateDocumentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the document.
+	// id は document を示す。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// title is unchanged when unset; an empty string clears it.
+	// title は未設定なら変更なし、空文字列ならクリアする。
 	Title *string `protobuf:"bytes,2,opt,name=title,proto3,oneof" json:"title,omitempty"`
-	// source is unchanged when omitted.
+	// source は省略すると変更なし。
 	//
 	// Types that are valid to be assigned to Source:
 	//
@@ -3814,7 +3813,7 @@ type UpdateDocumentRequest struct {
 	//	*UpdateDocumentRequest_LocalFile
 	//	*UpdateDocumentRequest_Markdown
 	Source isUpdateDocumentRequest_Source `protobuf_oneof:"source"`
-	// is_implementation_plan is unchanged when unset.
+	// is_implementation_plan は未設定なら変更なし。
 	IsImplementationPlan *bool `protobuf:"varint,6,opt,name=is_implementation_plan,json=isImplementationPlan,proto3,oneof" json:"is_implementation_plan,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
@@ -3910,17 +3909,17 @@ type isUpdateDocumentRequest_Source interface {
 }
 
 type UpdateDocumentRequest_Url struct {
-	// url replaces the source with an HTTP or HTTPS locator.
+	// url は取得元を HTTP か HTTPS の locator に置き換える。
 	Url string `protobuf:"bytes,3,opt,name=url,proto3,oneof"`
 }
 
 type UpdateDocumentRequest_LocalFile struct {
-	// local_file replaces the source with a registered local path.
+	// local_file は取得元を登録済みのローカルパスに置き換える。
 	LocalFile string `protobuf:"bytes,4,opt,name=local_file,json=localFile,proto3,oneof"`
 }
 
 type UpdateDocumentRequest_Markdown struct {
-	// markdown replaces the source with inline Markdown.
+	// markdown は取得元をインラインの Markdown に置き換える。
 	Markdown string `protobuf:"bytes,5,opt,name=markdown,proto3,oneof"`
 }
 
@@ -3930,10 +3929,10 @@ func (*UpdateDocumentRequest_LocalFile) isUpdateDocumentRequest_Source() {}
 
 func (*UpdateDocumentRequest_Markdown) isUpdateDocumentRequest_Source() {}
 
-// UpdateDocumentResponse returns the updated document metadata.
+// UpdateDocumentResponse は更新後の document のメタデータを返す。
 type UpdateDocumentResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// document is the updated document.
+	// document は更新後の document。
 	Document      *Document `protobuf:"bytes,1,opt,name=document,proto3" json:"document,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -3976,10 +3975,10 @@ func (x *UpdateDocumentResponse) GetDocument() *Document {
 	return nil
 }
 
-// DeleteDocumentRequest identifies a document reference to delete.
+// DeleteDocumentRequest は削除する document 参照を示す。
 type DeleteDocumentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the document to delete.
+	// id は削除する document を示す。
 	Id            string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4022,7 +4021,7 @@ func (x *DeleteDocumentRequest) GetId() string {
 	return ""
 }
 
-// DeleteDocumentResponse confirms that the document was deleted.
+// DeleteDocumentResponse は document が削除されたことを示す。
 type DeleteDocumentResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -4059,10 +4058,10 @@ func (*DeleteDocumentResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{44}
 }
 
-// ReadDocumentContentRequest identifies a registered document to read.
+// ReadDocumentContentRequest は読み取る登録済み document を示す。
 type ReadDocumentContentRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies a stored Markdown or local file document.
+	// id は保存された Markdown かローカルファイルの document を示す。
 	Id            string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4105,10 +4104,10 @@ func (x *ReadDocumentContentRequest) GetId() string {
 	return ""
 }
 
-// ReadDocumentContentResponse returns bounded UTF-8 document content.
+// ReadDocumentContentResponse は上限つきの UTF-8 の document 内容を返す。
 type ReadDocumentContentResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// content contains the document body and is limited to 1 MiB.
+	// content は document の本文で、1 MiB までに制限される。
 	Content       string `protobuf:"bytes,1,opt,name=content,proto3" json:"content,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4151,7 +4150,7 @@ func (x *ReadDocumentContentResponse) GetContent() string {
 	return ""
 }
 
-// SelectLocalFileRequest asks the PRX server to open its native file chooser.
+// SelectLocalFileRequest は PRX サーバーにネイティブのファイル選択画面を開かせる。
 type SelectLocalFileRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -4188,12 +4187,12 @@ func (*SelectLocalFileRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{47}
 }
 
-// SelectLocalFileResponse returns the selected server-local absolute path.
+// SelectLocalFileResponse は選択されたサーバー上の絶対パスを返す。
 type SelectLocalFileResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// path is the selected absolute path and is empty when the user cancels.
+	// path は選択された絶対パスで、ユーザーが取り消した場合は空。
 	Path string `protobuf:"bytes,1,opt,name=path,proto3" json:"path,omitempty"`
-	// canceled distinguishes cancellation from a selected path.
+	// canceled は取り消しとパス選択を区別する。
 	Canceled      bool `protobuf:"varint,2,opt,name=canceled,proto3" json:"canceled,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4243,18 +4242,18 @@ func (x *SelectLocalFileResponse) GetCanceled() bool {
 	return false
 }
 
-// GitHubHost describes one configured GitHub.com or GitHub Enterprise Server host.
+// GitHubHost は設定された GitHub.com または GitHub Enterprise Server の host 1 つを表す。
 type GitHubHost struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// host is the normalized hostname, optionally including a port.
+	// host は正規化したホスト名で、必要ならポートを含む。
 	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
-	// web_url is the HTTPS web origin used for canonical pull-request URLs.
+	// web_url は pull request の正規 URL に使う HTTPS の web オリジン。
 	WebUrl string `protobuf:"bytes,2,opt,name=web_url,json=webUrl,proto3" json:"web_url,omitempty"`
-	// api_url is the HTTPS API base URL.
+	// api_url は HTTPS の API ベース URL。
 	ApiUrl string `protobuf:"bytes,3,opt,name=api_url,json=apiUrl,proto3" json:"api_url,omitempty"`
-	// upload_url is the HTTPS upload base URL.
+	// upload_url は HTTPS のアップロード用ベース URL。
 	UploadUrl string `protobuf:"bytes,4,opt,name=upload_url,json=uploadUrl,proto3" json:"upload_url,omitempty"`
-	// graphql_url is the HTTPS GraphQL endpoint used for batched pull-request refreshes.
+	// graphql_url は pull request の一括更新に使う HTTPS の GraphQL エンドポイント。
 	GraphqlUrl    string `protobuf:"bytes,5,opt,name=graphql_url,json=graphqlUrl,proto3" json:"graphql_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4325,27 +4324,27 @@ func (x *GitHubHost) GetGraphqlUrl() string {
 	return ""
 }
 
-// GitHubAuthMethod is the public representation of a host-scoped credential.
-// The token itself is never returned by the server.
+// GitHubAuthMethod は host 単位の資格情報の公開表現。
+// トークン自体はサーバーが返すことはない。
 type GitHubAuthMethod struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the authentication method and its cache entries.
+	// id は認証方法とそのキャッシュ項目を示す。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// host identifies the only GitHub host to which this method may be sent.
+	// host はこの方法を送ってよい唯一の GitHub host を示す。
 	Host string `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
-	// type identifies the credential source.
+	// type は資格情報の取得元を示す。
 	Type GithubAuthMethodType `protobuf:"varint,3,opt,name=type,proto3,enum=prx.v1.GithubAuthMethodType" json:"type,omitempty"`
-	// account is the Keychain account when type is keychain.
+	// account は type が keychain のときの Keychain アカウント。
 	Account string `protobuf:"bytes,4,opt,name=account,proto3" json:"account,omitempty"`
-	// service is the Keychain service when type is keychain.
+	// service は type が keychain のときの Keychain サービス。
 	Service string `protobuf:"bytes,5,opt,name=service,proto3" json:"service,omitempty"`
-	// variable is the environment variable when type is environment.
+	// variable は type が environment のときの環境変数。
 	Variable string `protobuf:"bytes,6,opt,name=variable,proto3" json:"variable,omitempty"`
-	// user selects a gh CLI account when type is gh_cli.
+	// user は type が gh_cli のときの gh CLI アカウントを選ぶ。
 	User string `protobuf:"bytes,7,opt,name=user,proto3" json:"user,omitempty"`
-	// secret_configured indicates that a credential source is configured.
+	// secret_configured は資格情報の取得元が設定済みであることを表す。
 	SecretConfigured bool `protobuf:"varint,8,opt,name=secret_configured,json=secretConfigured,proto3" json:"secret_configured,omitempty"`
-	// secret_hint is a short masked hint for inline credentials.
+	// secret_hint はインラインの資格情報向けの短いマスク済みヒント。
 	SecretHint    string `protobuf:"bytes,9,opt,name=secret_hint,json=secretHint,proto3" json:"secret_hint,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4444,16 +4443,16 @@ func (x *GitHubAuthMethod) GetSecretHint() string {
 	return ""
 }
 
-// GitHubConfig is the public, secret-free server configuration.
+// GitHubConfig は秘密情報を含まない公開のサーバー設定。
 type GitHubConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// version is the YAML schema version.
+	// version は YAML スキーマのバージョン。
 	Version int32 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
-	// hosts contains the configured GitHub host boundaries.
+	// hosts は設定された GitHub host の境界。
 	Hosts []*GitHubHost `protobuf:"bytes,2,rep,name=hosts,proto3" json:"hosts,omitempty"`
-	// auth_methods contains host-scoped credentials in priority order.
+	// auth_methods は host 単位の資格情報を優先順に並べたもの。
 	AuthMethods []*GitHubAuthMethod `protobuf:"bytes,3,rep,name=auth_methods,json=authMethods,proto3" json:"auth_methods,omitempty"`
-	// auto_sync_interval_seconds is the shared CLI and server refresh interval.
+	// auto_sync_interval_seconds は CLI とサーバーで共有する更新間隔。
 	AutoSyncIntervalSeconds int64 `protobuf:"varint,4,opt,name=auto_sync_interval_seconds,json=autoSyncIntervalSeconds,proto3" json:"auto_sync_interval_seconds,omitempty"`
 	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
@@ -4517,7 +4516,7 @@ func (x *GitHubConfig) GetAutoSyncIntervalSeconds() int64 {
 	return 0
 }
 
-// GetConfigRequest requests the public GitHub configuration.
+// GetConfigRequest は公開の GitHub 設定を要求する。
 type GetConfigRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -4554,10 +4553,10 @@ func (*GetConfigRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{52}
 }
 
-// GetConfigResponse returns the public GitHub configuration.
+// GetConfigResponse は公開の GitHub 設定を返す。
 type GetConfigResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// config contains hosts and secret-free authentication metadata.
+	// config は host と、秘密情報を含まない認証メタデータを持つ。
 	Config        *GitHubConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4600,10 +4599,10 @@ func (x *GetConfigResponse) GetConfig() *GitHubConfig {
 	return nil
 }
 
-// UpdateGitHubSyncConfigRequest changes the shared automatic synchronization interval.
+// UpdateGitHubSyncConfigRequest は共有の自動同期間隔を変更する。
 type UpdateGitHubSyncConfigRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// interval_seconds must be at least 600.
+	// interval_seconds は 600 以上でなければならない。
 	IntervalSeconds int64 `protobuf:"varint,1,opt,name=interval_seconds,json=intervalSeconds,proto3" json:"interval_seconds,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
@@ -4646,10 +4645,10 @@ func (x *UpdateGitHubSyncConfigRequest) GetIntervalSeconds() int64 {
 	return 0
 }
 
-// UpdateGitHubSyncConfigResponse returns the resulting public configuration.
+// UpdateGitHubSyncConfigResponse は結果の公開設定を返す。
 type UpdateGitHubSyncConfigResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// config is the updated secret-free configuration.
+	// config は更新後の、秘密情報を含まない設定。
 	Config        *GitHubConfig `protobuf:"bytes,1,opt,name=config,proto3" json:"config,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4692,18 +4691,18 @@ func (x *UpdateGitHubSyncConfigResponse) GetConfig() *GitHubConfig {
 	return nil
 }
 
-// AddGitHubHostRequest adds a GitHub host.
+// AddGitHubHostRequest は GitHub host を追加する。
 type AddGitHubHostRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// host is the hostname with optional port.
+	// host は必要ならポートを含むホスト名。
 	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
-	// web_url is optional and defaults from host.
+	// web_url は任意で、既定値は host から決まる。
 	WebUrl string `protobuf:"bytes,2,opt,name=web_url,json=webUrl,proto3" json:"web_url,omitempty"`
-	// api_url is optional and defaults from host.
+	// api_url は任意で、既定値は host から決まる。
 	ApiUrl string `protobuf:"bytes,3,opt,name=api_url,json=apiUrl,proto3" json:"api_url,omitempty"`
-	// upload_url is optional and defaults from host.
+	// upload_url は任意で、既定値は host から決まる。
 	UploadUrl string `protobuf:"bytes,4,opt,name=upload_url,json=uploadUrl,proto3" json:"upload_url,omitempty"`
-	// graphql_url is optional and defaults from host.
+	// graphql_url は任意で、既定値は host から決まる。
 	GraphqlUrl    string `protobuf:"bytes,5,opt,name=graphql_url,json=graphqlUrl,proto3" json:"graphql_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4774,10 +4773,10 @@ func (x *AddGitHubHostRequest) GetGraphqlUrl() string {
 	return ""
 }
 
-// AddGitHubHostResponse returns the added host.
+// AddGitHubHostResponse は追加された host を返す。
 type AddGitHubHostResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// host is the normalized host after validation.
+	// host は検証後に正規化された host。
 	Host          *GitHubHost `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4820,20 +4819,20 @@ func (x *AddGitHubHostResponse) GetHost() *GitHubHost {
 	return nil
 }
 
-// UpdateGitHubHostRequest updates a host and only the fields that are present.
+// UpdateGitHubHostRequest は host を更新し、指定されたフィールドだけを変える。
 type UpdateGitHubHostRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// host identifies the existing host.
+	// host は既存の host を示す。
 	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
-	// new_host changes the host key when present.
+	// new_host は指定があれば host キーを変更する。
 	NewHost *string `protobuf:"bytes,2,opt,name=new_host,json=newHost,proto3,oneof" json:"new_host,omitempty"`
-	// web_url replaces the web URL when present.
+	// web_url は指定があれば web URL を置き換える。
 	WebUrl *string `protobuf:"bytes,3,opt,name=web_url,json=webUrl,proto3,oneof" json:"web_url,omitempty"`
-	// api_url replaces the API URL when present.
+	// api_url は指定があれば API URL を置き換える。
 	ApiUrl *string `protobuf:"bytes,4,opt,name=api_url,json=apiUrl,proto3,oneof" json:"api_url,omitempty"`
-	// upload_url replaces the upload URL when present.
+	// upload_url は指定があればアップロード URL を置き換える。
 	UploadUrl *string `protobuf:"bytes,5,opt,name=upload_url,json=uploadUrl,proto3,oneof" json:"upload_url,omitempty"`
-	// graphql_url replaces the GraphQL endpoint when present.
+	// graphql_url は指定があれば GraphQL エンドポイントを置き換える。
 	GraphqlUrl    *string `protobuf:"bytes,6,opt,name=graphql_url,json=graphqlUrl,proto3,oneof" json:"graphql_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4911,10 +4910,10 @@ func (x *UpdateGitHubHostRequest) GetGraphqlUrl() string {
 	return ""
 }
 
-// UpdateGitHubHostResponse returns the updated host.
+// UpdateGitHubHostResponse は更新後の host を返す。
 type UpdateGitHubHostResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// host is the normalized host after validation.
+	// host は検証後に正規化された host。
 	Host          *GitHubHost `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -4957,10 +4956,10 @@ func (x *UpdateGitHubHostResponse) GetHost() *GitHubHost {
 	return nil
 }
 
-// DeleteGitHubHostRequest removes a host when no authentication method uses it.
+// DeleteGitHubHostRequest は認証方法が使っていない host を削除する。
 type DeleteGitHubHostRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// host identifies the host to remove.
+	// host は削除する host を示す。
 	Host          string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5003,7 +5002,7 @@ func (x *DeleteGitHubHostRequest) GetHost() string {
 	return ""
 }
 
-// DeleteGitHubHostResponse confirms the host was removed.
+// DeleteGitHubHostResponse は host が削除されたことを示す。
 type DeleteGitHubHostResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -5040,24 +5039,24 @@ func (*DeleteGitHubHostResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{61}
 }
 
-// AddGitHubAuthMethodRequest adds one host-scoped authentication method.
+// AddGitHubAuthMethodRequest は host 単位の認証方法を 1 つ追加する。
 type AddGitHubAuthMethodRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the method.
+	// id は認証方法を示す。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// host identifies the only host for this method.
+	// host はこの方法の唯一の host を示す。
 	Host string `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
-	// type identifies the credential source.
+	// type は資格情報の取得元を示す。
 	Type GithubAuthMethodType `protobuf:"varint,3,opt,name=type,proto3,enum=prx.v1.GithubAuthMethodType" json:"type,omitempty"`
-	// account is the Keychain account.
+	// account は Keychain アカウント。
 	Account string `protobuf:"bytes,4,opt,name=account,proto3" json:"account,omitempty"`
-	// service is the Keychain service.
+	// service は Keychain サービス。
 	Service string `protobuf:"bytes,5,opt,name=service,proto3" json:"service,omitempty"`
-	// variable is the environment variable.
+	// variable は環境変数。
 	Variable string `protobuf:"bytes,6,opt,name=variable,proto3" json:"variable,omitempty"`
-	// user selects a gh CLI account.
+	// user は gh CLI アカウントを選ぶ。
 	User string `protobuf:"bytes,7,opt,name=user,proto3" json:"user,omitempty"`
-	// token is write-only and is accepted only for inline credentials.
+	// token は書き込み専用で、インラインの資格情報でのみ受け付ける。
 	Token         *string `protobuf:"bytes,8,opt,name=token,proto3,oneof" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5149,10 +5148,10 @@ func (x *AddGitHubAuthMethodRequest) GetToken() string {
 	return ""
 }
 
-// AddGitHubAuthMethodResponse returns secret-free authentication metadata.
+// AddGitHubAuthMethodResponse は秘密情報を含まない認証メタデータを返す。
 type AddGitHubAuthMethodResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// auth_method is the added method without its token.
+	// auth_method はトークンを除いた、追加された認証方法。
 	AuthMethod    *GitHubAuthMethod `protobuf:"bytes,1,opt,name=auth_method,json=authMethod,proto3" json:"auth_method,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5195,26 +5194,26 @@ func (x *AddGitHubAuthMethodResponse) GetAuthMethod() *GitHubAuthMethod {
 	return nil
 }
 
-// UpdateGitHubAuthMethodRequest updates a method while preserving an omitted token.
+// UpdateGitHubAuthMethodRequest は省略されたトークンを保ったまま認証方法を更新する。
 type UpdateGitHubAuthMethodRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the existing method.
+	// id は既存の認証方法を示す。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// new_id changes the method ID when present.
+	// new_id は指定があれば認証方法の ID を変更する。
 	NewId *string `protobuf:"bytes,2,opt,name=new_id,json=newId,proto3,oneof" json:"new_id,omitempty"`
-	// host changes the host when present.
+	// host は指定があれば host を変更する。
 	Host *string `protobuf:"bytes,3,opt,name=host,proto3,oneof" json:"host,omitempty"`
-	// type changes the source when present.
+	// type は指定があれば取得元を変更する。
 	Type *GithubAuthMethodType `protobuf:"varint,4,opt,name=type,proto3,enum=prx.v1.GithubAuthMethodType,oneof" json:"type,omitempty"`
-	// account changes the Keychain account when present.
+	// account は指定があれば Keychain アカウントを変更する。
 	Account *string `protobuf:"bytes,5,opt,name=account,proto3,oneof" json:"account,omitempty"`
-	// service changes the Keychain service when present.
+	// service は指定があれば Keychain サービスを変更する。
 	Service *string `protobuf:"bytes,6,opt,name=service,proto3,oneof" json:"service,omitempty"`
-	// variable changes the environment variable when present.
+	// variable は指定があれば環境変数を変更する。
 	Variable *string `protobuf:"bytes,7,opt,name=variable,proto3,oneof" json:"variable,omitempty"`
-	// user changes the gh CLI user when present.
+	// user は指定があれば gh CLI のユーザーを変更する。
 	User *string `protobuf:"bytes,8,opt,name=user,proto3,oneof" json:"user,omitempty"`
-	// token replaces the inline token when present and is never returned.
+	// token は指定があればインラインのトークンを置き換え、返されることはない。
 	Token         *string `protobuf:"bytes,9,opt,name=token,proto3,oneof" json:"token,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5313,10 +5312,10 @@ func (x *UpdateGitHubAuthMethodRequest) GetToken() string {
 	return ""
 }
 
-// UpdateGitHubAuthMethodResponse returns secret-free authentication metadata.
+// UpdateGitHubAuthMethodResponse は秘密情報を含まない認証メタデータを返す。
 type UpdateGitHubAuthMethodResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// auth_method is the updated method without its token.
+	// auth_method はトークンを除いた、更新後の認証方法。
 	AuthMethod    *GitHubAuthMethod `protobuf:"bytes,1,opt,name=auth_method,json=authMethod,proto3" json:"auth_method,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5359,10 +5358,10 @@ func (x *UpdateGitHubAuthMethodResponse) GetAuthMethod() *GitHubAuthMethod {
 	return nil
 }
 
-// DeleteGitHubAuthMethodRequest removes a host-scoped authentication method.
+// DeleteGitHubAuthMethodRequest は host 単位の認証方法を削除する。
 type DeleteGitHubAuthMethodRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id identifies the method to remove.
+	// id は削除する認証方法を示す。
 	Id            string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5405,7 +5404,7 @@ func (x *DeleteGitHubAuthMethodRequest) GetId() string {
 	return ""
 }
 
-// DeleteGitHubAuthMethodResponse confirms the method was removed.
+// DeleteGitHubAuthMethodResponse は認証方法が削除されたことを示す。
 type DeleteGitHubAuthMethodResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -5442,10 +5441,10 @@ func (*DeleteGitHubAuthMethodResponse) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{67}
 }
 
-// ReorderGitHubAuthMethodsRequest sets the complete authentication priority.
+// ReorderGitHubAuthMethodsRequest は認証の優先順位をすべて設定する。
 type ReorderGitHubAuthMethodsRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// ids contains every configured authentication method exactly once.
+	// ids は設定済みの認証方法をすべてちょうど 1 回ずつ含む。
 	Ids           []string `protobuf:"bytes,1,rep,name=ids,proto3" json:"ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5488,10 +5487,10 @@ func (x *ReorderGitHubAuthMethodsRequest) GetIds() []string {
 	return nil
 }
 
-// ReorderGitHubAuthMethodsResponse returns the new secret-free priority.
+// ReorderGitHubAuthMethodsResponse は秘密情報を含まない新しい優先順位を返す。
 type ReorderGitHubAuthMethodsResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// auth_methods contains the reordered methods.
+	// auth_methods は並べ替え後の認証方法。
 	AuthMethods   []*GitHubAuthMethod `protobuf:"bytes,1,rep,name=auth_methods,json=authMethods,proto3" json:"auth_methods,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5534,7 +5533,7 @@ func (x *ReorderGitHubAuthMethodsResponse) GetAuthMethods() []*GitHubAuthMethod 
 	return nil
 }
 
-// ValidateConfigRequest validates the YAML configuration.
+// ValidateConfigRequest は YAML 設定を検証する。
 type ValidateConfigRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -5571,15 +5570,15 @@ func (*ValidateConfigRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{70}
 }
 
-// ValidateConfigResponse reports whether configuration validation succeeded.
+// ValidateConfigResponse は設定の検証に成功したかを報告する。
 type ValidateConfigResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// valid is true when the configuration can be loaded and used.
+	// valid は設定を読み込んで使える場合に true。
 	Valid bool `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
-	// errors contains validation failures when valid is false.
+	// errors は valid が false のときの検証失敗の内容。
 	Errors []string `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
-	// warnings contains recoverable problems, such as unknown fields, that did not
-	// prevent the configuration from loading.
+	// warnings は未知のフィールドなど、読み込みは妨げなかった回復可能な問題を
+	// 含む。
 	Warnings      []string `protobuf:"bytes,3,rep,name=warnings,proto3" json:"warnings,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5636,16 +5635,16 @@ func (x *ValidateConfigResponse) GetWarnings() []string {
 	return nil
 }
 
-// PromptTemplates holds the shared agent prompt templates.
-// Every template is stored in the same configuration the CLI reads.
+// PromptTemplates は共有のエージェント用プロンプトテンプレートを保持する。
+// どのテンプレートも CLI が読むのと同じ設定に保存される。
 type PromptTemplates struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// design is used for a task that has no implementation plan yet.
+	// design はまだ実装計画がない task に使う。
 	Design string `protobuf:"bytes,1,opt,name=design,proto3" json:"design,omitempty"`
-	// implementation is used for a task that already has an implementation plan.
+	// implementation はすでに実装計画がある task に使う。
 	Implementation string `protobuf:"bytes,2,opt,name=implementation,proto3" json:"implementation,omitempty"`
-	// batch is used for several tasks handed over in one prompt. It is selected by
-	// the caller asking for a batch rather than derived from any single task.
+	// batch は複数の task を 1 つのプロンプトで引き渡すときに使う。個々の task から
+	// 導出せず、呼び出し側が batch を要求したことで選ばれる。
 	Batch         string `protobuf:"bytes,3,opt,name=batch,proto3" json:"batch,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5702,7 +5701,7 @@ func (x *PromptTemplates) GetBatch() string {
 	return ""
 }
 
-// GetPromptTemplatesRequest requests the stored agent prompt templates.
+// GetPromptTemplatesRequest は保存されたエージェント用テンプレートを要求する。
 type GetPromptTemplatesRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -5739,26 +5738,25 @@ func (*GetPromptTemplatesRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{73}
 }
 
-// GetPromptTemplatesResponse returns the stored agent prompt templates.
+// GetPromptTemplatesResponse は保存されたエージェント用テンプレートを返す。
 type GetPromptTemplatesResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// templates contains both stored templates.
+	// templates は保存された両方のテンプレートを含む。
 	Templates *PromptTemplates `protobuf:"bytes,1,opt,name=templates,proto3" json:"templates,omitempty"`
-	// supported_placeholders is the complete substitution vocabulary, without the
-	// surrounding braces. A client presents this list rather than keeping its own
-	// copy, which would drift from what the server accepts.
+	// supported_placeholders は前後の波括弧を除いた、置換語彙の全体。クライアントは
+	// 独自の写しを持たずこの一覧を提示する。写しはサーバーが受け付けるものから
+	// ずれていくためである。
 	SupportedPlaceholders []string `protobuf:"bytes,2,rep,name=supported_placeholders,json=supportedPlaceholders,proto3" json:"supported_placeholders,omitempty"`
-	// required_placeholder is the one placeholder every task template must use.
+	// required_placeholder は task 用テンプレートが必ず使う唯一の placeholder。
 	RequiredPlaceholder string `protobuf:"bytes,3,opt,name=required_placeholder,json=requiredPlaceholder,proto3" json:"required_placeholder,omitempty"`
-	// built_in contains the templates PRX ships. An editor offering to restore
-	// them shows the text they contain instead of leaving the field empty until a
-	// write completes.
+	// built_in は PRX に同梱するテンプレート。復元を提示するエディタは、書き込みが
+	// 終わるまで空欄にせず、ここに入っている文面を表示できる。
 	BuiltIn *PromptTemplates `protobuf:"bytes,4,opt,name=built_in,json=builtIn,proto3" json:"built_in,omitempty"`
-	// batch_supported_placeholders is the substitution vocabulary of the batch
-	// template. It is smaller than the task vocabulary, because a batch has no
-	// single task to expand a task placeholder from.
+	// batch_supported_placeholders は batch テンプレートの置換語彙。batch には task
+	// 用の placeholder を展開する元になる単一の task がないため、task の語彙より
+	// 小さい。
 	BatchSupportedPlaceholders []string `protobuf:"bytes,5,rep,name=batch_supported_placeholders,json=batchSupportedPlaceholders,proto3" json:"batch_supported_placeholders,omitempty"`
-	// batch_required_placeholder is the one placeholder every batch template must use.
+	// batch_required_placeholder は batch テンプレートが必ず使う唯一の placeholder。
 	BatchRequiredPlaceholder string `protobuf:"bytes,6,opt,name=batch_required_placeholder,json=batchRequiredPlaceholder,proto3" json:"batch_required_placeholder,omitempty"`
 	unknownFields            protoimpl.UnknownFields
 	sizeCache                protoimpl.SizeCache
@@ -5836,15 +5834,15 @@ func (x *GetPromptTemplatesResponse) GetBatchRequiredPlaceholder() string {
 	return ""
 }
 
-// UpdatePromptTemplatesRequest replaces every template in one configuration write.
-// An empty template is restored to its built-in default.
+// UpdatePromptTemplatesRequest は 1 回の設定書き込みで全テンプレートを置き換える。
+// 空のテンプレートは同梱の既定値に戻される。
 type UpdatePromptTemplatesRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// design replaces the template used for a task without an implementation plan.
+	// design は実装計画がない task 用のテンプレートを置き換える。
 	Design string `protobuf:"bytes,1,opt,name=design,proto3" json:"design,omitempty"`
-	// implementation replaces the template used for a task with an implementation plan.
+	// implementation は実装計画がある task 用のテンプレートを置き換える。
 	Implementation string `protobuf:"bytes,2,opt,name=implementation,proto3" json:"implementation,omitempty"`
-	// batch replaces the template used for several tasks handed over in one prompt.
+	// batch は複数の task を 1 つのプロンプトで引き渡す用のテンプレートを置き換える。
 	Batch         string `protobuf:"bytes,3,opt,name=batch,proto3" json:"batch,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5901,10 +5899,10 @@ func (x *UpdatePromptTemplatesRequest) GetBatch() string {
 	return ""
 }
 
-// UpdatePromptTemplatesResponse returns the templates the write produced.
+// UpdatePromptTemplatesResponse は書き込みの結果できたテンプレートを返す。
 type UpdatePromptTemplatesResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// templates contains both stored templates.
+	// templates は保存された両方のテンプレートを含む。
 	Templates     *PromptTemplates `protobuf:"bytes,1,opt,name=templates,proto3" json:"templates,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5947,10 +5945,10 @@ func (x *UpdatePromptTemplatesResponse) GetTemplates() *PromptTemplates {
 	return nil
 }
 
-// GetTaskPromptRequest asks for the expanded agent prompt of one task.
+// GetTaskPromptRequest は task 1 件分の展開済みエージェントプロンプトを求める。
 type GetTaskPromptRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// task_id is the task's public identifier.
+	// task_id は task の公開識別子。
 	TaskId        string `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -5993,14 +5991,14 @@ func (x *GetTaskPromptRequest) GetTaskId() string {
 	return ""
 }
 
-// GetTaskPromptResponse returns the expanded agent prompt of one task.
+// GetTaskPromptResponse は task 1 件分の展開済みエージェントプロンプトを返す。
 type GetTaskPromptResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// task_id is the task the prompt targets.
+	// task_id はプロンプトの対象となる task。
 	TaskId string `protobuf:"bytes,1,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
-	// kind reports which template produced the prompt.
+	// kind はどのテンプレートからプロンプトができたかを示す。
 	Kind TaskPromptKind `protobuf:"varint,2,opt,name=kind,proto3,enum=prx.v1.TaskPromptKind" json:"kind,omitempty"`
-	// prompt is the expanded template, ready to hand to another agent.
+	// prompt は展開済みのテンプレートで、他のエージェントにそのまま渡せる。
 	Prompt        string `protobuf:"bytes,3,opt,name=prompt,proto3" json:"prompt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6057,12 +6055,12 @@ func (x *GetTaskPromptResponse) GetPrompt() string {
 	return ""
 }
 
-// GetBatchPromptRequest asks for one prompt covering several tasks of one feature.
+// GetBatchPromptRequest は 1 つの feature の複数 task をまとめたプロンプトを求める。
 type GetBatchPromptRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// feature_id is the public identifier of the feature the tasks belong to.
+	// feature_id は task が属する feature の公開識別子。
 	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	// task_ids lists the tasks to cover, in the order they should appear.
+	// task_ids は対象の task を、プロンプトに並べたい順で列挙する。
 	TaskIds       []string `protobuf:"bytes,2,rep,name=task_ids,json=taskIds,proto3" json:"task_ids,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6112,14 +6110,14 @@ func (x *GetBatchPromptRequest) GetTaskIds() []string {
 	return nil
 }
 
-// GetBatchPromptResponse returns the expanded batch prompt.
+// GetBatchPromptResponse は展開済みの batch プロンプトを返す。
 type GetBatchPromptResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// feature_id is the feature the prompt covers.
+	// feature_id はプロンプトが対象とする feature。
 	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	// task_ids lists the covered tasks in the order the prompt names them.
+	// task_ids は対象の task を、プロンプトが挙げる順で列挙する。
 	TaskIds []string `protobuf:"bytes,2,rep,name=task_ids,json=taskIds,proto3" json:"task_ids,omitempty"`
-	// prompt is the expanded batch template, ready to hand to another agent.
+	// prompt は展開済みの batch テンプレートで、他のエージェントにそのまま渡せる。
 	Prompt        string `protobuf:"bytes,3,opt,name=prompt,proto3" json:"prompt,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6176,13 +6174,13 @@ func (x *GetBatchPromptResponse) GetPrompt() string {
 	return ""
 }
 
-// SyncRequest selects pull requests to refresh from GitHub.
-// Empty selectors refresh all pull requests; setting both selectors applies both filters.
+// SyncRequest は GitHub から更新する pull request を選ぶ。
+// セレクタが空なら全件を更新し、両方を指定すると両方の絞り込みが効く。
 type SyncRequest struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// feature_id selects pull requests belonging to the feature identified by public ID.
+	// feature_id は公開 ID で示した feature に属する pull request を選ぶ。
 	FeatureId string `protobuf:"bytes,1,opt,name=feature_id,json=featureId,proto3" json:"feature_id,omitempty"`
-	// task_id selects the pull request attached to this task's public ID.
+	// task_id はこの公開 ID の task に紐づく pull request を選ぶ。
 	TaskId        string `protobuf:"bytes,2,opt,name=task_id,json=taskId,proto3" json:"task_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6232,13 +6230,13 @@ func (x *SyncRequest) GetTaskId() string {
 	return ""
 }
 
-// SyncResponse reports the results of a pull request refresh.
+// SyncResponse は pull request の更新結果を報告する。
 type SyncResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// succeeded is the number of pull requests refreshed successfully.
+	// succeeded は更新に成功した pull request の数。
 	Succeeded int32 `protobuf:"varint,1,opt,name=succeeded,proto3" json:"succeeded,omitempty"`
-	// failed is the number of pull requests with an actionable refresh error.
-	// Known closed or merged pull requests with an unavailable refresh are not counted.
+	// failed は対処が必要な更新エラーを持つ pull request の数。
+	// クローズやマージが既知で更新できない pull request は数えない。
 	Failed        int32 `protobuf:"varint,2,opt,name=failed,proto3" json:"failed,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6288,21 +6286,21 @@ func (x *SyncResponse) GetFailed() int32 {
 	return 0
 }
 
-// GitHubSyncStatus describes the latest process-wide synchronization attempt.
+// GitHubSyncStatus は直近のプロセス全体の同期試行を表す。
 type GitHubSyncStatus struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// interval_seconds is the configured automatic synchronization interval.
+	// interval_seconds は設定された自動同期の間隔。
 	IntervalSeconds int64 `protobuf:"varint,1,opt,name=interval_seconds,json=intervalSeconds,proto3" json:"interval_seconds,omitempty"`
-	// last_attempt_at is the last claimed run time in RFC 3339 UTC format.
+	// last_attempt_at は RFC 3339 UTC 形式の、最後に実行を確保した時刻。
 	LastAttemptAt *string `protobuf:"bytes,2,opt,name=last_attempt_at,json=lastAttemptAt,proto3,oneof" json:"last_attempt_at,omitempty"`
-	// last_updated_at is the last completed run time in RFC 3339 UTC format.
+	// last_updated_at は RFC 3339 UTC 形式の、最後に完了した実行の時刻。
 	LastUpdatedAt *string `protobuf:"bytes,3,opt,name=last_updated_at,json=lastUpdatedAt,proto3,oneof" json:"last_updated_at,omitempty"`
-	// succeeded is the number of items refreshed by the latest completed run.
+	// succeeded は直近の完了した実行で更新できた件数。
 	Succeeded int32 `protobuf:"varint,4,opt,name=succeeded,proto3" json:"succeeded,omitempty"`
-	// failed is the number of items with an actionable refresh error after the latest completed run.
-	// Known closed or merged pull requests with an unavailable refresh are not counted.
+	// failed は直近の完了した実行のあと、対処が必要な更新エラーを持つ件数。
+	// クローズやマージが既知で更新できない pull request は数えない。
 	Failed int32 `protobuf:"varint,5,opt,name=failed,proto3" json:"failed,omitempty"`
-	// error is the latest run-level failure, when present.
+	// error は直近の実行単位の失敗があればその内容。
 	Error         string `protobuf:"bytes,6,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6380,7 +6378,7 @@ func (x *GitHubSyncStatus) GetError() string {
 	return ""
 }
 
-// GetGitHubSyncStatusRequest requests the persisted synchronization status.
+// GetGitHubSyncStatusRequest は保存された同期状況を要求する。
 type GetGitHubSyncStatusRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -6417,10 +6415,10 @@ func (*GetGitHubSyncStatusRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{84}
 }
 
-// GetGitHubSyncStatusResponse returns the persisted synchronization status.
+// GetGitHubSyncStatusResponse は保存された同期状況を返す。
 type GetGitHubSyncStatusResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// status contains interval, timestamps, counts, and the latest run error.
+	// status は間隔・時刻・件数・直近の実行エラーを含む。
 	Status        *GitHubSyncStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6463,7 +6461,7 @@ func (x *GetGitHubSyncStatusResponse) GetStatus() *GitHubSyncStatus {
 	return nil
 }
 
-// SyncGitHubIfDueRequest asks the server to refresh only when the interval has expired.
+// SyncGitHubIfDueRequest は間隔が切れている場合だけ更新するようサーバーに求める。
 type SyncGitHubIfDueRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -6500,12 +6498,12 @@ func (*SyncGitHubIfDueRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{86}
 }
 
-// SyncGitHubIfDueResponse reports whether this caller claimed a run and the resulting status.
+// SyncGitHubIfDueResponse は呼び出し側が実行を確保したかと、その結果の状況を報告する。
 type SyncGitHubIfDueResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// ran is true only when this request acquired and completed a synchronization run.
+	// ran はこのリクエストが同期の実行を確保して完了させた場合にのみ true。
 	Ran bool `protobuf:"varint,1,opt,name=ran,proto3" json:"ran,omitempty"`
-	// status contains the latest persisted synchronization status.
+	// status は保存された最新の同期状況を含む。
 	Status        *GitHubSyncStatus `protobuf:"bytes,2,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6555,7 +6553,7 @@ func (x *SyncGitHubIfDueResponse) GetStatus() *GitHubSyncStatus {
 	return nil
 }
 
-// ValidateRequest requests database integrity validation.
+// ValidateRequest はデータベースの整合性検証を要求する。
 type ValidateRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -6592,12 +6590,12 @@ func (*ValidateRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{88}
 }
 
-// ValidateResponse reports whether database integrity checks passed.
+// ValidateResponse はデータベースの整合性検査に通ったかを報告する。
 type ValidateResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// valid is true when no integrity errors were found.
+	// valid は整合性エラーが見つからなかった場合に true。
 	Valid bool `protobuf:"varint,1,opt,name=valid,proto3" json:"valid,omitempty"`
-	// errors contains human-readable integrity errors when valid is false.
+	// errors は valid が false のときの、人が読める整合性エラー。
 	Errors        []string `protobuf:"bytes,2,rep,name=errors,proto3" json:"errors,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6647,16 +6645,16 @@ func (x *ValidateResponse) GetErrors() []string {
 	return nil
 }
 
-// DebugProblem is one detected diagnostic problem together with its evidence.
+// DebugProblem は検出した診断上の問題 1 件と、その根拠。
 type DebugProblem struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// code identifies the detected problem.
+	// code は検出した問題を示す。
 	Code DebugProblemCode `protobuf:"varint,1,opt,name=code,proto3,enum=prx.v1.DebugProblemCode" json:"code,omitempty"`
-	// target names the file, host, or repository the problem was detected on.
+	// target は問題を検出したファイル・host・リポジトリの名前。
 	Target string `protobuf:"bytes,2,opt,name=target,proto3" json:"target,omitempty"`
-	// evidence is the observed value that triggered the detection.
+	// evidence は検出のきっかけになった観測値。
 	Evidence string `protobuf:"bytes,3,opt,name=evidence,proto3" json:"evidence,omitempty"`
-	// next_command is the command whose output explains the problem in full.
+	// next_command は問題の全容を出力で説明するコマンド。
 	NextCommand   string `protobuf:"bytes,4,opt,name=next_command,json=nextCommand,proto3" json:"next_command,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6720,18 +6718,18 @@ func (x *DebugProblem) GetNextCommand() string {
 	return ""
 }
 
-// DebugBuild describes the running PRX build.
+// DebugBuild は動作中の PRX のビルドを表す。
 type DebugBuild struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// version is the PRX version, carrying a -dev suffix on an unstamped development build.
+	// version は PRX のバージョンで、刻印のない開発ビルドでは -dev が付く。
 	Version string `protobuf:"bytes,1,opt,name=version,proto3" json:"version,omitempty"`
-	// development is true when the build is not a stamped release.
+	// development は刻印されたリリースでないビルドのとき true。
 	Development bool `protobuf:"varint,2,opt,name=development,proto3" json:"development,omitempty"`
-	// go_version is the Go toolchain version the binary reports.
+	// go_version はバイナリが報告する Go ツールチェーンのバージョン。
 	GoVersion string `protobuf:"bytes,3,opt,name=go_version,json=goVersion,proto3" json:"go_version,omitempty"`
-	// os is the operating system the binary was built for.
+	// os はバイナリのビルド対象 OS。
 	Os string `protobuf:"bytes,4,opt,name=os,proto3" json:"os,omitempty"`
-	// arch is the architecture the binary was built for.
+	// arch はバイナリのビルド対象アーキテクチャ。
 	Arch          string `protobuf:"bytes,5,opt,name=arch,proto3" json:"arch,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6802,24 +6800,24 @@ func (x *DebugBuild) GetArch() string {
 	return ""
 }
 
-// DebugRuntime describes the process that produced the report.
+// DebugRuntime はレポートを生成したプロセスを表す。
 type DebugRuntime struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// mode is cli for a command invocation and serve for the local server.
+	// mode はコマンド実行なら cli、ローカルサーバーなら serve。
 	Mode string `protobuf:"bytes,1,opt,name=mode,proto3" json:"mode,omitempty"`
-	// demo is true while the process uses the temporary demo environment.
+	// demo はプロセスが一時的な demo 環境を使っている間 true。
 	Demo bool `protobuf:"varint,2,opt,name=demo,proto3" json:"demo,omitempty"`
-	// github_fixture is true while GitHub reads come from a fixture file.
+	// github_fixture は GitHub の読み取りが fixture ファイル由来の間 true。
 	GithubFixture bool `protobuf:"varint,3,opt,name=github_fixture,json=githubFixture,proto3" json:"github_fixture,omitempty"`
-	// generated_at is the report time in RFC 3339 UTC format.
+	// generated_at は RFC 3339 UTC 形式のレポート生成時刻。
 	GeneratedAt string `protobuf:"bytes,4,opt,name=generated_at,json=generatedAt,proto3" json:"generated_at,omitempty"`
-	// time_zone is the local time zone name of the process.
+	// time_zone はプロセスのローカルタイムゾーン名。
 	TimeZone string `protobuf:"bytes,5,opt,name=time_zone,json=timeZone,proto3" json:"time_zone,omitempty"`
-	// listen_address is the address the server accepted, and is empty outside serve mode.
+	// listen_address はサーバーが受け付けたアドレスで、serve 以外では空。
 	ListenAddress string `protobuf:"bytes,6,opt,name=listen_address,json=listenAddress,proto3" json:"listen_address,omitempty"`
-	// started_at is the server start time in RFC 3339 UTC format, and is empty outside serve mode.
+	// started_at は RFC 3339 UTC 形式のサーバー起動時刻で、serve 以外では空。
 	StartedAt string `protobuf:"bytes,7,opt,name=started_at,json=startedAt,proto3" json:"started_at,omitempty"`
-	// uptime_seconds is how long the server has been listening, and is zero outside serve mode.
+	// uptime_seconds はサーバーが待ち受けている時間で、serve 以外では 0。
 	UptimeSeconds int64 `protobuf:"varint,8,opt,name=uptime_seconds,json=uptimeSeconds,proto3" json:"uptime_seconds,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6911,12 +6909,12 @@ func (x *DebugRuntime) GetUptimeSeconds() int64 {
 	return 0
 }
 
-// DebugEnvironmentVariable reports whether one PRX-relevant variable is set, never its value.
+// DebugEnvironmentVariable は PRX に関わる変数 1 件の設定有無だけを報告し、値は含めない。
 type DebugEnvironmentVariable struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// name is the environment variable name.
+	// name は環境変数名。
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// set is true when the variable holds a non-empty value.
+	// set は変数が空でない値を持つとき true。
 	Set           bool `protobuf:"varint,2,opt,name=set,proto3" json:"set,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -6966,24 +6964,24 @@ func (x *DebugEnvironmentVariable) GetSet() bool {
 	return false
 }
 
-// DebugPaths reports the resolved file locations and the ambient environment that selected them.
+// DebugPaths は解決されたファイルの場所と、それを選んだ環境を報告する。
 type DebugPaths struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// database_path is the resolved SQLite path, shortened to ~ under the home directory, or demo.
+	// database_path は解決した SQLite のパスで、ホーム配下は ~ に短縮、demo のこともある。
 	DatabasePath string `protobuf:"bytes,1,opt,name=database_path,json=databasePath,proto3" json:"database_path,omitempty"`
-	// database_path_source is flag, env, default, or demo.
+	// database_path_source は flag、env、default、demo のいずれか。
 	DatabasePathSource string `protobuf:"bytes,2,opt,name=database_path_source,json=databasePathSource,proto3" json:"database_path_source,omitempty"`
-	// database_file_exists is true when the resolved database path is an existing file.
+	// database_file_exists は解決したデータベースのパスが既存のファイルのとき true。
 	DatabaseFileExists bool `protobuf:"varint,3,opt,name=database_file_exists,json=databaseFileExists,proto3" json:"database_file_exists,omitempty"`
-	// config_path is the resolved YAML path, shortened to ~ under the home directory, or demo.
+	// config_path は解決した YAML のパスで、ホーム配下は ~ に短縮、demo のこともある。
 	ConfigPath string `protobuf:"bytes,4,opt,name=config_path,json=configPath,proto3" json:"config_path,omitempty"`
-	// config_path_source is flag, env, default, or demo.
+	// config_path_source は flag、env、default、demo のいずれか。
 	ConfigPathSource string `protobuf:"bytes,5,opt,name=config_path_source,json=configPathSource,proto3" json:"config_path_source,omitempty"`
-	// config_file_exists is true when the resolved configuration path is an existing file.
+	// config_file_exists は解決した設定のパスが既存のファイルのとき true。
 	ConfigFileExists bool `protobuf:"varint,6,opt,name=config_file_exists,json=configFileExists,proto3" json:"config_file_exists,omitempty"`
-	// config_permissions is the octal permission mode of the configuration file, when it exists.
+	// config_permissions は設定ファイルが存在する場合の 8 進数のパーミッション。
 	ConfigPermissions string `protobuf:"bytes,7,opt,name=config_permissions,json=configPermissions,proto3" json:"config_permissions,omitempty"`
-	// environment_variables lists the PRX-relevant variables and whether each is set.
+	// environment_variables は PRX に関わる変数と、それぞれの設定有無を並べる。
 	EnvironmentVariables []*DebugEnvironmentVariable `protobuf:"bytes,8,rep,name=environment_variables,json=environmentVariables,proto3" json:"environment_variables,omitempty"`
 	unknownFields        protoimpl.UnknownFields
 	sizeCache            protoimpl.SizeCache
@@ -7075,14 +7073,14 @@ func (x *DebugPaths) GetEnvironmentVariables() []*DebugEnvironmentVariable {
 	return nil
 }
 
-// DebugConfigHost is the host boundary as the report presents it.
+// DebugConfigHost はレポートが提示する host の境界。
 type DebugConfigHost struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// host is the normalized GitHub host key.
+	// host は正規化した GitHub の host キー。
 	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
-	// api_url is the REST endpoint used for the host.
+	// api_url はその host に使う REST エンドポイント。
 	ApiUrl string `protobuf:"bytes,2,opt,name=api_url,json=apiUrl,proto3" json:"api_url,omitempty"`
-	// graphql_url is the GraphQL endpoint used for the host.
+	// graphql_url はその host に使う GraphQL エンドポイント。
 	GraphqlUrl    string `protobuf:"bytes,3,opt,name=graphql_url,json=graphqlUrl,proto3" json:"graphql_url,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -7139,16 +7137,16 @@ func (x *DebugConfigHost) GetGraphqlUrl() string {
 	return ""
 }
 
-// DebugConfigAuthMethod is a credential method without any secret material.
+// DebugConfigAuthMethod は秘密情報を一切含まない資格情報の方法。
 type DebugConfigAuthMethod struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// id is the configured method identifier.
+	// id は設定された認証方法の識別子。
 	Id string `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	// host is the normalized host the method is scoped to.
+	// host は認証方法の対象として正規化された host。
 	Host string `protobuf:"bytes,2,opt,name=host,proto3" json:"host,omitempty"`
-	// type is the credential source name.
+	// type は資格情報の取得元の名前。
 	Type string `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
-	// secret_configured is true when the method has a usable secret source.
+	// secret_configured は使える秘密情報の取得元がある場合に true。
 	SecretConfigured bool `protobuf:"varint,4,opt,name=secret_configured,json=secretConfigured,proto3" json:"secret_configured,omitempty"`
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
@@ -7212,22 +7210,22 @@ func (x *DebugConfigAuthMethod) GetSecretConfigured() bool {
 	return false
 }
 
-// DebugConfig reports the loaded configuration without secret material.
+// DebugConfig は読み込んだ設定を、秘密情報を除いて報告する。
 type DebugConfig struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// version is the configuration file version.
+	// version は設定ファイルのバージョン。
 	Version int32 `protobuf:"varint,1,opt,name=version,proto3" json:"version,omitempty"`
-	// valid is true when the configuration loaded successfully.
+	// valid は設定の読み込みに成功した場合に true。
 	Valid bool `protobuf:"varint,2,opt,name=valid,proto3" json:"valid,omitempty"`
-	// errors contains the load failure when valid is false.
+	// errors は valid が false のときの読み込み失敗の内容。
 	Errors []string `protobuf:"bytes,3,rep,name=errors,proto3" json:"errors,omitempty"`
-	// warnings contains recoverable problems such as unknown fields.
+	// warnings は未知のフィールドなど回復可能な問題を含む。
 	Warnings []string `protobuf:"bytes,4,rep,name=warnings,proto3" json:"warnings,omitempty"`
-	// hosts lists the configured host boundaries.
+	// hosts は設定された host の境界を並べる。
 	Hosts []*DebugConfigHost `protobuf:"bytes,5,rep,name=hosts,proto3" json:"hosts,omitempty"`
-	// auth_methods lists the credential methods in evaluation order.
+	// auth_methods は資格情報の方法を評価順に並べる。
 	AuthMethods []*DebugConfigAuthMethod `protobuf:"bytes,6,rep,name=auth_methods,json=authMethods,proto3" json:"auth_methods,omitempty"`
-	// auto_sync_interval_seconds is the configured automatic refresh interval.
+	// auto_sync_interval_seconds は設定された自動更新の間隔。
 	AutoSyncIntervalSeconds int64 `protobuf:"varint,7,opt,name=auto_sync_interval_seconds,json=autoSyncIntervalSeconds,proto3" json:"auto_sync_interval_seconds,omitempty"`
 	unknownFields           protoimpl.UnknownFields
 	sizeCache               protoimpl.SizeCache
@@ -7312,22 +7310,22 @@ func (x *DebugConfig) GetAutoSyncIntervalSeconds() int64 {
 	return 0
 }
 
-// DebugDatabaseFile reports the on-disk state of the SQLite database.
+// DebugDatabaseFile は SQLite データベースのディスク上の状態を報告する。
 type DebugDatabaseFile struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// applicable is false for an in-memory or DSN-style database that has no single file.
+	// applicable は単一のファイルを持たないインメモリや DSN 形式のデータベースでは false。
 	Applicable bool `protobuf:"varint,1,opt,name=applicable,proto3" json:"applicable,omitempty"`
-	// size_bytes is the size of the main database file.
+	// size_bytes は主データベースファイルのサイズ。
 	SizeBytes int64 `protobuf:"varint,2,opt,name=size_bytes,json=sizeBytes,proto3" json:"size_bytes,omitempty"`
-	// wal_present is true when a write-ahead log file exists beside the database.
+	// wal_present はデータベースの隣に write-ahead log ファイルがあるとき true。
 	WalPresent bool `protobuf:"varint,3,opt,name=wal_present,json=walPresent,proto3" json:"wal_present,omitempty"`
-	// wal_size_bytes is the size of the write-ahead log file when it exists.
+	// wal_size_bytes は write-ahead log ファイルがある場合のそのサイズ。
 	WalSizeBytes int64 `protobuf:"varint,4,opt,name=wal_size_bytes,json=walSizeBytes,proto3" json:"wal_size_bytes,omitempty"`
-	// shm_present is true when a shared-memory file exists beside the database.
+	// shm_present はデータベースの隣に共有メモリファイルがあるとき true。
 	ShmPresent bool `protobuf:"varint,5,opt,name=shm_present,json=shmPresent,proto3" json:"shm_present,omitempty"`
-	// writable is true when the database file could be opened for writing.
+	// writable はデータベースファイルを書き込み用に開けた場合に true。
 	Writable bool `protobuf:"varint,6,opt,name=writable,proto3" json:"writable,omitempty"`
-	// write_error explains why the database file could not be opened for writing.
+	// write_error はデータベースファイルを書き込み用に開けなかった理由。
 	WriteError    string `protobuf:"bytes,7,opt,name=write_error,json=writeError,proto3" json:"write_error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -7412,22 +7410,22 @@ func (x *DebugDatabaseFile) GetWriteError() string {
 	return ""
 }
 
-// DebugStorage reports schema state and database integrity.
+// DebugStorage はスキーマの状態とデータベースの整合性を報告する。
 type DebugStorage struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// applied_schema_version is the highest migration version recorded in the database.
+	// applied_schema_version はデータベースに記録された最大のマイグレーション版数。
 	AppliedSchemaVersion int32 `protobuf:"varint,1,opt,name=applied_schema_version,json=appliedSchemaVersion,proto3" json:"applied_schema_version,omitempty"`
-	// embedded_schema_version is the highest migration version this binary carries.
+	// embedded_schema_version はこのバイナリが持つ最大のマイグレーション版数。
 	EmbeddedSchemaVersion int32 `protobuf:"varint,2,opt,name=embedded_schema_version,json=embeddedSchemaVersion,proto3" json:"embedded_schema_version,omitempty"`
-	// integrity_valid is true when dependency-data validation found no errors.
+	// integrity_valid は依存データの検証でエラーがなかった場合に true。
 	IntegrityValid bool `protobuf:"varint,3,opt,name=integrity_valid,json=integrityValid,proto3" json:"integrity_valid,omitempty"`
-	// integrity_errors contains the validation errors when integrity_valid is false.
+	// integrity_errors は integrity_valid が false のときの検証エラー。
 	IntegrityErrors []string `protobuf:"bytes,4,rep,name=integrity_errors,json=integrityErrors,proto3" json:"integrity_errors,omitempty"`
-	// database_file reports the on-disk state of the database.
+	// database_file はデータベースのディスク上の状態を報告する。
 	DatabaseFile *DebugDatabaseFile `protobuf:"bytes,5,opt,name=database_file,json=databaseFile,proto3" json:"database_file,omitempty"`
-	// cli_schema_version is the CLI response schema version this binary emits.
+	// cli_schema_version はこのバイナリが出力する CLI レスポンスのスキーマ版数。
 	CliSchemaVersion string `protobuf:"bytes,6,opt,name=cli_schema_version,json=cliSchemaVersion,proto3" json:"cli_schema_version,omitempty"`
-	// error explains why storage diagnostics are unavailable.
+	// error はストレージの診断が得られない理由。
 	Error         string `protobuf:"bytes,7,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -7512,12 +7510,12 @@ func (x *DebugStorage) GetError() string {
 	return ""
 }
 
-// DebugCount is one named count in a breakdown.
+// DebugCount は内訳の中の名前付きの件数 1 件。
 type DebugCount struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// name is the value the count belongs to.
+	// name は件数が属する値。
 	Name string `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	// count is the number of records carrying that value.
+	// count はその値を持つレコードの数。
 	Count         int32 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -7567,34 +7565,34 @@ func (x *DebugCount) GetCount() int32 {
 	return 0
 }
 
-// DebugData reports stored record counts and their breakdowns.
+// DebugData は保存されたレコード数とその内訳を報告する。
 type DebugData struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// features is the number of stored features.
+	// features は保存された feature の数。
 	Features int32 `protobuf:"varint,1,opt,name=features,proto3" json:"features,omitempty"`
-	// tasks is the number of stored tasks.
+	// tasks は保存された task の数。
 	Tasks int32 `protobuf:"varint,2,opt,name=tasks,proto3" json:"tasks,omitempty"`
-	// dependencies is the number of stored dependency edges.
+	// dependencies は保存された依存の辺の数。
 	Dependencies int32 `protobuf:"varint,3,opt,name=dependencies,proto3" json:"dependencies,omitempty"`
-	// pull_requests is the number of attached pull requests.
+	// pull_requests は紐づいた pull request の数。
 	PullRequests int32 `protobuf:"varint,4,opt,name=pull_requests,json=pullRequests,proto3" json:"pull_requests,omitempty"`
-	// documents is the number of registered documents.
+	// documents は登録された document の数。
 	Documents int32 `protobuf:"varint,5,opt,name=documents,proto3" json:"documents,omitempty"`
-	// feature_statuses breaks features down by presented status.
+	// feature_statuses は feature を表示ステータス別に分ける。
 	FeatureStatuses []*DebugCount `protobuf:"bytes,6,rep,name=feature_statuses,json=featureStatuses,proto3" json:"feature_statuses,omitempty"`
-	// task_display_states breaks tasks down by presented state.
+	// task_display_states は task を表示状態別に分ける。
 	TaskDisplayStates []*DebugCount `protobuf:"bytes,7,rep,name=task_display_states,json=taskDisplayStates,proto3" json:"task_display_states,omitempty"`
-	// pull_request_display_states breaks pull requests down by presented state.
+	// pull_request_display_states は pull request を表示状態別に分ける。
 	PullRequestDisplayStates []*DebugCount `protobuf:"bytes,9,rep,name=pull_request_display_states,json=pullRequestDisplayStates,proto3" json:"pull_request_display_states,omitempty"`
-	// pull_request_hosts breaks pull requests down by normalized host.
+	// pull_request_hosts は pull request を正規化した host 別に分ける。
 	PullRequestHosts []*DebugCount `protobuf:"bytes,10,rep,name=pull_request_hosts,json=pullRequestHosts,proto3" json:"pull_request_hosts,omitempty"`
-	// document_kinds breaks documents down by source kind.
+	// document_kinds は document を取得元の種類別に分ける。
 	DocumentKinds []*DebugCount `protobuf:"bytes,11,rep,name=document_kinds,json=documentKinds,proto3" json:"document_kinds,omitempty"`
-	// error explains why the stored data could not be counted.
+	// error は保存データを数えられなかった理由。
 	Error string `protobuf:"bytes,12,opt,name=error,proto3" json:"error,omitempty"`
-	// projects is the number of stored projects.
+	// projects は保存された project の数。
 	Projects int32 `protobuf:"varint,13,opt,name=projects,proto3" json:"projects,omitempty"`
-	// project_states breaks projects down by their only state, active or archived.
+	// project_states は project を唯一の状態、active か archived で分ける。
 	ProjectStates []*DebugCount `protobuf:"bytes,14,rep,name=project_states,json=projectStates,proto3" json:"project_states,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -7721,12 +7719,12 @@ func (x *DebugData) GetProjectStates() []*DebugCount {
 	return nil
 }
 
-// DebugSyncFailure counts synchronization failures within one host or repository.
+// DebugSyncFailure は 1 つの host かリポジトリの中の同期失敗を数える。
 type DebugSyncFailure struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// scope is the host or the host, owner, and repository the failures belong to.
+	// scope は失敗が属する host、または host・owner・リポジトリの組。
 	Scope string `protobuf:"bytes,1,opt,name=scope,proto3" json:"scope,omitempty"`
-	// count is the number of failing pull requests in that scope.
+	// count はその範囲で失敗している pull request の数。
 	Count         int32 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -7776,16 +7774,16 @@ func (x *DebugSyncFailure) GetCount() int32 {
 	return 0
 }
 
-// DebugErrorGroup is one representative synchronization error and the tasks it affected.
+// DebugErrorGroup は代表的な同期エラー 1 件と、影響を受けた task。
 type DebugErrorGroup struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// message is the representative error text, truncated when very long.
+	// message は代表的なエラー文で、非常に長い場合は切り詰める。
 	Message string `protobuf:"bytes,1,opt,name=message,proto3" json:"message,omitempty"`
-	// count is the number of pull requests whose error shares this shape.
+	// count はこの形のエラーを持つ pull request の数。
 	Count int32 `protobuf:"varint,2,opt,name=count,proto3" json:"count,omitempty"`
-	// task_ids lists a bounded sample of the affected task IDs.
+	// task_ids は影響を受けた task ID の、件数を絞った標本。
 	TaskIds []string `protobuf:"bytes,3,rep,name=task_ids,json=taskIds,proto3" json:"task_ids,omitempty"`
-	// total_task_count is how many tasks the group covers, including those not listed.
+	// total_task_count はこのグループが対象とする task 数で、未掲載分も含む。
 	TotalTaskCount int32 `protobuf:"varint,4,opt,name=total_task_count,json=totalTaskCount,proto3" json:"total_task_count,omitempty"`
 	unknownFields  protoimpl.UnknownFields
 	sizeCache      protoimpl.SizeCache
@@ -7849,18 +7847,18 @@ func (x *DebugErrorGroup) GetTotalTaskCount() int32 {
 	return 0
 }
 
-// DebugAuthCacheEntry records which credential last succeeded for one repository.
+// DebugAuthCacheEntry はリポジトリごとに直近で成功した資格情報を記録する。
 type DebugAuthCacheEntry struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// host is the normalized GitHub host.
+	// host は正規化した GitHub の host。
 	Host string `protobuf:"bytes,1,opt,name=host,proto3" json:"host,omitempty"`
-	// owner is the repository owner.
+	// owner はリポジトリの所有者。
 	Owner string `protobuf:"bytes,2,opt,name=owner,proto3" json:"owner,omitempty"`
-	// repository is the repository name.
+	// repository はリポジトリ名。
 	Repository string `protobuf:"bytes,3,opt,name=repository,proto3" json:"repository,omitempty"`
-	// auth_method_id is the credential method that last succeeded.
+	// auth_method_id は直近で成功した資格情報の方法。
 	AuthMethodId string `protobuf:"bytes,4,opt,name=auth_method_id,json=authMethodId,proto3" json:"auth_method_id,omitempty"`
-	// last_succeeded_at is when that credential last succeeded, in RFC 3339 UTC format.
+	// last_succeeded_at は RFC 3339 UTC 形式で、その資格情報が最後に成功した時刻。
 	LastSucceededAt string `protobuf:"bytes,5,opt,name=last_succeeded_at,json=lastSucceededAt,proto3" json:"last_succeeded_at,omitempty"`
 	unknownFields   protoimpl.UnknownFields
 	sizeCache       protoimpl.SizeCache
@@ -7931,36 +7929,36 @@ func (x *DebugAuthCacheEntry) GetLastSucceededAt() string {
 	return ""
 }
 
-// DebugGitHubSync reports synchronization state and the failures behind it.
+// DebugGitHubSync は同期の状態と、その背後にある失敗を報告する。
 type DebugGitHubSync struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// status is the persisted process-wide synchronization status.
+	// status は保存されたプロセス全体の同期状況。
 	Status *GitHubSyncStatus `protobuf:"bytes,1,opt,name=status,proto3" json:"status,omitempty"`
-	// next_run_at is when the interval next expires, in RFC 3339 UTC format.
+	// next_run_at は RFC 3339 UTC 形式で、次に間隔が切れる時刻。
 	NextRunAt string `protobuf:"bytes,2,opt,name=next_run_at,json=nextRunAt,proto3" json:"next_run_at,omitempty"`
-	// due is true when the interval has already expired.
+	// due はすでに間隔が切れている場合に true。
 	Due bool `protobuf:"varint,3,opt,name=due,proto3" json:"due,omitempty"`
-	// seconds_since_last_update is how long ago the last run completed.
+	// seconds_since_last_update は直近の実行が完了してからの経過秒数。
 	SecondsSinceLastUpdate int64 `protobuf:"varint,4,opt,name=seconds_since_last_update,json=secondsSinceLastUpdate,proto3" json:"seconds_since_last_update,omitempty"`
-	// stale_pull_requests is the number of pull requests holding stale state.
+	// stale_pull_requests は古い状態を持つ pull request の数。
 	StalePullRequests int32 `protobuf:"varint,5,opt,name=stale_pull_requests,json=stalePullRequests,proto3" json:"stale_pull_requests,omitempty"`
-	// failed_pull_requests is the number of pull requests carrying a refresh error.
+	// failed_pull_requests は更新エラーを持つ pull request の数。
 	FailedPullRequests int32 `protobuf:"varint,6,opt,name=failed_pull_requests,json=failedPullRequests,proto3" json:"failed_pull_requests,omitempty"`
-	// host_failures breaks refresh errors down by host.
+	// host_failures は更新エラーを host 別に分ける。
 	HostFailures []*DebugSyncFailure `protobuf:"bytes,7,rep,name=host_failures,json=hostFailures,proto3" json:"host_failures,omitempty"`
-	// repository_failures breaks refresh errors down by repository, bounded in size.
+	// repository_failures は更新エラーをリポジトリ別に分ける。件数には上限がある。
 	RepositoryFailures []*DebugSyncFailure `protobuf:"bytes,8,rep,name=repository_failures,json=repositoryFailures,proto3" json:"repository_failures,omitempty"`
-	// omitted_repository_failures is how many repository rows the size limit dropped.
+	// omitted_repository_failures は上限で落としたリポジトリの行数。
 	OmittedRepositoryFailures int32 `protobuf:"varint,9,opt,name=omitted_repository_failures,json=omittedRepositoryFailures,proto3" json:"omitted_repository_failures,omitempty"`
-	// error_groups lists representative refresh errors, bounded in size.
+	// error_groups は代表的な更新エラーを並べる。件数には上限がある。
 	ErrorGroups []*DebugErrorGroup `protobuf:"bytes,10,rep,name=error_groups,json=errorGroups,proto3" json:"error_groups,omitempty"`
-	// omitted_error_groups is how many error groups the size limit dropped.
+	// omitted_error_groups は上限で落としたエラーグループの数。
 	OmittedErrorGroups int32 `protobuf:"varint,11,opt,name=omitted_error_groups,json=omittedErrorGroups,proto3" json:"omitted_error_groups,omitempty"`
-	// auth_cache lists the credential that last succeeded per repository, bounded in size.
+	// auth_cache はリポジトリごとに直近で成功した資格情報を並べる。件数には上限がある。
 	AuthCache []*DebugAuthCacheEntry `protobuf:"bytes,12,rep,name=auth_cache,json=authCache,proto3" json:"auth_cache,omitempty"`
-	// omitted_auth_cache_entries is how many cache rows the size limit dropped.
+	// omitted_auth_cache_entries は上限で落としたキャッシュの行数。
 	OmittedAuthCacheEntries int32 `protobuf:"varint,13,opt,name=omitted_auth_cache_entries,json=omittedAuthCacheEntries,proto3" json:"omitted_auth_cache_entries,omitempty"`
-	// error explains why synchronization diagnostics are unavailable.
+	// error は同期の診断が得られない理由。
 	Error         string `protobuf:"bytes,14,opt,name=error,proto3" json:"error,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -8094,25 +8092,25 @@ func (x *DebugGitHubSync) GetError() string {
 	return ""
 }
 
-// DebugReport is the whole diagnostic report, with detected problems first.
+// DebugReport は診断レポート全体で、検出した問題を先頭に置く。
 type DebugReport struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// problems lists the detected problems in reporting order.
+	// problems は検出した問題を報告順に並べる。
 	Problems []*DebugProblem `protobuf:"bytes,1,rep,name=problems,proto3" json:"problems,omitempty"`
-	// build describes the running PRX build.
+	// build は動作中の PRX のビルドを表す。
 	Build *DebugBuild `protobuf:"bytes,2,opt,name=build,proto3" json:"build,omitempty"`
-	// runtime describes the process that produced the report.
+	// runtime はレポートを生成したプロセスを表す。
 	Runtime *DebugRuntime `protobuf:"bytes,3,opt,name=runtime,proto3" json:"runtime,omitempty"`
-	// paths reports resolved file locations and the ambient environment.
+	// paths は解決されたファイルの場所と、その環境を報告する。
 	Paths *DebugPaths `protobuf:"bytes,4,opt,name=paths,proto3" json:"paths,omitempty"`
-	// config reports the loaded configuration without secret material.
+	// config は読み込んだ設定を、秘密情報を除いて報告する。
 	Config *DebugConfig `protobuf:"bytes,5,opt,name=config,proto3" json:"config,omitempty"`
-	// storage reports schema state and database integrity.
+	// storage はスキーマの状態とデータベースの整合性を報告する。
 	Storage *DebugStorage `protobuf:"bytes,6,opt,name=storage,proto3" json:"storage,omitempty"`
-	// records reports stored record counts and their breakdowns.
-	// It is not named data so a JSON reader never mistakes the section for a response envelope.
+	// records は保存されたレコード数とその内訳を報告する。
+	// JSON の読み手がこの節をレスポンスの外枠と取り違えないよう、data とは名付けていない。
 	Records *DebugData `protobuf:"bytes,7,opt,name=records,proto3" json:"records,omitempty"`
-	// github_sync reports synchronization state and the failures behind it.
+	// github_sync は同期の状態と、その背後にある失敗を報告する。
 	GithubSync    *DebugGitHubSync `protobuf:"bytes,8,opt,name=github_sync,json=githubSync,proto3" json:"github_sync,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
@@ -8204,7 +8202,7 @@ func (x *DebugReport) GetGithubSync() *DebugGitHubSync {
 	return nil
 }
 
-// GetDebugReportRequest asks the server for a diagnostic report.
+// GetDebugReportRequest はサーバーに診断レポートを求める。
 type GetDebugReportRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	unknownFields protoimpl.UnknownFields
@@ -8241,12 +8239,12 @@ func (*GetDebugReportRequest) Descriptor() ([]byte, []int) {
 	return file_prx_v1_prx_proto_rawDescGZIP(), []int{107}
 }
 
-// GetDebugReportResponse returns the diagnostic report and its rendered text.
+// GetDebugReportResponse は診断レポートと、その整形済みテキストを返す。
 type GetDebugReportResponse struct {
 	state protoimpl.MessageState `protogen:"open.v1"`
-	// report contains the structured diagnostic sections.
+	// report は構造化された診断の各節を含む。
 	Report *DebugReport `protobuf:"bytes,1,opt,name=report,proto3" json:"report,omitempty"`
-	// text is the rendered report, identical to the text `prx debug` prints.
+	// text は整形済みのレポートで、`prx debug` が出力するテキストと同一。
 	Text          string `protobuf:"bytes,2,opt,name=text,proto3" json:"text,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache

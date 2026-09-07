@@ -28,9 +28,9 @@ func demoPullRequestAuthor(index int) string {
 	return []string{"octocat", "hubot", "monalisa"}[index%3]
 }
 
-// WriteDemoFixture records the demo pull-request states as a GitHub fixture
-// file. Serving the demo through this fixture instead of the generated preset
-// keeps a synchronization from replacing the states the demo exists to show.
+// WriteDemoFixture はデモの pull request の状態を GitHub fixture ファイルに記録する。
+// 生成済みプリセットではなくこの fixture でデモを提供することで、
+// デモが見せたい状態を同期が置き換えてしまうのを防ぐ。
 func WriteDemoFixture(path string) error {
 	fixtures := map[string]githubprovider.Fixture{}
 	for _, tasks := range [][]demoTask{showcaseDemoTasks(), completedDemoTasks()} {
@@ -58,7 +58,7 @@ func WriteDemoFixture(path string) error {
 	return nil
 }
 
-// InitializeDemo populates a new, empty repository with the built-in demo.
+// InitializeDemo は空の新規リポジトリに組み込みデモを投入する。
 func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error {
 	if err := os.WriteFile(markdownPath, []byte(demoMarkdown), 0o600); err != nil {
 		return fmt.Errorf("write demo Markdown: %w", err)
@@ -101,8 +101,8 @@ func (s *Service) InitializeDemo(ctx context.Context, markdownPath string) error
 			return err
 		}
 	}
-	// The archive is applied last: an archived project refuses the writes that
-	// build the work inside it.
+	// アーカイブは最後に適用する。アーカイブ済み project は、その中身を作る
+	// 書き込みを拒むため。
 	archived := true
 	if _, err := s.UpdateProject(ctx, sunset.ID, domain.ProjectUpdate{Archived: &archived}); err != nil {
 		return err
@@ -222,8 +222,8 @@ func (s *Service) createCompletedDemo(ctx context.Context, projectID string) err
 	if err != nil {
 		return err
 	}
-	// Every task carries a merged pull request, so the feature keeps its
-	// automatic status and demonstrates the derived completion itself.
+	// すべての task が merge 済み pull request を持つので、feature は自動ステータスの
+	// ままとなり、導出された完了状態そのものを示せる。
 	for index := 1; index < len(largeTasks); index++ {
 		if _, err := s.AddDependency(ctx, largeTasks[(index-1)/2].ID, largeTasks[index].ID); err != nil {
 			return err
@@ -281,9 +281,8 @@ func (s *Service) createCancelledDemo(ctx context.Context, projectID string) err
 	return nil
 }
 
-// createSunsetPostmortemDemo puts a feature that is not archived itself inside
-// the project the demo archives, which is the state the walkthrough points at:
-// the read-only presentation comes from the project alone.
+// createSunsetPostmortemDemo は、デモがアーカイブする project の中に、それ自体は
+// 未アーカイブの feature を置く。読み取り専用表示が project だけに由来する状態を示す。
 func (s *Service) createSunsetPostmortemDemo(ctx context.Context, projectID string) error {
 	postmortem, err := s.CreateFeature(
 		ctx,

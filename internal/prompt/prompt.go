@@ -1,6 +1,6 @@
-// Package prompt owns the agent prompt templates shared by the CLI, the RPC
-// server, and the WebUI: the built-in templates, their validation, the
-// placeholder substitution, and the rule that selects a template for one task.
+// Package prompt は CLI・RPC サーバー・WebUI が共有するエージェント用プロンプト
+// テンプレートを管理する。組み込みテンプレート、その検証、プレースホルダの置換、
+// タスクごとにテンプレートを選ぶ規則を含む。
 package prompt
 
 import (
@@ -12,42 +12,42 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// MaximumTemplateBytes bounds one stored template. Templates travel through
-// YAML, JSON, and Protocol Buffers, and they exist to be pasted into another
-// agent's input, so an unbounded body helps nobody.
+// MaximumTemplateBytes は保存されるテンプレート 1 件の上限。テンプレートは YAML・
+// JSON・Protocol Buffers を経由し、他のエージェントの入力に貼るためのものなので、
+// 本文が無制限でも誰の得にもならない。
 const MaximumTemplateBytes = 8192
 
-// Kind identifies which template a task needs. It is derived from the task and
-// is never stored.
+// Kind はタスクに必要なテンプレートを示す。タスクから導出される値であり、
+// 保存されることはない。
 type Kind string
 
 const (
-	// KindDesign asks an agent to produce an implementation plan.
+	// KindDesign はエージェントに実装計画の作成を依頼する。
 	KindDesign Kind = "design"
-	// KindImplementation asks an agent to carry out a registered plan.
+	// KindImplementation はエージェントに登録済みの計画の実行を依頼する。
 	KindImplementation Kind = "implementation"
 )
 
-// Templates holds one template per Kind, plus the batch template, which is not
-// a Kind because it is chosen by the caller asking for several tasks at once
-// rather than derived from any single task.
+// Templates は Kind ごとのテンプレートに加え、batch テンプレートを保持する。batch は
+// 個々のタスクから導出されるのではなく、複数タスクをまとめて要求する呼び出し元が
+// 選ぶものなので Kind ではない。
 type Templates struct {
 	Design         string `yaml:"design"         json:"design"`
 	Implementation string `yaml:"implementation" json:"implementation"`
 	Batch          string `yaml:"batch"          json:"batch"`
 }
 
-// placeholderPattern matches every substitution token, including unsupported
-// ones, so validation can reject a name the renderer would silently keep.
+// placeholderPattern は未対応のものも含めて置換トークン全てに一致する。レンダラが
+// 黙って残してしまう名前を検証で弾けるようにするため。
 var placeholderPattern = regexp.MustCompile(`\{\{([^{}]*)\}\}`)
 
-// requiredPlaceholder keeps a template pointed at one task. Without it the
-// rendered prompt names no target and the receiving agent cannot start.
+// requiredPlaceholder はテンプレートを 1 つのタスクに向け続ける。これがないと
+// 生成されたプロンプトは対象を示さず、受け取ったエージェントが着手できない。
 const requiredPlaceholder = "task_id"
 
-// supportedPlaceholders is the complete substitution vocabulary. Plan bodies are
-// deliberately absent: a plan may be up to 1 MiB or may live behind a locator,
-// so the prompt tells the agent to read it with `prx plan TASK_ID` instead.
+// supportedPlaceholders は置換語彙の全体。計画の本文は意図的に含めない。計画は
+// 最大 1 MiB になり得るしロケータの先にある場合もあるため、プロンプトでは
+// 代わりに `prx plan TASK_ID` で読むようエージェントに指示する。
 var supportedPlaceholders = []string{
 	requiredPlaceholder,
 	"feature_id",
@@ -55,14 +55,14 @@ var supportedPlaceholders = []string{
 	"task_scope",
 }
 
-// batchRequiredPlaceholder keeps a batch template pointed at the tasks it was
-// asked for. Without it the rendered prompt names no target at all, which is
-// worse than a task prompt missing its own identifier.
+// batchRequiredPlaceholder は batch テンプレートを要求されたタスク群に向け続ける。
+// これがないと生成されたプロンプトは対象を一切示さず、タスク用プロンプトが
+// 識別子を欠くよりさらに悪い。
 const batchRequiredPlaceholder = "task_list"
 
-// batchSupportedPlaceholders is the batch vocabulary, which carries no
-// single task's title or scope.
-// See docs/design/agent-prompts.md.
+// batchSupportedPlaceholders は batch の語彙で、個々のタスクのタイトルやスコープは
+// 含まない。
+// docs/design/agent-prompts.md を参照。
 var batchSupportedPlaceholders = []string{
 	batchRequiredPlaceholder,
 	"feature_id",
@@ -141,28 +141,26 @@ Tasks:
 Report each task's outcome separately, including the ones that failed.
 `
 
-// SupportedPlaceholders returns the substitution vocabulary, without the
-// surrounding braces. It exists so a client can present what the server accepts
-// instead of maintaining its own list, which would drift silently.
+// SupportedPlaceholders は置換語彙を波括弧なしで返す。クライアントが独自の一覧を
+// 抱えて黙って乖離するのではなく、サーバーが受け付ける内容を提示できるようにある。
 func SupportedPlaceholders() []string {
 	return slices.Clone(supportedPlaceholders)
 }
 
-// RequiredPlaceholder returns the placeholder every task template must use.
+// RequiredPlaceholder はすべてのタスクテンプレートが使うべきプレースホルダを返す。
 func RequiredPlaceholder() string { return requiredPlaceholder }
 
-// BatchSupportedPlaceholders returns the batch substitution vocabulary. It is
-// served separately because a batch template that used a task placeholder would
-// have nothing to expand it from.
+// BatchSupportedPlaceholders は batch の置換語彙を返す。batch テンプレートがタスク用
+// プレースホルダを使っても展開元がないため、別建てで提供している。
 func BatchSupportedPlaceholders() []string {
 	return slices.Clone(batchSupportedPlaceholders)
 }
 
-// BatchRequiredPlaceholder returns the placeholder every batch template must use.
+// BatchRequiredPlaceholder はすべての batch テンプレートが使うべきプレースホルダを返す。
 func BatchRequiredPlaceholder() string { return batchRequiredPlaceholder }
 
-// DefaultTemplates returns the built-in templates used when the configuration
-// does not define its own.
+// DefaultTemplates は設定が独自のテンプレートを定義していないときに使う
+// 組み込みテンプレートを返す。
 func DefaultTemplates() Templates {
 	return Templates{
 		Design:         defaultDesignTemplate,
@@ -171,9 +169,9 @@ func DefaultTemplates() Templates {
 	}
 }
 
-// KindFor selects the template a task needs. Only the presence of an
-// implementation plan decides it: display state and readiness describe progress
-// rather than which question the agent is being asked.
+// KindFor はタスクに必要なテンプレートを選ぶ。判断材料は実装計画の有無だけ。
+// 表示状態や着手可否は進捗を表すものであって、エージェントに投げる問いが
+// どれかを決めるものではない。
 func KindFor(task domain.Task) Kind {
 	if task.HasImplementationPlan {
 		return KindImplementation
@@ -181,7 +179,7 @@ func KindFor(task domain.Task) Kind {
 	return KindDesign
 }
 
-// Template returns the stored template for one kind.
+// Template は指定した kind に対応する保存済みテンプレートを返す。
 func (t Templates) Template(kind Kind) string {
 	if kind == KindImplementation {
 		return t.Implementation
@@ -189,9 +187,9 @@ func (t Templates) Template(kind Kind) string {
 	return t.Design
 }
 
-// Normalize fills in an omitted template with its built-in default and reports
-// the first invalid template. It is what keeps a configuration file written
-// before prompts existed loading unchanged.
+// Normalize は省略されたテンプレートを組み込みの既定値で埋め、最初に見つかった
+// 不正なテンプレートを報告する。prompts がなかった頃の設定ファイルがそのまま
+// 読み込めるのはこの処理のおかげ。
 func (t Templates) Normalize() (Templates, error) {
 	result := t
 	defaults := DefaultTemplates()
@@ -222,9 +220,9 @@ func (t Templates) Normalize() (Templates, error) {
 	return result, nil
 }
 
-// Render expands one task into its prompt and reports which template produced
-// it. The stored templates are validated again here so a file edited by hand
-// between a load and a render cannot emit an unexpanded placeholder.
+// Render は 1 つのタスクをプロンプトに展開し、どのテンプレートを使ったかを返す。
+// 読み込みから描画までの間に手編集されたファイルが未展開のプレースホルダを
+// 出さないよう、保存済みテンプレートをここで再検証する。
 func Render(task domain.Task, templates Templates) (Kind, string, error) {
 	normalized, err := templates.Normalize()
 	if err != nil {
@@ -243,9 +241,9 @@ func Render(task domain.Task, templates Templates) (Kind, string, error) {
 	return kind, body, nil
 }
 
-// RenderBatch expands the batch template over several tasks, keeping the order
-// the caller listed them in and leaving the per-task instructions out.
-// See docs/design/agent-prompts.md.
+// RenderBatch は batch テンプレートを複数タスクに展開する。呼び出し元が並べた順を
+// 保ち、タスクごとの指示は含めない。
+// docs/design/agent-prompts.md を参照。
 func RenderBatch(featureID string, tasks []domain.Task, templates Templates) (string, error) {
 	normalized, err := templates.Normalize()
 	if err != nil {
@@ -260,9 +258,8 @@ func RenderBatch(featureID string, tasks []domain.Task, templates Templates) (st
 	}), nil
 }
 
-// batchTaskList names every task by the identifier the agent passes back to
-// `prx prompt`, with the title behind it so a person reading the prompt can tell
-// the tasks apart.
+// batchTaskList は各タスクを、エージェントが `prx prompt` に渡し返す識別子で列挙する。
+// プロンプトを読む人がタスクを見分けられるよう、後ろにタイトルを添える。
 func batchTaskList(tasks []domain.Task) string {
 	lines := make([]string, 0, len(tasks))
 	for _, task := range tasks {
@@ -271,9 +268,9 @@ func batchTaskList(tasks []domain.Task) string {
 	return strings.Join(lines, "\n")
 }
 
-// unspecifiedScope stands in for a task created without a scope. The templates
-// point the agent at "the scope above", and a receiving agent that knows nothing
-// about PRX cannot tell a blank line apart from a value that failed to load.
+// unspecifiedScope はスコープなしで作られたタスクの代わりに置く値。テンプレートは
+// 「上記のスコープ」を参照させるが、PRX を知らないエージェントは空行と読み込みに
+// 失敗した値を区別できない。
 const unspecifiedScope = "(not specified)"
 
 func describedScope(scope string) string {
@@ -283,8 +280,8 @@ func describedScope(scope string) string {
 	return scope
 }
 
-// Error reports a rejected template. The field name is carried so a caller can
-// point at the template the reader has to fix.
+// Error は拒否されたテンプレートを報告する。呼び出し元が修正すべきテンプレートを
+// 指し示せるよう、フィールド名を保持する。
 type Error struct {
 	Field   string
 	Message string

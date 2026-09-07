@@ -129,9 +129,9 @@ function ProjectContent(props: ProjectContentProps) {
           />
         </div>
         <div className="workspace-actions">
-          {/* Creating a feature lives here rather than in the sidebar, because
-              the project it joins is the page the caller is already on. An
-              archived project refuses the write, so it offers no button. */}
+          {/* feature の作成をサイドバーではなくここに置くのは、作成先のプロ
+              ジェクトが呼び出し元の開いているページそのものだから。アーカイブ
+              済みのプロジェクトは書き込みを拒むのでボタンを出さない。 */}
           {!archived && (
             <IconButton
               icon={Plus}

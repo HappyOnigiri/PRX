@@ -90,8 +90,8 @@ describe("DebugSettingsPanel", () => {
     expect(reportBody()).toBe(reportText);
   });
 
-  // A report from a newer server can carry a problem this bundle predates, and
-  // the panel has to name it rather than render a translation key.
+  // 新しいサーバーのレポートにはこのバンドルより後の問題が含まれうるため、
+  // パネルは翻訳キーではなく名前を表示する必要がある。
   it("falls back to a generic label for an unknown problem code", () => {
     debugMocks.report = makeReport([{ code: 9999, evidence: "something" }]);
     render(<DebugSettingsPanel />);

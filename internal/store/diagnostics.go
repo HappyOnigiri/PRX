@@ -13,15 +13,15 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// migrationFile is one embedded migration and the version its name encodes.
+// migrationFile は埋め込みマイグレーション 1 件と、その名前が示すバージョン。
 type migrationFile struct {
 	name    string
 	version int
 }
 
-// migrationFiles lists the embedded migrations in application order. The
-// migration runner and the diagnostic report read the same list, so the version
-// a report calls embedded is the one the runner would apply.
+// migrationFiles は埋め込みマイグレーションを適用順に列挙する。
+// マイグレーション実行側と診断レポートは同じ一覧を読むため、
+// レポートが embedded と呼ぶバージョンは実行側が適用するものと一致する。
 func migrationFiles() ([]migrationFile, error) {
 	entries, err := fs.ReadDir(migrations, "migrations")
 	if err != nil {
@@ -43,12 +43,12 @@ func migrationFiles() ([]migrationFile, error) {
 	return result, nil
 }
 
-// Path reports the database location this store resolved when it was opened.
+// Path は、この store を開いたときに解決したデータベースの位置を返す。
 func (s *Store) Path() string { return s.path }
 
-// AppliedSchemaVersion reads the highest migration recorded in the database.
-// schema_migrations is created by the migration runner rather than by the
-// tracked schema, so sqlc has no model for it and the query is written here.
+// AppliedSchemaVersion はデータベースに記録された最大のマイグレーションを読む。
+// schema_migrations は管理対象スキーマではなくマイグレーション実行側が作るため、
+// sqlc のモデルがなくクエリをここに直書きしている。
 func (s *Store) AppliedSchemaVersion(ctx context.Context) (int, error) {
 	var version int
 	if err := s.db.QueryRowContext(
@@ -60,8 +60,8 @@ func (s *Store) AppliedSchemaVersion(ctx context.Context) (int, error) {
 	return version, nil
 }
 
-// EmbeddedSchemaVersion reports the highest migration this binary carries. A
-// database ahead of it was written by a newer PRX.
+// EmbeddedSchemaVersion はこのバイナリが持つ最大のマイグレーションを返す。
+// これより進んだデータベースは、より新しい PRX が書いたものである。
 func (s *Store) EmbeddedSchemaVersion() (int, error) {
 	files, err := migrationFiles()
 	if err != nil {
@@ -76,9 +76,9 @@ func (s *Store) EmbeddedSchemaVersion() (int, error) {
 	return highest, nil
 }
 
-// DatabaseFile reports the on-disk state of the database. An in-memory or
-// DSN-style location has no single file, so it reports itself as inapplicable
-// instead of describing a path that does not exist.
+// DatabaseFile はデータベースのディスク上の状態を返す。インメモリや DSN 形式の
+// 位置には単一のファイルがないため、存在しないパスを示す代わりに
+// 対象外として報告する。
 func (s *Store) DatabaseFile() domain.DebugDatabaseFile {
 	if !isDatabaseFilePath(s.path) {
 		return domain.DebugDatabaseFile{}
@@ -97,9 +97,9 @@ func (s *Store) DatabaseFile() domain.DebugDatabaseFile {
 	if _, shmErr := os.Stat(s.path + "-shm"); shmErr == nil {
 		result.SHMPresent = true
 	}
-	// The probe deliberately omits O_CREATE: a read-only diagnostic must not
-	// create the file it is reporting on. Opening for writing also catches the
-	// cases a permission bit does not, such as a read-only volume or an ACL.
+	// O_CREATE は意図的に外す。読み取り専用の診断が対象ファイルを作ってはならない。
+	// 書き込みで開けば、読み取り専用ボリュームや ACL など
+	// パーミッションビットでは分からない場合も検出できる。
 	file, err := os.OpenFile(s.path, os.O_WRONLY, 0)
 	if err != nil {
 		result.WriteError = err.Error()
@@ -110,9 +110,8 @@ func (s *Store) DatabaseFile() domain.DebugDatabaseFile {
 	return result
 }
 
-// ListGitHubRepositoryAuthCache reports which credential last succeeded for each
-// repository. The cache never holds credential material, so it is safe to
-// report in full.
+// ListGitHubRepositoryAuthCache はリポジトリごとに最後に成功した認証情報を返す。
+// このキャッシュは認証情報の中身を保持しないため、全体をそのまま報告してよい。
 func (s *Store) ListGitHubRepositoryAuthCache(ctx context.Context) ([]domain.DebugAuthCacheEntry, error) {
 	rows, err := db.New(s.db).ListGitHubRepositoryAuthCache(ctx)
 	if err != nil {

@@ -1,14 +1,14 @@
 import { FeatureStatus, type Feature } from "./gen/prx/v1/prx_pb";
 
-// The overview, the sidebar, and the task queues all present work in flight,
-// which excludes read-only and completed features. Every predicate reads the
-// server's readOnly, never the archived flag: see docs/design/webui.md.
+// 概要・サイドバー・task キューはいずれも進行中の作業を示すので、read-only と
+// 完了済みの feature は除く。判定はどれも archived ではなくサーバーの readOnly
+// を見る。docs/design/webui.md を参照。
 export function isActiveFeature(feature: Feature): boolean {
   return !feature.readOnly && feature.displayStatus !== FeatureStatus.COMPLETED;
 }
 
-// A feature that is both read-only and completed belongs to the archive, so the
-// completed list only claims the ones still in the working set.
+// read-only かつ完了済みの feature はアーカイブ扱いなので、完了リストには作業
+// 対象に残っているものだけを含める。
 export function isCompletedFeature(feature: Feature): boolean {
   return !feature.readOnly && feature.displayStatus === FeatureStatus.COMPLETED;
 }
@@ -17,8 +17,8 @@ export function isArchivedFeature(feature: Feature): boolean {
   return feature.readOnly;
 }
 
-// unfinishedTaskCount reports how many tasks the automatic completion rule
-// still counts as unfinished, using the server's own count.
+// unfinishedTaskCount は、自動完了ルールが未完了とみなす task の数を、サーバー
+// の集計値を使って返す。
 export function unfinishedTaskCount(feature: Feature): number {
   return feature.taskCount - feature.finishedCount;
 }

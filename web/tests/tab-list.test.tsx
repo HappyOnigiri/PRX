@@ -43,8 +43,8 @@ function Harness({ focusOnMount }: { focusOnMount?: boolean }) {
 describe("TabList", () => {
   afterEach(cleanup);
 
-  // One tab stop enters the strip and the arrow keys move within it, which is
-  // the pattern the tab role obliges the strip to implement.
+  // タブストップ 1 つで列に入り、中の移動は矢印キーで行う。これは tab ロール
+  // が実装を義務づけるパターン。
   it("keeps a single tab stop and moves the selection with the keyboard", () => {
     render(<Harness />);
     const one = screen.getByRole("tab", { name: "One" });
@@ -69,7 +69,7 @@ describe("TabList", () => {
     fireEvent.keyDown(three, { key: "Home" });
     expect(one).toHaveFocus();
 
-    // Anything else is left to the browser.
+    // それ以外のキーはブラウザに任せる。
     fireEvent.keyDown(one, { key: "a" });
     expect(one).toHaveFocus();
   });

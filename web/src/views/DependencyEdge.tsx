@@ -77,9 +77,9 @@ export function DependencyEdge({
       />
       {data && (
         <EdgeToolbar
-          // React Flow keeps the toolbar at a constant screen size, so aligning
-          // it above the edge here holds at every zoom level while a CSS offset
-          // would scale with the viewport.
+          // React Flow はツールバーを画面上で一定の大きさに保つ。ここでエッジの
+          // 上に揃えればどの倍率でも位置が保たれるが、CSS のオフセットだと
+          // ビューポートに合わせて拡大縮小してしまう。
           alignY="bottom"
           className="dependency-edge-toolbar nodrag nopan"
           edgeId={id}

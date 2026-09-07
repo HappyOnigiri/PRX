@@ -80,9 +80,8 @@ func TestCommandTreeUsesCanonicalReadSyntax(t *testing.T) {
 	}
 }
 
-// The long description spells out the aliases that Cobra also lists on its own,
-// so nothing detects a stale description once an alias changes. Keep the two in
-// step until one of them owns the text.
+// 長い説明文には Cobra が自前で列挙するエイリアスも書いてあるため、エイリアスが
+// 変わっても説明文の陳腐化を検出できない。どちらかが文言を担うまでは 2 つを揃えておく。
 func TestCommandDescriptionsMentionTheirAliases(t *testing.T) {
 	root := NewRoot(io.Discard, io.Discard, testOpenService)
 	var visit func(*cobra.Command)

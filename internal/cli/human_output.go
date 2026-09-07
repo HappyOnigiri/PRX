@@ -34,8 +34,8 @@ func writeProjectTable(out io.Writer, projects []domain.Project) error {
 	})
 }
 
-// renderProjectFields is the project on its own. `show` uses it because it
-// resolves one record without reading the snapshot the contents come from.
+// renderProjectFields は project 単体を描画する。`show` は中身の取得元である
+// スナップショットを読まずに 1 レコードだけ解決するので、これを使う。
 func renderProjectFields(project domain.Project) humanRenderer {
 	return func(out io.Writer) error {
 		return writeFields(out, [][2]string{
@@ -462,9 +462,9 @@ func renderConfig(value config.PublicConfig) humanRenderer {
 	}
 }
 
-// renderConfigValidation keeps a valid configuration a success even when the
-// file carries fields this build does not know, and lists those fields so the
-// reader learns which ones the next write drops.
+// renderConfigValidation は、このビルドが知らないフィールドがファイルにあっても
+// 妥当な設定を成功扱いのままにし、次の書き込みで失われるフィールドが分かるよう
+// それらを列挙する。
 func renderConfigValidation(warnings []string) humanRenderer {
 	return func(out io.Writer) error {
 		if _, err := fmt.Fprintln(out, "Configuration is valid."); err != nil {

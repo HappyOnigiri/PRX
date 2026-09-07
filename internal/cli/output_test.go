@@ -159,14 +159,14 @@ func TestHumanTablesAreDeterministic(t *testing.T) {
 	if !strings.Contains(first.String(), "ID") || !strings.Contains(first.String(), "F-1") {
 		t.Fatalf("table output = %q", first.String())
 	}
-	// The list column presents the derived status, matching the task list.
+	// 一覧の列は導出ステータスを表示し、task の一覧と一致する。
 	if !strings.Contains(first.String(), "completed") || strings.Contains(first.String(), "auto") {
 		t.Fatalf("feature table status column = %q", first.String())
 	}
 }
 
-// The detail view shows both values so a reader can tell an automatic
-// completion from one someone selected.
+// 詳細表示は両方の値を出すので、自動的な完了と誰かが選んだ完了を読み手が
+// 区別できる。
 func TestFeatureDetailShowsStoredAndDerivedStatus(t *testing.T) {
 	var out bytes.Buffer
 	feature := domain.Feature{

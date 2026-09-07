@@ -14,8 +14,8 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-// unknownFieldPattern matches the complaint strict decoding raises for a key
-// that no field claims. Its groups are the source line and the field name.
+// unknownFieldPattern は、どのフィールドにも対応しないキーに対して strict デコードが
+// 出すエラーに一致する。キャプチャグループは行番号とフィールド名。
 var unknownFieldPattern = regexp.MustCompile(`^line (\d+): field (\S+) not found in type \S+$`)
 
 type Store struct {
@@ -62,9 +62,8 @@ func (s *Store) Load() (Config, error) {
 	return value, err
 }
 
-// LoadWithWarnings reads the configuration together with the recoverable
-// problems that did not stop it from loading, so a caller can report them
-// without failing.
+// LoadWithWarnings は設定と、読み込みを妨げなかった回復可能な問題を併せて返す。
+// 呼び出し元が失敗させずに報告できるようにするため。
 func (s *Store) LoadWithWarnings() (Config, []string, error) {
 	var (
 		result   Config
@@ -122,16 +121,16 @@ func (s *Store) Public() (PublicConfig, error) {
 	return value.Public(), nil
 }
 
-// Validate reports whether the stored configuration loads, together with the
-// warnings the load produced.
+// Validate は保存済みの設定が読み込めるかどうかを、読み込みで生じた警告と
+// 併せて報告する。
 func (s *Store) Validate() ([]string, error) {
 	_, warnings, err := s.LoadWithWarnings()
 	return warnings, err
 }
 
-// decode parses the single configuration document. Unknown fields become
-// warnings instead of failures so a file written by a newer PRX still loads,
-// while every other decoding complaint keeps failing the load.
+// decode は単一の設定ドキュメントを解析する。新しい PRX が書いたファイルも
+// 読み込めるよう未知のフィールドは失敗ではなく警告にするが、それ以外の
+// デコードエラーは従来どおり読み込みを失敗させる。
 func decode(body []byte, destination *Config) ([]string, error) {
 	strict := yaml.NewDecoder(bytes.NewReader(body))
 	strict.KnownFields(true)
@@ -143,8 +142,8 @@ func decode(body []byte, destination *Config) ([]string, error) {
 	if !unknownOnly {
 		return nil, newError(ErrorCodeInvalid, "decode config: %v", err)
 	}
-	// Strict decoding stops claiming the result once it reports an error, so the
-	// accepted fields are read again with the unknown ones ignored.
+	// strict デコードはエラーを報告した時点で結果を保証しなくなるため、
+	// 未知のフィールドを無視して受理されたフィールドを読み直す。
 	*destination = Config{}
 	lenient := yaml.NewDecoder(bytes.NewReader(body))
 	if err := lenient.Decode(destination); err != nil {
@@ -167,9 +166,9 @@ func expectSingleDocument(decoder *yaml.Decoder) error {
 	return nil
 }
 
-// unknownFieldWarnings turns a strict-decoding failure into warnings. It reports
-// false unless every complaint is an unknown field, so a type error, a duplicate
-// key, or a syntax error still fails the load.
+// unknownFieldWarnings は strict デコードの失敗を警告に変える。すべてが未知の
+// フィールドでない限り false を返すため、型エラー・キーの重複・構文エラーは
+// 引き続き読み込みを失敗させる。
 func unknownFieldWarnings(err error) ([]string, bool) {
 	var typeErr *yaml.TypeError
 	if !errors.As(err, &typeErr) || len(typeErr.Errors) == 0 {

@@ -17,8 +17,8 @@ export function PromptSettingsPanel() {
   const update = usePromptTemplatesMutation(promptMutations.updateTemplates);
   const [draft, setDraft] = useState<TemplateDraft>();
   const [saved, setSaved] = useState(false);
-  // Counts keystrokes so a save that is still in flight can tell whether the
-  // text it sent is still the text on screen.
+  // キー入力を数え、実行中の保存が、送ったテキストと画面上のテキストが同じか
+  // 判定できるようにする。
   const edits = useRef(0);
 
   function edit(next: TemplateDraft) {
@@ -47,16 +47,16 @@ export function PromptSettingsPanel() {
     batch: templates.data.builtIn.batch,
   };
 
-  // Every template travels in one request so a configuration write never leaves
-  // one of them updated and another stale.
+  // テンプレートはすべて 1 リクエストで送り、設定の書き込みで片方だけ更新され
+  // 片方が古いまま残ることがないようにする。
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
     setSaved(false);
     const submitted = edits.current;
     const result = await update.mutateAsync(current);
-    // Text typed while the request was in flight is newer than the response, so
-    // adopting the server's copy would silently revert those keystrokes and
-    // then report success for text the user no longer sees.
+    // リクエスト中に打たれたテキストはレスポンスより新しい。サーバーのコピーを
+    // 採用するとその入力を黙って巻き戻したうえ、ユーザーにもう見えないテキスト
+    // について成功を報告してしまう。
     if (edits.current !== submitted) return;
     if (result.templates) setDraft(result.templates);
     setSaved(true);
@@ -84,9 +84,9 @@ export function PromptSettingsPanel() {
             type="button"
             disabled={update.isPending}
             onClick={() => {
-              // The server would restore a blank template on its own, but the
-              // editor shows what it is about to save, so the built-in text
-              // goes into the fields rather than waiting for the write.
+              // 空のテンプレートならサーバーが自前で既定値に戻すが、エディタは
+              // これから保存する内容を見せるものなので、書き込みを待たず組み
+              // 込みのテキストをフィールドに入れる。
               edit(builtIn);
             }}
           />
@@ -107,9 +107,9 @@ export function PromptSettingsPanel() {
   );
 }
 
-// The vocabulary comes from the server so a hint can never advertise a
-// placeholder the server would reject, and each field lists its own.
-// See docs/design/agent-prompts.md.
+// 語彙はサーバー由来なので、サーバーが拒む placeholder をヒントが案内すること
+// はない。各フィールドは自分の分だけを列挙する。
+// docs/design/agent-prompts.md を参照。
 function TemplateFields({
   current,
   settings,
@@ -162,8 +162,8 @@ function TemplateFields({
   );
 }
 
-// Both the list and the required name are interpolation values, so the braces
-// survive: a translation containing them would itself be interpolated away.
+// リストも必須名も補間値なので波括弧が残る。波括弧を含む翻訳文にすると、それ
+// 自体が補間で消えてしまう。
 function placeholderList(names: string[]): string {
   return names.map((name) => `{{${name}}}`).join(", ");
 }

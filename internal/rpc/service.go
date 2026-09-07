@@ -6,8 +6,8 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// Service is the smallest application boundary required to translate the
-// ConnectRPC API into domain operations.
+// Service は ConnectRPC API をドメイン操作へ変換するために必要な、
+// 最小限のアプリケーション境界。
 type Service interface {
 	Snapshot(ctx context.Context) (domain.Snapshot, error)
 

@@ -4,1548 +4,1546 @@ package prx.v1;
 
 option go_package = "github.com/HappyOnigiri/PRX/gen/prx/v1;prxv1";
 
-// FeatureStatus is the stored lifecycle state of a feature. Every value other
-// than auto is a manual override that takes precedence over derivation.
+// FeatureStatus は feature の保存されたライフサイクル状態。
+// auto 以外の値はすべて、導出より優先される手動の上書き。
 enum FeatureStatus {
-  // FEATURE_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
+  // FEATURE_STATUS_UNSPECIFIED はサーバーが返さず、リクエストでは拒否される。
   FEATURE_STATUS_UNSPECIFIED = 0;
-  // FEATURE_STATUS_ACTIVE means the feature is currently being worked on.
+  // FEATURE_STATUS_ACTIVE は feature が作業中であることを表す。
   FEATURE_STATUS_ACTIVE = 1;
-  // FEATURE_STATUS_PAUSED means work on the feature is temporarily paused.
+  // FEATURE_STATUS_PAUSED は feature の作業が一時停止中であることを表す。
   FEATURE_STATUS_PAUSED = 2;
-  // FEATURE_STATUS_COMPLETED means the feature has been completed.
+  // FEATURE_STATUS_COMPLETED は feature が完了したことを表す。
   FEATURE_STATUS_COMPLETED = 3;
-  // FEATURE_STATUS_CANCELLED means the feature will not be completed.
+  // FEATURE_STATUS_CANCELLED は feature を完了させないことを表す。
   FEATURE_STATUS_CANCELLED = 4;
-  // FEATURE_STATUS_AUTO is the default of a new feature and presents the
-  // feature as completed once it has tasks and every one of them is finished.
+  // FEATURE_STATUS_AUTO は新しい feature の既定値で、task が 1 つ以上あり
+  // そのすべてが終わっているとき feature を完了として表示する。
   FEATURE_STATUS_AUTO = 5;
 }
 
-// TaskStatus is the stored workflow state of a task. It is always set by hand.
-// The unfinished values yield to an attached pull request, and the finished
-// values take precedence over one.
+// TaskStatus は task の保存されたワークフロー状態で、常に手動で設定する。
+// 未完了を表す値は紐づく pull request に譲り、完了を表す値は
+// pull request より優先される。
 enum TaskStatus {
-  // TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
+  // TASK_STATUS_UNSPECIFIED はサーバーが返さず、リクエストでは拒否される。
   TASK_STATUS_UNSPECIFIED = 0;
-  // TASK_STATUS_NOT_STARTED is the default of a new task and means work has not begun.
+  // TASK_STATUS_NOT_STARTED は新しい task の既定値で、未着手を表す。
   TASK_STATUS_NOT_STARTED = 1;
-  // TASK_STATUS_IN_PROGRESS means the task is being implemented before a pull request exists.
+  // TASK_STATUS_IN_PROGRESS は pull request がない段階で実装中であることを表す。
   TASK_STATUS_IN_PROGRESS = 2;
-  // TASK_STATUS_DESIGNING means the task is being designed before an implementation plan exists.
+  // TASK_STATUS_DESIGNING は実装計画がない段階で設計中であることを表す。
   TASK_STATUS_DESIGNING = 5;
-  // TASK_STATUS_COMPLETED marks the task satisfied regardless of any attached pull request.
+  // TASK_STATUS_COMPLETED は pull request の状態によらず task を完了とする。
   TASK_STATUS_COMPLETED = 3;
-  // TASK_STATUS_CLOSED marks the task closed regardless of any attached pull request.
+  // TASK_STATUS_CLOSED は pull request の状態によらず task をクローズとする。
   TASK_STATUS_CLOSED = 4;
 }
 
-// TaskDisplayState is the derived state presented for a task.
-// Pull-request states use priority merged, closed, draft, conflict,
-// changes requested, approved, review waiting, open, then unknown.
+// TaskDisplayState は task の表示用に導出された状態。
+// pull request 由来の状態の優先順位は merged, closed, draft, conflict,
+// changes requested, approved, review waiting, open, unknown の順。
 enum TaskDisplayState {
-  // TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
+  // TASK_DISPLAY_STATE_UNSPECIFIED は有効な task では返らず、リクエストのフィールドでもない。
   TASK_DISPLAY_STATE_UNSPECIFIED = 0;
-  // TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached and no implementation plan exists.
+  // TASK_DISPLAY_STATE_NOT_STARTED は pull request も実装計画もないことを表す。
   TASK_DISPLAY_STATE_NOT_STARTED = 1;
-  // TASK_DISPLAY_STATE_DESIGNING means the task is being designed without an implementation plan.
+  // TASK_DISPLAY_STATE_DESIGNING は実装計画がないまま設計中であることを表す。
   TASK_DISPLAY_STATE_DESIGNING = 14;
-  // TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
+  // TASK_DISPLAY_STATE_DESIGNED は pull request はないが実装計画があることを表す。
   TASK_DISPLAY_STATE_DESIGNED = 2;
-  // TASK_DISPLAY_STATE_IN_PROGRESS means the task is in progress without a pull request.
+  // TASK_DISPLAY_STATE_IN_PROGRESS は pull request がないまま作業中であることを表す。
   TASK_DISPLAY_STATE_IN_PROGRESS = 3;
-  // TASK_DISPLAY_STATE_COMPLETED is a stored completed status.
+  // TASK_DISPLAY_STATE_COMPLETED は保存された完了ステータスを表す。
   TASK_DISPLAY_STATE_COMPLETED = 4;
-  // TASK_DISPLAY_STATE_CLOSED is a stored closed status or a closed pull request.
+  // TASK_DISPLAY_STATE_CLOSED は保存されたクローズか、クローズされた pull request を表す。
   TASK_DISPLAY_STATE_CLOSED = 5;
-  // TASK_DISPLAY_STATE_MERGED means the attached pull request is merged.
+  // TASK_DISPLAY_STATE_MERGED は紐づく pull request がマージ済みであることを表す。
   TASK_DISPLAY_STATE_MERGED = 6;
-  // TASK_DISPLAY_STATE_DRAFT means the attached pull request is a draft.
+  // TASK_DISPLAY_STATE_DRAFT は紐づく pull request が draft であることを表す。
   TASK_DISPLAY_STATE_DRAFT = 7;
-  // TASK_DISPLAY_STATE_CONFLICT means the attached pull request has a merge conflict.
+  // TASK_DISPLAY_STATE_CONFLICT は紐づく pull request にコンフリクトがあることを表す。
   TASK_DISPLAY_STATE_CONFLICT = 8;
-  // TASK_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
+  // TASK_DISPLAY_STATE_CHANGES_REQUESTED はレビュアーが変更を要求したことを表す。
   TASK_DISPLAY_STATE_CHANGES_REQUESTED = 9;
-  // TASK_DISPLAY_STATE_APPROVED means the attached pull request has an approval.
+  // TASK_DISPLAY_STATE_APPROVED は紐づく pull request が承認済みであることを表す。
   TASK_DISPLAY_STATE_APPROVED = 10;
-  // TASK_DISPLAY_STATE_REVIEW_WAITING means the attached open pull request is waiting for review.
+  // TASK_DISPLAY_STATE_REVIEW_WAITING は open な pull request がレビュー待ちであることを表す。
   TASK_DISPLAY_STATE_REVIEW_WAITING = 11;
-  // TASK_DISPLAY_STATE_OPEN means the attached pull request is open without a higher-priority state.
+  // TASK_DISPLAY_STATE_OPEN は上位の状態がない open な pull request を表す。
   TASK_DISPLAY_STATE_OPEN = 12;
-  // TASK_DISPLAY_STATE_UNKNOWN means the attached pull request state or relevant data is unknown.
+  // TASK_DISPLAY_STATE_UNKNOWN は pull request の状態や必要な情報が不明であることを表す。
   TASK_DISPLAY_STATE_UNKNOWN = 13;
 }
 
-// PullRequestState is the raw lifecycle state reported for a GitHub pull request.
+// PullRequestState は GitHub の pull request について報告される生のライフサイクル状態。
 enum PullRequestState {
-  // PULL_REQUEST_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+  // PULL_REQUEST_STATE_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
   PULL_REQUEST_STATE_UNSPECIFIED = 0;
-  // PULL_REQUEST_STATE_OPEN means GitHub reports the pull request as open.
+  // PULL_REQUEST_STATE_OPEN は GitHub が open と報告していることを表す。
   PULL_REQUEST_STATE_OPEN = 1;
-  // PULL_REQUEST_STATE_CLOSED means GitHub reports the pull request as closed without merge.
+  // PULL_REQUEST_STATE_CLOSED は GitHub がマージなしのクローズと報告していることを表す。
   PULL_REQUEST_STATE_CLOSED = 2;
-  // PULL_REQUEST_STATE_MERGED means GitHub reports the pull request as merged.
+  // PULL_REQUEST_STATE_MERGED は GitHub がマージ済みと報告していることを表す。
   PULL_REQUEST_STATE_MERGED = 3;
-  // PULL_REQUEST_STATE_UNKNOWN means the pull request state could not be determined.
+  // PULL_REQUEST_STATE_UNKNOWN は pull request の状態を判定できなかったことを表す。
   PULL_REQUEST_STATE_UNKNOWN = 4;
 }
 
-// ReviewState summarizes the current review decision and requested reviewers.
+// ReviewState は現在のレビュー判定とレビュー依頼状況をまとめたもの。
 enum ReviewState {
-  // REVIEW_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+  // REVIEW_STATE_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
   REVIEW_STATE_UNSPECIFIED = 0;
-  // REVIEW_STATE_NONE means no approval or change request is currently active.
+  // REVIEW_STATE_NONE は承認も変更要求も有効でないことを表す。
   REVIEW_STATE_NONE = 1;
-  // REVIEW_STATE_REQUIRED means the pull request has requested reviewers.
+  // REVIEW_STATE_REQUIRED は pull request にレビュー依頼があることを表す。
   REVIEW_STATE_REQUIRED = 2;
-  // REVIEW_STATE_APPROVED means at least one current review approves the pull request.
+  // REVIEW_STATE_APPROVED は有効なレビューに承認が 1 件以上あることを表す。
   REVIEW_STATE_APPROVED = 3;
-  // REVIEW_STATE_CHANGES_REQUESTED means at least one current review requests changes.
+  // REVIEW_STATE_CHANGES_REQUESTED は有効なレビューに変更要求が 1 件以上あることを表す。
   REVIEW_STATE_CHANGES_REQUESTED = 4;
-  // REVIEW_STATE_UNKNOWN means review information could not be determined.
+  // REVIEW_STATE_UNKNOWN はレビュー情報を判定できなかったことを表す。
   REVIEW_STATE_UNKNOWN = 5;
 }
 
-// Mergeability is the current mergeability reported for a GitHub pull request.
+// Mergeability は GitHub の pull request について報告される現在のマージ可否。
 enum Mergeability {
-  // MERGEABILITY_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+  // MERGEABILITY_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
   MERGEABILITY_UNSPECIFIED = 0;
-  // MERGEABILITY_MERGEABLE means GitHub reports no merge conflict.
+  // MERGEABILITY_MERGEABLE は GitHub がコンフリクトなしと報告していることを表す。
   MERGEABILITY_MERGEABLE = 1;
-  // MERGEABILITY_CONFLICTING means GitHub reports a merge conflict.
+  // MERGEABILITY_CONFLICTING は GitHub がコンフリクトありと報告していることを表す。
   MERGEABILITY_CONFLICTING = 2;
-  // MERGEABILITY_UNKNOWN means mergeability could not be determined.
+  // MERGEABILITY_UNKNOWN はマージ可否を判定できなかったことを表す。
   MERGEABILITY_UNKNOWN = 3;
 }
 
-// PullRequestDisplayState is the derived presentation state of a pull request.
-// Its priority is merged, closed, draft, conflict, changes requested, approved, review waiting, open, then unknown.
+// PullRequestDisplayState は pull request の導出された表示状態。
+// 優先度は merged, closed, draft, conflict, changes requested, approved, review waiting, open, unknown。
 enum PullRequestDisplayState {
-  // PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+  // PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
   PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED = 0;
-  // PULL_REQUEST_DISPLAY_STATE_MERGED means the pull request is merged.
+  // PULL_REQUEST_DISPLAY_STATE_MERGED は pull request がマージ済みであることを表す。
   PULL_REQUEST_DISPLAY_STATE_MERGED = 1;
-  // PULL_REQUEST_DISPLAY_STATE_CLOSED means the pull request is closed without being merged.
+  // PULL_REQUEST_DISPLAY_STATE_CLOSED はマージされずにクローズされたことを表す。
   PULL_REQUEST_DISPLAY_STATE_CLOSED = 2;
-  // PULL_REQUEST_DISPLAY_STATE_DRAFT means the pull request is a draft.
+  // PULL_REQUEST_DISPLAY_STATE_DRAFT は pull request が draft であることを表す。
   PULL_REQUEST_DISPLAY_STATE_DRAFT = 3;
-  // PULL_REQUEST_DISPLAY_STATE_CONFLICT means the pull request has a merge conflict.
+  // PULL_REQUEST_DISPLAY_STATE_CONFLICT はコンフリクトがあることを表す。
   PULL_REQUEST_DISPLAY_STATE_CONFLICT = 4;
-  // PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
+  // PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED はレビュアーが変更を要求したことを表す。
   PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED = 5;
-  // PULL_REQUEST_DISPLAY_STATE_APPROVED means the pull request has an approval.
+  // PULL_REQUEST_DISPLAY_STATE_APPROVED は pull request が承認済みであることを表す。
   PULL_REQUEST_DISPLAY_STATE_APPROVED = 6;
-  // PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING means the open, non-draft pull request needs review.
+  // PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING は draft でない open な pull request がレビューを要することを表す。
   PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING = 7;
-  // PULL_REQUEST_DISPLAY_STATE_OPEN means the pull request is open without a higher-priority state.
+  // PULL_REQUEST_DISPLAY_STATE_OPEN は上位の状態がない open な pull request を表す。
   PULL_REQUEST_DISPLAY_STATE_OPEN = 8;
-  // PULL_REQUEST_DISPLAY_STATE_UNKNOWN means the pull request state or relevant data is unknown.
+  // PULL_REQUEST_DISPLAY_STATE_UNKNOWN は pull request の状態や必要な情報が不明であることを表す。
   PULL_REQUEST_DISPLAY_STATE_UNKNOWN = 9;
 }
 
-// DocumentKind identifies the type of reference stored in a document.
+// DocumentKind は document に保存された参照の種類を表す。
 enum DocumentKind {
-  // DOCUMENT_KIND_UNSPECIFIED is never returned by the server and is rejected in requests.
+  // DOCUMENT_KIND_UNSPECIFIED はサーバーが返さず、リクエストでは拒否される。
   DOCUMENT_KIND_UNSPECIFIED = 0;
-  // DOCUMENT_KIND_URL stores an HTTP or HTTPS URL.
+  // DOCUMENT_KIND_URL は HTTP または HTTPS の URL を保持する。
   DOCUMENT_KIND_URL = 1;
   reserved 2;
   reserved "DOCUMENT_KIND_MARKDOWN_PATH";
-  // DOCUMENT_KIND_LOCAL_FILE stores a registered local file path.
+  // DOCUMENT_KIND_LOCAL_FILE は登録済みのローカルファイルパスを保持する。
   DOCUMENT_KIND_LOCAL_FILE = 3;
-  // DOCUMENT_KIND_MARKDOWN stores Markdown content in the database.
+  // DOCUMENT_KIND_MARKDOWN は Markdown の本文をデータベースに保持する。
   DOCUMENT_KIND_MARKDOWN = 4;
 }
 
-// BlockedReasonCode explains why a task is not ready.
+// BlockedReasonCode は task が ready でない理由を表す。
 enum BlockedReasonCode {
-  // BLOCKED_REASON_CODE_UNSPECIFIED is never returned; no BlockedReason is sent when there is no structured reason.
+  // BLOCKED_REASON_CODE_UNSPECIFIED は返らない。構造化された理由がなければ BlockedReason 自体を送らない。
   BLOCKED_REASON_CODE_UNSPECIFIED = 0;
-  // BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE means a referenced blocker is missing.
+  // BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE は参照先の blocker が存在しないことを表す。
   BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE = 1;
   reserved 2;
-  // BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER means a dependency has not been satisfied.
+  // BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER は依存が満たされていないことを表す。
   BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER = 3;
 }
 
-// DomainErrorCode identifies a known validation, state, storage, or GitHub error exposed over RPC.
+// DomainErrorCode は RPC で公開する検証・状態・保存・GitHub の既知エラーを表す。
 enum DomainErrorCode {
-  // DOMAIN_ERROR_CODE_UNSPECIFIED is never returned for a recognized domain error; it is the unmapped fallback.
+  // DOMAIN_ERROR_CODE_UNSPECIFIED は既知のドメインエラーでは返らない、未対応時のフォールバック。
   DOMAIN_ERROR_CODE_UNSPECIFIED = 0;
-  // DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY means a dependency crosses feature boundaries.
+  // DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY は依存が feature をまたいでいることを表す。
   DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY = 2;
-  // DOMAIN_ERROR_CODE_CYCLE means adding a dependency would create a cycle.
+  // DOMAIN_ERROR_CODE_CYCLE は依存の追加で循環が生じることを表す。
   DOMAIN_ERROR_CODE_CYCLE = 3;
-  // DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY means the dependency already exists.
+  // DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY は依存がすでに存在することを表す。
   DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY = 4;
-  // DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST means the pull request is already attached to another task.
+  // DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST は他の task にすでに紐づいていることを表す。
   DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST = 5;
-  // DOMAIN_ERROR_CODE_GITHUB_AUTH means GitHub credentials or a provider are unavailable.
+  // DOMAIN_ERROR_CODE_GITHUB_AUTH は GitHub の資格情報かプロバイダが使えないことを表す。
   DOMAIN_ERROR_CODE_GITHUB_AUTH = 6;
-  // DOMAIN_ERROR_CODE_INVALID_DATABASE means database validation failed.
+  // DOMAIN_ERROR_CODE_INVALID_DATABASE はデータベースの検証に失敗したことを表す。
   DOMAIN_ERROR_CODE_INVALID_DATABASE = 7;
-  // DOMAIN_ERROR_CODE_INVALID_DOCUMENT means a document value is missing or invalid.
+  // DOMAIN_ERROR_CODE_INVALID_DOCUMENT は document の値が欠けているか不正であることを表す。
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT = 8;
-  // DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND means the document kind is unsupported.
+  // DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND は document の種類が未対応であることを表す。
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND = 9;
   reserved 10;
   reserved "DOMAIN_ERROR_CODE_INVALID_KIND";
-  // DOMAIN_ERROR_CODE_INVALID_PARENT means a document does not have exactly one valid parent.
+  // DOMAIN_ERROR_CODE_INVALID_PARENT は document の親がちょうど 1 つでないことを表す。
   DOMAIN_ERROR_CODE_INVALID_PARENT = 11;
-  // DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL means the pull request URL cannot be parsed.
+  // DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL は pull request の URL を解析できないことを表す。
   DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL = 12;
   reserved 13;
   reserved "DOMAIN_ERROR_CODE_INVALID_SEED";
   reserved 14;
   reserved "DOMAIN_ERROR_CODE_INVALID_SLUG";
-  // DOMAIN_ERROR_CODE_INVALID_STATUS means a feature or task status is unsupported.
+  // DOMAIN_ERROR_CODE_INVALID_STATUS は feature か task のステータスが未対応であることを表す。
   DOMAIN_ERROR_CODE_INVALID_STATUS = 15;
-  // DOMAIN_ERROR_CODE_INVALID_TITLE means a required feature or task title is empty.
+  // DOMAIN_ERROR_CODE_INVALID_TITLE は必須の feature か task のタイトルが空であることを表す。
   DOMAIN_ERROR_CODE_INVALID_TITLE = 16;
-  // DOMAIN_ERROR_CODE_NOT_FOUND means the requested record does not exist.
+  // DOMAIN_ERROR_CODE_NOT_FOUND は要求されたレコードが存在しないことを表す。
   DOMAIN_ERROR_CODE_NOT_FOUND = 17;
-  // DOMAIN_ERROR_CODE_REFERENCES_EXIST means deletion is blocked by referencing records.
+  // DOMAIN_ERROR_CODE_REFERENCES_EXIST は参照するレコードがあり削除できないことを表す。
   DOMAIN_ERROR_CODE_REFERENCES_EXIST = 18;
   reserved 19;
   reserved "DOMAIN_ERROR_CODE_PULL_REQUEST_ON_MANUAL_TASK";
   reserved 20;
-  // DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL means a document URL is not HTTP or HTTPS.
+  // DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL は document の URL が HTTP でも HTTPS でもないことを表す。
   DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL = 21;
-  // DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED means a registered Markdown file could not be read.
+  // DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED は登録済みの Markdown ファイルを読めないことを表す。
   DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED = 22;
-  // DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE means a Markdown preview exceeds the 1 MiB limit.
+  // DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE は Markdown プレビューが 1 MiB を超えることを表す。
   DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE = 23;
-  // DOMAIN_ERROR_CODE_INVALID_CONFIG means the GitHub YAML configuration is invalid.
+  // DOMAIN_ERROR_CODE_INVALID_CONFIG は GitHub の YAML 設定が不正であることを表す。
   DOMAIN_ERROR_CODE_INVALID_CONFIG = 24;
-  // DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN means plan content is empty or invalid.
+  // DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN は計画の内容が空か不正であることを表す。
   DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN = 25;
-  // DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE means plan content exceeds 1 MiB.
+  // DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE は計画の内容が 1 MiB を超えることを表す。
   DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE = 26;
-  // DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT means document content is not valid UTF-8 text.
+  // DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT は document の内容が正しい UTF-8 でないことを表す。
   DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT = 27;
-  // DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN means the task already has a plan document.
+  // DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN は task にすでに計画文書があることを表す。
   DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN = 28;
-  // DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY means the write targets an archived project or feature.
+  // DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY はアーカイブ済みの project か feature への書き込みを表す。
   DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY = 29;
 }
 
-// GitHubAuthMethodType identifies how a GitHub token is obtained.
+// GitHubAuthMethodType は GitHub のトークンの取得方法を表す。
 enum GithubAuthMethodType {
-  // GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED is never returned and is rejected in requests.
+  // GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED は返らず、リクエストでは拒否される。
   GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED = 0;
-  // GITHUB_AUTH_METHOD_TYPE_KEYCHAIN reads a macOS generic password.
+  // GITHUB_AUTH_METHOD_TYPE_KEYCHAIN は macOS の generic password を読む。
   GITHUB_AUTH_METHOD_TYPE_KEYCHAIN = 1;
-  // GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT reads a configured environment variable.
+  // GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT は設定された環境変数を読む。
   GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT = 2;
-  // GITHUB_AUTH_METHOD_TYPE_INLINE reads a token stored in the YAML file.
+  // GITHUB_AUTH_METHOD_TYPE_INLINE は YAML ファイルに保存したトークンを読む。
   GITHUB_AUTH_METHOD_TYPE_INLINE = 3;
-  // GITHUB_AUTH_METHOD_TYPE_GH_CLI invokes gh auth token for the host.
+  // GITHUB_AUTH_METHOD_TYPE_GH_CLI は host に対して gh auth token を実行する。
   GITHUB_AUTH_METHOD_TYPE_GH_CLI = 4;
 }
 
-// TaskPromptKind identifies which prompt template a task was rendered with.
-// The presence of an implementation plan is the only input to that choice.
+// TaskPromptKind は task をどのプロンプトテンプレートで展開したかを表す。
+// 選択の材料は実装計画の有無だけである。
 enum TaskPromptKind {
-  // TASK_PROMPT_KIND_UNSPECIFIED is never returned by the server and is not a request field.
+  // TASK_PROMPT_KIND_UNSPECIFIED はサーバーが返さず、リクエストのフィールドでもない。
   TASK_PROMPT_KIND_UNSPECIFIED = 0;
-  // TASK_PROMPT_KIND_DESIGN asks an agent to produce the implementation plan.
+  // TASK_PROMPT_KIND_DESIGN は実装計画の作成をエージェントに求める。
   TASK_PROMPT_KIND_DESIGN = 1;
-  // TASK_PROMPT_KIND_IMPLEMENTATION asks an agent to carry out the registered plan.
+  // TASK_PROMPT_KIND_IMPLEMENTATION は登録済みの計画の実行をエージェントに求める。
   TASK_PROMPT_KIND_IMPLEMENTATION = 2;
 }
 
-// DebugProblemCode identifies a problem the diagnostic report detected.
-// Every member is a stable public identifier that callers may branch on.
+// DebugProblemCode は診断レポートが検出した問題を表す。
+// すべての値は呼び出し側が分岐に使える安定した公開識別子である。
 enum DebugProblemCode {
-  // DEBUG_PROBLEM_CODE_UNSPECIFIED is never returned by the server; it is the unmapped fallback.
+  // DEBUG_PROBLEM_CODE_UNSPECIFIED はサーバーが返さない、未対応時のフォールバック。
   DEBUG_PROBLEM_CODE_UNSPECIFIED = 0;
-  // DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE means the database could not be opened.
+  // DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE はデータベースを開けなかったことを表す。
   DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE = 1;
-  // DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY means the database was migrated by a newer PRX.
+  // DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY は新しい PRX が移行したことを表す。
   DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY = 2;
-  // DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE means the database file exists but cannot be written.
+  // DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE はファイルはあるが書き込めないことを表す。
   DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE = 3;
-  // DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS means stored dependency data failed validation.
+  // DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS は依存データの検証に失敗したことを表す。
   DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS = 4;
-  // DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE means the YAML configuration could not be loaded.
+  // DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE は YAML 設定を読み込めなかったことを表す。
   DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE = 5;
-  // DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN means the configuration file is readable by others.
+  // DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN は設定ファイルを他者が読めることを表す。
   DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN = 6;
-  // DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS means the configuration contains fields PRX ignores.
+  // DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS は設定に PRX が無視する項目があることを表す。
   DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS = 7;
-  // DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST means a host with pull requests has no credential.
+  // DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST は pull request のある host に資格情報がないことを表す。
   DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST = 8;
-  // DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR means the latest recorded synchronization run failed.
+  // DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR は直近の同期実行が失敗したことを表す。
   DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR = 9;
-  // DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE means the automatic interval expired well before the report.
+  // DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE は自動実行の間隔がかなり前に切れたことを表す。
   DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE = 10;
-  // DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED means pull requests exist but no run ever completed.
+  // DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED は pull request はあるが完了実行がないことを表す。
   DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED = 11;
-  // DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE means at least one pull request holds stale state.
+  // DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE は古い状態の pull request が 1 件以上あることを表す。
   DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE = 12;
 }
 
-// BlockedReason is the structured reason a task is not ready.
+// BlockedReason は task が ready でない理由を構造化したもの。
 message BlockedReason {
-  // code identifies the dependency condition preventing readiness.
+  // code は ready を妨げている依存の状況を表す。
   BlockedReasonCode code = 1;
-  // blocker_task_id identifies the specific blocking task when one is known.
+  // blocker_task_id は特定できる場合に、妨げている task を示す。
   string blocker_task_id = 2;
 }
 
-// ErrorDetail carries a stable domain error code and optional dependency context.
+// ErrorDetail は安定したドメインエラーコードと、任意の依存情報を運ぶ。
 message ErrorDetail {
-  // code identifies the domain error reported by the server.
+  // code はサーバーが報告するドメインエラーを示す。
   DomainErrorCode code = 1;
-  // path contains the task IDs along a detected dependency cycle, with the starting task repeated at the end.
+  // path は検出した依存の循環に沿った task ID の並びで、末尾に起点の task を繰り返す。
   repeated string path = 2;
 }
 
-// Project is a container that groups features and their shared documents.
-// Its only state is whether it is archived; it has no derived status.
+// Project は feature と共有 document をまとめる入れ物。
+// 状態はアーカイブ済みかどうかだけで、導出されるステータスはない。
 message Project {
-  // id is the public stable identifier of the project in the form P-<number>.
-  // The storage UUID is internal and is never exposed through this API.
+  // id は P-<number> 形式の project の公開安定識別子。
+  // 保存用の UUID は内部のもので、この API では公開しない。
   string id = 1;
   reserved 2;
   reserved "slug";
-  // title is the human-readable project name.
+  // title は人が読む project 名。
   string title = 3;
-  // description explains what the project groups.
+  // description は project が何をまとめているかを説明する。
   string description = 4;
-  // archived makes the project and every feature in it read-only.
+  // archived は project と配下のすべての feature を読み取り専用にする。
   bool archived = 5;
-  // created_at is the creation time in RFC 3339 format.
+  // created_at は RFC 3339 形式の作成時刻。
   string created_at = 6;
-  // updated_at is the last update time in RFC 3339 format.
+  // updated_at は RFC 3339 形式の最終更新時刻。
   string updated_at = 7;
 }
 
-// Feature is a roadmap unit that owns tasks and dependency graphs.
+// Feature は task と依存グラフを持つロードマップの単位。
 message Feature {
-  // id is the public stable identifier of the feature in the form F-<number>.
-  // The storage UUID is internal and is never exposed through this API.
+  // id は F-<number> 形式の feature の公開安定識別子。
+  // 保存用の UUID は内部のもので、この API では公開しない。
   string id = 1;
   reserved 2;
   reserved "slug";
-  // title is the human-readable feature name.
+  // title は人が読む feature 名。
   string title = 3;
-  // description explains the feature's scope or goal.
+  // description は feature の範囲や目的を説明する。
   string description = 4;
-  // status is the feature's stored lifecycle state.
+  // status は feature の保存されたライフサイクル状態。
   FeatureStatus status = 5;
-  // archived separates the feature from active WebUI views and queues.
+  // archived は feature を WebUI の通常ビューやキューから切り離す。
   bool archived = 6;
-  // created_at is the creation time in RFC 3339 format.
+  // created_at は RFC 3339 形式の作成時刻。
   string created_at = 7;
-  // updated_at is the last update time in RFC 3339 format.
+  // updated_at は RFC 3339 形式の最終更新時刻。
   string updated_at = 8;
-  // task_count is the number of tasks belonging to the feature.
+  // task_count は feature に属する task の数。
   int32 task_count = 9;
-  // ready_count is the number of tasks currently ready to work on.
+  // ready_count は今すぐ着手できる task の数。
   int32 ready_count = 10;
-  // review_waiting_count is the number of tasks whose pull requests are waiting for review.
+  // review_waiting_count は pull request がレビュー待ちの task の数。
   int32 review_waiting_count = 11;
-  // conflict_count is the number of tasks whose pull requests have conflicts.
+  // conflict_count は pull request にコンフリクトがある task の数。
   int32 conflict_count = 12;
-  // merged_count is the number of tasks whose pull requests are merged.
+  // merged_count は pull request がマージ済みの task の数。
   int32 merged_count = 13;
-  // display_status is the status presented for the feature. Snapshot reads derive it and never
-  // report AUTO; responses that echo the stored feature alone leave it UNSPECIFIED.
+  // display_status は feature の表示用ステータス。snapshot の読み取りでは導出され AUTO を返さない。
+  // 保存された feature をそのまま返すレスポンスでは UNSPECIFIED のままになる。
   FeatureStatus display_status = 14;
-  // finished_count is the number of tasks the automatic completion rule counts as finished.
+  // finished_count は自動完了の規則が終了とみなす task の数。
   int32 finished_count = 15;
-  // project_id identifies the owning project by its public P-<number> ID. Every feature belongs to
-  // a project, so this value is never empty.
+  // project_id は所属する project を公開 ID の P-<number> で示す。feature は必ず project に
+  // 属するので、この値が空になることはない。
   string project_id = 16;
-  // read_only is derived: the feature is archived, or its project is. Clients present read-only
-  // state from this value instead of combining the feature's own flag with its project's.
-  // Every response that carries a feature derives it, including the ones that echo a single
-  // stored feature, so a caller never has to know which read it came from.
+  // read_only は導出値で、feature 自身かその project がアーカイブ済みであることを表す。クライアントは
+  // feature 自身のフラグと project のフラグを組み合わせず、この値から読み取り専用かを判断する。
+  // feature を含むレスポンスはすべて、保存された feature をそのまま返すものも含めてこれを導出するので、
+  // 呼び出し側はどの読み取り由来かを気にしなくてよい。
   bool read_only = 17;
 }
 
-// Task is a unit of work belonging to a feature.
+// Task は feature に属する作業の単位。
 message Task {
-  // id is the public stable identifier of the task in the form T-<number>.
-  // The storage UUID is internal and is never exposed through this API.
+  // id は T-<number> 形式の task の公開安定識別子。
+  // 保存用の UUID は内部のもので、この API では公開しない。
   string id = 1;
-  // feature_id identifies the owning feature by its public F-<number> ID.
+  // feature_id は所属する feature を公開 ID の F-<number> で示す。
   string feature_id = 2;
-  // title is the human-readable task name.
+  // title は人が読む task 名。
   string title = 3;
-  // scope describes the work covered by the task.
+  // scope は task が扱う作業内容を説明する。
   string scope = 4;
   reserved 5;
   reserved "kind";
-  // status is the stored workflow control value.
+  // status は保存されたワークフロー制御用の値。
   TaskStatus status = 6;
-  // assignee is the person responsible for the task, when assigned.
+  // assignee は担当者が割り当てられている場合のその人物。
   string assignee = 7;
-  // created_at is the creation time in RFC 3339 format.
+  // created_at は RFC 3339 形式の作成時刻。
   string created_at = 8;
-  // updated_at is the last update time in RFC 3339 format.
+  // updated_at は RFC 3339 形式の最終更新時刻。
   string updated_at = 9;
-  // ready indicates that the task is not started and has no unsatisfied blockers.
+  // ready は task が未着手で、未解決の blocker がないことを表す。
   bool ready = 10;
-  // display_state is the derived state intended for task presentation.
+  // display_state は task の表示のために導出された状態。
   TaskDisplayState display_state = 11;
-  // blocked_reason explains why a task is not ready, when applicable.
+  // blocked_reason は該当する場合に task が ready でない理由を説明する。
   BlockedReason blocked_reason = 12;
-  // has_implementation_plan indicates whether a plan document is registered for this task.
+  // has_implementation_plan はこの task に計画文書が登録されているかを表す。
   bool has_implementation_plan = 13;
-  // pending_blocker_task_ids names every blocker that is not satisfied yet, by
-  // its public T-<number> ID. blocked_reason names only the first of them, so a
-  // caller that has to hand over a task together with everything it waits for
-  // reads this instead.
+  // pending_blocker_task_ids は未解決の blocker をすべて公開 ID の T-<number> で
+  // 並べる。blocked_reason はその先頭 1 件しか示さないので、task を待ち相手ごと
+  // 引き渡す必要がある呼び出し側はこちらを読む。
   repeated string pending_blocker_task_ids = 14;
 }
 
-// Dependency is a directed edge from a blocker task to a blocked task in one feature.
+// Dependency は 1 つの feature 内で blocker task から blocked task への有向辺を表す。
 message Dependency {
-  // blocker_task_id identifies the task by its public T-<number> ID.
+  // blocker_task_id は task を公開 ID の T-<number> で示す。
   string blocker_task_id = 1;
-  // blocked_task_id identifies the task by its public T-<number> ID.
+  // blocked_task_id は task を公開 ID の T-<number> で示す。
   string blocked_task_id = 2;
-  // created_at is the time the dependency was added in RFC 3339 format.
+  // created_at は RFC 3339 形式の依存を追加した時刻。
   string created_at = 3;
 }
 
-// PullRequest is the GitHub record attached to a pull-request task.
+// PullRequest は pull request 用の task に紐づく GitHub のレコード。
 message PullRequest {
-  // task_id identifies the linked task by its public T-<number> ID.
+  // task_id は紐づく task を公開 ID の T-<number> で示す。
   string task_id = 1;
-  // owner is the GitHub account or organization that owns the repository.
+  // owner はリポジトリを所有する GitHub アカウントまたは組織。
   string owner = 2;
-  // repository is the GitHub repository name.
+  // repository は GitHub のリポジトリ名。
   string repository = 3;
-  // number is the pull request number within the repository.
+  // number はリポジトリ内での pull request 番号。
   int64 number = 4;
-  // url is the canonical pull request URL.
+  // url は pull request の正規 URL。
   string url = 5;
-  // node_id is GitHub's stable node identifier for the pull request.
+  // node_id は pull request に対する GitHub の安定したノード識別子。
   string node_id = 6;
-  // author is the GitHub login of the pull request author.
+  // author は pull request 作成者の GitHub ログイン名。
   string author = 7;
-  // assignees contains the GitHub logins assigned to the pull request.
+  // assignees は pull request に割り当てられた GitHub ログイン名。
   repeated string assignees = 8;
-  // state is the raw lifecycle state reported by GitHub.
+  // state は GitHub が報告する生のライフサイクル状態。
   PullRequestState state = 9;
-  // draft indicates whether the pull request is a draft.
+  // draft は pull request が draft かどうかを表す。
   bool draft = 10;
-  // review_state summarizes current review decisions and requested reviewers.
+  // review_state は現在のレビュー判定とレビュー依頼状況をまとめる。
   ReviewState review_state = 11;
-  // mergeability is the current mergeability reported by GitHub.
+  // mergeability は GitHub が報告する現在のマージ可否。
   Mergeability mergeability = 12;
-  // github_updated_at is the last update time reported by GitHub in RFC 3339 format.
+  // github_updated_at は GitHub が報告する RFC 3339 形式の最終更新時刻。
   string github_updated_at = 13;
-  // last_synced_at is the last time PR data was fetched in RFC 3339 format.
+  // last_synced_at は PR データを最後に取得した RFC 3339 形式の時刻。
   string last_synced_at = 14;
-  // sync_error contains the most recent refresh error, when one occurred.
+  // sync_error は直近の更新エラーがあればその内容。
   string sync_error = 15;
-  // stale indicates that the pull request data may not represent the current GitHub state.
+  // stale は pull request のデータが現在の GitHub の状態と異なりうることを表す。
   bool stale = 16;
-  // display_state is the derived presentation state using the documented priority order.
+  // display_state は文書化された優先順位で導出した表示状態。
   PullRequestDisplayState display_state = 17;
-  // host is the case-insensitive GitHub or GitHub Enterprise Server host key.
+  // host は大文字小文字を区別しない GitHub / GitHub Enterprise Server の host キー。
   string host = 18;
 }
 
-// Document is a reference attached to exactly one project, feature, or task.
+// Document は project、feature、task のいずれか 1 つだけに紐づく参照。
 message Document {
-  // id is the stable identifier of the document reference.
+  // id は document 参照の安定識別子。
   string id = 1;
-  // feature_id identifies the parent feature by its public F-<number> ID when the document is feature-scoped.
+  // feature_id は feature 単位の document のとき、親 feature を公開 ID の F-<number> で示す。
   string feature_id = 2;
-  // task_id identifies the parent task by its public T-<number> ID when the document is task-scoped.
+  // task_id は task 単位の document のとき、親 task を公開 ID の T-<number> で示す。
   string task_id = 3;
-  // kind identifies the document source.
+  // kind は document の取得元を表す。
   DocumentKind kind = 4;
-  // title is the human-readable document label.
+  // title は人が読む document のラベル。
   string title = 5;
-  // locator is the URL or local file path; stored Markdown leaves it empty.
+  // locator は URL かローカルファイルパス。保存された Markdown では空になる。
   string locator = 6;
-  // created_at is the creation time in RFC 3339 format.
+  // created_at は RFC 3339 形式の作成時刻。
   string created_at = 7;
-  // is_implementation_plan marks the task's single plan document.
+  // is_implementation_plan は task に 1 つだけの計画文書であることを示す。
   bool is_implementation_plan = 8;
-  // updated_at is the last update time in RFC 3339 format.
+  // updated_at は RFC 3339 形式の最終更新時刻。
   string updated_at = 9;
-  // project_id identifies the parent project by its public P-<number> ID when the document is project-scoped.
+  // project_id は project 単位の document のとき、親 project を公開 ID の P-<number> で示す。
   string project_id = 10;
 }
 
-// Snapshot is the complete normalized dataset plus derived task queues.
+// Snapshot は正規化されたデータ一式と、導出した task のキュー。
 message Snapshot {
-  // features contains all stored features.
+  // features は保存されたすべての feature。
   repeated Feature features = 1;
-  // tasks contains all stored tasks with derived readiness and display state.
+  // tasks は保存されたすべての task で、導出した ready と表示状態を含む。
   repeated Task tasks = 2;
-  // dependencies contains all directed task dependencies.
+  // dependencies は task 間のすべての有向依存。
   repeated Dependency dependencies = 3;
-  // pull_requests contains all attached pull requests and their latest known data.
+  // pull_requests は紐づくすべての pull request と、その最新の既知データ。
   repeated PullRequest pull_requests = 4;
-  // documents contains all registered document references without file contents.
+  // documents は登録済みのすべての document 参照で、ファイルの内容は含まない。
   repeated Document documents = 5;
-  // ready_tasks contains tasks whose effective state is not started and whose blockers are satisfied.
+  // ready_tasks は実効状態が未着手で blocker が満たされている task。
   repeated Task ready_tasks = 6;
-  // review_waiting_tasks contains tasks whose pull requests are waiting for review.
+  // review_waiting_tasks は pull request がレビュー待ちの task。
   repeated Task review_waiting_tasks = 7;
-  // conflict_tasks contains tasks whose pull requests have merge conflicts.
+  // conflict_tasks は pull request にコンフリクトがある task。
   repeated Task conflict_tasks = 8;
-  // stale_tasks contains tasks whose pull request data is stale or has a sync error.
+  // stale_tasks は pull request のデータが古いか同期エラーを持つ task。
   repeated Task stale_tasks = 9;
-  // projects contains all stored projects.
+  // projects は保存されたすべての project。
   repeated Project projects = 10;
 }
 
-// GetSnapshotRequest requests the current normalized dataset and derived queues.
+// GetSnapshotRequest は現在の正規化データと導出キューを要求する。
 message GetSnapshotRequest {}
 
-// GetSnapshotResponse returns the requested application snapshot.
+// GetSnapshotResponse は要求された snapshot を返す。
 message GetSnapshotResponse {
-  // snapshot contains normalized records and derived task queues.
+  // snapshot は正規化されたレコードと導出した task のキューを含む。
   Snapshot snapshot = 1;
 }
 
-// CreateProjectRequest contains the required and descriptive values for a project.
+// CreateProjectRequest は project に必要な値と説明的な値を持つ。
 message CreateProjectRequest {
   reserved 1;
   reserved "slug";
-  // title is the required human-readable project name.
+  // title は必須の、人が読む project 名。
   string title = 2;
-  // description is optional explanatory text for the project.
+  // description は project の任意の説明文。
   string description = 3;
 }
 
-// CreateProjectResponse returns the newly created project.
+// CreateProjectResponse は作成された project を返す。
 message CreateProjectResponse {
-  // project is the created project with its generated identifier and timestamps.
+  // project は生成された識別子とタイムスタンプを持つ、作成された project。
   Project project = 1;
 }
 
-// UpdateProjectRequest updates only the supplied project fields.
-// An unset optional field is unchanged, while an empty string requests clearing a string field.
+// UpdateProjectRequest は指定された project のフィールドだけを更新する。
+// 未設定の optional は変更なし、空文字列は文字列フィールドのクリアを意味する。
 message UpdateProjectRequest {
-  // id identifies the project to update by public ID.
+  // id は更新する project を公開 ID で示す。
   string id = 1;
   reserved 2;
   reserved "slug";
-  // title is unchanged when unset; an empty string requests clearing it.
+  // title は未設定なら変更なし、空文字列ならクリアを要求する。
   optional string title = 3;
-  // description is unchanged when unset; an empty string clears it.
+  // description は未設定なら変更なし、空文字列ならクリアする。
   optional string description = 4;
-  // archived is unchanged when unset; a supplied value explicitly sets it.
-  // Clearing it is the only update an archived project accepts.
+  // archived は未設定なら変更なし、値があればそのとおりに設定する。
+  // アーカイブ済みの project が受け付ける更新はこれを外すことだけ。
   optional bool archived = 5;
 }
 
-// UpdateProjectResponse returns the updated project.
+// UpdateProjectResponse は更新後の project を返す。
 message UpdateProjectResponse {
-  // project is the project after applying the requested updates.
+  // project は要求された更新を適用したあとの project。
   Project project = 1;
 }
 
-// DeleteProjectRequest requests deletion of a project.
+// DeleteProjectRequest は project の削除を要求する。
 message DeleteProjectRequest {
-  // id identifies the project to delete by public ID.
+  // id は削除する project を公開 ID で示す。
   string id = 1;
-  // cascade deletes the project's own documents and every feature it contains,
-  // with the tasks, dependencies, pull-request attachments, and documents
-  // inside them, instead of failing.
+  // cascade は失敗させる代わりに、project 自身の document と配下のすべての
+  // feature を、その中の task・依存・pull request の紐づけ・document ごと
+  // 削除する。
   bool cascade = 2;
 }
 
-// DeleteProjectResponse confirms that the project was deleted.
+// DeleteProjectResponse は project が削除されたことを示す。
 message DeleteProjectResponse {}
 
-// CreateFeatureRequest contains the required and descriptive values for a feature.
+// CreateFeatureRequest は feature に必要な値と説明的な値を持つ。
 message CreateFeatureRequest {
   reserved 1;
   reserved "slug";
-  // title is the required human-readable feature name.
+  // title は必須の、人が読む feature 名。
   string title = 2;
-  // description is optional explanatory text for the feature.
+  // description は feature の任意の説明文。
   string description = 3;
-  // project_id assigns the feature to a project by public ID. It is required: a feature always
-  // belongs to a project.
+  // project_id は feature を公開 ID で project に割り当てる。feature は必ず project に属するので
+  // 必須である。
   string project_id = 4;
 }
 
-// CreateFeatureResponse returns the newly created feature.
+// CreateFeatureResponse は作成された feature を返す。
 message CreateFeatureResponse {
-  // feature is the created feature with its generated identifier and timestamps.
+  // feature は生成された識別子とタイムスタンプを持つ、作成された feature。
   Feature feature = 1;
 }
 
-// UpdateFeatureRequest updates only the supplied feature fields.
-// An unset optional field is unchanged, while an empty string requests clearing a string field.
+// UpdateFeatureRequest は指定された feature のフィールドだけを更新する。
+// 未設定の optional は変更なし、空文字列は文字列フィールドのクリアを意味する。
 message UpdateFeatureRequest {
-  // id identifies the feature to update.
+  // id は更新する feature を示す。
   string id = 1;
   reserved 2;
   reserved "slug";
-  // title is unchanged when unset; an empty string requests clearing it.
+  // title は未設定なら変更なし、空文字列ならクリアを要求する。
   optional string title = 3;
-  // description is unchanged when unset; an empty string clears it.
+  // description は未設定なら変更なし、空文字列ならクリアする。
   optional string description = 4;
-  // status is unchanged when unset; a supplied value replaces it.
+  // status は未設定なら変更なし、値があれば置き換える。
   optional FeatureStatus status = 5;
-  // archived is unchanged when unset; a supplied value explicitly sets it.
-  // Clearing it is the only update an archived feature accepts.
+  // archived は未設定なら変更なし、値があればそのとおりに設定する。
+  // アーカイブ済みの feature が受け付ける更新はこれを外すことだけ。
   optional bool archived = 6;
-  // project_id is unchanged when unset; a public ID reassigns the feature.
-  // An empty string is refused, because a feature cannot leave every project.
+  // project_id は未設定なら変更なし、公開 ID があれば feature を付け替える。
+  // feature はどの project にも属さない状態になれないので、空文字列は拒否する。
   optional string project_id = 7;
 }
 
-// UpdateFeatureResponse returns the updated feature.
+// UpdateFeatureResponse は更新後の feature を返す。
 message UpdateFeatureResponse {
-  // feature is the feature after applying the requested updates.
+  // feature は要求された更新を適用したあとの feature。
   Feature feature = 1;
 }
 
-// DeleteFeatureRequest requests deletion of a feature and optionally its references.
+// DeleteFeatureRequest は feature と、必要ならその参照の削除を要求する。
 message DeleteFeatureRequest {
-  // id identifies the feature to delete.
+  // id は削除する feature を示す。
   string id = 1;
-  // cascade permits deletion of the feature's dependent tasks and records.
+  // cascade は feature に従属する task やレコードの削除を許可する。
   bool cascade = 2;
 }
 
-// DeleteFeatureResponse confirms that the feature was deleted.
+// DeleteFeatureResponse は feature が削除されたことを示す。
 message DeleteFeatureResponse {}
 
-// CreateTaskRequest contains the values for a task within a feature.
+// CreateTaskRequest は feature 内の task の値を持つ。
 message CreateTaskRequest {
-  // feature_id identifies the feature that owns the task.
+  // feature_id は task を持つ feature を示す。
   string feature_id = 1;
-  // title is the required human-readable task name.
+  // title は必須の、人が読む task 名。
   string title = 2;
-  // scope describes the work covered by the task.
+  // scope は task が扱う作業内容を説明する。
   string scope = 3;
   reserved 4;
   reserved "kind";
-  // assignee is the optional person responsible for the task.
+  // assignee は task の担当者で、任意。
   string assignee = 5;
 }
 
-// CreateTaskResponse returns the newly created task.
+// CreateTaskResponse は作成された task を返す。
 message CreateTaskResponse {
-  // task is the created task with its generated identifier and timestamps.
+  // task は生成された識別子とタイムスタンプを持つ、作成された task。
   Task task = 1;
 }
 
-// UpdateTaskRequest updates only the supplied task fields.
-// An unset optional field is unchanged, while an empty string requests clearing a string field.
+// UpdateTaskRequest は指定された task のフィールドだけを更新する。
+// 未設定の optional は変更なし、空文字列は文字列フィールドのクリアを意味する。
 message UpdateTaskRequest {
-  // id identifies the task to update.
+  // id は更新する task を示す。
   string id = 1;
-  // title is unchanged when unset; an empty string requests clearing it.
+  // title は未設定なら変更なし、空文字列ならクリアを要求する。
   optional string title = 2;
-  // scope is unchanged when unset; an empty string clears it.
+  // scope は未設定なら変更なし、空文字列ならクリアする。
   optional string scope = 3;
-  // status is unchanged when unset; a supplied value replaces it.
+  // status は未設定なら変更なし、値があれば置き換える。
   optional TaskStatus status = 4;
-  // assignee is unchanged when unset; an empty string clears it.
+  // assignee は未設定なら変更なし、空文字列ならクリアする。
   optional string assignee = 5;
 }
 
-// UpdateTaskResponse returns the updated task.
+// UpdateTaskResponse は更新後の task を返す。
 message UpdateTaskResponse {
-  // task is the task after applying the requested updates.
+  // task は要求された更新を適用したあとの task。
   Task task = 1;
 }
 
-// DeleteTaskRequest requests deletion of a task and optionally its references.
+// DeleteTaskRequest は task と、必要ならその参照の削除を要求する。
 message DeleteTaskRequest {
-  // id identifies the task to delete.
+  // id は削除する task を示す。
   string id = 1;
-  // cascade permits deletion of the task's dependencies, pull request, plan, and documents.
+  // cascade は task の依存・pull request・計画・document の削除を許可する。
   bool cascade = 2;
 }
 
-// DeleteTaskResponse confirms that the task was deleted.
+// DeleteTaskResponse は task が削除されたことを示す。
 message DeleteTaskResponse {}
 
-// AddDependencyRequest creates a same-feature dependency edge.
+// AddDependencyRequest は同じ feature 内に依存の辺を作る。
 message AddDependencyRequest {
-  // blocker_task_id identifies the task that must be satisfied first.
+  // blocker_task_id は先に満たす必要がある task を示す。
   string blocker_task_id = 1;
-  // blocked_task_id identifies the task that will wait for the blocker.
+  // blocked_task_id は blocker を待つ側の task を示す。
   string blocked_task_id = 2;
 }
 
-// AddDependencyResponse returns the newly created dependency.
+// AddDependencyResponse は作成された依存を返す。
 message AddDependencyResponse {
-  // dependency is the persisted directed edge.
+  // dependency は保存された有向の辺。
   Dependency dependency = 1;
 }
 
-// RemoveDependencyRequest identifies a dependency edge to remove.
+// RemoveDependencyRequest は取り除く依存の辺を示す。
 message RemoveDependencyRequest {
-  // blocker_task_id identifies the dependency's blocker.
+  // blocker_task_id は依存の blocker を示す。
   string blocker_task_id = 1;
-  // blocked_task_id identifies the dependency's blocked task.
+  // blocked_task_id は依存で待つ側の task を示す。
   string blocked_task_id = 2;
 }
 
-// RemoveDependencyResponse confirms that the dependency was removed.
+// RemoveDependencyResponse は依存が取り除かれたことを示す。
 message RemoveDependencyResponse {}
 
-// AttachPullRequestRequest links a GitHub pull request to a pull-request task.
+// AttachPullRequestRequest は GitHub の pull request を task に紐づける。
 message AttachPullRequestRequest {
-  // task_id identifies the pull-request task.
+  // task_id は pull request 用の task を示す。
   string task_id = 1;
-  // url is the GitHub pull request URL to attach.
+  // url は紐づける GitHub の pull request URL。
   string url = 2;
 }
 
-// AttachPullRequestResponse returns the attached pull request.
+// AttachPullRequestResponse は紐づけた pull request を返す。
 message AttachPullRequestResponse {
-  // pull_request is the newly attached record with unknown initial GitHub state.
+  // pull_request は GitHub 側の状態が未取得のまま新たに紐づいたレコード。
   PullRequest pull_request = 1;
 }
 
-// DetachPullRequestRequest identifies the task whose pull request should be detached.
+// DetachPullRequestRequest は pull request の紐づけを外す task を示す。
 message DetachPullRequestRequest {
-  // task_id identifies the task whose pull request is removed.
+  // task_id は pull request を外す task を示す。
   string task_id = 1;
 }
 
-// DetachPullRequestResponse confirms that the pull request was detached.
+// DetachPullRequestResponse は pull request の紐づけが外れたことを示す。
 message DetachPullRequestResponse {}
 
-// AddDocumentRequest registers one document source under exactly one parent.
+// AddDocumentRequest は document の取得元を 1 つの親のもとに登録する。
 message AddDocumentRequest {
-  // feature_id identifies the parent feature when project_id and task_id are empty.
+  // feature_id は project_id と task_id が空のとき、親 feature を示す。
   string feature_id = 1;
-  // task_id identifies the parent task when project_id and feature_id are empty.
+  // task_id は project_id と feature_id が空のとき、親 task を示す。
   string task_id = 2;
-  // title is the human-readable document label.
+  // title は人が読む document のラベル。
   string title = 3;
-  // source contains exactly one URL, local path, or stored Markdown body.
+  // source は URL、ローカルパス、保存する Markdown 本文のいずれか 1 つだけを持つ。
   oneof source {
-    // url stores an HTTP or HTTPS locator.
+    // url は HTTP または HTTPS の locator を保持する。
     string url = 4;
-    // local_file stores a path read only through this document ID.
+    // local_file はこの document ID 経由でのみ読めるパスを保持する。
     string local_file = 5;
-    // markdown stores the inline Markdown body.
+    // markdown はインラインの Markdown 本文を保持する。
     string markdown = 6;
   }
-  // is_implementation_plan marks this task document as its plan.
+  // is_implementation_plan はこの task document を計画として印付ける。
   bool is_implementation_plan = 7;
-  // project_id identifies the parent project when feature_id and task_id are empty.
+  // project_id は feature_id と task_id が空のとき、親 project を示す。
   string project_id = 8;
 }
 
-// AddDocumentResponse returns the newly registered document.
+// AddDocumentResponse は登録された document を返す。
 message AddDocumentResponse {
-  // document is the persisted document reference.
+  // document は保存された document 参照。
   Document document = 1;
 }
 
-// GetDocumentRequest identifies a document to return with content when applicable.
+// GetDocumentRequest は、該当すれば内容も返す document を示す。
 message GetDocumentRequest {
-  // id identifies the document.
+  // id は document を示す。
   string id = 1;
 }
 
-// GetDocumentResponse returns document metadata and stored Markdown content separately.
+// GetDocumentResponse は document のメタデータと、保存された Markdown を分けて返す。
 message GetDocumentResponse {
-  // document contains document metadata without inline content.
+  // document は内容を含まない document のメタデータ。
   Document document = 1;
-  // content contains stored Markdown and is empty for locator-backed documents.
+  // content は保存された Markdown で、locator 由来の document では空。
   string content = 2;
 }
 
-// UpdateDocumentRequest replaces only supplied metadata or source fields.
+// UpdateDocumentRequest は指定されたメタデータか取得元のみを置き換える。
 message UpdateDocumentRequest {
-  // id identifies the document.
+  // id は document を示す。
   string id = 1;
-  // title is unchanged when unset; an empty string clears it.
+  // title は未設定なら変更なし、空文字列ならクリアする。
   optional string title = 2;
-  // source is unchanged when omitted.
+  // source は省略すると変更なし。
   oneof source {
-    // url replaces the source with an HTTP or HTTPS locator.
+    // url は取得元を HTTP か HTTPS の locator に置き換える。
     string url = 3;
-    // local_file replaces the source with a registered local path.
+    // local_file は取得元を登録済みのローカルパスに置き換える。
     string local_file = 4;
-    // markdown replaces the source with inline Markdown.
+    // markdown は取得元をインラインの Markdown に置き換える。
     string markdown = 5;
   }
-  // is_implementation_plan is unchanged when unset.
+  // is_implementation_plan は未設定なら変更なし。
   optional bool is_implementation_plan = 6;
 }
 
-// UpdateDocumentResponse returns the updated document metadata.
+// UpdateDocumentResponse は更新後の document のメタデータを返す。
 message UpdateDocumentResponse {
-  // document is the updated document.
+  // document は更新後の document。
   Document document = 1;
 }
 
-// DeleteDocumentRequest identifies a document reference to delete.
+// DeleteDocumentRequest は削除する document 参照を示す。
 message DeleteDocumentRequest {
-  // id identifies the document to delete.
+  // id は削除する document を示す。
   string id = 1;
 }
 
-// DeleteDocumentResponse confirms that the document was deleted.
+// DeleteDocumentResponse は document が削除されたことを示す。
 message DeleteDocumentResponse {}
 
-// ReadDocumentContentRequest identifies a registered document to read.
+// ReadDocumentContentRequest は読み取る登録済み document を示す。
 message ReadDocumentContentRequest {
-  // id identifies a stored Markdown or local file document.
+  // id は保存された Markdown かローカルファイルの document を示す。
   string id = 1;
 }
 
-// ReadDocumentContentResponse returns bounded UTF-8 document content.
+// ReadDocumentContentResponse は上限つきの UTF-8 の document 内容を返す。
 message ReadDocumentContentResponse {
-  // content contains the document body and is limited to 1 MiB.
+  // content は document の本文で、1 MiB までに制限される。
   string content = 1;
 }
 
-// SelectLocalFileRequest asks the PRX server to open its native file chooser.
+// SelectLocalFileRequest は PRX サーバーにネイティブのファイル選択画面を開かせる。
 message SelectLocalFileRequest {}
 
-// SelectLocalFileResponse returns the selected server-local absolute path.
+// SelectLocalFileResponse は選択されたサーバー上の絶対パスを返す。
 message SelectLocalFileResponse {
-  // path is the selected absolute path and is empty when the user cancels.
+  // path は選択された絶対パスで、ユーザーが取り消した場合は空。
   string path = 1;
-  // canceled distinguishes cancellation from a selected path.
+  // canceled は取り消しとパス選択を区別する。
   bool canceled = 2;
 }
 
-// GitHubHost describes one configured GitHub.com or GitHub Enterprise Server host.
+// GitHubHost は設定された GitHub.com または GitHub Enterprise Server の host 1 つを表す。
 message GitHubHost {
-  // host is the normalized hostname, optionally including a port.
+  // host は正規化したホスト名で、必要ならポートを含む。
   string host = 1;
-  // web_url is the HTTPS web origin used for canonical pull-request URLs.
+  // web_url は pull request の正規 URL に使う HTTPS の web オリジン。
   string web_url = 2;
-  // api_url is the HTTPS API base URL.
+  // api_url は HTTPS の API ベース URL。
   string api_url = 3;
-  // upload_url is the HTTPS upload base URL.
+  // upload_url は HTTPS のアップロード用ベース URL。
   string upload_url = 4;
-  // graphql_url is the HTTPS GraphQL endpoint used for batched pull-request refreshes.
+  // graphql_url は pull request の一括更新に使う HTTPS の GraphQL エンドポイント。
   string graphql_url = 5;
 }
 
-// GitHubAuthMethod is the public representation of a host-scoped credential.
-// The token itself is never returned by the server.
+// GitHubAuthMethod は host 単位の資格情報の公開表現。
+// トークン自体はサーバーが返すことはない。
 message GitHubAuthMethod {
-  // id identifies the authentication method and its cache entries.
+  // id は認証方法とそのキャッシュ項目を示す。
   string id = 1;
-  // host identifies the only GitHub host to which this method may be sent.
+  // host はこの方法を送ってよい唯一の GitHub host を示す。
   string host = 2;
-  // type identifies the credential source.
+  // type は資格情報の取得元を示す。
   GithubAuthMethodType type = 3;
-  // account is the Keychain account when type is keychain.
+  // account は type が keychain のときの Keychain アカウント。
   string account = 4;
-  // service is the Keychain service when type is keychain.
+  // service は type が keychain のときの Keychain サービス。
   string service = 5;
-  // variable is the environment variable when type is environment.
+  // variable は type が environment のときの環境変数。
   string variable = 6;
-  // user selects a gh CLI account when type is gh_cli.
+  // user は type が gh_cli のときの gh CLI アカウントを選ぶ。
   string user = 7;
-  // secret_configured indicates that a credential source is configured.
+  // secret_configured は資格情報の取得元が設定済みであることを表す。
   bool secret_configured = 8;
-  // secret_hint is a short masked hint for inline credentials.
+  // secret_hint はインラインの資格情報向けの短いマスク済みヒント。
   string secret_hint = 9;
 }
 
-// GitHubConfig is the public, secret-free server configuration.
+// GitHubConfig は秘密情報を含まない公開のサーバー設定。
 message GitHubConfig {
-  // version is the YAML schema version.
+  // version は YAML スキーマのバージョン。
   int32 version = 1;
-  // hosts contains the configured GitHub host boundaries.
+  // hosts は設定された GitHub host の境界。
   repeated GitHubHost hosts = 2;
-  // auth_methods contains host-scoped credentials in priority order.
+  // auth_methods は host 単位の資格情報を優先順に並べたもの。
   repeated GitHubAuthMethod auth_methods = 3;
-  // auto_sync_interval_seconds is the shared CLI and server refresh interval.
+  // auto_sync_interval_seconds は CLI とサーバーで共有する更新間隔。
   int64 auto_sync_interval_seconds = 4;
 }
 
-// GetConfigRequest requests the public GitHub configuration.
+// GetConfigRequest は公開の GitHub 設定を要求する。
 message GetConfigRequest {}
 
-// GetConfigResponse returns the public GitHub configuration.
+// GetConfigResponse は公開の GitHub 設定を返す。
 message GetConfigResponse {
-  // config contains hosts and secret-free authentication metadata.
+  // config は host と、秘密情報を含まない認証メタデータを持つ。
   GitHubConfig config = 1;
 }
 
-// UpdateGitHubSyncConfigRequest changes the shared automatic synchronization interval.
+// UpdateGitHubSyncConfigRequest は共有の自動同期間隔を変更する。
 message UpdateGitHubSyncConfigRequest {
-  // interval_seconds must be at least 600.
+  // interval_seconds は 600 以上でなければならない。
   int64 interval_seconds = 1;
 }
 
-// UpdateGitHubSyncConfigResponse returns the resulting public configuration.
+// UpdateGitHubSyncConfigResponse は結果の公開設定を返す。
 message UpdateGitHubSyncConfigResponse {
-  // config is the updated secret-free configuration.
+  // config は更新後の、秘密情報を含まない設定。
   GitHubConfig config = 1;
 }
 
-// AddGitHubHostRequest adds a GitHub host.
+// AddGitHubHostRequest は GitHub host を追加する。
 message AddGitHubHostRequest {
-  // host is the hostname with optional port.
+  // host は必要ならポートを含むホスト名。
   string host = 1;
-  // web_url is optional and defaults from host.
+  // web_url は任意で、既定値は host から決まる。
   string web_url = 2;
-  // api_url is optional and defaults from host.
+  // api_url は任意で、既定値は host から決まる。
   string api_url = 3;
-  // upload_url is optional and defaults from host.
+  // upload_url は任意で、既定値は host から決まる。
   string upload_url = 4;
-  // graphql_url is optional and defaults from host.
+  // graphql_url は任意で、既定値は host から決まる。
   string graphql_url = 5;
 }
 
-// AddGitHubHostResponse returns the added host.
+// AddGitHubHostResponse は追加された host を返す。
 message AddGitHubHostResponse {
-  // host is the normalized host after validation.
+  // host は検証後に正規化された host。
   GitHubHost host = 1;
 }
 
-// UpdateGitHubHostRequest updates a host and only the fields that are present.
+// UpdateGitHubHostRequest は host を更新し、指定されたフィールドだけを変える。
 message UpdateGitHubHostRequest {
-  // host identifies the existing host.
+  // host は既存の host を示す。
   string host = 1;
-  // new_host changes the host key when present.
+  // new_host は指定があれば host キーを変更する。
   optional string new_host = 2;
-  // web_url replaces the web URL when present.
+  // web_url は指定があれば web URL を置き換える。
   optional string web_url = 3;
-  // api_url replaces the API URL when present.
+  // api_url は指定があれば API URL を置き換える。
   optional string api_url = 4;
-  // upload_url replaces the upload URL when present.
+  // upload_url は指定があればアップロード URL を置き換える。
   optional string upload_url = 5;
-  // graphql_url replaces the GraphQL endpoint when present.
+  // graphql_url は指定があれば GraphQL エンドポイントを置き換える。
   optional string graphql_url = 6;
 }
 
-// UpdateGitHubHostResponse returns the updated host.
+// UpdateGitHubHostResponse は更新後の host を返す。
 message UpdateGitHubHostResponse {
-  // host is the normalized host after validation.
+  // host は検証後に正規化された host。
   GitHubHost host = 1;
 }
 
-// DeleteGitHubHostRequest removes a host when no authentication method uses it.
+// DeleteGitHubHostRequest は認証方法が使っていない host を削除する。
 message DeleteGitHubHostRequest {
-  // host identifies the host to remove.
+  // host は削除する host を示す。
   string host = 1;
 }
 
-// DeleteGitHubHostResponse confirms the host was removed.
+// DeleteGitHubHostResponse は host が削除されたことを示す。
 message DeleteGitHubHostResponse {}
 
-// AddGitHubAuthMethodRequest adds one host-scoped authentication method.
+// AddGitHubAuthMethodRequest は host 単位の認証方法を 1 つ追加する。
 message AddGitHubAuthMethodRequest {
-  // id identifies the method.
+  // id は認証方法を示す。
   string id = 1;
-  // host identifies the only host for this method.
+  // host はこの方法の唯一の host を示す。
   string host = 2;
-  // type identifies the credential source.
+  // type は資格情報の取得元を示す。
   GithubAuthMethodType type = 3;
-  // account is the Keychain account.
+  // account は Keychain アカウント。
   string account = 4;
-  // service is the Keychain service.
+  // service は Keychain サービス。
   string service = 5;
-  // variable is the environment variable.
+  // variable は環境変数。
   string variable = 6;
-  // user selects a gh CLI account.
+  // user は gh CLI アカウントを選ぶ。
   string user = 7;
-  // token is write-only and is accepted only for inline credentials.
+  // token は書き込み専用で、インラインの資格情報でのみ受け付ける。
   optional string token = 8;
 }
 
-// AddGitHubAuthMethodResponse returns secret-free authentication metadata.
+// AddGitHubAuthMethodResponse は秘密情報を含まない認証メタデータを返す。
 message AddGitHubAuthMethodResponse {
-  // auth_method is the added method without its token.
+  // auth_method はトークンを除いた、追加された認証方法。
   GitHubAuthMethod auth_method = 1;
 }
 
-// UpdateGitHubAuthMethodRequest updates a method while preserving an omitted token.
+// UpdateGitHubAuthMethodRequest は省略されたトークンを保ったまま認証方法を更新する。
 message UpdateGitHubAuthMethodRequest {
-  // id identifies the existing method.
+  // id は既存の認証方法を示す。
   string id = 1;
-  // new_id changes the method ID when present.
+  // new_id は指定があれば認証方法の ID を変更する。
   optional string new_id = 2;
-  // host changes the host when present.
+  // host は指定があれば host を変更する。
   optional string host = 3;
-  // type changes the source when present.
+  // type は指定があれば取得元を変更する。
   optional GithubAuthMethodType type = 4;
-  // account changes the Keychain account when present.
+  // account は指定があれば Keychain アカウントを変更する。
   optional string account = 5;
-  // service changes the Keychain service when present.
+  // service は指定があれば Keychain サービスを変更する。
   optional string service = 6;
-  // variable changes the environment variable when present.
+  // variable は指定があれば環境変数を変更する。
   optional string variable = 7;
-  // user changes the gh CLI user when present.
+  // user は指定があれば gh CLI のユーザーを変更する。
   optional string user = 8;
-  // token replaces the inline token when present and is never returned.
+  // token は指定があればインラインのトークンを置き換え、返されることはない。
   optional string token = 9;
 }
 
-// UpdateGitHubAuthMethodResponse returns secret-free authentication metadata.
+// UpdateGitHubAuthMethodResponse は秘密情報を含まない認証メタデータを返す。
 message UpdateGitHubAuthMethodResponse {
-  // auth_method is the updated method without its token.
+  // auth_method はトークンを除いた、更新後の認証方法。
   GitHubAuthMethod auth_method = 1;
 }
 
-// DeleteGitHubAuthMethodRequest removes a host-scoped authentication method.
+// DeleteGitHubAuthMethodRequest は host 単位の認証方法を削除する。
 message DeleteGitHubAuthMethodRequest {
-  // id identifies the method to remove.
+  // id は削除する認証方法を示す。
   string id = 1;
 }
 
-// DeleteGitHubAuthMethodResponse confirms the method was removed.
+// DeleteGitHubAuthMethodResponse は認証方法が削除されたことを示す。
 message DeleteGitHubAuthMethodResponse {}
 
-// ReorderGitHubAuthMethodsRequest sets the complete authentication priority.
+// ReorderGitHubAuthMethodsRequest は認証の優先順位をすべて設定する。
 message ReorderGitHubAuthMethodsRequest {
-  // ids contains every configured authentication method exactly once.
+  // ids は設定済みの認証方法をすべてちょうど 1 回ずつ含む。
   repeated string ids = 1;
 }
 
-// ReorderGitHubAuthMethodsResponse returns the new secret-free priority.
+// ReorderGitHubAuthMethodsResponse は秘密情報を含まない新しい優先順位を返す。
 message ReorderGitHubAuthMethodsResponse {
-  // auth_methods contains the reordered methods.
+  // auth_methods は並べ替え後の認証方法。
   repeated GitHubAuthMethod auth_methods = 1;
 }
 
-// ValidateConfigRequest validates the YAML configuration.
+// ValidateConfigRequest は YAML 設定を検証する。
 message ValidateConfigRequest {}
 
-// ValidateConfigResponse reports whether configuration validation succeeded.
+// ValidateConfigResponse は設定の検証に成功したかを報告する。
 message ValidateConfigResponse {
-  // valid is true when the configuration can be loaded and used.
+  // valid は設定を読み込んで使える場合に true。
   bool valid = 1;
-  // errors contains validation failures when valid is false.
+  // errors は valid が false のときの検証失敗の内容。
   repeated string errors = 2;
-  // warnings contains recoverable problems, such as unknown fields, that did not
-  // prevent the configuration from loading.
+  // warnings は未知のフィールドなど、読み込みは妨げなかった回復可能な問題を
+  // 含む。
   repeated string warnings = 3;
 }
 
-// PromptTemplates holds the shared agent prompt templates.
-// Every template is stored in the same configuration the CLI reads.
+// PromptTemplates は共有のエージェント用プロンプトテンプレートを保持する。
+// どのテンプレートも CLI が読むのと同じ設定に保存される。
 message PromptTemplates {
-  // design is used for a task that has no implementation plan yet.
+  // design はまだ実装計画がない task に使う。
   string design = 1;
-  // implementation is used for a task that already has an implementation plan.
+  // implementation はすでに実装計画がある task に使う。
   string implementation = 2;
-  // batch is used for several tasks handed over in one prompt. It is selected by
-  // the caller asking for a batch rather than derived from any single task.
+  // batch は複数の task を 1 つのプロンプトで引き渡すときに使う。個々の task から
+  // 導出せず、呼び出し側が batch を要求したことで選ばれる。
   string batch = 3;
 }
 
-// GetPromptTemplatesRequest requests the stored agent prompt templates.
+// GetPromptTemplatesRequest は保存されたエージェント用テンプレートを要求する。
 message GetPromptTemplatesRequest {}
 
-// GetPromptTemplatesResponse returns the stored agent prompt templates.
+// GetPromptTemplatesResponse は保存されたエージェント用テンプレートを返す。
 message GetPromptTemplatesResponse {
-  // templates contains both stored templates.
+  // templates は保存された両方のテンプレートを含む。
   PromptTemplates templates = 1;
-  // supported_placeholders is the complete substitution vocabulary, without the
-  // surrounding braces. A client presents this list rather than keeping its own
-  // copy, which would drift from what the server accepts.
+  // supported_placeholders は前後の波括弧を除いた、置換語彙の全体。クライアントは
+  // 独自の写しを持たずこの一覧を提示する。写しはサーバーが受け付けるものから
+  // ずれていくためである。
   repeated string supported_placeholders = 2;
-  // required_placeholder is the one placeholder every task template must use.
+  // required_placeholder は task 用テンプレートが必ず使う唯一の placeholder。
   string required_placeholder = 3;
-  // built_in contains the templates PRX ships. An editor offering to restore
-  // them shows the text they contain instead of leaving the field empty until a
-  // write completes.
+  // built_in は PRX に同梱するテンプレート。復元を提示するエディタは、書き込みが
+  // 終わるまで空欄にせず、ここに入っている文面を表示できる。
   PromptTemplates built_in = 4;
-  // batch_supported_placeholders is the substitution vocabulary of the batch
-  // template. It is smaller than the task vocabulary, because a batch has no
-  // single task to expand a task placeholder from.
+  // batch_supported_placeholders は batch テンプレートの置換語彙。batch には task
+  // 用の placeholder を展開する元になる単一の task がないため、task の語彙より
+  // 小さい。
   repeated string batch_supported_placeholders = 5;
-  // batch_required_placeholder is the one placeholder every batch template must use.
+  // batch_required_placeholder は batch テンプレートが必ず使う唯一の placeholder。
   string batch_required_placeholder = 6;
 }
 
-// UpdatePromptTemplatesRequest replaces every template in one configuration write.
-// An empty template is restored to its built-in default.
+// UpdatePromptTemplatesRequest は 1 回の設定書き込みで全テンプレートを置き換える。
+// 空のテンプレートは同梱の既定値に戻される。
 message UpdatePromptTemplatesRequest {
-  // design replaces the template used for a task without an implementation plan.
+  // design は実装計画がない task 用のテンプレートを置き換える。
   string design = 1;
-  // implementation replaces the template used for a task with an implementation plan.
+  // implementation は実装計画がある task 用のテンプレートを置き換える。
   string implementation = 2;
-  // batch replaces the template used for several tasks handed over in one prompt.
+  // batch は複数の task を 1 つのプロンプトで引き渡す用のテンプレートを置き換える。
   string batch = 3;
 }
 
-// UpdatePromptTemplatesResponse returns the templates the write produced.
+// UpdatePromptTemplatesResponse は書き込みの結果できたテンプレートを返す。
 message UpdatePromptTemplatesResponse {
-  // templates contains both stored templates.
+  // templates は保存された両方のテンプレートを含む。
   PromptTemplates templates = 1;
 }
 
-// GetTaskPromptRequest asks for the expanded agent prompt of one task.
+// GetTaskPromptRequest は task 1 件分の展開済みエージェントプロンプトを求める。
 message GetTaskPromptRequest {
-  // task_id is the task's public identifier.
+  // task_id は task の公開識別子。
   string task_id = 1;
 }
 
-// GetTaskPromptResponse returns the expanded agent prompt of one task.
+// GetTaskPromptResponse は task 1 件分の展開済みエージェントプロンプトを返す。
 message GetTaskPromptResponse {
-  // task_id is the task the prompt targets.
+  // task_id はプロンプトの対象となる task。
   string task_id = 1;
-  // kind reports which template produced the prompt.
+  // kind はどのテンプレートからプロンプトができたかを示す。
   TaskPromptKind kind = 2;
-  // prompt is the expanded template, ready to hand to another agent.
+  // prompt は展開済みのテンプレートで、他のエージェントにそのまま渡せる。
   string prompt = 3;
 }
 
-// GetBatchPromptRequest asks for one prompt covering several tasks of one feature.
+// GetBatchPromptRequest は 1 つの feature の複数 task をまとめたプロンプトを求める。
 message GetBatchPromptRequest {
-  // feature_id is the public identifier of the feature the tasks belong to.
+  // feature_id は task が属する feature の公開識別子。
   string feature_id = 1;
-  // task_ids lists the tasks to cover, in the order they should appear.
+  // task_ids は対象の task を、プロンプトに並べたい順で列挙する。
   repeated string task_ids = 2;
 }
 
-// GetBatchPromptResponse returns the expanded batch prompt.
+// GetBatchPromptResponse は展開済みの batch プロンプトを返す。
 message GetBatchPromptResponse {
-  // feature_id is the feature the prompt covers.
+  // feature_id はプロンプトが対象とする feature。
   string feature_id = 1;
-  // task_ids lists the covered tasks in the order the prompt names them.
+  // task_ids は対象の task を、プロンプトが挙げる順で列挙する。
   repeated string task_ids = 2;
-  // prompt is the expanded batch template, ready to hand to another agent.
+  // prompt は展開済みの batch テンプレートで、他のエージェントにそのまま渡せる。
   string prompt = 3;
 }
 
-// SyncRequest selects pull requests to refresh from GitHub.
-// Empty selectors refresh all pull requests; setting both selectors applies both filters.
+// SyncRequest は GitHub から更新する pull request を選ぶ。
+// セレクタが空なら全件を更新し、両方を指定すると両方の絞り込みが効く。
 message SyncRequest {
-  // feature_id selects pull requests belonging to the feature identified by public ID.
+  // feature_id は公開 ID で示した feature に属する pull request を選ぶ。
   string feature_id = 1;
-  // task_id selects the pull request attached to this task's public ID.
+  // task_id はこの公開 ID の task に紐づく pull request を選ぶ。
   string task_id = 2;
 }
 
-// SyncResponse reports the results of a pull request refresh.
+// SyncResponse は pull request の更新結果を報告する。
 message SyncResponse {
-  // succeeded is the number of pull requests refreshed successfully.
+  // succeeded は更新に成功した pull request の数。
   int32 succeeded = 1;
-  // failed is the number of pull requests with an actionable refresh error.
-  // Known closed or merged pull requests with an unavailable refresh are not counted.
+  // failed は対処が必要な更新エラーを持つ pull request の数。
+  // クローズやマージが既知で更新できない pull request は数えない。
   int32 failed = 2;
 }
 
-// GitHubSyncStatus describes the latest process-wide synchronization attempt.
+// GitHubSyncStatus は直近のプロセス全体の同期試行を表す。
 message GitHubSyncStatus {
-  // interval_seconds is the configured automatic synchronization interval.
+  // interval_seconds は設定された自動同期の間隔。
   int64 interval_seconds = 1;
-  // last_attempt_at is the last claimed run time in RFC 3339 UTC format.
+  // last_attempt_at は RFC 3339 UTC 形式の、最後に実行を確保した時刻。
   optional string last_attempt_at = 2;
-  // last_updated_at is the last completed run time in RFC 3339 UTC format.
+  // last_updated_at は RFC 3339 UTC 形式の、最後に完了した実行の時刻。
   optional string last_updated_at = 3;
-  // succeeded is the number of items refreshed by the latest completed run.
+  // succeeded は直近の完了した実行で更新できた件数。
   int32 succeeded = 4;
-  // failed is the number of items with an actionable refresh error after the latest completed run.
-  // Known closed or merged pull requests with an unavailable refresh are not counted.
+  // failed は直近の完了した実行のあと、対処が必要な更新エラーを持つ件数。
+  // クローズやマージが既知で更新できない pull request は数えない。
   int32 failed = 5;
-  // error is the latest run-level failure, when present.
+  // error は直近の実行単位の失敗があればその内容。
   string error = 6;
 }
 
-// GetGitHubSyncStatusRequest requests the persisted synchronization status.
+// GetGitHubSyncStatusRequest は保存された同期状況を要求する。
 message GetGitHubSyncStatusRequest {}
 
-// GetGitHubSyncStatusResponse returns the persisted synchronization status.
+// GetGitHubSyncStatusResponse は保存された同期状況を返す。
 message GetGitHubSyncStatusResponse {
-  // status contains interval, timestamps, counts, and the latest run error.
+  // status は間隔・時刻・件数・直近の実行エラーを含む。
   GitHubSyncStatus status = 1;
 }
 
-// SyncGitHubIfDueRequest asks the server to refresh only when the interval has expired.
+// SyncGitHubIfDueRequest は間隔が切れている場合だけ更新するようサーバーに求める。
 message SyncGitHubIfDueRequest {}
 
-// SyncGitHubIfDueResponse reports whether this caller claimed a run and the resulting status.
+// SyncGitHubIfDueResponse は呼び出し側が実行を確保したかと、その結果の状況を報告する。
 message SyncGitHubIfDueResponse {
-  // ran is true only when this request acquired and completed a synchronization run.
+  // ran はこのリクエストが同期の実行を確保して完了させた場合にのみ true。
   bool ran = 1;
-  // status contains the latest persisted synchronization status.
+  // status は保存された最新の同期状況を含む。
   GitHubSyncStatus status = 2;
 }
 
-// ValidateRequest requests database integrity validation.
+// ValidateRequest はデータベースの整合性検証を要求する。
 message ValidateRequest {}
 
-// ValidateResponse reports whether database integrity checks passed.
+// ValidateResponse はデータベースの整合性検査に通ったかを報告する。
 message ValidateResponse {
-  // valid is true when no integrity errors were found.
+  // valid は整合性エラーが見つからなかった場合に true。
   bool valid = 1;
-  // errors contains human-readable integrity errors when valid is false.
+  // errors は valid が false のときの、人が読める整合性エラー。
   repeated string errors = 2;
 }
 
-// DebugProblem is one detected diagnostic problem together with its evidence.
+// DebugProblem は検出した診断上の問題 1 件と、その根拠。
 message DebugProblem {
-  // code identifies the detected problem.
+  // code は検出した問題を示す。
   DebugProblemCode code = 1;
-  // target names the file, host, or repository the problem was detected on.
+  // target は問題を検出したファイル・host・リポジトリの名前。
   string target = 2;
-  // evidence is the observed value that triggered the detection.
+  // evidence は検出のきっかけになった観測値。
   string evidence = 3;
-  // next_command is the command whose output explains the problem in full.
+  // next_command は問題の全容を出力で説明するコマンド。
   string next_command = 4;
 }
 
-// DebugBuild describes the running PRX build.
+// DebugBuild は動作中の PRX のビルドを表す。
 message DebugBuild {
-  // version is the PRX version, carrying a -dev suffix on an unstamped development build.
+  // version は PRX のバージョンで、刻印のない開発ビルドでは -dev が付く。
   string version = 1;
-  // development is true when the build is not a stamped release.
+  // development は刻印されたリリースでないビルドのとき true。
   bool development = 2;
-  // go_version is the Go toolchain version the binary reports.
+  // go_version はバイナリが報告する Go ツールチェーンのバージョン。
   string go_version = 3;
-  // os is the operating system the binary was built for.
+  // os はバイナリのビルド対象 OS。
   string os = 4;
-  // arch is the architecture the binary was built for.
+  // arch はバイナリのビルド対象アーキテクチャ。
   string arch = 5;
 }
 
-// DebugRuntime describes the process that produced the report.
+// DebugRuntime はレポートを生成したプロセスを表す。
 message DebugRuntime {
-  // mode is cli for a command invocation and serve for the local server.
+  // mode はコマンド実行なら cli、ローカルサーバーなら serve。
   string mode = 1;
-  // demo is true while the process uses the temporary demo environment.
+  // demo はプロセスが一時的な demo 環境を使っている間 true。
   bool demo = 2;
-  // github_fixture is true while GitHub reads come from a fixture file.
+  // github_fixture は GitHub の読み取りが fixture ファイル由来の間 true。
   bool github_fixture = 3;
-  // generated_at is the report time in RFC 3339 UTC format.
+  // generated_at は RFC 3339 UTC 形式のレポート生成時刻。
   string generated_at = 4;
-  // time_zone is the local time zone name of the process.
+  // time_zone はプロセスのローカルタイムゾーン名。
   string time_zone = 5;
-  // listen_address is the address the server accepted, and is empty outside serve mode.
+  // listen_address はサーバーが受け付けたアドレスで、serve 以外では空。
   string listen_address = 6;
-  // started_at is the server start time in RFC 3339 UTC format, and is empty outside serve mode.
+  // started_at は RFC 3339 UTC 形式のサーバー起動時刻で、serve 以外では空。
   string started_at = 7;
-  // uptime_seconds is how long the server has been listening, and is zero outside serve mode.
+  // uptime_seconds はサーバーが待ち受けている時間で、serve 以外では 0。
   int64 uptime_seconds = 8;
 }
 
-// DebugEnvironmentVariable reports whether one PRX-relevant variable is set, never its value.
+// DebugEnvironmentVariable は PRX に関わる変数 1 件の設定有無だけを報告し、値は含めない。
 message DebugEnvironmentVariable {
-  // name is the environment variable name.
+  // name は環境変数名。
   string name = 1;
-  // set is true when the variable holds a non-empty value.
+  // set は変数が空でない値を持つとき true。
   bool set = 2;
 }
 
-// DebugPaths reports the resolved file locations and the ambient environment that selected them.
+// DebugPaths は解決されたファイルの場所と、それを選んだ環境を報告する。
 message DebugPaths {
-  // database_path is the resolved SQLite path, shortened to ~ under the home directory, or demo.
+  // database_path は解決した SQLite のパスで、ホーム配下は ~ に短縮、demo のこともある。
   string database_path = 1;
-  // database_path_source is flag, env, default, or demo.
+  // database_path_source は flag、env、default、demo のいずれか。
   string database_path_source = 2;
-  // database_file_exists is true when the resolved database path is an existing file.
+  // database_file_exists は解決したデータベースのパスが既存のファイルのとき true。
   bool database_file_exists = 3;
-  // config_path is the resolved YAML path, shortened to ~ under the home directory, or demo.
+  // config_path は解決した YAML のパスで、ホーム配下は ~ に短縮、demo のこともある。
   string config_path = 4;
-  // config_path_source is flag, env, default, or demo.
+  // config_path_source は flag、env、default、demo のいずれか。
   string config_path_source = 5;
-  // config_file_exists is true when the resolved configuration path is an existing file.
+  // config_file_exists は解決した設定のパスが既存のファイルのとき true。
   bool config_file_exists = 6;
-  // config_permissions is the octal permission mode of the configuration file, when it exists.
+  // config_permissions は設定ファイルが存在する場合の 8 進数のパーミッション。
   string config_permissions = 7;
-  // environment_variables lists the PRX-relevant variables and whether each is set.
+  // environment_variables は PRX に関わる変数と、それぞれの設定有無を並べる。
   repeated DebugEnvironmentVariable environment_variables = 8;
 }
 
-// DebugConfigHost is the host boundary as the report presents it.
+// DebugConfigHost はレポートが提示する host の境界。
 message DebugConfigHost {
-  // host is the normalized GitHub host key.
+  // host は正規化した GitHub の host キー。
   string host = 1;
-  // api_url is the REST endpoint used for the host.
+  // api_url はその host に使う REST エンドポイント。
   string api_url = 2;
-  // graphql_url is the GraphQL endpoint used for the host.
+  // graphql_url はその host に使う GraphQL エンドポイント。
   string graphql_url = 3;
 }
 
-// DebugConfigAuthMethod is a credential method without any secret material.
+// DebugConfigAuthMethod は秘密情報を一切含まない資格情報の方法。
 message DebugConfigAuthMethod {
-  // id is the configured method identifier.
+  // id は設定された認証方法の識別子。
   string id = 1;
-  // host is the normalized host the method is scoped to.
+  // host は認証方法の対象として正規化された host。
   string host = 2;
-  // type is the credential source name.
+  // type は資格情報の取得元の名前。
   string type = 3;
-  // secret_configured is true when the method has a usable secret source.
+  // secret_configured は使える秘密情報の取得元がある場合に true。
   bool secret_configured = 4;
 }
 
-// DebugConfig reports the loaded configuration without secret material.
+// DebugConfig は読み込んだ設定を、秘密情報を除いて報告する。
 message DebugConfig {
-  // version is the configuration file version.
+  // version は設定ファイルのバージョン。
   int32 version = 1;
-  // valid is true when the configuration loaded successfully.
+  // valid は設定の読み込みに成功した場合に true。
   bool valid = 2;
-  // errors contains the load failure when valid is false.
+  // errors は valid が false のときの読み込み失敗の内容。
   repeated string errors = 3;
-  // warnings contains recoverable problems such as unknown fields.
+  // warnings は未知のフィールドなど回復可能な問題を含む。
   repeated string warnings = 4;
-  // hosts lists the configured host boundaries.
+  // hosts は設定された host の境界を並べる。
   repeated DebugConfigHost hosts = 5;
-  // auth_methods lists the credential methods in evaluation order.
+  // auth_methods は資格情報の方法を評価順に並べる。
   repeated DebugConfigAuthMethod auth_methods = 6;
-  // auto_sync_interval_seconds is the configured automatic refresh interval.
+  // auto_sync_interval_seconds は設定された自動更新の間隔。
   int64 auto_sync_interval_seconds = 7;
 }
 
-// DebugDatabaseFile reports the on-disk state of the SQLite database.
+// DebugDatabaseFile は SQLite データベースのディスク上の状態を報告する。
 message DebugDatabaseFile {
-  // applicable is false for an in-memory or DSN-style database that has no single file.
+  // applicable は単一のファイルを持たないインメモリや DSN 形式のデータベースでは false。
   bool applicable = 1;
-  // size_bytes is the size of the main database file.
+  // size_bytes は主データベースファイルのサイズ。
   int64 size_bytes = 2;
-  // wal_present is true when a write-ahead log file exists beside the database.
+  // wal_present はデータベースの隣に write-ahead log ファイルがあるとき true。
   bool wal_present = 3;
-  // wal_size_bytes is the size of the write-ahead log file when it exists.
+  // wal_size_bytes は write-ahead log ファイルがある場合のそのサイズ。
   int64 wal_size_bytes = 4;
-  // shm_present is true when a shared-memory file exists beside the database.
+  // shm_present はデータベースの隣に共有メモリファイルがあるとき true。
   bool shm_present = 5;
-  // writable is true when the database file could be opened for writing.
+  // writable はデータベースファイルを書き込み用に開けた場合に true。
   bool writable = 6;
-  // write_error explains why the database file could not be opened for writing.
+  // write_error はデータベースファイルを書き込み用に開けなかった理由。
   string write_error = 7;
 }
 
-// DebugStorage reports schema state and database integrity.
+// DebugStorage はスキーマの状態とデータベースの整合性を報告する。
 message DebugStorage {
-  // applied_schema_version is the highest migration version recorded in the database.
+  // applied_schema_version はデータベースに記録された最大のマイグレーション版数。
   int32 applied_schema_version = 1;
-  // embedded_schema_version is the highest migration version this binary carries.
+  // embedded_schema_version はこのバイナリが持つ最大のマイグレーション版数。
   int32 embedded_schema_version = 2;
-  // integrity_valid is true when dependency-data validation found no errors.
+  // integrity_valid は依存データの検証でエラーがなかった場合に true。
   bool integrity_valid = 3;
-  // integrity_errors contains the validation errors when integrity_valid is false.
+  // integrity_errors は integrity_valid が false のときの検証エラー。
   repeated string integrity_errors = 4;
-  // database_file reports the on-disk state of the database.
+  // database_file はデータベースのディスク上の状態を報告する。
   DebugDatabaseFile database_file = 5;
-  // cli_schema_version is the CLI response schema version this binary emits.
+  // cli_schema_version はこのバイナリが出力する CLI レスポンスのスキーマ版数。
   string cli_schema_version = 6;
-  // error explains why storage diagnostics are unavailable.
+  // error はストレージの診断が得られない理由。
   string error = 7;
 }
 
-// DebugCount is one named count in a breakdown.
+// DebugCount は内訳の中の名前付きの件数 1 件。
 message DebugCount {
-  // name is the value the count belongs to.
+  // name は件数が属する値。
   string name = 1;
-  // count is the number of records carrying that value.
+  // count はその値を持つレコードの数。
   int32 count = 2;
 }
 
-// DebugData reports stored record counts and their breakdowns.
+// DebugData は保存されたレコード数とその内訳を報告する。
 message DebugData {
-  // features is the number of stored features.
+  // features は保存された feature の数。
   int32 features = 1;
-  // tasks is the number of stored tasks.
+  // tasks は保存された task の数。
   int32 tasks = 2;
-  // dependencies is the number of stored dependency edges.
+  // dependencies は保存された依存の辺の数。
   int32 dependencies = 3;
-  // pull_requests is the number of attached pull requests.
+  // pull_requests は紐づいた pull request の数。
   int32 pull_requests = 4;
-  // documents is the number of registered documents.
+  // documents は登録された document の数。
   int32 documents = 5;
-  // feature_statuses breaks features down by presented status.
+  // feature_statuses は feature を表示ステータス別に分ける。
   repeated DebugCount feature_statuses = 6;
-  // task_display_states breaks tasks down by presented state.
+  // task_display_states は task を表示状態別に分ける。
   repeated DebugCount task_display_states = 7;
   reserved 8;
   reserved "task_kinds";
-  // pull_request_display_states breaks pull requests down by presented state.
+  // pull_request_display_states は pull request を表示状態別に分ける。
   repeated DebugCount pull_request_display_states = 9;
-  // pull_request_hosts breaks pull requests down by normalized host.
+  // pull_request_hosts は pull request を正規化した host 別に分ける。
   repeated DebugCount pull_request_hosts = 10;
-  // document_kinds breaks documents down by source kind.
+  // document_kinds は document を取得元の種類別に分ける。
   repeated DebugCount document_kinds = 11;
-  // error explains why the stored data could not be counted.
+  // error は保存データを数えられなかった理由。
   string error = 12;
-  // projects is the number of stored projects.
+  // projects は保存された project の数。
   int32 projects = 13;
-  // project_states breaks projects down by their only state, active or archived.
+  // project_states は project を唯一の状態、active か archived で分ける。
   repeated DebugCount project_states = 14;
 }
 
-// DebugSyncFailure counts synchronization failures within one host or repository.
+// DebugSyncFailure は 1 つの host かリポジトリの中の同期失敗を数える。
 message DebugSyncFailure {
-  // scope is the host or the host, owner, and repository the failures belong to.
+  // scope は失敗が属する host、または host・owner・リポジトリの組。
   string scope = 1;
-  // count is the number of failing pull requests in that scope.
+  // count はその範囲で失敗している pull request の数。
   int32 count = 2;
 }
 
-// DebugErrorGroup is one representative synchronization error and the tasks it affected.
+// DebugErrorGroup は代表的な同期エラー 1 件と、影響を受けた task。
 message DebugErrorGroup {
-  // message is the representative error text, truncated when very long.
+  // message は代表的なエラー文で、非常に長い場合は切り詰める。
   string message = 1;
-  // count is the number of pull requests whose error shares this shape.
+  // count はこの形のエラーを持つ pull request の数。
   int32 count = 2;
-  // task_ids lists a bounded sample of the affected task IDs.
+  // task_ids は影響を受けた task ID の、件数を絞った標本。
   repeated string task_ids = 3;
-  // total_task_count is how many tasks the group covers, including those not listed.
+  // total_task_count はこのグループが対象とする task 数で、未掲載分も含む。
   int32 total_task_count = 4;
 }
 
-// DebugAuthCacheEntry records which credential last succeeded for one repository.
+// DebugAuthCacheEntry はリポジトリごとに直近で成功した資格情報を記録する。
 message DebugAuthCacheEntry {
-  // host is the normalized GitHub host.
+  // host は正規化した GitHub の host。
   string host = 1;
-  // owner is the repository owner.
+  // owner はリポジトリの所有者。
   string owner = 2;
-  // repository is the repository name.
+  // repository はリポジトリ名。
   string repository = 3;
-  // auth_method_id is the credential method that last succeeded.
+  // auth_method_id は直近で成功した資格情報の方法。
   string auth_method_id = 4;
-  // last_succeeded_at is when that credential last succeeded, in RFC 3339 UTC format.
+  // last_succeeded_at は RFC 3339 UTC 形式で、その資格情報が最後に成功した時刻。
   string last_succeeded_at = 5;
 }
 
-// DebugGitHubSync reports synchronization state and the failures behind it.
+// DebugGitHubSync は同期の状態と、その背後にある失敗を報告する。
 message DebugGitHubSync {
-  // status is the persisted process-wide synchronization status.
+  // status は保存されたプロセス全体の同期状況。
   GitHubSyncStatus status = 1;
-  // next_run_at is when the interval next expires, in RFC 3339 UTC format.
+  // next_run_at は RFC 3339 UTC 形式で、次に間隔が切れる時刻。
   string next_run_at = 2;
-  // due is true when the interval has already expired.
+  // due はすでに間隔が切れている場合に true。
   bool due = 3;
-  // seconds_since_last_update is how long ago the last run completed.
+  // seconds_since_last_update は直近の実行が完了してからの経過秒数。
   int64 seconds_since_last_update = 4;
-  // stale_pull_requests is the number of pull requests holding stale state.
+  // stale_pull_requests は古い状態を持つ pull request の数。
   int32 stale_pull_requests = 5;
-  // failed_pull_requests is the number of pull requests carrying a refresh error.
+  // failed_pull_requests は更新エラーを持つ pull request の数。
   int32 failed_pull_requests = 6;
-  // host_failures breaks refresh errors down by host.
+  // host_failures は更新エラーを host 別に分ける。
   repeated DebugSyncFailure host_failures = 7;
-  // repository_failures breaks refresh errors down by repository, bounded in size.
+  // repository_failures は更新エラーをリポジトリ別に分ける。件数には上限がある。
   repeated DebugSyncFailure repository_failures = 8;
-  // omitted_repository_failures is how many repository rows the size limit dropped.
+  // omitted_repository_failures は上限で落としたリポジトリの行数。
   int32 omitted_repository_failures = 9;
-  // error_groups lists representative refresh errors, bounded in size.
+  // error_groups は代表的な更新エラーを並べる。件数には上限がある。
   repeated DebugErrorGroup error_groups = 10;
-  // omitted_error_groups is how many error groups the size limit dropped.
+  // omitted_error_groups は上限で落としたエラーグループの数。
   int32 omitted_error_groups = 11;
-  // auth_cache lists the credential that last succeeded per repository, bounded in size.
+  // auth_cache はリポジトリごとに直近で成功した資格情報を並べる。件数には上限がある。
   repeated DebugAuthCacheEntry auth_cache = 12;
-  // omitted_auth_cache_entries is how many cache rows the size limit dropped.
+  // omitted_auth_cache_entries は上限で落としたキャッシュの行数。
   int32 omitted_auth_cache_entries = 13;
-  // error explains why synchronization diagnostics are unavailable.
+  // error は同期の診断が得られない理由。
   string error = 14;
 }
 
-// DebugReport is the whole diagnostic report, with detected problems first.
+// DebugReport は診断レポート全体で、検出した問題を先頭に置く。
 message DebugReport {
-  // problems lists the detected problems in reporting order.
+  // problems は検出した問題を報告順に並べる。
   repeated DebugProblem problems = 1;
-  // build describes the running PRX build.
+  // build は動作中の PRX のビルドを表す。
   DebugBuild build = 2;
-  // runtime describes the process that produced the report.
+  // runtime はレポートを生成したプロセスを表す。
   DebugRuntime runtime = 3;
-  // paths reports resolved file locations and the ambient environment.
+  // paths は解決されたファイルの場所と、その環境を報告する。
   DebugPaths paths = 4;
-  // config reports the loaded configuration without secret material.
+  // config は読み込んだ設定を、秘密情報を除いて報告する。
   DebugConfig config = 5;
-  // storage reports schema state and database integrity.
+  // storage はスキーマの状態とデータベースの整合性を報告する。
   DebugStorage storage = 6;
-  // records reports stored record counts and their breakdowns.
-  // It is not named data so a JSON reader never mistakes the section for a response envelope.
+  // records は保存されたレコード数とその内訳を報告する。
+  // JSON の読み手がこの節をレスポンスの外枠と取り違えないよう、data とは名付けていない。
   DebugData records = 7;
-  // github_sync reports synchronization state and the failures behind it.
+  // github_sync は同期の状態と、その背後にある失敗を報告する。
   DebugGitHubSync github_sync = 8;
 }
 
-// GetDebugReportRequest asks the server for a diagnostic report.
+// GetDebugReportRequest はサーバーに診断レポートを求める。
 message GetDebugReportRequest {}
 
-// GetDebugReportResponse returns the diagnostic report and its rendered text.
+// GetDebugReportResponse は診断レポートと、その整形済みテキストを返す。
 message GetDebugReportResponse {
-  // report contains the structured diagnostic sections.
+  // report は構造化された診断の各節を含む。
   DebugReport report = 1;
-  // text is the rendered report, identical to the text `prx debug` prints.
+  // text は整形済みのレポートで、`prx debug` が出力するテキストと同一。
   string text = 2;
 }
 
-// PRXService exposes project, feature, task, dependency, GitHub, document, and validation operations.
+// PRXService は project・feature・task・依存・GitHub・document・検証の操作を公開する。
 service PRXService {
-  // GetSnapshot returns the current normalized dataset and derived queues.
+  // GetSnapshot は現在の正規化データと導出キューを返す。
   rpc GetSnapshot(GetSnapshotRequest) returns (GetSnapshotResponse);
-  // CreateProject creates a new project.
+  // CreateProject は project を新規作成する。
   rpc CreateProject(CreateProjectRequest) returns (CreateProjectResponse);
-  // UpdateProject applies the fields present in the request to an existing project, including archiving.
+  // UpdateProject はリクエストにあるフィールドを既存の project に適用し、アーカイブも含む。
   rpc UpdateProject(UpdateProjectRequest) returns (UpdateProjectResponse);
-  // DeleteProject deletes a project, subject to the cascade option.
+  // DeleteProject は cascade の指定に従って project を削除する。
   rpc DeleteProject(DeleteProjectRequest) returns (DeleteProjectResponse);
-  // CreateFeature creates a new feature.
+  // CreateFeature は feature を新規作成する。
   rpc CreateFeature(CreateFeatureRequest) returns (CreateFeatureResponse);
-  // UpdateFeature applies the fields present in the request to an existing feature.
+  // UpdateFeature はリクエストにあるフィールドを既存の feature に適用する。
   rpc UpdateFeature(UpdateFeatureRequest) returns (UpdateFeatureResponse);
-  // DeleteFeature deletes a feature, subject to the cascade option.
+  // DeleteFeature は cascade の指定に従って feature を削除する。
   rpc DeleteFeature(DeleteFeatureRequest) returns (DeleteFeatureResponse);
-  // CreateTask creates a task within an existing feature.
+  // CreateTask は既存の feature の中に task を作成する。
   rpc CreateTask(CreateTaskRequest) returns (CreateTaskResponse);
-  // UpdateTask applies the fields present in the request to an existing task.
+  // UpdateTask はリクエストにあるフィールドを既存の task に適用する。
   rpc UpdateTask(UpdateTaskRequest) returns (UpdateTaskResponse);
-  // DeleteTask deletes a task, subject to the cascade option.
+  // DeleteTask は cascade の指定に従って task を削除する。
   rpc DeleteTask(DeleteTaskRequest) returns (DeleteTaskResponse);
-  // AddDependency adds a same-feature dependency when it does not create a cycle.
+  // AddDependency は循環を作らない場合に、同じ feature 内の依存を追加する。
   rpc AddDependency(AddDependencyRequest) returns (AddDependencyResponse);
-  // RemoveDependency removes an existing dependency edge.
+  // RemoveDependency は既存の依存の辺を取り除く。
   rpc RemoveDependency(RemoveDependencyRequest) returns (RemoveDependencyResponse);
-  // AttachPullRequest attaches a GitHub pull request to a pull-request task.
+  // AttachPullRequest は GitHub の pull request を pull request 用の task に紐づける。
   rpc AttachPullRequest(AttachPullRequestRequest) returns (AttachPullRequestResponse);
-  // DetachPullRequest removes the pull request attached to a task.
+  // DetachPullRequest は task に紐づく pull request を外す。
   rpc DetachPullRequest(DetachPullRequestRequest) returns (DetachPullRequestResponse);
-  // AddDocument registers a URL, local file, or stored Markdown document.
+  // AddDocument は URL、ローカルファイル、保存する Markdown の document を登録する。
   rpc AddDocument(AddDocumentRequest) returns (AddDocumentResponse);
-  // GetDocument returns one document and stored Markdown content when applicable.
+  // GetDocument は document を 1 件返し、該当すれば保存された Markdown も返す。
   rpc GetDocument(GetDocumentRequest) returns (GetDocumentResponse);
-  // UpdateDocument changes document metadata, source, or plan designation.
+  // UpdateDocument は document のメタデータ・取得元・計画指定を変更する。
   rpc UpdateDocument(UpdateDocumentRequest) returns (UpdateDocumentResponse);
-  // DeleteDocument removes a registered document reference.
+  // DeleteDocument は登録済みの document 参照を削除する。
   rpc DeleteDocument(DeleteDocumentRequest) returns (DeleteDocumentResponse);
-  // ReadDocumentContent reads bounded UTF-8 content for a local file or stored Markdown document.
+  // ReadDocumentContent はローカルファイルか保存された Markdown の内容を上限つきの UTF-8 で読む。
   rpc ReadDocumentContent(ReadDocumentContentRequest) returns (ReadDocumentContentResponse);
-  // SelectLocalFile opens a native file chooser on the PRX server without registering a document.
+  // SelectLocalFile は document を登録せず、PRX サーバーでネイティブのファイル選択画面を開く。
   rpc SelectLocalFile(SelectLocalFileRequest) returns (SelectLocalFileResponse);
-  // Sync refreshes selected pull requests from GitHub and records successes and failures independently.
+  // Sync は選ばれた pull request を GitHub から更新し、成功と失敗を個別に記録する。
   rpc Sync(SyncRequest) returns (SyncResponse);
-  // GetGitHubSyncStatus returns automatic synchronization diagnostics.
+  // GetGitHubSyncStatus は自動同期の診断情報を返す。
   rpc GetGitHubSyncStatus(GetGitHubSyncStatusRequest) returns (GetGitHubSyncStatusResponse);
-  // SyncGitHubIfDue claims and runs an automatic refresh only when due.
+  // SyncGitHubIfDue は期限が来たときだけ自動更新を確保して実行する。
   rpc SyncGitHubIfDue(SyncGitHubIfDueRequest) returns (SyncGitHubIfDueResponse);
-  // Validate checks database integrity and returns any detected errors.
+  // Validate はデータベースの整合性を調べ、検出したエラーを返す。
   rpc Validate(ValidateRequest) returns (ValidateResponse);
-  // GetDebugReport returns the diagnostic report without starting a synchronization run.
+  // GetDebugReport は同期を開始せずに診断レポートを返す。
   rpc GetDebugReport(GetDebugReportRequest) returns (GetDebugReportResponse);
-  // GetConfig returns the public GitHub configuration.
+  // GetConfig は公開の GitHub 設定を返す。
   rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
-  // UpdateGitHubSyncConfig changes the shared automatic refresh interval.
+  // UpdateGitHubSyncConfig は共有の自動更新間隔を変更する。
   rpc UpdateGitHubSyncConfig(UpdateGitHubSyncConfigRequest) returns (UpdateGitHubSyncConfigResponse);
-  // AddGitHubHost adds a host boundary.
+  // AddGitHubHost は host の境界を追加する。
   rpc AddGitHubHost(AddGitHubHostRequest) returns (AddGitHubHostResponse);
-  // UpdateGitHubHost updates a host boundary.
+  // UpdateGitHubHost は host の境界を更新する。
   rpc UpdateGitHubHost(UpdateGitHubHostRequest) returns (UpdateGitHubHostResponse);
-  // DeleteGitHubHost removes a host boundary.
+  // DeleteGitHubHost は host の境界を削除する。
   rpc DeleteGitHubHost(DeleteGitHubHostRequest) returns (DeleteGitHubHostResponse);
-  // AddGitHubAuthMethod adds a host-scoped credential.
+  // AddGitHubAuthMethod は host 単位の資格情報を追加する。
   rpc AddGitHubAuthMethod(AddGitHubAuthMethodRequest) returns (AddGitHubAuthMethodResponse);
-  // UpdateGitHubAuthMethod updates a host-scoped credential.
+  // UpdateGitHubAuthMethod は host 単位の資格情報を更新する。
   rpc UpdateGitHubAuthMethod(UpdateGitHubAuthMethodRequest) returns (UpdateGitHubAuthMethodResponse);
-  // DeleteGitHubAuthMethod removes a host-scoped credential.
+  // DeleteGitHubAuthMethod は host 単位の資格情報を削除する。
   rpc DeleteGitHubAuthMethod(DeleteGitHubAuthMethodRequest) returns (DeleteGitHubAuthMethodResponse);
-  // ReorderGitHubAuthMethods changes credential priority.
+  // ReorderGitHubAuthMethods は資格情報の優先順位を変更する。
   rpc ReorderGitHubAuthMethods(ReorderGitHubAuthMethodsRequest) returns (ReorderGitHubAuthMethodsResponse);
-  // ValidateConfig validates the YAML configuration without changing it.
+  // ValidateConfig は YAML 設定を変更せずに検証する。
   rpc ValidateConfig(ValidateConfigRequest) returns (ValidateConfigResponse);
-  // GetPromptTemplates returns the stored agent prompt templates.
+  // GetPromptTemplates は保存されたエージェント用テンプレートを返す。
   rpc GetPromptTemplates(GetPromptTemplatesRequest) returns (GetPromptTemplatesResponse);
-  // UpdatePromptTemplates replaces every agent prompt template in one write.
+  // UpdatePromptTemplates は 1 回の書き込みで全テンプレートを置き換える。
   rpc UpdatePromptTemplates(UpdatePromptTemplatesRequest) returns (UpdatePromptTemplatesResponse);
-  // GetTaskPrompt returns the expanded agent prompt for one task.
+  // GetTaskPrompt は task 1 件分の展開済みエージェントプロンプトを返す。
   rpc GetTaskPrompt(GetTaskPromptRequest) returns (GetTaskPromptResponse);
-  // GetBatchPrompt returns one expanded prompt covering several tasks of one feature.
+  // GetBatchPrompt は 1 つの feature の複数 task をまとめた展開済みプロンプトを返す。
   rpc GetBatchPrompt(GetBatchPromptRequest) returns (GetBatchPromptResponse);
 }

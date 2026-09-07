@@ -36,7 +36,7 @@ function TaskInspectorHeader({
   return (
     <header>
       <div className="inspector-heading">
-        {/* The state opens the heading, as it does on every card and row. */}
+        {/* どのカードや行とも同じく、状態が見出しの先頭に来る。 */}
         <div className="inspector-heading-line">
           <StatusBadge
             className={`state-${taskDisplayStateToken(task.displayState)}`}
@@ -79,8 +79,8 @@ export function TaskInspector({
   return (
     <aside className="inspector" aria-label={t("inspector.label")}>
       <TaskInspectorHeader task={task} onClose={onClose} />
-      {/* The state moved into the heading, so the strip is left with the one
-          thing the state cannot say: why the task is waiting. */}
+      {/* 状態は見出しへ移したので、このストリップには状態が語れない唯一のこと、
+          つまりタスクが待たされている理由だけが残る。 */}
       {task.blockedReason && (
         <p className="inspector-blocked">
           {blockedReasonLabel(

@@ -28,9 +28,9 @@ test.afterEach(() => {
   expect(browserErrors, browserErrors.join("\n")).toEqual([]);
 });
 
-// The prompt templates live in the shared demo configuration, so this spec is
-// the only one that writes to it and it restores the built-in templates. Serial
-// mode orders this file only, so template-sensitive tests belong here.
+// プロンプトテンプレートは共有のデモ設定にあるため、書き込むのはこの spec だけ
+// にし、最後に組み込みテンプレートへ戻す。serial モードが効くのはこのファイル内
+// だけなので、テンプレートに依存するテストはここに置く。
 test.describe.configure({ mode: "serial" });
 
 test("copies a task prompt built from the configured template", async ({
@@ -41,8 +41,8 @@ test("copies a task prompt built from the configured template", async ({
   const token = `e2e-prompt-${crypto.randomUUID()}`;
   const title = `E2E prompt ${token}`;
 
-  // A feature belongs to a project, so it is created from the demo's first
-  // project rather than from the rail.
+  // feature は project に属するので、rail からではなくデモの最初の project
+  // から作る。
   await page.goto("/projects/P-1?features=active");
   await page.getByRole("button", { name: "Create feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
@@ -70,8 +70,8 @@ test("copies a task prompt built from the configured template", async ({
   await expect(promptPanel.getByText("Prompt templates saved.")).toBeVisible();
   await settings.getByRole("button", { name: "Done" }).click();
 
-  // The prompt is copied from the task listed on the feature screen, so the
-  // reader never has to open the task to hand it to an agent.
+  // プロンプトは feature 画面に並ぶタスクからコピーできるので、エージェントに
+  // 渡すためにタスクを開く必要はない。
   const node = page
     .locator(".task-node")
     .filter({ hasText: "E2E prompt task" });
@@ -89,8 +89,8 @@ test("copies a task prompt built from the configured template", async ({
   await promptPanel
     .getByRole("button", { name: "Restore built-in templates" })
     .click();
-  // Restoring shows the built-in text right away, so the reader sees what the
-  // save is about to write instead of an empty field.
+  // 復元すると組み込みのテキストがすぐ表示されるので、空欄ではなく保存で
+  // 書き込まれる内容が見える。
   await expect(promptPanel.getByLabel("Design prompt")).toContainText(
     "Design PRX task {{task_id}}",
   );
@@ -102,9 +102,8 @@ test("copies a task prompt built from the configured template", async ({
   await settings.getByRole("button", { name: "Done" }).click();
 });
 
-// The batch prompt covers several tasks at once, so this spec drives the whole
-// path a reader takes: designing two tasks, selecting them, and reading the one
-// prompt the server rendered from them.
+// バッチプロンプトは複数タスクをまとめて扱うので、この spec は 2 件を設計して
+// 選択し、サーバーが生成した 1 つのプロンプトを読むまでの一連の流れをたどる。
 test("copies one batch prompt for the tasks selected on a feature", async ({
   page,
   context,
@@ -112,8 +111,8 @@ test("copies one batch prompt for the tasks selected on a feature", async ({
   await context.grantPermissions(["clipboard-read", "clipboard-write"]);
   const title = `E2E batch ${crypto.randomUUID()}`;
 
-  // A feature belongs to a project, so it is created from the demo's first
-  // project rather than from the rail.
+  // feature は project に属するので、rail からではなくデモの最初の project
+  // から作る。
   await page.goto("/projects/P-1?features=active");
   await page.getByRole("button", { name: "Create feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
@@ -132,8 +131,8 @@ test("copies one batch prompt for the tasks selected on a feature", async ({
     ).toBeVisible();
   }
 
-  // A task reaches the batch only once it has a plan, so each one is designed
-  // through the reference dialog before the batch is opened.
+  // タスクは実装計画を持って初めてバッチに載るので、バッチを開く前に参照
+  // ダイアログから各タスクを設計しておく。
   const taskIds: string[] = [];
   for (const taskTitle of taskTitles) {
     const node = page.locator(".task-node").filter({ hasText: taskTitle });
@@ -171,8 +170,8 @@ test("copies one batch prompt for the tasks selected on a feature", async ({
     batchDialog.getByText("Copied a prompt for 2 tasks."),
   ).toBeVisible();
 
-  // The copied text is what the server rendered from the stored batch template:
-  // it names every selected task and sends the agent back to PRX for each one.
+  // コピーされるのは保存済みバッチテンプレートからサーバーが生成した文面で、
+  // 選択した全タスクを列挙し、各タスクでエージェントを PRX に戻す。
   const copied = await page.evaluate(() => navigator.clipboard.readText());
   expect(copied).toContain(`- ${taskIds[0]}: ${taskTitles[0]}`);
   expect(copied).toContain(`- ${taskIds[1]}: ${taskTitles[1]}`);

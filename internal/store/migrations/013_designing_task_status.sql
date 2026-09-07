@@ -1,12 +1,12 @@
--- A task can now be marked as being designed. The status vocabulary gains
--- 'designing', which sits before 'in_progress' and yields to a registered
--- implementation plan the way every unfinished status yields to a pull request.
--- No stored row changes meaning, so this migration only widens the constraint.
--- SQLite cannot change a CHECK constraint in place, so the table is rebuilt.
--- Rebuilding tasks drags in dependencies, pull requests, and documents, because
--- a DROP TABLE with foreign keys enabled runs an implicit DELETE FROM that
--- ON DELETE RESTRICT rejects while referencing rows exist. Every table below
--- other than tasks is recreated exactly as it was.
+-- task を設計中と示せるようにする。status の語彙に 'designing' が加わる。これは
+-- 'in_progress' の手前に位置し、未完了の status が pull request に譲るのと同じように、
+-- 登録済みの実装計画に譲る。既存の行の意味は変わらないので、このマイグレーションは
+-- 制約を広げるだけである。
+-- SQLite は CHECK 制約をその場で変更できないので、テーブルを作り直す。tasks の
+-- 作り直しは dependencies・pull_requests・documents を巻き込む。外部キーが有効な状態の
+-- DROP TABLE は暗黙の DELETE FROM を伴い、参照する行が残っている間は
+-- ON DELETE RESTRICT がそれを拒むためである。以下のうち tasks 以外のテーブルは、
+-- 元とまったく同じ定義で作り直す。
 CREATE TEMP TABLE task_migration AS
 SELECT
   id, feature_id, title, scope, status, assignee, created_at, updated_at,
@@ -123,8 +123,8 @@ CREATE INDEX documents_project_idx ON documents(project_id, created_at, id);
 CREATE INDEX documents_feature_idx ON documents(feature_id, created_at, id);
 CREATE INDEX documents_task_idx ON documents(task_id, is_implementation_plan DESC, created_at, id);
 
--- The upsert of an implementation plan targets this partial index by name and
--- predicate, so both have to survive the rebuild unchanged.
+-- 実装計画の upsert はこの部分インデックスを名前と述語で指定するため、
+-- どちらも作り直しの前後で変えてはならない。
 CREATE UNIQUE INDEX documents_one_plan_per_task_idx
 ON documents(task_id) WHERE is_implementation_plan = 1;
 

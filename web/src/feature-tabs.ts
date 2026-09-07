@@ -5,9 +5,9 @@ import {
 } from "./feature-status";
 import type { Feature } from "./gen/prx/v1/prx_pb";
 
-// A feature list is filtered by status on the project page it appears on. The
-// tab is a search parameter rather than browser-local state so reload, history,
-// and a shared link reproduce the view, as task search does with its query.
+// feature 一覧は表示先の project ページでステータス別に絞り込む。タブはブラウザ
+// 側の状態ではなく search parameter にしてあり、リロード・履歴・共有リンクで同じ
+// 表示を再現できる。task 検索がクエリでそうしているのと同じ。
 export const featureTabIds = ["active", "completed", "archived"] as const;
 export type FeatureTabId = (typeof featureTabIds)[number];
 
@@ -28,8 +28,8 @@ function isFeatureTabId(value: unknown): value is FeatureTabId {
   return featureTabIds.includes(value as FeatureTabId);
 }
 
-// An unknown or missing value falls back to the working set rather than
-// failing the route: a hand-edited or stale link still opens the page.
+// 不明な値や未指定はルートを失敗させず作業対象へフォールバックする。手で書き換
+// えたリンクや古いリンクでもページが開く。
 export function validateFeatureTabSearch(search: Record<string, unknown>): {
   features: FeatureTabId;
 } {

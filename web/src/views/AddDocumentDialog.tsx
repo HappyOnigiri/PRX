@@ -189,8 +189,8 @@ export function AddDocumentDialog(props: AddDocumentDialogProps) {
   );
 }
 
-// The heading names the parent the document will belong to, so the three
-// entry points do not each need their own dialog.
+// 見出しにドキュメントの所属先を示すことで、3 つの入口それぞれに
+// 専用ダイアログを用意せずに済ませる。
 function documentDialogTitleKey(state: DialogState) {
   if (state.projectId !== undefined) return "documentDialog.projectTitle";
   if (state.featureId !== undefined) return "documentDialog.featureTitle";

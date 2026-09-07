@@ -73,9 +73,8 @@ function AppShellLayout({ children }: { children: ReactNode }) {
   );
 }
 
-// The tree sits inside the same <nav> as the screen links: adding an element
-// straight under .rail would break the grid the 900px and 600px layouts
-// define.
+// ツリーは画面リンクと同じ <nav> の中に置く。.rail の直下に要素を足すと、900px
+// と 600px のレイアウトが定義するグリッドが崩れるため。
 function RailNavigation({
   features,
   projects,
@@ -99,9 +98,8 @@ function RailNavigation({
         search={{ archived: false }}
         className="nav-link"
         id="nav-projects-heading"
-        // The default prefix match would light the heading up on a project's
-        // own page, and matching the search would put it out on the archived
-        // view, which is the same screen.
+        // 既定の前方一致だと個々の project ページでも見出しが点灯し、search まで
+        // 一致条件に含めると同じ画面であるアーカイブ表示で消灯してしまう。
         activeOptions={{ exact: true, includeSearch: false }}
         activeProps={{ "data-active": true }}
       >

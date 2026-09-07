@@ -93,9 +93,8 @@ func (s *Service) SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus,
 	if syncErr != nil {
 		runError = syncErr.Error()
 	}
-	// The refresh may have ended because the caller went away, and the outcome
-	// still has to be recorded: otherwise the acquired attempt holds the
-	// interval with no explanation of what stopped it.
+	// 呼び出し側が消えたことで refresh が終わった可能性があるが、結果は必ず記録する。
+	// さもないと取得済みの試行が、何に止められたかの説明もないまま interval を握る。
 	recordContext, cancel := recordingContext(ctx)
 	defer cancel()
 	recorded, completeErr := repository.CompleteGitHubSync(
@@ -108,14 +107,14 @@ func (s *Service) SyncIfDue(ctx context.Context) (bool, domain.GitHubSyncStatus,
 	if statusErr != nil {
 		return true, domain.GitHubSyncStatus{}, statusErr
 	}
-	// The automatic path records errors but deliberately does not fail the CLI
-	// command or page load that happened to notice the expired interval. A
-	// superseded record reports as one that never acquired the interval.
+	// 自動経路はエラーを記録するが、interval 切れにたまたま気づいた CLI コマンドや
+	// ページ読み込みを意図的に失敗させない。
+	// 上書きされた記録は、interval を取得しなかった場合と同じ扱いで報告する。
 	return recorded, syncStatus(interval, status), nil
 }
 
-// recordingContext detaches the run-status write from the cancellation that may
-// have ended the refresh itself, while still bounding how long the write waits.
+// recordingContext は実行状態の書き込みを、refresh 自体を終わらせたかもしれない
+// キャンセルから切り離しつつ、書き込みの待ち時間には上限を設ける。
 func recordingContext(ctx context.Context) (context.Context, context.CancelFunc) {
 	return context.WithTimeout(context.WithoutCancel(ctx), syncRecordTimeout)
 }
@@ -124,9 +123,9 @@ const syncRecordTimeout = 5 * time.Second
 
 func (s *Service) Sync(ctx context.Context, featureID, taskID string) (succeeded, failed int, err error) {
 	repository, recordsState := s.repository.(GitHubSyncStateRepository)
-	// A refresh that covers only one feature or task says nothing about the
-	// pull requests it skipped, so it must not reset the shared interval or
-	// overwrite the counts the last full refresh recorded.
+	// 単一の feature や task だけを対象にした refresh は、飛ばした pull request について
+	// 何も語らない。よって共有の interval をリセットしたり、
+	// 直近の全体 refresh が記録した件数を上書きしたりしてはならない。
 	recordsState = recordsState && featureID == "" && taskID == ""
 	runID := uuid.NewString()
 	if recordsState {

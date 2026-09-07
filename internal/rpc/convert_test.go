@@ -31,9 +31,8 @@ func TestProtoFeatureStatusMapsEveryKnownValue(t *testing.T) {
 	}
 }
 
-// The derived status and the finished count leave the server together, so a
-// client can label the feature and explain what is left without recounting the
-// tasks itself.
+// 導出された status と完了数はまとめてサーバーから出ていく。クライアントが
+// タスクを数え直さずに feature へラベルを付け、残りを説明できるようにするため。
 func TestProtoFeatureCarriesTheDerivedStatusAndFinishedCount(t *testing.T) {
 	got := protoFeature(domain.Feature{
 		ID:            "F-1",

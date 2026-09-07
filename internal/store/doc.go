@@ -1,2 +1,2 @@
-// Package store provides SQLite persistence for PRX application data.
+// Package store は PRX のアプリケーションデータを SQLite で永続化する。
 package store

@@ -1,39 +1,39 @@
-# Persistence and configuration policy
+# 永続化と設定の方針
 
-PRX uses SQLite to keep installation, inspection, and backup local.
-The design accepts a single-writer constraint in exchange for a single local database.
-A normalized schema keeps a future PostgreSQL migration practical.
+PRX は SQLite を使い、インストール・調査・バックアップをローカルで完結させる。
+この設計は、ローカルのデータベースを 1 つにまとめる代わりに single-writer の制約を受け入れる。
+正規化されたスキーマにより、将来 PostgreSQL へ移行する余地を残す。
 
-CLI and server settings share a configuration file; presentation-only settings follow the Local Storage rule in the repository `AGENTS.md`.
+CLI とサーバの設定は 1 つの設定ファイルを共有する。表示にしか影響しない設定は、リポジトリの `AGENTS.md` にある Local Storage の規則に従う。
 
-Persistent mutations and migrations are atomic.
-Configuration writes preserve local secret-file protections and use atomic replacement.
+永続的な変更と migration はアトミックである。
+設定の書き込みは、ローカルの秘密ファイルの保護を保ったままアトミックな置換で行う。
 
-Where the recorded migration versions and the actual schema disagree, the schema decides.
-Opening a database repairs the record before applying anything: a version whose schema is absent loses its record, and a version whose schema is already in place regains one.
-This keeps a database openable after an older build, which recognizes a schema only by the shape it knew, removes a record that a later migration has since reshaped.
-A migration is never replayed against a schema that has already moved past it.
+記録された migration のバージョンと実際のスキーマが食い違う場合は、スキーマを正とする。
+データベースを開くときは、何かを適用する前に記録を修復する。スキーマが存在しないバージョンは記録を失い、スキーマがすでに適用されているバージョンは記録を取り戻す。
+これにより、自分が知る形でしかスキーマを認識しない古いビルドが、後の migration で作り替えられた記録を削除した後でも、データベースを開けるままにできる。
+すでに先へ進んだスキーマに対して migration を再適用することはない。
 
-A configuration file using a supported version still loads when it contains unknown fields.
-Those fields are reported as warnings instead of failing the command or the server start, and the next configuration write drops them.
-Unsupported versions and every other decoding failure keep the configuration from loading, so a malformed or ambiguous file is never accepted silently.
+サポートされたバージョンの設定ファイルは、未知のフィールドを含んでいても読み込める。
+そうしたフィールドはコマンドやサーバ起動を失敗させず警告として報告し、次に設定を書き込むときに削除する。
+サポート外のバージョンとその他すべてのデコード失敗では設定を読み込まない。壊れた、あるいは曖昧なファイルを黙って受け入れることはない。
 
-Template and synchronization configuration policies live in [agent-prompts.md](agent-prompts.md) and [github-sync.md](github-sync.md).
+テンプレートと同期の設定に関する方針は、[agent-prompts.md](agent-prompts.md) と [github-sync.md](github-sync.md) にある。
 
-`prx serve --demo` creates a new temporary database, configuration, and Markdown document set for each server process.
-It never reads or writes the normal database and configuration paths, including paths supplied through environment variables.
-The temporary environment is removed after a normal shutdown and is never reused after an abnormal shutdown.
-All demo mutations remain available until that process exits so the WebUI behaves like the normal application.
+`prx serve --demo` は、サーバプロセスごとに新しい一時データベース・設定・Markdown document 一式を作る。
+通常のデータベースと設定のパスは、環境変数で指定されたものも含めて読み書きしない。
+一時環境は正常終了後に削除し、異常終了した場合も再利用しない。
+demo でのすべての変更操作はそのプロセスが終了するまで利用できるので、WebUI は通常のアプリケーションと同じように振る舞う。
 
-## Documents and implementation plans
+## Document と implementation plan
 
-Document entries in snapshots carry only metadata needed for derived state.
+snapshot 中の document の項目は、派生状態に必要なメタデータだけを持つ。
 
-Documents use one model for project, feature, and task references, and each document belongs to exactly one of the three.
-Each document stores exactly one source: an HTTP or HTTPS URL, a registered local file path, or inline Markdown.
-Inline Markdown is limited to 1 MiB and is loaded only by a detailed read.
+document は project・feature・task いずれの参照にも同じモデルを使い、各 document はそのうちちょうど 1 つに属する。
+各 document が持つ source はちょうど 1 つで、HTTP または HTTPS の URL、登録済みのローカルファイルパス、インラインの Markdown のいずれかである。
+インラインの Markdown は 1 MiB までで、詳細読み取りのときにだけ読み込む。
 
-A task may designate at most one document as its implementation plan.
-That designation stays exclusive to tasks: a project or feature document can never be a plan.
-The designation moves a not-started or designing task without a pull request to the designed display state, and leaves readiness, dependency satisfaction, and completion untouched.
-Non-plan documents, feature documents, and project documents have no application-level count limit.
+task は最大 1 つの document を implementation plan に指定できる。
+この指定は task だけのものである。project や feature の document が plan になることはない。
+この指定により、pull request のない未着手または designing の task は designed の表示状態に移る。readiness、依存の充足、完了状態は変わらない。
+plan 以外の document、feature の document、project の document には、アプリケーション層での件数制限はない。

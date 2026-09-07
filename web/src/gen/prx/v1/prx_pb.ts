@@ -13,20 +13,20 @@ export const file_prx_v1_prx: GenFile = /*@__PURE__*/
   fileDesc("ChBwcngvdjEvcHJ4LnByb3RvEgZwcngudjEiUQoNQmxvY2tlZFJlYXNvbhInCgRjb2RlGAEgASgOMhkucHJ4LnYxLkJsb2NrZWRSZWFzb25Db2RlEhcKD2Jsb2NrZXJfdGFza19pZBgCIAEoCSJCCgtFcnJvckRldGFpbBIlCgRjb2RlGAEgASgOMhcucHJ4LnYxLkRvbWFpbkVycm9yQ29kZRIMCgRwYXRoGAIgAygJIn8KB1Byb2plY3QSCgoCaWQYASABKAkSDQoFdGl0bGUYAyABKAkSEwoLZGVzY3JpcHRpb24YBCABKAkSEAoIYXJjaGl2ZWQYBSABKAgSEgoKY3JlYXRlZF9hdBgGIAEoCRISCgp1cGRhdGVkX2F0GAcgASgJSgQIAhADUgRzbHVnIokDCgdGZWF0dXJlEgoKAmlkGAEgASgJEg0KBXRpdGxlGAMgASgJEhMKC2Rlc2NyaXB0aW9uGAQgASgJEiUKBnN0YXR1cxgFIAEoDjIVLnByeC52MS5GZWF0dXJlU3RhdHVzEhAKCGFyY2hpdmVkGAYgASgIEhIKCmNyZWF0ZWRfYXQYByABKAkSEgoKdXBkYXRlZF9hdBgIIAEoCRISCgp0YXNrX2NvdW50GAkgASgFEhMKC3JlYWR5X2NvdW50GAogASgFEhwKFHJldmlld193YWl0aW5nX2NvdW50GAsgASgFEhYKDmNvbmZsaWN0X2NvdW50GAwgASgFEhQKDG1lcmdlZF9jb3VudBgNIAEoBRItCg5kaXNwbGF5X3N0YXR1cxgOIAEoDjIVLnByeC52MS5GZWF0dXJlU3RhdHVzEhYKDmZpbmlzaGVkX2NvdW50GA8gASgFEhIKCnByb2plY3RfaWQYECABKAkSEQoJcmVhZF9vbmx5GBEgASgISgQIAhADUgRzbHVnIuACCgRUYXNrEgoKAmlkGAEgASgJEhIKCmZlYXR1cmVfaWQYAiABKAkSDQoFdGl0bGUYAyABKAkSDQoFc2NvcGUYBCABKAkSIgoGc3RhdHVzGAYgASgOMhIucHJ4LnYxLlRhc2tTdGF0dXMSEAoIYXNzaWduZWUYByABKAkSEgoKY3JlYXRlZF9hdBgIIAEoCRISCgp1cGRhdGVkX2F0GAkgASgJEg0KBXJlYWR5GAogASgIEi8KDWRpc3BsYXlfc3RhdGUYCyABKA4yGC5wcngudjEuVGFza0Rpc3BsYXlTdGF0ZRItCg5ibG9ja2VkX3JlYXNvbhgMIAEoCzIVLnByeC52MS5CbG9ja2VkUmVhc29uEh8KF2hhc19pbXBsZW1lbnRhdGlvbl9wbGFuGA0gASgIEiAKGHBlbmRpbmdfYmxvY2tlcl90YXNrX2lkcxgOIAMoCUoECAUQBlIEa2luZCJSCgpEZXBlbmRlbmN5EhcKD2Jsb2NrZXJfdGFza19pZBgBIAEoCRIXCg9ibG9ja2VkX3Rhc2tfaWQYAiABKAkSEgoKY3JlYXRlZF9hdBgDIAEoCSK9AwoLUHVsbFJlcXVlc3QSDwoHdGFza19pZBgBIAEoCRINCgVvd25lchgCIAEoCRISCgpyZXBvc2l0b3J5GAMgASgJEg4KBm51bWJlchgEIAEoAxILCgN1cmwYBSABKAkSDwoHbm9kZV9pZBgGIAEoCRIOCgZhdXRob3IYByABKAkSEQoJYXNzaWduZWVzGAggAygJEicKBXN0YXRlGAkgASgOMhgucHJ4LnYxLlB1bGxSZXF1ZXN0U3RhdGUSDQoFZHJhZnQYCiABKAgSKQoMcmV2aWV3X3N0YXRlGAsgASgOMhMucHJ4LnYxLlJldmlld1N0YXRlEioKDG1lcmdlYWJpbGl0eRgMIAEoDjIULnByeC52MS5NZXJnZWFiaWxpdHkSGQoRZ2l0aHViX3VwZGF0ZWRfYXQYDSABKAkSFgoObGFzdF9zeW5jZWRfYXQYDiABKAkSEgoKc3luY19lcnJvchgPIAEoCRINCgVzdGFsZRgQIAEoCBI2Cg1kaXNwbGF5X3N0YXRlGBEgASgOMh8ucHJ4LnYxLlB1bGxSZXF1ZXN0RGlzcGxheVN0YXRlEgwKBGhvc3QYEiABKAki2wEKCERvY3VtZW50EgoKAmlkGAEgASgJEhIKCmZlYXR1cmVfaWQYAiABKAkSDwoHdGFza19pZBgDIAEoCRIiCgRraW5kGAQgASgOMhQucHJ4LnYxLkRvY3VtZW50S2luZBINCgV0aXRsZRgFIAEoCRIPCgdsb2NhdG9yGAYgASgJEhIKCmNyZWF0ZWRfYXQYByABKAkSHgoWaXNfaW1wbGVtZW50YXRpb25fcGxhbhgIIAEoCBISCgp1cGRhdGVkX2F0GAkgASgJEhIKCnByb2plY3RfaWQYCiABKAkigAMKCFNuYXBzaG90EiEKCGZlYXR1cmVzGAEgAygLMg8ucHJ4LnYxLkZlYXR1cmUSGwoFdGFza3MYAiADKAsyDC5wcngudjEuVGFzaxIoCgxkZXBlbmRlbmNpZXMYAyADKAsyEi5wcngudjEuRGVwZW5kZW5jeRIqCg1wdWxsX3JlcXVlc3RzGAQgAygLMhMucHJ4LnYxLlB1bGxSZXF1ZXN0EiMKCWRvY3VtZW50cxgFIAMoCzIQLnByeC52MS5Eb2N1bWVudBIhCgtyZWFkeV90YXNrcxgGIAMoCzIMLnByeC52MS5UYXNrEioKFHJldmlld193YWl0aW5nX3Rhc2tzGAcgAygLMgwucHJ4LnYxLlRhc2sSJAoOY29uZmxpY3RfdGFza3MYCCADKAsyDC5wcngudjEuVGFzaxIhCgtzdGFsZV90YXNrcxgJIAMoCzIMLnByeC52MS5UYXNrEiEKCHByb2plY3RzGAogAygLMg8ucHJ4LnYxLlByb2plY3QiFAoSR2V0U25hcHNob3RSZXF1ZXN0IjkKE0dldFNuYXBzaG90UmVzcG9uc2USIgoIc25hcHNob3QYASABKAsyEC5wcngudjEuU25hcHNob3QiRgoUQ3JlYXRlUHJvamVjdFJlcXVlc3QSDQoFdGl0bGUYAiABKAkSEwoLZGVzY3JpcHRpb24YAyABKAlKBAgBEAJSBHNsdWciOQoVQ3JlYXRlUHJvamVjdFJlc3BvbnNlEiAKB3Byb2plY3QYASABKAsyDy5wcngudjEuUHJvamVjdCKaAQoUVXBkYXRlUHJvamVjdFJlcXVlc3QSCgoCaWQYASABKAkSEgoFdGl0bGUYAyABKAlIAIgBARIYCgtkZXNjcmlwdGlvbhgEIAEoCUgBiAEBEhUKCGFyY2hpdmVkGAUgASgISAKIAQFCCAoGX3RpdGxlQg4KDF9kZXNjcmlwdGlvbkILCglfYXJjaGl2ZWRKBAgCEANSBHNsdWciOQoVVXBkYXRlUHJvamVjdFJlc3BvbnNlEiAKB3Byb2plY3QYASABKAsyDy5wcngudjEuUHJvamVjdCIzChREZWxldGVQcm9qZWN0UmVxdWVzdBIKCgJpZBgBIAEoCRIPCgdjYXNjYWRlGAIgASgIIhcKFURlbGV0ZVByb2plY3RSZXNwb25zZSJaChRDcmVhdGVGZWF0dXJlUmVxdWVzdBINCgV0aXRsZRgCIAEoCRITCgtkZXNjcmlwdGlvbhgDIAEoCRISCgpwcm9qZWN0X2lkGAQgASgJSgQIARACUgRzbHVnIjkKFUNyZWF0ZUZlYXR1cmVSZXNwb25zZRIgCgdmZWF0dXJlGAEgASgLMg8ucHJ4LnYxLkZlYXR1cmUi+QEKFFVwZGF0ZUZlYXR1cmVSZXF1ZXN0EgoKAmlkGAEgASgJEhIKBXRpdGxlGAMgASgJSACIAQESGAoLZGVzY3JpcHRpb24YBCABKAlIAYgBARIqCgZzdGF0dXMYBSABKA4yFS5wcngudjEuRmVhdHVyZVN0YXR1c0gCiAEBEhUKCGFyY2hpdmVkGAYgASgISAOIAQESFwoKcHJvamVjdF9pZBgHIAEoCUgEiAEBQggKBl90aXRsZUIOCgxfZGVzY3JpcHRpb25CCQoHX3N0YXR1c0ILCglfYXJjaGl2ZWRCDQoLX3Byb2plY3RfaWRKBAgCEANSBHNsdWciOQoVVXBkYXRlRmVhdHVyZVJlc3BvbnNlEiAKB2ZlYXR1cmUYASABKAsyDy5wcngudjEuRmVhdHVyZSIzChREZWxldGVGZWF0dXJlUmVxdWVzdBIKCgJpZBgBIAEoCRIPCgdjYXNjYWRlGAIgASgIIhcKFURlbGV0ZUZlYXR1cmVSZXNwb25zZSJjChFDcmVhdGVUYXNrUmVxdWVzdBISCgpmZWF0dXJlX2lkGAEgASgJEg0KBXRpdGxlGAIgASgJEg0KBXNjb3BlGAMgASgJEhAKCGFzc2lnbmVlGAUgASgJSgQIBBAFUgRraW5kIjAKEkNyZWF0ZVRhc2tSZXNwb25zZRIaCgR0YXNrGAEgASgLMgwucHJ4LnYxLlRhc2siswEKEVVwZGF0ZVRhc2tSZXF1ZXN0EgoKAmlkGAEgASgJEhIKBXRpdGxlGAIgASgJSACIAQESEgoFc2NvcGUYAyABKAlIAYgBARInCgZzdGF0dXMYBCABKA4yEi5wcngudjEuVGFza1N0YXR1c0gCiAEBEhUKCGFzc2lnbmVlGAUgASgJSAOIAQFCCAoGX3RpdGxlQggKBl9zY29wZUIJCgdfc3RhdHVzQgsKCV9hc3NpZ25lZSIwChJVcGRhdGVUYXNrUmVzcG9uc2USGgoEdGFzaxgBIAEoCzIMLnByeC52MS5UYXNrIjAKEURlbGV0ZVRhc2tSZXF1ZXN0EgoKAmlkGAEgASgJEg8KB2Nhc2NhZGUYAiABKAgiFAoSRGVsZXRlVGFza1Jlc3BvbnNlIkgKFEFkZERlcGVuZGVuY3lSZXF1ZXN0EhcKD2Jsb2NrZXJfdGFza19pZBgBIAEoCRIXCg9ibG9ja2VkX3Rhc2tfaWQYAiABKAkiPwoVQWRkRGVwZW5kZW5jeVJlc3BvbnNlEiYKCmRlcGVuZGVuY3kYASABKAsyEi5wcngudjEuRGVwZW5kZW5jeSJLChdSZW1vdmVEZXBlbmRlbmN5UmVxdWVzdBIXCg9ibG9ja2VyX3Rhc2tfaWQYASABKAkSFwoPYmxvY2tlZF90YXNrX2lkGAIgASgJIhoKGFJlbW92ZURlcGVuZGVuY3lSZXNwb25zZSI4ChhBdHRhY2hQdWxsUmVxdWVzdFJlcXVlc3QSDwoHdGFza19pZBgBIAEoCRILCgN1cmwYAiABKAkiRgoZQXR0YWNoUHVsbFJlcXVlc3RSZXNwb25zZRIpCgxwdWxsX3JlcXVlc3QYASABKAsyEy5wcngudjEuUHVsbFJlcXVlc3QiKwoYRGV0YWNoUHVsbFJlcXVlc3RSZXF1ZXN0Eg8KB3Rhc2tfaWQYASABKAkiGwoZRGV0YWNoUHVsbFJlcXVlc3RSZXNwb25zZSK/AQoSQWRkRG9jdW1lbnRSZXF1ZXN0EhIKCmZlYXR1cmVfaWQYASABKAkSDwoHdGFza19pZBgCIAEoCRINCgV0aXRsZRgDIAEoCRINCgN1cmwYBCABKAlIABIUCgpsb2NhbF9maWxlGAUgASgJSAASEgoIbWFya2Rvd24YBiABKAlIABIeChZpc19pbXBsZW1lbnRhdGlvbl9wbGFuGAcgASgIEhIKCnByb2plY3RfaWQYCCABKAlCCAoGc291cmNlIjkKE0FkZERvY3VtZW50UmVzcG9uc2USIgoIZG9jdW1lbnQYASABKAsyEC5wcngudjEuRG9jdW1lbnQiIAoSR2V0RG9jdW1lbnRSZXF1ZXN0EgoKAmlkGAEgASgJIkoKE0dldERvY3VtZW50UmVzcG9uc2USIgoIZG9jdW1lbnQYASABKAsyEC5wcngudjEuRG9jdW1lbnQSDwoHY29udGVudBgCIAEoCSLEAQoVVXBkYXRlRG9jdW1lbnRSZXF1ZXN0EgoKAmlkGAEgASgJEhIKBXRpdGxlGAIgASgJSAGIAQESDQoDdXJsGAMgASgJSAASFAoKbG9jYWxfZmlsZRgEIAEoCUgAEhIKCG1hcmtkb3duGAUgASgJSAASIwoWaXNfaW1wbGVtZW50YXRpb25fcGxhbhgGIAEoCEgCiAEBQggKBnNvdXJjZUIICgZfdGl0bGVCGQoXX2lzX2ltcGxlbWVudGF0aW9uX3BsYW4iPAoWVXBkYXRlRG9jdW1lbnRSZXNwb25zZRIiCghkb2N1bWVudBgBIAEoCzIQLnByeC52MS5Eb2N1bWVudCIjChVEZWxldGVEb2N1bWVudFJlcXVlc3QSCgoCaWQYASABKAkiGAoWRGVsZXRlRG9jdW1lbnRSZXNwb25zZSIoChpSZWFkRG9jdW1lbnRDb250ZW50UmVxdWVzdBIKCgJpZBgBIAEoCSIuChtSZWFkRG9jdW1lbnRDb250ZW50UmVzcG9uc2USDwoHY29udGVudBgBIAEoCSIYChZTZWxlY3RMb2NhbEZpbGVSZXF1ZXN0IjkKF1NlbGVjdExvY2FsRmlsZVJlc3BvbnNlEgwKBHBhdGgYASABKAkSEAoIY2FuY2VsZWQYAiABKAgiZQoKR2l0SHViSG9zdBIMCgRob3N0GAEgASgJEg8KB3dlYl91cmwYAiABKAkSDwoHYXBpX3VybBgDIAEoCRISCgp1cGxvYWRfdXJsGAQgASgJEhMKC2dyYXBocWxfdXJsGAUgASgJIsoBChBHaXRIdWJBdXRoTWV0aG9kEgoKAmlkGAEgASgJEgwKBGhvc3QYAiABKAkSKgoEdHlwZRgDIAEoDjIcLnByeC52MS5HaXRodWJBdXRoTWV0aG9kVHlwZRIPCgdhY2NvdW50GAQgASgJEg8KB3NlcnZpY2UYBSABKAkSEAoIdmFyaWFibGUYBiABKAkSDAoEdXNlchgHIAEoCRIZChFzZWNyZXRfY29uZmlndXJlZBgIIAEoCBITCgtzZWNyZXRfaGludBgJIAEoCSKWAQoMR2l0SHViQ29uZmlnEg8KB3ZlcnNpb24YASABKAUSIQoFaG9zdHMYAiADKAsyEi5wcngudjEuR2l0SHViSG9zdBIuCgxhdXRoX21ldGhvZHMYAyADKAsyGC5wcngudjEuR2l0SHViQXV0aE1ldGhvZBIiChphdXRvX3N5bmNfaW50ZXJ2YWxfc2Vjb25kcxgEIAEoAyISChBHZXRDb25maWdSZXF1ZXN0IjkKEUdldENvbmZpZ1Jlc3BvbnNlEiQKBmNvbmZpZxgBIAEoCzIULnByeC52MS5HaXRIdWJDb25maWciOQodVXBkYXRlR2l0SHViU3luY0NvbmZpZ1JlcXVlc3QSGAoQaW50ZXJ2YWxfc2Vjb25kcxgBIAEoAyJGCh5VcGRhdGVHaXRIdWJTeW5jQ29uZmlnUmVzcG9uc2USJAoGY29uZmlnGAEgASgLMhQucHJ4LnYxLkdpdEh1YkNvbmZpZyJvChRBZGRHaXRIdWJIb3N0UmVxdWVzdBIMCgRob3N0GAEgASgJEg8KB3dlYl91cmwYAiABKAkSDwoHYXBpX3VybBgDIAEoCRISCgp1cGxvYWRfdXJsGAQgASgJEhMKC2dyYXBocWxfdXJsGAUgASgJIjkKFUFkZEdpdEh1Ykhvc3RSZXNwb25zZRIgCgRob3N0GAEgASgLMhIucHJ4LnYxLkdpdEh1Ykhvc3Qi4QEKF1VwZGF0ZUdpdEh1Ykhvc3RSZXF1ZXN0EgwKBGhvc3QYASABKAkSFQoIbmV3X2hvc3QYAiABKAlIAIgBARIUCgd3ZWJfdXJsGAMgASgJSAGIAQESFAoHYXBpX3VybBgEIAEoCUgCiAEBEhcKCnVwbG9hZF91cmwYBSABKAlIA4gBARIYCgtncmFwaHFsX3VybBgGIAEoCUgEiAEBQgsKCV9uZXdfaG9zdEIKCghfd2ViX3VybEIKCghfYXBpX3VybEINCgtfdXBsb2FkX3VybEIOCgxfZ3JhcGhxbF91cmwiPAoYVXBkYXRlR2l0SHViSG9zdFJlc3BvbnNlEiAKBGhvc3QYASABKAsyEi5wcngudjEuR2l0SHViSG9zdCInChdEZWxldGVHaXRIdWJIb3N0UmVxdWVzdBIMCgRob3N0GAEgASgJIhoKGERlbGV0ZUdpdEh1Ykhvc3RSZXNwb25zZSLCAQoaQWRkR2l0SHViQXV0aE1ldGhvZFJlcXVlc3QSCgoCaWQYASABKAkSDAoEaG9zdBgCIAEoCRIqCgR0eXBlGAMgASgOMhwucHJ4LnYxLkdpdGh1YkF1dGhNZXRob2RUeXBlEg8KB2FjY291bnQYBCABKAkSDwoHc2VydmljZRgFIAEoCRIQCgh2YXJpYWJsZRgGIAEoCRIMCgR1c2VyGAcgASgJEhIKBXRva2VuGAggASgJSACIAQFCCAoGX3Rva2VuIkwKG0FkZEdpdEh1YkF1dGhNZXRob2RSZXNwb25zZRItCgthdXRoX21ldGhvZBgBIAEoCzIYLnByeC52MS5HaXRIdWJBdXRoTWV0aG9kIsMCCh1VcGRhdGVHaXRIdWJBdXRoTWV0aG9kUmVxdWVzdBIKCgJpZBgBIAEoCRITCgZuZXdfaWQYAiABKAlIAIgBARIRCgRob3N0GAMgASgJSAGIAQESLwoEdHlwZRgEIAEoDjIcLnByeC52MS5HaXRodWJBdXRoTWV0aG9kVHlwZUgCiAEBEhQKB2FjY291bnQYBSABKAlIA4gBARIUCgdzZXJ2aWNlGAYgASgJSASIAQESFQoIdmFyaWFibGUYByABKAlIBYgBARIRCgR1c2VyGAggASgJSAaIAQESEgoFdG9rZW4YCSABKAlIB4gBAUIJCgdfbmV3X2lkQgcKBV9ob3N0QgcKBV90eXBlQgoKCF9hY2NvdW50QgoKCF9zZXJ2aWNlQgsKCV92YXJpYWJsZUIHCgVfdXNlckIICgZfdG9rZW4iTwoeVXBkYXRlR2l0SHViQXV0aE1ldGhvZFJlc3BvbnNlEi0KC2F1dGhfbWV0aG9kGAEgASgLMhgucHJ4LnYxLkdpdEh1YkF1dGhNZXRob2QiKwodRGVsZXRlR2l0SHViQXV0aE1ldGhvZFJlcXVlc3QSCgoCaWQYASABKAkiIAoeRGVsZXRlR2l0SHViQXV0aE1ldGhvZFJlc3BvbnNlIi4KH1Jlb3JkZXJHaXRIdWJBdXRoTWV0aG9kc1JlcXVlc3QSCwoDaWRzGAEgAygJIlIKIFJlb3JkZXJHaXRIdWJBdXRoTWV0aG9kc1Jlc3BvbnNlEi4KDGF1dGhfbWV0aG9kcxgBIAMoCzIYLnByeC52MS5HaXRIdWJBdXRoTWV0aG9kIhcKFVZhbGlkYXRlQ29uZmlnUmVxdWVzdCJJChZWYWxpZGF0ZUNvbmZpZ1Jlc3BvbnNlEg0KBXZhbGlkGAEgASgIEg4KBmVycm9ycxgCIAMoCRIQCgh3YXJuaW5ncxgDIAMoCSJICg9Qcm9tcHRUZW1wbGF0ZXMSDgoGZGVzaWduGAEgASgJEhYKDmltcGxlbWVudGF0aW9uGAIgASgJEg0KBWJhdGNoGAMgASgJIhsKGUdldFByb21wdFRlbXBsYXRlc1JlcXVlc3Qi+wEKGkdldFByb21wdFRlbXBsYXRlc1Jlc3BvbnNlEioKCXRlbXBsYXRlcxgBIAEoCzIXLnByeC52MS5Qcm9tcHRUZW1wbGF0ZXMSHgoWc3VwcG9ydGVkX3BsYWNlaG9sZGVycxgCIAMoCRIcChRyZXF1aXJlZF9wbGFjZWhvbGRlchgDIAEoCRIpCghidWlsdF9pbhgEIAEoCzIXLnByeC52MS5Qcm9tcHRUZW1wbGF0ZXMSJAocYmF0Y2hfc3VwcG9ydGVkX3BsYWNlaG9sZGVycxgFIAMoCRIiChpiYXRjaF9yZXF1aXJlZF9wbGFjZWhvbGRlchgGIAEoCSJVChxVcGRhdGVQcm9tcHRUZW1wbGF0ZXNSZXF1ZXN0Eg4KBmRlc2lnbhgBIAEoCRIWCg5pbXBsZW1lbnRhdGlvbhgCIAEoCRINCgViYXRjaBgDIAEoCSJLCh1VcGRhdGVQcm9tcHRUZW1wbGF0ZXNSZXNwb25zZRIqCgl0ZW1wbGF0ZXMYASABKAsyFy5wcngudjEuUHJvbXB0VGVtcGxhdGVzIicKFEdldFRhc2tQcm9tcHRSZXF1ZXN0Eg8KB3Rhc2tfaWQYASABKAkiXgoVR2V0VGFza1Byb21wdFJlc3BvbnNlEg8KB3Rhc2tfaWQYASABKAkSJAoEa2luZBgCIAEoDjIWLnByeC52MS5UYXNrUHJvbXB0S2luZBIOCgZwcm9tcHQYAyABKAkiPQoVR2V0QmF0Y2hQcm9tcHRSZXF1ZXN0EhIKCmZlYXR1cmVfaWQYASABKAkSEAoIdGFza19pZHMYAiADKAkiTgoWR2V0QmF0Y2hQcm9tcHRSZXNwb25zZRISCgpmZWF0dXJlX2lkGAEgASgJEhAKCHRhc2tfaWRzGAIgAygJEg4KBnByb21wdBgDIAEoCSIyCgtTeW5jUmVxdWVzdBISCgpmZWF0dXJlX2lkGAEgASgJEg8KB3Rhc2tfaWQYAiABKAkiMQoMU3luY1Jlc3BvbnNlEhEKCXN1Y2NlZWRlZBgBIAEoBRIOCgZmYWlsZWQYAiABKAUiwgEKEEdpdEh1YlN5bmNTdGF0dXMSGAoQaW50ZXJ2YWxfc2Vjb25kcxgBIAEoAxIcCg9sYXN0X2F0dGVtcHRfYXQYAiABKAlIAIgBARIcCg9sYXN0X3VwZGF0ZWRfYXQYAyABKAlIAYgBARIRCglzdWNjZWVkZWQYBCABKAUSDgoGZmFpbGVkGAUgASgFEg0KBWVycm9yGAYgASgJQhIKEF9sYXN0X2F0dGVtcHRfYXRCEgoQX2xhc3RfdXBkYXRlZF9hdCIcChpHZXRHaXRIdWJTeW5jU3RhdHVzUmVxdWVzdCJHChtHZXRHaXRIdWJTeW5jU3RhdHVzUmVzcG9uc2USKAoGc3RhdHVzGAEgASgLMhgucHJ4LnYxLkdpdEh1YlN5bmNTdGF0dXMiGAoWU3luY0dpdEh1YklmRHVlUmVxdWVzdCJQChdTeW5jR2l0SHViSWZEdWVSZXNwb25zZRILCgNyYW4YASABKAgSKAoGc3RhdHVzGAIgASgLMhgucHJ4LnYxLkdpdEh1YlN5bmNTdGF0dXMiEQoPVmFsaWRhdGVSZXF1ZXN0IjEKEFZhbGlkYXRlUmVzcG9uc2USDQoFdmFsaWQYASABKAgSDgoGZXJyb3JzGAIgAygJIm4KDERlYnVnUHJvYmxlbRImCgRjb2RlGAEgASgOMhgucHJ4LnYxLkRlYnVnUHJvYmxlbUNvZGUSDgoGdGFyZ2V0GAIgASgJEhAKCGV2aWRlbmNlGAMgASgJEhQKDG5leHRfY29tbWFuZBgEIAEoCSJgCgpEZWJ1Z0J1aWxkEg8KB3ZlcnNpb24YASABKAkSEwoLZGV2ZWxvcG1lbnQYAiABKAgSEgoKZ29fdmVyc2lvbhgDIAEoCRIKCgJvcxgEIAEoCRIMCgRhcmNoGAUgASgJIq8BCgxEZWJ1Z1J1bnRpbWUSDAoEbW9kZRgBIAEoCRIMCgRkZW1vGAIgASgIEhYKDmdpdGh1Yl9maXh0dXJlGAMgASgIEhQKDGdlbmVyYXRlZF9hdBgEIAEoCRIRCgl0aW1lX3pvbmUYBSABKAkSFgoObGlzdGVuX2FkZHJlc3MYBiABKAkSEgoKc3RhcnRlZF9hdBgHIAEoCRIWCg51cHRpbWVfc2Vjb25kcxgIIAEoAyI1ChhEZWJ1Z0Vudmlyb25tZW50VmFyaWFibGUSDAoEbmFtZRgBIAEoCRILCgNzZXQYAiABKAgiiQIKCkRlYnVnUGF0aHMSFQoNZGF0YWJhc2VfcGF0aBgBIAEoCRIcChRkYXRhYmFzZV9wYXRoX3NvdXJjZRgCIAEoCRIcChRkYXRhYmFzZV9maWxlX2V4aXN0cxgDIAEoCBITCgtjb25maWdfcGF0aBgEIAEoCRIaChJjb25maWdfcGF0aF9zb3VyY2UYBSABKAkSGgoSY29uZmlnX2ZpbGVfZXhpc3RzGAYgASgIEhoKEmNvbmZpZ19wZXJtaXNzaW9ucxgHIAEoCRI/ChVlbnZpcm9ubWVudF92YXJpYWJsZXMYCCADKAsyIC5wcngudjEuRGVidWdFbnZpcm9ubWVudFZhcmlhYmxlIkUKD0RlYnVnQ29uZmlnSG9zdBIMCgRob3N0GAEgASgJEg8KB2FwaV91cmwYAiABKAkSEwoLZ3JhcGhxbF91cmwYAyABKAkiWgoVRGVidWdDb25maWdBdXRoTWV0aG9kEgoKAmlkGAEgASgJEgwKBGhvc3QYAiABKAkSDAoEdHlwZRgDIAEoCRIZChFzZWNyZXRfY29uZmlndXJlZBgEIAEoCCLQAQoLRGVidWdDb25maWcSDwoHdmVyc2lvbhgBIAEoBRINCgV2YWxpZBgCIAEoCBIOCgZlcnJvcnMYAyADKAkSEAoId2FybmluZ3MYBCADKAkSJgoFaG9zdHMYBSADKAsyFy5wcngudjEuRGVidWdDb25maWdIb3N0EjMKDGF1dGhfbWV0aG9kcxgGIAMoCzIdLnByeC52MS5EZWJ1Z0NvbmZpZ0F1dGhNZXRob2QSIgoaYXV0b19zeW5jX2ludGVydmFsX3NlY29uZHMYByABKAMipAEKEURlYnVnRGF0YWJhc2VGaWxlEhIKCmFwcGxpY2FibGUYASABKAgSEgoKc2l6ZV9ieXRlcxgCIAEoAxITCgt3YWxfcHJlc2VudBgDIAEoCBIWCg53YWxfc2l6ZV9ieXRlcxgEIAEoAxITCgtzaG1fcHJlc2VudBgFIAEoCBIQCgh3cml0YWJsZRgGIAEoCBITCgt3cml0ZV9lcnJvchgHIAEoCSLfAQoMRGVidWdTdG9yYWdlEh4KFmFwcGxpZWRfc2NoZW1hX3ZlcnNpb24YASABKAUSHwoXZW1iZWRkZWRfc2NoZW1hX3ZlcnNpb24YAiABKAUSFwoPaW50ZWdyaXR5X3ZhbGlkGAMgASgIEhgKEGludGVncml0eV9lcnJvcnMYBCADKAkSMAoNZGF0YWJhc2VfZmlsZRgFIAEoCzIZLnByeC52MS5EZWJ1Z0RhdGFiYXNlRmlsZRIaChJjbGlfc2NoZW1hX3ZlcnNpb24YBiABKAkSDQoFZXJyb3IYByABKAkiKQoKRGVidWdDb3VudBIMCgRuYW1lGAEgASgJEg0KBWNvdW50GAIgASgFIr8DCglEZWJ1Z0RhdGESEAoIZmVhdHVyZXMYASABKAUSDQoFdGFza3MYAiABKAUSFAoMZGVwZW5kZW5jaWVzGAMgASgFEhUKDXB1bGxfcmVxdWVzdHMYBCABKAUSEQoJZG9jdW1lbnRzGAUgASgFEiwKEGZlYXR1cmVfc3RhdHVzZXMYBiADKAsyEi5wcngudjEuRGVidWdDb3VudBIvChN0YXNrX2Rpc3BsYXlfc3RhdGVzGAcgAygLMhIucHJ4LnYxLkRlYnVnQ291bnQSNwobcHVsbF9yZXF1ZXN0X2Rpc3BsYXlfc3RhdGVzGAkgAygLMhIucHJ4LnYxLkRlYnVnQ291bnQSLgoScHVsbF9yZXF1ZXN0X2hvc3RzGAogAygLMhIucHJ4LnYxLkRlYnVnQ291bnQSKgoOZG9jdW1lbnRfa2luZHMYCyADKAsyEi5wcngudjEuRGVidWdDb3VudBINCgVlcnJvchgMIAEoCRIQCghwcm9qZWN0cxgNIAEoBRIqCg5wcm9qZWN0X3N0YXRlcxgOIAMoCzISLnByeC52MS5EZWJ1Z0NvdW50SgQICBAJUgp0YXNrX2tpbmRzIjAKEERlYnVnU3luY0ZhaWx1cmUSDQoFc2NvcGUYASABKAkSDQoFY291bnQYAiABKAUiXQoPRGVidWdFcnJvckdyb3VwEg8KB21lc3NhZ2UYASABKAkSDQoFY291bnQYAiABKAUSEAoIdGFza19pZHMYAyADKAkSGAoQdG90YWxfdGFza19jb3VudBgEIAEoBSJ5ChNEZWJ1Z0F1dGhDYWNoZUVudHJ5EgwKBGhvc3QYASABKAkSDQoFb3duZXIYAiABKAkSEgoKcmVwb3NpdG9yeRgDIAEoCRIWCg5hdXRoX21ldGhvZF9pZBgEIAEoCRIZChFsYXN0X3N1Y2NlZWRlZF9hdBgFIAEoCSL5AwoPRGVidWdHaXRIdWJTeW5jEigKBnN0YXR1cxgBIAEoCzIYLnByeC52MS5HaXRIdWJTeW5jU3RhdHVzEhMKC25leHRfcnVuX2F0GAIgASgJEgsKA2R1ZRgDIAEoCBIhChlzZWNvbmRzX3NpbmNlX2xhc3RfdXBkYXRlGAQgASgDEhsKE3N0YWxlX3B1bGxfcmVxdWVzdHMYBSABKAUSHAoUZmFpbGVkX3B1bGxfcmVxdWVzdHMYBiABKAUSLwoNaG9zdF9mYWlsdXJlcxgHIAMoCzIYLnByeC52MS5EZWJ1Z1N5bmNGYWlsdXJlEjUKE3JlcG9zaXRvcnlfZmFpbHVyZXMYCCADKAsyGC5wcngudjEuRGVidWdTeW5jRmFpbHVyZRIjChtvbWl0dGVkX3JlcG9zaXRvcnlfZmFpbHVyZXMYCSABKAUSLQoMZXJyb3JfZ3JvdXBzGAogAygLMhcucHJ4LnYxLkRlYnVnRXJyb3JHcm91cBIcChRvbWl0dGVkX2Vycm9yX2dyb3VwcxgLIAEoBRIvCgphdXRoX2NhY2hlGAwgAygLMhsucHJ4LnYxLkRlYnVnQXV0aENhY2hlRW50cnkSIgoab21pdHRlZF9hdXRoX2NhY2hlX2VudHJpZXMYDSABKAUSDQoFZXJyb3IYDiABKAkiwAIKC0RlYnVnUmVwb3J0EiYKCHByb2JsZW1zGAEgAygLMhQucHJ4LnYxLkRlYnVnUHJvYmxlbRIhCgVidWlsZBgCIAEoCzISLnByeC52MS5EZWJ1Z0J1aWxkEiUKB3J1bnRpbWUYAyABKAsyFC5wcngudjEuRGVidWdSdW50aW1lEiEKBXBhdGhzGAQgASgLMhIucHJ4LnYxLkRlYnVnUGF0aHMSIwoGY29uZmlnGAUgASgLMhMucHJ4LnYxLkRlYnVnQ29uZmlnEiUKB3N0b3JhZ2UYBiABKAsyFC5wcngudjEuRGVidWdTdG9yYWdlEiIKB3JlY29yZHMYByABKAsyES5wcngudjEuRGVidWdEYXRhEiwKC2dpdGh1Yl9zeW5jGAggASgLMhcucHJ4LnYxLkRlYnVnR2l0SHViU3luYyIXChVHZXREZWJ1Z1JlcG9ydFJlcXVlc3QiSwoWR2V0RGVidWdSZXBvcnRSZXNwb25zZRIjCgZyZXBvcnQYASABKAsyEy5wcngudjEuRGVidWdSZXBvcnQSDAoEdGV4dBgCIAEoCSq6AQoNRmVhdHVyZVN0YXR1cxIeChpGRUFUVVJFX1NUQVRVU19VTlNQRUNJRklFRBAAEhkKFUZFQVRVUkVfU1RBVFVTX0FDVElWRRABEhkKFUZFQVRVUkVfU1RBVFVTX1BBVVNFRBACEhwKGEZFQVRVUkVfU1RBVFVTX0NPTVBMRVRFRBADEhwKGEZFQVRVUkVfU1RBVFVTX0NBTkNFTExFRBAEEhcKE0ZFQVRVUkVfU1RBVFVTX0FVVE8QBSqxAQoKVGFza1N0YXR1cxIbChdUQVNLX1NUQVRVU19VTlNQRUNJRklFRBAAEhsKF1RBU0tfU1RBVFVTX05PVF9TVEFSVEVEEAESGwoXVEFTS19TVEFUVVNfSU5fUFJPR1JFU1MQAhIZChVUQVNLX1NUQVRVU19ERVNJR05JTkcQBRIZChVUQVNLX1NUQVRVU19DT01QTEVURUQQAxIWChJUQVNLX1NUQVRVU19DTE9TRUQQBCqPBAoQVGFza0Rpc3BsYXlTdGF0ZRIiCh5UQVNLX0RJU1BMQVlfU1RBVEVfVU5TUEVDSUZJRUQQABIiCh5UQVNLX0RJU1BMQVlfU1RBVEVfTk9UX1NUQVJURUQQARIgChxUQVNLX0RJU1BMQVlfU1RBVEVfREVTSUdOSU5HEA4SHwobVEFTS19ESVNQTEFZX1NUQVRFX0RFU0lHTkVEEAISIgoeVEFTS19ESVNQTEFZX1NUQVRFX0lOX1BST0dSRVNTEAMSIAocVEFTS19ESVNQTEFZX1NUQVRFX0NPTVBMRVRFRBAEEh0KGVRBU0tfRElTUExBWV9TVEFURV9DTE9TRUQQBRIdChlUQVNLX0RJU1BMQVlfU1RBVEVfTUVSR0VEEAYSHAoYVEFTS19ESVNQTEFZX1NUQVRFX0RSQUZUEAcSHwobVEFTS19ESVNQTEFZX1NUQVRFX0NPTkZMSUNUEAgSKAokVEFTS19ESVNQTEFZX1NUQVRFX0NIQU5HRVNfUkVRVUVTVEVEEAkSHwobVEFTS19ESVNQTEFZX1NUQVRFX0FQUFJPVkVEEAoSJQohVEFTS19ESVNQTEFZX1NUQVRFX1JFVklFV19XQUlUSU5HEAsSGwoXVEFTS19ESVNQTEFZX1NUQVRFX09QRU4QDBIeChpUQVNLX0RJU1BMQVlfU1RBVEVfVU5LTk9XThANKrEBChBQdWxsUmVxdWVzdFN0YXRlEiIKHlBVTExfUkVRVUVTVF9TVEFURV9VTlNQRUNJRklFRBAAEhsKF1BVTExfUkVRVUVTVF9TVEFURV9PUEVOEAESHQoZUFVMTF9SRVFVRVNUX1NUQVRFX0NMT1NFRBACEh0KGVBVTExfUkVRVUVTVF9TVEFURV9NRVJHRUQQAxIeChpQVUxMX1JFUVVFU1RfU1RBVEVfVU5LTk9XThAEKrYBCgtSZXZpZXdTdGF0ZRIcChhSRVZJRVdfU1RBVEVfVU5TUEVDSUZJRUQQABIVChFSRVZJRVdfU1RBVEVfTk9ORRABEhkKFVJFVklFV19TVEFURV9SRVFVSVJFRBACEhkKFVJFVklFV19TVEFURV9BUFBST1ZFRBADEiIKHlJFVklFV19TVEFURV9DSEFOR0VTX1JFUVVFU1RFRBAEEhgKFFJFVklFV19TVEFURV9VTktOT1dOEAUqgAEKDE1lcmdlYWJpbGl0eRIcChhNRVJHRUFCSUxJVFlfVU5TUEVDSUZJRUQQABIaChZNRVJHRUFCSUxJVFlfTUVSR0VBQkxFEAESHAoYTUVSR0VBQklMSVRZX0NPTkZMSUNUSU5HEAISGAoUTUVSR0VBQklMSVRZX1VOS05PV04QAyq5AwoXUHVsbFJlcXVlc3REaXNwbGF5U3RhdGUSKgomUFVMTF9SRVFVRVNUX0RJU1BMQVlfU1RBVEVfVU5TUEVDSUZJRUQQABIlCiFQVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9NRVJHRUQQARIlCiFQVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9DTE9TRUQQAhIkCiBQVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9EUkFGVBADEicKI1BVTExfUkVRVUVTVF9ESVNQTEFZX1NUQVRFX0NPTkZMSUNUEAQSMAosUFVMTF9SRVFVRVNUX0RJU1BMQVlfU1RBVEVfQ0hBTkdFU19SRVFVRVNURUQQBRInCiNQVUxMX1JFUVVFU1RfRElTUExBWV9TVEFURV9BUFBST1ZFRBAGEi0KKVBVTExfUkVRVUVTVF9ESVNQTEFZX1NUQVRFX1JFVklFV19XQUlUSU5HEAcSIwofUFVMTF9SRVFVRVNUX0RJU1BMQVlfU1RBVEVfT1BFThAIEiYKIlBVTExfUkVRVUVTVF9ESVNQTEFZX1NUQVRFX1VOS05PV04QCSqhAQoMRG9jdW1lbnRLaW5kEh0KGURPQ1VNRU5UX0tJTkRfVU5TUEVDSUZJRUQQABIVChFET0NVTUVOVF9LSU5EX1VSTBABEhwKGERPQ1VNRU5UX0tJTkRfTE9DQUxfRklMRRADEhoKFkRPQ1VNRU5UX0tJTkRfTUFSS0RPV04QBCIECAIQAiobRE9DVU1FTlRfS0lORF9NQVJLRE9XTl9QQVRIKp8BChFCbG9ja2VkUmVhc29uQ29kZRIjCh9CTE9DS0VEX1JFQVNPTl9DT0RFX1VOU1BFQ0lGSUVEEAASMgouQkxPQ0tFRF9SRUFTT05fQ09ERV9ERVBFTkRFTkNZX0RBVEFfSU5DT01QTEVURRABEisKJ0JMT0NLRURfUkVBU09OX0NPREVfV0FJVElOR19GT1JfQkxPQ0tFUhADIgQIAhACKqoJCg9Eb21haW5FcnJvckNvZGUSIQodRE9NQUlOX0VSUk9SX0NPREVfVU5TUEVDSUZJRUQQABIuCipET01BSU5fRVJST1JfQ09ERV9DUk9TU19GRUFUVVJFX0RFUEVOREVOQ1kQAhIbChdET01BSU5fRVJST1JfQ09ERV9DWUNMRRADEioKJkRPTUFJTl9FUlJPUl9DT0RFX0RVUExJQ0FURV9ERVBFTkRFTkNZEAQSLAooRE9NQUlOX0VSUk9SX0NPREVfRFVQTElDQVRFX1BVTExfUkVRVUVTVBAFEiEKHURPTUFJTl9FUlJPUl9DT0RFX0dJVEhVQl9BVVRIEAYSJgoiRE9NQUlOX0VSUk9SX0NPREVfSU5WQUxJRF9EQVRBQkFTRRAHEiYKIkRPTUFJTl9FUlJPUl9DT0RFX0lOVkFMSURfRE9DVU1FTlQQCBIrCidET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX0RPQ1VNRU5UX0tJTkQQCRIkCiBET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX1BBUkVOVBALEi4KKkRPTUFJTl9FUlJPUl9DT0RFX0lOVkFMSURfUFVMTF9SRVFVRVNUX1VSTBAMEiQKIERPTUFJTl9FUlJPUl9DT0RFX0lOVkFMSURfU1RBVFVTEA8SIwofRE9NQUlOX0VSUk9SX0NPREVfSU5WQUxJRF9USVRMRRAQEh8KG0RPTUFJTl9FUlJPUl9DT0RFX05PVF9GT1VORBAREiYKIkRPTUFJTl9FUlJPUl9DT0RFX1JFRkVSRU5DRVNfRVhJU1QQEhIqCiZET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX0RPQ1VNRU5UX1VSTBAVEioKJkRPTUFJTl9FUlJPUl9DT0RFX0RPQ1VNRU5UX1JFQURfRkFJTEVEEBYSKAokRE9NQUlOX0VSUk9SX0NPREVfRE9DVU1FTlRfVE9PX0xBUkdFEBcSJAogRE9NQUlOX0VSUk9SX0NPREVfSU5WQUxJRF9DT05GSUcQGBIxCi1ET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX0lNUExFTUVOVEFUSU9OX1BMQU4QGRIzCi9ET01BSU5fRVJST1JfQ09ERV9JTVBMRU1FTlRBVElPTl9QTEFOX1RPT19MQVJHRRAaEicKI0RPTUFJTl9FUlJPUl9DT0RFX0RPQ1VNRU5UX05PVF9URVhUEBsSMwovRE9NQUlOX0VSUk9SX0NPREVfRFVQTElDQVRFX0lNUExFTUVOVEFUSU9OX1BMQU4QHBIoCiRET01BSU5fRVJST1JfQ09ERV9BUkNISVZFRF9SRUFEX09OTFkQHSIECAoQCiIECA0QDSIECA4QDiIECBMQEyIECBQQFCoeRE9NQUlOX0VSUk9SX0NPREVfSU5WQUxJRF9LSU5EKh5ET01BSU5fRVJST1JfQ09ERV9JTlZBTElEX1NFRUQqHkRPTUFJTl9FUlJPUl9DT0RFX0lOVkFMSURfU0xVRyotRE9NQUlOX0VSUk9SX0NPREVfUFVMTF9SRVFVRVNUX09OX01BTlVBTF9UQVNLKtYBChRHaXRodWJBdXRoTWV0aG9kVHlwZRInCiNHSVRIVUJfQVVUSF9NRVRIT0RfVFlQRV9VTlNQRUNJRklFRBAAEiQKIEdJVEhVQl9BVVRIX01FVEhPRF9UWVBFX0tFWUNIQUlOEAESJwojR0lUSFVCX0FVVEhfTUVUSE9EX1RZUEVfRU5WSVJPTk1FTlQQAhIiCh5HSVRIVUJfQVVUSF9NRVRIT0RfVFlQRV9JTkxJTkUQAxIiCh5HSVRIVUJfQVVUSF9NRVRIT0RfVFlQRV9HSF9DTEkQBCp0Cg5UYXNrUHJvbXB0S2luZBIgChxUQVNLX1BST01QVF9LSU5EX1VOU1BFQ0lGSUVEEAASGwoXVEFTS19QUk9NUFRfS0lORF9ERVNJR04QARIjCh9UQVNLX1BST01QVF9LSU5EX0lNUExFTUVOVEFUSU9OEAIq7wQKEERlYnVnUHJvYmxlbUNvZGUSIgoeREVCVUdfUFJPQkxFTV9DT0RFX1VOU1BFQ0lGSUVEEAASKgomREVCVUdfUFJPQkxFTV9DT0RFX1NUT1JBR0VfVU5BVkFJTEFCTEUQARI1CjFERUJVR19QUk9CTEVNX0NPREVfU0NIRU1BX1ZFUlNJT05fQUhFQURfT0ZfQklOQVJZEAISLAooREVCVUdfUFJPQkxFTV9DT0RFX0RBVEFCQVNFX05PVF9XUklUQUJMRRADEjAKLERFQlVHX1BST0JMRU1fQ09ERV9EQVRBQkFTRV9JTlRFR1JJVFlfRVJST1JTEAQSKAokREVCVUdfUFJPQkxFTV9DT0RFX0NPTkZJR19VTlJFQURBQkxFEAUSMgouREVCVUdfUFJPQkxFTV9DT0RFX0NPTkZJR19QRVJNSVNTSU9OU19UT09fT1BFThAGEiwKKERFQlVHX1BST0JMRU1fQ09ERV9DT05GSUdfVU5LTk9XTl9GSUVMRFMQBxIuCipERUJVR19QUk9CTEVNX0NPREVfTk9fQVVUSF9NRVRIT0RfRk9SX0hPU1QQCBIsCihERUJVR19QUk9CTEVNX0NPREVfR0lUSFVCX1NZTkNfUlVOX0VSUk9SEAkSKgomREVCVUdfUFJPQkxFTV9DT0RFX0dJVEhVQl9TWU5DX09WRVJEVUUQChIyCi5ERUJVR19QUk9CTEVNX0NPREVfR0lUSFVCX1NZTkNfTkVWRVJfQ09NUExFVEVEEAsSKgomREVCVUdfUFJPQkxFTV9DT0RFX1BVTExfUkVRVUVTVFNfU1RBTEUQDDKoGQoKUFJYU2VydmljZRJGCgtHZXRTbmFwc2hvdBIaLnByeC52MS5HZXRTbmFwc2hvdFJlcXVlc3QaGy5wcngudjEuR2V0U25hcHNob3RSZXNwb25zZRJMCg1DcmVhdGVQcm9qZWN0EhwucHJ4LnYxLkNyZWF0ZVByb2plY3RSZXF1ZXN0Gh0ucHJ4LnYxLkNyZWF0ZVByb2plY3RSZXNwb25zZRJMCg1VcGRhdGVQcm9qZWN0EhwucHJ4LnYxLlVwZGF0ZVByb2plY3RSZXF1ZXN0Gh0ucHJ4LnYxLlVwZGF0ZVByb2plY3RSZXNwb25zZRJMCg1EZWxldGVQcm9qZWN0EhwucHJ4LnYxLkRlbGV0ZVByb2plY3RSZXF1ZXN0Gh0ucHJ4LnYxLkRlbGV0ZVByb2plY3RSZXNwb25zZRJMCg1DcmVhdGVGZWF0dXJlEhwucHJ4LnYxLkNyZWF0ZUZlYXR1cmVSZXF1ZXN0Gh0ucHJ4LnYxLkNyZWF0ZUZlYXR1cmVSZXNwb25zZRJMCg1VcGRhdGVGZWF0dXJlEhwucHJ4LnYxLlVwZGF0ZUZlYXR1cmVSZXF1ZXN0Gh0ucHJ4LnYxLlVwZGF0ZUZlYXR1cmVSZXNwb25zZRJMCg1EZWxldGVGZWF0dXJlEhwucHJ4LnYxLkRlbGV0ZUZlYXR1cmVSZXF1ZXN0Gh0ucHJ4LnYxLkRlbGV0ZUZlYXR1cmVSZXNwb25zZRJDCgpDcmVhdGVUYXNrEhkucHJ4LnYxLkNyZWF0ZVRhc2tSZXF1ZXN0GhoucHJ4LnYxLkNyZWF0ZVRhc2tSZXNwb25zZRJDCgpVcGRhdGVUYXNrEhkucHJ4LnYxLlVwZGF0ZVRhc2tSZXF1ZXN0GhoucHJ4LnYxLlVwZGF0ZVRhc2tSZXNwb25zZRJDCgpEZWxldGVUYXNrEhkucHJ4LnYxLkRlbGV0ZVRhc2tSZXF1ZXN0GhoucHJ4LnYxLkRlbGV0ZVRhc2tSZXNwb25zZRJMCg1BZGREZXBlbmRlbmN5EhwucHJ4LnYxLkFkZERlcGVuZGVuY3lSZXF1ZXN0Gh0ucHJ4LnYxLkFkZERlcGVuZGVuY3lSZXNwb25zZRJVChBSZW1vdmVEZXBlbmRlbmN5Eh8ucHJ4LnYxLlJlbW92ZURlcGVuZGVuY3lSZXF1ZXN0GiAucHJ4LnYxLlJlbW92ZURlcGVuZGVuY3lSZXNwb25zZRJYChFBdHRhY2hQdWxsUmVxdWVzdBIgLnByeC52MS5BdHRhY2hQdWxsUmVxdWVzdFJlcXVlc3QaIS5wcngudjEuQXR0YWNoUHVsbFJlcXVlc3RSZXNwb25zZRJYChFEZXRhY2hQdWxsUmVxdWVzdBIgLnByeC52MS5EZXRhY2hQdWxsUmVxdWVzdFJlcXVlc3QaIS5wcngudjEuRGV0YWNoUHVsbFJlcXVlc3RSZXNwb25zZRJGCgtBZGREb2N1bWVudBIaLnByeC52MS5BZGREb2N1bWVudFJlcXVlc3QaGy5wcngudjEuQWRkRG9jdW1lbnRSZXNwb25zZRJGCgtHZXREb2N1bWVudBIaLnByeC52MS5HZXREb2N1bWVudFJlcXVlc3QaGy5wcngudjEuR2V0RG9jdW1lbnRSZXNwb25zZRJPCg5VcGRhdGVEb2N1bWVudBIdLnByeC52MS5VcGRhdGVEb2N1bWVudFJlcXVlc3QaHi5wcngudjEuVXBkYXRlRG9jdW1lbnRSZXNwb25zZRJPCg5EZWxldGVEb2N1bWVudBIdLnByeC52MS5EZWxldGVEb2N1bWVudFJlcXVlc3QaHi5wcngudjEuRGVsZXRlRG9jdW1lbnRSZXNwb25zZRJeChNSZWFkRG9jdW1lbnRDb250ZW50EiIucHJ4LnYxLlJlYWREb2N1bWVudENvbnRlbnRSZXF1ZXN0GiMucHJ4LnYxLlJlYWREb2N1bWVudENvbnRlbnRSZXNwb25zZRJSCg9TZWxlY3RMb2NhbEZpbGUSHi5wcngudjEuU2VsZWN0TG9jYWxGaWxlUmVxdWVzdBofLnByeC52MS5TZWxlY3RMb2NhbEZpbGVSZXNwb25zZRIxCgRTeW5jEhMucHJ4LnYxLlN5bmNSZXF1ZXN0GhQucHJ4LnYxLlN5bmNSZXNwb25zZRJeChNHZXRHaXRIdWJTeW5jU3RhdHVzEiIucHJ4LnYxLkdldEdpdEh1YlN5bmNTdGF0dXNSZXF1ZXN0GiMucHJ4LnYxLkdldEdpdEh1YlN5bmNTdGF0dXNSZXNwb25zZRJSCg9TeW5jR2l0SHViSWZEdWUSHi5wcngudjEuU3luY0dpdEh1YklmRHVlUmVxdWVzdBofLnByeC52MS5TeW5jR2l0SHViSWZEdWVSZXNwb25zZRI9CghWYWxpZGF0ZRIXLnByeC52MS5WYWxpZGF0ZVJlcXVlc3QaGC5wcngudjEuVmFsaWRhdGVSZXNwb25zZRJPCg5HZXREZWJ1Z1JlcG9ydBIdLnByeC52MS5HZXREZWJ1Z1JlcG9ydFJlcXVlc3QaHi5wcngudjEuR2V0RGVidWdSZXBvcnRSZXNwb25zZRJACglHZXRDb25maWcSGC5wcngudjEuR2V0Q29uZmlnUmVxdWVzdBoZLnByeC52MS5HZXRDb25maWdSZXNwb25zZRJnChZVcGRhdGVHaXRIdWJTeW5jQ29uZmlnEiUucHJ4LnYxLlVwZGF0ZUdpdEh1YlN5bmNDb25maWdSZXF1ZXN0GiYucHJ4LnYxLlVwZGF0ZUdpdEh1YlN5bmNDb25maWdSZXNwb25zZRJMCg1BZGRHaXRIdWJIb3N0EhwucHJ4LnYxLkFkZEdpdEh1Ykhvc3RSZXF1ZXN0Gh0ucHJ4LnYxLkFkZEdpdEh1Ykhvc3RSZXNwb25zZRJVChBVcGRhdGVHaXRIdWJIb3N0Eh8ucHJ4LnYxLlVwZGF0ZUdpdEh1Ykhvc3RSZXF1ZXN0GiAucHJ4LnYxLlVwZGF0ZUdpdEh1Ykhvc3RSZXNwb25zZRJVChBEZWxldGVHaXRIdWJIb3N0Eh8ucHJ4LnYxLkRlbGV0ZUdpdEh1Ykhvc3RSZXF1ZXN0GiAucHJ4LnYxLkRlbGV0ZUdpdEh1Ykhvc3RSZXNwb25zZRJeChNBZGRHaXRIdWJBdXRoTWV0aG9kEiIucHJ4LnYxLkFkZEdpdEh1YkF1dGhNZXRob2RSZXF1ZXN0GiMucHJ4LnYxLkFkZEdpdEh1YkF1dGhNZXRob2RSZXNwb25zZRJnChZVcGRhdGVHaXRIdWJBdXRoTWV0aG9kEiUucHJ4LnYxLlVwZGF0ZUdpdEh1YkF1dGhNZXRob2RSZXF1ZXN0GiYucHJ4LnYxLlVwZGF0ZUdpdEh1YkF1dGhNZXRob2RSZXNwb25zZRJnChZEZWxldGVHaXRIdWJBdXRoTWV0aG9kEiUucHJ4LnYxLkRlbGV0ZUdpdEh1YkF1dGhNZXRob2RSZXF1ZXN0GiYucHJ4LnYxLkRlbGV0ZUdpdEh1YkF1dGhNZXRob2RSZXNwb25zZRJtChhSZW9yZGVyR2l0SHViQXV0aE1ldGhvZHMSJy5wcngudjEuUmVvcmRlckdpdEh1YkF1dGhNZXRob2RzUmVxdWVzdBooLnByeC52MS5SZW9yZGVyR2l0SHViQXV0aE1ldGhvZHNSZXNwb25zZRJPCg5WYWxpZGF0ZUNvbmZpZxIdLnByeC52MS5WYWxpZGF0ZUNvbmZpZ1JlcXVlc3QaHi5wcngudjEuVmFsaWRhdGVDb25maWdSZXNwb25zZRJbChJHZXRQcm9tcHRUZW1wbGF0ZXMSIS5wcngudjEuR2V0UHJvbXB0VGVtcGxhdGVzUmVxdWVzdBoiLnByeC52MS5HZXRQcm9tcHRUZW1wbGF0ZXNSZXNwb25zZRJkChVVcGRhdGVQcm9tcHRUZW1wbGF0ZXMSJC5wcngudjEuVXBkYXRlUHJvbXB0VGVtcGxhdGVzUmVxdWVzdBolLnByeC52MS5VcGRhdGVQcm9tcHRUZW1wbGF0ZXNSZXNwb25zZRJMCg1HZXRUYXNrUHJvbXB0EhwucHJ4LnYxLkdldFRhc2tQcm9tcHRSZXF1ZXN0Gh0ucHJ4LnYxLkdldFRhc2tQcm9tcHRSZXNwb25zZRJPCg5HZXRCYXRjaFByb21wdBIdLnByeC52MS5HZXRCYXRjaFByb21wdFJlcXVlc3QaHi5wcngudjEuR2V0QmF0Y2hQcm9tcHRSZXNwb25zZUIuWixnaXRodWIuY29tL0hhcHB5T25pZ2lyaS9QUlgvZ2VuL3ByeC92MTtwcnh2MWIGcHJvdG8z");
 
 /**
- * BlockedReason is the structured reason a task is not ready.
+ * BlockedReason は task が ready でない理由を構造化したもの。
  *
  * @generated from message prx.v1.BlockedReason
  */
 export type BlockedReason = Message<"prx.v1.BlockedReason"> & {
   /**
-   * code identifies the dependency condition preventing readiness.
+   * code は ready を妨げている依存の状況を表す。
    *
    * @generated from field: prx.v1.BlockedReasonCode code = 1;
    */
   code: BlockedReasonCode;
 
   /**
-   * blocker_task_id identifies the specific blocking task when one is known.
+   * blocker_task_id は特定できる場合に、妨げている task を示す。
    *
    * @generated from field: string blocker_task_id = 2;
    */
@@ -41,20 +41,20 @@ export const BlockedReasonSchema: GenMessage<BlockedReason> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 0);
 
 /**
- * ErrorDetail carries a stable domain error code and optional dependency context.
+ * ErrorDetail は安定したドメインエラーコードと、任意の依存情報を運ぶ。
  *
  * @generated from message prx.v1.ErrorDetail
  */
 export type ErrorDetail = Message<"prx.v1.ErrorDetail"> & {
   /**
-   * code identifies the domain error reported by the server.
+   * code はサーバーが報告するドメインエラーを示す。
    *
    * @generated from field: prx.v1.DomainErrorCode code = 1;
    */
   code: DomainErrorCode;
 
   /**
-   * path contains the task IDs along a detected dependency cycle, with the starting task repeated at the end.
+   * path は検出した依存の循環に沿った task ID の並びで、末尾に起点の task を繰り返す。
    *
    * @generated from field: repeated string path = 2;
    */
@@ -69,50 +69,50 @@ export const ErrorDetailSchema: GenMessage<ErrorDetail> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 1);
 
 /**
- * Project is a container that groups features and their shared documents.
- * Its only state is whether it is archived; it has no derived status.
+ * Project は feature と共有 document をまとめる入れ物。
+ * 状態はアーカイブ済みかどうかだけで、導出されるステータスはない。
  *
  * @generated from message prx.v1.Project
  */
 export type Project = Message<"prx.v1.Project"> & {
   /**
-   * id is the public stable identifier of the project in the form P-<number>.
-   * The storage UUID is internal and is never exposed through this API.
+   * id は P-<number> 形式の project の公開安定識別子。
+   * 保存用の UUID は内部のもので、この API では公開しない。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * title is the human-readable project name.
+   * title は人が読む project 名。
    *
    * @generated from field: string title = 3;
    */
   title: string;
 
   /**
-   * description explains what the project groups.
+   * description は project が何をまとめているかを説明する。
    *
    * @generated from field: string description = 4;
    */
   description: string;
 
   /**
-   * archived makes the project and every feature in it read-only.
+   * archived は project と配下のすべての feature を読み取り専用にする。
    *
    * @generated from field: bool archived = 5;
    */
   archived: boolean;
 
   /**
-   * created_at is the creation time in RFC 3339 format.
+   * created_at は RFC 3339 形式の作成時刻。
    *
    * @generated from field: string created_at = 6;
    */
   createdAt: string;
 
   /**
-   * updated_at is the last update time in RFC 3339 format.
+   * updated_at は RFC 3339 形式の最終更新時刻。
    *
    * @generated from field: string updated_at = 7;
    */
@@ -127,124 +127,124 @@ export const ProjectSchema: GenMessage<Project> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 2);
 
 /**
- * Feature is a roadmap unit that owns tasks and dependency graphs.
+ * Feature は task と依存グラフを持つロードマップの単位。
  *
  * @generated from message prx.v1.Feature
  */
 export type Feature = Message<"prx.v1.Feature"> & {
   /**
-   * id is the public stable identifier of the feature in the form F-<number>.
-   * The storage UUID is internal and is never exposed through this API.
+   * id は F-<number> 形式の feature の公開安定識別子。
+   * 保存用の UUID は内部のもので、この API では公開しない。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * title is the human-readable feature name.
+   * title は人が読む feature 名。
    *
    * @generated from field: string title = 3;
    */
   title: string;
 
   /**
-   * description explains the feature's scope or goal.
+   * description は feature の範囲や目的を説明する。
    *
    * @generated from field: string description = 4;
    */
   description: string;
 
   /**
-   * status is the feature's stored lifecycle state.
+   * status は feature の保存されたライフサイクル状態。
    *
    * @generated from field: prx.v1.FeatureStatus status = 5;
    */
   status: FeatureStatus;
 
   /**
-   * archived separates the feature from active WebUI views and queues.
+   * archived は feature を WebUI の通常ビューやキューから切り離す。
    *
    * @generated from field: bool archived = 6;
    */
   archived: boolean;
 
   /**
-   * created_at is the creation time in RFC 3339 format.
+   * created_at は RFC 3339 形式の作成時刻。
    *
    * @generated from field: string created_at = 7;
    */
   createdAt: string;
 
   /**
-   * updated_at is the last update time in RFC 3339 format.
+   * updated_at は RFC 3339 形式の最終更新時刻。
    *
    * @generated from field: string updated_at = 8;
    */
   updatedAt: string;
 
   /**
-   * task_count is the number of tasks belonging to the feature.
+   * task_count は feature に属する task の数。
    *
    * @generated from field: int32 task_count = 9;
    */
   taskCount: number;
 
   /**
-   * ready_count is the number of tasks currently ready to work on.
+   * ready_count は今すぐ着手できる task の数。
    *
    * @generated from field: int32 ready_count = 10;
    */
   readyCount: number;
 
   /**
-   * review_waiting_count is the number of tasks whose pull requests are waiting for review.
+   * review_waiting_count は pull request がレビュー待ちの task の数。
    *
    * @generated from field: int32 review_waiting_count = 11;
    */
   reviewWaitingCount: number;
 
   /**
-   * conflict_count is the number of tasks whose pull requests have conflicts.
+   * conflict_count は pull request にコンフリクトがある task の数。
    *
    * @generated from field: int32 conflict_count = 12;
    */
   conflictCount: number;
 
   /**
-   * merged_count is the number of tasks whose pull requests are merged.
+   * merged_count は pull request がマージ済みの task の数。
    *
    * @generated from field: int32 merged_count = 13;
    */
   mergedCount: number;
 
   /**
-   * display_status is the status presented for the feature. Snapshot reads derive it and never
-   * report AUTO; responses that echo the stored feature alone leave it UNSPECIFIED.
+   * display_status は feature の表示用ステータス。snapshot の読み取りでは導出され AUTO を返さない。
+   * 保存された feature をそのまま返すレスポンスでは UNSPECIFIED のままになる。
    *
    * @generated from field: prx.v1.FeatureStatus display_status = 14;
    */
   displayStatus: FeatureStatus;
 
   /**
-   * finished_count is the number of tasks the automatic completion rule counts as finished.
+   * finished_count は自動完了の規則が終了とみなす task の数。
    *
    * @generated from field: int32 finished_count = 15;
    */
   finishedCount: number;
 
   /**
-   * project_id identifies the owning project by its public P-<number> ID. Every feature belongs to
-   * a project, so this value is never empty.
+   * project_id は所属する project を公開 ID の P-<number> で示す。feature は必ず project に
+   * 属するので、この値が空になることはない。
    *
    * @generated from field: string project_id = 16;
    */
   projectId: string;
 
   /**
-   * read_only is derived: the feature is archived, or its project is. Clients present read-only
-   * state from this value instead of combining the feature's own flag with its project's.
-   * Every response that carries a feature derives it, including the ones that echo a single
-   * stored feature, so a caller never has to know which read it came from.
+   * read_only は導出値で、feature 自身かその project がアーカイブ済みであることを表す。クライアントは
+   * feature 自身のフラグと project のフラグを組み合わせず、この値から読み取り専用かを判断する。
+   * feature を含むレスポンスはすべて、保存された feature をそのまま返すものも含めてこれを導出するので、
+   * 呼び出し側はどの読み取り由来かを気にしなくてよい。
    *
    * @generated from field: bool read_only = 17;
    */
@@ -259,101 +259,100 @@ export const FeatureSchema: GenMessage<Feature> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 3);
 
 /**
- * Task is a unit of work belonging to a feature.
+ * Task は feature に属する作業の単位。
  *
  * @generated from message prx.v1.Task
  */
 export type Task = Message<"prx.v1.Task"> & {
   /**
-   * id is the public stable identifier of the task in the form T-<number>.
-   * The storage UUID is internal and is never exposed through this API.
+   * id は T-<number> 形式の task の公開安定識別子。
+   * 保存用の UUID は内部のもので、この API では公開しない。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * feature_id identifies the owning feature by its public F-<number> ID.
+   * feature_id は所属する feature を公開 ID の F-<number> で示す。
    *
    * @generated from field: string feature_id = 2;
    */
   featureId: string;
 
   /**
-   * title is the human-readable task name.
+   * title は人が読む task 名。
    *
    * @generated from field: string title = 3;
    */
   title: string;
 
   /**
-   * scope describes the work covered by the task.
+   * scope は task が扱う作業内容を説明する。
    *
    * @generated from field: string scope = 4;
    */
   scope: string;
 
   /**
-   * status is the stored workflow control value.
+   * status は保存されたワークフロー制御用の値。
    *
    * @generated from field: prx.v1.TaskStatus status = 6;
    */
   status: TaskStatus;
 
   /**
-   * assignee is the person responsible for the task, when assigned.
+   * assignee は担当者が割り当てられている場合のその人物。
    *
    * @generated from field: string assignee = 7;
    */
   assignee: string;
 
   /**
-   * created_at is the creation time in RFC 3339 format.
+   * created_at は RFC 3339 形式の作成時刻。
    *
    * @generated from field: string created_at = 8;
    */
   createdAt: string;
 
   /**
-   * updated_at is the last update time in RFC 3339 format.
+   * updated_at は RFC 3339 形式の最終更新時刻。
    *
    * @generated from field: string updated_at = 9;
    */
   updatedAt: string;
 
   /**
-   * ready indicates that the task is not started and has no unsatisfied blockers.
+   * ready は task が未着手で、未解決の blocker がないことを表す。
    *
    * @generated from field: bool ready = 10;
    */
   ready: boolean;
 
   /**
-   * display_state is the derived state intended for task presentation.
+   * display_state は task の表示のために導出された状態。
    *
    * @generated from field: prx.v1.TaskDisplayState display_state = 11;
    */
   displayState: TaskDisplayState;
 
   /**
-   * blocked_reason explains why a task is not ready, when applicable.
+   * blocked_reason は該当する場合に task が ready でない理由を説明する。
    *
    * @generated from field: prx.v1.BlockedReason blocked_reason = 12;
    */
   blockedReason?: BlockedReason | undefined;
 
   /**
-   * has_implementation_plan indicates whether a plan document is registered for this task.
+   * has_implementation_plan はこの task に計画文書が登録されているかを表す。
    *
    * @generated from field: bool has_implementation_plan = 13;
    */
   hasImplementationPlan: boolean;
 
   /**
-   * pending_blocker_task_ids names every blocker that is not satisfied yet, by
-   * its public T-<number> ID. blocked_reason names only the first of them, so a
-   * caller that has to hand over a task together with everything it waits for
-   * reads this instead.
+   * pending_blocker_task_ids は未解決の blocker をすべて公開 ID の T-<number> で
+   * 並べる。blocked_reason はその先頭 1 件しか示さないので、task を待ち相手ごと
+   * 引き渡す必要がある呼び出し側はこちらを読む。
    *
    * @generated from field: repeated string pending_blocker_task_ids = 14;
    */
@@ -368,27 +367,27 @@ export const TaskSchema: GenMessage<Task> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 4);
 
 /**
- * Dependency is a directed edge from a blocker task to a blocked task in one feature.
+ * Dependency は 1 つの feature 内で blocker task から blocked task への有向辺を表す。
  *
  * @generated from message prx.v1.Dependency
  */
 export type Dependency = Message<"prx.v1.Dependency"> & {
   /**
-   * blocker_task_id identifies the task by its public T-<number> ID.
+   * blocker_task_id は task を公開 ID の T-<number> で示す。
    *
    * @generated from field: string blocker_task_id = 1;
    */
   blockerTaskId: string;
 
   /**
-   * blocked_task_id identifies the task by its public T-<number> ID.
+   * blocked_task_id は task を公開 ID の T-<number> で示す。
    *
    * @generated from field: string blocked_task_id = 2;
    */
   blockedTaskId: string;
 
   /**
-   * created_at is the time the dependency was added in RFC 3339 format.
+   * created_at は RFC 3339 形式の依存を追加した時刻。
    *
    * @generated from field: string created_at = 3;
    */
@@ -403,132 +402,132 @@ export const DependencySchema: GenMessage<Dependency> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 5);
 
 /**
- * PullRequest is the GitHub record attached to a pull-request task.
+ * PullRequest は pull request 用の task に紐づく GitHub のレコード。
  *
  * @generated from message prx.v1.PullRequest
  */
 export type PullRequest = Message<"prx.v1.PullRequest"> & {
   /**
-   * task_id identifies the linked task by its public T-<number> ID.
+   * task_id は紐づく task を公開 ID の T-<number> で示す。
    *
    * @generated from field: string task_id = 1;
    */
   taskId: string;
 
   /**
-   * owner is the GitHub account or organization that owns the repository.
+   * owner はリポジトリを所有する GitHub アカウントまたは組織。
    *
    * @generated from field: string owner = 2;
    */
   owner: string;
 
   /**
-   * repository is the GitHub repository name.
+   * repository は GitHub のリポジトリ名。
    *
    * @generated from field: string repository = 3;
    */
   repository: string;
 
   /**
-   * number is the pull request number within the repository.
+   * number はリポジトリ内での pull request 番号。
    *
    * @generated from field: int64 number = 4;
    */
   number: bigint;
 
   /**
-   * url is the canonical pull request URL.
+   * url は pull request の正規 URL。
    *
    * @generated from field: string url = 5;
    */
   url: string;
 
   /**
-   * node_id is GitHub's stable node identifier for the pull request.
+   * node_id は pull request に対する GitHub の安定したノード識別子。
    *
    * @generated from field: string node_id = 6;
    */
   nodeId: string;
 
   /**
-   * author is the GitHub login of the pull request author.
+   * author は pull request 作成者の GitHub ログイン名。
    *
    * @generated from field: string author = 7;
    */
   author: string;
 
   /**
-   * assignees contains the GitHub logins assigned to the pull request.
+   * assignees は pull request に割り当てられた GitHub ログイン名。
    *
    * @generated from field: repeated string assignees = 8;
    */
   assignees: string[];
 
   /**
-   * state is the raw lifecycle state reported by GitHub.
+   * state は GitHub が報告する生のライフサイクル状態。
    *
    * @generated from field: prx.v1.PullRequestState state = 9;
    */
   state: PullRequestState;
 
   /**
-   * draft indicates whether the pull request is a draft.
+   * draft は pull request が draft かどうかを表す。
    *
    * @generated from field: bool draft = 10;
    */
   draft: boolean;
 
   /**
-   * review_state summarizes current review decisions and requested reviewers.
+   * review_state は現在のレビュー判定とレビュー依頼状況をまとめる。
    *
    * @generated from field: prx.v1.ReviewState review_state = 11;
    */
   reviewState: ReviewState;
 
   /**
-   * mergeability is the current mergeability reported by GitHub.
+   * mergeability は GitHub が報告する現在のマージ可否。
    *
    * @generated from field: prx.v1.Mergeability mergeability = 12;
    */
   mergeability: Mergeability;
 
   /**
-   * github_updated_at is the last update time reported by GitHub in RFC 3339 format.
+   * github_updated_at は GitHub が報告する RFC 3339 形式の最終更新時刻。
    *
    * @generated from field: string github_updated_at = 13;
    */
   githubUpdatedAt: string;
 
   /**
-   * last_synced_at is the last time PR data was fetched in RFC 3339 format.
+   * last_synced_at は PR データを最後に取得した RFC 3339 形式の時刻。
    *
    * @generated from field: string last_synced_at = 14;
    */
   lastSyncedAt: string;
 
   /**
-   * sync_error contains the most recent refresh error, when one occurred.
+   * sync_error は直近の更新エラーがあればその内容。
    *
    * @generated from field: string sync_error = 15;
    */
   syncError: string;
 
   /**
-   * stale indicates that the pull request data may not represent the current GitHub state.
+   * stale は pull request のデータが現在の GitHub の状態と異なりうることを表す。
    *
    * @generated from field: bool stale = 16;
    */
   stale: boolean;
 
   /**
-   * display_state is the derived presentation state using the documented priority order.
+   * display_state は文書化された優先順位で導出した表示状態。
    *
    * @generated from field: prx.v1.PullRequestDisplayState display_state = 17;
    */
   displayState: PullRequestDisplayState;
 
   /**
-   * host is the case-insensitive GitHub or GitHub Enterprise Server host key.
+   * host は大文字小文字を区別しない GitHub / GitHub Enterprise Server の host キー。
    *
    * @generated from field: string host = 18;
    */
@@ -543,76 +542,76 @@ export const PullRequestSchema: GenMessage<PullRequest> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 6);
 
 /**
- * Document is a reference attached to exactly one project, feature, or task.
+ * Document は project、feature、task のいずれか 1 つだけに紐づく参照。
  *
  * @generated from message prx.v1.Document
  */
 export type Document = Message<"prx.v1.Document"> & {
   /**
-   * id is the stable identifier of the document reference.
+   * id は document 参照の安定識別子。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * feature_id identifies the parent feature by its public F-<number> ID when the document is feature-scoped.
+   * feature_id は feature 単位の document のとき、親 feature を公開 ID の F-<number> で示す。
    *
    * @generated from field: string feature_id = 2;
    */
   featureId: string;
 
   /**
-   * task_id identifies the parent task by its public T-<number> ID when the document is task-scoped.
+   * task_id は task 単位の document のとき、親 task を公開 ID の T-<number> で示す。
    *
    * @generated from field: string task_id = 3;
    */
   taskId: string;
 
   /**
-   * kind identifies the document source.
+   * kind は document の取得元を表す。
    *
    * @generated from field: prx.v1.DocumentKind kind = 4;
    */
   kind: DocumentKind;
 
   /**
-   * title is the human-readable document label.
+   * title は人が読む document のラベル。
    *
    * @generated from field: string title = 5;
    */
   title: string;
 
   /**
-   * locator is the URL or local file path; stored Markdown leaves it empty.
+   * locator は URL かローカルファイルパス。保存された Markdown では空になる。
    *
    * @generated from field: string locator = 6;
    */
   locator: string;
 
   /**
-   * created_at is the creation time in RFC 3339 format.
+   * created_at は RFC 3339 形式の作成時刻。
    *
    * @generated from field: string created_at = 7;
    */
   createdAt: string;
 
   /**
-   * is_implementation_plan marks the task's single plan document.
+   * is_implementation_plan は task に 1 つだけの計画文書であることを示す。
    *
    * @generated from field: bool is_implementation_plan = 8;
    */
   isImplementationPlan: boolean;
 
   /**
-   * updated_at is the last update time in RFC 3339 format.
+   * updated_at は RFC 3339 形式の最終更新時刻。
    *
    * @generated from field: string updated_at = 9;
    */
   updatedAt: string;
 
   /**
-   * project_id identifies the parent project by its public P-<number> ID when the document is project-scoped.
+   * project_id は project 単位の document のとき、親 project を公開 ID の P-<number> で示す。
    *
    * @generated from field: string project_id = 10;
    */
@@ -627,76 +626,76 @@ export const DocumentSchema: GenMessage<Document> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 7);
 
 /**
- * Snapshot is the complete normalized dataset plus derived task queues.
+ * Snapshot は正規化されたデータ一式と、導出した task のキュー。
  *
  * @generated from message prx.v1.Snapshot
  */
 export type Snapshot = Message<"prx.v1.Snapshot"> & {
   /**
-   * features contains all stored features.
+   * features は保存されたすべての feature。
    *
    * @generated from field: repeated prx.v1.Feature features = 1;
    */
   features: Feature[];
 
   /**
-   * tasks contains all stored tasks with derived readiness and display state.
+   * tasks は保存されたすべての task で、導出した ready と表示状態を含む。
    *
    * @generated from field: repeated prx.v1.Task tasks = 2;
    */
   tasks: Task[];
 
   /**
-   * dependencies contains all directed task dependencies.
+   * dependencies は task 間のすべての有向依存。
    *
    * @generated from field: repeated prx.v1.Dependency dependencies = 3;
    */
   dependencies: Dependency[];
 
   /**
-   * pull_requests contains all attached pull requests and their latest known data.
+   * pull_requests は紐づくすべての pull request と、その最新の既知データ。
    *
    * @generated from field: repeated prx.v1.PullRequest pull_requests = 4;
    */
   pullRequests: PullRequest[];
 
   /**
-   * documents contains all registered document references without file contents.
+   * documents は登録済みのすべての document 参照で、ファイルの内容は含まない。
    *
    * @generated from field: repeated prx.v1.Document documents = 5;
    */
   documents: Document[];
 
   /**
-   * ready_tasks contains tasks whose effective state is not started and whose blockers are satisfied.
+   * ready_tasks は実効状態が未着手で blocker が満たされている task。
    *
    * @generated from field: repeated prx.v1.Task ready_tasks = 6;
    */
   readyTasks: Task[];
 
   /**
-   * review_waiting_tasks contains tasks whose pull requests are waiting for review.
+   * review_waiting_tasks は pull request がレビュー待ちの task。
    *
    * @generated from field: repeated prx.v1.Task review_waiting_tasks = 7;
    */
   reviewWaitingTasks: Task[];
 
   /**
-   * conflict_tasks contains tasks whose pull requests have merge conflicts.
+   * conflict_tasks は pull request にコンフリクトがある task。
    *
    * @generated from field: repeated prx.v1.Task conflict_tasks = 8;
    */
   conflictTasks: Task[];
 
   /**
-   * stale_tasks contains tasks whose pull request data is stale or has a sync error.
+   * stale_tasks は pull request のデータが古いか同期エラーを持つ task。
    *
    * @generated from field: repeated prx.v1.Task stale_tasks = 9;
    */
   staleTasks: Task[];
 
   /**
-   * projects contains all stored projects.
+   * projects は保存されたすべての project。
    *
    * @generated from field: repeated prx.v1.Project projects = 10;
    */
@@ -711,7 +710,7 @@ export const SnapshotSchema: GenMessage<Snapshot> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 8);
 
 /**
- * GetSnapshotRequest requests the current normalized dataset and derived queues.
+ * GetSnapshotRequest は現在の正規化データと導出キューを要求する。
  *
  * @generated from message prx.v1.GetSnapshotRequest
  */
@@ -726,13 +725,13 @@ export const GetSnapshotRequestSchema: GenMessage<GetSnapshotRequest> = /*@__PUR
   messageDesc(file_prx_v1_prx, 9);
 
 /**
- * GetSnapshotResponse returns the requested application snapshot.
+ * GetSnapshotResponse は要求された snapshot を返す。
  *
  * @generated from message prx.v1.GetSnapshotResponse
  */
 export type GetSnapshotResponse = Message<"prx.v1.GetSnapshotResponse"> & {
   /**
-   * snapshot contains normalized records and derived task queues.
+   * snapshot は正規化されたレコードと導出した task のキューを含む。
    *
    * @generated from field: prx.v1.Snapshot snapshot = 1;
    */
@@ -747,20 +746,20 @@ export const GetSnapshotResponseSchema: GenMessage<GetSnapshotResponse> = /*@__P
   messageDesc(file_prx_v1_prx, 10);
 
 /**
- * CreateProjectRequest contains the required and descriptive values for a project.
+ * CreateProjectRequest は project に必要な値と説明的な値を持つ。
  *
  * @generated from message prx.v1.CreateProjectRequest
  */
 export type CreateProjectRequest = Message<"prx.v1.CreateProjectRequest"> & {
   /**
-   * title is the required human-readable project name.
+   * title は必須の、人が読む project 名。
    *
    * @generated from field: string title = 2;
    */
   title: string;
 
   /**
-   * description is optional explanatory text for the project.
+   * description は project の任意の説明文。
    *
    * @generated from field: string description = 3;
    */
@@ -775,13 +774,13 @@ export const CreateProjectRequestSchema: GenMessage<CreateProjectRequest> = /*@_
   messageDesc(file_prx_v1_prx, 11);
 
 /**
- * CreateProjectResponse returns the newly created project.
+ * CreateProjectResponse は作成された project を返す。
  *
  * @generated from message prx.v1.CreateProjectResponse
  */
 export type CreateProjectResponse = Message<"prx.v1.CreateProjectResponse"> & {
   /**
-   * project is the created project with its generated identifier and timestamps.
+   * project は生成された識別子とタイムスタンプを持つ、作成された project。
    *
    * @generated from field: prx.v1.Project project = 1;
    */
@@ -796,36 +795,36 @@ export const CreateProjectResponseSchema: GenMessage<CreateProjectResponse> = /*
   messageDesc(file_prx_v1_prx, 12);
 
 /**
- * UpdateProjectRequest updates only the supplied project fields.
- * An unset optional field is unchanged, while an empty string requests clearing a string field.
+ * UpdateProjectRequest は指定された project のフィールドだけを更新する。
+ * 未設定の optional は変更なし、空文字列は文字列フィールドのクリアを意味する。
  *
  * @generated from message prx.v1.UpdateProjectRequest
  */
 export type UpdateProjectRequest = Message<"prx.v1.UpdateProjectRequest"> & {
   /**
-   * id identifies the project to update by public ID.
+   * id は更新する project を公開 ID で示す。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * title is unchanged when unset; an empty string requests clearing it.
+   * title は未設定なら変更なし、空文字列ならクリアを要求する。
    *
    * @generated from field: optional string title = 3;
    */
   title?: string | undefined;
 
   /**
-   * description is unchanged when unset; an empty string clears it.
+   * description は未設定なら変更なし、空文字列ならクリアする。
    *
    * @generated from field: optional string description = 4;
    */
   description?: string | undefined;
 
   /**
-   * archived is unchanged when unset; a supplied value explicitly sets it.
-   * Clearing it is the only update an archived project accepts.
+   * archived は未設定なら変更なし、値があればそのとおりに設定する。
+   * アーカイブ済みの project が受け付ける更新はこれを外すことだけ。
    *
    * @generated from field: optional bool archived = 5;
    */
@@ -840,13 +839,13 @@ export const UpdateProjectRequestSchema: GenMessage<UpdateProjectRequest> = /*@_
   messageDesc(file_prx_v1_prx, 13);
 
 /**
- * UpdateProjectResponse returns the updated project.
+ * UpdateProjectResponse は更新後の project を返す。
  *
  * @generated from message prx.v1.UpdateProjectResponse
  */
 export type UpdateProjectResponse = Message<"prx.v1.UpdateProjectResponse"> & {
   /**
-   * project is the project after applying the requested updates.
+   * project は要求された更新を適用したあとの project。
    *
    * @generated from field: prx.v1.Project project = 1;
    */
@@ -861,22 +860,22 @@ export const UpdateProjectResponseSchema: GenMessage<UpdateProjectResponse> = /*
   messageDesc(file_prx_v1_prx, 14);
 
 /**
- * DeleteProjectRequest requests deletion of a project.
+ * DeleteProjectRequest は project の削除を要求する。
  *
  * @generated from message prx.v1.DeleteProjectRequest
  */
 export type DeleteProjectRequest = Message<"prx.v1.DeleteProjectRequest"> & {
   /**
-   * id identifies the project to delete by public ID.
+   * id は削除する project を公開 ID で示す。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * cascade deletes the project's own documents and every feature it contains,
-   * with the tasks, dependencies, pull-request attachments, and documents
-   * inside them, instead of failing.
+   * cascade は失敗させる代わりに、project 自身の document と配下のすべての
+   * feature を、その中の task・依存・pull request の紐づけ・document ごと
+   * 削除する。
    *
    * @generated from field: bool cascade = 2;
    */
@@ -891,7 +890,7 @@ export const DeleteProjectRequestSchema: GenMessage<DeleteProjectRequest> = /*@_
   messageDesc(file_prx_v1_prx, 15);
 
 /**
- * DeleteProjectResponse confirms that the project was deleted.
+ * DeleteProjectResponse は project が削除されたことを示す。
  *
  * @generated from message prx.v1.DeleteProjectResponse
  */
@@ -906,28 +905,28 @@ export const DeleteProjectResponseSchema: GenMessage<DeleteProjectResponse> = /*
   messageDesc(file_prx_v1_prx, 16);
 
 /**
- * CreateFeatureRequest contains the required and descriptive values for a feature.
+ * CreateFeatureRequest は feature に必要な値と説明的な値を持つ。
  *
  * @generated from message prx.v1.CreateFeatureRequest
  */
 export type CreateFeatureRequest = Message<"prx.v1.CreateFeatureRequest"> & {
   /**
-   * title is the required human-readable feature name.
+   * title は必須の、人が読む feature 名。
    *
    * @generated from field: string title = 2;
    */
   title: string;
 
   /**
-   * description is optional explanatory text for the feature.
+   * description は feature の任意の説明文。
    *
    * @generated from field: string description = 3;
    */
   description: string;
 
   /**
-   * project_id assigns the feature to a project by public ID. It is required: a feature always
-   * belongs to a project.
+   * project_id は feature を公開 ID で project に割り当てる。feature は必ず project に属するので
+   * 必須である。
    *
    * @generated from field: string project_id = 4;
    */
@@ -942,13 +941,13 @@ export const CreateFeatureRequestSchema: GenMessage<CreateFeatureRequest> = /*@_
   messageDesc(file_prx_v1_prx, 17);
 
 /**
- * CreateFeatureResponse returns the newly created feature.
+ * CreateFeatureResponse は作成された feature を返す。
  *
  * @generated from message prx.v1.CreateFeatureResponse
  */
 export type CreateFeatureResponse = Message<"prx.v1.CreateFeatureResponse"> & {
   /**
-   * feature is the created feature with its generated identifier and timestamps.
+   * feature は生成された識別子とタイムスタンプを持つ、作成された feature。
    *
    * @generated from field: prx.v1.Feature feature = 1;
    */
@@ -963,51 +962,51 @@ export const CreateFeatureResponseSchema: GenMessage<CreateFeatureResponse> = /*
   messageDesc(file_prx_v1_prx, 18);
 
 /**
- * UpdateFeatureRequest updates only the supplied feature fields.
- * An unset optional field is unchanged, while an empty string requests clearing a string field.
+ * UpdateFeatureRequest は指定された feature のフィールドだけを更新する。
+ * 未設定の optional は変更なし、空文字列は文字列フィールドのクリアを意味する。
  *
  * @generated from message prx.v1.UpdateFeatureRequest
  */
 export type UpdateFeatureRequest = Message<"prx.v1.UpdateFeatureRequest"> & {
   /**
-   * id identifies the feature to update.
+   * id は更新する feature を示す。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * title is unchanged when unset; an empty string requests clearing it.
+   * title は未設定なら変更なし、空文字列ならクリアを要求する。
    *
    * @generated from field: optional string title = 3;
    */
   title?: string | undefined;
 
   /**
-   * description is unchanged when unset; an empty string clears it.
+   * description は未設定なら変更なし、空文字列ならクリアする。
    *
    * @generated from field: optional string description = 4;
    */
   description?: string | undefined;
 
   /**
-   * status is unchanged when unset; a supplied value replaces it.
+   * status は未設定なら変更なし、値があれば置き換える。
    *
    * @generated from field: optional prx.v1.FeatureStatus status = 5;
    */
   status?: FeatureStatus | undefined;
 
   /**
-   * archived is unchanged when unset; a supplied value explicitly sets it.
-   * Clearing it is the only update an archived feature accepts.
+   * archived は未設定なら変更なし、値があればそのとおりに設定する。
+   * アーカイブ済みの feature が受け付ける更新はこれを外すことだけ。
    *
    * @generated from field: optional bool archived = 6;
    */
   archived?: boolean | undefined;
 
   /**
-   * project_id is unchanged when unset; a public ID reassigns the feature.
-   * An empty string is refused, because a feature cannot leave every project.
+   * project_id は未設定なら変更なし、公開 ID があれば feature を付け替える。
+   * feature はどの project にも属さない状態になれないので、空文字列は拒否する。
    *
    * @generated from field: optional string project_id = 7;
    */
@@ -1022,13 +1021,13 @@ export const UpdateFeatureRequestSchema: GenMessage<UpdateFeatureRequest> = /*@_
   messageDesc(file_prx_v1_prx, 19);
 
 /**
- * UpdateFeatureResponse returns the updated feature.
+ * UpdateFeatureResponse は更新後の feature を返す。
  *
  * @generated from message prx.v1.UpdateFeatureResponse
  */
 export type UpdateFeatureResponse = Message<"prx.v1.UpdateFeatureResponse"> & {
   /**
-   * feature is the feature after applying the requested updates.
+   * feature は要求された更新を適用したあとの feature。
    *
    * @generated from field: prx.v1.Feature feature = 1;
    */
@@ -1043,20 +1042,20 @@ export const UpdateFeatureResponseSchema: GenMessage<UpdateFeatureResponse> = /*
   messageDesc(file_prx_v1_prx, 20);
 
 /**
- * DeleteFeatureRequest requests deletion of a feature and optionally its references.
+ * DeleteFeatureRequest は feature と、必要ならその参照の削除を要求する。
  *
  * @generated from message prx.v1.DeleteFeatureRequest
  */
 export type DeleteFeatureRequest = Message<"prx.v1.DeleteFeatureRequest"> & {
   /**
-   * id identifies the feature to delete.
+   * id は削除する feature を示す。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * cascade permits deletion of the feature's dependent tasks and records.
+   * cascade は feature に従属する task やレコードの削除を許可する。
    *
    * @generated from field: bool cascade = 2;
    */
@@ -1071,7 +1070,7 @@ export const DeleteFeatureRequestSchema: GenMessage<DeleteFeatureRequest> = /*@_
   messageDesc(file_prx_v1_prx, 21);
 
 /**
- * DeleteFeatureResponse confirms that the feature was deleted.
+ * DeleteFeatureResponse は feature が削除されたことを示す。
  *
  * @generated from message prx.v1.DeleteFeatureResponse
  */
@@ -1086,34 +1085,34 @@ export const DeleteFeatureResponseSchema: GenMessage<DeleteFeatureResponse> = /*
   messageDesc(file_prx_v1_prx, 22);
 
 /**
- * CreateTaskRequest contains the values for a task within a feature.
+ * CreateTaskRequest は feature 内の task の値を持つ。
  *
  * @generated from message prx.v1.CreateTaskRequest
  */
 export type CreateTaskRequest = Message<"prx.v1.CreateTaskRequest"> & {
   /**
-   * feature_id identifies the feature that owns the task.
+   * feature_id は task を持つ feature を示す。
    *
    * @generated from field: string feature_id = 1;
    */
   featureId: string;
 
   /**
-   * title is the required human-readable task name.
+   * title は必須の、人が読む task 名。
    *
    * @generated from field: string title = 2;
    */
   title: string;
 
   /**
-   * scope describes the work covered by the task.
+   * scope は task が扱う作業内容を説明する。
    *
    * @generated from field: string scope = 3;
    */
   scope: string;
 
   /**
-   * assignee is the optional person responsible for the task.
+   * assignee は task の担当者で、任意。
    *
    * @generated from field: string assignee = 5;
    */
@@ -1128,13 +1127,13 @@ export const CreateTaskRequestSchema: GenMessage<CreateTaskRequest> = /*@__PURE_
   messageDesc(file_prx_v1_prx, 23);
 
 /**
- * CreateTaskResponse returns the newly created task.
+ * CreateTaskResponse は作成された task を返す。
  *
  * @generated from message prx.v1.CreateTaskResponse
  */
 export type CreateTaskResponse = Message<"prx.v1.CreateTaskResponse"> & {
   /**
-   * task is the created task with its generated identifier and timestamps.
+   * task は生成された識別子とタイムスタンプを持つ、作成された task。
    *
    * @generated from field: prx.v1.Task task = 1;
    */
@@ -1149,42 +1148,42 @@ export const CreateTaskResponseSchema: GenMessage<CreateTaskResponse> = /*@__PUR
   messageDesc(file_prx_v1_prx, 24);
 
 /**
- * UpdateTaskRequest updates only the supplied task fields.
- * An unset optional field is unchanged, while an empty string requests clearing a string field.
+ * UpdateTaskRequest は指定された task のフィールドだけを更新する。
+ * 未設定の optional は変更なし、空文字列は文字列フィールドのクリアを意味する。
  *
  * @generated from message prx.v1.UpdateTaskRequest
  */
 export type UpdateTaskRequest = Message<"prx.v1.UpdateTaskRequest"> & {
   /**
-   * id identifies the task to update.
+   * id は更新する task を示す。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * title is unchanged when unset; an empty string requests clearing it.
+   * title は未設定なら変更なし、空文字列ならクリアを要求する。
    *
    * @generated from field: optional string title = 2;
    */
   title?: string | undefined;
 
   /**
-   * scope is unchanged when unset; an empty string clears it.
+   * scope は未設定なら変更なし、空文字列ならクリアする。
    *
    * @generated from field: optional string scope = 3;
    */
   scope?: string | undefined;
 
   /**
-   * status is unchanged when unset; a supplied value replaces it.
+   * status は未設定なら変更なし、値があれば置き換える。
    *
    * @generated from field: optional prx.v1.TaskStatus status = 4;
    */
   status?: TaskStatus | undefined;
 
   /**
-   * assignee is unchanged when unset; an empty string clears it.
+   * assignee は未設定なら変更なし、空文字列ならクリアする。
    *
    * @generated from field: optional string assignee = 5;
    */
@@ -1199,13 +1198,13 @@ export const UpdateTaskRequestSchema: GenMessage<UpdateTaskRequest> = /*@__PURE_
   messageDesc(file_prx_v1_prx, 25);
 
 /**
- * UpdateTaskResponse returns the updated task.
+ * UpdateTaskResponse は更新後の task を返す。
  *
  * @generated from message prx.v1.UpdateTaskResponse
  */
 export type UpdateTaskResponse = Message<"prx.v1.UpdateTaskResponse"> & {
   /**
-   * task is the task after applying the requested updates.
+   * task は要求された更新を適用したあとの task。
    *
    * @generated from field: prx.v1.Task task = 1;
    */
@@ -1220,20 +1219,20 @@ export const UpdateTaskResponseSchema: GenMessage<UpdateTaskResponse> = /*@__PUR
   messageDesc(file_prx_v1_prx, 26);
 
 /**
- * DeleteTaskRequest requests deletion of a task and optionally its references.
+ * DeleteTaskRequest は task と、必要ならその参照の削除を要求する。
  *
  * @generated from message prx.v1.DeleteTaskRequest
  */
 export type DeleteTaskRequest = Message<"prx.v1.DeleteTaskRequest"> & {
   /**
-   * id identifies the task to delete.
+   * id は削除する task を示す。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * cascade permits deletion of the task's dependencies, pull request, plan, and documents.
+   * cascade は task の依存・pull request・計画・document の削除を許可する。
    *
    * @generated from field: bool cascade = 2;
    */
@@ -1248,7 +1247,7 @@ export const DeleteTaskRequestSchema: GenMessage<DeleteTaskRequest> = /*@__PURE_
   messageDesc(file_prx_v1_prx, 27);
 
 /**
- * DeleteTaskResponse confirms that the task was deleted.
+ * DeleteTaskResponse は task が削除されたことを示す。
  *
  * @generated from message prx.v1.DeleteTaskResponse
  */
@@ -1263,20 +1262,20 @@ export const DeleteTaskResponseSchema: GenMessage<DeleteTaskResponse> = /*@__PUR
   messageDesc(file_prx_v1_prx, 28);
 
 /**
- * AddDependencyRequest creates a same-feature dependency edge.
+ * AddDependencyRequest は同じ feature 内に依存の辺を作る。
  *
  * @generated from message prx.v1.AddDependencyRequest
  */
 export type AddDependencyRequest = Message<"prx.v1.AddDependencyRequest"> & {
   /**
-   * blocker_task_id identifies the task that must be satisfied first.
+   * blocker_task_id は先に満たす必要がある task を示す。
    *
    * @generated from field: string blocker_task_id = 1;
    */
   blockerTaskId: string;
 
   /**
-   * blocked_task_id identifies the task that will wait for the blocker.
+   * blocked_task_id は blocker を待つ側の task を示す。
    *
    * @generated from field: string blocked_task_id = 2;
    */
@@ -1291,13 +1290,13 @@ export const AddDependencyRequestSchema: GenMessage<AddDependencyRequest> = /*@_
   messageDesc(file_prx_v1_prx, 29);
 
 /**
- * AddDependencyResponse returns the newly created dependency.
+ * AddDependencyResponse は作成された依存を返す。
  *
  * @generated from message prx.v1.AddDependencyResponse
  */
 export type AddDependencyResponse = Message<"prx.v1.AddDependencyResponse"> & {
   /**
-   * dependency is the persisted directed edge.
+   * dependency は保存された有向の辺。
    *
    * @generated from field: prx.v1.Dependency dependency = 1;
    */
@@ -1312,20 +1311,20 @@ export const AddDependencyResponseSchema: GenMessage<AddDependencyResponse> = /*
   messageDesc(file_prx_v1_prx, 30);
 
 /**
- * RemoveDependencyRequest identifies a dependency edge to remove.
+ * RemoveDependencyRequest は取り除く依存の辺を示す。
  *
  * @generated from message prx.v1.RemoveDependencyRequest
  */
 export type RemoveDependencyRequest = Message<"prx.v1.RemoveDependencyRequest"> & {
   /**
-   * blocker_task_id identifies the dependency's blocker.
+   * blocker_task_id は依存の blocker を示す。
    *
    * @generated from field: string blocker_task_id = 1;
    */
   blockerTaskId: string;
 
   /**
-   * blocked_task_id identifies the dependency's blocked task.
+   * blocked_task_id は依存で待つ側の task を示す。
    *
    * @generated from field: string blocked_task_id = 2;
    */
@@ -1340,7 +1339,7 @@ export const RemoveDependencyRequestSchema: GenMessage<RemoveDependencyRequest> 
   messageDesc(file_prx_v1_prx, 31);
 
 /**
- * RemoveDependencyResponse confirms that the dependency was removed.
+ * RemoveDependencyResponse は依存が取り除かれたことを示す。
  *
  * @generated from message prx.v1.RemoveDependencyResponse
  */
@@ -1355,20 +1354,20 @@ export const RemoveDependencyResponseSchema: GenMessage<RemoveDependencyResponse
   messageDesc(file_prx_v1_prx, 32);
 
 /**
- * AttachPullRequestRequest links a GitHub pull request to a pull-request task.
+ * AttachPullRequestRequest は GitHub の pull request を task に紐づける。
  *
  * @generated from message prx.v1.AttachPullRequestRequest
  */
 export type AttachPullRequestRequest = Message<"prx.v1.AttachPullRequestRequest"> & {
   /**
-   * task_id identifies the pull-request task.
+   * task_id は pull request 用の task を示す。
    *
    * @generated from field: string task_id = 1;
    */
   taskId: string;
 
   /**
-   * url is the GitHub pull request URL to attach.
+   * url は紐づける GitHub の pull request URL。
    *
    * @generated from field: string url = 2;
    */
@@ -1383,13 +1382,13 @@ export const AttachPullRequestRequestSchema: GenMessage<AttachPullRequestRequest
   messageDesc(file_prx_v1_prx, 33);
 
 /**
- * AttachPullRequestResponse returns the attached pull request.
+ * AttachPullRequestResponse は紐づけた pull request を返す。
  *
  * @generated from message prx.v1.AttachPullRequestResponse
  */
 export type AttachPullRequestResponse = Message<"prx.v1.AttachPullRequestResponse"> & {
   /**
-   * pull_request is the newly attached record with unknown initial GitHub state.
+   * pull_request は GitHub 側の状態が未取得のまま新たに紐づいたレコード。
    *
    * @generated from field: prx.v1.PullRequest pull_request = 1;
    */
@@ -1404,13 +1403,13 @@ export const AttachPullRequestResponseSchema: GenMessage<AttachPullRequestRespon
   messageDesc(file_prx_v1_prx, 34);
 
 /**
- * DetachPullRequestRequest identifies the task whose pull request should be detached.
+ * DetachPullRequestRequest は pull request の紐づけを外す task を示す。
  *
  * @generated from message prx.v1.DetachPullRequestRequest
  */
 export type DetachPullRequestRequest = Message<"prx.v1.DetachPullRequestRequest"> & {
   /**
-   * task_id identifies the task whose pull request is removed.
+   * task_id は pull request を外す task を示す。
    *
    * @generated from field: string task_id = 1;
    */
@@ -1425,7 +1424,7 @@ export const DetachPullRequestRequestSchema: GenMessage<DetachPullRequestRequest
   messageDesc(file_prx_v1_prx, 35);
 
 /**
- * DetachPullRequestResponse confirms that the pull request was detached.
+ * DetachPullRequestResponse は pull request の紐づけが外れたことを示す。
  *
  * @generated from message prx.v1.DetachPullRequestResponse
  */
@@ -1440,40 +1439,40 @@ export const DetachPullRequestResponseSchema: GenMessage<DetachPullRequestRespon
   messageDesc(file_prx_v1_prx, 36);
 
 /**
- * AddDocumentRequest registers one document source under exactly one parent.
+ * AddDocumentRequest は document の取得元を 1 つの親のもとに登録する。
  *
  * @generated from message prx.v1.AddDocumentRequest
  */
 export type AddDocumentRequest = Message<"prx.v1.AddDocumentRequest"> & {
   /**
-   * feature_id identifies the parent feature when project_id and task_id are empty.
+   * feature_id は project_id と task_id が空のとき、親 feature を示す。
    *
    * @generated from field: string feature_id = 1;
    */
   featureId: string;
 
   /**
-   * task_id identifies the parent task when project_id and feature_id are empty.
+   * task_id は project_id と feature_id が空のとき、親 task を示す。
    *
    * @generated from field: string task_id = 2;
    */
   taskId: string;
 
   /**
-   * title is the human-readable document label.
+   * title は人が読む document のラベル。
    *
    * @generated from field: string title = 3;
    */
   title: string;
 
   /**
-   * source contains exactly one URL, local path, or stored Markdown body.
+   * source は URL、ローカルパス、保存する Markdown 本文のいずれか 1 つだけを持つ。
    *
    * @generated from oneof prx.v1.AddDocumentRequest.source
    */
   source: {
     /**
-     * url stores an HTTP or HTTPS locator.
+     * url は HTTP または HTTPS の locator を保持する。
      *
      * @generated from field: string url = 4;
      */
@@ -1481,7 +1480,7 @@ export type AddDocumentRequest = Message<"prx.v1.AddDocumentRequest"> & {
     case: "url";
   } | {
     /**
-     * local_file stores a path read only through this document ID.
+     * local_file はこの document ID 経由でのみ読めるパスを保持する。
      *
      * @generated from field: string local_file = 5;
      */
@@ -1489,7 +1488,7 @@ export type AddDocumentRequest = Message<"prx.v1.AddDocumentRequest"> & {
     case: "localFile";
   } | {
     /**
-     * markdown stores the inline Markdown body.
+     * markdown はインラインの Markdown 本文を保持する。
      *
      * @generated from field: string markdown = 6;
      */
@@ -1498,14 +1497,14 @@ export type AddDocumentRequest = Message<"prx.v1.AddDocumentRequest"> & {
   } | { case: undefined; value?: undefined };
 
   /**
-   * is_implementation_plan marks this task document as its plan.
+   * is_implementation_plan はこの task document を計画として印付ける。
    *
    * @generated from field: bool is_implementation_plan = 7;
    */
   isImplementationPlan: boolean;
 
   /**
-   * project_id identifies the parent project when feature_id and task_id are empty.
+   * project_id は feature_id と task_id が空のとき、親 project を示す。
    *
    * @generated from field: string project_id = 8;
    */
@@ -1520,13 +1519,13 @@ export const AddDocumentRequestSchema: GenMessage<AddDocumentRequest> = /*@__PUR
   messageDesc(file_prx_v1_prx, 37);
 
 /**
- * AddDocumentResponse returns the newly registered document.
+ * AddDocumentResponse は登録された document を返す。
  *
  * @generated from message prx.v1.AddDocumentResponse
  */
 export type AddDocumentResponse = Message<"prx.v1.AddDocumentResponse"> & {
   /**
-   * document is the persisted document reference.
+   * document は保存された document 参照。
    *
    * @generated from field: prx.v1.Document document = 1;
    */
@@ -1541,13 +1540,13 @@ export const AddDocumentResponseSchema: GenMessage<AddDocumentResponse> = /*@__P
   messageDesc(file_prx_v1_prx, 38);
 
 /**
- * GetDocumentRequest identifies a document to return with content when applicable.
+ * GetDocumentRequest は、該当すれば内容も返す document を示す。
  *
  * @generated from message prx.v1.GetDocumentRequest
  */
 export type GetDocumentRequest = Message<"prx.v1.GetDocumentRequest"> & {
   /**
-   * id identifies the document.
+   * id は document を示す。
    *
    * @generated from field: string id = 1;
    */
@@ -1562,20 +1561,20 @@ export const GetDocumentRequestSchema: GenMessage<GetDocumentRequest> = /*@__PUR
   messageDesc(file_prx_v1_prx, 39);
 
 /**
- * GetDocumentResponse returns document metadata and stored Markdown content separately.
+ * GetDocumentResponse は document のメタデータと、保存された Markdown を分けて返す。
  *
  * @generated from message prx.v1.GetDocumentResponse
  */
 export type GetDocumentResponse = Message<"prx.v1.GetDocumentResponse"> & {
   /**
-   * document contains document metadata without inline content.
+   * document は内容を含まない document のメタデータ。
    *
    * @generated from field: prx.v1.Document document = 1;
    */
   document?: Document | undefined;
 
   /**
-   * content contains stored Markdown and is empty for locator-backed documents.
+   * content は保存された Markdown で、locator 由来の document では空。
    *
    * @generated from field: string content = 2;
    */
@@ -1590,33 +1589,33 @@ export const GetDocumentResponseSchema: GenMessage<GetDocumentResponse> = /*@__P
   messageDesc(file_prx_v1_prx, 40);
 
 /**
- * UpdateDocumentRequest replaces only supplied metadata or source fields.
+ * UpdateDocumentRequest は指定されたメタデータか取得元のみを置き換える。
  *
  * @generated from message prx.v1.UpdateDocumentRequest
  */
 export type UpdateDocumentRequest = Message<"prx.v1.UpdateDocumentRequest"> & {
   /**
-   * id identifies the document.
+   * id は document を示す。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * title is unchanged when unset; an empty string clears it.
+   * title は未設定なら変更なし、空文字列ならクリアする。
    *
    * @generated from field: optional string title = 2;
    */
   title?: string | undefined;
 
   /**
-   * source is unchanged when omitted.
+   * source は省略すると変更なし。
    *
    * @generated from oneof prx.v1.UpdateDocumentRequest.source
    */
   source: {
     /**
-     * url replaces the source with an HTTP or HTTPS locator.
+     * url は取得元を HTTP か HTTPS の locator に置き換える。
      *
      * @generated from field: string url = 3;
      */
@@ -1624,7 +1623,7 @@ export type UpdateDocumentRequest = Message<"prx.v1.UpdateDocumentRequest"> & {
     case: "url";
   } | {
     /**
-     * local_file replaces the source with a registered local path.
+     * local_file は取得元を登録済みのローカルパスに置き換える。
      *
      * @generated from field: string local_file = 4;
      */
@@ -1632,7 +1631,7 @@ export type UpdateDocumentRequest = Message<"prx.v1.UpdateDocumentRequest"> & {
     case: "localFile";
   } | {
     /**
-     * markdown replaces the source with inline Markdown.
+     * markdown は取得元をインラインの Markdown に置き換える。
      *
      * @generated from field: string markdown = 5;
      */
@@ -1641,7 +1640,7 @@ export type UpdateDocumentRequest = Message<"prx.v1.UpdateDocumentRequest"> & {
   } | { case: undefined; value?: undefined };
 
   /**
-   * is_implementation_plan is unchanged when unset.
+   * is_implementation_plan は未設定なら変更なし。
    *
    * @generated from field: optional bool is_implementation_plan = 6;
    */
@@ -1656,13 +1655,13 @@ export const UpdateDocumentRequestSchema: GenMessage<UpdateDocumentRequest> = /*
   messageDesc(file_prx_v1_prx, 41);
 
 /**
- * UpdateDocumentResponse returns the updated document metadata.
+ * UpdateDocumentResponse は更新後の document のメタデータを返す。
  *
  * @generated from message prx.v1.UpdateDocumentResponse
  */
 export type UpdateDocumentResponse = Message<"prx.v1.UpdateDocumentResponse"> & {
   /**
-   * document is the updated document.
+   * document は更新後の document。
    *
    * @generated from field: prx.v1.Document document = 1;
    */
@@ -1677,13 +1676,13 @@ export const UpdateDocumentResponseSchema: GenMessage<UpdateDocumentResponse> = 
   messageDesc(file_prx_v1_prx, 42);
 
 /**
- * DeleteDocumentRequest identifies a document reference to delete.
+ * DeleteDocumentRequest は削除する document 参照を示す。
  *
  * @generated from message prx.v1.DeleteDocumentRequest
  */
 export type DeleteDocumentRequest = Message<"prx.v1.DeleteDocumentRequest"> & {
   /**
-   * id identifies the document to delete.
+   * id は削除する document を示す。
    *
    * @generated from field: string id = 1;
    */
@@ -1698,7 +1697,7 @@ export const DeleteDocumentRequestSchema: GenMessage<DeleteDocumentRequest> = /*
   messageDesc(file_prx_v1_prx, 43);
 
 /**
- * DeleteDocumentResponse confirms that the document was deleted.
+ * DeleteDocumentResponse は document が削除されたことを示す。
  *
  * @generated from message prx.v1.DeleteDocumentResponse
  */
@@ -1713,13 +1712,13 @@ export const DeleteDocumentResponseSchema: GenMessage<DeleteDocumentResponse> = 
   messageDesc(file_prx_v1_prx, 44);
 
 /**
- * ReadDocumentContentRequest identifies a registered document to read.
+ * ReadDocumentContentRequest は読み取る登録済み document を示す。
  *
  * @generated from message prx.v1.ReadDocumentContentRequest
  */
 export type ReadDocumentContentRequest = Message<"prx.v1.ReadDocumentContentRequest"> & {
   /**
-   * id identifies a stored Markdown or local file document.
+   * id は保存された Markdown かローカルファイルの document を示す。
    *
    * @generated from field: string id = 1;
    */
@@ -1734,13 +1733,13 @@ export const ReadDocumentContentRequestSchema: GenMessage<ReadDocumentContentReq
   messageDesc(file_prx_v1_prx, 45);
 
 /**
- * ReadDocumentContentResponse returns bounded UTF-8 document content.
+ * ReadDocumentContentResponse は上限つきの UTF-8 の document 内容を返す。
  *
  * @generated from message prx.v1.ReadDocumentContentResponse
  */
 export type ReadDocumentContentResponse = Message<"prx.v1.ReadDocumentContentResponse"> & {
   /**
-   * content contains the document body and is limited to 1 MiB.
+   * content は document の本文で、1 MiB までに制限される。
    *
    * @generated from field: string content = 1;
    */
@@ -1755,7 +1754,7 @@ export const ReadDocumentContentResponseSchema: GenMessage<ReadDocumentContentRe
   messageDesc(file_prx_v1_prx, 46);
 
 /**
- * SelectLocalFileRequest asks the PRX server to open its native file chooser.
+ * SelectLocalFileRequest は PRX サーバーにネイティブのファイル選択画面を開かせる。
  *
  * @generated from message prx.v1.SelectLocalFileRequest
  */
@@ -1770,20 +1769,20 @@ export const SelectLocalFileRequestSchema: GenMessage<SelectLocalFileRequest> = 
   messageDesc(file_prx_v1_prx, 47);
 
 /**
- * SelectLocalFileResponse returns the selected server-local absolute path.
+ * SelectLocalFileResponse は選択されたサーバー上の絶対パスを返す。
  *
  * @generated from message prx.v1.SelectLocalFileResponse
  */
 export type SelectLocalFileResponse = Message<"prx.v1.SelectLocalFileResponse"> & {
   /**
-   * path is the selected absolute path and is empty when the user cancels.
+   * path は選択された絶対パスで、ユーザーが取り消した場合は空。
    *
    * @generated from field: string path = 1;
    */
   path: string;
 
   /**
-   * canceled distinguishes cancellation from a selected path.
+   * canceled は取り消しとパス選択を区別する。
    *
    * @generated from field: bool canceled = 2;
    */
@@ -1798,41 +1797,41 @@ export const SelectLocalFileResponseSchema: GenMessage<SelectLocalFileResponse> 
   messageDesc(file_prx_v1_prx, 48);
 
 /**
- * GitHubHost describes one configured GitHub.com or GitHub Enterprise Server host.
+ * GitHubHost は設定された GitHub.com または GitHub Enterprise Server の host 1 つを表す。
  *
  * @generated from message prx.v1.GitHubHost
  */
 export type GitHubHost = Message<"prx.v1.GitHubHost"> & {
   /**
-   * host is the normalized hostname, optionally including a port.
+   * host は正規化したホスト名で、必要ならポートを含む。
    *
    * @generated from field: string host = 1;
    */
   host: string;
 
   /**
-   * web_url is the HTTPS web origin used for canonical pull-request URLs.
+   * web_url は pull request の正規 URL に使う HTTPS の web オリジン。
    *
    * @generated from field: string web_url = 2;
    */
   webUrl: string;
 
   /**
-   * api_url is the HTTPS API base URL.
+   * api_url は HTTPS の API ベース URL。
    *
    * @generated from field: string api_url = 3;
    */
   apiUrl: string;
 
   /**
-   * upload_url is the HTTPS upload base URL.
+   * upload_url は HTTPS のアップロード用ベース URL。
    *
    * @generated from field: string upload_url = 4;
    */
   uploadUrl: string;
 
   /**
-   * graphql_url is the HTTPS GraphQL endpoint used for batched pull-request refreshes.
+   * graphql_url は pull request の一括更新に使う HTTPS の GraphQL エンドポイント。
    *
    * @generated from field: string graphql_url = 5;
    */
@@ -1847,70 +1846,70 @@ export const GitHubHostSchema: GenMessage<GitHubHost> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 49);
 
 /**
- * GitHubAuthMethod is the public representation of a host-scoped credential.
- * The token itself is never returned by the server.
+ * GitHubAuthMethod は host 単位の資格情報の公開表現。
+ * トークン自体はサーバーが返すことはない。
  *
  * @generated from message prx.v1.GitHubAuthMethod
  */
 export type GitHubAuthMethod = Message<"prx.v1.GitHubAuthMethod"> & {
   /**
-   * id identifies the authentication method and its cache entries.
+   * id は認証方法とそのキャッシュ項目を示す。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * host identifies the only GitHub host to which this method may be sent.
+   * host はこの方法を送ってよい唯一の GitHub host を示す。
    *
    * @generated from field: string host = 2;
    */
   host: string;
 
   /**
-   * type identifies the credential source.
+   * type は資格情報の取得元を示す。
    *
    * @generated from field: prx.v1.GithubAuthMethodType type = 3;
    */
   type: GithubAuthMethodType;
 
   /**
-   * account is the Keychain account when type is keychain.
+   * account は type が keychain のときの Keychain アカウント。
    *
    * @generated from field: string account = 4;
    */
   account: string;
 
   /**
-   * service is the Keychain service when type is keychain.
+   * service は type が keychain のときの Keychain サービス。
    *
    * @generated from field: string service = 5;
    */
   service: string;
 
   /**
-   * variable is the environment variable when type is environment.
+   * variable は type が environment のときの環境変数。
    *
    * @generated from field: string variable = 6;
    */
   variable: string;
 
   /**
-   * user selects a gh CLI account when type is gh_cli.
+   * user は type が gh_cli のときの gh CLI アカウントを選ぶ。
    *
    * @generated from field: string user = 7;
    */
   user: string;
 
   /**
-   * secret_configured indicates that a credential source is configured.
+   * secret_configured は資格情報の取得元が設定済みであることを表す。
    *
    * @generated from field: bool secret_configured = 8;
    */
   secretConfigured: boolean;
 
   /**
-   * secret_hint is a short masked hint for inline credentials.
+   * secret_hint はインラインの資格情報向けの短いマスク済みヒント。
    *
    * @generated from field: string secret_hint = 9;
    */
@@ -1925,34 +1924,34 @@ export const GitHubAuthMethodSchema: GenMessage<GitHubAuthMethod> = /*@__PURE__*
   messageDesc(file_prx_v1_prx, 50);
 
 /**
- * GitHubConfig is the public, secret-free server configuration.
+ * GitHubConfig は秘密情報を含まない公開のサーバー設定。
  *
  * @generated from message prx.v1.GitHubConfig
  */
 export type GitHubConfig = Message<"prx.v1.GitHubConfig"> & {
   /**
-   * version is the YAML schema version.
+   * version は YAML スキーマのバージョン。
    *
    * @generated from field: int32 version = 1;
    */
   version: number;
 
   /**
-   * hosts contains the configured GitHub host boundaries.
+   * hosts は設定された GitHub host の境界。
    *
    * @generated from field: repeated prx.v1.GitHubHost hosts = 2;
    */
   hosts: GitHubHost[];
 
   /**
-   * auth_methods contains host-scoped credentials in priority order.
+   * auth_methods は host 単位の資格情報を優先順に並べたもの。
    *
    * @generated from field: repeated prx.v1.GitHubAuthMethod auth_methods = 3;
    */
   authMethods: GitHubAuthMethod[];
 
   /**
-   * auto_sync_interval_seconds is the shared CLI and server refresh interval.
+   * auto_sync_interval_seconds は CLI とサーバーで共有する更新間隔。
    *
    * @generated from field: int64 auto_sync_interval_seconds = 4;
    */
@@ -1967,7 +1966,7 @@ export const GitHubConfigSchema: GenMessage<GitHubConfig> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 51);
 
 /**
- * GetConfigRequest requests the public GitHub configuration.
+ * GetConfigRequest は公開の GitHub 設定を要求する。
  *
  * @generated from message prx.v1.GetConfigRequest
  */
@@ -1982,13 +1981,13 @@ export const GetConfigRequestSchema: GenMessage<GetConfigRequest> = /*@__PURE__*
   messageDesc(file_prx_v1_prx, 52);
 
 /**
- * GetConfigResponse returns the public GitHub configuration.
+ * GetConfigResponse は公開の GitHub 設定を返す。
  *
  * @generated from message prx.v1.GetConfigResponse
  */
 export type GetConfigResponse = Message<"prx.v1.GetConfigResponse"> & {
   /**
-   * config contains hosts and secret-free authentication metadata.
+   * config は host と、秘密情報を含まない認証メタデータを持つ。
    *
    * @generated from field: prx.v1.GitHubConfig config = 1;
    */
@@ -2003,13 +2002,13 @@ export const GetConfigResponseSchema: GenMessage<GetConfigResponse> = /*@__PURE_
   messageDesc(file_prx_v1_prx, 53);
 
 /**
- * UpdateGitHubSyncConfigRequest changes the shared automatic synchronization interval.
+ * UpdateGitHubSyncConfigRequest は共有の自動同期間隔を変更する。
  *
  * @generated from message prx.v1.UpdateGitHubSyncConfigRequest
  */
 export type UpdateGitHubSyncConfigRequest = Message<"prx.v1.UpdateGitHubSyncConfigRequest"> & {
   /**
-   * interval_seconds must be at least 600.
+   * interval_seconds は 600 以上でなければならない。
    *
    * @generated from field: int64 interval_seconds = 1;
    */
@@ -2024,13 +2023,13 @@ export const UpdateGitHubSyncConfigRequestSchema: GenMessage<UpdateGitHubSyncCon
   messageDesc(file_prx_v1_prx, 54);
 
 /**
- * UpdateGitHubSyncConfigResponse returns the resulting public configuration.
+ * UpdateGitHubSyncConfigResponse は結果の公開設定を返す。
  *
  * @generated from message prx.v1.UpdateGitHubSyncConfigResponse
  */
 export type UpdateGitHubSyncConfigResponse = Message<"prx.v1.UpdateGitHubSyncConfigResponse"> & {
   /**
-   * config is the updated secret-free configuration.
+   * config は更新後の、秘密情報を含まない設定。
    *
    * @generated from field: prx.v1.GitHubConfig config = 1;
    */
@@ -2045,41 +2044,41 @@ export const UpdateGitHubSyncConfigResponseSchema: GenMessage<UpdateGitHubSyncCo
   messageDesc(file_prx_v1_prx, 55);
 
 /**
- * AddGitHubHostRequest adds a GitHub host.
+ * AddGitHubHostRequest は GitHub host を追加する。
  *
  * @generated from message prx.v1.AddGitHubHostRequest
  */
 export type AddGitHubHostRequest = Message<"prx.v1.AddGitHubHostRequest"> & {
   /**
-   * host is the hostname with optional port.
+   * host は必要ならポートを含むホスト名。
    *
    * @generated from field: string host = 1;
    */
   host: string;
 
   /**
-   * web_url is optional and defaults from host.
+   * web_url は任意で、既定値は host から決まる。
    *
    * @generated from field: string web_url = 2;
    */
   webUrl: string;
 
   /**
-   * api_url is optional and defaults from host.
+   * api_url は任意で、既定値は host から決まる。
    *
    * @generated from field: string api_url = 3;
    */
   apiUrl: string;
 
   /**
-   * upload_url is optional and defaults from host.
+   * upload_url は任意で、既定値は host から決まる。
    *
    * @generated from field: string upload_url = 4;
    */
   uploadUrl: string;
 
   /**
-   * graphql_url is optional and defaults from host.
+   * graphql_url は任意で、既定値は host から決まる。
    *
    * @generated from field: string graphql_url = 5;
    */
@@ -2094,13 +2093,13 @@ export const AddGitHubHostRequestSchema: GenMessage<AddGitHubHostRequest> = /*@_
   messageDesc(file_prx_v1_prx, 56);
 
 /**
- * AddGitHubHostResponse returns the added host.
+ * AddGitHubHostResponse は追加された host を返す。
  *
  * @generated from message prx.v1.AddGitHubHostResponse
  */
 export type AddGitHubHostResponse = Message<"prx.v1.AddGitHubHostResponse"> & {
   /**
-   * host is the normalized host after validation.
+   * host は検証後に正規化された host。
    *
    * @generated from field: prx.v1.GitHubHost host = 1;
    */
@@ -2115,48 +2114,48 @@ export const AddGitHubHostResponseSchema: GenMessage<AddGitHubHostResponse> = /*
   messageDesc(file_prx_v1_prx, 57);
 
 /**
- * UpdateGitHubHostRequest updates a host and only the fields that are present.
+ * UpdateGitHubHostRequest は host を更新し、指定されたフィールドだけを変える。
  *
  * @generated from message prx.v1.UpdateGitHubHostRequest
  */
 export type UpdateGitHubHostRequest = Message<"prx.v1.UpdateGitHubHostRequest"> & {
   /**
-   * host identifies the existing host.
+   * host は既存の host を示す。
    *
    * @generated from field: string host = 1;
    */
   host: string;
 
   /**
-   * new_host changes the host key when present.
+   * new_host は指定があれば host キーを変更する。
    *
    * @generated from field: optional string new_host = 2;
    */
   newHost?: string | undefined;
 
   /**
-   * web_url replaces the web URL when present.
+   * web_url は指定があれば web URL を置き換える。
    *
    * @generated from field: optional string web_url = 3;
    */
   webUrl?: string | undefined;
 
   /**
-   * api_url replaces the API URL when present.
+   * api_url は指定があれば API URL を置き換える。
    *
    * @generated from field: optional string api_url = 4;
    */
   apiUrl?: string | undefined;
 
   /**
-   * upload_url replaces the upload URL when present.
+   * upload_url は指定があればアップロード URL を置き換える。
    *
    * @generated from field: optional string upload_url = 5;
    */
   uploadUrl?: string | undefined;
 
   /**
-   * graphql_url replaces the GraphQL endpoint when present.
+   * graphql_url は指定があれば GraphQL エンドポイントを置き換える。
    *
    * @generated from field: optional string graphql_url = 6;
    */
@@ -2171,13 +2170,13 @@ export const UpdateGitHubHostRequestSchema: GenMessage<UpdateGitHubHostRequest> 
   messageDesc(file_prx_v1_prx, 58);
 
 /**
- * UpdateGitHubHostResponse returns the updated host.
+ * UpdateGitHubHostResponse は更新後の host を返す。
  *
  * @generated from message prx.v1.UpdateGitHubHostResponse
  */
 export type UpdateGitHubHostResponse = Message<"prx.v1.UpdateGitHubHostResponse"> & {
   /**
-   * host is the normalized host after validation.
+   * host は検証後に正規化された host。
    *
    * @generated from field: prx.v1.GitHubHost host = 1;
    */
@@ -2192,13 +2191,13 @@ export const UpdateGitHubHostResponseSchema: GenMessage<UpdateGitHubHostResponse
   messageDesc(file_prx_v1_prx, 59);
 
 /**
- * DeleteGitHubHostRequest removes a host when no authentication method uses it.
+ * DeleteGitHubHostRequest は認証方法が使っていない host を削除する。
  *
  * @generated from message prx.v1.DeleteGitHubHostRequest
  */
 export type DeleteGitHubHostRequest = Message<"prx.v1.DeleteGitHubHostRequest"> & {
   /**
-   * host identifies the host to remove.
+   * host は削除する host を示す。
    *
    * @generated from field: string host = 1;
    */
@@ -2213,7 +2212,7 @@ export const DeleteGitHubHostRequestSchema: GenMessage<DeleteGitHubHostRequest> 
   messageDesc(file_prx_v1_prx, 60);
 
 /**
- * DeleteGitHubHostResponse confirms the host was removed.
+ * DeleteGitHubHostResponse は host が削除されたことを示す。
  *
  * @generated from message prx.v1.DeleteGitHubHostResponse
  */
@@ -2228,62 +2227,62 @@ export const DeleteGitHubHostResponseSchema: GenMessage<DeleteGitHubHostResponse
   messageDesc(file_prx_v1_prx, 61);
 
 /**
- * AddGitHubAuthMethodRequest adds one host-scoped authentication method.
+ * AddGitHubAuthMethodRequest は host 単位の認証方法を 1 つ追加する。
  *
  * @generated from message prx.v1.AddGitHubAuthMethodRequest
  */
 export type AddGitHubAuthMethodRequest = Message<"prx.v1.AddGitHubAuthMethodRequest"> & {
   /**
-   * id identifies the method.
+   * id は認証方法を示す。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * host identifies the only host for this method.
+   * host はこの方法の唯一の host を示す。
    *
    * @generated from field: string host = 2;
    */
   host: string;
 
   /**
-   * type identifies the credential source.
+   * type は資格情報の取得元を示す。
    *
    * @generated from field: prx.v1.GithubAuthMethodType type = 3;
    */
   type: GithubAuthMethodType;
 
   /**
-   * account is the Keychain account.
+   * account は Keychain アカウント。
    *
    * @generated from field: string account = 4;
    */
   account: string;
 
   /**
-   * service is the Keychain service.
+   * service は Keychain サービス。
    *
    * @generated from field: string service = 5;
    */
   service: string;
 
   /**
-   * variable is the environment variable.
+   * variable は環境変数。
    *
    * @generated from field: string variable = 6;
    */
   variable: string;
 
   /**
-   * user selects a gh CLI account.
+   * user は gh CLI アカウントを選ぶ。
    *
    * @generated from field: string user = 7;
    */
   user: string;
 
   /**
-   * token is write-only and is accepted only for inline credentials.
+   * token は書き込み専用で、インラインの資格情報でのみ受け付ける。
    *
    * @generated from field: optional string token = 8;
    */
@@ -2298,13 +2297,13 @@ export const AddGitHubAuthMethodRequestSchema: GenMessage<AddGitHubAuthMethodReq
   messageDesc(file_prx_v1_prx, 62);
 
 /**
- * AddGitHubAuthMethodResponse returns secret-free authentication metadata.
+ * AddGitHubAuthMethodResponse は秘密情報を含まない認証メタデータを返す。
  *
  * @generated from message prx.v1.AddGitHubAuthMethodResponse
  */
 export type AddGitHubAuthMethodResponse = Message<"prx.v1.AddGitHubAuthMethodResponse"> & {
   /**
-   * auth_method is the added method without its token.
+   * auth_method はトークンを除いた、追加された認証方法。
    *
    * @generated from field: prx.v1.GitHubAuthMethod auth_method = 1;
    */
@@ -2319,69 +2318,69 @@ export const AddGitHubAuthMethodResponseSchema: GenMessage<AddGitHubAuthMethodRe
   messageDesc(file_prx_v1_prx, 63);
 
 /**
- * UpdateGitHubAuthMethodRequest updates a method while preserving an omitted token.
+ * UpdateGitHubAuthMethodRequest は省略されたトークンを保ったまま認証方法を更新する。
  *
  * @generated from message prx.v1.UpdateGitHubAuthMethodRequest
  */
 export type UpdateGitHubAuthMethodRequest = Message<"prx.v1.UpdateGitHubAuthMethodRequest"> & {
   /**
-   * id identifies the existing method.
+   * id は既存の認証方法を示す。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * new_id changes the method ID when present.
+   * new_id は指定があれば認証方法の ID を変更する。
    *
    * @generated from field: optional string new_id = 2;
    */
   newId?: string | undefined;
 
   /**
-   * host changes the host when present.
+   * host は指定があれば host を変更する。
    *
    * @generated from field: optional string host = 3;
    */
   host?: string | undefined;
 
   /**
-   * type changes the source when present.
+   * type は指定があれば取得元を変更する。
    *
    * @generated from field: optional prx.v1.GithubAuthMethodType type = 4;
    */
   type?: GithubAuthMethodType | undefined;
 
   /**
-   * account changes the Keychain account when present.
+   * account は指定があれば Keychain アカウントを変更する。
    *
    * @generated from field: optional string account = 5;
    */
   account?: string | undefined;
 
   /**
-   * service changes the Keychain service when present.
+   * service は指定があれば Keychain サービスを変更する。
    *
    * @generated from field: optional string service = 6;
    */
   service?: string | undefined;
 
   /**
-   * variable changes the environment variable when present.
+   * variable は指定があれば環境変数を変更する。
    *
    * @generated from field: optional string variable = 7;
    */
   variable?: string | undefined;
 
   /**
-   * user changes the gh CLI user when present.
+   * user は指定があれば gh CLI のユーザーを変更する。
    *
    * @generated from field: optional string user = 8;
    */
   user?: string | undefined;
 
   /**
-   * token replaces the inline token when present and is never returned.
+   * token は指定があればインラインのトークンを置き換え、返されることはない。
    *
    * @generated from field: optional string token = 9;
    */
@@ -2396,13 +2395,13 @@ export const UpdateGitHubAuthMethodRequestSchema: GenMessage<UpdateGitHubAuthMet
   messageDesc(file_prx_v1_prx, 64);
 
 /**
- * UpdateGitHubAuthMethodResponse returns secret-free authentication metadata.
+ * UpdateGitHubAuthMethodResponse は秘密情報を含まない認証メタデータを返す。
  *
  * @generated from message prx.v1.UpdateGitHubAuthMethodResponse
  */
 export type UpdateGitHubAuthMethodResponse = Message<"prx.v1.UpdateGitHubAuthMethodResponse"> & {
   /**
-   * auth_method is the updated method without its token.
+   * auth_method はトークンを除いた、更新後の認証方法。
    *
    * @generated from field: prx.v1.GitHubAuthMethod auth_method = 1;
    */
@@ -2417,13 +2416,13 @@ export const UpdateGitHubAuthMethodResponseSchema: GenMessage<UpdateGitHubAuthMe
   messageDesc(file_prx_v1_prx, 65);
 
 /**
- * DeleteGitHubAuthMethodRequest removes a host-scoped authentication method.
+ * DeleteGitHubAuthMethodRequest は host 単位の認証方法を削除する。
  *
  * @generated from message prx.v1.DeleteGitHubAuthMethodRequest
  */
 export type DeleteGitHubAuthMethodRequest = Message<"prx.v1.DeleteGitHubAuthMethodRequest"> & {
   /**
-   * id identifies the method to remove.
+   * id は削除する認証方法を示す。
    *
    * @generated from field: string id = 1;
    */
@@ -2438,7 +2437,7 @@ export const DeleteGitHubAuthMethodRequestSchema: GenMessage<DeleteGitHubAuthMet
   messageDesc(file_prx_v1_prx, 66);
 
 /**
- * DeleteGitHubAuthMethodResponse confirms the method was removed.
+ * DeleteGitHubAuthMethodResponse は認証方法が削除されたことを示す。
  *
  * @generated from message prx.v1.DeleteGitHubAuthMethodResponse
  */
@@ -2453,13 +2452,13 @@ export const DeleteGitHubAuthMethodResponseSchema: GenMessage<DeleteGitHubAuthMe
   messageDesc(file_prx_v1_prx, 67);
 
 /**
- * ReorderGitHubAuthMethodsRequest sets the complete authentication priority.
+ * ReorderGitHubAuthMethodsRequest は認証の優先順位をすべて設定する。
  *
  * @generated from message prx.v1.ReorderGitHubAuthMethodsRequest
  */
 export type ReorderGitHubAuthMethodsRequest = Message<"prx.v1.ReorderGitHubAuthMethodsRequest"> & {
   /**
-   * ids contains every configured authentication method exactly once.
+   * ids は設定済みの認証方法をすべてちょうど 1 回ずつ含む。
    *
    * @generated from field: repeated string ids = 1;
    */
@@ -2474,13 +2473,13 @@ export const ReorderGitHubAuthMethodsRequestSchema: GenMessage<ReorderGitHubAuth
   messageDesc(file_prx_v1_prx, 68);
 
 /**
- * ReorderGitHubAuthMethodsResponse returns the new secret-free priority.
+ * ReorderGitHubAuthMethodsResponse は秘密情報を含まない新しい優先順位を返す。
  *
  * @generated from message prx.v1.ReorderGitHubAuthMethodsResponse
  */
 export type ReorderGitHubAuthMethodsResponse = Message<"prx.v1.ReorderGitHubAuthMethodsResponse"> & {
   /**
-   * auth_methods contains the reordered methods.
+   * auth_methods は並べ替え後の認証方法。
    *
    * @generated from field: repeated prx.v1.GitHubAuthMethod auth_methods = 1;
    */
@@ -2495,7 +2494,7 @@ export const ReorderGitHubAuthMethodsResponseSchema: GenMessage<ReorderGitHubAut
   messageDesc(file_prx_v1_prx, 69);
 
 /**
- * ValidateConfigRequest validates the YAML configuration.
+ * ValidateConfigRequest は YAML 設定を検証する。
  *
  * @generated from message prx.v1.ValidateConfigRequest
  */
@@ -2510,28 +2509,28 @@ export const ValidateConfigRequestSchema: GenMessage<ValidateConfigRequest> = /*
   messageDesc(file_prx_v1_prx, 70);
 
 /**
- * ValidateConfigResponse reports whether configuration validation succeeded.
+ * ValidateConfigResponse は設定の検証に成功したかを報告する。
  *
  * @generated from message prx.v1.ValidateConfigResponse
  */
 export type ValidateConfigResponse = Message<"prx.v1.ValidateConfigResponse"> & {
   /**
-   * valid is true when the configuration can be loaded and used.
+   * valid は設定を読み込んで使える場合に true。
    *
    * @generated from field: bool valid = 1;
    */
   valid: boolean;
 
   /**
-   * errors contains validation failures when valid is false.
+   * errors は valid が false のときの検証失敗の内容。
    *
    * @generated from field: repeated string errors = 2;
    */
   errors: string[];
 
   /**
-   * warnings contains recoverable problems, such as unknown fields, that did not
-   * prevent the configuration from loading.
+   * warnings は未知のフィールドなど、読み込みは妨げなかった回復可能な問題を
+   * 含む。
    *
    * @generated from field: repeated string warnings = 3;
    */
@@ -2546,29 +2545,29 @@ export const ValidateConfigResponseSchema: GenMessage<ValidateConfigResponse> = 
   messageDesc(file_prx_v1_prx, 71);
 
 /**
- * PromptTemplates holds the shared agent prompt templates.
- * Every template is stored in the same configuration the CLI reads.
+ * PromptTemplates は共有のエージェント用プロンプトテンプレートを保持する。
+ * どのテンプレートも CLI が読むのと同じ設定に保存される。
  *
  * @generated from message prx.v1.PromptTemplates
  */
 export type PromptTemplates = Message<"prx.v1.PromptTemplates"> & {
   /**
-   * design is used for a task that has no implementation plan yet.
+   * design はまだ実装計画がない task に使う。
    *
    * @generated from field: string design = 1;
    */
   design: string;
 
   /**
-   * implementation is used for a task that already has an implementation plan.
+   * implementation はすでに実装計画がある task に使う。
    *
    * @generated from field: string implementation = 2;
    */
   implementation: string;
 
   /**
-   * batch is used for several tasks handed over in one prompt. It is selected by
-   * the caller asking for a batch rather than derived from any single task.
+   * batch は複数の task を 1 つのプロンプトで引き渡すときに使う。個々の task から
+   * 導出せず、呼び出し側が batch を要求したことで選ばれる。
    *
    * @generated from field: string batch = 3;
    */
@@ -2583,7 +2582,7 @@ export const PromptTemplatesSchema: GenMessage<PromptTemplates> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 72);
 
 /**
- * GetPromptTemplatesRequest requests the stored agent prompt templates.
+ * GetPromptTemplatesRequest は保存されたエージェント用テンプレートを要求する。
  *
  * @generated from message prx.v1.GetPromptTemplatesRequest
  */
@@ -2598,54 +2597,53 @@ export const GetPromptTemplatesRequestSchema: GenMessage<GetPromptTemplatesReque
   messageDesc(file_prx_v1_prx, 73);
 
 /**
- * GetPromptTemplatesResponse returns the stored agent prompt templates.
+ * GetPromptTemplatesResponse は保存されたエージェント用テンプレートを返す。
  *
  * @generated from message prx.v1.GetPromptTemplatesResponse
  */
 export type GetPromptTemplatesResponse = Message<"prx.v1.GetPromptTemplatesResponse"> & {
   /**
-   * templates contains both stored templates.
+   * templates は保存された両方のテンプレートを含む。
    *
    * @generated from field: prx.v1.PromptTemplates templates = 1;
    */
   templates?: PromptTemplates | undefined;
 
   /**
-   * supported_placeholders is the complete substitution vocabulary, without the
-   * surrounding braces. A client presents this list rather than keeping its own
-   * copy, which would drift from what the server accepts.
+   * supported_placeholders は前後の波括弧を除いた、置換語彙の全体。クライアントは
+   * 独自の写しを持たずこの一覧を提示する。写しはサーバーが受け付けるものから
+   * ずれていくためである。
    *
    * @generated from field: repeated string supported_placeholders = 2;
    */
   supportedPlaceholders: string[];
 
   /**
-   * required_placeholder is the one placeholder every task template must use.
+   * required_placeholder は task 用テンプレートが必ず使う唯一の placeholder。
    *
    * @generated from field: string required_placeholder = 3;
    */
   requiredPlaceholder: string;
 
   /**
-   * built_in contains the templates PRX ships. An editor offering to restore
-   * them shows the text they contain instead of leaving the field empty until a
-   * write completes.
+   * built_in は PRX に同梱するテンプレート。復元を提示するエディタは、書き込みが
+   * 終わるまで空欄にせず、ここに入っている文面を表示できる。
    *
    * @generated from field: prx.v1.PromptTemplates built_in = 4;
    */
   builtIn?: PromptTemplates | undefined;
 
   /**
-   * batch_supported_placeholders is the substitution vocabulary of the batch
-   * template. It is smaller than the task vocabulary, because a batch has no
-   * single task to expand a task placeholder from.
+   * batch_supported_placeholders は batch テンプレートの置換語彙。batch には task
+   * 用の placeholder を展開する元になる単一の task がないため、task の語彙より
+   * 小さい。
    *
    * @generated from field: repeated string batch_supported_placeholders = 5;
    */
   batchSupportedPlaceholders: string[];
 
   /**
-   * batch_required_placeholder is the one placeholder every batch template must use.
+   * batch_required_placeholder は batch テンプレートが必ず使う唯一の placeholder。
    *
    * @generated from field: string batch_required_placeholder = 6;
    */
@@ -2660,28 +2658,28 @@ export const GetPromptTemplatesResponseSchema: GenMessage<GetPromptTemplatesResp
   messageDesc(file_prx_v1_prx, 74);
 
 /**
- * UpdatePromptTemplatesRequest replaces every template in one configuration write.
- * An empty template is restored to its built-in default.
+ * UpdatePromptTemplatesRequest は 1 回の設定書き込みで全テンプレートを置き換える。
+ * 空のテンプレートは同梱の既定値に戻される。
  *
  * @generated from message prx.v1.UpdatePromptTemplatesRequest
  */
 export type UpdatePromptTemplatesRequest = Message<"prx.v1.UpdatePromptTemplatesRequest"> & {
   /**
-   * design replaces the template used for a task without an implementation plan.
+   * design は実装計画がない task 用のテンプレートを置き換える。
    *
    * @generated from field: string design = 1;
    */
   design: string;
 
   /**
-   * implementation replaces the template used for a task with an implementation plan.
+   * implementation は実装計画がある task 用のテンプレートを置き換える。
    *
    * @generated from field: string implementation = 2;
    */
   implementation: string;
 
   /**
-   * batch replaces the template used for several tasks handed over in one prompt.
+   * batch は複数の task を 1 つのプロンプトで引き渡す用のテンプレートを置き換える。
    *
    * @generated from field: string batch = 3;
    */
@@ -2696,13 +2694,13 @@ export const UpdatePromptTemplatesRequestSchema: GenMessage<UpdatePromptTemplate
   messageDesc(file_prx_v1_prx, 75);
 
 /**
- * UpdatePromptTemplatesResponse returns the templates the write produced.
+ * UpdatePromptTemplatesResponse は書き込みの結果できたテンプレートを返す。
  *
  * @generated from message prx.v1.UpdatePromptTemplatesResponse
  */
 export type UpdatePromptTemplatesResponse = Message<"prx.v1.UpdatePromptTemplatesResponse"> & {
   /**
-   * templates contains both stored templates.
+   * templates は保存された両方のテンプレートを含む。
    *
    * @generated from field: prx.v1.PromptTemplates templates = 1;
    */
@@ -2717,13 +2715,13 @@ export const UpdatePromptTemplatesResponseSchema: GenMessage<UpdatePromptTemplat
   messageDesc(file_prx_v1_prx, 76);
 
 /**
- * GetTaskPromptRequest asks for the expanded agent prompt of one task.
+ * GetTaskPromptRequest は task 1 件分の展開済みエージェントプロンプトを求める。
  *
  * @generated from message prx.v1.GetTaskPromptRequest
  */
 export type GetTaskPromptRequest = Message<"prx.v1.GetTaskPromptRequest"> & {
   /**
-   * task_id is the task's public identifier.
+   * task_id は task の公開識別子。
    *
    * @generated from field: string task_id = 1;
    */
@@ -2738,27 +2736,27 @@ export const GetTaskPromptRequestSchema: GenMessage<GetTaskPromptRequest> = /*@_
   messageDesc(file_prx_v1_prx, 77);
 
 /**
- * GetTaskPromptResponse returns the expanded agent prompt of one task.
+ * GetTaskPromptResponse は task 1 件分の展開済みエージェントプロンプトを返す。
  *
  * @generated from message prx.v1.GetTaskPromptResponse
  */
 export type GetTaskPromptResponse = Message<"prx.v1.GetTaskPromptResponse"> & {
   /**
-   * task_id is the task the prompt targets.
+   * task_id はプロンプトの対象となる task。
    *
    * @generated from field: string task_id = 1;
    */
   taskId: string;
 
   /**
-   * kind reports which template produced the prompt.
+   * kind はどのテンプレートからプロンプトができたかを示す。
    *
    * @generated from field: prx.v1.TaskPromptKind kind = 2;
    */
   kind: TaskPromptKind;
 
   /**
-   * prompt is the expanded template, ready to hand to another agent.
+   * prompt は展開済みのテンプレートで、他のエージェントにそのまま渡せる。
    *
    * @generated from field: string prompt = 3;
    */
@@ -2773,20 +2771,20 @@ export const GetTaskPromptResponseSchema: GenMessage<GetTaskPromptResponse> = /*
   messageDesc(file_prx_v1_prx, 78);
 
 /**
- * GetBatchPromptRequest asks for one prompt covering several tasks of one feature.
+ * GetBatchPromptRequest は 1 つの feature の複数 task をまとめたプロンプトを求める。
  *
  * @generated from message prx.v1.GetBatchPromptRequest
  */
 export type GetBatchPromptRequest = Message<"prx.v1.GetBatchPromptRequest"> & {
   /**
-   * feature_id is the public identifier of the feature the tasks belong to.
+   * feature_id は task が属する feature の公開識別子。
    *
    * @generated from field: string feature_id = 1;
    */
   featureId: string;
 
   /**
-   * task_ids lists the tasks to cover, in the order they should appear.
+   * task_ids は対象の task を、プロンプトに並べたい順で列挙する。
    *
    * @generated from field: repeated string task_ids = 2;
    */
@@ -2801,27 +2799,27 @@ export const GetBatchPromptRequestSchema: GenMessage<GetBatchPromptRequest> = /*
   messageDesc(file_prx_v1_prx, 79);
 
 /**
- * GetBatchPromptResponse returns the expanded batch prompt.
+ * GetBatchPromptResponse は展開済みの batch プロンプトを返す。
  *
  * @generated from message prx.v1.GetBatchPromptResponse
  */
 export type GetBatchPromptResponse = Message<"prx.v1.GetBatchPromptResponse"> & {
   /**
-   * feature_id is the feature the prompt covers.
+   * feature_id はプロンプトが対象とする feature。
    *
    * @generated from field: string feature_id = 1;
    */
   featureId: string;
 
   /**
-   * task_ids lists the covered tasks in the order the prompt names them.
+   * task_ids は対象の task を、プロンプトが挙げる順で列挙する。
    *
    * @generated from field: repeated string task_ids = 2;
    */
   taskIds: string[];
 
   /**
-   * prompt is the expanded batch template, ready to hand to another agent.
+   * prompt は展開済みの batch テンプレートで、他のエージェントにそのまま渡せる。
    *
    * @generated from field: string prompt = 3;
    */
@@ -2836,21 +2834,21 @@ export const GetBatchPromptResponseSchema: GenMessage<GetBatchPromptResponse> = 
   messageDesc(file_prx_v1_prx, 80);
 
 /**
- * SyncRequest selects pull requests to refresh from GitHub.
- * Empty selectors refresh all pull requests; setting both selectors applies both filters.
+ * SyncRequest は GitHub から更新する pull request を選ぶ。
+ * セレクタが空なら全件を更新し、両方を指定すると両方の絞り込みが効く。
  *
  * @generated from message prx.v1.SyncRequest
  */
 export type SyncRequest = Message<"prx.v1.SyncRequest"> & {
   /**
-   * feature_id selects pull requests belonging to the feature identified by public ID.
+   * feature_id は公開 ID で示した feature に属する pull request を選ぶ。
    *
    * @generated from field: string feature_id = 1;
    */
   featureId: string;
 
   /**
-   * task_id selects the pull request attached to this task's public ID.
+   * task_id はこの公開 ID の task に紐づく pull request を選ぶ。
    *
    * @generated from field: string task_id = 2;
    */
@@ -2865,21 +2863,21 @@ export const SyncRequestSchema: GenMessage<SyncRequest> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 81);
 
 /**
- * SyncResponse reports the results of a pull request refresh.
+ * SyncResponse は pull request の更新結果を報告する。
  *
  * @generated from message prx.v1.SyncResponse
  */
 export type SyncResponse = Message<"prx.v1.SyncResponse"> & {
   /**
-   * succeeded is the number of pull requests refreshed successfully.
+   * succeeded は更新に成功した pull request の数。
    *
    * @generated from field: int32 succeeded = 1;
    */
   succeeded: number;
 
   /**
-   * failed is the number of pull requests with an actionable refresh error.
-   * Known closed or merged pull requests with an unavailable refresh are not counted.
+   * failed は対処が必要な更新エラーを持つ pull request の数。
+   * クローズやマージが既知で更新できない pull request は数えない。
    *
    * @generated from field: int32 failed = 2;
    */
@@ -2894,49 +2892,49 @@ export const SyncResponseSchema: GenMessage<SyncResponse> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 82);
 
 /**
- * GitHubSyncStatus describes the latest process-wide synchronization attempt.
+ * GitHubSyncStatus は直近のプロセス全体の同期試行を表す。
  *
  * @generated from message prx.v1.GitHubSyncStatus
  */
 export type GitHubSyncStatus = Message<"prx.v1.GitHubSyncStatus"> & {
   /**
-   * interval_seconds is the configured automatic synchronization interval.
+   * interval_seconds は設定された自動同期の間隔。
    *
    * @generated from field: int64 interval_seconds = 1;
    */
   intervalSeconds: bigint;
 
   /**
-   * last_attempt_at is the last claimed run time in RFC 3339 UTC format.
+   * last_attempt_at は RFC 3339 UTC 形式の、最後に実行を確保した時刻。
    *
    * @generated from field: optional string last_attempt_at = 2;
    */
   lastAttemptAt?: string | undefined;
 
   /**
-   * last_updated_at is the last completed run time in RFC 3339 UTC format.
+   * last_updated_at は RFC 3339 UTC 形式の、最後に完了した実行の時刻。
    *
    * @generated from field: optional string last_updated_at = 3;
    */
   lastUpdatedAt?: string | undefined;
 
   /**
-   * succeeded is the number of items refreshed by the latest completed run.
+   * succeeded は直近の完了した実行で更新できた件数。
    *
    * @generated from field: int32 succeeded = 4;
    */
   succeeded: number;
 
   /**
-   * failed is the number of items with an actionable refresh error after the latest completed run.
-   * Known closed or merged pull requests with an unavailable refresh are not counted.
+   * failed は直近の完了した実行のあと、対処が必要な更新エラーを持つ件数。
+   * クローズやマージが既知で更新できない pull request は数えない。
    *
    * @generated from field: int32 failed = 5;
    */
   failed: number;
 
   /**
-   * error is the latest run-level failure, when present.
+   * error は直近の実行単位の失敗があればその内容。
    *
    * @generated from field: string error = 6;
    */
@@ -2951,7 +2949,7 @@ export const GitHubSyncStatusSchema: GenMessage<GitHubSyncStatus> = /*@__PURE__*
   messageDesc(file_prx_v1_prx, 83);
 
 /**
- * GetGitHubSyncStatusRequest requests the persisted synchronization status.
+ * GetGitHubSyncStatusRequest は保存された同期状況を要求する。
  *
  * @generated from message prx.v1.GetGitHubSyncStatusRequest
  */
@@ -2966,13 +2964,13 @@ export const GetGitHubSyncStatusRequestSchema: GenMessage<GetGitHubSyncStatusReq
   messageDesc(file_prx_v1_prx, 84);
 
 /**
- * GetGitHubSyncStatusResponse returns the persisted synchronization status.
+ * GetGitHubSyncStatusResponse は保存された同期状況を返す。
  *
  * @generated from message prx.v1.GetGitHubSyncStatusResponse
  */
 export type GetGitHubSyncStatusResponse = Message<"prx.v1.GetGitHubSyncStatusResponse"> & {
   /**
-   * status contains interval, timestamps, counts, and the latest run error.
+   * status は間隔・時刻・件数・直近の実行エラーを含む。
    *
    * @generated from field: prx.v1.GitHubSyncStatus status = 1;
    */
@@ -2987,7 +2985,7 @@ export const GetGitHubSyncStatusResponseSchema: GenMessage<GetGitHubSyncStatusRe
   messageDesc(file_prx_v1_prx, 85);
 
 /**
- * SyncGitHubIfDueRequest asks the server to refresh only when the interval has expired.
+ * SyncGitHubIfDueRequest は間隔が切れている場合だけ更新するようサーバーに求める。
  *
  * @generated from message prx.v1.SyncGitHubIfDueRequest
  */
@@ -3002,20 +3000,20 @@ export const SyncGitHubIfDueRequestSchema: GenMessage<SyncGitHubIfDueRequest> = 
   messageDesc(file_prx_v1_prx, 86);
 
 /**
- * SyncGitHubIfDueResponse reports whether this caller claimed a run and the resulting status.
+ * SyncGitHubIfDueResponse は呼び出し側が実行を確保したかと、その結果の状況を報告する。
  *
  * @generated from message prx.v1.SyncGitHubIfDueResponse
  */
 export type SyncGitHubIfDueResponse = Message<"prx.v1.SyncGitHubIfDueResponse"> & {
   /**
-   * ran is true only when this request acquired and completed a synchronization run.
+   * ran はこのリクエストが同期の実行を確保して完了させた場合にのみ true。
    *
    * @generated from field: bool ran = 1;
    */
   ran: boolean;
 
   /**
-   * status contains the latest persisted synchronization status.
+   * status は保存された最新の同期状況を含む。
    *
    * @generated from field: prx.v1.GitHubSyncStatus status = 2;
    */
@@ -3030,7 +3028,7 @@ export const SyncGitHubIfDueResponseSchema: GenMessage<SyncGitHubIfDueResponse> 
   messageDesc(file_prx_v1_prx, 87);
 
 /**
- * ValidateRequest requests database integrity validation.
+ * ValidateRequest はデータベースの整合性検証を要求する。
  *
  * @generated from message prx.v1.ValidateRequest
  */
@@ -3045,20 +3043,20 @@ export const ValidateRequestSchema: GenMessage<ValidateRequest> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 88);
 
 /**
- * ValidateResponse reports whether database integrity checks passed.
+ * ValidateResponse はデータベースの整合性検査に通ったかを報告する。
  *
  * @generated from message prx.v1.ValidateResponse
  */
 export type ValidateResponse = Message<"prx.v1.ValidateResponse"> & {
   /**
-   * valid is true when no integrity errors were found.
+   * valid は整合性エラーが見つからなかった場合に true。
    *
    * @generated from field: bool valid = 1;
    */
   valid: boolean;
 
   /**
-   * errors contains human-readable integrity errors when valid is false.
+   * errors は valid が false のときの、人が読める整合性エラー。
    *
    * @generated from field: repeated string errors = 2;
    */
@@ -3073,34 +3071,34 @@ export const ValidateResponseSchema: GenMessage<ValidateResponse> = /*@__PURE__*
   messageDesc(file_prx_v1_prx, 89);
 
 /**
- * DebugProblem is one detected diagnostic problem together with its evidence.
+ * DebugProblem は検出した診断上の問題 1 件と、その根拠。
  *
  * @generated from message prx.v1.DebugProblem
  */
 export type DebugProblem = Message<"prx.v1.DebugProblem"> & {
   /**
-   * code identifies the detected problem.
+   * code は検出した問題を示す。
    *
    * @generated from field: prx.v1.DebugProblemCode code = 1;
    */
   code: DebugProblemCode;
 
   /**
-   * target names the file, host, or repository the problem was detected on.
+   * target は問題を検出したファイル・host・リポジトリの名前。
    *
    * @generated from field: string target = 2;
    */
   target: string;
 
   /**
-   * evidence is the observed value that triggered the detection.
+   * evidence は検出のきっかけになった観測値。
    *
    * @generated from field: string evidence = 3;
    */
   evidence: string;
 
   /**
-   * next_command is the command whose output explains the problem in full.
+   * next_command は問題の全容を出力で説明するコマンド。
    *
    * @generated from field: string next_command = 4;
    */
@@ -3115,41 +3113,41 @@ export const DebugProblemSchema: GenMessage<DebugProblem> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 90);
 
 /**
- * DebugBuild describes the running PRX build.
+ * DebugBuild は動作中の PRX のビルドを表す。
  *
  * @generated from message prx.v1.DebugBuild
  */
 export type DebugBuild = Message<"prx.v1.DebugBuild"> & {
   /**
-   * version is the PRX version, carrying a -dev suffix on an unstamped development build.
+   * version は PRX のバージョンで、刻印のない開発ビルドでは -dev が付く。
    *
    * @generated from field: string version = 1;
    */
   version: string;
 
   /**
-   * development is true when the build is not a stamped release.
+   * development は刻印されたリリースでないビルドのとき true。
    *
    * @generated from field: bool development = 2;
    */
   development: boolean;
 
   /**
-   * go_version is the Go toolchain version the binary reports.
+   * go_version はバイナリが報告する Go ツールチェーンのバージョン。
    *
    * @generated from field: string go_version = 3;
    */
   goVersion: string;
 
   /**
-   * os is the operating system the binary was built for.
+   * os はバイナリのビルド対象 OS。
    *
    * @generated from field: string os = 4;
    */
   os: string;
 
   /**
-   * arch is the architecture the binary was built for.
+   * arch はバイナリのビルド対象アーキテクチャ。
    *
    * @generated from field: string arch = 5;
    */
@@ -3164,62 +3162,62 @@ export const DebugBuildSchema: GenMessage<DebugBuild> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 91);
 
 /**
- * DebugRuntime describes the process that produced the report.
+ * DebugRuntime はレポートを生成したプロセスを表す。
  *
  * @generated from message prx.v1.DebugRuntime
  */
 export type DebugRuntime = Message<"prx.v1.DebugRuntime"> & {
   /**
-   * mode is cli for a command invocation and serve for the local server.
+   * mode はコマンド実行なら cli、ローカルサーバーなら serve。
    *
    * @generated from field: string mode = 1;
    */
   mode: string;
 
   /**
-   * demo is true while the process uses the temporary demo environment.
+   * demo はプロセスが一時的な demo 環境を使っている間 true。
    *
    * @generated from field: bool demo = 2;
    */
   demo: boolean;
 
   /**
-   * github_fixture is true while GitHub reads come from a fixture file.
+   * github_fixture は GitHub の読み取りが fixture ファイル由来の間 true。
    *
    * @generated from field: bool github_fixture = 3;
    */
   githubFixture: boolean;
 
   /**
-   * generated_at is the report time in RFC 3339 UTC format.
+   * generated_at は RFC 3339 UTC 形式のレポート生成時刻。
    *
    * @generated from field: string generated_at = 4;
    */
   generatedAt: string;
 
   /**
-   * time_zone is the local time zone name of the process.
+   * time_zone はプロセスのローカルタイムゾーン名。
    *
    * @generated from field: string time_zone = 5;
    */
   timeZone: string;
 
   /**
-   * listen_address is the address the server accepted, and is empty outside serve mode.
+   * listen_address はサーバーが受け付けたアドレスで、serve 以外では空。
    *
    * @generated from field: string listen_address = 6;
    */
   listenAddress: string;
 
   /**
-   * started_at is the server start time in RFC 3339 UTC format, and is empty outside serve mode.
+   * started_at は RFC 3339 UTC 形式のサーバー起動時刻で、serve 以外では空。
    *
    * @generated from field: string started_at = 7;
    */
   startedAt: string;
 
   /**
-   * uptime_seconds is how long the server has been listening, and is zero outside serve mode.
+   * uptime_seconds はサーバーが待ち受けている時間で、serve 以外では 0。
    *
    * @generated from field: int64 uptime_seconds = 8;
    */
@@ -3234,20 +3232,20 @@ export const DebugRuntimeSchema: GenMessage<DebugRuntime> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 92);
 
 /**
- * DebugEnvironmentVariable reports whether one PRX-relevant variable is set, never its value.
+ * DebugEnvironmentVariable は PRX に関わる変数 1 件の設定有無だけを報告し、値は含めない。
  *
  * @generated from message prx.v1.DebugEnvironmentVariable
  */
 export type DebugEnvironmentVariable = Message<"prx.v1.DebugEnvironmentVariable"> & {
   /**
-   * name is the environment variable name.
+   * name は環境変数名。
    *
    * @generated from field: string name = 1;
    */
   name: string;
 
   /**
-   * set is true when the variable holds a non-empty value.
+   * set は変数が空でない値を持つとき true。
    *
    * @generated from field: bool set = 2;
    */
@@ -3262,62 +3260,62 @@ export const DebugEnvironmentVariableSchema: GenMessage<DebugEnvironmentVariable
   messageDesc(file_prx_v1_prx, 93);
 
 /**
- * DebugPaths reports the resolved file locations and the ambient environment that selected them.
+ * DebugPaths は解決されたファイルの場所と、それを選んだ環境を報告する。
  *
  * @generated from message prx.v1.DebugPaths
  */
 export type DebugPaths = Message<"prx.v1.DebugPaths"> & {
   /**
-   * database_path is the resolved SQLite path, shortened to ~ under the home directory, or demo.
+   * database_path は解決した SQLite のパスで、ホーム配下は ~ に短縮、demo のこともある。
    *
    * @generated from field: string database_path = 1;
    */
   databasePath: string;
 
   /**
-   * database_path_source is flag, env, default, or demo.
+   * database_path_source は flag、env、default、demo のいずれか。
    *
    * @generated from field: string database_path_source = 2;
    */
   databasePathSource: string;
 
   /**
-   * database_file_exists is true when the resolved database path is an existing file.
+   * database_file_exists は解決したデータベースのパスが既存のファイルのとき true。
    *
    * @generated from field: bool database_file_exists = 3;
    */
   databaseFileExists: boolean;
 
   /**
-   * config_path is the resolved YAML path, shortened to ~ under the home directory, or demo.
+   * config_path は解決した YAML のパスで、ホーム配下は ~ に短縮、demo のこともある。
    *
    * @generated from field: string config_path = 4;
    */
   configPath: string;
 
   /**
-   * config_path_source is flag, env, default, or demo.
+   * config_path_source は flag、env、default、demo のいずれか。
    *
    * @generated from field: string config_path_source = 5;
    */
   configPathSource: string;
 
   /**
-   * config_file_exists is true when the resolved configuration path is an existing file.
+   * config_file_exists は解決した設定のパスが既存のファイルのとき true。
    *
    * @generated from field: bool config_file_exists = 6;
    */
   configFileExists: boolean;
 
   /**
-   * config_permissions is the octal permission mode of the configuration file, when it exists.
+   * config_permissions は設定ファイルが存在する場合の 8 進数のパーミッション。
    *
    * @generated from field: string config_permissions = 7;
    */
   configPermissions: string;
 
   /**
-   * environment_variables lists the PRX-relevant variables and whether each is set.
+   * environment_variables は PRX に関わる変数と、それぞれの設定有無を並べる。
    *
    * @generated from field: repeated prx.v1.DebugEnvironmentVariable environment_variables = 8;
    */
@@ -3332,27 +3330,27 @@ export const DebugPathsSchema: GenMessage<DebugPaths> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 94);
 
 /**
- * DebugConfigHost is the host boundary as the report presents it.
+ * DebugConfigHost はレポートが提示する host の境界。
  *
  * @generated from message prx.v1.DebugConfigHost
  */
 export type DebugConfigHost = Message<"prx.v1.DebugConfigHost"> & {
   /**
-   * host is the normalized GitHub host key.
+   * host は正規化した GitHub の host キー。
    *
    * @generated from field: string host = 1;
    */
   host: string;
 
   /**
-   * api_url is the REST endpoint used for the host.
+   * api_url はその host に使う REST エンドポイント。
    *
    * @generated from field: string api_url = 2;
    */
   apiUrl: string;
 
   /**
-   * graphql_url is the GraphQL endpoint used for the host.
+   * graphql_url はその host に使う GraphQL エンドポイント。
    *
    * @generated from field: string graphql_url = 3;
    */
@@ -3367,34 +3365,34 @@ export const DebugConfigHostSchema: GenMessage<DebugConfigHost> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 95);
 
 /**
- * DebugConfigAuthMethod is a credential method without any secret material.
+ * DebugConfigAuthMethod は秘密情報を一切含まない資格情報の方法。
  *
  * @generated from message prx.v1.DebugConfigAuthMethod
  */
 export type DebugConfigAuthMethod = Message<"prx.v1.DebugConfigAuthMethod"> & {
   /**
-   * id is the configured method identifier.
+   * id は設定された認証方法の識別子。
    *
    * @generated from field: string id = 1;
    */
   id: string;
 
   /**
-   * host is the normalized host the method is scoped to.
+   * host は認証方法の対象として正規化された host。
    *
    * @generated from field: string host = 2;
    */
   host: string;
 
   /**
-   * type is the credential source name.
+   * type は資格情報の取得元の名前。
    *
    * @generated from field: string type = 3;
    */
   type: string;
 
   /**
-   * secret_configured is true when the method has a usable secret source.
+   * secret_configured は使える秘密情報の取得元がある場合に true。
    *
    * @generated from field: bool secret_configured = 4;
    */
@@ -3409,55 +3407,55 @@ export const DebugConfigAuthMethodSchema: GenMessage<DebugConfigAuthMethod> = /*
   messageDesc(file_prx_v1_prx, 96);
 
 /**
- * DebugConfig reports the loaded configuration without secret material.
+ * DebugConfig は読み込んだ設定を、秘密情報を除いて報告する。
  *
  * @generated from message prx.v1.DebugConfig
  */
 export type DebugConfig = Message<"prx.v1.DebugConfig"> & {
   /**
-   * version is the configuration file version.
+   * version は設定ファイルのバージョン。
    *
    * @generated from field: int32 version = 1;
    */
   version: number;
 
   /**
-   * valid is true when the configuration loaded successfully.
+   * valid は設定の読み込みに成功した場合に true。
    *
    * @generated from field: bool valid = 2;
    */
   valid: boolean;
 
   /**
-   * errors contains the load failure when valid is false.
+   * errors は valid が false のときの読み込み失敗の内容。
    *
    * @generated from field: repeated string errors = 3;
    */
   errors: string[];
 
   /**
-   * warnings contains recoverable problems such as unknown fields.
+   * warnings は未知のフィールドなど回復可能な問題を含む。
    *
    * @generated from field: repeated string warnings = 4;
    */
   warnings: string[];
 
   /**
-   * hosts lists the configured host boundaries.
+   * hosts は設定された host の境界を並べる。
    *
    * @generated from field: repeated prx.v1.DebugConfigHost hosts = 5;
    */
   hosts: DebugConfigHost[];
 
   /**
-   * auth_methods lists the credential methods in evaluation order.
+   * auth_methods は資格情報の方法を評価順に並べる。
    *
    * @generated from field: repeated prx.v1.DebugConfigAuthMethod auth_methods = 6;
    */
   authMethods: DebugConfigAuthMethod[];
 
   /**
-   * auto_sync_interval_seconds is the configured automatic refresh interval.
+   * auto_sync_interval_seconds は設定された自動更新の間隔。
    *
    * @generated from field: int64 auto_sync_interval_seconds = 7;
    */
@@ -3472,55 +3470,55 @@ export const DebugConfigSchema: GenMessage<DebugConfig> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 97);
 
 /**
- * DebugDatabaseFile reports the on-disk state of the SQLite database.
+ * DebugDatabaseFile は SQLite データベースのディスク上の状態を報告する。
  *
  * @generated from message prx.v1.DebugDatabaseFile
  */
 export type DebugDatabaseFile = Message<"prx.v1.DebugDatabaseFile"> & {
   /**
-   * applicable is false for an in-memory or DSN-style database that has no single file.
+   * applicable は単一のファイルを持たないインメモリや DSN 形式のデータベースでは false。
    *
    * @generated from field: bool applicable = 1;
    */
   applicable: boolean;
 
   /**
-   * size_bytes is the size of the main database file.
+   * size_bytes は主データベースファイルのサイズ。
    *
    * @generated from field: int64 size_bytes = 2;
    */
   sizeBytes: bigint;
 
   /**
-   * wal_present is true when a write-ahead log file exists beside the database.
+   * wal_present はデータベースの隣に write-ahead log ファイルがあるとき true。
    *
    * @generated from field: bool wal_present = 3;
    */
   walPresent: boolean;
 
   /**
-   * wal_size_bytes is the size of the write-ahead log file when it exists.
+   * wal_size_bytes は write-ahead log ファイルがある場合のそのサイズ。
    *
    * @generated from field: int64 wal_size_bytes = 4;
    */
   walSizeBytes: bigint;
 
   /**
-   * shm_present is true when a shared-memory file exists beside the database.
+   * shm_present はデータベースの隣に共有メモリファイルがあるとき true。
    *
    * @generated from field: bool shm_present = 5;
    */
   shmPresent: boolean;
 
   /**
-   * writable is true when the database file could be opened for writing.
+   * writable はデータベースファイルを書き込み用に開けた場合に true。
    *
    * @generated from field: bool writable = 6;
    */
   writable: boolean;
 
   /**
-   * write_error explains why the database file could not be opened for writing.
+   * write_error はデータベースファイルを書き込み用に開けなかった理由。
    *
    * @generated from field: string write_error = 7;
    */
@@ -3535,55 +3533,55 @@ export const DebugDatabaseFileSchema: GenMessage<DebugDatabaseFile> = /*@__PURE_
   messageDesc(file_prx_v1_prx, 98);
 
 /**
- * DebugStorage reports schema state and database integrity.
+ * DebugStorage はスキーマの状態とデータベースの整合性を報告する。
  *
  * @generated from message prx.v1.DebugStorage
  */
 export type DebugStorage = Message<"prx.v1.DebugStorage"> & {
   /**
-   * applied_schema_version is the highest migration version recorded in the database.
+   * applied_schema_version はデータベースに記録された最大のマイグレーション版数。
    *
    * @generated from field: int32 applied_schema_version = 1;
    */
   appliedSchemaVersion: number;
 
   /**
-   * embedded_schema_version is the highest migration version this binary carries.
+   * embedded_schema_version はこのバイナリが持つ最大のマイグレーション版数。
    *
    * @generated from field: int32 embedded_schema_version = 2;
    */
   embeddedSchemaVersion: number;
 
   /**
-   * integrity_valid is true when dependency-data validation found no errors.
+   * integrity_valid は依存データの検証でエラーがなかった場合に true。
    *
    * @generated from field: bool integrity_valid = 3;
    */
   integrityValid: boolean;
 
   /**
-   * integrity_errors contains the validation errors when integrity_valid is false.
+   * integrity_errors は integrity_valid が false のときの検証エラー。
    *
    * @generated from field: repeated string integrity_errors = 4;
    */
   integrityErrors: string[];
 
   /**
-   * database_file reports the on-disk state of the database.
+   * database_file はデータベースのディスク上の状態を報告する。
    *
    * @generated from field: prx.v1.DebugDatabaseFile database_file = 5;
    */
   databaseFile?: DebugDatabaseFile | undefined;
 
   /**
-   * cli_schema_version is the CLI response schema version this binary emits.
+   * cli_schema_version はこのバイナリが出力する CLI レスポンスのスキーマ版数。
    *
    * @generated from field: string cli_schema_version = 6;
    */
   cliSchemaVersion: string;
 
   /**
-   * error explains why storage diagnostics are unavailable.
+   * error はストレージの診断が得られない理由。
    *
    * @generated from field: string error = 7;
    */
@@ -3598,20 +3596,20 @@ export const DebugStorageSchema: GenMessage<DebugStorage> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 99);
 
 /**
- * DebugCount is one named count in a breakdown.
+ * DebugCount は内訳の中の名前付きの件数 1 件。
  *
  * @generated from message prx.v1.DebugCount
  */
 export type DebugCount = Message<"prx.v1.DebugCount"> & {
   /**
-   * name is the value the count belongs to.
+   * name は件数が属する値。
    *
    * @generated from field: string name = 1;
    */
   name: string;
 
   /**
-   * count is the number of records carrying that value.
+   * count はその値を持つレコードの数。
    *
    * @generated from field: int32 count = 2;
    */
@@ -3626,97 +3624,97 @@ export const DebugCountSchema: GenMessage<DebugCount> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 100);
 
 /**
- * DebugData reports stored record counts and their breakdowns.
+ * DebugData は保存されたレコード数とその内訳を報告する。
  *
  * @generated from message prx.v1.DebugData
  */
 export type DebugData = Message<"prx.v1.DebugData"> & {
   /**
-   * features is the number of stored features.
+   * features は保存された feature の数。
    *
    * @generated from field: int32 features = 1;
    */
   features: number;
 
   /**
-   * tasks is the number of stored tasks.
+   * tasks は保存された task の数。
    *
    * @generated from field: int32 tasks = 2;
    */
   tasks: number;
 
   /**
-   * dependencies is the number of stored dependency edges.
+   * dependencies は保存された依存の辺の数。
    *
    * @generated from field: int32 dependencies = 3;
    */
   dependencies: number;
 
   /**
-   * pull_requests is the number of attached pull requests.
+   * pull_requests は紐づいた pull request の数。
    *
    * @generated from field: int32 pull_requests = 4;
    */
   pullRequests: number;
 
   /**
-   * documents is the number of registered documents.
+   * documents は登録された document の数。
    *
    * @generated from field: int32 documents = 5;
    */
   documents: number;
 
   /**
-   * feature_statuses breaks features down by presented status.
+   * feature_statuses は feature を表示ステータス別に分ける。
    *
    * @generated from field: repeated prx.v1.DebugCount feature_statuses = 6;
    */
   featureStatuses: DebugCount[];
 
   /**
-   * task_display_states breaks tasks down by presented state.
+   * task_display_states は task を表示状態別に分ける。
    *
    * @generated from field: repeated prx.v1.DebugCount task_display_states = 7;
    */
   taskDisplayStates: DebugCount[];
 
   /**
-   * pull_request_display_states breaks pull requests down by presented state.
+   * pull_request_display_states は pull request を表示状態別に分ける。
    *
    * @generated from field: repeated prx.v1.DebugCount pull_request_display_states = 9;
    */
   pullRequestDisplayStates: DebugCount[];
 
   /**
-   * pull_request_hosts breaks pull requests down by normalized host.
+   * pull_request_hosts は pull request を正規化した host 別に分ける。
    *
    * @generated from field: repeated prx.v1.DebugCount pull_request_hosts = 10;
    */
   pullRequestHosts: DebugCount[];
 
   /**
-   * document_kinds breaks documents down by source kind.
+   * document_kinds は document を取得元の種類別に分ける。
    *
    * @generated from field: repeated prx.v1.DebugCount document_kinds = 11;
    */
   documentKinds: DebugCount[];
 
   /**
-   * error explains why the stored data could not be counted.
+   * error は保存データを数えられなかった理由。
    *
    * @generated from field: string error = 12;
    */
   error: string;
 
   /**
-   * projects is the number of stored projects.
+   * projects は保存された project の数。
    *
    * @generated from field: int32 projects = 13;
    */
   projects: number;
 
   /**
-   * project_states breaks projects down by their only state, active or archived.
+   * project_states は project を唯一の状態、active か archived で分ける。
    *
    * @generated from field: repeated prx.v1.DebugCount project_states = 14;
    */
@@ -3731,20 +3729,20 @@ export const DebugDataSchema: GenMessage<DebugData> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 101);
 
 /**
- * DebugSyncFailure counts synchronization failures within one host or repository.
+ * DebugSyncFailure は 1 つの host かリポジトリの中の同期失敗を数える。
  *
  * @generated from message prx.v1.DebugSyncFailure
  */
 export type DebugSyncFailure = Message<"prx.v1.DebugSyncFailure"> & {
   /**
-   * scope is the host or the host, owner, and repository the failures belong to.
+   * scope は失敗が属する host、または host・owner・リポジトリの組。
    *
    * @generated from field: string scope = 1;
    */
   scope: string;
 
   /**
-   * count is the number of failing pull requests in that scope.
+   * count はその範囲で失敗している pull request の数。
    *
    * @generated from field: int32 count = 2;
    */
@@ -3759,34 +3757,34 @@ export const DebugSyncFailureSchema: GenMessage<DebugSyncFailure> = /*@__PURE__*
   messageDesc(file_prx_v1_prx, 102);
 
 /**
- * DebugErrorGroup is one representative synchronization error and the tasks it affected.
+ * DebugErrorGroup は代表的な同期エラー 1 件と、影響を受けた task。
  *
  * @generated from message prx.v1.DebugErrorGroup
  */
 export type DebugErrorGroup = Message<"prx.v1.DebugErrorGroup"> & {
   /**
-   * message is the representative error text, truncated when very long.
+   * message は代表的なエラー文で、非常に長い場合は切り詰める。
    *
    * @generated from field: string message = 1;
    */
   message: string;
 
   /**
-   * count is the number of pull requests whose error shares this shape.
+   * count はこの形のエラーを持つ pull request の数。
    *
    * @generated from field: int32 count = 2;
    */
   count: number;
 
   /**
-   * task_ids lists a bounded sample of the affected task IDs.
+   * task_ids は影響を受けた task ID の、件数を絞った標本。
    *
    * @generated from field: repeated string task_ids = 3;
    */
   taskIds: string[];
 
   /**
-   * total_task_count is how many tasks the group covers, including those not listed.
+   * total_task_count はこのグループが対象とする task 数で、未掲載分も含む。
    *
    * @generated from field: int32 total_task_count = 4;
    */
@@ -3801,41 +3799,41 @@ export const DebugErrorGroupSchema: GenMessage<DebugErrorGroup> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 103);
 
 /**
- * DebugAuthCacheEntry records which credential last succeeded for one repository.
+ * DebugAuthCacheEntry はリポジトリごとに直近で成功した資格情報を記録する。
  *
  * @generated from message prx.v1.DebugAuthCacheEntry
  */
 export type DebugAuthCacheEntry = Message<"prx.v1.DebugAuthCacheEntry"> & {
   /**
-   * host is the normalized GitHub host.
+   * host は正規化した GitHub の host。
    *
    * @generated from field: string host = 1;
    */
   host: string;
 
   /**
-   * owner is the repository owner.
+   * owner はリポジトリの所有者。
    *
    * @generated from field: string owner = 2;
    */
   owner: string;
 
   /**
-   * repository is the repository name.
+   * repository はリポジトリ名。
    *
    * @generated from field: string repository = 3;
    */
   repository: string;
 
   /**
-   * auth_method_id is the credential method that last succeeded.
+   * auth_method_id は直近で成功した資格情報の方法。
    *
    * @generated from field: string auth_method_id = 4;
    */
   authMethodId: string;
 
   /**
-   * last_succeeded_at is when that credential last succeeded, in RFC 3339 UTC format.
+   * last_succeeded_at は RFC 3339 UTC 形式で、その資格情報が最後に成功した時刻。
    *
    * @generated from field: string last_succeeded_at = 5;
    */
@@ -3850,104 +3848,104 @@ export const DebugAuthCacheEntrySchema: GenMessage<DebugAuthCacheEntry> = /*@__P
   messageDesc(file_prx_v1_prx, 104);
 
 /**
- * DebugGitHubSync reports synchronization state and the failures behind it.
+ * DebugGitHubSync は同期の状態と、その背後にある失敗を報告する。
  *
  * @generated from message prx.v1.DebugGitHubSync
  */
 export type DebugGitHubSync = Message<"prx.v1.DebugGitHubSync"> & {
   /**
-   * status is the persisted process-wide synchronization status.
+   * status は保存されたプロセス全体の同期状況。
    *
    * @generated from field: prx.v1.GitHubSyncStatus status = 1;
    */
   status?: GitHubSyncStatus | undefined;
 
   /**
-   * next_run_at is when the interval next expires, in RFC 3339 UTC format.
+   * next_run_at は RFC 3339 UTC 形式で、次に間隔が切れる時刻。
    *
    * @generated from field: string next_run_at = 2;
    */
   nextRunAt: string;
 
   /**
-   * due is true when the interval has already expired.
+   * due はすでに間隔が切れている場合に true。
    *
    * @generated from field: bool due = 3;
    */
   due: boolean;
 
   /**
-   * seconds_since_last_update is how long ago the last run completed.
+   * seconds_since_last_update は直近の実行が完了してからの経過秒数。
    *
    * @generated from field: int64 seconds_since_last_update = 4;
    */
   secondsSinceLastUpdate: bigint;
 
   /**
-   * stale_pull_requests is the number of pull requests holding stale state.
+   * stale_pull_requests は古い状態を持つ pull request の数。
    *
    * @generated from field: int32 stale_pull_requests = 5;
    */
   stalePullRequests: number;
 
   /**
-   * failed_pull_requests is the number of pull requests carrying a refresh error.
+   * failed_pull_requests は更新エラーを持つ pull request の数。
    *
    * @generated from field: int32 failed_pull_requests = 6;
    */
   failedPullRequests: number;
 
   /**
-   * host_failures breaks refresh errors down by host.
+   * host_failures は更新エラーを host 別に分ける。
    *
    * @generated from field: repeated prx.v1.DebugSyncFailure host_failures = 7;
    */
   hostFailures: DebugSyncFailure[];
 
   /**
-   * repository_failures breaks refresh errors down by repository, bounded in size.
+   * repository_failures は更新エラーをリポジトリ別に分ける。件数には上限がある。
    *
    * @generated from field: repeated prx.v1.DebugSyncFailure repository_failures = 8;
    */
   repositoryFailures: DebugSyncFailure[];
 
   /**
-   * omitted_repository_failures is how many repository rows the size limit dropped.
+   * omitted_repository_failures は上限で落としたリポジトリの行数。
    *
    * @generated from field: int32 omitted_repository_failures = 9;
    */
   omittedRepositoryFailures: number;
 
   /**
-   * error_groups lists representative refresh errors, bounded in size.
+   * error_groups は代表的な更新エラーを並べる。件数には上限がある。
    *
    * @generated from field: repeated prx.v1.DebugErrorGroup error_groups = 10;
    */
   errorGroups: DebugErrorGroup[];
 
   /**
-   * omitted_error_groups is how many error groups the size limit dropped.
+   * omitted_error_groups は上限で落としたエラーグループの数。
    *
    * @generated from field: int32 omitted_error_groups = 11;
    */
   omittedErrorGroups: number;
 
   /**
-   * auth_cache lists the credential that last succeeded per repository, bounded in size.
+   * auth_cache はリポジトリごとに直近で成功した資格情報を並べる。件数には上限がある。
    *
    * @generated from field: repeated prx.v1.DebugAuthCacheEntry auth_cache = 12;
    */
   authCache: DebugAuthCacheEntry[];
 
   /**
-   * omitted_auth_cache_entries is how many cache rows the size limit dropped.
+   * omitted_auth_cache_entries は上限で落としたキャッシュの行数。
    *
    * @generated from field: int32 omitted_auth_cache_entries = 13;
    */
   omittedAuthCacheEntries: number;
 
   /**
-   * error explains why synchronization diagnostics are unavailable.
+   * error は同期の診断が得られない理由。
    *
    * @generated from field: string error = 14;
    */
@@ -3962,63 +3960,63 @@ export const DebugGitHubSyncSchema: GenMessage<DebugGitHubSync> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 105);
 
 /**
- * DebugReport is the whole diagnostic report, with detected problems first.
+ * DebugReport は診断レポート全体で、検出した問題を先頭に置く。
  *
  * @generated from message prx.v1.DebugReport
  */
 export type DebugReport = Message<"prx.v1.DebugReport"> & {
   /**
-   * problems lists the detected problems in reporting order.
+   * problems は検出した問題を報告順に並べる。
    *
    * @generated from field: repeated prx.v1.DebugProblem problems = 1;
    */
   problems: DebugProblem[];
 
   /**
-   * build describes the running PRX build.
+   * build は動作中の PRX のビルドを表す。
    *
    * @generated from field: prx.v1.DebugBuild build = 2;
    */
   build?: DebugBuild | undefined;
 
   /**
-   * runtime describes the process that produced the report.
+   * runtime はレポートを生成したプロセスを表す。
    *
    * @generated from field: prx.v1.DebugRuntime runtime = 3;
    */
   runtime?: DebugRuntime | undefined;
 
   /**
-   * paths reports resolved file locations and the ambient environment.
+   * paths は解決されたファイルの場所と、その環境を報告する。
    *
    * @generated from field: prx.v1.DebugPaths paths = 4;
    */
   paths?: DebugPaths | undefined;
 
   /**
-   * config reports the loaded configuration without secret material.
+   * config は読み込んだ設定を、秘密情報を除いて報告する。
    *
    * @generated from field: prx.v1.DebugConfig config = 5;
    */
   config?: DebugConfig | undefined;
 
   /**
-   * storage reports schema state and database integrity.
+   * storage はスキーマの状態とデータベースの整合性を報告する。
    *
    * @generated from field: prx.v1.DebugStorage storage = 6;
    */
   storage?: DebugStorage | undefined;
 
   /**
-   * records reports stored record counts and their breakdowns.
-   * It is not named data so a JSON reader never mistakes the section for a response envelope.
+   * records は保存されたレコード数とその内訳を報告する。
+   * JSON の読み手がこの節をレスポンスの外枠と取り違えないよう、data とは名付けていない。
    *
    * @generated from field: prx.v1.DebugData records = 7;
    */
   records?: DebugData | undefined;
 
   /**
-   * github_sync reports synchronization state and the failures behind it.
+   * github_sync は同期の状態と、その背後にある失敗を報告する。
    *
    * @generated from field: prx.v1.DebugGitHubSync github_sync = 8;
    */
@@ -4033,7 +4031,7 @@ export const DebugReportSchema: GenMessage<DebugReport> = /*@__PURE__*/
   messageDesc(file_prx_v1_prx, 106);
 
 /**
- * GetDebugReportRequest asks the server for a diagnostic report.
+ * GetDebugReportRequest はサーバーに診断レポートを求める。
  *
  * @generated from message prx.v1.GetDebugReportRequest
  */
@@ -4048,20 +4046,20 @@ export const GetDebugReportRequestSchema: GenMessage<GetDebugReportRequest> = /*
   messageDesc(file_prx_v1_prx, 107);
 
 /**
- * GetDebugReportResponse returns the diagnostic report and its rendered text.
+ * GetDebugReportResponse は診断レポートと、その整形済みテキストを返す。
  *
  * @generated from message prx.v1.GetDebugReportResponse
  */
 export type GetDebugReportResponse = Message<"prx.v1.GetDebugReportResponse"> & {
   /**
-   * report contains the structured diagnostic sections.
+   * report は構造化された診断の各節を含む。
    *
    * @generated from field: prx.v1.DebugReport report = 1;
    */
   report?: DebugReport | undefined;
 
   /**
-   * text is the rendered report, identical to the text `prx debug` prints.
+   * text は整形済みのレポートで、`prx debug` が出力するテキストと同一。
    *
    * @generated from field: string text = 2;
    */
@@ -4076,50 +4074,50 @@ export const GetDebugReportResponseSchema: GenMessage<GetDebugReportResponse> = 
   messageDesc(file_prx_v1_prx, 108);
 
 /**
- * FeatureStatus is the stored lifecycle state of a feature. Every value other
- * than auto is a manual override that takes precedence over derivation.
+ * FeatureStatus は feature の保存されたライフサイクル状態。
+ * auto 以外の値はすべて、導出より優先される手動の上書き。
  *
  * @generated from enum prx.v1.FeatureStatus
  */
 export enum FeatureStatus {
   /**
-   * FEATURE_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
+   * FEATURE_STATUS_UNSPECIFIED はサーバーが返さず、リクエストでは拒否される。
    *
    * @generated from enum value: FEATURE_STATUS_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * FEATURE_STATUS_ACTIVE means the feature is currently being worked on.
+   * FEATURE_STATUS_ACTIVE は feature が作業中であることを表す。
    *
    * @generated from enum value: FEATURE_STATUS_ACTIVE = 1;
    */
   ACTIVE = 1,
 
   /**
-   * FEATURE_STATUS_PAUSED means work on the feature is temporarily paused.
+   * FEATURE_STATUS_PAUSED は feature の作業が一時停止中であることを表す。
    *
    * @generated from enum value: FEATURE_STATUS_PAUSED = 2;
    */
   PAUSED = 2,
 
   /**
-   * FEATURE_STATUS_COMPLETED means the feature has been completed.
+   * FEATURE_STATUS_COMPLETED は feature が完了したことを表す。
    *
    * @generated from enum value: FEATURE_STATUS_COMPLETED = 3;
    */
   COMPLETED = 3,
 
   /**
-   * FEATURE_STATUS_CANCELLED means the feature will not be completed.
+   * FEATURE_STATUS_CANCELLED は feature を完了させないことを表す。
    *
    * @generated from enum value: FEATURE_STATUS_CANCELLED = 4;
    */
   CANCELLED = 4,
 
   /**
-   * FEATURE_STATUS_AUTO is the default of a new feature and presents the
-   * feature as completed once it has tasks and every one of them is finished.
+   * FEATURE_STATUS_AUTO は新しい feature の既定値で、task が 1 つ以上あり
+   * そのすべてが終わっているとき feature を完了として表示する。
    *
    * @generated from enum value: FEATURE_STATUS_AUTO = 5;
    */
@@ -4133,50 +4131,50 @@ export const FeatureStatusSchema: GenEnum<FeatureStatus> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 0);
 
 /**
- * TaskStatus is the stored workflow state of a task. It is always set by hand.
- * The unfinished values yield to an attached pull request, and the finished
- * values take precedence over one.
+ * TaskStatus は task の保存されたワークフロー状態で、常に手動で設定する。
+ * 未完了を表す値は紐づく pull request に譲り、完了を表す値は
+ * pull request より優先される。
  *
  * @generated from enum prx.v1.TaskStatus
  */
 export enum TaskStatus {
   /**
-   * TASK_STATUS_UNSPECIFIED is never returned by the server and is rejected in requests.
+   * TASK_STATUS_UNSPECIFIED はサーバーが返さず、リクエストでは拒否される。
    *
    * @generated from enum value: TASK_STATUS_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * TASK_STATUS_NOT_STARTED is the default of a new task and means work has not begun.
+   * TASK_STATUS_NOT_STARTED は新しい task の既定値で、未着手を表す。
    *
    * @generated from enum value: TASK_STATUS_NOT_STARTED = 1;
    */
   NOT_STARTED = 1,
 
   /**
-   * TASK_STATUS_IN_PROGRESS means the task is being implemented before a pull request exists.
+   * TASK_STATUS_IN_PROGRESS は pull request がない段階で実装中であることを表す。
    *
    * @generated from enum value: TASK_STATUS_IN_PROGRESS = 2;
    */
   IN_PROGRESS = 2,
 
   /**
-   * TASK_STATUS_DESIGNING means the task is being designed before an implementation plan exists.
+   * TASK_STATUS_DESIGNING は実装計画がない段階で設計中であることを表す。
    *
    * @generated from enum value: TASK_STATUS_DESIGNING = 5;
    */
   DESIGNING = 5,
 
   /**
-   * TASK_STATUS_COMPLETED marks the task satisfied regardless of any attached pull request.
+   * TASK_STATUS_COMPLETED は pull request の状態によらず task を完了とする。
    *
    * @generated from enum value: TASK_STATUS_COMPLETED = 3;
    */
   COMPLETED = 3,
 
   /**
-   * TASK_STATUS_CLOSED marks the task closed regardless of any attached pull request.
+   * TASK_STATUS_CLOSED は pull request の状態によらず task をクローズとする。
    *
    * @generated from enum value: TASK_STATUS_CLOSED = 4;
    */
@@ -4190,113 +4188,113 @@ export const TaskStatusSchema: GenEnum<TaskStatus> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 1);
 
 /**
- * TaskDisplayState is the derived state presented for a task.
- * Pull-request states use priority merged, closed, draft, conflict,
- * changes requested, approved, review waiting, open, then unknown.
+ * TaskDisplayState は task の表示用に導出された状態。
+ * pull request 由来の状態の優先順位は merged, closed, draft, conflict,
+ * changes requested, approved, review waiting, open, unknown の順。
  *
  * @generated from enum prx.v1.TaskDisplayState
  */
 export enum TaskDisplayState {
   /**
-   * TASK_DISPLAY_STATE_UNSPECIFIED is never returned for a valid task and is not a request field.
+   * TASK_DISPLAY_STATE_UNSPECIFIED は有効な task では返らず、リクエストのフィールドでもない。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * TASK_DISPLAY_STATE_NOT_STARTED means no pull request is attached and no implementation plan exists.
+   * TASK_DISPLAY_STATE_NOT_STARTED は pull request も実装計画もないことを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_NOT_STARTED = 1;
    */
   NOT_STARTED = 1,
 
   /**
-   * TASK_DISPLAY_STATE_DESIGNING means the task is being designed without an implementation plan.
+   * TASK_DISPLAY_STATE_DESIGNING は実装計画がないまま設計中であることを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_DESIGNING = 14;
    */
   DESIGNING = 14,
 
   /**
-   * TASK_DISPLAY_STATE_DESIGNED means an implementation plan exists without a pull request.
+   * TASK_DISPLAY_STATE_DESIGNED は pull request はないが実装計画があることを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_DESIGNED = 2;
    */
   DESIGNED = 2,
 
   /**
-   * TASK_DISPLAY_STATE_IN_PROGRESS means the task is in progress without a pull request.
+   * TASK_DISPLAY_STATE_IN_PROGRESS は pull request がないまま作業中であることを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_IN_PROGRESS = 3;
    */
   IN_PROGRESS = 3,
 
   /**
-   * TASK_DISPLAY_STATE_COMPLETED is a stored completed status.
+   * TASK_DISPLAY_STATE_COMPLETED は保存された完了ステータスを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_COMPLETED = 4;
    */
   COMPLETED = 4,
 
   /**
-   * TASK_DISPLAY_STATE_CLOSED is a stored closed status or a closed pull request.
+   * TASK_DISPLAY_STATE_CLOSED は保存されたクローズか、クローズされた pull request を表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_CLOSED = 5;
    */
   CLOSED = 5,
 
   /**
-   * TASK_DISPLAY_STATE_MERGED means the attached pull request is merged.
+   * TASK_DISPLAY_STATE_MERGED は紐づく pull request がマージ済みであることを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_MERGED = 6;
    */
   MERGED = 6,
 
   /**
-   * TASK_DISPLAY_STATE_DRAFT means the attached pull request is a draft.
+   * TASK_DISPLAY_STATE_DRAFT は紐づく pull request が draft であることを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_DRAFT = 7;
    */
   DRAFT = 7,
 
   /**
-   * TASK_DISPLAY_STATE_CONFLICT means the attached pull request has a merge conflict.
+   * TASK_DISPLAY_STATE_CONFLICT は紐づく pull request にコンフリクトがあることを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_CONFLICT = 8;
    */
   CONFLICT = 8,
 
   /**
-   * TASK_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
+   * TASK_DISPLAY_STATE_CHANGES_REQUESTED はレビュアーが変更を要求したことを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_CHANGES_REQUESTED = 9;
    */
   CHANGES_REQUESTED = 9,
 
   /**
-   * TASK_DISPLAY_STATE_APPROVED means the attached pull request has an approval.
+   * TASK_DISPLAY_STATE_APPROVED は紐づく pull request が承認済みであることを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_APPROVED = 10;
    */
   APPROVED = 10,
 
   /**
-   * TASK_DISPLAY_STATE_REVIEW_WAITING means the attached open pull request is waiting for review.
+   * TASK_DISPLAY_STATE_REVIEW_WAITING は open な pull request がレビュー待ちであることを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_REVIEW_WAITING = 11;
    */
   REVIEW_WAITING = 11,
 
   /**
-   * TASK_DISPLAY_STATE_OPEN means the attached pull request is open without a higher-priority state.
+   * TASK_DISPLAY_STATE_OPEN は上位の状態がない open な pull request を表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_OPEN = 12;
    */
   OPEN = 12,
 
   /**
-   * TASK_DISPLAY_STATE_UNKNOWN means the attached pull request state or relevant data is unknown.
+   * TASK_DISPLAY_STATE_UNKNOWN は pull request の状態や必要な情報が不明であることを表す。
    *
    * @generated from enum value: TASK_DISPLAY_STATE_UNKNOWN = 13;
    */
@@ -4310,41 +4308,41 @@ export const TaskDisplayStateSchema: GenEnum<TaskDisplayState> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 2);
 
 /**
- * PullRequestState is the raw lifecycle state reported for a GitHub pull request.
+ * PullRequestState は GitHub の pull request について報告される生のライフサイクル状態。
  *
  * @generated from enum prx.v1.PullRequestState
  */
 export enum PullRequestState {
   /**
-   * PULL_REQUEST_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+   * PULL_REQUEST_STATE_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
    *
    * @generated from enum value: PULL_REQUEST_STATE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * PULL_REQUEST_STATE_OPEN means GitHub reports the pull request as open.
+   * PULL_REQUEST_STATE_OPEN は GitHub が open と報告していることを表す。
    *
    * @generated from enum value: PULL_REQUEST_STATE_OPEN = 1;
    */
   OPEN = 1,
 
   /**
-   * PULL_REQUEST_STATE_CLOSED means GitHub reports the pull request as closed without merge.
+   * PULL_REQUEST_STATE_CLOSED は GitHub がマージなしのクローズと報告していることを表す。
    *
    * @generated from enum value: PULL_REQUEST_STATE_CLOSED = 2;
    */
   CLOSED = 2,
 
   /**
-   * PULL_REQUEST_STATE_MERGED means GitHub reports the pull request as merged.
+   * PULL_REQUEST_STATE_MERGED は GitHub がマージ済みと報告していることを表す。
    *
    * @generated from enum value: PULL_REQUEST_STATE_MERGED = 3;
    */
   MERGED = 3,
 
   /**
-   * PULL_REQUEST_STATE_UNKNOWN means the pull request state could not be determined.
+   * PULL_REQUEST_STATE_UNKNOWN は pull request の状態を判定できなかったことを表す。
    *
    * @generated from enum value: PULL_REQUEST_STATE_UNKNOWN = 4;
    */
@@ -4358,48 +4356,48 @@ export const PullRequestStateSchema: GenEnum<PullRequestState> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 3);
 
 /**
- * ReviewState summarizes the current review decision and requested reviewers.
+ * ReviewState は現在のレビュー判定とレビュー依頼状況をまとめたもの。
  *
  * @generated from enum prx.v1.ReviewState
  */
 export enum ReviewState {
   /**
-   * REVIEW_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+   * REVIEW_STATE_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
    *
    * @generated from enum value: REVIEW_STATE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * REVIEW_STATE_NONE means no approval or change request is currently active.
+   * REVIEW_STATE_NONE は承認も変更要求も有効でないことを表す。
    *
    * @generated from enum value: REVIEW_STATE_NONE = 1;
    */
   NONE = 1,
 
   /**
-   * REVIEW_STATE_REQUIRED means the pull request has requested reviewers.
+   * REVIEW_STATE_REQUIRED は pull request にレビュー依頼があることを表す。
    *
    * @generated from enum value: REVIEW_STATE_REQUIRED = 2;
    */
   REQUIRED = 2,
 
   /**
-   * REVIEW_STATE_APPROVED means at least one current review approves the pull request.
+   * REVIEW_STATE_APPROVED は有効なレビューに承認が 1 件以上あることを表す。
    *
    * @generated from enum value: REVIEW_STATE_APPROVED = 3;
    */
   APPROVED = 3,
 
   /**
-   * REVIEW_STATE_CHANGES_REQUESTED means at least one current review requests changes.
+   * REVIEW_STATE_CHANGES_REQUESTED は有効なレビューに変更要求が 1 件以上あることを表す。
    *
    * @generated from enum value: REVIEW_STATE_CHANGES_REQUESTED = 4;
    */
   CHANGES_REQUESTED = 4,
 
   /**
-   * REVIEW_STATE_UNKNOWN means review information could not be determined.
+   * REVIEW_STATE_UNKNOWN はレビュー情報を判定できなかったことを表す。
    *
    * @generated from enum value: REVIEW_STATE_UNKNOWN = 5;
    */
@@ -4413,34 +4411,34 @@ export const ReviewStateSchema: GenEnum<ReviewState> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 4);
 
 /**
- * Mergeability is the current mergeability reported for a GitHub pull request.
+ * Mergeability は GitHub の pull request について報告される現在のマージ可否。
  *
  * @generated from enum prx.v1.Mergeability
  */
 export enum Mergeability {
   /**
-   * MERGEABILITY_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+   * MERGEABILITY_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
    *
    * @generated from enum value: MERGEABILITY_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * MERGEABILITY_MERGEABLE means GitHub reports no merge conflict.
+   * MERGEABILITY_MERGEABLE は GitHub がコンフリクトなしと報告していることを表す。
    *
    * @generated from enum value: MERGEABILITY_MERGEABLE = 1;
    */
   MERGEABLE = 1,
 
   /**
-   * MERGEABILITY_CONFLICTING means GitHub reports a merge conflict.
+   * MERGEABILITY_CONFLICTING は GitHub がコンフリクトありと報告していることを表す。
    *
    * @generated from enum value: MERGEABILITY_CONFLICTING = 2;
    */
   CONFLICTING = 2,
 
   /**
-   * MERGEABILITY_UNKNOWN means mergeability could not be determined.
+   * MERGEABILITY_UNKNOWN はマージ可否を判定できなかったことを表す。
    *
    * @generated from enum value: MERGEABILITY_UNKNOWN = 3;
    */
@@ -4454,77 +4452,77 @@ export const MergeabilitySchema: GenEnum<Mergeability> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 5);
 
 /**
- * PullRequestDisplayState is the derived presentation state of a pull request.
- * Its priority is merged, closed, draft, conflict, changes requested, approved, review waiting, open, then unknown.
+ * PullRequestDisplayState は pull request の導出された表示状態。
+ * 優先度は merged, closed, draft, conflict, changes requested, approved, review waiting, open, unknown。
  *
  * @generated from enum prx.v1.PullRequestDisplayState
  */
 export enum PullRequestDisplayState {
   /**
-   * PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED is never returned for a valid pull request and is not a request field.
+   * PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
    *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * PULL_REQUEST_DISPLAY_STATE_MERGED means the pull request is merged.
+   * PULL_REQUEST_DISPLAY_STATE_MERGED は pull request がマージ済みであることを表す。
    *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_MERGED = 1;
    */
   MERGED = 1,
 
   /**
-   * PULL_REQUEST_DISPLAY_STATE_CLOSED means the pull request is closed without being merged.
+   * PULL_REQUEST_DISPLAY_STATE_CLOSED はマージされずにクローズされたことを表す。
    *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_CLOSED = 2;
    */
   CLOSED = 2,
 
   /**
-   * PULL_REQUEST_DISPLAY_STATE_DRAFT means the pull request is a draft.
+   * PULL_REQUEST_DISPLAY_STATE_DRAFT は pull request が draft であることを表す。
    *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_DRAFT = 3;
    */
   DRAFT = 3,
 
   /**
-   * PULL_REQUEST_DISPLAY_STATE_CONFLICT means the pull request has a merge conflict.
+   * PULL_REQUEST_DISPLAY_STATE_CONFLICT はコンフリクトがあることを表す。
    *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_CONFLICT = 4;
    */
   CONFLICT = 4,
 
   /**
-   * PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED means a reviewer requested changes.
+   * PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED はレビュアーが変更を要求したことを表す。
    *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED = 5;
    */
   CHANGES_REQUESTED = 5,
 
   /**
-   * PULL_REQUEST_DISPLAY_STATE_APPROVED means the pull request has an approval.
+   * PULL_REQUEST_DISPLAY_STATE_APPROVED は pull request が承認済みであることを表す。
    *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_APPROVED = 6;
    */
   APPROVED = 6,
 
   /**
-   * PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING means the open, non-draft pull request needs review.
+   * PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING は draft でない open な pull request がレビューを要することを表す。
    *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_REVIEW_WAITING = 7;
    */
   REVIEW_WAITING = 7,
 
   /**
-   * PULL_REQUEST_DISPLAY_STATE_OPEN means the pull request is open without a higher-priority state.
+   * PULL_REQUEST_DISPLAY_STATE_OPEN は上位の状態がない open な pull request を表す。
    *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_OPEN = 8;
    */
   OPEN = 8,
 
   /**
-   * PULL_REQUEST_DISPLAY_STATE_UNKNOWN means the pull request state or relevant data is unknown.
+   * PULL_REQUEST_DISPLAY_STATE_UNKNOWN は pull request の状態や必要な情報が不明であることを表す。
    *
    * @generated from enum value: PULL_REQUEST_DISPLAY_STATE_UNKNOWN = 9;
    */
@@ -4538,34 +4536,34 @@ export const PullRequestDisplayStateSchema: GenEnum<PullRequestDisplayState> = /
   enumDesc(file_prx_v1_prx, 6);
 
 /**
- * DocumentKind identifies the type of reference stored in a document.
+ * DocumentKind は document に保存された参照の種類を表す。
  *
  * @generated from enum prx.v1.DocumentKind
  */
 export enum DocumentKind {
   /**
-   * DOCUMENT_KIND_UNSPECIFIED is never returned by the server and is rejected in requests.
+   * DOCUMENT_KIND_UNSPECIFIED はサーバーが返さず、リクエストでは拒否される。
    *
    * @generated from enum value: DOCUMENT_KIND_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * DOCUMENT_KIND_URL stores an HTTP or HTTPS URL.
+   * DOCUMENT_KIND_URL は HTTP または HTTPS の URL を保持する。
    *
    * @generated from enum value: DOCUMENT_KIND_URL = 1;
    */
   URL = 1,
 
   /**
-   * DOCUMENT_KIND_LOCAL_FILE stores a registered local file path.
+   * DOCUMENT_KIND_LOCAL_FILE は登録済みのローカルファイルパスを保持する。
    *
    * @generated from enum value: DOCUMENT_KIND_LOCAL_FILE = 3;
    */
   LOCAL_FILE = 3,
 
   /**
-   * DOCUMENT_KIND_MARKDOWN stores Markdown content in the database.
+   * DOCUMENT_KIND_MARKDOWN は Markdown の本文をデータベースに保持する。
    *
    * @generated from enum value: DOCUMENT_KIND_MARKDOWN = 4;
    */
@@ -4579,27 +4577,27 @@ export const DocumentKindSchema: GenEnum<DocumentKind> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 7);
 
 /**
- * BlockedReasonCode explains why a task is not ready.
+ * BlockedReasonCode は task が ready でない理由を表す。
  *
  * @generated from enum prx.v1.BlockedReasonCode
  */
 export enum BlockedReasonCode {
   /**
-   * BLOCKED_REASON_CODE_UNSPECIFIED is never returned; no BlockedReason is sent when there is no structured reason.
+   * BLOCKED_REASON_CODE_UNSPECIFIED は返らない。構造化された理由がなければ BlockedReason 自体を送らない。
    *
    * @generated from enum value: BLOCKED_REASON_CODE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE means a referenced blocker is missing.
+   * BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE は参照先の blocker が存在しないことを表す。
    *
    * @generated from enum value: BLOCKED_REASON_CODE_DEPENDENCY_DATA_INCOMPLETE = 1;
    */
   DEPENDENCY_DATA_INCOMPLETE = 1,
 
   /**
-   * BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER means a dependency has not been satisfied.
+   * BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER は依存が満たされていないことを表す。
    *
    * @generated from enum value: BLOCKED_REASON_CODE_WAITING_FOR_BLOCKER = 3;
    */
@@ -4613,174 +4611,174 @@ export const BlockedReasonCodeSchema: GenEnum<BlockedReasonCode> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 8);
 
 /**
- * DomainErrorCode identifies a known validation, state, storage, or GitHub error exposed over RPC.
+ * DomainErrorCode は RPC で公開する検証・状態・保存・GitHub の既知エラーを表す。
  *
  * @generated from enum prx.v1.DomainErrorCode
  */
 export enum DomainErrorCode {
   /**
-   * DOMAIN_ERROR_CODE_UNSPECIFIED is never returned for a recognized domain error; it is the unmapped fallback.
+   * DOMAIN_ERROR_CODE_UNSPECIFIED は既知のドメインエラーでは返らない、未対応時のフォールバック。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY means a dependency crosses feature boundaries.
+   * DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY は依存が feature をまたいでいることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_CROSS_FEATURE_DEPENDENCY = 2;
    */
   CROSS_FEATURE_DEPENDENCY = 2,
 
   /**
-   * DOMAIN_ERROR_CODE_CYCLE means adding a dependency would create a cycle.
+   * DOMAIN_ERROR_CODE_CYCLE は依存の追加で循環が生じることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_CYCLE = 3;
    */
   CYCLE = 3,
 
   /**
-   * DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY means the dependency already exists.
+   * DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY は依存がすでに存在することを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_DUPLICATE_DEPENDENCY = 4;
    */
   DUPLICATE_DEPENDENCY = 4,
 
   /**
-   * DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST means the pull request is already attached to another task.
+   * DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST は他の task にすでに紐づいていることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_DUPLICATE_PULL_REQUEST = 5;
    */
   DUPLICATE_PULL_REQUEST = 5,
 
   /**
-   * DOMAIN_ERROR_CODE_GITHUB_AUTH means GitHub credentials or a provider are unavailable.
+   * DOMAIN_ERROR_CODE_GITHUB_AUTH は GitHub の資格情報かプロバイダが使えないことを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_GITHUB_AUTH = 6;
    */
   GITHUB_AUTH = 6,
 
   /**
-   * DOMAIN_ERROR_CODE_INVALID_DATABASE means database validation failed.
+   * DOMAIN_ERROR_CODE_INVALID_DATABASE はデータベースの検証に失敗したことを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DATABASE = 7;
    */
   INVALID_DATABASE = 7,
 
   /**
-   * DOMAIN_ERROR_CODE_INVALID_DOCUMENT means a document value is missing or invalid.
+   * DOMAIN_ERROR_CODE_INVALID_DOCUMENT は document の値が欠けているか不正であることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DOCUMENT = 8;
    */
   INVALID_DOCUMENT = 8,
 
   /**
-   * DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND means the document kind is unsupported.
+   * DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND は document の種類が未対応であることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DOCUMENT_KIND = 9;
    */
   INVALID_DOCUMENT_KIND = 9,
 
   /**
-   * DOMAIN_ERROR_CODE_INVALID_PARENT means a document does not have exactly one valid parent.
+   * DOMAIN_ERROR_CODE_INVALID_PARENT は document の親がちょうど 1 つでないことを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_PARENT = 11;
    */
   INVALID_PARENT = 11,
 
   /**
-   * DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL means the pull request URL cannot be parsed.
+   * DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL は pull request の URL を解析できないことを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_PULL_REQUEST_URL = 12;
    */
   INVALID_PULL_REQUEST_URL = 12,
 
   /**
-   * DOMAIN_ERROR_CODE_INVALID_STATUS means a feature or task status is unsupported.
+   * DOMAIN_ERROR_CODE_INVALID_STATUS は feature か task のステータスが未対応であることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_STATUS = 15;
    */
   INVALID_STATUS = 15,
 
   /**
-   * DOMAIN_ERROR_CODE_INVALID_TITLE means a required feature or task title is empty.
+   * DOMAIN_ERROR_CODE_INVALID_TITLE は必須の feature か task のタイトルが空であることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_TITLE = 16;
    */
   INVALID_TITLE = 16,
 
   /**
-   * DOMAIN_ERROR_CODE_NOT_FOUND means the requested record does not exist.
+   * DOMAIN_ERROR_CODE_NOT_FOUND は要求されたレコードが存在しないことを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_NOT_FOUND = 17;
    */
   NOT_FOUND = 17,
 
   /**
-   * DOMAIN_ERROR_CODE_REFERENCES_EXIST means deletion is blocked by referencing records.
+   * DOMAIN_ERROR_CODE_REFERENCES_EXIST は参照するレコードがあり削除できないことを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_REFERENCES_EXIST = 18;
    */
   REFERENCES_EXIST = 18,
 
   /**
-   * DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL means a document URL is not HTTP or HTTPS.
+   * DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL は document の URL が HTTP でも HTTPS でもないことを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_DOCUMENT_URL = 21;
    */
   INVALID_DOCUMENT_URL = 21,
 
   /**
-   * DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED means a registered Markdown file could not be read.
+   * DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED は登録済みの Markdown ファイルを読めないことを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_DOCUMENT_READ_FAILED = 22;
    */
   DOCUMENT_READ_FAILED = 22,
 
   /**
-   * DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE means a Markdown preview exceeds the 1 MiB limit.
+   * DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE は Markdown プレビューが 1 MiB を超えることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_DOCUMENT_TOO_LARGE = 23;
    */
   DOCUMENT_TOO_LARGE = 23,
 
   /**
-   * DOMAIN_ERROR_CODE_INVALID_CONFIG means the GitHub YAML configuration is invalid.
+   * DOMAIN_ERROR_CODE_INVALID_CONFIG は GitHub の YAML 設定が不正であることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_CONFIG = 24;
    */
   INVALID_CONFIG = 24,
 
   /**
-   * DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN means plan content is empty or invalid.
+   * DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN は計画の内容が空か不正であることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_INVALID_IMPLEMENTATION_PLAN = 25;
    */
   INVALID_IMPLEMENTATION_PLAN = 25,
 
   /**
-   * DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE means plan content exceeds 1 MiB.
+   * DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE は計画の内容が 1 MiB を超えることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_IMPLEMENTATION_PLAN_TOO_LARGE = 26;
    */
   IMPLEMENTATION_PLAN_TOO_LARGE = 26,
 
   /**
-   * DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT means document content is not valid UTF-8 text.
+   * DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT は document の内容が正しい UTF-8 でないことを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_DOCUMENT_NOT_TEXT = 27;
    */
   DOCUMENT_NOT_TEXT = 27,
 
   /**
-   * DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN means the task already has a plan document.
+   * DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN は task にすでに計画文書があることを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_DUPLICATE_IMPLEMENTATION_PLAN = 28;
    */
   DUPLICATE_IMPLEMENTATION_PLAN = 28,
 
   /**
-   * DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY means the write targets an archived project or feature.
+   * DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY はアーカイブ済みの project か feature への書き込みを表す。
    *
    * @generated from enum value: DOMAIN_ERROR_CODE_ARCHIVED_READ_ONLY = 29;
    */
@@ -4794,41 +4792,41 @@ export const DomainErrorCodeSchema: GenEnum<DomainErrorCode> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 9);
 
 /**
- * GitHubAuthMethodType identifies how a GitHub token is obtained.
+ * GitHubAuthMethodType は GitHub のトークンの取得方法を表す。
  *
  * @generated from enum prx.v1.GithubAuthMethodType
  */
 export enum GithubAuthMethodType {
   /**
-   * GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED is never returned and is rejected in requests.
+   * GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED は返らず、リクエストでは拒否される。
    *
    * @generated from enum value: GITHUB_AUTH_METHOD_TYPE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * GITHUB_AUTH_METHOD_TYPE_KEYCHAIN reads a macOS generic password.
+   * GITHUB_AUTH_METHOD_TYPE_KEYCHAIN は macOS の generic password を読む。
    *
    * @generated from enum value: GITHUB_AUTH_METHOD_TYPE_KEYCHAIN = 1;
    */
   KEYCHAIN = 1,
 
   /**
-   * GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT reads a configured environment variable.
+   * GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT は設定された環境変数を読む。
    *
    * @generated from enum value: GITHUB_AUTH_METHOD_TYPE_ENVIRONMENT = 2;
    */
   ENVIRONMENT = 2,
 
   /**
-   * GITHUB_AUTH_METHOD_TYPE_INLINE reads a token stored in the YAML file.
+   * GITHUB_AUTH_METHOD_TYPE_INLINE は YAML ファイルに保存したトークンを読む。
    *
    * @generated from enum value: GITHUB_AUTH_METHOD_TYPE_INLINE = 3;
    */
   INLINE = 3,
 
   /**
-   * GITHUB_AUTH_METHOD_TYPE_GH_CLI invokes gh auth token for the host.
+   * GITHUB_AUTH_METHOD_TYPE_GH_CLI は host に対して gh auth token を実行する。
    *
    * @generated from enum value: GITHUB_AUTH_METHOD_TYPE_GH_CLI = 4;
    */
@@ -4842,28 +4840,28 @@ export const GithubAuthMethodTypeSchema: GenEnum<GithubAuthMethodType> = /*@__PU
   enumDesc(file_prx_v1_prx, 10);
 
 /**
- * TaskPromptKind identifies which prompt template a task was rendered with.
- * The presence of an implementation plan is the only input to that choice.
+ * TaskPromptKind は task をどのプロンプトテンプレートで展開したかを表す。
+ * 選択の材料は実装計画の有無だけである。
  *
  * @generated from enum prx.v1.TaskPromptKind
  */
 export enum TaskPromptKind {
   /**
-   * TASK_PROMPT_KIND_UNSPECIFIED is never returned by the server and is not a request field.
+   * TASK_PROMPT_KIND_UNSPECIFIED はサーバーが返さず、リクエストのフィールドでもない。
    *
    * @generated from enum value: TASK_PROMPT_KIND_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * TASK_PROMPT_KIND_DESIGN asks an agent to produce the implementation plan.
+   * TASK_PROMPT_KIND_DESIGN は実装計画の作成をエージェントに求める。
    *
    * @generated from enum value: TASK_PROMPT_KIND_DESIGN = 1;
    */
   DESIGN = 1,
 
   /**
-   * TASK_PROMPT_KIND_IMPLEMENTATION asks an agent to carry out the registered plan.
+   * TASK_PROMPT_KIND_IMPLEMENTATION は登録済みの計画の実行をエージェントに求める。
    *
    * @generated from enum value: TASK_PROMPT_KIND_IMPLEMENTATION = 2;
    */
@@ -4877,98 +4875,98 @@ export const TaskPromptKindSchema: GenEnum<TaskPromptKind> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 11);
 
 /**
- * DebugProblemCode identifies a problem the diagnostic report detected.
- * Every member is a stable public identifier that callers may branch on.
+ * DebugProblemCode は診断レポートが検出した問題を表す。
+ * すべての値は呼び出し側が分岐に使える安定した公開識別子である。
  *
  * @generated from enum prx.v1.DebugProblemCode
  */
 export enum DebugProblemCode {
   /**
-   * DEBUG_PROBLEM_CODE_UNSPECIFIED is never returned by the server; it is the unmapped fallback.
+   * DEBUG_PROBLEM_CODE_UNSPECIFIED はサーバーが返さない、未対応時のフォールバック。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_UNSPECIFIED = 0;
    */
   UNSPECIFIED = 0,
 
   /**
-   * DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE means the database could not be opened.
+   * DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE はデータベースを開けなかったことを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_STORAGE_UNAVAILABLE = 1;
    */
   STORAGE_UNAVAILABLE = 1,
 
   /**
-   * DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY means the database was migrated by a newer PRX.
+   * DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY は新しい PRX が移行したことを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_SCHEMA_VERSION_AHEAD_OF_BINARY = 2;
    */
   SCHEMA_VERSION_AHEAD_OF_BINARY = 2,
 
   /**
-   * DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE means the database file exists but cannot be written.
+   * DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE はファイルはあるが書き込めないことを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_DATABASE_NOT_WRITABLE = 3;
    */
   DATABASE_NOT_WRITABLE = 3,
 
   /**
-   * DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS means stored dependency data failed validation.
+   * DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS は依存データの検証に失敗したことを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_DATABASE_INTEGRITY_ERRORS = 4;
    */
   DATABASE_INTEGRITY_ERRORS = 4,
 
   /**
-   * DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE means the YAML configuration could not be loaded.
+   * DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE は YAML 設定を読み込めなかったことを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_CONFIG_UNREADABLE = 5;
    */
   CONFIG_UNREADABLE = 5,
 
   /**
-   * DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN means the configuration file is readable by others.
+   * DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN は設定ファイルを他者が読めることを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_CONFIG_PERMISSIONS_TOO_OPEN = 6;
    */
   CONFIG_PERMISSIONS_TOO_OPEN = 6,
 
   /**
-   * DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS means the configuration contains fields PRX ignores.
+   * DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS は設定に PRX が無視する項目があることを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_CONFIG_UNKNOWN_FIELDS = 7;
    */
   CONFIG_UNKNOWN_FIELDS = 7,
 
   /**
-   * DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST means a host with pull requests has no credential.
+   * DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST は pull request のある host に資格情報がないことを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_NO_AUTH_METHOD_FOR_HOST = 8;
    */
   NO_AUTH_METHOD_FOR_HOST = 8,
 
   /**
-   * DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR means the latest recorded synchronization run failed.
+   * DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR は直近の同期実行が失敗したことを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_GITHUB_SYNC_RUN_ERROR = 9;
    */
   GITHUB_SYNC_RUN_ERROR = 9,
 
   /**
-   * DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE means the automatic interval expired well before the report.
+   * DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE は自動実行の間隔がかなり前に切れたことを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_GITHUB_SYNC_OVERDUE = 10;
    */
   GITHUB_SYNC_OVERDUE = 10,
 
   /**
-   * DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED means pull requests exist but no run ever completed.
+   * DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED は pull request はあるが完了実行がないことを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED = 11;
    */
   GITHUB_SYNC_NEVER_COMPLETED = 11,
 
   /**
-   * DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE means at least one pull request holds stale state.
+   * DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE は古い状態の pull request が 1 件以上あることを表す。
    *
    * @generated from enum value: DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE = 12;
    */
@@ -4982,13 +4980,13 @@ export const DebugProblemCodeSchema: GenEnum<DebugProblemCode> = /*@__PURE__*/
   enumDesc(file_prx_v1_prx, 12);
 
 /**
- * PRXService exposes project, feature, task, dependency, GitHub, document, and validation operations.
+ * PRXService は project・feature・task・依存・GitHub・document・検証の操作を公開する。
  *
  * @generated from service prx.v1.PRXService
  */
 export const PRXService: GenService<{
   /**
-   * GetSnapshot returns the current normalized dataset and derived queues.
+   * GetSnapshot は現在の正規化データと導出キューを返す。
    *
    * @generated from rpc prx.v1.PRXService.GetSnapshot
    */
@@ -4998,7 +4996,7 @@ export const PRXService: GenService<{
     output: typeof GetSnapshotResponseSchema;
   },
   /**
-   * CreateProject creates a new project.
+   * CreateProject は project を新規作成する。
    *
    * @generated from rpc prx.v1.PRXService.CreateProject
    */
@@ -5008,7 +5006,7 @@ export const PRXService: GenService<{
     output: typeof CreateProjectResponseSchema;
   },
   /**
-   * UpdateProject applies the fields present in the request to an existing project, including archiving.
+   * UpdateProject はリクエストにあるフィールドを既存の project に適用し、アーカイブも含む。
    *
    * @generated from rpc prx.v1.PRXService.UpdateProject
    */
@@ -5018,7 +5016,7 @@ export const PRXService: GenService<{
     output: typeof UpdateProjectResponseSchema;
   },
   /**
-   * DeleteProject deletes a project, subject to the cascade option.
+   * DeleteProject は cascade の指定に従って project を削除する。
    *
    * @generated from rpc prx.v1.PRXService.DeleteProject
    */
@@ -5028,7 +5026,7 @@ export const PRXService: GenService<{
     output: typeof DeleteProjectResponseSchema;
   },
   /**
-   * CreateFeature creates a new feature.
+   * CreateFeature は feature を新規作成する。
    *
    * @generated from rpc prx.v1.PRXService.CreateFeature
    */
@@ -5038,7 +5036,7 @@ export const PRXService: GenService<{
     output: typeof CreateFeatureResponseSchema;
   },
   /**
-   * UpdateFeature applies the fields present in the request to an existing feature.
+   * UpdateFeature はリクエストにあるフィールドを既存の feature に適用する。
    *
    * @generated from rpc prx.v1.PRXService.UpdateFeature
    */
@@ -5048,7 +5046,7 @@ export const PRXService: GenService<{
     output: typeof UpdateFeatureResponseSchema;
   },
   /**
-   * DeleteFeature deletes a feature, subject to the cascade option.
+   * DeleteFeature は cascade の指定に従って feature を削除する。
    *
    * @generated from rpc prx.v1.PRXService.DeleteFeature
    */
@@ -5058,7 +5056,7 @@ export const PRXService: GenService<{
     output: typeof DeleteFeatureResponseSchema;
   },
   /**
-   * CreateTask creates a task within an existing feature.
+   * CreateTask は既存の feature の中に task を作成する。
    *
    * @generated from rpc prx.v1.PRXService.CreateTask
    */
@@ -5068,7 +5066,7 @@ export const PRXService: GenService<{
     output: typeof CreateTaskResponseSchema;
   },
   /**
-   * UpdateTask applies the fields present in the request to an existing task.
+   * UpdateTask はリクエストにあるフィールドを既存の task に適用する。
    *
    * @generated from rpc prx.v1.PRXService.UpdateTask
    */
@@ -5078,7 +5076,7 @@ export const PRXService: GenService<{
     output: typeof UpdateTaskResponseSchema;
   },
   /**
-   * DeleteTask deletes a task, subject to the cascade option.
+   * DeleteTask は cascade の指定に従って task を削除する。
    *
    * @generated from rpc prx.v1.PRXService.DeleteTask
    */
@@ -5088,7 +5086,7 @@ export const PRXService: GenService<{
     output: typeof DeleteTaskResponseSchema;
   },
   /**
-   * AddDependency adds a same-feature dependency when it does not create a cycle.
+   * AddDependency は循環を作らない場合に、同じ feature 内の依存を追加する。
    *
    * @generated from rpc prx.v1.PRXService.AddDependency
    */
@@ -5098,7 +5096,7 @@ export const PRXService: GenService<{
     output: typeof AddDependencyResponseSchema;
   },
   /**
-   * RemoveDependency removes an existing dependency edge.
+   * RemoveDependency は既存の依存の辺を取り除く。
    *
    * @generated from rpc prx.v1.PRXService.RemoveDependency
    */
@@ -5108,7 +5106,7 @@ export const PRXService: GenService<{
     output: typeof RemoveDependencyResponseSchema;
   },
   /**
-   * AttachPullRequest attaches a GitHub pull request to a pull-request task.
+   * AttachPullRequest は GitHub の pull request を pull request 用の task に紐づける。
    *
    * @generated from rpc prx.v1.PRXService.AttachPullRequest
    */
@@ -5118,7 +5116,7 @@ export const PRXService: GenService<{
     output: typeof AttachPullRequestResponseSchema;
   },
   /**
-   * DetachPullRequest removes the pull request attached to a task.
+   * DetachPullRequest は task に紐づく pull request を外す。
    *
    * @generated from rpc prx.v1.PRXService.DetachPullRequest
    */
@@ -5128,7 +5126,7 @@ export const PRXService: GenService<{
     output: typeof DetachPullRequestResponseSchema;
   },
   /**
-   * AddDocument registers a URL, local file, or stored Markdown document.
+   * AddDocument は URL、ローカルファイル、保存する Markdown の document を登録する。
    *
    * @generated from rpc prx.v1.PRXService.AddDocument
    */
@@ -5138,7 +5136,7 @@ export const PRXService: GenService<{
     output: typeof AddDocumentResponseSchema;
   },
   /**
-   * GetDocument returns one document and stored Markdown content when applicable.
+   * GetDocument は document を 1 件返し、該当すれば保存された Markdown も返す。
    *
    * @generated from rpc prx.v1.PRXService.GetDocument
    */
@@ -5148,7 +5146,7 @@ export const PRXService: GenService<{
     output: typeof GetDocumentResponseSchema;
   },
   /**
-   * UpdateDocument changes document metadata, source, or plan designation.
+   * UpdateDocument は document のメタデータ・取得元・計画指定を変更する。
    *
    * @generated from rpc prx.v1.PRXService.UpdateDocument
    */
@@ -5158,7 +5156,7 @@ export const PRXService: GenService<{
     output: typeof UpdateDocumentResponseSchema;
   },
   /**
-   * DeleteDocument removes a registered document reference.
+   * DeleteDocument は登録済みの document 参照を削除する。
    *
    * @generated from rpc prx.v1.PRXService.DeleteDocument
    */
@@ -5168,7 +5166,7 @@ export const PRXService: GenService<{
     output: typeof DeleteDocumentResponseSchema;
   },
   /**
-   * ReadDocumentContent reads bounded UTF-8 content for a local file or stored Markdown document.
+   * ReadDocumentContent はローカルファイルか保存された Markdown の内容を上限つきの UTF-8 で読む。
    *
    * @generated from rpc prx.v1.PRXService.ReadDocumentContent
    */
@@ -5178,7 +5176,7 @@ export const PRXService: GenService<{
     output: typeof ReadDocumentContentResponseSchema;
   },
   /**
-   * SelectLocalFile opens a native file chooser on the PRX server without registering a document.
+   * SelectLocalFile は document を登録せず、PRX サーバーでネイティブのファイル選択画面を開く。
    *
    * @generated from rpc prx.v1.PRXService.SelectLocalFile
    */
@@ -5188,7 +5186,7 @@ export const PRXService: GenService<{
     output: typeof SelectLocalFileResponseSchema;
   },
   /**
-   * Sync refreshes selected pull requests from GitHub and records successes and failures independently.
+   * Sync は選ばれた pull request を GitHub から更新し、成功と失敗を個別に記録する。
    *
    * @generated from rpc prx.v1.PRXService.Sync
    */
@@ -5198,7 +5196,7 @@ export const PRXService: GenService<{
     output: typeof SyncResponseSchema;
   },
   /**
-   * GetGitHubSyncStatus returns automatic synchronization diagnostics.
+   * GetGitHubSyncStatus は自動同期の診断情報を返す。
    *
    * @generated from rpc prx.v1.PRXService.GetGitHubSyncStatus
    */
@@ -5208,7 +5206,7 @@ export const PRXService: GenService<{
     output: typeof GetGitHubSyncStatusResponseSchema;
   },
   /**
-   * SyncGitHubIfDue claims and runs an automatic refresh only when due.
+   * SyncGitHubIfDue は期限が来たときだけ自動更新を確保して実行する。
    *
    * @generated from rpc prx.v1.PRXService.SyncGitHubIfDue
    */
@@ -5218,7 +5216,7 @@ export const PRXService: GenService<{
     output: typeof SyncGitHubIfDueResponseSchema;
   },
   /**
-   * Validate checks database integrity and returns any detected errors.
+   * Validate はデータベースの整合性を調べ、検出したエラーを返す。
    *
    * @generated from rpc prx.v1.PRXService.Validate
    */
@@ -5228,7 +5226,7 @@ export const PRXService: GenService<{
     output: typeof ValidateResponseSchema;
   },
   /**
-   * GetDebugReport returns the diagnostic report without starting a synchronization run.
+   * GetDebugReport は同期を開始せずに診断レポートを返す。
    *
    * @generated from rpc prx.v1.PRXService.GetDebugReport
    */
@@ -5238,7 +5236,7 @@ export const PRXService: GenService<{
     output: typeof GetDebugReportResponseSchema;
   },
   /**
-   * GetConfig returns the public GitHub configuration.
+   * GetConfig は公開の GitHub 設定を返す。
    *
    * @generated from rpc prx.v1.PRXService.GetConfig
    */
@@ -5248,7 +5246,7 @@ export const PRXService: GenService<{
     output: typeof GetConfigResponseSchema;
   },
   /**
-   * UpdateGitHubSyncConfig changes the shared automatic refresh interval.
+   * UpdateGitHubSyncConfig は共有の自動更新間隔を変更する。
    *
    * @generated from rpc prx.v1.PRXService.UpdateGitHubSyncConfig
    */
@@ -5258,7 +5256,7 @@ export const PRXService: GenService<{
     output: typeof UpdateGitHubSyncConfigResponseSchema;
   },
   /**
-   * AddGitHubHost adds a host boundary.
+   * AddGitHubHost は host の境界を追加する。
    *
    * @generated from rpc prx.v1.PRXService.AddGitHubHost
    */
@@ -5268,7 +5266,7 @@ export const PRXService: GenService<{
     output: typeof AddGitHubHostResponseSchema;
   },
   /**
-   * UpdateGitHubHost updates a host boundary.
+   * UpdateGitHubHost は host の境界を更新する。
    *
    * @generated from rpc prx.v1.PRXService.UpdateGitHubHost
    */
@@ -5278,7 +5276,7 @@ export const PRXService: GenService<{
     output: typeof UpdateGitHubHostResponseSchema;
   },
   /**
-   * DeleteGitHubHost removes a host boundary.
+   * DeleteGitHubHost は host の境界を削除する。
    *
    * @generated from rpc prx.v1.PRXService.DeleteGitHubHost
    */
@@ -5288,7 +5286,7 @@ export const PRXService: GenService<{
     output: typeof DeleteGitHubHostResponseSchema;
   },
   /**
-   * AddGitHubAuthMethod adds a host-scoped credential.
+   * AddGitHubAuthMethod は host 単位の資格情報を追加する。
    *
    * @generated from rpc prx.v1.PRXService.AddGitHubAuthMethod
    */
@@ -5298,7 +5296,7 @@ export const PRXService: GenService<{
     output: typeof AddGitHubAuthMethodResponseSchema;
   },
   /**
-   * UpdateGitHubAuthMethod updates a host-scoped credential.
+   * UpdateGitHubAuthMethod は host 単位の資格情報を更新する。
    *
    * @generated from rpc prx.v1.PRXService.UpdateGitHubAuthMethod
    */
@@ -5308,7 +5306,7 @@ export const PRXService: GenService<{
     output: typeof UpdateGitHubAuthMethodResponseSchema;
   },
   /**
-   * DeleteGitHubAuthMethod removes a host-scoped credential.
+   * DeleteGitHubAuthMethod は host 単位の資格情報を削除する。
    *
    * @generated from rpc prx.v1.PRXService.DeleteGitHubAuthMethod
    */
@@ -5318,7 +5316,7 @@ export const PRXService: GenService<{
     output: typeof DeleteGitHubAuthMethodResponseSchema;
   },
   /**
-   * ReorderGitHubAuthMethods changes credential priority.
+   * ReorderGitHubAuthMethods は資格情報の優先順位を変更する。
    *
    * @generated from rpc prx.v1.PRXService.ReorderGitHubAuthMethods
    */
@@ -5328,7 +5326,7 @@ export const PRXService: GenService<{
     output: typeof ReorderGitHubAuthMethodsResponseSchema;
   },
   /**
-   * ValidateConfig validates the YAML configuration without changing it.
+   * ValidateConfig は YAML 設定を変更せずに検証する。
    *
    * @generated from rpc prx.v1.PRXService.ValidateConfig
    */
@@ -5338,7 +5336,7 @@ export const PRXService: GenService<{
     output: typeof ValidateConfigResponseSchema;
   },
   /**
-   * GetPromptTemplates returns the stored agent prompt templates.
+   * GetPromptTemplates は保存されたエージェント用テンプレートを返す。
    *
    * @generated from rpc prx.v1.PRXService.GetPromptTemplates
    */
@@ -5348,7 +5346,7 @@ export const PRXService: GenService<{
     output: typeof GetPromptTemplatesResponseSchema;
   },
   /**
-   * UpdatePromptTemplates replaces every agent prompt template in one write.
+   * UpdatePromptTemplates は 1 回の書き込みで全テンプレートを置き換える。
    *
    * @generated from rpc prx.v1.PRXService.UpdatePromptTemplates
    */
@@ -5358,7 +5356,7 @@ export const PRXService: GenService<{
     output: typeof UpdatePromptTemplatesResponseSchema;
   },
   /**
-   * GetTaskPrompt returns the expanded agent prompt for one task.
+   * GetTaskPrompt は task 1 件分の展開済みエージェントプロンプトを返す。
    *
    * @generated from rpc prx.v1.PRXService.GetTaskPrompt
    */
@@ -5368,7 +5366,7 @@ export const PRXService: GenService<{
     output: typeof GetTaskPromptResponseSchema;
   },
   /**
-   * GetBatchPrompt returns one expanded prompt covering several tasks of one feature.
+   * GetBatchPrompt は 1 つの feature の複数 task をまとめた展開済みプロンプトを返す。
    *
    * @generated from rpc prx.v1.PRXService.GetBatchPrompt
    */

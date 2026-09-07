@@ -4,7 +4,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { router } from "../src/router";
 import { makeSnapshot } from "./factories";
 
-// React Flow measures its container, which jsdom does not implement.
+// React Flow はコンテナを計測するが、jsdom はそれを実装していない。
 class ResizeObserverStub {
   observe() {
     return undefined;

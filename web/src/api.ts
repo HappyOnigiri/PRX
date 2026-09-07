@@ -71,8 +71,8 @@ export async function getConfig(): Promise<GitHubConfig> {
   return response.config;
 }
 
-// The report and its rendered text arrive together so the WebUI can display the
-// sections while copying exactly the text `prx debug` prints.
+// レポートと整形済みテキストを一緒に受け取ることで、WebUI はセクションを表示
+// しつつ `prx debug` が出力するテキストをそのままコピーできる。
 export async function getDebugReport(): Promise<{
   report: DebugReport;
   text: string;
@@ -107,8 +107,8 @@ export const mutations = {
     description?: string;
     archived?: boolean;
   }) => client.updateProject(create(UpdateProjectRequestSchema, input)),
-  // The cascade releases the project's features instead of deleting them, so
-  // this is the only form the WebUI needs.
+  // cascade は project の feature を削除せず切り離すので、WebUI に必要な形は
+  // これだけ。
   deleteProject: (id: string) =>
     client.deleteProject(
       create(DeleteProjectRequestSchema, { id, cascade: true }),
@@ -267,14 +267,13 @@ export const configMutations = {
   validate: () => client.validateConfig(create(ValidateConfigRequestSchema)),
 };
 
-// PromptTemplateSettings carries the stored templates together with the
-// vocabulary the server accepts and the templates it ships, so the editor never
-// validates or restores against copies of its own.
+// PromptTemplateSettings は保存済みテンプレートに加え、サーバーが受け付ける語彙
+// と同梱テンプレートを持つ。エディタが自前の複製を使って検証・復元しないため。
 export interface PromptTemplateSettings extends PromptTemplates {
   supportedPlaceholders: string[];
   requiredPlaceholder: string;
-  // The batch template has its own vocabulary: it covers several tasks, so no
-  // single task's placeholder could be expanded in it.
+  // batch テンプレートは複数の task を扱うため語彙が別。単一 task の
+  // プレースホルダは展開できない。
   batchSupportedPlaceholders: string[];
   batchRequiredPlaceholder: string;
   builtIn: PromptTemplates;
@@ -296,18 +295,18 @@ export async function getPromptTemplates(): Promise<PromptTemplateSettings> {
   };
 }
 
-// The prompt is rendered on demand instead of with the snapshot: the template
-// the server picks depends on whether the task has an implementation plan right
-// now, and a cached snapshot may already disagree with that.
+// プロンプトは snapshot と一緒ではなく都度描画する。サーバーが選ぶテンプレート
+// は task に実装計画が今あるかで変わり、キャッシュ済みの snapshot はすでに実態
+// とずれている可能性があるため。
 export async function getTaskPrompt(
   taskId: string,
 ): Promise<GetTaskPromptResponse> {
   return client.getTaskPrompt(create(GetTaskPromptRequestSchema, { taskId }));
 }
 
-// A batch prompt is rendered from the tasks the reader selected, for the same
-// reason one task's prompt is: the template and the tasks live on the server,
-// and a snapshot the browser is holding may already disagree with both.
+// batch プロンプトも単一 task と同じ理由で、選択された task から都度描画する。
+// テンプレートも task もサーバー側にあり、ブラウザが保持する snapshot はどちら
+// ともずれている可能性があるため。
 export async function getBatchPrompt(
   featureId: string,
   taskIds: string[],

@@ -138,8 +138,8 @@ func (r *featureRepository) GetFeature(context.Context, string) (domain.Feature,
 	return r.feature, nil
 }
 
-// The read-only guard reads the project every feature belongs to, so the stub
-// answers with the active container rather than a missing one.
+// 読み取り専用ガードは feature の所属先 project を読むので、stub は
+// 「存在しない」ではなく active なコンテナを返す。
 func (r *featureRepository) GetProject(_ context.Context, id string) (domain.Project, error) {
 	return domain.Project{ID: id}, nil
 }
@@ -147,7 +147,7 @@ func (r *featureRepository) GetProject(_ context.Context, id string) (domain.Pro
 type taskRepository struct {
 	repositoryStub
 	task domain.Task
-	// feature is the owner the read-only guard reads before every task write.
+	// feature は、task への書き込み前に読み取り専用ガードが読む所有者。
 	feature domain.Feature
 }
 
@@ -183,8 +183,8 @@ func (r *failingFeatureRepository) GetFeature(ctx context.Context, id string) (d
 	return domain.Feature{}, r.idFailure
 }
 
-// A storage failure such as a locked database keeps its own cause instead of
-// being reported as a missing feature.
+// データベースのロックのようなストレージ障害は、feature が見つからないと報告されず、
+// 本来の原因を保つ。
 func TestResolveFeatureAndGetNodeKeepStorageFailures(t *testing.T) {
 	repository := &failingFeatureRepository{idFailure: errors.New("database is locked")}
 	service := app.New(repository, nil)
@@ -217,8 +217,8 @@ func TestGetNodeResolvesFeatureAndTaskIDs(t *testing.T) {
 		t.Fatalf("task node=%#v", taskValue)
 	}
 
-	// An operand without a known public-ID prefix names no kind at all, so it
-	// is reported as missing without a lookup.
+	// 既知の公開 ID 接頭辞を持たないオペランドはどの種別も指さないので、
+	// 検索せずに「存在しない」と報告する。
 	if _, err := app.New(missingFeatureRepository{}, nil).
 		GetNode(context.Background(), "checkout"); errorCode(
 		t,
@@ -312,8 +312,7 @@ func TestCreateFeatureValidatesBeforeRepository(t *testing.T) {
 		t.Fatalf("error code=%q, want %q", got, domain.DomainErrorCodeInvalidTitle)
 	}
 
-	// Membership is required, so a feature without a project is refused before
-	// the repository is reached.
+	// 所属は必須なので、project のない feature は repository に届く前に拒否される。
 	_, err = service.CreateFeature(context.Background(), "Release API", "", "  ")
 	if got := errorCode(t, err); got != domain.DomainErrorCodeInvalidParent {
 		t.Fatalf("error code=%q, want %q", got, domain.DomainErrorCodeInvalidParent)

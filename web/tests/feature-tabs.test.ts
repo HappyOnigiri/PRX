@@ -29,7 +29,7 @@ describe("feature tabs", () => {
     ]);
   });
 
-  // A hand-edited or stale link still opens the page, on the working set.
+  // 手で書き換えた古いリンクでも、作業対象の集合でページは開く。
   it("falls back to the active tab for an unknown or missing value", () => {
     expect(validateFeatureTabSearch({ features: "archived" })).toEqual({
       features: "archived",

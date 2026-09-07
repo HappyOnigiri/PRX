@@ -147,8 +147,8 @@ describe("EditProjectDialog", () => {
     ).not.toBeInTheDocument();
   });
 
-  // An archived project shows its values without edit fields and offers the
-  // activation that lifts the archive from every feature inside it.
+  // アーカイブ済みプロジェクトは編集欄なしで値を表示し、配下の全 feature の
+  // アーカイブを解除するアクティブ化を提供する。
   it("activates an archived project instead of editing it", async () => {
     const onClose = vi.fn();
     render(

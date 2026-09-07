@@ -1,6 +1,6 @@
-// Package config owns the versioned YAML configuration shared by the CLI,
-// server, and GitHub authentication resolver. A file written by a newer PRX
-// still loads: unknown fields become warnings, other decoding failures do not.
+// Package config は CLI・サーバー・GitHub 認証リゾルバが共有するバージョン付き
+// YAML 設定を管理する。新しい PRX が書いたファイルも読み込める。未知のフィールドは
+// 警告になるが、それ以外のデコード失敗は警告にならない。
 package config
 
 import (
@@ -54,9 +54,9 @@ type GitHubConfig struct {
 	AutoSyncIntervalSeconds int64        `yaml:"auto_sync_interval_seconds,omitempty" json:"auto_sync_interval_seconds"`
 }
 
-// MarshalYAML keeps an omitted auth_methods list distinct from an explicitly
-// empty list. The former enables the historical GitHub.com credential
-// discovery; the latter intentionally disables all implicit candidates.
+// MarshalYAML は auth_methods の省略と明示的な空リストを区別する。省略は
+// 従来からの GitHub.com 資格情報の自動探索を有効にし、空リストは暗黙の
+// 候補をすべて意図的に無効にする。
 func (c GitHubConfig) MarshalYAML() (any, error) {
 	type yamlGitHubConfig struct {
 		Hosts                   []Host        `yaml:"hosts"`
@@ -73,17 +73,17 @@ func (c GitHubConfig) MarshalYAML() (any, error) {
 	}, nil
 }
 
-// Config is the on-disk configuration. AuthMethod.Token is deliberately not
-// serializable as JSON; callers should use Public for any human or RPC output.
-// Prompts live here, not in Local Storage, because the CLI also prints them.
+// Config はディスク上の設定。AuthMethod.Token は意図的に JSON 化しないので、
+// 人間向けや RPC の出力には Public を使うこと。Prompts は CLI も出力するため、
+// Local Storage ではなくここに置く。
 type Config struct {
 	Version int              `yaml:"version" json:"version"`
 	GitHub  GitHubConfig     `yaml:"github"  json:"github"`
 	Prompts prompt.Templates `yaml:"prompts" json:"prompts"`
 }
 
-// yamlConfig mirrors Config for YAML output. Prompts is a pointer so a
-// configuration that still uses the built-in templates omits the key entirely.
+// yamlConfig は YAML 出力用の Config の写し。組み込みテンプレートのままの設定で
+// キーごと省略できるよう、Prompts はポインタにしてある。
 type yamlConfig struct {
 	Version int          `yaml:"version"`
 	GitHub  GitHubConfig `yaml:"github"`
@@ -96,9 +96,9 @@ type yamlPrompts struct {
 	Batch          string `yaml:"batch,omitempty"`
 }
 
-// MarshalYAML drops any template that still matches the built-in default.
-// Normalize fills blank templates in on load, so writing them back would pin the
-// file to the wording of whichever PRX version happened to save it first.
+// MarshalYAML は組み込みの既定値と一致するテンプレートを出力しない。Normalize が
+// 読み込み時に空のテンプレートを埋めるため、そのまま書き戻すと最初に保存した
+// PRX のバージョンの文言でファイルが固定されてしまう。
 func (c Config) MarshalYAML() (any, error) {
 	defaults := prompt.DefaultTemplates()
 	prompts := yamlPrompts{}
@@ -194,9 +194,9 @@ func Default() Config {
 	}
 }
 
-// NormalizeHost returns the case-insensitive host key used by PRs, config, and
-// the authentication cache. A port is part of the key so two local GHE
-// instances cannot share credentials accidentally.
+// NormalizeHost は PR・設定・認証キャッシュで使う大文字小文字を区別しない
+// ホストキーを返す。ローカルの GHE インスタンス同士が誤って資格情報を
+// 共有しないよう、ポートもキーの一部に含める。
 func NormalizeHost(value string) (string, error) {
 	value = strings.TrimSpace(value)
 	if value == "" || strings.ContainsAny(value, "/?#@\t\r\n ") {
@@ -554,8 +554,8 @@ func (c *Config) ReorderAuthMethods(ids []string) error {
 	return c.normalizeInPlace()
 }
 
-// SetPrompts replaces both templates at once so one configuration write always
-// leaves a consistent pair behind.
+// SetPrompts は両方のテンプレートを一度に差し替える。設定の 1 回の書き込みで
+// 常に整合の取れた組が残るようにするため。
 func (c *Config) SetPrompts(templates prompt.Templates) error {
 	previous := c.Prompts
 	c.Prompts = templates
@@ -566,9 +566,8 @@ func (c *Config) SetPrompts(templates prompt.Templates) error {
 	return nil
 }
 
-// promptError presents a rejected template with the configuration's own error
-// vocabulary, so the CLI and the RPC map it the way they map every other
-// invalid configuration value.
+// promptError は拒否されたテンプレートを設定側のエラー語彙で表現する。CLI と
+// RPC が他の不正な設定値と同じようにマッピングできるようにするため。
 func promptError(err error) error {
 	var typed *prompt.Error
 	if errors.As(err, &typed) {
@@ -578,8 +577,8 @@ func promptError(err error) error {
 }
 
 func (c *Config) SetAutoSyncInterval(seconds int64) error {
-	// Normalize reads an omitted interval as the default, which would silently
-	// turn an explicit 0 into 3600 instead of reporting the documented minimum.
+	// Normalize は省略された間隔を既定値として扱うため、明示的な 0 が最小値の
+	// 報告ではなく黙って 3600 になってしまう。
 	if seconds < MinimumAutoSyncIntervalSeconds {
 		return newError(
 			ErrorCodeInvalid,

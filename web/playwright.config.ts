@@ -5,9 +5,9 @@ export default defineConfig({
   outputDir: "../test-results/playwright",
   timeout: 45_000,
   expect: { timeout: 8_000 },
-  // Tests create features with unique titles and otherwise only read the demo
-  // graphs, so they share the single E2E server across workers. The exception is
-  // prompts.spec.ts, which rewrites the shared prompt templates.
+  // テストは一意なタイトルの feature を作る以外はデモグラフを読むだけなので、
+  // 単一の E2E サーバーを worker 間で共有する。例外は共有のプロンプト
+  // テンプレートを書き換える prompts.spec.ts。
   fullyParallel: true,
   retries: process.env["CI"] ? 1 : 0,
   reporter: process.env["CI"]

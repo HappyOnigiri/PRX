@@ -144,8 +144,8 @@ describe("ProjectWorkspace", () => {
     });
   });
 
-  // The page shows only the features and documents that belong to the project,
-  // never the unaffiliated ones that carry an empty project ID.
+  // このページはプロジェクトに属する feature と document だけを表示し、
+  // プロジェクト ID が空の未所属のものは出さない。
   it("lists its own features and references and opens the edit dialog", () => {
     workspaceMocks.snapshot.data = populatedSnapshot();
     render(<ProjectWorkspace />);
@@ -153,14 +153,14 @@ describe("ProjectWorkspace", () => {
     expect(
       screen.getByRole("heading", { name: "Delivery platform", level: 1 }),
     ).toBeInTheDocument();
-    // Only the open panel is in the accessibility tree; the folded ones keep
-    // their rows in the DOM, so the assertions read the open one.
+    // アクセシビリティツリーに出るのは開いているパネルだけで、畳んだ側も
+    // 行は DOM に残るため、検証は開いているパネルから読む。
     const features = screen.getByRole("tabpanel");
     expect(features).toHaveTextContent("Checkout rollout");
     expect(features).not.toHaveTextContent("Search revamp");
     expect(features).not.toHaveTextContent("Legacy checkout");
-    // The progress counts every finished task, not only the merged ones, so
-    // the third task closed without a pull request still shows up here.
+    // 進捗は merge 済みだけでなく完了したタスクをすべて数えるので、
+    // pull request なしで閉じた 3 つ目のタスクもここに含まれる。
     expect(features).toHaveTextContent("3/4 finished");
 
     fireEvent.click(screen.getByRole("button", { name: "References" }));
@@ -180,8 +180,8 @@ describe("ProjectWorkspace", () => {
     ).not.toBeInTheDocument();
   });
 
-  // The status filter is a search parameter, so choosing a tab navigates and
-  // the page renders whatever the URL then says.
+  // ステータスの絞り込みは search parameter なので、タブを選ぶと遷移し、
+  // ページは遷移後の URL が示すとおりに描画する。
   it("narrows the feature list to the tab the URL names", () => {
     workspaceMocks.snapshot.data = populatedSnapshot();
     const { rerender } = render(<ProjectWorkspace />);
@@ -206,8 +206,8 @@ describe("ProjectWorkspace", () => {
     ).toBeInTheDocument();
   });
 
-  // A feature is created from the project it joins, so the action lives here
-  // and needs no project field of its own.
+  // feature は所属先のプロジェクトから作るので、操作はここに置き、
+  // プロジェクトを選ぶ項目は要らない。
   it("opens the feature creation dialog for this project", () => {
     workspaceMocks.snapshot.data = populatedSnapshot();
     render(<ProjectWorkspace />);

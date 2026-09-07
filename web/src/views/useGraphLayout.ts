@@ -91,8 +91,8 @@ function buildRawNodes({
   });
 }
 
-// A task with nothing hidden behind it leaves the key out entirely rather than
-// carrying an undefined one, which the node data type refuses.
+// 背後に隠れているものがないタスクは、undefined を持たせずキー自体を省く。
+// ノードのデータ型が undefined を受け付けないため。
 function hiddenDependencyData(hidden: HiddenDependencies | undefined) {
   return hidden ? { hiddenDependencies: hidden } : {};
 }
@@ -202,8 +202,8 @@ export function useGraphLayout({
   const [edgeRoutes, setEdgeRoutes] = useState<
     Map<string, DependencyEdgeRoute>
   >(() => new Map());
-  // Keep the raw error so changing the display language does not re-run the
-  // layout effect and reset the viewport.
+  // 表示言語を変えてもレイアウトの effect が再実行されてビューポートが
+  // リセットされないよう、生のエラーを保持する。
   const [layoutError, setLayoutError] = useState<
     { message: string | undefined } | undefined
   >();
@@ -248,9 +248,9 @@ export function useGraphLayout({
       setCompletedLayout(layoutRequest);
     }
 
-    // A worker that fails to start never answers, and ELK keeps its layout
-    // promise pending in that case. Own the worker so its failure events reach
-    // the graph instead of leaving it loading forever.
+    // 起動に失敗した worker は応答せず、ELK はレイアウトの promise を保留した
+    // ままにする。worker を自前で持ち、失敗イベントをグラフへ届けることで、
+    // 読み込み中のまま止まるのを防ぐ。
     function handleWorkerFailure(event: Event) {
       failLayout(
         event instanceof ErrorEvent && event.message

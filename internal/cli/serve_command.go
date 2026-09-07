@@ -17,8 +17,8 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/webui"
 )
 
-// serveEndpointRecorder is implemented by the application service. The CLI
-// cannot import that package, so the address crosses the boundary as primitives.
+// serveEndpointRecorder はアプリケーションサービス側で実装する。CLI はそのパッケージを
+// import できないので、アドレスはプリミティブ型のまま境界を越える。
 type serveEndpointRecorder interface {
 	SetServeEndpoint(address string, startedAt time.Time)
 }
@@ -39,9 +39,9 @@ func (s *state) serveCommand() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			// The accepted address is only known now, and --addr 127.0.0.1:0
-			// makes it differ from the requested one. The diagnostic report needs
-			// the address the server actually answers on.
+			// 実際に受け付けたアドレスはこの時点で初めて分かり、--addr 127.0.0.1:0 では
+			// 要求したものと異なる。診断レポートにはサーバーが実際に応答している
+			// アドレスが必要。
 			if recorder, ok := s.service.(serveEndpointRecorder); ok {
 				recorder.SetServeEndpoint(listener.Addr().String(), time.Now().UTC())
 			}
@@ -72,9 +72,9 @@ func (s *state) serveCommand() *cobra.Command {
 	return command
 }
 
-// localOnly rejects requests whose Host or Origin header does not belong to the
-// address the server listens on: an attacker-controlled domain resolving to the
-// loopback address is otherwise same-origin. See docs/design/security.md.
+// localOnly は Host や Origin ヘッダーが listen 中のアドレスに属さないリクエストを拒否する。
+// そうしないと、ループバックに解決される攻撃者所有のドメインが same-origin になる。
+// docs/design/security.md を参照。
 func localOnly(addr net.Addr, next http.Handler) http.Handler {
 	allowed := map[string]struct{}{}
 	if host, port, err := net.SplitHostPort(addr.String()); err == nil {
