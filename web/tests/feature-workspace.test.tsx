@@ -8,6 +8,7 @@ import {
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { TaskDisplayState, type Snapshot } from "../src/gen/prx/v1/prx_pb";
+import { readHideCompletedTasks } from "../src/i18n/settings";
 import { FeatureWorkspace } from "../src/views/FeatureWorkspace";
 import {
   makeDependency,
@@ -249,6 +250,7 @@ describe("FeatureWorkspace", () => {
   });
 
   beforeEach(() => {
+    localStorage.clear();
     workspaceMocks.hookIndex = 0;
     workspaceMocks.snapshot.data = populatedSnapshot();
     workspaceMocks.snapshot.isPending = false;
@@ -304,6 +306,37 @@ describe("FeatureWorkspace", () => {
     expect(screen.getByTestId("mock-graph-tasks")).toHaveTextContent(
       "done,open",
     );
+  });
+
+  it("restores the header switch from browser-local settings on the next visit", () => {
+    workspaceMocks.snapshot.data = makeSnapshot({
+      features: [feature],
+      tasks: [
+        makeTask({
+          id: "open",
+          featureId: "feature-1",
+          displayState: TaskDisplayState.NOT_STARTED,
+        }),
+        makeTask({
+          id: "done",
+          featureId: "feature-1",
+          displayState: TaskDisplayState.COMPLETED,
+        }),
+      ],
+    });
+    render(<FeatureWorkspace />);
+
+    fireEvent.click(screen.getByRole("switch", { name: "Hide completed" }));
+    expect(readHideCompletedTasks()).toBe(true);
+
+    cleanup();
+    workspaceMocks.hookIndex = 0;
+    render(<FeatureWorkspace />);
+
+    expect(
+      screen.getByRole("switch", { name: "Hide completed" }),
+    ).toBeChecked();
+    expect(screen.getByTestId("mock-graph-tasks")).toHaveTextContent("open");
   });
 
   it("closes the inspector when hiding takes the selected task off the canvas", () => {

@@ -14,6 +14,10 @@ import type {
 } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
 import { featureStatusLabel, featureStatusToken } from "../i18n/domain";
+import {
+  readHideCompletedTasks,
+  writeHideCompletedTasks,
+} from "../i18n/settings";
 import { AddDocumentDialog } from "./AddDocumentDialog";
 import {
   emptyHiddenDependencies,
@@ -47,9 +51,13 @@ export function FeatureWorkspace() {
   const [showFeatureEdit, setShowFeatureEdit] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<TaskNodeDocument>();
   const [documentTarget, setDocumentTarget] = useState<DocumentTarget>();
-  // Hiding finished tasks is a way of reading the graph rather than a stored
-  // preference, so it starts off on every visit and is not persisted.
-  const [hideCompleted, setHideCompleted] = useState(false);
+  // Hiding finished tasks is how the graph was last read, so it is restored on
+  // the next visit from browser-local settings.
+  const [hideCompleted, setHideCompleted] = useState(readHideCompletedTasks);
+  const changeHideCompleted = useCallback((hide: boolean) => {
+    setHideCompleted(hide);
+    writeHideCompletedTasks(hide);
+  }, []);
   const data = snapshot.data;
   const feature = data?.features.find((item) => item.id === featureId);
   const project = data?.projects.find((item) => item.id === feature?.projectId);
@@ -107,7 +115,7 @@ export function FeatureWorkspace() {
       hiddenDependencies={visible.hiddenDependencies}
       hiddenTaskCount={tasks.length - visible.tasks.length}
       hideCompleted={hideCompleted}
-      onHideCompletedChange={setHideCompleted}
+      onHideCompletedChange={changeHideCompleted}
       pullRequests={pullRequests}
       documentsByTask={documentsByTask}
       featureDocuments={featureDocuments}

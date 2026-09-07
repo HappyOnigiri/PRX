@@ -60,6 +60,11 @@ test("hides completed tasks and leaves their dependency visible", async ({
     "Hidden completed blockers: Verify storage boundary",
   );
 
+  // The switch is browser-local state, so a reload comes back filtered.
+  await page.reload();
+  await expect(toggle).toBeChecked();
+  await expect(nodes).toHaveCount(10, { timeout: 25_000 });
+
   await toggle.uncheck();
   await expect(nodes).toHaveCount(13, { timeout: 25_000 });
   await expect(page.locator(".node-hidden-dependency")).toHaveCount(0);

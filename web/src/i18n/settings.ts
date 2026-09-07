@@ -15,6 +15,7 @@ interface WebUISettings {
   graphZoom?: number;
   theme?: ThemePreference;
   collapsedProjects?: string[];
+  hideCompletedTasks?: boolean;
 }
 
 function isSupportedLanguage(value: unknown): value is SupportedLanguage {
@@ -43,8 +44,11 @@ export function readWebUISettings(): WebUISettings {
       graphZoom?: unknown;
       theme?: unknown;
       collapsedProjects?: unknown;
+      hideCompletedTasks?: unknown;
     };
     const settings: WebUISettings = {};
+    if (typeof candidate.hideCompletedTasks === "boolean")
+      settings.hideCompletedTasks = candidate.hideCompletedTasks;
     if (isSupportedLanguage(candidate.language))
       settings.language = candidate.language;
     if (isThemePreference(candidate.theme)) settings.theme = candidate.theme;
@@ -101,6 +105,25 @@ export function writeCollapsedProjects(collapsedProjects: string[]) {
     );
   } catch {
     // The rows still fold for this session when storage is unavailable.
+  }
+}
+
+// Hiding finished tasks is toggled while reading the graph rather than from the
+// Settings dialog, so it is stored the way graph zoom is. The graph shows every
+// task when nothing is stored.
+export function readHideCompletedTasks(): boolean {
+  return readWebUISettings().hideCompletedTasks ?? false;
+}
+
+export function writeHideCompletedTasks(hideCompletedTasks: boolean) {
+  try {
+    const settings = readWebUISettings();
+    localStorage.setItem(
+      webUISettingsKey,
+      JSON.stringify({ ...settings, hideCompletedTasks }),
+    );
+  } catch {
+    // The graph still filters for this session when storage is unavailable.
   }
 }
 
