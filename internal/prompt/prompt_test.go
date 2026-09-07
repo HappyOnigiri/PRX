@@ -113,6 +113,22 @@ func TestDefaultTemplatesGuideTheAgentThroughPRX(t *testing.T) {
 	}
 }
 
+// PRX はローカルのツールなので、リポジトリの読み手には解決できない参照になる。
+// 既定テンプレートは、成果物に PRX を持ち込まないようエージェントに指示する。
+func TestDefaultTemplatesKeepPRXOutOfTheRepository(t *testing.T) {
+	defaults := prompt.DefaultTemplates()
+	for name, template := range map[string]string{
+		"design":         defaults.Design,
+		"implementation": defaults.Implementation,
+		"batch":          defaults.Batch,
+	} {
+		if !strings.Contains(template, "PRX runs on this machine only") ||
+			!strings.Contains(template, "may mention PRX, its identifiers, or its commands.") {
+			t.Fatalf("default %s template does not forbid mentioning PRX in the repository: %q", name, template)
+		}
+	}
+}
+
 func TestNormalizeRejectsTemplatesTheRendererCouldNotExpand(t *testing.T) {
 	for name, test := range map[string]struct {
 		templates prompt.Templates

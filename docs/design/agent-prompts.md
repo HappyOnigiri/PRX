@@ -3,6 +3,7 @@
 PRX は PRX を知らないエージェントに task を渡すため、prompt は task の識別子と、それを操作するために必要なコマンドを含んでいなければならない。
 task prompt や batch prompt のレンダリングは、task の状態・readiness・依存関係・implementation plan のいずれも変更しない。
 他の読み取りコマンドと同じく、`prx prompt TASK_ID` は [github-sync.md](github-sync.md) の共有 GitHub refresh 間隔を確認する。
+組み込みテンプレートは、PRX がローカルのツールであってリポジトリの読み手には見えないことを伝え、コードコメント・コミットメッセージ・pull request で PRX やその識別子・コマンドに言及しないよう指示する。
 
 ## Task prompt
 
