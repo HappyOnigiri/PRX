@@ -5,10 +5,9 @@ import {
 } from "./feature-status";
 import type { Feature } from "./gen/prx/v1/prx_pb";
 
-// A feature list is filtered by status wherever it appears: on a project page
-// and on the unaffiliated list. The tab is a search parameter rather than
-// browser-local state so reload, history, and a shared link reproduce the view,
-// as task search does with its query.
+// A feature list is filtered by status on the project page it appears on. The
+// tab is a search parameter rather than browser-local state so reload, history,
+// and a shared link reproduce the view, as task search does with its query.
 export const featureTabIds = ["active", "completed", "archived"] as const;
 export type FeatureTabId = (typeof featureTabIds)[number];
 

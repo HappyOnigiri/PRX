@@ -43,8 +43,10 @@ test("copies a task prompt built from the configured template", async ({
   const token = `e2e-prompt-${crypto.randomUUID()}`;
   const title = `E2E prompt ${token}`;
 
-  await page.goto("/");
-  await page.getByRole("button", { name: "New feature" }).click();
+  // A feature belongs to a project, so it is created from the demo's first
+  // project rather than from the rail.
+  await page.goto("/projects/P-1?features=active");
+  await page.getByRole("button", { name: "Create feature" }).click();
   const featureDialog = page.getByRole("form", { name: "Create feature" });
   await featureDialog.getByLabel("Title").fill(title);
   await featureDialog.getByRole("button", { name: "Create feature" }).click();

@@ -22,12 +22,31 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/store"
 )
 
+// newRPCProject creates the project a feature has to belong to, for the tests
+// whose subject is the feature rather than its container.
+func newRPCProject(
+	t *testing.T,
+	ctx context.Context,
+	client prxv1connect.PRXServiceClient,
+	title string,
+) string {
+	t.Helper()
+	project, err := client.CreateProject(ctx, connect.NewRequest(&prxv1.CreateProjectRequest{Title: title}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	return project.Msg.GetProject().GetId()
+}
+
 func TestRPCReadsOnlyRegisteredMarkdownDocuments(t *testing.T) {
 	ctx := context.Background()
 	client := newTestClient(t)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "Markdown preview"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{
+			Title:     "Markdown preview",
+			ProjectId: newRPCProject(t, ctx, client, "Markdown preview"),
+		}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -306,7 +325,10 @@ func TestRPCSharesDomainValidation(t *testing.T) {
 	client := prxv1connect.NewPRXServiceClient(server.Client(), server.URL)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "RPC feature"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{
+			Title:     "RPC feature",
+			ProjectId: newRPCProject(t, ctx, client, "RPC feature"),
+		}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -396,7 +418,10 @@ func TestRPCImplementationPlanLifecycle(t *testing.T) {
 	client := newTestClient(t)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "RPC plans"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{
+			Title:     "RPC plans",
+			ProjectId: newRPCProject(t, ctx, client, "RPC plans"),
+		}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -489,7 +514,10 @@ func TestRPCLifecyclePersistsAndDeletesResources(t *testing.T) {
 
 	featureResponse, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "RPC lifecycle"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{
+			Title:     "RPC lifecycle",
+			ProjectId: newRPCProject(t, ctx, client, "RPC lifecycle"),
+		}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -712,7 +740,10 @@ func TestRPCRejectsUnknownEnumValues(t *testing.T) {
 	client := newTestClient(t)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "Enum feature"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{
+			Title:     "Enum feature",
+			ProjectId: newRPCProject(t, ctx, client, "Enum feature"),
+		}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -771,7 +802,10 @@ func TestRPCReportsDistinctErrorCodesPerCause(t *testing.T) {
 	client := newTestClient(t)
 	feature, err := client.CreateFeature(
 		ctx,
-		connect.NewRequest(&prxv1.CreateFeatureRequest{Title: "Cause feature"}),
+		connect.NewRequest(&prxv1.CreateFeatureRequest{
+			Title:     "Cause feature",
+			ProjectId: newRPCProject(t, ctx, client, "Cause feature"),
+		}),
 	)
 	if err != nil {
 		t.Fatal(err)
@@ -974,7 +1008,7 @@ func TestRPCProjectLifecycleAndArchiveEnforcement(t *testing.T) {
 		t.Fatal(err)
 	}
 	if len(snapshot.Msg.GetSnapshot().GetProjects()) != 0 ||
-		snapshot.Msg.GetSnapshot().GetFeatures()[0].GetProjectId() != "" {
+		len(snapshot.Msg.GetSnapshot().GetFeatures()) != 0 {
 		t.Fatalf("snapshot after the cascade=%+v", snapshot.Msg.GetSnapshot())
 	}
 }

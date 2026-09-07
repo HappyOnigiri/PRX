@@ -39,7 +39,7 @@ const features = [
     projectId: "P-2",
     displayStatus: FeatureStatus.COMPLETED,
   }),
-  makeFeature({ id: "F-4", title: "Loose end" }),
+  makeFeature({ id: "F-4", title: "Loose end", projectId: "P-2" }),
 ];
 
 function tree() {
@@ -77,27 +77,31 @@ describe("ProjectTree", () => {
     expect(screen.getByText("Checkout")).toBeInTheDocument();
     expect(screen.queryByText("Legacy checkout")).not.toBeInTheDocument();
     expect(screen.queryByText("Finished indexing")).not.toBeInTheDocument();
-    expect(screen.getByText("No project")).toBeInTheDocument();
     expect(screen.getByText("Loose end")).toBeInTheDocument();
 
     // A project with nothing in flight keeps its row but offers no toggle.
     expect(
       screen.queryByRole("button", {
-        name: "Expand or collapse Search revamp",
+        name: "Expand or collapse Delivery platform",
       }),
-    ).not.toBeInTheDocument();
+    ).toBeInTheDocument();
     expect(screen.getByText("Search revamp")).toBeInTheDocument();
   });
 
-  it("omits the unaffiliated row when nothing is unaffiliated", () => {
+  it("keeps a project row that has nothing in flight", () => {
     render(
       <ProjectTree
         headingId="nav-projects-heading"
         projects={projects}
-        features={features.filter((feature) => feature.projectId !== "")}
+        features={[]}
       />,
     );
-    expect(screen.queryByText("No project")).not.toBeInTheDocument();
+    expect(screen.getByText("Delivery platform")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", {
+        name: "Expand or collapse Delivery platform",
+      }),
+    ).not.toBeInTheDocument();
   });
 
   it("stores only the collapsed rows and restores them on the next mount", () => {
@@ -134,8 +138,8 @@ describe("ProjectTree", () => {
     render(tree());
 
     fireEvent.click(
-      screen.getByRole("button", { name: "Expand or collapse No project" }),
+      screen.getByRole("button", { name: "Expand or collapse Search revamp" }),
     );
-    expect(stored()).toEqual(["P-1", "unassigned"]);
+    expect(stored()).toEqual(["P-1", "P-2"]);
   });
 });

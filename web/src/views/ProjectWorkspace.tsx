@@ -1,5 +1,5 @@
 import { useNavigate, useParams, useSearch } from "@tanstack/react-router";
-import { ArrowLeft, Pencil } from "lucide-react";
+import { ArrowLeft, Pencil, Plus } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import type { FeatureTabId } from "../feature-tabs";
@@ -10,6 +10,7 @@ import { CopyableIdentifier } from "./CopyableIdentifier";
 import { DocumentReferences } from "./DocumentReferences";
 import { EditProjectDialog } from "./EditProjectDialog";
 import { EntityIcon } from "./EntityIcon";
+import { FeatureCreateDialog } from "./FeatureCreateDialog";
 import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { ProjectFeatureList } from "./ProjectFeatureList";
@@ -23,6 +24,7 @@ export function ProjectWorkspace() {
   const navigate = useNavigate();
   const snapshot = useSnapshot();
   const [showEdit, setShowEdit] = useState(false);
+  const [showCreateFeature, setShowCreateFeature] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<TaskNodeDocument>();
   const data = snapshot.data;
   const project = data?.projects.find((item) => item.id === projectId);
@@ -64,6 +66,7 @@ export function ProjectWorkspace() {
       }}
       previewDocument={previewDocument}
       showEdit={showEdit}
+      showCreateFeature={showCreateFeature}
       onPreviewDocument={setPreviewDocument}
       onClosePreview={() => {
         setPreviewDocument(undefined);
@@ -73,6 +76,12 @@ export function ProjectWorkspace() {
       }}
       onCloseEdit={() => {
         setShowEdit(false);
+      }}
+      onCreateFeature={() => {
+        setShowCreateFeature(true);
+      }}
+      onCloseCreateFeature={() => {
+        setShowCreateFeature(false);
       }}
       onDeleted={() => {
         void navigate({ to: "/projects", search: { archived: false } });
@@ -89,10 +98,13 @@ interface ProjectContentProps {
   onSelectTab: (tab: FeatureTabId) => void;
   previewDocument: TaskNodeDocument | undefined;
   showEdit: boolean;
+  showCreateFeature: boolean;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onClosePreview: () => void;
   onEdit: () => void;
   onCloseEdit: () => void;
+  onCreateFeature: () => void;
+  onCloseCreateFeature: () => void;
   onDeleted: () => void;
 }
 
@@ -117,6 +129,17 @@ function ProjectContent(props: ProjectContentProps) {
           />
         </div>
         <div className="workspace-actions">
+          {/* Creating a feature lives here rather than in the sidebar, because
+              the project it joins is the page the caller is already on. An
+              archived project refuses the write, so it offers no button. */}
+          {!archived && (
+            <IconButton
+              icon={Plus}
+              label={t("featureCreate.title")}
+              variant="primary"
+              onClick={props.onCreateFeature}
+            />
+          )}
           <DocumentReferences
             parent={{ projectId: props.project.id }}
             documents={props.documents}
@@ -164,6 +187,12 @@ function ProjectOverlays({ props }: { props: ProjectContentProps }) {
           key={props.previewDocument.id}
           document={props.previewDocument}
           onClose={props.onClosePreview}
+        />
+      )}
+      {props.showCreateFeature && (
+        <FeatureCreateDialog
+          projectId={props.project.id}
+          onClose={props.onCloseCreateFeature}
         />
       )}
       {props.showEdit && (

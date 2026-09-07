@@ -18,6 +18,6 @@ Two processes on one database therefore have a window: a write that passed the b
 The archive is a coordination rule between people and their agents, not a lock, so recovering from that window is a manual deletion rather than a guarantee the store enforces.
 
 Moving a feature into or out of an archived project is a write and is therefore refused; activating the project comes first.
-A project's cascade deletion is the exception: releasing its features is part of the deletion, not a membership change.
+A project's cascade deletion is the exception: it deletes the features it holds, which is a deletion rather than a membership change.
 
 How an archived container is presented, and how it reaches the features inside it, is recorded in [domain.md](domain.md).

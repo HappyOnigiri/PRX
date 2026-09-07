@@ -1,8 +1,14 @@
 export const project = {
   en: {
+    featureCreate: {
+      formLabel: "Create feature",
+      title: "Create feature",
+      titlePlaceholder: "Payments rollout",
+      descriptionPlaceholder: "What must this feature deliver?",
+      submit: "Create feature",
+    },
     project: {
       membership: "Project",
-      noMembership: "No project",
       title: "Projects",
       listLabel: "Project list",
       loadingTitle: "Loading projects…",
@@ -46,7 +52,6 @@ export const project = {
           detail: "Features you archive appear here without leaving the list.",
         },
       },
-      unassignedTitle: "No project",
       progress: "{{finished}}/{{total}} finished",
       editProject: "Edit project",
       manageProject: "Manage project",
@@ -87,9 +92,15 @@ export const project = {
     },
   },
   ja: {
+    featureCreate: {
+      formLabel: "フィーチャーを作成",
+      title: "フィーチャーを作成",
+      titlePlaceholder: "決済機能の展開",
+      descriptionPlaceholder: "このフィーチャーで実現すること",
+      submit: "フィーチャーを作成",
+    },
     project: {
       membership: "プロジェクト",
-      noMembership: "プロジェクトなし",
       title: "プロジェクト",
       listLabel: "プロジェクト一覧",
       loadingTitle: "プロジェクトを読み込んでいます…",
@@ -134,7 +145,6 @@ export const project = {
             "アーカイブしたフィーチャーは、一覧から消えずにここへ表示されます。",
         },
       },
-      unassignedTitle: "プロジェクトなし",
       progress: "{{finished}}/{{total}} 完了",
       editProject: "プロジェクトを編集",
       manageProject: "プロジェクトを管理",

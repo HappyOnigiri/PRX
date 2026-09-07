@@ -46,7 +46,7 @@ func TestGetNodeResolvesProjectsAndFeaturesByPublicID(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	feature, err := service.CreateFeature(ctx, "Shared feature", "", "")
+	feature, err := service.CreateFeature(ctx, "Shared feature", "", project.ID)
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -69,10 +69,16 @@ func TestGetNodeResolvesProjectsAndFeaturesByPublicID(t *testing.T) {
 	}
 }
 
-func TestFeatureProjectMembershipIsOptionalAndReversible(t *testing.T) {
+// Membership is required and can only move from one project to another, so the
+// empty request that used to detach a feature is refused.
+func TestFeatureProjectMembershipIsRequiredAndMovable(t *testing.T) {
 	ctx := context.Background()
 	_, service := openTestService(t)
 	project, err := service.CreateProject(ctx, "Payments", "")
+	if err != nil {
+		t.Fatal(err)
+	}
+	second, err := service.CreateProject(ctx, "Search", "")
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -80,23 +86,25 @@ func TestFeatureProjectMembershipIsOptionalAndReversible(t *testing.T) {
 	if err != nil || feature.ProjectID != project.ID {
 		t.Fatalf("created feature=%+v err=%v", feature, err)
 	}
-	unaffiliated, err := service.CreateFeature(ctx, "Search", "", "")
-	if err != nil || unaffiliated.ProjectID != "" {
-		t.Fatalf("unaffiliated feature=%+v err=%v", unaffiliated, err)
+	if _, err := service.CreateFeature(
+		ctx, "Orphan", "", "",
+	); domain.ErrorCode(err) != domain.DomainErrorCodeInvalidParent {
+		t.Fatalf("feature without a project code=%s err=%v", domain.ErrorCode(err), err)
 	}
 	empty := ""
-	detached, err := service.UpdateFeature(ctx, feature.ID, domain.FeatureUpdate{ProjectID: &empty})
-	if err != nil || detached.ProjectID != "" {
-		t.Fatalf("detached feature=%+v err=%v", detached, err)
+	if _, err := service.UpdateFeature(
+		ctx, feature.ID, domain.FeatureUpdate{ProjectID: &empty},
+	); domain.ErrorCode(err) != domain.DomainErrorCodeInvalidParent {
+		t.Fatalf("detach code=%s err=%v", domain.ErrorCode(err), err)
+	}
+	moved, err := service.UpdateFeature(ctx, feature.ID, domain.FeatureUpdate{ProjectID: &second.ID})
+	if err != nil || moved.ProjectID != second.ID {
+		t.Fatalf("moved feature=%+v err=%v", moved, err)
 	}
 	// An omitted membership leaves the current one alone.
 	renamed, err := service.UpdateFeature(ctx, feature.ID, domain.FeatureUpdate{Title: stringPointer("Renamed")})
-	if err != nil || renamed.ProjectID != "" {
+	if err != nil || renamed.ProjectID != second.ID {
 		t.Fatalf("renamed feature=%+v err=%v", renamed, err)
-	}
-	reattached, err := service.UpdateFeature(ctx, feature.ID, domain.FeatureUpdate{ProjectID: &project.ID})
-	if err != nil || reattached.ProjectID != project.ID {
-		t.Fatalf("reattached feature=%+v err=%v", reattached, err)
 	}
 	missing := "P-9"
 	if _, err := service.UpdateFeature(
@@ -355,8 +363,9 @@ func TestArchivedFlagMovesInBothDirectionsPastTheBarrier(t *testing.T) {
 	}
 }
 
-// A feature with no project and no archive of its own is not read-only, which
-// is the third case the derivation has to get right.
+// A feature that is archived nowhere, neither on its own nor through its
+// project, is not read-only; that is the third case the derivation has to get
+// right.
 func TestActiveFeatureInActiveProjectIsNotReadOnly(t *testing.T) {
 	ctx := context.Background()
 	fixture := newReadOnlyFixture(t)
@@ -369,15 +378,18 @@ func TestActiveFeatureInActiveProjectIsNotReadOnly(t *testing.T) {
 	}
 }
 
-func TestProjectDeleteReleasesFeaturesAndRemovesOnlyItsOwnDocuments(t *testing.T) {
+// A cascade empties the project: its own documents and the features it holds,
+// with everything those features own. A feature cannot survive its project,
+// because it belongs to one.
+func TestProjectDeleteRemovesItsDocumentsAndTheFeaturesItHolds(t *testing.T) {
 	ctx := context.Background()
 	fixture := newReadOnlyFixture(t)
 	if err := fixture.service.DeleteProject(ctx, fixture.project.ID, false); domain.ErrorCode(err) !=
 		domain.DomainErrorCodeReferencesExist {
 		t.Fatalf("delete without cascade code=%s err=%v", domain.ErrorCode(err), err)
 	}
-	// An archived project is still deletable; the release of its features is
-	// part of the deletion rather than a forbidden membership change.
+	// An archived project is still deletable; deletion is how archived work is
+	// finally discarded.
 	archived := true
 	if _, err := fixture.service.UpdateProject(
 		ctx, fixture.project.ID, domain.ProjectUpdate{Archived: &archived},
@@ -391,20 +403,14 @@ func TestProjectDeleteReleasesFeaturesAndRemovesOnlyItsOwnDocuments(t *testing.T
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(snapshot.Projects) != 0 || len(snapshot.Features) != 1 {
-		t.Fatalf("projects=%+v features=%+v", snapshot.Projects, snapshot.Features)
-	}
-	feature := snapshot.Features[0]
-	if feature.ProjectID != "" || feature.ReadOnly || feature.TaskCount != 2 {
-		t.Fatalf("released feature=%+v", feature)
-	}
-	for _, document := range snapshot.Documents {
-		if document.ID == fixture.projectDocument.ID {
-			t.Fatalf("project document survived the cascade: %+v", document)
-		}
-	}
-	if len(snapshot.Documents) != 3 {
-		t.Fatalf("documents=%+v, want the feature, task, and plan documents", snapshot.Documents)
+	if len(snapshot.Projects) != 0 || len(snapshot.Features) != 0 ||
+		len(snapshot.Tasks) != 0 || len(snapshot.Dependencies) != 0 ||
+		len(snapshot.Documents) != 0 {
+		t.Fatalf(
+			"projects=%+v features=%+v tasks=%+v dependencies=%+v documents=%+v",
+			snapshot.Projects, snapshot.Features, snapshot.Tasks,
+			snapshot.Dependencies, snapshot.Documents,
+		)
 	}
 }
 

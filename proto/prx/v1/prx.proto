@@ -355,7 +355,8 @@ message Feature {
   FeatureStatus display_status = 14;
   // finished_count is the number of tasks the automatic completion rule counts as finished.
   int32 finished_count = 15;
-  // project_id identifies the owning project by its public P-<number> ID, and is empty when unaffiliated.
+  // project_id identifies the owning project by its public P-<number> ID. Every feature belongs to
+  // a project, so this value is never empty.
   string project_id = 16;
   // read_only is derived: the feature is archived, or its project is. Clients present read-only
   // state from this value instead of combining the feature's own flag with its project's.
@@ -544,8 +545,9 @@ message UpdateProjectResponse {
 message DeleteProjectRequest {
   // id identifies the project to delete by public ID.
   string id = 1;
-  // cascade deletes the project's own documents and releases its features
-  // instead of failing; contained features are never deleted.
+  // cascade deletes the project's own documents and every feature it contains,
+  // with the tasks, dependencies, pull-request attachments, and documents
+  // inside them, instead of failing.
   bool cascade = 2;
 }
 
@@ -560,7 +562,8 @@ message CreateFeatureRequest {
   string title = 2;
   // description is optional explanatory text for the feature.
   string description = 3;
-  // project_id assigns the feature to a project by public ID; an empty value leaves it unaffiliated.
+  // project_id assigns the feature to a project by public ID. It is required: a feature always
+  // belongs to a project.
   string project_id = 4;
 }
 
@@ -586,8 +589,8 @@ message UpdateFeatureRequest {
   // archived is unchanged when unset; a supplied value explicitly sets it.
   // Clearing it is the only update an archived feature accepts.
   optional bool archived = 6;
-  // project_id is unchanged when unset; a public ID reassigns the
-  // feature, and an empty string removes it from its project.
+  // project_id is unchanged when unset; a public ID reassigns the feature.
+  // An empty string is refused, because a feature cannot leave every project.
   optional string project_id = 7;
 }
 

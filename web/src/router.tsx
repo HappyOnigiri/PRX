@@ -11,7 +11,6 @@ import { FeatureWorkspace } from "./views/FeatureWorkspace";
 import { ProjectListPage } from "./views/ProjectListPage";
 import { ProjectWorkspace } from "./views/ProjectWorkspace";
 import { TaskSearch } from "./views/TaskSearch";
-import { UnassignedFeaturesPage } from "./views/UnassignedFeaturesPage";
 
 const rootRoute = createRootRoute({
   component: () => (
@@ -40,14 +39,6 @@ const projectsRoute = createRoute({
   }),
   component: ProjectListPage,
 });
-// The unaffiliated list is a static segment, which the router ranks above the
-// dynamic one, so it wins over a project whose ID could never spell it anyway.
-const unassignedFeaturesRoute = createRoute({
-  getParentRoute: () => rootRoute,
-  path: "/projects/unassigned",
-  validateSearch: validateFeatureTabSearch,
-  component: UnassignedFeaturesPage,
-});
 const projectRoute = createRoute({
   getParentRoute: () => rootRoute,
   path: "/projects/$projectId",
@@ -69,7 +60,6 @@ const routeTree = rootRoute.addChildren([
   taskSearchRoute,
   featureRoute,
   projectsRoute,
-  unassignedFeaturesRoute,
   projectRoute,
 ]);
 

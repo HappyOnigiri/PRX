@@ -88,7 +88,7 @@ func writeFeatureTable(out io.Writer, features []domain.Feature) error {
 				writeRow(
 					table,
 					feature.ID,
-					displayValue(feature.ProjectID),
+					feature.ProjectID,
 					feature.DisplayStatus,
 					yesNo(feature.Archived),
 					yesNo(feature.ReadOnly),
@@ -104,7 +104,7 @@ func renderFeatureDetail(feature domain.Feature) humanRenderer {
 	return func(out io.Writer) error {
 		return writeFields(out, [][2]string{
 			{"ID", feature.ID},
-			{"Project", displayValue(feature.ProjectID)},
+			{"Project", feature.ProjectID},
 			{"Title", feature.Title},
 			{"Description", displayValue(feature.Description)},
 			{"Status", string(feature.Status)},

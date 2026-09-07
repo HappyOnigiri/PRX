@@ -29,16 +29,16 @@ type Document struct {
 }
 
 type Feature struct {
-	ID          string         `json:"id"`
-	Title       string         `json:"title"`
-	Description string         `json:"description"`
-	Status      string         `json:"status"`
-	Archived    int64          `json:"archived"`
-	CreatedAt   string         `json:"created_at"`
-	UpdatedAt   string         `json:"updated_at"`
-	PublicID    string         `json:"public_id"`
-	StatusAuto  int64          `json:"status_auto"`
-	ProjectID   sql.NullString `json:"project_id"`
+	ID          string `json:"id"`
+	Title       string `json:"title"`
+	Description string `json:"description"`
+	Status      string `json:"status"`
+	Archived    int64  `json:"archived"`
+	CreatedAt   string `json:"created_at"`
+	UpdatedAt   string `json:"updated_at"`
+	PublicID    string `json:"public_id"`
+	StatusAuto  int64  `json:"status_auto"`
+	ProjectID   string `json:"project_id"`
 }
 
 type GithubRepositoryAuthCache struct {
