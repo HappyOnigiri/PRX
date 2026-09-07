@@ -590,7 +590,7 @@ func (q *Queries) GetProjectByPublicID(ctx context.Context, publicID string) (Pr
 }
 
 const getPullRequestByTask = `-- name: GetPullRequestByTask :one
-SELECT task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale FROM pull_requests WHERE task_id=?
+SELECT task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale, review_request_pending, changes_requested_at, last_pushed_at FROM pull_requests WHERE task_id=?
 `
 
 func (q *Queries) GetPullRequestByTask(ctx context.Context, taskID string) (PullRequest, error) {
@@ -614,6 +614,9 @@ func (q *Queries) GetPullRequestByTask(ctx context.Context, taskID string) (Pull
 		&i.LastSyncedAt,
 		&i.SyncError,
 		&i.Stale,
+		&i.ReviewRequestPending,
+		&i.ChangesRequestedAt,
+		&i.LastPushedAt,
 	)
 	return i, err
 }
@@ -953,7 +956,7 @@ func (q *Queries) ListProjects(ctx context.Context) ([]Project, error) {
 }
 
 const listPullRequests = `-- name: ListPullRequests :many
-SELECT task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale FROM pull_requests ORDER BY host, owner, repository, number
+SELECT task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale, review_request_pending, changes_requested_at, last_pushed_at FROM pull_requests ORDER BY host, owner, repository, number
 `
 
 func (q *Queries) ListPullRequests(ctx context.Context) ([]PullRequest, error) {
@@ -983,6 +986,9 @@ func (q *Queries) ListPullRequests(ctx context.Context) ([]PullRequest, error) {
 			&i.LastSyncedAt,
 			&i.SyncError,
 			&i.Stale,
+			&i.ReviewRequestPending,
+			&i.ChangesRequestedAt,
+			&i.LastPushedAt,
 		); err != nil {
 			return nil, err
 		}
@@ -1349,33 +1355,38 @@ func (q *Queries) UpsertImplementationPlanDocument(ctx context.Context, arg Upse
 }
 
 const upsertPullRequest = `-- name: UpsertPullRequest :one
-INSERT INTO pull_requests (task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO pull_requests (task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale, review_request_pending, changes_requested_at, last_pushed_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(task_id) DO UPDATE SET host=excluded.host, owner=excluded.owner, repository=excluded.repository, number=excluded.number,
 url=excluded.url, node_id=excluded.node_id, author=excluded.author, assignees_json=excluded.assignees_json,
 state=excluded.state, draft=excluded.draft, review_state=excluded.review_state, mergeability=excluded.mergeability,
 github_updated_at=excluded.github_updated_at, last_synced_at=excluded.last_synced_at,
-sync_error=excluded.sync_error, stale=excluded.stale RETURNING task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale
+sync_error=excluded.sync_error, stale=excluded.stale,
+review_request_pending=excluded.review_request_pending, changes_requested_at=excluded.changes_requested_at,
+last_pushed_at=excluded.last_pushed_at RETURNING task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale, review_request_pending, changes_requested_at, last_pushed_at
 `
 
 type UpsertPullRequestParams struct {
-	TaskID          string         `json:"task_id"`
-	Host            string         `json:"host"`
-	Owner           string         `json:"owner"`
-	Repository      string         `json:"repository"`
-	Number          int64          `json:"number"`
-	Url             string         `json:"url"`
-	NodeID          string         `json:"node_id"`
-	Author          string         `json:"author"`
-	AssigneesJson   string         `json:"assignees_json"`
-	State           string         `json:"state"`
-	Draft           int64          `json:"draft"`
-	ReviewState     string         `json:"review_state"`
-	Mergeability    string         `json:"mergeability"`
-	GithubUpdatedAt sql.NullString `json:"github_updated_at"`
-	LastSyncedAt    sql.NullString `json:"last_synced_at"`
-	SyncError       string         `json:"sync_error"`
-	Stale           int64          `json:"stale"`
+	TaskID               string         `json:"task_id"`
+	Host                 string         `json:"host"`
+	Owner                string         `json:"owner"`
+	Repository           string         `json:"repository"`
+	Number               int64          `json:"number"`
+	Url                  string         `json:"url"`
+	NodeID               string         `json:"node_id"`
+	Author               string         `json:"author"`
+	AssigneesJson        string         `json:"assignees_json"`
+	State                string         `json:"state"`
+	Draft                int64          `json:"draft"`
+	ReviewState          string         `json:"review_state"`
+	Mergeability         string         `json:"mergeability"`
+	GithubUpdatedAt      sql.NullString `json:"github_updated_at"`
+	LastSyncedAt         sql.NullString `json:"last_synced_at"`
+	SyncError            string         `json:"sync_error"`
+	Stale                int64          `json:"stale"`
+	ReviewRequestPending int64          `json:"review_request_pending"`
+	ChangesRequestedAt   sql.NullString `json:"changes_requested_at"`
+	LastPushedAt         sql.NullString `json:"last_pushed_at"`
 }
 
 func (q *Queries) UpsertPullRequest(ctx context.Context, arg UpsertPullRequestParams) (PullRequest, error) {
@@ -1397,6 +1408,9 @@ func (q *Queries) UpsertPullRequest(ctx context.Context, arg UpsertPullRequestPa
 		arg.LastSyncedAt,
 		arg.SyncError,
 		arg.Stale,
+		arg.ReviewRequestPending,
+		arg.ChangesRequestedAt,
+		arg.LastPushedAt,
 	)
 	var i PullRequest
 	err := row.Scan(
@@ -1417,6 +1431,9 @@ func (q *Queries) UpsertPullRequest(ctx context.Context, arg UpsertPullRequestPa
 		&i.LastSyncedAt,
 		&i.SyncError,
 		&i.Stale,
+		&i.ReviewRequestPending,
+		&i.ChangesRequestedAt,
+		&i.LastPushedAt,
 	)
 	return i, err
 }

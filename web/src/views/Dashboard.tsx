@@ -11,6 +11,9 @@ import { filterTaskSearchResults } from "../task-search";
 import { IconButton } from "./IconButton";
 import { TaskCard } from "./TaskCard";
 
+// 件数はタスクのステータスとブロックラベルから数えるので、リンク先のクエリも
+// 同じ軸で書く。pull request 自身の状態を指す github-status では件数と一覧が
+// 食い違う。
 const queueNames = [
   [
     "readyTasks",
@@ -22,13 +25,13 @@ const queueNames = [
     "reviewWaitingTasks",
     "queue-review-waiting",
     "dashboard.queues.review.title",
-    "github-status:review-waiting",
+    "task-status:in-review",
   ],
   [
     "conflictTasks",
     "queue-conflict",
     "dashboard.queues.conflicts.title",
-    "github-status:conflict",
+    "block:conflict",
   ],
   [
     "syncErrorTasks",

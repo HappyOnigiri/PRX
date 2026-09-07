@@ -155,12 +155,15 @@ func TestPRDisplayPriority(t *testing.T) {
 }
 
 func TestTaskDisplayStateMatrix(t *testing.T) {
+	reviewedAt := time.Date(2024, time.January, 2, 3, 4, 5, 0, time.UTC)
+	pushedAt := reviewedAt.Add(time.Hour)
 	tests := []struct {
-		name  string
-		task  Task
-		pr    []PullRequest
-		want  TaskDisplayState
-		ready bool
+		name   string
+		task   Task
+		pr     []PullRequest
+		want   TaskDisplayState
+		labels []TaskBlockLabel
+		ready  bool
 	}{
 		{
 			name:  "not started without plan",
@@ -190,14 +193,21 @@ func TestTaskDisplayStateMatrix(t *testing.T) {
 			name:  "designing yields to a pull request",
 			task:  Task{ID: "task", Status: TaskStatusDesigning},
 			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
-			want:  TaskDisplayStateOpen,
+			want:  TaskDisplayStateImplemented,
+			ready: false,
+		},
+		{
+			name:  "draft pull requests count as implemented",
+			task:  Task{ID: "task", Status: TaskStatusInProgress},
+			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen, Draft: true}},
+			want:  TaskDisplayStateImplemented,
 			ready: false,
 		},
 		{
 			name:  "not started with plan and pull request",
 			task:  Task{ID: "task", Status: TaskStatusNotStarted, HasImplementationPlan: true},
 			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateOpen}},
-			want:  TaskDisplayStateOpen,
+			want:  TaskDisplayStateImplemented,
 			ready: false,
 		},
 		{
@@ -207,12 +217,68 @@ func TestTaskDisplayStateMatrix(t *testing.T) {
 			ready: false,
 		},
 		{
-			name: "in progress yields to a pull request waiting for review",
+			name: "a pending review request means in review",
 			task: Task{ID: "task", Status: TaskStatusInProgress},
 			pr: []PullRequest{{
-				TaskID: "task", State: PullRequestStateOpen, ReviewState: ReviewStateRequired,
+				TaskID: "task", State: PullRequestStateOpen,
+				ReviewState: ReviewStateRequired, ReviewRequestPending: true,
 			}},
-			want:  TaskDisplayStateReviewWaiting,
+			want:  TaskDisplayStateInReview,
+			ready: false,
+		},
+		{
+			name: "a push after changes requested means in review",
+			task: Task{ID: "task", Status: TaskStatusInProgress},
+			pr: []PullRequest{{
+				TaskID: "task", State: PullRequestStateOpen,
+				ReviewState:        ReviewStateChangesRequested,
+				ChangesRequestedAt: &reviewedAt, LastPushedAt: &pushedAt,
+			}},
+			want:   TaskDisplayStateInReview,
+			labels: []TaskBlockLabel{TaskBlockLabelChangesRequested},
+			ready:  false,
+		},
+		{
+			name: "changes requested without a later push stays implemented",
+			task: Task{ID: "task", Status: TaskStatusInProgress},
+			pr: []PullRequest{{
+				TaskID: "task", State: PullRequestStateOpen,
+				ReviewState:        ReviewStateChangesRequested,
+				ChangesRequestedAt: &pushedAt, LastPushedAt: &reviewedAt,
+			}},
+			want:   TaskDisplayStateImplemented,
+			labels: []TaskBlockLabel{TaskBlockLabelChangesRequested},
+			ready:  false,
+		},
+		{
+			name: "approved outranks a pending review request",
+			task: Task{ID: "task", Status: TaskStatusInProgress},
+			pr: []PullRequest{{
+				TaskID: "task", State: PullRequestStateOpen,
+				ReviewState: ReviewStateApproved, ReviewRequestPending: true,
+			}},
+			want:  TaskDisplayStateApproved,
+			ready: false,
+		},
+		{
+			name: "a conflicting pull request keeps its status",
+			task: Task{ID: "task", Status: TaskStatusInProgress},
+			pr: []PullRequest{{
+				TaskID: "task", State: PullRequestStateOpen,
+				ReviewState: ReviewStateApproved, Mergeability: MergeabilityConflicting,
+			}},
+			want:   TaskDisplayStateApproved,
+			labels: []TaskBlockLabel{TaskBlockLabelConflict},
+			ready:  false,
+		},
+		{
+			name: "a merged pull request drops every label",
+			task: Task{ID: "task", Status: TaskStatusInProgress},
+			pr: []PullRequest{{
+				TaskID: "task", State: PullRequestStateMerged,
+				ReviewState: ReviewStateChangesRequested, Mergeability: MergeabilityConflicting,
+			}},
+			want:  TaskDisplayStateMerged,
 			ready: false,
 		},
 		{
@@ -243,7 +309,38 @@ func TestTaskDisplayStateMatrix(t *testing.T) {
 			if got.DisplayState != test.want || got.Ready != test.ready {
 				t.Fatalf("task=%+v, want display=%q ready=%v", got, test.want, test.ready)
 			}
+			want := test.labels
+			if want == nil {
+				want = []TaskBlockLabel{}
+			}
+			if !slices.Equal(got.BlockLabels, want) {
+				t.Fatalf("block labels=%v want %v", got.BlockLabels, want)
+			}
 		})
+	}
+}
+
+// 依存のラベルは実装が進んだ task でも評価する。以前は ready 候補しか blocker を
+// 見ていなかったため、実装中の task の依存切れが見えなかった。
+func TestBlockLabelsCoverUnfinishedTasks(t *testing.T) {
+	tasks := []Task{
+		{ID: "blocker", Status: TaskStatusNotStarted},
+		{ID: "blocked", Status: TaskStatusInProgress},
+	}
+	deps := []Dependency{{BlockerTaskID: "blocker", BlockedTaskID: "blocked"}}
+	prs := []PullRequest{{
+		TaskID: "blocked", State: PullRequestStateOpen, Mergeability: MergeabilityConflicting,
+	}}
+	got := Derive(tasks, deps, prs)[1]
+	want := []TaskBlockLabel{TaskBlockLabelDependencyUnresolved, TaskBlockLabelConflict}
+	if !slices.Equal(got.BlockLabels, want) {
+		t.Fatalf("block labels=%v want %v", got.BlockLabels, want)
+	}
+	if got.Ready {
+		t.Fatal("a task with an open pull request is not ready")
+	}
+	if got.BlockedCode != BlockedReasonCodeWaitingForBlocker {
+		t.Fatalf("blocked code=%q", got.BlockedCode)
 	}
 }
 

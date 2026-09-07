@@ -52,6 +52,7 @@ func protoTask(v domain.Task) *prxv1.Task {
 		DisplayState:          protoTaskDisplayState(v.DisplayState),
 		BlockedReason:         protoBlockedReason(v),
 		PendingBlockerTaskIds: v.PendingBlockerTaskIDs,
+		BlockLabels:           protoTaskBlockLabels(v.BlockLabels),
 	}
 }
 
@@ -81,12 +82,20 @@ func protoPullRequest(v domain.PullRequest) *prxv1.PullRequest {
 		SyncError:    v.SyncError,
 		Stale:        v.Stale,
 		DisplayState: protoPullRequestDisplayState(v.DisplayState),
+
+		ReviewRequestPending: v.ReviewRequestPending,
 	}
 	if v.GitHubUpdatedAt != nil {
 		result.GithubUpdatedAt = v.GitHubUpdatedAt.Format(timeFormat)
 	}
 	if v.LastSyncedAt != nil {
 		result.LastSyncedAt = v.LastSyncedAt.Format(timeFormat)
+	}
+	if v.ChangesRequestedAt != nil {
+		result.ChangesRequestedAt = v.ChangesRequestedAt.Format(timeFormat)
+	}
+	if v.LastPushedAt != nil {
+		result.LastPushedAt = v.LastPushedAt.Format(timeFormat)
 	}
 	return result
 }
@@ -229,20 +238,17 @@ func domainTaskStatus(value *prxv1.TaskStatus) (*domain.TaskStatus, error) {
 
 func protoTaskDisplayState(value domain.TaskDisplayState) prxv1.TaskDisplayState {
 	states := map[domain.TaskDisplayState]prxv1.TaskDisplayState{
-		domain.TaskDisplayStateNotStarted:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED,
-		domain.TaskDisplayStateDesigning:        prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNING,
-		domain.TaskDisplayStateDesigned:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED,
-		domain.TaskDisplayStateInProgress:       prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS,
-		domain.TaskDisplayStateCompleted:        prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED,
-		domain.TaskDisplayStateClosed:           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED,
-		domain.TaskDisplayStateMerged:           prxv1.TaskDisplayState_TASK_DISPLAY_STATE_MERGED,
-		domain.TaskDisplayStateDraft:            prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DRAFT,
-		domain.TaskDisplayStateConflict:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CONFLICT,
-		domain.TaskDisplayStateChangesRequested: prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CHANGES_REQUESTED,
-		domain.TaskDisplayStateApproved:         prxv1.TaskDisplayState_TASK_DISPLAY_STATE_APPROVED,
-		domain.TaskDisplayStateReviewWaiting:    prxv1.TaskDisplayState_TASK_DISPLAY_STATE_REVIEW_WAITING,
-		domain.TaskDisplayStateOpen:             prxv1.TaskDisplayState_TASK_DISPLAY_STATE_OPEN,
-		domain.TaskDisplayStateUnknown:          prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNKNOWN,
+		domain.TaskDisplayStateNotStarted:  prxv1.TaskDisplayState_TASK_DISPLAY_STATE_NOT_STARTED,
+		domain.TaskDisplayStateDesigning:   prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNING,
+		domain.TaskDisplayStateDesigned:    prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DESIGNED,
+		domain.TaskDisplayStateInProgress:  prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_PROGRESS,
+		domain.TaskDisplayStateImplemented: prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IMPLEMENTED,
+		domain.TaskDisplayStateInReview:    prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_REVIEW,
+		domain.TaskDisplayStateApproved:    prxv1.TaskDisplayState_TASK_DISPLAY_STATE_APPROVED,
+		domain.TaskDisplayStateMerged:      prxv1.TaskDisplayState_TASK_DISPLAY_STATE_MERGED,
+		domain.TaskDisplayStateCompleted:   prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED,
+		domain.TaskDisplayStateClosed:      prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED,
+		domain.TaskDisplayStateUnknown:     prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNKNOWN,
 	}
 	if state, ok := states[value]; ok {
 		return state
@@ -354,6 +360,22 @@ func protoUpdateDocumentSource(value *prxv1.UpdateDocumentRequest) domain.Docume
 	default:
 		return domain.Document{}
 	}
+}
+
+// protoTaskBlockLabels はドメインの並び順をそのまま保つ。未知の値は落とす。
+func protoTaskBlockLabels(values []domain.TaskBlockLabel) []prxv1.TaskBlockLabel {
+	labels := map[domain.TaskBlockLabel]prxv1.TaskBlockLabel{
+		domain.TaskBlockLabelDependencyUnresolved: prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_DEPENDENCY_UNRESOLVED,
+		domain.TaskBlockLabelConflict:             prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_CONFLICT,
+		domain.TaskBlockLabelChangesRequested:     prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_CHANGES_REQUESTED,
+	}
+	result := make([]prxv1.TaskBlockLabel, 0, len(values))
+	for _, value := range values {
+		if label, ok := labels[value]; ok {
+			result = append(result, label)
+		}
+	}
+	return result
 }
 
 func protoBlockedReason(task domain.Task) *prxv1.BlockedReason {

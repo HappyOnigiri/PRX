@@ -162,11 +162,21 @@ func renderTaskDetail(task domain.Task) humanRenderer {
 			{"Ready", yesNo(task.Ready)},
 			{"Assignee", displayValue(task.Assignee)},
 			{"Implementation plan", yesNo(task.HasImplementationPlan)},
+			{"Blocks", displayValue(blockLabelsText(task.BlockLabels))},
 			{"Blocked reason", displayValue(task.BlockedReason)},
 			{"Created", formatTime(task.CreatedAt)},
 			{"Updated", formatTime(task.UpdatedAt)},
 		})
 	}
+}
+
+// blockLabelsText はブロックラベルをドメインの並び順のままカンマ区切りにする。
+func blockLabelsText(labels []domain.TaskBlockLabel) string {
+	values := make([]string, 0, len(labels))
+	for _, label := range labels {
+		values = append(values, string(label))
+	}
+	return strings.Join(values, ", ")
 }
 
 func renderNode(value any) humanRenderer {

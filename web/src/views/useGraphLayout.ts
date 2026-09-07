@@ -62,11 +62,18 @@ function buildRawNodes({
     return {
       id: task.id,
       width: 284,
-      height: 148 + Math.min(assetCount, 4) * 34 + (hasSyncError ? 22 : 0),
+      // ブロックラベルの行はヘッダの下に 1 行だけ増える。ノード幅は固定なので、
+      // ラベルが 3 個でも 1 行に収まる。
+      height:
+        148 +
+        Math.min(assetCount, 4) * 34 +
+        (hasSyncError ? 22 : 0) +
+        (task.blockLabels.length > 0 ? 26 : 0),
       data: {
         title: task.title,
         assignee: task.assignee,
         state: task.displayState,
+        blockLabels: task.blockLabels,
         hasImplementationPlan: task.hasImplementationPlan,
         stale: pr?.stale ?? false,
         syncError: hasSyncError,

@@ -141,7 +141,7 @@
   display: flex;
   flex-direction: column;
   border: 1px solid var(--border);
-  border-left: 3px solid var(--status-none);
+  border-left: 3px solid var(--status-inactive);
   border-radius: 4px;
   background: var(--surface);
   padding: 10px 12px;
@@ -153,33 +153,41 @@
   outline-offset: -1px;
 }
 
-/* The edge takes the same colour as the state badge, so a node reads the same
-   whether it is scanned by its edge or read by its label. */
-.task-node.state-not-started {
-  border-left-color: var(--status-idle);
+/* The edge takes the same colour as the status badge, so a node reads the same
+   whether it is scanned by its edge or read by its label. A block label never
+   recolours the edge; it appears in the label row instead. */
+.task-node.state-not-started,
+.task-node.state-designed,
+.task-node.state-implemented,
+.task-node.state-approved {
+  border-left-color: var(--status-actionable);
 }
 
-.task-node.state-designed {
-  border-left-color: var(--status-ready);
+.task-node.state-designing,
+.task-node.state-in-progress {
+  border-left-color: var(--status-working);
 }
 
-.task-node.state-conflict {
-  border-left-color: var(--status-conflict);
+.task-node.state-in-review {
+  border-left-color: var(--status-waiting);
 }
 
 .task-node.state-completed {
-  border-left-color: var(--status-merged);
+  border-left-color: var(--status-done);
 }
 
 .task-node.state-merged {
-  border-left-color: var(--status-merged);
+  border-left-color: var(--status-done);
   opacity: 0.83;
 }
 
-.task-node.state-review-waiting,
-.task-node.state-approved,
-.task-node.state-changes-requested {
-  border-left-color: var(--status-review);
+/* The label row sits under the header so that three labels wrap into a row of
+   their own, keeping the node as tall as the layout predicted. */
+.task-node-blocks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin: 4px 0 0;
 }
 
 .task-node.is-stale {
@@ -270,7 +278,7 @@
 
 .node-sync-error {
   margin: 0 0 4px;
-  color: var(--status-conflict);
+  color: var(--status-blocked);
   font-size: var(--text-xs);
   font-weight: 600;
 }
@@ -430,7 +438,7 @@
 }
 
 .task-handle.connectingto.valid {
-  background: var(--status-ready);
+  background: var(--status-actionable);
 }
 
 .task-handle.connectingto:not(.valid) {
@@ -457,7 +465,7 @@
   bottom: 16px;
   left: 16px;
   width: min(560px, calc(100% - 32px));
-  border: 1px solid var(--status-conflict);
+  border: 1px solid var(--status-blocked);
   border-radius: 4px;
   background: var(--surface);
   padding: 8px 10px;

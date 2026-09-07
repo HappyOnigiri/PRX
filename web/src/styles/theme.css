@@ -13,12 +13,16 @@
   --accent: light-dark(#245fb8, #7aaeff);
   --accent-hover: light-dark(#194f9e, #91bcff);
   --accent-text: light-dark(#fff, #0f1418);
-  --status-idle: light-dark(#0b6a8f, #52b6d8);
-  --status-ready: light-dark(#0c715a, #4cc2a0);
-  --status-review: light-dark(#7b5100, #d9a441);
-  --status-conflict: light-dark(#a9322f, #ef6f66);
-  --status-merged: light-dark(#8250df, #ab7df8);
-  --status-none: var(--border-strong);
+
+  /* The status colours name who holds the ball: actionable is yours to pick up,
+     working is yours in flight, waiting is somebody else's, done is finished,
+     inactive is void, and blocked marks a block label rather than a status. */
+  --status-working: light-dark(#0b6a8f, #52b6d8);
+  --status-actionable: light-dark(#0c715a, #4cc2a0);
+  --status-waiting: light-dark(#7b5100, #d9a441);
+  --status-blocked: light-dark(#a9322f, #ef6f66);
+  --status-done: light-dark(#8250df, #ab7df8);
+  --status-inactive: var(--border-strong);
   --scrim: light-dark(rgb(16 20 26 / 50%), rgb(0 0 0 / 60%));
 }
 

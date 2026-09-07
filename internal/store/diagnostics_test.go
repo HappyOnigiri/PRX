@@ -32,8 +32,8 @@ func TestStoreReportsResolvedPathAndSchemaVersions(t *testing.T) {
 	// 新規に開いたデータベースは埋め込みマイグレーションが全て適用済みなので、
 	// 2 つのバージョンは一致するはず。差があれば、別の PRX ビルドが書いた
 	// データベースだと分かる。
-	if applied != embedded || embedded != 14 {
-		t.Fatalf("applied=%d embedded=%d, want 14", applied, embedded)
+	if applied != embedded || embedded != 15 {
+		t.Fatalf("applied=%d embedded=%d, want 15", applied, embedded)
 	}
 }
 

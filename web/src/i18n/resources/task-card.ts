@@ -1,6 +1,7 @@
 export const taskCard = {
   en: {
     taskCard: {
+      blocks: "Blocks",
       project: "Project",
       feature: "Feature",
       assignee: "Assignee",
@@ -10,6 +11,7 @@ export const taskCard = {
   },
   ja: {
     taskCard: {
+      blocks: "ブロック",
       project: "プロジェクト",
       feature: "フィーチャー",
       assignee: "担当",

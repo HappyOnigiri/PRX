@@ -1,34 +1,83 @@
 package domain
 
-func PRDisplayState(pr *PullRequest) TaskDisplayState {
+// PRDisplayState は pull request 自身の表示状態を導出する。task の表示状態とは
+// 語彙が別で、taskDisplayStateFromPR がそれぞれ独立に導出する。
+func PRDisplayState(pr *PullRequest) PullRequestDisplayState {
 	if pr == nil {
-		return TaskDisplayStateUnknown
+		return PullRequestDisplayStateUnknown
 	}
 	if pr.State == PullRequestStateMerged {
-		return TaskDisplayStateMerged
+		return PullRequestDisplayStateMerged
 	}
 	if pr.State == PullRequestStateClosed {
-		return TaskDisplayStateClosed
+		return PullRequestDisplayStateClosed
 	}
 	if pr.Draft {
-		return TaskDisplayStateDraft
+		return PullRequestDisplayStateDraft
 	}
 	if pr.Mergeability == MergeabilityConflicting {
-		return TaskDisplayStateConflict
+		return PullRequestDisplayStateConflict
 	}
 	if pr.ReviewState == ReviewStateChangesRequested {
-		return TaskDisplayStateChangesRequested
+		return PullRequestDisplayStateChangesRequested
 	}
 	if pr.ReviewState == ReviewStateApproved {
-		return TaskDisplayStateApproved
+		return PullRequestDisplayStateApproved
 	}
 	if pr.ReviewState == ReviewStateRequired {
-		return TaskDisplayStateReviewWaiting
+		return PullRequestDisplayStateReviewWaiting
 	}
 	if pr.State == PullRequestStateOpen {
-		return TaskDisplayStateOpen
+		return PullRequestDisplayStateOpen
 	}
-	return TaskDisplayStateUnknown
+	return PullRequestDisplayStateUnknown
+}
+
+// taskDisplayStateFromPR は pull request から task のステータスを導出する。承認済みを
+// レビュー中より優先するのは、承認が「変更要求が 1 件もなく誰かが通した」を意味し、
+// 読み手にとって最も重い情報だからである。docs/design/domain.md を参照。
+func taskDisplayStateFromPR(pr *PullRequest) TaskDisplayState {
+	switch {
+	case pr == nil:
+		return TaskDisplayStateUnknown
+	case pr.State == PullRequestStateMerged:
+		return TaskDisplayStateMerged
+	case pr.State == PullRequestStateClosed:
+		return TaskDisplayStateClosed
+	case pr.ReviewState == ReviewStateApproved:
+		return TaskDisplayStateApproved
+	case pr.ReviewRequestPending || respondedAfterReview(pr):
+		return TaskDisplayStateInReview
+	case pr.State == PullRequestStateOpen:
+		return TaskDisplayStateImplemented
+	default:
+		return TaskDisplayStateUnknown
+	}
+}
+
+// respondedAfterReview は変更要求の後に push があったかを返す。同一時刻はレビューが
+// 後とみなす。どちらかの時刻が欠けていれば判定しない。
+func respondedAfterReview(pr *PullRequest) bool {
+	if pr.ChangesRequestedAt == nil || pr.LastPushedAt == nil {
+		return false
+	}
+	return pr.LastPushedAt.After(*pr.ChangesRequestedAt)
+}
+
+// blockLabelsFor は task の進行を妨げている事情を、固定の順序で挙げる。
+// 終了した task では呼び出し側が評価しない。
+func blockLabelsFor(pr *PullRequest, dependencyUnresolved bool) []TaskBlockLabel {
+	labels := []TaskBlockLabel{}
+	if dependencyUnresolved {
+		labels = append(labels, TaskBlockLabelDependencyUnresolved)
+	}
+	if pr != nil && pr.Mergeability == MergeabilityConflicting {
+		labels = append(labels, TaskBlockLabelConflict)
+	}
+	if pr != nil && pr.ReviewState == ReviewStateChangesRequested {
+		labels = append(labels, TaskBlockLabelChangesRequested)
+	}
+	return labels
 }
 
 // IsTaskFinished は、導出されたタスク状態がそのタスクの作業の終了を表すかを返す。
@@ -64,7 +113,7 @@ func displayStateFor(task Task, pr *PullRequest) TaskDisplayState {
 		return TaskDisplayStateClosed
 	}
 	if pr != nil {
-		return PRDisplayState(pr)
+		return taskDisplayStateFromPR(pr)
 	}
 	if task.Status == TaskStatusInProgress {
 		return TaskDisplayStateInProgress

@@ -126,13 +126,16 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 		task.BlockedReason = ""
 		task.BlockedCode = ""
 		task.BlockerTaskID = ""
+		task.PendingBlockerTaskIDs = nil
+		task.BlockLabels = []TaskBlockLabel{}
 		task.DisplayState = displayStateFor(task, pr)
-		if !isReadyCandidate(task.DisplayState) {
+		// 終了した task はブロック情報を持たない。マージ済みの pull request に修正依頼や
+		// コンフリクトのラベルが残らないのはこの抑制による。
+		if IsTaskFinished(task.DisplayState) {
 			result[i] = task
 			continue
 		}
-		task.Ready = true
-		task.PendingBlockerTaskIDs = nil
+		task.Ready = isReadyCandidate(task.DisplayState)
 		// 未解消の blocker はすべて集めるが、blocked reason は最初の 1 件だけを表す。
 		// docs/design/domain.md を参照。
 		for _, blockerID := range blockers[task.ID] {
@@ -153,6 +156,7 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 			task.BlockerTaskID = blockerID
 		}
 		task.BlockedReason = BlockedReasonText(task.BlockedCode, taskByID[task.BlockerTaskID].Title)
+		task.BlockLabels = blockLabelsFor(pr, len(task.PendingBlockerTaskIDs) > 0)
 		result[i] = task
 	}
 	return result

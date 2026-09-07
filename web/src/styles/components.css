@@ -66,9 +66,9 @@
 }
 
 .icon-button-danger {
-  border-color: var(--status-conflict);
+  border-color: var(--status-blocked);
   background: transparent;
-  color: var(--status-conflict);
+  color: var(--status-blocked);
 }
 
 .icon-button-danger:hover {
@@ -124,7 +124,7 @@
 
 .copyable-identifier-value-button.is-copied,
 .copyable-identifier-value-button.is-copied:hover {
-  color: var(--status-ready);
+  color: var(--status-actionable);
 }
 
 .copyable-identifier-button {
@@ -149,7 +149,7 @@
 
 .copyable-identifier-button.is-copied,
 .copyable-identifier-button.is-copied:hover {
-  color: var(--status-ready);
+  color: var(--status-actionable);
 }
 
 .copyable-identifier-status {
@@ -180,7 +180,7 @@
 
 .task-prompt-copy-button.is-copied,
 .task-prompt-copy-button.is-copied:hover {
-  color: var(--status-ready);
+  color: var(--status-actionable);
 }
 
 .task-prompt-copy-status {
@@ -346,8 +346,8 @@
 }
 
 .confirmation-icon.danger {
-  border-color: var(--status-conflict);
-  color: var(--status-conflict);
+  border-color: var(--status-blocked);
+  color: var(--status-blocked);
 }
 
 .feature-management-dialog {
@@ -409,7 +409,7 @@
 }
 
 .form-error {
-  color: var(--status-conflict);
+  color: var(--status-blocked);
   font-size: var(--text-sm);
 }
 
@@ -1130,7 +1130,7 @@
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--status-none);
+  border: 1px solid var(--status-inactive);
   border-radius: 3px;
   color: var(--text-2);
   padding: 3px 6px;
@@ -1140,51 +1140,68 @@
   white-space: nowrap;
 }
 
-/* A state names one colour wherever it is shown: the badge does not know
-   whether the task is ready to start, only which state it is in. */
-.status-badge.state-not-started {
-  border-color: var(--status-idle);
-  color: var(--status-idle);
+/* A task status names who holds the ball: green is yours to pick up, blue is
+   yours in flight, amber waits on somebody else, purple is finished, and a
+   closed task keeps the muted default border. */
+.status-badge.state-not-started,
+.status-badge.state-designed,
+.status-badge.state-implemented,
+.status-badge.state-approved {
+  border-color: var(--status-actionable);
+  color: var(--status-actionable);
 }
 
-.status-badge.state-designed {
-  border-color: var(--status-ready);
-  color: var(--status-ready);
+.status-badge.state-designing,
+.status-badge.state-in-progress {
+  border-color: var(--status-working);
+  color: var(--status-working);
 }
 
-.status-badge.state-review-waiting,
-.status-badge.state-approved,
-.status-badge.state-changes-requested {
-  border-color: var(--status-review);
-  color: var(--status-review);
-}
-
-.status-badge.state-conflict {
-  border-color: var(--status-conflict);
-  color: var(--status-conflict);
+.status-badge.state-in-review,
+.status-badge.state-review-waiting {
+  border-color: var(--status-waiting);
+  color: var(--status-waiting);
 }
 
 /* A finished task and a merged pull request are both terminal, so they read as
    one colour; a closed task stays muted because nothing was finished. */
 .status-badge.state-completed,
 .status-badge.state-merged {
-  border-color: var(--status-merged);
-  color: var(--status-merged);
+  border-color: var(--status-done);
+  color: var(--status-done);
+}
+
+/* An unknown status is not a state of the work but a gap in what PRX knows, so
+   it is drawn as an incomplete border rather than a colour of its own. */
+.status-badge.state-unknown {
+  border-style: dashed;
+}
+
+/* Block labels sit beside the status and never replace it, so they share one
+   colour: the task is held up, whatever its status says. The pull request
+   badge keeps its own conflict and changes requested states in that colour. */
+.status-badge.block-dependency-unresolved,
+.status-badge.block-conflict,
+.status-badge.block-changes-requested,
+.status-badge.state-conflict,
+.status-badge.state-changes-requested {
+  border-color: var(--status-blocked);
+  color: var(--status-blocked);
 }
 
 /* A feature carries its own status vocabulary, so its colours sit next to the
    badge rather than in the stylesheet of any one page that shows it. */
 .status-badge.status-active {
-  border-color: var(--status-ready);
-  color: var(--status-ready);
+  border-color: var(--status-actionable);
+  color: var(--status-actionable);
 }
 
 .status-badge.status-paused {
-  border-color: var(--status-review);
-  color: var(--status-review);
+  border-color: var(--status-waiting);
+  color: var(--status-waiting);
 }
 
 .status-badge.status-completed {
-  border-color: var(--status-merged);
-  color: var(--status-merged);
+  border-color: var(--status-done);
+  color: var(--status-done);
 }

@@ -22,23 +22,32 @@ const (
 	TaskStatusClosed     TaskStatus = "closed"
 )
 
+// TaskDisplayState は task につき 1 値で、作業がどこまで進んだかだけを表す。
+// 進行を妨げている事情は TaskBlockLabel が別に持つ。docs/design/domain.md を参照。
 type TaskDisplayState string
 
 const (
-	TaskDisplayStateNotStarted       TaskDisplayState = "not_started"
-	TaskDisplayStateDesigning        TaskDisplayState = "designing"
-	TaskDisplayStateDesigned         TaskDisplayState = "designed"
-	TaskDisplayStateInProgress       TaskDisplayState = "in_progress"
-	TaskDisplayStateCompleted        TaskDisplayState = "completed"
-	TaskDisplayStateClosed           TaskDisplayState = "closed"
-	TaskDisplayStateMerged           TaskDisplayState = "merged"
-	TaskDisplayStateDraft            TaskDisplayState = "draft"
-	TaskDisplayStateConflict         TaskDisplayState = "conflict"
-	TaskDisplayStateChangesRequested TaskDisplayState = "changes_requested"
-	TaskDisplayStateApproved         TaskDisplayState = "approved"
-	TaskDisplayStateReviewWaiting    TaskDisplayState = "review_waiting"
-	TaskDisplayStateOpen             TaskDisplayState = "open"
-	TaskDisplayStateUnknown          TaskDisplayState = "unknown"
+	TaskDisplayStateNotStarted  TaskDisplayState = "not_started"
+	TaskDisplayStateDesigning   TaskDisplayState = "designing"
+	TaskDisplayStateDesigned    TaskDisplayState = "designed"
+	TaskDisplayStateInProgress  TaskDisplayState = "in_progress"
+	TaskDisplayStateImplemented TaskDisplayState = "implemented"
+	TaskDisplayStateInReview    TaskDisplayState = "in_review"
+	TaskDisplayStateApproved    TaskDisplayState = "approved"
+	TaskDisplayStateMerged      TaskDisplayState = "merged"
+	TaskDisplayStateCompleted   TaskDisplayState = "completed"
+	TaskDisplayStateClosed      TaskDisplayState = "closed"
+	TaskDisplayStateUnknown     TaskDisplayState = "unknown"
+)
+
+// TaskBlockLabel は task の進行を妨げている事情で、1 つの task に 0〜3 個付く。
+// 表示順はこの定数の並びに固定する。docs/design/domain.md を参照。
+type TaskBlockLabel string
+
+const (
+	TaskBlockLabelDependencyUnresolved TaskBlockLabel = "dependency_unresolved"
+	TaskBlockLabelConflict             TaskBlockLabel = "conflict"
+	TaskBlockLabelChangesRequested     TaskBlockLabel = "changes_requested"
 )
 
 type PullRequestState string
@@ -172,6 +181,9 @@ type Task struct {
 	// blocked reason の文言の元になった最初の 1 件だけを指す。
 	// docs/design/domain.md を参照。
 	PendingBlockerTaskIDs []string `json:"-"`
+	// BlockLabels は DisplayState とは独立に評価する。JSON では空でも null にせず
+	// 空配列を出す。docs/design/cli-contract.md を参照。
+	BlockLabels []TaskBlockLabel `json:"block_labels"`
 }
 
 type Dependency struct {
@@ -199,6 +211,13 @@ type PullRequest struct {
 	SyncError       string                  `json:"sync_error,omitempty"`
 	Stale           bool                    `json:"stale"`
 	DisplayState    PullRequestDisplayState `json:"display_state"`
+	// ReviewRequestPending は未応答のレビュー依頼が残っているかを、ReviewState の
+	// 畳み込みとは独立に持つ。docs/design/github-sync.md を参照。
+	ReviewRequestPending bool `json:"review_request_pending"`
+	// ChangesRequestedAt は有効な変更要求レビューの最新提出時刻。
+	ChangesRequestedAt *time.Time `json:"changes_requested_at,omitempty"`
+	// LastPushedAt は最新コミットの push 時刻。
+	LastPushedAt *time.Time `json:"last_pushed_at,omitempty"`
 }
 
 type GitHubSyncState struct {
