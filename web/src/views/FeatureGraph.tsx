@@ -18,7 +18,7 @@ import {
   type ReactFlowInstance,
 } from "@xyflow/react";
 import type { TFunction } from "i18next";
-import { Plus, RotateCcw, TriangleAlert } from "lucide-react";
+import { EyeOff, Plus, RotateCcw, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
@@ -30,6 +30,10 @@ import {
   readGraphZoom,
   writeGraphZoom,
 } from "../i18n/settings";
+import {
+  emptyHiddenDependencies,
+  type HiddenDependencies,
+} from "./completedTasks";
 import { DependencyEdge } from "./DependencyEdge";
 import {
   dependencyEdgeId,
@@ -305,6 +309,8 @@ interface FeatureGraphProps {
   dependencies: Dependency[];
   pullRequests: Map<string, PullRequest>;
   documentsByTask: Map<string, TaskNodeDocument[]>;
+  hiddenDependencies?: Map<string, HiddenDependencies>;
+  hiddenTaskCount?: number;
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onAddDocument?: (taskId: string, trigger: HTMLButtonElement) => void;
@@ -317,6 +323,8 @@ export function FeatureGraph({
   dependencies,
   pullRequests,
   documentsByTask,
+  hiddenDependencies = emptyHiddenDependencies,
+  hiddenTaskCount = 0,
   onEditTask,
   onPreviewDocument,
   onAddDocument,
@@ -337,6 +345,7 @@ export function FeatureGraph({
       dependencies,
       pullRequests,
       documentsByTask,
+      hiddenDependencies,
       onEditTask,
       onPreviewDocument,
       ...(onAddDocument ? { onAddDocument } : {}),
@@ -397,6 +406,7 @@ export function FeatureGraph({
       />
       <GraphCanvas
         tasks={tasks}
+        hiddenTaskCount={hiddenTaskCount}
         nodes={nodes}
         edges={edges}
         initialGraphZoom={initialGraphZoom}
@@ -430,6 +440,7 @@ export function FeatureGraph({
 
 interface GraphCanvasProps {
   tasks: Task[];
+  hiddenTaskCount: number;
   nodes: TaskFlowNode[];
   edges: DependencyFlowEdge[];
   initialGraphZoom: number;
@@ -468,6 +479,7 @@ interface GraphCanvasProps {
 
 function GraphCanvas({
   tasks,
+  hiddenTaskCount,
   nodes,
   edges,
   initialGraphZoom,
@@ -543,6 +555,7 @@ function GraphCanvas({
       )}
       <GraphState
         taskCount={tasks.length}
+        hiddenTaskCount={hiddenTaskCount}
         layoutError={layoutError}
         onCreateTask={onCreateTask}
         onRetryLayout={retryLayout}
@@ -554,18 +567,33 @@ function GraphCanvas({
 
 function GraphState({
   taskCount,
+  hiddenTaskCount,
   layoutError,
   onCreateTask,
   onRetryLayout,
   readOnly,
 }: {
   taskCount: number;
+  hiddenTaskCount: number;
   layoutError: { message: string | undefined } | undefined;
   onCreateTask: () => void;
   onRetryLayout: () => void;
   readOnly: boolean;
 }) {
   const { t } = useTranslation();
+  // A feature whose every task is finished still has a graph; hiding it is a
+  // view the reader chose. Offering the first-node prompt there would claim the
+  // feature is empty and put an Add task button where the remedy is the toggle.
+  if (taskCount === 0 && hiddenTaskCount > 0 && !layoutError)
+    return (
+      <div className="graph-empty">
+        <span>
+          <EyeOff aria-hidden="true" focusable="false" size={24} />
+        </span>
+        <h2>{t("workspace.graphAllHiddenTitle")}</h2>
+        <p>{t("workspace.graphAllHiddenDetail", { total: hiddenTaskCount })}</p>
+      </div>
+    );
   if (taskCount === 0 && !layoutError)
     return (
       <div className="graph-empty">

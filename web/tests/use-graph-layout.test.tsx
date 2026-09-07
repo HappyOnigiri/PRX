@@ -126,6 +126,34 @@ describe("useGraphLayout", () => {
     expect(layoutMocks.terminateWorker).toHaveBeenCalledOnce();
   });
 
+  it("carries hidden dependencies to the node that stands in for them", async () => {
+    layoutMocks.layout.mockResolvedValue({
+      children: [
+        { id: "task-1", x: 0, y: 0 },
+        { id: "task-2", x: 400, y: 0 },
+      ],
+    });
+    const hidden = { blockers: ["Migrate schema"], blocked: [] };
+    const options = {
+      tasks: [makeTask({ id: "task-1" }), makeTask({ id: "task-2" })],
+      dependencies: [],
+      pullRequests: new Map(),
+      documentsByTask: new Map(),
+      hiddenDependencies: new Map([["task-1", hidden]]),
+      onEditTask: vi.fn(),
+      onPreviewDocument: vi.fn(),
+    };
+    const { result } = renderHook(() => useGraphLayout(options));
+
+    await waitFor(() => {
+      expect(result.current.nodes).toHaveLength(2);
+    });
+    expect(result.current.nodes[0]?.data.hiddenDependencies).toBe(hidden);
+    expect(result.current.nodes[1]?.data).not.toHaveProperty(
+      "hiddenDependencies",
+    );
+  });
+
   it("keeps ELK edge routes and assigns a distinct port to each endpoint", async () => {
     layoutMocks.layout.mockResolvedValue({
       children: [

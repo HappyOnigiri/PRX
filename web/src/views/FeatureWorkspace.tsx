@@ -20,8 +20,17 @@ import type {
 } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation, useSnapshot } from "../hooks";
 import { featureStatusLabel, featureStatusToken } from "../i18n/domain";
+import {
+  readHideCompletedTasks,
+  writeHideCompletedTasks,
+} from "../i18n/settings";
 import { AddDocumentDialog } from "./AddDocumentDialog";
 import { BatchPromptDialog } from "./BatchPromptDialog";
+import {
+  emptyHiddenDependencies,
+  hideFinishedTasks,
+  type HiddenDependencies,
+} from "./completedTasks";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
 import { DocumentReferences } from "./DocumentReferences";
@@ -50,6 +59,13 @@ export function FeatureWorkspace() {
   const [showBatchPrompt, setShowBatchPrompt] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<TaskNodeDocument>();
   const [documentTarget, setDocumentTarget] = useState<DocumentTarget>();
+  // Hiding finished tasks is how the graph was last read, so it is restored on
+  // the next visit from browser-local settings.
+  const [hideCompleted, setHideCompleted] = useState(readHideCompletedTasks);
+  const changeHideCompleted = useCallback((hide: boolean) => {
+    setHideCompleted(hide);
+    writeHideCompletedTasks(hide);
+  }, []);
   const data = snapshot.data;
   const feature = data?.features.find((item) => item.id === featureId);
   const project = data?.projects.find((item) => item.id === feature?.projectId);
@@ -60,6 +76,7 @@ export function FeatureWorkspace() {
     documentsByTask,
     featureDocuments,
   } = useFeatureWorkspaceData(data, featureId);
+  const visible = useVisibleGraph(tasks, dependencies, hideCompleted);
   const openTaskDialog = useCallback(() => {
     setShowTask(true);
   }, []);
@@ -91,7 +108,9 @@ export function FeatureWorkspace() {
       </div>
     );
 
-  const selectedTask = tasks.find((task) => task.id === selected);
+  // The inspector follows the canvas: a task the reader hid leaves the screen
+  // with its node rather than staying open in the panel beside it.
+  const selectedTask = visible.tasks.find((task) => task.id === selected);
   return (
     <WorkspaceContent
       feature={feature}
@@ -99,7 +118,12 @@ export function FeatureWorkspace() {
       project={project}
       projects={data.projects}
       tasks={tasks}
-      dependencies={dependencies}
+      visibleTasks={visible.tasks}
+      visibleDependencies={visible.dependencies}
+      hiddenDependencies={visible.hiddenDependencies}
+      hiddenTaskCount={tasks.length - visible.tasks.length}
+      hideCompleted={hideCompleted}
+      onHideCompletedChange={changeHideCompleted}
       pullRequests={pullRequests}
       documentsByTask={documentsByTask}
       featureDocuments={featureDocuments}
@@ -211,13 +235,35 @@ function useFeatureWorkspaceData(
   };
 }
 
+// The layout keys off the identity of what it is handed, so leaving the filter
+// off has to give back the very arrays the snapshot produced rather than fresh
+// copies of them.
+function useVisibleGraph(
+  tasks: Task[],
+  dependencies: Dependency[],
+  hideCompleted: boolean,
+) {
+  return useMemo(
+    () =>
+      hideCompleted
+        ? hideFinishedTasks(tasks, dependencies)
+        : { tasks, dependencies, hiddenDependencies: emptyHiddenDependencies },
+    [tasks, dependencies, hideCompleted],
+  );
+}
+
 interface WorkspaceContentProps {
   feature: Feature;
   featureId: string;
   project: Project | undefined;
   projects: Project[];
   tasks: Task[];
-  dependencies: Dependency[];
+  visibleTasks: Task[];
+  visibleDependencies: Dependency[];
+  hiddenDependencies: Map<string, HiddenDependencies>;
+  hiddenTaskCount: number;
+  hideCompleted: boolean;
+  onHideCompletedChange: (hide: boolean) => void;
   pullRequests: Map<string, PullRequest>;
   documentsByTask: Map<string, TaskNodeDocument[]>;
   featureDocuments: TaskNodeDocument[];
@@ -254,8 +300,10 @@ function WorkspaceContent(props: WorkspaceContentProps) {
       {readOnly && <ArchivedNotice project={props.project} />}
       <div className="workspace-body">
         <FeatureGraph
-          tasks={props.tasks}
-          dependencies={props.dependencies}
+          tasks={props.visibleTasks}
+          dependencies={props.visibleDependencies}
+          hiddenDependencies={props.hiddenDependencies}
+          hiddenTaskCount={props.hiddenTaskCount}
           pullRequests={props.pullRequests}
           documentsByTask={props.documentsByTask}
           onEditTask={props.onEditTask}
@@ -319,6 +367,10 @@ function FeatureWorkspaceHead({
         )}
       </div>
       <div className="workspace-actions">
+        <HideCompletedToggle
+          checked={props.hideCompleted}
+          onChange={props.onHideCompletedChange}
+        />
         <DocumentReferences
           parent={{ featureId: props.featureId }}
           documents={props.featureDocuments}
@@ -365,6 +417,36 @@ function FeatureWorkspaceHead({
         />
       </div>
     </header>
+  );
+}
+
+// The filter is adjusted while reading one graph and reverts on the next
+// visit, so it stays at the canvas it acts on instead of moving to the
+// Settings dialog the persistent preferences share.
+function HideCompletedToggle({
+  checked,
+  onChange,
+}: {
+  checked: boolean;
+  onChange: (hide: boolean) => void;
+}) {
+  const { t } = useTranslation();
+  return (
+    <label className="hide-completed-toggle">
+      {/* The wording gives way at a narrow viewport, so the control names
+          itself rather than relying on the text beside it. */}
+      <input
+        type="checkbox"
+        role="switch"
+        aria-label={t("workspace.hideCompleted")}
+        title={t("workspace.hideCompleted")}
+        checked={checked}
+        onChange={(event) => {
+          onChange(event.currentTarget.checked);
+        }}
+      />
+      <span>{t("workspace.hideCompleted")}</span>
+    </label>
   );
 }
 
