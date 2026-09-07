@@ -37,6 +37,13 @@
   display: none;
 }
 
+/* 文言は帯の中央に置いたままにしたいので、閉じるボタンだけを右端へ抜き出す。 */
+.demo-banner-dismiss {
+  position: absolute;
+  right: 8px;
+  color: inherit;
+}
+
 .rail {
   position: fixed;
   inset: var(--demo-offset) auto 0 0;

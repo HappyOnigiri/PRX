@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Settings, X } from "lucide-react";
 import {
   useEffect,
   useRef,
@@ -45,7 +45,9 @@ function AppShellLayout({ children }: { children: ReactNode }) {
     useRailToggleFocus(railCollapsed);
   const features = snapshot.data?.features;
   const projects = snapshot.data?.projects;
-  const demo = isDemoMode();
+  // 警告を消せるのはこの描画の間だけである。読み込み直すと必ず戻る。
+  const [demoDismissed, setDemoDismissed] = useState(false);
+  const demo = isDemoMode() && !demoDismissed;
 
   function toggleRail(collapsed: boolean) {
     markUserToggle();
@@ -70,6 +72,17 @@ function AppShellLayout({ children }: { children: ReactNode }) {
             <span>DEMO · Reset on restart</span>
             <span>再起動でリセット</span>
           </span>
+          <IconButton
+            className="demo-banner-dismiss"
+            icon={X}
+            iconOnly
+            label={t("demo.dismiss")}
+            size="compact"
+            variant="quiet"
+            onClick={() => {
+              setDemoDismissed(true);
+            }}
+          />
         </div>
       )}
       <aside className="rail" id={railId}>

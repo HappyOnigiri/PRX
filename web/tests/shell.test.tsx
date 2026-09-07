@@ -188,6 +188,36 @@ describe("AppShell", () => {
     expect(document.querySelector(".rail-foot")).not.toBeInTheDocument();
   });
 
+  it("hides the demo warning for this page load when it is dismissed", () => {
+    const meta = document.createElement("meta");
+    meta.name = "prx-demo";
+    meta.content = "true";
+    document.head.append(meta);
+
+    const { unmount } = render(
+      <AppShell>
+        <p>Workspace</p>
+      </AppShell>,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Hide the demo notice until the page is reloaded",
+      }),
+    );
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(document.querySelector("[data-demo]")).toBeNull();
+
+    // 読み込み直しに相当する再マウントでは、消した状態を持ち越さない。
+    unmount();
+    render(
+      <AppShell>
+        <p>Workspace</p>
+      </AppShell>,
+    );
+    expect(screen.getByRole("status")).toBeInTheDocument();
+  });
+
   it("opens and closes Settings from the rail", () => {
     render(
       <AppShell>

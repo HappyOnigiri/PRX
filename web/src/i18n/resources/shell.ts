@@ -54,6 +54,9 @@ export const shell = {
       showRail: "Show the sidebar",
       resizeRail: "Sidebar width",
     },
+    demo: {
+      dismiss: "Hide the demo notice until the page is reloaded",
+    },
     serverSettings: {
       loading: "Loading server settings…",
       syncTitle: "Automatic GitHub updates",
@@ -153,6 +156,9 @@ export const shell = {
       hideRail: "サイドバーを隠す",
       showRail: "サイドバーを表示",
       resizeRail: "サイドバーの幅",
+    },
+    demo: {
+      dismiss: "デモの警告を再読み込みまで隠す",
     },
     serverSettings: {
       loading: "サーバー設定を読み込んでいます…",

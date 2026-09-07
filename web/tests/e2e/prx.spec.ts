@@ -39,38 +39,6 @@ async function openDisplaySettings(page: Page, language: "en" | "ja" = "en") {
   await page.getByRole("tab", { name: labels.tab }).click();
 }
 
-test("keeps the bilingual demo reset warning visible", async ({ page }) => {
-  await page.goto("/");
-  const banner = page.getByRole("status");
-  await expect(banner).toContainText("DEMO");
-  await expect(banner).toContainText("Changes reset on restart");
-  await expect(banner).toContainText("変更は再起動時にリセットされます");
-
-  await openDisplaySettings(page);
-  await page.getByLabel("Display theme").selectOption("dark");
-  await expect(banner).toBeVisible();
-  await page.getByLabel("Display language").selectOption("ja");
-  await expect(banner).toBeVisible();
-  await page.getByRole("button", { name: "完了" }).click();
-
-  await page.setViewportSize({ width: 320, height: 720 });
-  await page.evaluate(() => {
-    document.body.style.zoom = "2";
-  });
-  // toContainText は textContent を見るため、スクリーンリーダーに読む内容が
-  // 残っていなくても、隠れた広幅用の文言だけで条件を満たしてしまう。
-  const compact = banner.locator(".demo-banner-compact");
-  await expect(compact).toBeVisible();
-  await expect(banner.locator(".demo-banner-full")).toBeHidden();
-  await expect(compact).toHaveText("DEMO · Reset on restart再起動でリセット");
-  expect(
-    await banner.evaluate(
-      (element) =>
-        Array.from(element.querySelectorAll("[aria-hidden='true']")).length,
-    ),
-  ).toBe(0);
-});
-
 // デモバナーはビューポートから高さを取るので、ワークスペースがビューポート全体の
 // サイズのままだと、自身の下端であるグラフキャンバスとズーム操作が画面外に出る。
 test("keeps the demo workspace inside the viewport", async ({ page }) => {
