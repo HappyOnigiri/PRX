@@ -181,7 +181,7 @@
 .feature-list-row {
   min-height: 68px;
   display: grid;
-  grid-template-columns: minmax(180px, 1fr) minmax(110px, 0.65fr) auto auto;
+  grid-template-columns: minmax(180px, 1fr) minmax(110px, 0.65fr) auto;
   align-items: center;
   gap: 22px;
   padding: 12px 18px;
@@ -197,7 +197,17 @@
   background: var(--surface-2);
 }
 
+/* The state opens the line, then the kind icon and the title, so every titled
+   row reads the same way. */
 .feature-list-row-title {
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.feature-list-row-title > b {
+  flex: 1 1 auto;
   min-width: 0;
 }
 
@@ -222,23 +232,14 @@
   font-weight: 500;
 }
 
+/* The status badge is a span in the same row, so the muted, monospaced value
+   styles name every span but that one. */
 .feature-list-row small,
-.feature-list-row > span,
-.feature-list-row > strong {
+.feature-list-row > span:not(.status-badge) {
   color: var(--text-2);
-  font-size: var(--text-xs);
-}
-
-.feature-list-row small,
-.feature-list-row > span {
   font-family: var(--font-mono);
+  font-size: var(--text-xs);
   font-variant-numeric: tabular-nums;
-}
-
-.feature-list-row > strong {
-  border: 1px solid var(--border-strong);
-  padding: 4px 7px;
-  font-weight: 500;
 }
 
 .queue-meter.queue-ready > span {
@@ -300,7 +301,7 @@
   }
 
   .feature-list-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     gap: 8px 12px;
     padding-inline: 14px;
   }
@@ -310,13 +311,8 @@
     grid-row: 2;
   }
 
-  .feature-list-row > span {
+  .feature-list-row > span:not(.status-badge) {
     grid-column: 1;
-  }
-
-  .feature-list-row > strong {
-    grid-column: 2;
-    grid-row: 1;
   }
 
   .queue-meter {

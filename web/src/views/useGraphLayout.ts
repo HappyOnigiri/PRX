@@ -61,7 +61,6 @@ function buildRawNodes({
         assignee: task.assignee,
         state: task.displayState,
         hasImplementationPlan: task.hasImplementationPlan,
-        ready: task.ready,
         stale: pr?.stale ?? false,
         syncError: hasSyncError,
         pullRequest: pr

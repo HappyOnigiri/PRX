@@ -10,7 +10,6 @@ import { useAutoSync, useDomainMutation, useSnapshot } from "./hooks";
 import { formatError } from "./i18n/domain";
 import { projectsByArchive } from "./project";
 import { AutoSyncStatusContext } from "./sync-status";
-import { appVersion } from "./version";
 import { IconButton } from "./views/IconButton";
 import { ProjectSelectField } from "./views/ProjectSelectField";
 import { ProjectTree } from "./views/ProjectTree";
@@ -48,11 +47,8 @@ function AppShellLayout({ children }: { children: ReactNode }) {
       )}
       <aside className="rail">
         <Link to="/" className="brand" aria-label={t("nav.dashboard")}>
-          <span className="brand-line">
-            <span className="brand-mark">
-              P<span>R</span>X
-            </span>
-            <span className="app-version">v{appVersion()}</span>
+          <span className="brand-mark">
+            P<span>R</span>X
           </span>
         </Link>
         <RailNavigation features={features} projects={projects} />

@@ -951,3 +951,69 @@
   color: var(--text-2);
   font-size: var(--text-xs);
 }
+
+/* The badge states a task's or a feature's status, so it looks the same in a
+   list, on a card, and in a page header. The colour comes from the class the
+   caller adds, and the kind icon stays outside, next to the title. */
+.status-badge {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  border: 1px solid var(--status-none);
+  border-radius: 3px;
+  color: var(--text-2);
+  padding: 3px 6px;
+  font-size: var(--text-xs);
+  font-style: normal;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+/* A state names one colour wherever it is shown: the badge does not know
+   whether the task is ready to start, only which state it is in. */
+.status-badge.state-not-started {
+  border-color: var(--status-idle);
+  color: var(--status-idle);
+}
+
+.status-badge.state-designed {
+  border-color: var(--status-ready);
+  color: var(--status-ready);
+}
+
+.status-badge.state-review-waiting,
+.status-badge.state-approved,
+.status-badge.state-changes-requested {
+  border-color: var(--status-review);
+  color: var(--status-review);
+}
+
+.status-badge.state-conflict {
+  border-color: var(--status-conflict);
+  color: var(--status-conflict);
+}
+
+/* A finished task and a merged pull request are both terminal, so they read as
+   one colour; a closed task stays muted because nothing was finished. */
+.status-badge.state-completed,
+.status-badge.state-merged {
+  border-color: var(--status-merged);
+  color: var(--status-merged);
+}
+
+/* A feature carries its own status vocabulary, so its colours sit next to the
+   badge rather than in the stylesheet of any one page that shows it. */
+.status-badge.status-active {
+  border-color: var(--status-ready);
+  color: var(--status-ready);
+}
+
+.status-badge.status-paused {
+  border-color: var(--status-review);
+  color: var(--status-review);
+}
+
+.status-badge.status-completed {
+  border-color: var(--status-merged);
+  color: var(--status-merged);
+}
