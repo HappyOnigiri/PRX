@@ -48,6 +48,15 @@ function renderDialog(onClose = vi.fn()) {
           ready: false,
           pendingBlockerTaskIds: ["task-3"],
         }),
+        // Waiting on two tasks the batch could carry, which leaves its pull
+        // request no single base to stack on.
+        makeTask({
+          id: "task-6",
+          title: "Close the books",
+          ...designed,
+          ready: false,
+          pendingBlockerTaskIds: ["task-1", "task-2"],
+        }),
       ]}
       onClose={onClose}
     />,
@@ -166,6 +175,11 @@ describe("BatchPromptDialog", () => {
     // Its blocker has no plan, so no batch could ever carry this one.
     expect(
       screen.queryByRole("button", { name: /Archive the ledger/ }),
+    ).not.toBeInTheDocument();
+    // Two blockers leave no single pull request to stack on, so the task is
+    // not offered even though the batch could carry both of them.
+    expect(
+      screen.queryByRole("button", { name: /Close the books/ }),
     ).not.toBeInTheDocument();
 
     fireEvent.click(taskRow("Build API"));

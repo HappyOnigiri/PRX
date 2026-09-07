@@ -23,6 +23,8 @@ The receiving agent implements such a task after the work it waits for and stack
 A selection that leaves a blocker out is rejected like a task the feature does not own, because it describes work the agent has no base to start from.
 The reader is offered the blocked tasks only on request, since a handover of what can start now is the common case.
 A blocked task whose blocker no batch could carry is never offered, because selecting it could not become possible.
+A task waiting on more than one task is not offered either, because its pull request would have to stack on several at once and no single base describes where it belongs.
+Such a task is handed over on its own once its blockers have landed, which is the only form the receiving agent can act on.
 
 The built-in implementation and batch templates both tell the agent to branch from the base the work belongs on rather than from the default branch.
 A task whose blocker is still open belongs on that blocker's branch, so the wording is the same whether one task or a whole chain is handed over.

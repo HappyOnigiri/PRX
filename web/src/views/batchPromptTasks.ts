@@ -17,6 +17,11 @@ export interface BatchCandidate {
 // A task waiting on something the batch cannot carry — a task without a plan, or
 // one in another feature — stays out, because selecting it could never become
 // possible.
+//
+// A task waiting on more than one task stays out as well. Its pull request would
+// have to stack on several pull requests at once, and there is no single base to
+// open it against, so the handover it describes is not one an agent can carry
+// out.
 export function batchCandidates(
   tasks: Task[],
   includeBlocked: boolean,
@@ -39,9 +44,9 @@ export function batchCandidates(
   );
 }
 
-// coverableTaskIds grows the ready tasks by whatever waits only on tasks
-// already in the set, until nothing more can be added. A ready task has no
-// unsatisfied blocker, so it enters on the first pass.
+// coverableTaskIds grows the ready tasks by whatever waits on one task already
+// in the set, until nothing more can be added. A ready task has no unsatisfied
+// blocker, so it enters on the first pass.
 function coverableTaskIds(designed: Task[]): ReadonlySet<string> {
   const covered = new Set<string>();
   let grew = true;
@@ -49,6 +54,7 @@ function coverableTaskIds(designed: Task[]): ReadonlySet<string> {
     grew = false;
     for (const task of designed) {
       if (covered.has(task.id)) continue;
+      if (task.pendingBlockerTaskIds.length > 1) continue;
       if (!task.pendingBlockerTaskIds.every((id) => covered.has(id))) continue;
       covered.add(task.id);
       grew = true;
