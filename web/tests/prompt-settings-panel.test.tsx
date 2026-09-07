@@ -12,6 +12,7 @@ import { PromptSettingsPanel } from "../src/views/PromptSettingsPanel";
 interface PromptDraft {
   design: string;
   implementation: string;
+  batch: string;
 }
 
 const panelMocks = vi.hoisted(() => ({
@@ -21,9 +22,12 @@ const panelMocks = vi.hoisted(() => ({
       | {
           design: string;
           implementation: string;
+          batch: string;
           supportedPlaceholders: string[];
           requiredPlaceholder: string;
-          builtIn: { design: string; implementation: string };
+          batchSupportedPlaceholders: string[];
+          batchRequiredPlaceholder: string;
+          builtIn: { design: string; implementation: string; batch: string };
         }
       | undefined,
     isPending: false,
@@ -58,11 +62,15 @@ describe("PromptSettingsPanel", () => {
     panelMocks.templates.data = {
       design: "Design {{task_id}}",
       implementation: "Build {{task_id}}",
+      batch: "Batch {{task_list}}",
       supportedPlaceholders: ["task_id", "feature_id"],
       requiredPlaceholder: "task_id",
+      batchSupportedPlaceholders: ["task_list", "feature_id"],
+      batchRequiredPlaceholder: "task_list",
       builtIn: {
         design: "Built-in design {{task_id}}",
         implementation: "Built-in build {{task_id}}",
+        batch: "Built-in batch {{task_list}}",
       },
     };
     panelMocks.templates.isPending = false;
@@ -95,11 +103,15 @@ describe("PromptSettingsPanel", () => {
     panelMocks.templates.data = {
       design: "Design {{task_id}}",
       implementation: "Build {{task_id}}",
+      batch: "Batch {{task_group}}",
       supportedPlaceholders: ["task_ref", "milestone_id"],
       requiredPlaceholder: "task_ref",
+      batchSupportedPlaceholders: ["task_group"],
+      batchRequiredPlaceholder: "task_group",
       builtIn: {
         design: "Built-in design {{task_ref}}",
         implementation: "Built-in build {{task_ref}}",
+        batch: "Built-in batch {{task_group}}",
       },
     };
     render(<PromptSettingsPanel />);
@@ -109,9 +121,14 @@ describe("PromptSettingsPanel", () => {
     expect(
       screen.getByText(/\{\{task_ref\}\} is required/),
     ).toBeInTheDocument();
+    // The batch template accepts a vocabulary of its own, so the batch field
+    // carries its own hint rather than sharing the one above it.
+    expect(
+      screen.getByText(/\{\{task_group\}\} is required/),
+    ).toBeInTheDocument();
   });
 
-  it("saves both templates in one write and confirms the result", async () => {
+  it("saves every template in one write and confirms the result", async () => {
     render(<PromptSettingsPanel />);
     fireEvent.change(screen.getByLabelText(/Design prompt/), {
       target: { value: "Plan {{task_id}}" },
@@ -119,12 +136,16 @@ describe("PromptSettingsPanel", () => {
     fireEvent.change(screen.getByLabelText(/Implementation prompt/), {
       target: { value: "Ship {{task_id}}" },
     });
+    fireEvent.change(screen.getByLabelText(/Batch implementation prompt/), {
+      target: { value: "Group {{task_list}}" },
+    });
     submitTemplateForm();
 
     await waitFor(() => {
       expect(panelMocks.mutation.mutateAsync).toHaveBeenCalledWith({
         design: "Plan {{task_id}}",
         implementation: "Ship {{task_id}}",
+        batch: "Group {{task_list}}",
       });
     });
     expect(
@@ -146,12 +167,16 @@ describe("PromptSettingsPanel", () => {
     expect(screen.getByLabelText(/Implementation prompt/)).toHaveValue(
       "Built-in build {{task_id}}",
     );
+    expect(screen.getByLabelText(/Batch implementation prompt/)).toHaveValue(
+      "Built-in batch {{task_list}}",
+    );
     submitTemplateForm();
 
     await waitFor(() => {
       expect(panelMocks.mutation.mutateAsync).toHaveBeenCalledWith({
         design: "Built-in design {{task_id}}",
         implementation: "Built-in build {{task_id}}",
+        batch: "Built-in batch {{task_list}}",
       });
     });
   });
@@ -182,6 +207,7 @@ describe("PromptSettingsPanel", () => {
       templates: {
         design: "Plan {{task_id}}",
         implementation: "Build {{task_id}}",
+        batch: "Batch {{task_list}}",
       },
     });
 

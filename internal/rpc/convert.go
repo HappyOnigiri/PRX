@@ -51,6 +51,7 @@ func protoTask(v domain.Task) *prxv1.Task {
 		Ready:                 v.Ready,
 		DisplayState:          protoTaskDisplayState(v.DisplayState),
 		BlockedReason:         protoBlockedReason(v),
+		PendingBlockerTaskIds: v.PendingBlockerTaskIDs,
 	}
 }
 

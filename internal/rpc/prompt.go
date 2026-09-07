@@ -28,6 +28,9 @@ func (h *Handler) GetPromptTemplates(
 		SupportedPlaceholders: prompt.SupportedPlaceholders(),
 		RequiredPlaceholder:   prompt.RequiredPlaceholder(),
 		BuiltIn:               protoPromptTemplates(prompt.DefaultTemplates()),
+
+		BatchSupportedPlaceholders: prompt.BatchSupportedPlaceholders(),
+		BatchRequiredPlaceholder:   prompt.BatchRequiredPlaceholder(),
 	}), nil
 }
 
@@ -43,6 +46,7 @@ func (h *Handler) UpdatePromptTemplates(
 		return settings.SetPrompts(prompt.Templates{
 			Design:         req.Msg.GetDesign(),
 			Implementation: req.Msg.GetImplementation(),
+			Batch:          req.Msg.GetBatch(),
 		})
 	})
 	if err != nil {
@@ -88,6 +92,89 @@ func (h *Handler) GetTaskPrompt(
 	}), nil
 }
 
+// GetBatchPrompt renders one prompt covering several tasks. Every task is
+// resolved from the current server state and checked against the named feature,
+// so a stale WebUI selection reports the task it can no longer hand over instead
+// of quietly rendering a shorter batch than the caller asked for.
+func (h *Handler) GetBatchPrompt(
+	ctx context.Context,
+	req *connect.Request[prxv1.GetBatchPromptRequest],
+) (*connect.Response[prxv1.GetBatchPromptResponse], error) {
+	store, err := h.requireConfig()
+	if err != nil {
+		return nil, err
+	}
+	settings, err := store.Load()
+	if err != nil {
+		return nil, configRPCError(err)
+	}
+	featureID := req.Msg.GetFeatureId()
+	taskIDs := req.Msg.GetTaskIds()
+	// Both selection failures are reported as an invalid parent: the request
+	// says which tasks belong to this batch, and either it named none of them or
+	// it named one the feature does not own.
+	if len(taskIDs) == 0 {
+		return nil, rpcError(domain.NewError(
+			domain.DomainErrorCodeInvalidParent,
+			"a batch prompt needs at least one task of feature %q", featureID,
+		))
+	}
+	snapshot, err := h.service.Snapshot(ctx)
+	if err != nil {
+		return nil, rpcError(err)
+	}
+	tasks := make([]domain.Task, 0, len(taskIDs))
+	for _, id := range taskIDs {
+		task, ok := findTask(snapshot, id)
+		if !ok {
+			return nil, rpcError(
+				domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", id),
+			)
+		}
+		if task.FeatureID != featureID {
+			return nil, rpcError(domain.NewError(
+				domain.DomainErrorCodeInvalidParent,
+				"task %q does not belong to feature %q", id, featureID,
+			))
+		}
+		tasks = append(tasks, task)
+	}
+	if err := requireBlockersInBatch(tasks); err != nil {
+		return nil, err
+	}
+	body, err := prompt.RenderBatch(featureID, tasks, settings.Prompts)
+	if err != nil {
+		return nil, configRPCError(err)
+	}
+	return connect.NewResponse(&prxv1.GetBatchPromptResponse{
+		FeatureId: featureID, TaskIds: taskIDs, Prompt: body,
+	}), nil
+}
+
+// requireBlockersInBatch rejects a batch that asks for a task without the work
+// it waits for. A blocked task can be handed over, because the agent implements
+// it after its blocker and stacks the pull requests, but only if that blocker
+// travels in the same batch. Anything else describes work the receiving agent
+// has no base to start from.
+func requireBlockersInBatch(tasks []domain.Task) error {
+	included := make(map[string]struct{}, len(tasks))
+	for _, task := range tasks {
+		included[task.ID] = struct{}{}
+	}
+	for _, task := range tasks {
+		for _, blockerID := range task.PendingBlockerTaskIDs {
+			if _, ok := included[blockerID]; ok {
+				continue
+			}
+			return rpcError(domain.NewError(
+				domain.DomainErrorCodeInvalidParent,
+				"task %q waits for task %q, which the batch does not include", task.ID, blockerID,
+			))
+		}
+	}
+	return nil
+}
+
 func findTask(snapshot domain.Snapshot, id string) (domain.Task, bool) {
 	for _, task := range snapshot.Tasks {
 		if task.ID == id {
@@ -98,7 +185,9 @@ func findTask(snapshot domain.Snapshot, id string) (domain.Task, bool) {
 }
 
 func protoPromptTemplates(value prompt.Templates) *prxv1.PromptTemplates {
-	return &prxv1.PromptTemplates{Design: value.Design, Implementation: value.Implementation}
+	return &prxv1.PromptTemplates{
+		Design: value.Design, Implementation: value.Implementation, Batch: value.Batch,
+	}
 }
 
 func protoTaskPromptKind(value prompt.Kind) prxv1.TaskPromptKind {

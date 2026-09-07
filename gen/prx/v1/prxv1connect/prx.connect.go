@@ -138,6 +138,9 @@ const (
 	// PRXServiceGetTaskPromptProcedure is the fully-qualified name of the PRXService's GetTaskPrompt
 	// RPC.
 	PRXServiceGetTaskPromptProcedure = "/prx.v1.PRXService/GetTaskPrompt"
+	// PRXServiceGetBatchPromptProcedure is the fully-qualified name of the PRXService's GetBatchPrompt
+	// RPC.
+	PRXServiceGetBatchPromptProcedure = "/prx.v1.PRXService/GetBatchPrompt"
 )
 
 // PRXServiceClient is a client for the prx.v1.PRXService service.
@@ -214,10 +217,12 @@ type PRXServiceClient interface {
 	ValidateConfig(context.Context, *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error)
 	// GetPromptTemplates returns the stored agent prompt templates.
 	GetPromptTemplates(context.Context, *connect.Request[v1.GetPromptTemplatesRequest]) (*connect.Response[v1.GetPromptTemplatesResponse], error)
-	// UpdatePromptTemplates replaces both agent prompt templates in one write.
+	// UpdatePromptTemplates replaces every agent prompt template in one write.
 	UpdatePromptTemplates(context.Context, *connect.Request[v1.UpdatePromptTemplatesRequest]) (*connect.Response[v1.UpdatePromptTemplatesResponse], error)
 	// GetTaskPrompt returns the expanded agent prompt for one task.
 	GetTaskPrompt(context.Context, *connect.Request[v1.GetTaskPromptRequest]) (*connect.Response[v1.GetTaskPromptResponse], error)
+	// GetBatchPrompt returns one expanded prompt covering several tasks of one feature.
+	GetBatchPrompt(context.Context, *connect.Request[v1.GetBatchPromptRequest]) (*connect.Response[v1.GetBatchPromptResponse], error)
 }
 
 // NewPRXServiceClient constructs a client for the prx.v1.PRXService service. By default, it uses
@@ -459,6 +464,12 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(pRXServiceMethods.ByName("GetTaskPrompt")),
 			connect.WithClientOptions(opts...),
 		),
+		getBatchPrompt: connect.NewClient[v1.GetBatchPromptRequest, v1.GetBatchPromptResponse](
+			httpClient,
+			baseURL+PRXServiceGetBatchPromptProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("GetBatchPrompt")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -502,6 +513,7 @@ type pRXServiceClient struct {
 	getPromptTemplates       *connect.Client[v1.GetPromptTemplatesRequest, v1.GetPromptTemplatesResponse]
 	updatePromptTemplates    *connect.Client[v1.UpdatePromptTemplatesRequest, v1.UpdatePromptTemplatesResponse]
 	getTaskPrompt            *connect.Client[v1.GetTaskPromptRequest, v1.GetTaskPromptResponse]
+	getBatchPrompt           *connect.Client[v1.GetBatchPromptRequest, v1.GetBatchPromptResponse]
 }
 
 // GetSnapshot calls prx.v1.PRXService.GetSnapshot.
@@ -694,6 +706,11 @@ func (c *pRXServiceClient) GetTaskPrompt(ctx context.Context, req *connect.Reque
 	return c.getTaskPrompt.CallUnary(ctx, req)
 }
 
+// GetBatchPrompt calls prx.v1.PRXService.GetBatchPrompt.
+func (c *pRXServiceClient) GetBatchPrompt(ctx context.Context, req *connect.Request[v1.GetBatchPromptRequest]) (*connect.Response[v1.GetBatchPromptResponse], error) {
+	return c.getBatchPrompt.CallUnary(ctx, req)
+}
+
 // PRXServiceHandler is an implementation of the prx.v1.PRXService service.
 type PRXServiceHandler interface {
 	// GetSnapshot returns the current normalized dataset and derived queues.
@@ -768,10 +785,12 @@ type PRXServiceHandler interface {
 	ValidateConfig(context.Context, *connect.Request[v1.ValidateConfigRequest]) (*connect.Response[v1.ValidateConfigResponse], error)
 	// GetPromptTemplates returns the stored agent prompt templates.
 	GetPromptTemplates(context.Context, *connect.Request[v1.GetPromptTemplatesRequest]) (*connect.Response[v1.GetPromptTemplatesResponse], error)
-	// UpdatePromptTemplates replaces both agent prompt templates in one write.
+	// UpdatePromptTemplates replaces every agent prompt template in one write.
 	UpdatePromptTemplates(context.Context, *connect.Request[v1.UpdatePromptTemplatesRequest]) (*connect.Response[v1.UpdatePromptTemplatesResponse], error)
 	// GetTaskPrompt returns the expanded agent prompt for one task.
 	GetTaskPrompt(context.Context, *connect.Request[v1.GetTaskPromptRequest]) (*connect.Response[v1.GetTaskPromptResponse], error)
+	// GetBatchPrompt returns one expanded prompt covering several tasks of one feature.
+	GetBatchPrompt(context.Context, *connect.Request[v1.GetBatchPromptRequest]) (*connect.Response[v1.GetBatchPromptResponse], error)
 }
 
 // NewPRXServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -1009,6 +1028,12 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(pRXServiceMethods.ByName("GetTaskPrompt")),
 		connect.WithHandlerOptions(opts...),
 	)
+	pRXServiceGetBatchPromptHandler := connect.NewUnaryHandler(
+		PRXServiceGetBatchPromptProcedure,
+		svc.GetBatchPrompt,
+		connect.WithSchema(pRXServiceMethods.ByName("GetBatchPrompt")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/prx.v1.PRXService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case PRXServiceGetSnapshotProcedure:
@@ -1087,6 +1112,8 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceUpdatePromptTemplatesHandler.ServeHTTP(w, r)
 		case PRXServiceGetTaskPromptProcedure:
 			pRXServiceGetTaskPromptHandler.ServeHTTP(w, r)
+		case PRXServiceGetBatchPromptProcedure:
+			pRXServiceGetBatchPromptHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -1246,4 +1273,8 @@ func (UnimplementedPRXServiceHandler) UpdatePromptTemplates(context.Context, *co
 
 func (UnimplementedPRXServiceHandler) GetTaskPrompt(context.Context, *connect.Request[v1.GetTaskPromptRequest]) (*connect.Response[v1.GetTaskPromptResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetTaskPrompt is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) GetBatchPrompt(context.Context, *connect.Request[v1.GetBatchPromptRequest]) (*connect.Response[v1.GetBatchPromptResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetBatchPrompt is not implemented"))
 }

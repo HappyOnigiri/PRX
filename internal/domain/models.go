@@ -170,6 +170,11 @@ type Task struct {
 	BlockedReason         string            `json:"blocked_reason,omitempty"`
 	BlockedCode           BlockedReasonCode `json:"-"`
 	BlockerTaskID         string            `json:"-"`
+	// PendingBlockerTaskIDs names every blocker that is not satisfied yet, while
+	// BlockerTaskID names only the first one the blocked reason is worded from.
+	// A caller handing several tasks to one agent needs the whole set, because a
+	// task can only be started once every one of them travels with it.
+	PendingBlockerTaskIDs []string `json:"-"`
 }
 
 type Dependency struct {

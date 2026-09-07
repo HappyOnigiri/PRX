@@ -2,6 +2,7 @@ package domain
 
 import (
 	"fmt"
+	"slices"
 	"testing"
 	"time"
 )
@@ -52,6 +53,42 @@ func TestReadyReportsStructuredWaitingReason(t *testing.T) {
 	got := Derive(tasks, deps, nil)
 	if got[1].Ready || got[1].BlockedCode != BlockedReasonCodeWaitingForBlocker || got[1].BlockerTaskID != "a" {
 		t.Fatalf("unexpected structured waiting reason: %+v", got[1])
+	}
+}
+
+// A caller handing a blocked task to an agent has to hand over everything it
+// waits for, so the whole set is derived even though the reason names the first
+// blocker alone.
+func TestReadyCollectsEveryPendingBlocker(t *testing.T) {
+	tasks := []Task{
+		{ID: "a", Title: "API", Status: TaskStatusNotStarted},
+		{ID: "b", Title: "Billing", Status: TaskStatusCompleted},
+		{ID: "c", Title: "Schema", Status: TaskStatusNotStarted},
+		{ID: "d", Title: "UI", Status: TaskStatusNotStarted},
+	}
+	deps := []Dependency{
+		{BlockerTaskID: "a", BlockedTaskID: "d"},
+		{BlockerTaskID: "b", BlockedTaskID: "d"},
+		{BlockerTaskID: "c", BlockedTaskID: "d"},
+		{BlockerTaskID: "missing", BlockedTaskID: "d"},
+	}
+	got := Derive(tasks, deps, nil)
+	ui := got[3]
+	if ui.Ready {
+		t.Fatalf("task waiting on three blockers should not be ready: %+v", ui)
+	}
+	// "b" is completed, so it is satisfied and stays out; "missing" is carried
+	// because a blocker the graph cannot resolve is not satisfied either.
+	want := []string{"a", "c", "missing"}
+	if !slices.Equal(ui.PendingBlockerTaskIDs, want) {
+		t.Fatalf("pending blockers=%v want %v", ui.PendingBlockerTaskIDs, want)
+	}
+	// The reason still describes the first unsatisfied blocker on its own.
+	if ui.BlockedCode != BlockedReasonCodeWaitingForBlocker || ui.BlockerTaskID != "a" {
+		t.Fatalf("unexpected blocked reason: %+v", ui)
+	}
+	if ids := got[0].PendingBlockerTaskIDs; ids != nil {
+		t.Fatalf("a task with no blocker should carry none: %v", ids)
 	}
 }
 

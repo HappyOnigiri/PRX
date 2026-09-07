@@ -135,20 +135,27 @@ func Derive(tasks []Task, deps []Dependency, prs []PullRequest) []Task {
 			continue
 		}
 		task.Ready = true
+		task.PendingBlockerTaskIDs = nil
+		// Every unsatisfied blocker is collected rather than only the first one,
+		// because handing a blocked task to an agent means handing over
+		// everything it waits for. The blocked reason still describes the first
+		// one alone, which is what a reader acts on.
 		for _, blockerID := range blockers[task.ID] {
 			blocker, ok := taskByID[blockerID]
+			if ok && IsSatisfied(blocker, prByTask[blockerID]) {
+				continue
+			}
+			task.Ready = false
+			task.PendingBlockerTaskIDs = append(task.PendingBlockerTaskIDs, blockerID)
+			if task.BlockedCode != "" {
+				continue
+			}
 			if !ok {
-				task.Ready = false
 				task.BlockedCode = BlockedReasonCodeDependencyDataIncomplete
-				break
+				continue
 			}
-			blockerPR := prByTask[blockerID]
-			if !IsSatisfied(blocker, blockerPR) {
-				task.Ready = false
-				task.BlockedCode = BlockedReasonCodeWaitingForBlocker
-				task.BlockerTaskID = blockerID
-				break
-			}
+			task.BlockedCode = BlockedReasonCodeWaitingForBlocker
+			task.BlockerTaskID = blockerID
 		}
 		task.BlockedReason = BlockedReasonText(task.BlockedCode, taskByID[task.BlockerTaskID].Title)
 		result[i] = task

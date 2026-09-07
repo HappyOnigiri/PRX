@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   configMutations,
+  getBatchPrompt,
   getConfig,
   getDebugReport,
   getPromptTemplates,
@@ -54,6 +55,7 @@ const apiMocks = vi.hoisted(() => {
     getPromptTemplates: vi.fn(),
     updatePromptTemplates: vi.fn(),
     getTaskPrompt: vi.fn(),
+    getBatchPrompt: vi.fn(),
   };
   return {
     client,
@@ -158,23 +160,33 @@ describe("RPC API wrappers", () => {
   });
 
   it("wraps prompt template reads, writes, and one task prompt", async () => {
-    const templates = { design: "Design {{task_id}}", implementation: "" };
+    const templates = {
+      design: "Design {{task_id}}",
+      implementation: "",
+      batch: "Batch {{task_list}}",
+    };
     const builtIn = {
       design: "Built-in design {{task_id}}",
       implementation: "Built-in build {{task_id}}",
+      batch: "Built-in batch {{task_list}}",
     };
     apiMocks.client.getPromptTemplates.mockResolvedValueOnce({
       templates,
       supportedPlaceholders: ["task_id", "feature_id"],
       requiredPlaceholder: "task_id",
+      batchSupportedPlaceholders: ["task_list", "feature_id"],
+      batchRequiredPlaceholder: "task_list",
       builtIn,
     });
     // The vocabulary and the built-in text travel with the templates so the
-    // editor never has to keep its own copy of either.
+    // editor never has to keep its own copy of either. The batch template
+    // carries its own vocabulary, which is not the task one.
     await expect(getPromptTemplates()).resolves.toEqual({
       ...templates,
       supportedPlaceholders: ["task_id", "feature_id"],
       requiredPlaceholder: "task_id",
+      batchSupportedPlaceholders: ["task_list", "feature_id"],
+      batchRequiredPlaceholder: "task_list",
       builtIn,
     });
     apiMocks.client.getPromptTemplates.mockResolvedValueOnce({});
@@ -185,11 +197,13 @@ describe("RPC API wrappers", () => {
     await promptMutations.updateTemplates({
       design: "Design {{task_id}}",
       implementation: "Build {{task_id}}",
+      batch: "Batch {{task_list}}",
     });
     expect(apiMocks.client.updatePromptTemplates).toHaveBeenCalledWith(
       expect.objectContaining({
         design: "Design {{task_id}}",
         implementation: "Build {{task_id}}",
+        batch: "Batch {{task_list}}",
       }),
     );
 
@@ -205,6 +219,20 @@ describe("RPC API wrappers", () => {
     });
     expect(apiMocks.client.getTaskPrompt).toHaveBeenCalledWith(
       expect.objectContaining({ taskId: "T-1" }),
+    );
+
+    apiMocks.client.getBatchPrompt.mockResolvedValueOnce({
+      featureId: "F-1",
+      taskIds: ["T-1", "T-2"],
+      prompt: "Batch T-1 T-2",
+    });
+    await expect(getBatchPrompt("F-1", ["T-1", "T-2"])).resolves.toEqual({
+      featureId: "F-1",
+      taskIds: ["T-1", "T-2"],
+      prompt: "Batch T-1 T-2",
+    });
+    expect(apiMocks.client.getBatchPrompt).toHaveBeenCalledWith(
+      expect.objectContaining({ featureId: "F-1", taskIds: ["T-1", "T-2"] }),
     );
   });
 
