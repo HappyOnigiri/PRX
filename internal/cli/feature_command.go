@@ -46,11 +46,10 @@ func (s *state) featureCommand() *cobra.Command {
 func (s *state) featureCreateCommand() *cobra.Command {
 	var description, project string
 	command := &cobra.Command{
-		Use:   "create TITLE",
-		Short: "Create a feature",
-		Example: "prx feature create \"Checkout rollout\"\n" +
-			"prx feature create \"Checkout rollout\" --project P-1\n" +
-			"prx feature create -- \"-fix checkout\"",
+		Use:   "create TITLE --project PROJECT_ID",
+		Short: "Create a feature in a project",
+		Example: "prx feature create \"Checkout rollout\" --project P-1\n" +
+			"prx feature create -- \"-fix checkout\" --project P-1",
 		Args: cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.CreateFeature(cmd.Context(), args[0], description, project)
@@ -61,7 +60,7 @@ func (s *state) featureCreateCommand() *cobra.Command {
 		},
 	}
 	command.Flags().StringVar(&description, "description", "", "feature description")
-	command.Flags().StringVar(&project, "project", "", "project ID to join")
+	command.Flags().StringVar(&project, "project", "", "project ID to join; required")
 	return command
 }
 
@@ -71,7 +70,7 @@ func (s *state) featureUpdateCommand() *cobra.Command {
 	command := &cobra.Command{
 		Use:     "update FEATURE_ID",
 		Short:   "Update a feature by ID",
-		Example: "prx feature update F-1 --archived=false\nprx feature update F-1 --project=",
+		Example: "prx feature update F-1 --archived=false\nprx feature update F-1 --project P-2",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
 			value, err := s.service.UpdateFeature(cmd.Context(), args[0], domain.FeatureUpdate{
@@ -91,7 +90,7 @@ func (s *state) featureUpdateCommand() *cobra.Command {
 	command.Flags().StringVar(&description, "description", "", "new description")
 	command.Flags().StringVar(&status, "status", "", "auto, active, paused, completed, or cancelled")
 	command.Flags().BoolVar(&archived, "archived", false, "archive (true) or unarchive (false) the feature")
-	command.Flags().StringVar(&project, "project", "", "project ID; an empty value leaves the project")
+	command.Flags().StringVar(&project, "project", "", "project ID to move the feature to")
 	return command
 }
 

@@ -21,7 +21,8 @@ A stored status other than automatic is a manual decision and is presented uncha
 A feature has no separate derived vocabulary: the derived value is a stored status without the automatic member.
 
 A project is the unit above a feature: it groups features and holds the documents they share.
-Membership is optional, a feature belongs to at most one project, and dependencies stay inside one feature regardless of project.
+Membership is required, a feature belongs to exactly one project, and dependencies stay inside one feature regardless of project.
+A feature is created in a project and can only move to another one, so there is no state in which work sits outside every project.
 A project's only state is whether it is archived; it is deliberately outside the two-layer status rule that features and tasks share.
 Archiving reaches into a project: a feature inside an archived project is presented as read-only even when its own archived flag is false.
 The server derives that as `Feature.ReadOnly` and clients read it directly instead of combining the feature's flag with its project's.

@@ -32,10 +32,7 @@ func TestAutomaticSyncClaimsOnceAndFiltersArchivedButRefreshesMergedPullRequests
 	}
 	service := app.NewWithConfig(database, provider, configStore)
 
-	active, err := service.CreateFeature(ctx, "Active sync", "", "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	active := newFeature(t, ctx, service, "Active sync")
 	activeTask, err := service.CreateTask(ctx, active.ID, "Active PR", "", "")
 	if err != nil {
 		t.Fatal(err)
@@ -128,10 +125,7 @@ func archivedFeatureWithPullRequest(
 ) (domain.Task, error) {
 	t.Helper()
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, slug, "", "")
-	if err != nil {
-		return domain.Task{}, err
-	}
+	feature := newFeature(t, ctx, service, slug)
 	task, err := service.CreateTask(ctx, feature.ID, "Archived PR", "", "")
 	if err != nil {
 		return domain.Task{}, err
@@ -184,10 +178,7 @@ func TestTargetedManualSyncLeavesTheAutomaticIntervalAndStatusUntouched(t *testi
 	service, database := newAutoSyncTestService(t)
 	defer func() { _ = database.Close() }()
 
-	feature, err := service.CreateFeature(ctx, "Targeted", "", "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	feature := newFeature(t, ctx, service, "Targeted")
 	task, err := service.CreateTask(ctx, feature.ID, "Targeted PR", "", "")
 	if err != nil {
 		t.Fatal(err)
@@ -239,10 +230,7 @@ func TestAutomaticSyncRecordsTheRunAfterTheCallerCancels(t *testing.T) {
 		configStore,
 	)
 
-	feature, err := service.CreateFeature(context.Background(), "Cancelled", "", "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	feature := newFeature(t, context.Background(), service, "Cancelled")
 	task, err := service.CreateTask(context.Background(), feature.ID, "PR", "", "")
 	if err != nil {
 		t.Fatal(err)

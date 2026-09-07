@@ -142,11 +142,12 @@ func (s *state) projectDeleteCommand() *cobra.Command {
 	var cascade bool
 	command := &cobra.Command{
 		Use:   "delete PROJECT_ID",
-		Short: "Delete a project; --cascade removes its documents and releases its features",
+		Short: "Delete a project; --cascade removes its documents and the features it holds",
 		Long: "Delete a project.\n\n" +
 			"Without --cascade the command fails while the project still has features or documents.\n\n" +
-			"With --cascade it deletes the project's own documents and releases its features.\n" +
-			"Contained features are never deleted: they keep their own identifiers and tasks.",
+			"With --cascade it deletes the project's own documents and every feature inside it,\n" +
+			"together with the tasks, dependencies, pull-request attachments, and documents those\n" +
+			"features own. A feature cannot outlive its project, because it belongs to one.",
 		Example: "prx project delete P-1 --cascade",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
@@ -156,6 +157,6 @@ func (s *state) projectDeleteCommand() *cobra.Command {
 			return s.write(map[string]string{"deleted": args[0]}, renderMessage("Deleted project %s.", args[0]))
 		},
 	}
-	command.Flags().BoolVar(&cascade, "cascade", false, "delete the project's documents and release its features")
+	command.Flags().BoolVar(&cascade, "cascade", false, "delete the project's documents and the features it holds")
 	return command
 }

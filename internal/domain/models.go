@@ -97,8 +97,9 @@ const (
 	BlockedReasonCodeWaitingForBlocker        BlockedReasonCode = "waiting_for_blocker"
 )
 
-// Project groups features. Membership is optional, and a project's only state
-// is whether it is archived: it has no two-layer status the way a feature does.
+// Project groups features. Every feature belongs to one, and a project's only
+// state is whether it is archived: it has no two-layer status the way a feature
+// does.
 type Project struct {
 	ID          string    `json:"id"`
 	StorageID   string    `json:"-"`
@@ -132,7 +133,7 @@ type FeatureUpdate struct {
 type Feature struct {
 	ID          string        `json:"id"`
 	StorageID   string        `json:"-"`
-	ProjectID   string        `json:"project_id,omitempty"`
+	ProjectID   string        `json:"project_id"`
 	Title       string        `json:"title"`
 	Description string        `json:"description"`
 	Status      FeatureStatus `json:"status"`

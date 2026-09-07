@@ -138,6 +138,12 @@ func (r *featureRepository) GetFeature(context.Context, string) (domain.Feature,
 	return r.feature, nil
 }
 
+// The read-only guard reads the project every feature belongs to, so the stub
+// answers with the active container rather than a missing one.
+func (r *featureRepository) GetProject(_ context.Context, id string) (domain.Project, error) {
+	return domain.Project{ID: id}, nil
+}
+
 type taskRepository struct {
 	repositoryStub
 	task domain.Task
@@ -151,6 +157,10 @@ func (r *taskRepository) GetTask(context.Context, string) (domain.Task, error) {
 
 func (r *taskRepository) GetFeature(context.Context, string) (domain.Feature, error) {
 	return r.feature, nil
+}
+
+func (r *taskRepository) GetProject(_ context.Context, id string) (domain.Project, error) {
+	return domain.Project{ID: id}, nil
 }
 
 type missingFeatureRepository struct {
@@ -278,22 +288,35 @@ type createFeatureRepository struct {
 	repositoryStub
 	gotTitle       string
 	gotDescription string
+	gotProject     string
+}
+
+func (r *createFeatureRepository) GetProject(_ context.Context, id string) (domain.Project, error) {
+	return domain.Project{ID: id}, nil
 }
 
 func (r *createFeatureRepository) CreateFeature(
 	_ context.Context,
-	title, description, _ string,
+	title, description, projectID string,
 ) (domain.Feature, error) {
 	r.gotTitle = title
 	r.gotDescription = description
-	return domain.Feature{Title: title, Description: description}, nil
+	r.gotProject = projectID
+	return domain.Feature{Title: title, Description: description, ProjectID: projectID}, nil
 }
 
 func TestCreateFeatureValidatesBeforeRepository(t *testing.T) {
 	service := app.New(repositoryStub{}, nil)
-	_, err := service.CreateFeature(context.Background(), "  ", "", "")
+	_, err := service.CreateFeature(context.Background(), "  ", "", "P-1")
 	if got := errorCode(t, err); got != domain.DomainErrorCodeInvalidTitle {
 		t.Fatalf("error code=%q, want %q", got, domain.DomainErrorCodeInvalidTitle)
+	}
+
+	// Membership is required, so a feature without a project is refused before
+	// the repository is reached.
+	_, err = service.CreateFeature(context.Background(), "Release API", "", "  ")
+	if got := errorCode(t, err); got != domain.DomainErrorCodeInvalidParent {
+		t.Fatalf("error code=%q, want %q", got, domain.DomainErrorCodeInvalidParent)
 	}
 }
 
@@ -301,15 +324,18 @@ func TestCreateFeatureNormalizesBeforeRepository(t *testing.T) {
 	repository := &createFeatureRepository{}
 	service := app.New(repository, nil)
 
-	_, err := service.CreateFeature(context.Background(), "  Release API  ", "  Description  ", "")
+	_, err := service.CreateFeature(context.Background(), "  Release API  ", "  Description  ", "  P-1  ")
 	if err != nil {
 		t.Fatal(err)
 	}
-	if repository.gotTitle != "Release API" || repository.gotDescription != "Description" {
+	if repository.gotTitle != "Release API" ||
+		repository.gotDescription != "Description" ||
+		repository.gotProject != "P-1" {
 		t.Fatalf(
-			"repository received title=%q description=%q",
+			"repository received title=%q description=%q project=%q",
 			repository.gotTitle,
 			repository.gotDescription,
+			repository.gotProject,
 		)
 	}
 }

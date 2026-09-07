@@ -1,6 +1,6 @@
 ## prx project delete
 
-Delete a project; --cascade removes its documents and releases its features
+Delete a project; --cascade removes its documents and the features it holds
 
 ### Synopsis
 
@@ -8,8 +8,9 @@ Delete a project.
 
 Without --cascade the command fails while the project still has features or documents.
 
-With --cascade it deletes the project's own documents and releases its features.
-Contained features are never deleted: they keep their own identifiers and tasks.
+With --cascade it deletes the project's own documents and every feature inside it,
+together with the tasks, dependencies, pull-request attachments, and documents those
+features own. A feature cannot outlive its project, because it belongs to one.
 
 ```
 prx project delete PROJECT_ID [flags]
@@ -24,7 +25,7 @@ prx project delete P-1 --cascade
 ### Options
 
 ```
-      --cascade   delete the project's documents and release its features
+      --cascade   delete the project's documents and the features it holds
   -h, --help      help for delete
 ```
 

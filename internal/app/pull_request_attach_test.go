@@ -85,10 +85,7 @@ func TestAttachPullRequestKeepsAFailedRefreshVisible(t *testing.T) {
 func createTaskForAttach(t *testing.T, service *app.Service, title string) domain.Task {
 	t.Helper()
 	ctx := context.Background()
-	feature, err := service.CreateFeature(ctx, title, "", "")
-	if err != nil {
-		t.Fatal(err)
-	}
+	feature := newFeature(t, ctx, service, title)
 	task, err := service.CreateTask(ctx, feature.ID, title, "", "")
 	if err != nil {
 		t.Fatal(err)

@@ -46,6 +46,7 @@ vi.mock("../src/hooks", () => ({
 }));
 vi.mock("../src/api", () => ({
   mutations: {
+    createFeature: vi.fn(),
     updateProject: vi.fn(),
     deleteProject: vi.fn(),
     deleteDocument: vi.fn(),
@@ -205,11 +206,31 @@ describe("ProjectWorkspace", () => {
     ).toBeInTheDocument();
   });
 
+  // A feature is created from the project it joins, so the action lives here
+  // and needs no project field of its own.
+  it("opens the feature creation dialog for this project", () => {
+    workspaceMocks.snapshot.data = populatedSnapshot();
+    render(<ProjectWorkspace />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Create feature" }));
+    expect(
+      screen.getByRole("form", { name: "Create feature" }),
+    ).toBeInTheDocument();
+    expect(screen.queryByLabelText("Project")).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(
+      screen.queryByRole("form", { name: "Create feature" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("presents an archived project without reference editing", () => {
     workspaceMocks.snapshot.data = populatedSnapshot(true);
     render(<ProjectWorkspace />);
 
     expect(screen.getByText("Archived · read-only")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "Create feature" }),
+    ).not.toBeInTheDocument();
     fireEvent.click(screen.getByRole("button", { name: "References" }));
     expect(
       screen.queryByRole("button", { name: "Add reference" }),

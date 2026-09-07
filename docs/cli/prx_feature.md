@@ -39,7 +39,7 @@ prx f F-1
 
 * [prx](prx.md)	 - Manage pull-request dependency roadmaps
 * [prx feature archive](prx_feature_archive.md)	 - Archive a feature by ID
-* [prx feature create](prx_feature_create.md)	 - Create a feature
+* [prx feature create](prx_feature_create.md)	 - Create a feature in a project
 * [prx feature delete](prx_feature_delete.md)	 - Delete a feature and optionally its contained data
 * [prx feature unarchive](prx_feature_unarchive.md)	 - Unarchive a feature by ID
 * [prx feature update](prx_feature_update.md)	 - Update a feature by ID

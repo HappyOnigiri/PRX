@@ -8,44 +8,24 @@ import {
   readCollapsedProjects,
   writeCollapsedProjects,
 } from "../i18n/settings";
-import {
-  featuresInProject,
-  featuresWithoutProject,
-  unassignedProjectKey,
-} from "../project";
+import { featuresInProject } from "../project";
 import { EntityIcon } from "./EntityIcon";
 
 interface TreeRow {
-  key: string;
+  projectId: string;
   title: string;
-  // The unaffiliated row has no project to link to, so it is the one row
-  // without an ID and the one that reaches its own page instead.
-  projectId?: string;
   features: Feature[];
 }
 
 // The tree presents the working set: the projects still in play and the
 // features inside them that are still in flight. Everything else is reached
 // through the tabs on the pages the tree links to.
-function treeRows(
-  projects: Project[],
-  features: Feature[],
-  unassignedTitle: string,
-): TreeRow[] {
-  const rows: TreeRow[] = projects.map((project) => ({
-    key: project.id,
-    title: project.title,
+function treeRows(projects: Project[], features: Feature[]): TreeRow[] {
+  return projects.map((project) => ({
     projectId: project.id,
+    title: project.title,
     features: featuresInProject(features, project.id).filter(isActiveFeature),
   }));
-  const unassigned = featuresWithoutProject(features).filter(isActiveFeature);
-  if (unassigned.length)
-    rows.push({
-      key: unassignedProjectKey,
-      title: unassignedTitle,
-      features: unassigned,
-    });
-  return rows;
 }
 
 export function ProjectTree({
@@ -57,9 +37,8 @@ export function ProjectTree({
   projects: Project[];
   features: Feature[];
 }) {
-  const { t } = useTranslation();
   const [collapsed, setCollapsed] = useState(readCollapsedProjects);
-  const rows = treeRows(projects, features, t("project.unassignedTitle"));
+  const rows = treeRows(projects, features);
 
   function toggle(key: string) {
     // Deriving the next list from the rows on screen is also what keeps a
@@ -67,7 +46,7 @@ export function ProjectTree({
     // row cannot be carried over. No separate sweep and no extra pass over the
     // project list are needed.
     const next = rows
-      .map((row) => row.key)
+      .map((row) => row.projectId)
       .filter((id) =>
         id === key ? !collapsed.includes(id) : collapsed.includes(id),
       );
@@ -79,11 +58,11 @@ export function ProjectTree({
     <ul className="nav-tree" aria-labelledby={headingId}>
       {rows.map((row) => (
         <ProjectTreeRow
-          key={row.key}
+          key={row.projectId}
           row={row}
-          expanded={!collapsed.includes(row.key)}
+          expanded={!collapsed.includes(row.projectId)}
           onToggle={() => {
-            toggle(row.key);
+            toggle(row.projectId);
           }}
         />
       ))}
@@ -101,7 +80,7 @@ function ProjectTreeRow({
   onToggle: () => void;
 }) {
   const { t } = useTranslation();
-  const childrenId = `nav-tree-children-${row.key}`;
+  const childrenId = `nav-tree-children-${row.projectId}`;
   const label = t("nav.toggleProject", { title: row.title });
   return (
     <li>
@@ -140,8 +119,6 @@ function ProjectTreeRow({
   );
 }
 
-// The two destinations differ in their parameters, so the link is written
-// twice while the row content is written once.
 function ProjectRowLink({
   row,
   children,
@@ -149,23 +126,12 @@ function ProjectRowLink({
   row: TreeRow;
   children: ReactNode;
 }) {
-  const className = "feature-link project-link";
-  const search = { features: "active" } as const;
-  return row.projectId === undefined ? (
-    <Link
-      to="/projects/unassigned"
-      search={search}
-      className={className}
-      activeProps={{ "data-active": true }}
-    >
-      {children}
-    </Link>
-  ) : (
+  return (
     <Link
       to="/projects/$projectId"
       params={{ projectId: row.projectId }}
-      search={search}
-      className={className}
+      search={{ features: "active" } as const}
+      className="feature-link project-link"
       activeProps={{ "data-active": true }}
     >
       {children}
