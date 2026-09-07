@@ -532,7 +532,9 @@
   right: -32px;
 }
 
-.node-hidden-dependency svg {
+/* The stub's icon is type-qualified so it keeps at least the specificity of
+   the title's glyph rule, which comes earlier in this file. */
+span.node-hidden-dependency svg {
   display: block;
 }
 
