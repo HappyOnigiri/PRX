@@ -50,6 +50,9 @@ export const shell = {
       toggleProject: "Expand or collapse {{title}}",
       taskSearch: "Task search",
       serverUnavailable: "Server unavailable",
+      hideRail: "Hide the sidebar",
+      showRail: "Show the sidebar",
+      resizeRail: "Sidebar width",
     },
     serverSettings: {
       loading: "Loading server settings…",
@@ -147,6 +150,9 @@ export const shell = {
       toggleProject: "{{title}}を展開または折りたたむ",
       taskSearch: "タスク検索",
       serverUnavailable: "サーバーに接続できません",
+      hideRail: "サイドバーを隠す",
+      showRail: "サイドバーを表示",
+      resizeRail: "サイドバーの幅",
     },
     serverSettings: {
       loading: "サーバー設定を読み込んでいます…",
