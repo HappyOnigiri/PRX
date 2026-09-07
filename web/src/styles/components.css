@@ -1012,17 +1012,42 @@
   border-top: 1px solid var(--border);
 }
 
-.dialog .batch-prompt-list label {
+/* The whole row is the toggle, so it spans the list and keeps the accent edge
+   reserved for the selected state. The edge is placement rather than colour
+   alone, which is what separates a selected row from the one under the
+   pointer. */
+.batch-prompt-task {
   display: flex;
   flex-direction: row;
   align-items: center;
   gap: 10px;
+  width: 100%;
   margin: 0;
-  padding: 8px 12px;
+  padding: 8px 12px 8px 9px;
+  border: 0;
+  border-left: 3px solid transparent;
+  border-radius: 0;
+  background: none;
   color: var(--text);
   font-size: var(--text-sm);
   font-weight: 400;
+  text-align: left;
   cursor: pointer;
+}
+
+.batch-prompt-task:hover {
+  background: var(--surface-2);
+}
+
+.batch-prompt-task[aria-pressed="true"] {
+  border-left-color: var(--accent);
+  background: var(--surface-2);
+}
+
+/* The list clips its own scroll area, so the ring sits inside the row instead
+   of being cut off at the first and last one. */
+.batch-prompt-task:focus-visible {
+  outline-offset: -2px;
 }
 
 .batch-prompt-task-title {

@@ -171,17 +171,22 @@ function BatchPromptTaskList({
       <ul className="batch-prompt-list">
         {candidates.map((task) => (
           <li key={task.id}>
-            <label>
-              <input
-                type="checkbox"
-                checked={selected.has(task.id)}
-                onChange={() => {
-                  onToggle(task.id);
-                }}
-              />
+            {/* The row itself is the control. A reader picks several tasks in a
+                run down the list, so the target is the line they are reading
+                rather than a box at its edge. The selection reaches assistive
+                technology through aria-pressed, because the accent edge and the
+                filled background state it by appearance alone. */}
+            <button
+              type="button"
+              className="batch-prompt-task"
+              aria-pressed={selected.has(task.id)}
+              onClick={() => {
+                onToggle(task.id);
+              }}
+            >
               <span className="batch-prompt-task-title">{task.title}</span>
               <span className="batch-prompt-task-id">{task.id}</span>
-            </label>
+            </button>
           </li>
         ))}
       </ul>

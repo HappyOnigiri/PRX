@@ -43,6 +43,12 @@ function renderDialog(onClose = vi.fn()) {
   );
 }
 
+// The row is the control now, so a task is addressed by the button carrying its
+// title and identifier rather than by a checkbox label.
+function taskRow(title: string) {
+  return screen.getByRole("button", { name: new RegExp(title) });
+}
+
 function stubClipboard(writeText: ReturnType<typeof vi.fn>) {
   Object.defineProperty(navigator, "clipboard", {
     configurable: true,
@@ -65,10 +71,14 @@ describe("BatchPromptDialog", () => {
   it("offers the designed tasks whose blockers are clear", () => {
     renderDialog();
 
-    expect(screen.getByLabelText(/Build API/)).toBeInTheDocument();
-    expect(screen.getByLabelText(/Bill the order/)).toBeInTheDocument();
-    expect(screen.queryByLabelText(/Draft the schema/)).not.toBeInTheDocument();
-    expect(screen.queryByLabelText(/Ship the change/)).not.toBeInTheDocument();
+    expect(taskRow("Build API")).toBeInTheDocument();
+    expect(taskRow("Bill the order")).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Draft the schema/ }),
+    ).not.toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: /Ship the change/ }),
+    ).not.toBeInTheDocument();
     expect(screen.getByText("0 of 2 selected")).toBeInTheDocument();
     // Nothing is selected yet, so there is no prompt to copy.
     expect(screen.getByRole("button", { name: "Copy prompt" })).toBeDisabled();
@@ -86,8 +96,8 @@ describe("BatchPromptDialog", () => {
 
     // Clicking the later task first must not reorder the request: the reader
     // hands over the batch in the order they saw it.
-    fireEvent.click(screen.getByLabelText(/Bill the order/));
-    fireEvent.click(screen.getByLabelText(/Build API/));
+    fireEvent.click(taskRow("Bill the order"));
+    fireEvent.click(taskRow("Build API"));
     fireEvent.click(screen.getByRole("button", { name: "Copy prompt" }));
 
     await waitFor(() => {
@@ -107,11 +117,23 @@ describe("BatchPromptDialog", () => {
 
     fireEvent.click(screen.getByRole("button", { name: "Select all" }));
     expect(screen.getByText("2 of 2 selected")).toBeInTheDocument();
-    expect(screen.getByLabelText(/Build API/)).toBeChecked();
+    expect(taskRow("Build API")).toHaveAttribute("aria-pressed", "true");
 
     fireEvent.click(screen.getByRole("button", { name: "Clear selection" }));
     expect(screen.getByText("0 of 2 selected")).toBeInTheDocument();
-    expect(screen.getByLabelText(/Build API/)).not.toBeChecked();
+    expect(taskRow("Build API")).toHaveAttribute("aria-pressed", "false");
+  });
+
+  // Selecting a row is a pointer gesture with no checkbox behind it, so the
+  // row has to be a control a keyboard reaches and activates on its own.
+  it("offers each row as a focusable toggle", () => {
+    renderDialog();
+
+    const row = taskRow("Build API");
+    expect(row).toHaveAttribute("type", "button");
+    expect(row).toHaveAttribute("aria-pressed", "false");
+    row.focus();
+    expect(row).toHaveFocus();
   });
 
   // The server names the task or the template at fault, so its message reaches
@@ -146,7 +168,7 @@ describe("BatchPromptDialog", () => {
     });
     renderDialog();
 
-    fireEvent.click(screen.getByLabelText(/Build API/));
+    fireEvent.click(taskRow("Build API"));
     fireEvent.click(screen.getByRole("button", { name: "Copy prompt" }));
 
     await waitFor(() => {
