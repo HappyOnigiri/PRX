@@ -402,6 +402,9 @@ func domainTask(value db.Task, featureID string) domain.Task {
 		Assignee:         value.Assignee,
 		CreatedAt:        parseTime(value.CreatedAt),
 		UpdatedAt:        parseTime(value.UpdatedAt),
+		// domain.Derive を通らない経路（task create / task update）でも JSON の
+		// block_labels を null にしないため、ここで空配列を入れる。
+		BlockLabels: []domain.TaskBlockLabel{},
 	}
 }
 
