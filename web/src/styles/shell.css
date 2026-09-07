@@ -54,25 +54,11 @@
   justify-content: center;
 }
 
-.brand-line {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
 .brand-mark {
   color: var(--text);
   font-size: var(--text-lg);
   font-weight: 600;
   line-height: 1.2;
-}
-
-.app-version {
-  color: var(--text-3);
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  font-variant-numeric: tabular-nums;
-  font-weight: 500;
 }
 
 .rail nav {
@@ -371,17 +357,6 @@
 
   .rail-action {
     display: none;
-  }
-
-  .brand-line {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 0;
-  }
-
-  .app-version {
-    font-size: 0.625rem;
-    line-height: 1;
   }
 
   .rail nav {
