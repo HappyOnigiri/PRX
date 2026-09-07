@@ -789,7 +789,7 @@ test("archives and safely deletes a feature", async ({ page }) => {
 // 100 タスクのプログラムは全タスクが完了しているため、自動判定の状態により
 // 概要から外れて完了リストに移る。
 for (const { title, size, from } of [
-  { title: "Delivery control showcase", size: 13, from: "/" },
+  { title: "Delivery control showcase", size: 15, from: "/" },
   {
     title: "Completed 100-task program",
     size: 100,
@@ -829,7 +829,7 @@ for (const { title, size, from } of [
         expect(overlap, `nodes ${i} and ${j} overlap`).toBe(false);
       }
     await mkdir("../test-results/screenshots", { recursive: true });
-    if (size > 13)
+    if (size > 15)
       await page.screenshot({
         path: `../test-results/screenshots/graph-${size}-overview.png`,
         fullPage: true,
@@ -879,7 +879,7 @@ test("keeps the user's graph zoom across features and reloads", async ({
     .getByRole("link", { name: /Delivery control showcase/ })
     .first()
     .click();
-  await expect(page.locator(".task-node")).toHaveCount(13, {
+  await expect(page.locator(".task-node")).toHaveCount(15, {
     timeout: 25_000,
   });
   await page.locator(".react-flow__controls-zoomout").click();

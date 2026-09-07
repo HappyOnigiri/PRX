@@ -69,15 +69,10 @@
   font-size: var(--text-xs);
 }
 
+/* 結果は 1 枚のパネルではなくカードの並びなので、外枠と面を持たない。浮いた
+   カードだけが面を持ち、沈んだカードはこの地に溶ける。 */
 .task-results {
   margin: 28px 0 0;
-  border: 1px solid var(--border);
-  background: var(--surface);
-}
-
-/* The list draws its own outer border, so the last card stops repeating it. */
-.task-results > li:last-child {
-  border-bottom: 0;
 }
 
 .task-search-empty,
@@ -110,8 +105,7 @@
   }
 
   .task-results {
-    margin-inline: -16px;
-    border-inline: 0;
+    margin-inline: -4px;
   }
 
   .task-results .task-card {

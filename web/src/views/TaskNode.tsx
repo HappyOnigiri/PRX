@@ -18,6 +18,7 @@ import type { HiddenDependencies } from "./completedTasks";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
+import { PullRequestFlags } from "./PullRequestFlags";
 import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 import { TaskBlockLabels, TaskStatusBadge } from "./TaskStateBadges";
 
@@ -40,10 +41,16 @@ interface TaskNodeData extends Record<string, unknown> {
   title: string;
   assignee: string;
   state: TaskDisplayState;
+  // dormant はその task を今は見なくてよいかで、ステータス 1 つからは読み取れ
+  // ない。ノードの面の明暗で示す。docs/design/webui.md を参照。
+  dormant: boolean;
+  // blocked は沈んでいる理由が blocker 待ちかで、決着済みと区別して枠を残す。
+  blocked: boolean;
   blockLabels: TaskBlockLabel[];
   hasImplementationPlan: boolean;
   stale: boolean;
-  syncError: boolean;
+  // syncError は本文をそのまま tooltip に載せるので、真偽ではなく文言で持つ。
+  syncError: string;
   pullRequest: { label: string; url: string } | undefined;
   documents: TaskNodeDocument[];
   hiddenDependencies?: HiddenDependencies;
@@ -154,7 +161,7 @@ export function TaskNode({
 
   return (
     <div
-      className={`task-node state-${taskDisplayStateToken(data.state)} ${data.stale ? "is-stale" : ""} ${selected ? "is-selected" : ""}`}
+      className={`task-node state-${taskDisplayStateToken(data.state)} ${data.dormant ? "is-dormant" : ""} ${data.blocked ? "is-dependency-blocked" : ""} ${selected ? "is-selected" : ""}`}
     >
       <Handle
         type="target"
@@ -179,7 +186,6 @@ export function TaskNode({
         titles={data.hiddenDependencies?.blocked ?? []}
       />
       <div className="task-node-head">
-        <TaskStatusBadge state={data.state} />
         <div className="task-node-actions nodrag nowheel nopan">
           <CopyableIdentifier label={t("common.taskId")} value={id} valueOnly />
           {/* コピーはアーカイブ済みのタスクでも使える。エージェントに作業を
@@ -204,13 +210,12 @@ export function TaskNode({
           />
         </div>
       </div>
-      {/* ラベルはヘッダに並べると折り返して、先読みしたノードの高さとずれる。
-          独立した行にすれば useGraphLayout の計算式と一致する。 */}
-      {data.blockLabels.length > 0 && (
-        <p className="task-node-blocks">
-          <TaskBlockLabels labels={data.blockLabels} />
-        </p>
-      )}
+      {/* ステータスとブロックラベルは 1 つの並びとして読むので同じ行に置く。
+          操作の下に敷けば幅を丸ごと使えて、折り返しは 3 個目からになる。 */}
+      <p className="task-node-badges">
+        <TaskStatusBadge state={data.state} />
+        <TaskBlockLabels labels={data.blockLabels} />
+      </p>
       <h3>
         <EntityIcon kind="task" size={13} />
         {data.title}
@@ -222,9 +227,6 @@ export function TaskNode({
           <EntityIcon kind="assignee" size={13} />
           <span>{data.assignee}</span>
         </p>
-      )}
-      {data.syncError && (
-        <p className="node-sync-error">{t("inspector.githubSyncError")}</p>
       )}
       <NodeAssets data={data} />
       <Handle
@@ -271,16 +273,25 @@ function NodeAssetList({ data }: { data: TaskNodeData }) {
   return (
     <div className="node-assets nodrag nowheel nopan">
       {data.pullRequest && (
-        <a
-          className="node-asset node-asset-pr"
-          href={data.pullRequest.url}
-          target="_blank"
-          rel="noreferrer"
-        >
-          <span>PR</span>
-          <b>{data.pullRequest.label}</b>
-          <ExternalLink aria-hidden="true" focusable="false" size={14} />
-        </a>
+        /* 異常は pull request 自身のものなのでその行に置くが、リンクの中には
+           入れない。中に置くと tooltip がリンクに吸われ、理由が読めない。 */
+        <div className="node-asset-pr-row">
+          <a
+            className="node-asset node-asset-pr"
+            href={data.pullRequest.url}
+            target="_blank"
+            rel="noreferrer"
+          >
+            <span>PR</span>
+            <b>{data.pullRequest.label}</b>
+            <ExternalLink aria-hidden="true" focusable="false" size={14} />
+          </a>
+          {(data.stale || data.syncError) && (
+            <span className="node-asset-flags">
+              <PullRequestFlags stale={data.stale} syncError={data.syncError} />
+            </span>
+          )}
+        </div>
       )}
       {[...data.documents]
         .sort(

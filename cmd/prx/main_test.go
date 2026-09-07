@@ -35,7 +35,7 @@ func TestDemoServiceIsIsolatedPersistsUntilCloseAndResets(t *testing.T) {
 		t.Fatal(err)
 	}
 	temporaryRoot := closer.(*serviceCloser).temporaryRoot
-	assertDemoCounts(t, service, 5, 122)
+	assertDemoCounts(t, service, 5, 124)
 	project, err := service.CreateProject(ctx, "Session project", "")
 	if err != nil {
 		t.Fatal(err)
@@ -43,7 +43,7 @@ func TestDemoServiceIsIsolatedPersistsUntilCloseAndResets(t *testing.T) {
 	if _, err := service.CreateFeature(ctx, "Session change", "", project.ID); err != nil {
 		t.Fatal(err)
 	}
-	assertDemoCounts(t, service, 6, 122)
+	assertDemoCounts(t, service, 6, 124)
 	if err := closer.Close(); err != nil {
 		t.Fatal(err)
 	}
@@ -62,7 +62,7 @@ func TestDemoServiceIsIsolatedPersistsUntilCloseAndResets(t *testing.T) {
 			t.Error(err)
 		}
 	})
-	assertDemoCounts(t, service, 5, 122)
+	assertDemoCounts(t, service, 5, 124)
 }
 
 func assertDemoCounts(t *testing.T, service cli.Service, features, tasks int) {

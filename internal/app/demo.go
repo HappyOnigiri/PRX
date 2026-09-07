@@ -131,7 +131,9 @@ func (s *Service) createShowcaseDemo(ctx context.Context, markdownPath, projectI
 	if err != nil {
 		return err
 	}
-	for _, edge := range [][2]int{{0, 1}, {3, 6}, {6, 10}, {6, 11}, {10, 12}} {
+	// blocker には必ず、その先の task より進んだものを置く。依存未解決は 0 と 5
+	// から伸ばす。0 は着手前、5 は pull request を持てない手作業である。
+	for _, edge := range [][2]int{{0, 1}, {3, 7}, {6, 11}, {7, 12}, {11, 13}, {5, 14}} {
 		if _, err := s.AddDependency(ctx, showcaseTasks[edge[0]].ID, showcaseTasks[edge[1]].ID); err != nil {
 			return err
 		}
@@ -297,7 +299,7 @@ func (s *Service) createSunsetPostmortemDemo(ctx context.Context, projectID stri
 	if err != nil {
 		return err
 	}
-	_, err = s.createDemoTasks(ctx, postmortem, []demoTask{
+	tasks, err := s.createDemoTasks(ctx, postmortem, []demoTask{
 		{
 			title:    "Collect lessons",
 			scope:    "Summarize what the experiment showed",
@@ -311,6 +313,10 @@ func (s *Service) createSunsetPostmortemDemo(ctx context.Context, projectID stri
 			assignee: "Bob",
 		},
 	})
+	if err != nil {
+		return err
+	}
+	_, err = s.AddDependency(ctx, tasks[0].ID, tasks[1].ID)
 	return err
 }
 
@@ -413,6 +419,14 @@ func showcaseManualTasks() []demoTask {
 			scope:  "Explicitly closed work",
 			status: domain.TaskStatusClosed,
 		},
+		{
+			// 手作業の承認は pull request を持たないので、進行中のまま実装済みの
+			// pull request を止めておける。依存未解決のラベルはここから伸ばす。
+			title:    "Approve rollout policy",
+			scope:    "Manual sign-off that never gets a pull request",
+			status:   domain.TaskStatusInProgress,
+			assignee: "Bob",
+		},
 	}
 }
 
@@ -422,8 +436,18 @@ func showcasePullRequestTasks() []demoTask {
 			domain.PullRequestStateMerged, false, domain.ReviewStateApproved, domain.MergeabilityMergeable, "Alice"),
 		demoPullRequestTask("Draft WebUI shell", "Draft pull request", "prx-web", 102,
 			domain.PullRequestStateOpen, true, domain.ReviewStateNone, domain.MergeabilityMergeable, "Bob"),
-		demoPullRequestTask("Resolve graph conflict", "Conflicting pull request", "prx-graph", 103,
-			domain.PullRequestStateOpen, false, domain.ReviewStateNone, domain.MergeabilityConflicting, "Carol"),
+		// コンフリクトと修正依頼を同時に抱えるので、ブロックラベルが 2 個並ぶ。
+		demoPullRequestTask(
+			"Resolve graph conflict",
+			"Conflicting pull request under review",
+			"prx-graph",
+			103,
+			domain.PullRequestStateOpen,
+			false,
+			domain.ReviewStateChangesRequested,
+			domain.MergeabilityConflicting,
+			"Carol",
+		),
 		demoPullRequestTask("Address review feedback", "Changes requested, pushed since", "prx-cli", 104,
 			domain.PullRequestStateOpen, false, domain.ReviewStateChangesRequested, domain.MergeabilityMergeable, ""),
 		demoPullRequestTask("Approved configuration", "Approved pull request", "prx-config", 105,
@@ -434,12 +458,25 @@ func showcasePullRequestTasks() []demoTask {
 			domain.PullRequestStateOpen, false, domain.ReviewStateNone, domain.MergeabilityMergeable, ""),
 		demoPullRequestTask("Stale external state", "A failed sync preserving its last result", "prx-external", 108,
 			domain.PullRequestStateUnknown, false, domain.ReviewStateUnknown, domain.MergeabilityUnknown, "Carol"),
+		// 方針の承認が下りるまでマージできないが実装は先に進むので、ブロックラベルが
+		// 3 個並ぶ。依存は showcase の依存関係で与える。
+		demoPullRequestTask(
+			"Rework blocked migration",
+			"Implemented ahead of the sign-off it waits on",
+			"prx-migrations",
+			109,
+			domain.PullRequestStateOpen,
+			false,
+			domain.ReviewStateChangesRequested,
+			domain.MergeabilityConflicting,
+			"Alice",
+		),
 	}
 	values[7].pr.Stale = true
 	values[7].pr.SyncError = "demo fixture: repository temporarily unavailable"
 	// 104 はレビュー後に push した pull request、106 は未応答のレビュー依頼が残る
 	// pull request で、どちらもレビュー中になる。
-	reviewedAt := time.Date(2024, time.January, 2, 3, 4, 5, 0, time.UTC)
+	reviewedAt := time.Date(2026, time.August, 28, 3, 4, 5, 0, time.UTC)
 	pushedAt := reviewedAt.Add(time.Hour)
 	values[3].pr.ChangesRequestedAt = &reviewedAt
 	values[3].pr.LastPushedAt = &pushedAt

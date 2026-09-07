@@ -2,17 +2,65 @@
    and the search results share these rules instead of drifting apart. */
 .task-card-list {
   margin: 0;
+  display: grid;
+  gap: 8px;
   padding: 0;
   list-style: none;
 }
 
+/* What deserves a look right now is the first question a list of tasks has to
+   answer, so the card itself answers it: a card stands as its own raised
+   surface until nothing about it is worth reading, and then it lies flush with
+   the page. See docs/design/webui.md. */
 .task-card {
   display: grid;
   grid-template-columns: 1fr auto;
   gap: 12px;
   align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px
+    color-mix(in srgb, var(--border-strong) 30%, transparent);
   padding: 14px 18px;
-  border-bottom: 1px solid var(--border);
+}
+
+/* 沈んだカードは影を手放し、面も地の側へ寄せる。ただし枠と面をそのまま地と
+   同じにはしない。境界を失うとどこまでが 1 件か読めなくなるためである。 */
+.task-card.is-dormant {
+  border-color: color-mix(in srgb, var(--border) 55%, transparent);
+  background: color-mix(in srgb, var(--surface) 40%, var(--bg));
+  box-shadow: none;
+}
+
+/* blocker を待っているだけのカードは、決着済みと違って作業が残っている。地に
+   溶けきらせず、閉じていない枠として破線を残す。 */
+.task-card.is-dependency-blocked {
+  position: relative;
+  border-color: transparent;
+}
+
+/* dashed の刻みは border の太さで決まり、1px では点線に潰れて実線と区別が
+   つかない。枠を疑似要素に持たせ、斜めのストライプで抜いて刻みだけを大きく
+   する。太さは 1px のまま、寸法も変わらない。 */
+.task-card.is-dependency-blocked::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--border);
+  border-radius: inherit;
+  mask: repeating-linear-gradient(45deg, #000 0 6px, transparent 6px 12px);
+  pointer-events: none;
+}
+
+/* 明暗だけで伝わる区別なので、読み上げのために名前を残す。 */
+.task-card-dormant {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 }
 
 .task-card > div {
@@ -108,14 +156,22 @@
   text-decoration: underline;
 }
 
+/* 沈んだカードは題も一段落とす。面の差だけでは、拾い読みのときにリンクの強さが
+   残って前に出て見えてしまう。 */
+.task-card.is-dormant .task-card-title a {
+  color: var(--text-2);
+  font-weight: 400;
+}
+
+.task-card.is-dormant .task-card-title a:hover {
+  color: var(--accent);
+}
+
 .task-card-pr > small {
   color: var(--text-3);
 }
 
-.task-card-pr > em {
-  overflow: hidden;
-  color: var(--status-blocked);
-  font-style: normal;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+/* 印は状態を示すので、メタ行のフィールドを示すグリフの灰には引かれない。 */
+.task-card-pr .pr-flag svg {
+  color: inherit;
 }
