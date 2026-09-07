@@ -296,7 +296,7 @@ func latestChangesRequestedAtFromREST(latest map[string]restReview) *time.Time {
 }
 
 // lastPushedAt は最新コミットの時刻を返す。REST の commit には push 時刻がないので
-// committer の日時を使う。GraphQL 経路の pushedAt が null のときと同じ値になる。
+// committer の日時を使う。GraphQL 経路のコミット日時と同じ値になる。
 func (p *LiveProvider) lastPushedAt(
 	ctx context.Context,
 	current domain.PullRequest,

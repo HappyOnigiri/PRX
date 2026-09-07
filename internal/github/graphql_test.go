@@ -354,7 +354,7 @@ func writeGraphQLResponse(t *testing.T, writer http.ResponseWriter, value any) {
 }
 
 // GraphQL 経路の 3 項目は、レビュー中の判定に直接効く。変更要求だけを時刻の対象に
-// し、pushedAt が null ならコミット日時へ落とす。
+// し、push 時刻には最新コミットのコミット日時を使う。
 func TestLiveProviderFetchBatchReadsReviewTimingFields(t *testing.T) {
 	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
 		query := decodeGraphQLQuery(t, request)
@@ -379,7 +379,7 @@ func TestLiveProviderFetchBatchReadsReviewTimingFields(t *testing.T) {
 			"pageInfo": pageInfo,
 		}
 		pull["commits"] = map[string]any{"nodes": []any{map[string]any{
-			"commit": map[string]any{"pushedAt": nil, "committedDate": "2026-03-02T00:00:00Z"},
+			"commit": map[string]any{"committedDate": "2026-03-02T00:00:00Z"},
 		}}}
 		writeGraphQLResponse(t, writer, map[string]any{"data": data})
 	}))
@@ -451,7 +451,7 @@ func TestLiveProviderFetchBatchClearsReviewTimingForFinishedPullRequests(t *test
 			"pageInfo": map[string]any{"hasNextPage": false, "endCursor": ""},
 		}
 		pull["commits"] = map[string]any{"nodes": []any{map[string]any{
-			"commit": map[string]any{"pushedAt": "2026-03-02T00:00:00Z", "committedDate": ""},
+			"commit": map[string]any{"committedDate": "2026-03-02T00:00:00Z"},
 		}}}
 		writeGraphQLResponse(t, writer, map[string]any{"data": data})
 	}))
@@ -468,5 +468,32 @@ func TestLiveProviderFetchBatchClearsReviewTimingForFinishedPullRequests(t *test
 	got := result.PullRequests["merged"]
 	if got.ReviewRequestPending || got.ChangesRequestedAt != nil || got.LastPushedAt != nil {
 		t.Fatalf("merged result=%+v", got)
+	}
+}
+
+// クエリ検証エラーは HTTP 200 で data を伴わずに返る。path は repository の別名から
+// 始まらないので、個別の失敗に割り当てるとメッセージが失われる。
+func TestLiveProviderFetchBatchReportsQueryValidationErrors(t *testing.T) {
+	server := httptest.NewTLSServer(http.HandlerFunc(func(writer http.ResponseWriter, request *http.Request) {
+		writeGraphQLResponse(t, writer, map[string]any{
+			"errors": []any{map[string]any{
+				"message": "Field 'pushedAt' doesn't exist on type 'Commit'",
+				"path":    []any{"query", "r0", "p0", "commits", "nodes", "commit", "pushedAt"},
+				"extensions": map[string]any{
+					"code": "undefinedField", "typeName": "Commit", "fieldName": "pushedAt",
+				},
+			}},
+		})
+	}))
+	defer server.Close()
+	provider := newGraphQLTestProvider(t, server)
+	result, err := provider.FetchBatch(context.Background(), []domain.PullRequest{{
+		TaskID: "invalid", Owner: "acme", Repository: "api", Number: 12,
+	}})
+	if err == nil || !strings.Contains(err.Error(), "pushedAt") {
+		t.Fatalf("err=%v result=%+v", err, result)
+	}
+	if result.Errors["invalid"] != nil {
+		t.Fatalf("item error=%v", result.Errors["invalid"])
 	}
 }

@@ -66,12 +66,11 @@ type graphQLPullRequest struct {
 		} `json:"nodes"`
 		PageInfo graphQLPageInfo `json:"pageInfo"`
 	} `json:"reviewRequests"`
-	// Commits は常に最新の 1 件だけを取るのでページングしない。pushedAt は force push
-	// 後などに null になるため committedDate へフォールバックする。
+	// Commits は常に最新の 1 件だけを取るのでページングしない。Commit に push 時刻の
+	// フィールドはないので、REST 経路と同じくコミット日時を使う。
 	Commits struct {
 		Nodes []struct {
 			Commit struct {
-				PushedAt      string `json:"pushedAt"`
 				CommittedDate string `json:"committedDate"`
 			} `json:"commit"`
 		} `json:"nodes"`
@@ -334,18 +333,16 @@ func latestChangesRequestedAt(value graphQLPullRequest) *time.Time {
 	return latest
 }
 
-// lastPushedAtFromGraphQL は最新コミットの push 時刻を返す。pushedAt が null の
-// ことは多いので、コミット日時にフォールバックする。
+// lastPushedAtFromGraphQL は最新コミットのコミット日時を返す。GraphQL の Commit は
+// push 時刻を公開していないので、REST 経路と同じ値になる。
 func lastPushedAtFromGraphQL(value graphQLPullRequest) *time.Time {
 	for _, node := range value.Commits.Nodes {
-		for _, candidate := range []string{node.Commit.PushedAt, node.Commit.CommittedDate} {
-			pushed, err := time.Parse(time.RFC3339, candidate)
-			if err != nil {
-				continue
-			}
-			pushed = pushed.UTC()
-			return &pushed
+		pushed, err := time.Parse(time.RFC3339, node.Commit.CommittedDate)
+		if err != nil {
+			continue
 		}
+		pushed = pushed.UTC()
+		return &pushed
 	}
 	return nil
 }
@@ -533,7 +530,7 @@ func buildGraphQLQuery(current []domain.PullRequest) (string, map[string]any, []
 
 const graphQLFields = "id author{login} assignees(first:100){nodes{login} pageInfo{hasNextPage endCursor}} " +
 	"state merged isDraft mergeable updatedAt " +
-	"commits(last:1){nodes{commit{pushedAt committedDate}}} " +
+	"commits(last:1){nodes{commit{committedDate}}} " +
 	"latestReviews(first:100){nodes{author{login} state submittedAt} pageInfo{hasNextPage endCursor}} " +
 	"reviewRequests(first:100){nodes{requestedReviewer{... on User{login} ... on Team{slug}}} " +
 	"pageInfo{hasNextPage endCursor}}"
@@ -589,6 +586,11 @@ func mapGraphQLErrors(
 			return result, err
 		}
 		repositoryAlias, _ := graphErr.Path[0].(string)
+		// クエリ検証エラーの path は repository の別名から始まらない。個別の失敗として
+		// 割り当てると、どの pull request も「見つからない」に化けて原因が隠れる。
+		if _, ok := byRepository[repositoryAlias]; !ok {
+			return result, err
+		}
 		if len(graphErr.Path) > 1 {
 			pullAlias, _ := graphErr.Path[1].(string)
 			if item, ok := byPull[repositoryAlias+"/"+pullAlias]; ok {
