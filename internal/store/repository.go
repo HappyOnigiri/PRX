@@ -644,9 +644,12 @@ func (s *Store) UpsertPullRequest(ctx context.Context, value domain.PullRequest)
 		GithubUpdatedAt: nullTime(
 			value.GitHubUpdatedAt,
 		),
-		LastSyncedAt: nullTime(value.LastSyncedAt),
-		SyncError:    value.SyncError,
-		Stale:        boolInt(value.Stale),
+		LastSyncedAt:         nullTime(value.LastSyncedAt),
+		SyncError:            value.SyncError,
+		Stale:                boolInt(value.Stale),
+		ReviewRequestPending: boolInt(value.ReviewRequestPending),
+		ChangesRequestedAt:   nullTime(value.ChangesRequestedAt),
+		LastPushedAt:         nullTime(value.LastPushedAt),
 	})
 	if err != nil {
 		if strings.Contains(err.Error(), "UNIQUE constraint failed") {

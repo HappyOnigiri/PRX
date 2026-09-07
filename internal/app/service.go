@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"slices"
 	"strings"
 	"sync/atomic"
 	"time"
@@ -671,10 +672,10 @@ func deriveSnapshot(snapshot domain.Snapshot) domain.Snapshot {
 		if task.Ready {
 			snapshot.ReadyTasks = append(snapshot.ReadyTasks, task)
 		}
-		if task.DisplayState == domain.TaskDisplayStateReviewWaiting {
+		if task.DisplayState == domain.TaskDisplayStateInReview {
 			snapshot.ReviewWaitingTasks = append(snapshot.ReviewWaitingTasks, task)
 		}
-		if task.DisplayState == domain.TaskDisplayStateConflict {
+		if slices.Contains(task.BlockLabels, domain.TaskBlockLabelConflict) {
 			snapshot.ConflictTasks = append(snapshot.ConflictTasks, task)
 		}
 	}
@@ -701,10 +702,10 @@ func deriveSnapshot(snapshot domain.Snapshot) domain.Snapshot {
 		if task.Ready {
 			feature.ReadyCount++
 		}
-		if task.DisplayState == domain.TaskDisplayStateReviewWaiting {
+		if task.DisplayState == domain.TaskDisplayStateInReview {
 			feature.ReviewWaitingCount++
 		}
-		if task.DisplayState == domain.TaskDisplayStateConflict {
+		if slices.Contains(task.BlockLabels, domain.TaskBlockLabelConflict) {
 			feature.ConflictCount++
 		}
 		if task.DisplayState == domain.TaskDisplayStateMerged {

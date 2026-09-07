@@ -52,8 +52,9 @@ type graphQLPullRequest struct {
 	} `json:"assignees"`
 	LatestReviews struct {
 		Nodes []struct {
-			State  string `json:"state"`
-			Author *struct {
+			State       string `json:"state"`
+			SubmittedAt string `json:"submittedAt"`
+			Author      *struct {
 				Login string `json:"login"`
 			} `json:"author"`
 		} `json:"nodes"`
@@ -65,6 +66,16 @@ type graphQLPullRequest struct {
 		} `json:"nodes"`
 		PageInfo graphQLPageInfo `json:"pageInfo"`
 	} `json:"reviewRequests"`
+	// Commits は常に最新の 1 件だけを取るのでページングしない。pushedAt は force push
+	// 後などに null になるため committedDate へフォールバックする。
+	Commits struct {
+		Nodes []struct {
+			Commit struct {
+				PushedAt      string `json:"pushedAt"`
+				CommittedDate string `json:"committedDate"`
+			} `json:"commit"`
+		} `json:"nodes"`
+	} `json:"commits"`
 }
 
 type graphQLItem struct {
@@ -268,9 +279,48 @@ func domainPullRequestCoreFromGraphQL(
 	}
 	current.State = state
 	current.Draft = value.IsDraft
+	current.ReviewRequestPending = len(value.ReviewRequests.Nodes) > 0
+	current.ChangesRequestedAt = latestChangesRequestedAt(value)
+	current.LastPushedAt = lastPushedAtFromGraphQL(value)
 	githubUpdatedAt := updatedAt.UTC()
 	current.GitHubUpdatedAt = &githubUpdatedAt
 	return markPullRequestSynced(current), nil
+}
+
+// latestChangesRequestedAt は変更要求レビューだけを見る。COMMENTED や DISMISSED を
+// 含めると、コメントだけ付いた pull request に赤ラベルが誤って出る。
+func latestChangesRequestedAt(value graphQLPullRequest) *time.Time {
+	var latest *time.Time
+	for _, review := range value.LatestReviews.Nodes {
+		if !strings.EqualFold(review.State, "CHANGES_REQUESTED") {
+			continue
+		}
+		submitted, err := time.Parse(time.RFC3339, review.SubmittedAt)
+		if err != nil {
+			continue
+		}
+		submitted = submitted.UTC()
+		if latest == nil || submitted.After(*latest) {
+			latest = &submitted
+		}
+	}
+	return latest
+}
+
+// lastPushedAtFromGraphQL は最新コミットの push 時刻を返す。pushedAt が null の
+// ことは多いので、コミット日時にフォールバックする。
+func lastPushedAtFromGraphQL(value graphQLPullRequest) *time.Time {
+	for _, node := range value.Commits.Nodes {
+		for _, candidate := range []string{node.Commit.PushedAt, node.Commit.CommittedDate} {
+			pushed, err := time.Parse(time.RFC3339, candidate)
+			if err != nil {
+				continue
+			}
+			pushed = pushed.UTC()
+			return &pushed
+		}
+	}
+	return nil
 }
 
 type graphQLConnection struct {
@@ -302,12 +352,13 @@ func graphQLConnections(value *graphQLPullRequest) []graphQLConnection {
 		},
 		{
 			name: "latestReviews", pageInfo: &value.LatestReviews.PageInfo,
-			fields: "nodes{author{login} state} pageInfo{hasNextPage endCursor}",
+			fields: "nodes{author{login} state submittedAt} pageInfo{hasNextPage endCursor}",
 			append: func(body json.RawMessage) error {
 				var page struct {
 					Nodes []struct {
-						State  string `json:"state"`
-						Author *struct {
+						State       string `json:"state"`
+						SubmittedAt string `json:"submittedAt"`
+						Author      *struct {
 							Login string `json:"login"`
 						} `json:"author"`
 					} `json:"nodes"`
@@ -455,7 +506,8 @@ func buildGraphQLQuery(current []domain.PullRequest) (string, map[string]any, []
 
 const graphQLFields = "id author{login} assignees(first:100){nodes{login} pageInfo{hasNextPage endCursor}} " +
 	"state merged isDraft mergeable updatedAt " +
-	"latestReviews(first:100){nodes{author{login} state} pageInfo{hasNextPage endCursor}} " +
+	"commits(last:1){nodes{commit{pushedAt committedDate}}} " +
+	"latestReviews(first:100){nodes{author{login} state submittedAt} pageInfo{hasNextPage endCursor}} " +
 	"reviewRequests(first:100){nodes{requestedReviewer{... on User{login} ... on Team{slug}}} " +
 	"pageInfo{hasNextPage endCursor}}"
 
@@ -595,6 +647,9 @@ func domainPullRequestFromGraphQL(
 		reviewState = domain.ReviewStateRequired
 	}
 	now := time.Now().UTC()
+	current.ReviewRequestPending = len(value.ReviewRequests.Nodes) > 0
+	current.ChangesRequestedAt = latestChangesRequestedAt(value)
+	current.LastPushedAt = lastPushedAtFromGraphQL(value)
 	current.NodeID = value.ID
 	if value.Author != nil {
 		current.Author = value.Author.Login

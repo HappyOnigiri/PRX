@@ -28,6 +28,15 @@ func TestParsePullRequestURL(t *testing.T) {
 	}
 }
 
+// handleRESTCommits は最新コミットの時刻を返す。REST 経路は push 時刻の代わりに
+// committer の日時を使う。
+func handleRESTCommits(mux *http.ServeMux) {
+	mux.HandleFunc("/repos/acme/api/pulls/7/commits", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[{"commit":{"committer":{"date":"2026-02-01T00:00:00Z"}}}]`))
+	})
+}
+
 func TestLiveProviderMapsStates(t *testing.T) {
 	mux := http.NewServeMux()
 	mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
@@ -48,6 +57,7 @@ func TestLiveProviderMapsStates(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"users":[],"teams":[]}`))
 	})
+	handleRESTCommits(mux)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	client := gh.NewClient(nil)
@@ -130,6 +140,7 @@ func newReviewServer(t *testing.T, reviewsJSON string) *LiveProvider {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"users":[],"teams":[]}`))
 	})
+	handleRESTCommits(mux)
 	server := httptest.NewServer(mux)
 	t.Cleanup(server.Close)
 	client := gh.NewClient(nil)
@@ -324,6 +335,7 @@ func TestLiveProviderFollowsReviewPagination(t *testing.T) {
 		w.Header().Set("Content-Type", "application/json")
 		_, _ = w.Write([]byte(`{"users":[],"teams":[]}`))
 	})
+	handleRESTCommits(mux)
 	server := httptest.NewServer(mux)
 	defer server.Close()
 	client := gh.NewClient(nil)

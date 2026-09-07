@@ -50,6 +50,10 @@ func newSyncServer(t *testing.T, respond func(string, *http.Request) int) *syncS
 			_, _ = writer.Write([]byte(`[]`))
 		case strings.HasSuffix(path, "/requested_reviewers"):
 			_, _ = writer.Write([]byte(`{"users":[],"teams":[]}`))
+		case strings.HasSuffix(path, "/commits"):
+			_, _ = writer.Write(
+				[]byte(`[{"commit":{"committer":{"date":"2026-01-01T00:00:00Z"}}}]`),
+			)
 		case strings.HasPrefix(path, "/repos/") && strings.HasSuffix(path, "/pulls"):
 			_, _ = writer.Write([]byte(`[]`))
 		case strings.HasPrefix(path, "/repos/") && strings.Contains(path, "/pulls/"):

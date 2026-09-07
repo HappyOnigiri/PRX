@@ -173,32 +173,57 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	current.Mergeability = mergeability
 	current.GitHubUpdatedAt = &updated
 	if state == domain.PullRequestStateClosed || state == domain.PullRequestStateMerged {
+		// 終了した pull request ではレビュー中の判定に使わないので、追加のリクエストを
+		// かけずに前回同期の値を落とす。
+		current.ReviewRequestPending = false
+		current.ChangesRequestedAt = nil
+		current.LastPushedAt = nil
 		return markPullRequestSynced(current), nil
 	}
+	review, err := p.fetchReviewSummary(ctx, current)
+	if err != nil {
+		return current, err
+	}
+	pushedAt, err := p.lastPushedAt(ctx, current)
+	if err != nil {
+		return current, err
+	}
+	current.State = state
+	current.ReviewState = review.state
+	current.ReviewRequestPending = review.requestPending
+	current.ChangesRequestedAt = review.changesRequestedAt
+	current.LastPushedAt = pushedAt
+	return markPullRequestSynced(current), nil
+}
+
+// reviewSummary は REST 経路が組み立てるレビューの要約。
+type reviewSummary struct {
+	state              domain.ReviewState
+	requestPending     bool
+	changesRequestedAt *time.Time
+}
+
+// fetchReviewSummary はレビューとレビュー依頼を全ページたどって要約する。
+func (p *LiveProvider) fetchReviewSummary(
+	ctx context.Context,
+	current domain.PullRequest,
+) (reviewSummary, error) {
 	reviews, err := allPages(
 		ctx,
 		func(ctx context.Context, options *gh.ListOptions) ([]*gh.PullRequestReview, *gh.Response, error) {
 			return p.client.PullRequests.ListReviews(
-				ctx,
-				current.Owner,
-				current.Repository,
-				int(current.Number),
-				options,
+				ctx, current.Owner, current.Repository, int(current.Number), options,
 			)
 		},
 	)
 	if err != nil {
-		return current, wrapProviderError("fetch reviews", err, nil)
+		return reviewSummary{}, wrapProviderError("fetch reviews", err, nil)
 	}
 	requestedPages, err := allPages(
 		ctx,
 		func(ctx context.Context, options *gh.ListOptions) ([]*gh.Reviewers, *gh.Response, error) {
 			value, response, err := p.client.PullRequests.ListReviewers(
-				ctx,
-				current.Owner,
-				current.Repository,
-				int(current.Number),
-				options,
+				ctx, current.Owner, current.Repository, int(current.Number), options,
 			)
 			if err != nil {
 				return nil, response, err
@@ -207,37 +232,93 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 		},
 	)
 	if err != nil {
-		return current, wrapProviderError("fetch requested reviewers", err, nil)
+		return reviewSummary{}, wrapProviderError("fetch requested reviewers", err, nil)
 	}
 	requested := &gh.Reviewers{}
 	for _, page := range requestedPages {
 		requested.Users = append(requested.Users, page.Users...)
 		requested.Teams = append(requested.Teams, page.Teams...)
 	}
-	reviewState := domain.ReviewStateNone
-	latest := map[string]string{}
+	latest := map[string]restReview{}
 	for _, review := range reviews {
 		state := strings.ToUpper(review.GetState())
 		if state != "APPROVED" && state != "CHANGES_REQUESTED" {
 			continue
 		}
-		latest[review.GetUser().GetLogin()] = state
+		latest[review.GetUser().GetLogin()] = restReview{
+			state: state, submittedAt: review.GetSubmittedAt().UTC(),
+		}
 	}
-	for _, state := range latest {
-		if state == "CHANGES_REQUESTED" {
+	reviewState := domain.ReviewStateNone
+	for _, review := range latest {
+		if review.state == "CHANGES_REQUESTED" {
 			reviewState = domain.ReviewStateChangesRequested
 			break
 		}
-		if state == "APPROVED" {
+		if review.state == "APPROVED" {
 			reviewState = domain.ReviewStateApproved
 		}
 	}
-	if reviewState == domain.ReviewStateNone && (len(requested.Users) > 0 || len(requested.Teams) > 0) {
+	pending := len(requested.Users) > 0 || len(requested.Teams) > 0
+	if reviewState == domain.ReviewStateNone && pending {
 		reviewState = domain.ReviewStateRequired
 	}
-	current.State = state
-	current.ReviewState = reviewState
-	return markPullRequestSynced(current), nil
+	return reviewSummary{
+		state:              reviewState,
+		requestPending:     pending,
+		changesRequestedAt: latestChangesRequestedAtFromREST(latest),
+	}, nil
+}
+
+// restReview はレビュアーごとの最新レビューを、状態と提出時刻の組で保つ。
+type restReview struct {
+	state       string
+	submittedAt time.Time
+}
+
+// latestChangesRequestedAtFromREST は変更要求レビューだけを見る。GraphQL 経路と
+// 同じく、コメントだけのレビューでは時刻を返さない。
+func latestChangesRequestedAtFromREST(latest map[string]restReview) *time.Time {
+	var result *time.Time
+	for _, review := range latest {
+		if review.state != "CHANGES_REQUESTED" || review.submittedAt.IsZero() {
+			continue
+		}
+		if result == nil || review.submittedAt.After(*result) {
+			submitted := review.submittedAt
+			result = &submitted
+		}
+	}
+	return result
+}
+
+// lastPushedAt は最新コミットの時刻を返す。REST の commit には push 時刻がないので
+// committer の日時を使う。GraphQL 経路の pushedAt が null のときと同じ値になる。
+func (p *LiveProvider) lastPushedAt(
+	ctx context.Context,
+	current domain.PullRequest,
+) (*time.Time, error) {
+	options := &gh.ListOptions{PerPage: 100}
+	for {
+		page, response, err := p.client.PullRequests.ListCommits(
+			ctx, current.Owner, current.Repository, int(current.Number), options,
+		)
+		if err != nil {
+			return nil, wrapProviderError("fetch commits", err, response)
+		}
+		if response != nil && response.NextPage != 0 {
+			options.Page = response.NextPage
+			continue
+		}
+		if len(page) == 0 {
+			return nil, nil
+		}
+		pushed := page[len(page)-1].GetCommit().GetCommitter().GetDate().UTC()
+		if pushed.IsZero() {
+			return nil, nil
+		}
+		return &pushed, nil
+	}
 }
 
 func markPullRequestSynced(value domain.PullRequest) domain.PullRequest {
@@ -292,6 +373,11 @@ type Fixture struct {
 	Author       string                  `json:"author"`
 	Assignees    []string                `json:"assignees"`
 	Error        string                  `json:"error"`
+	// ReviewRequestPending 以下はレビュー中の判定に使う。CHECK 制約のある列ではない
+	// ので fixtureFields の検証対象には含めない。
+	ReviewRequestPending bool       `json:"review_request_pending"`
+	ChangesRequestedAt   *time.Time `json:"changes_requested_at"`
+	LastPushedAt         *time.Time `json:"last_pushed_at"`
 }
 
 // 保存先のカラムには CHECK 制約があるため、手書きフィクスチャの誤記は同期の
@@ -369,10 +455,14 @@ func NewFixtureProvider(path string) (*FixtureProvider, error) {
 func (p *FixtureProvider) Fetch(ctx context.Context, current domain.PullRequest) (domain.PullRequest, error) {
 	value, ok := p.values[current.URL]
 	if !ok {
+		// 4 パターンで実装済み・承認済み・レビュー中・マージ済みを 1 つずつ出す。
+		// デモは WebUI の見た目を確かめる唯一の手段なので、色の軸を網羅させる。
+		reviewedAt := time.Date(2024, time.January, 2, 3, 4, 5, 0, time.UTC)
+		pushedAt := reviewedAt.Add(time.Hour)
 		states := []Fixture{
 			{
 				State:        domain.PullRequestStateOpen,
-				ReviewState:  domain.ReviewStateRequired,
+				ReviewState:  domain.ReviewStateNone,
 				Mergeability: domain.MergeabilityMergeable,
 				Author:       "octocat",
 			},
@@ -383,10 +473,12 @@ func (p *FixtureProvider) Fetch(ctx context.Context, current domain.PullRequest)
 				Author:       "hubot",
 			},
 			{
-				State:        domain.PullRequestStateOpen,
-				ReviewState:  domain.ReviewStateChangesRequested,
-				Mergeability: domain.MergeabilityConflicting,
-				Author:       "monalisa",
+				State:              domain.PullRequestStateOpen,
+				ReviewState:        domain.ReviewStateChangesRequested,
+				Mergeability:       domain.MergeabilityConflicting,
+				Author:             "monalisa",
+				ChangesRequestedAt: &reviewedAt,
+				LastPushedAt:       &pushedAt,
 			},
 			{
 				State:        domain.PullRequestStateMerged,
@@ -405,6 +497,9 @@ func (p *FixtureProvider) Fetch(ctx context.Context, current domain.PullRequest)
 	current.Draft = value.Draft
 	current.ReviewState = value.ReviewState
 	current.Mergeability = value.Mergeability
+	current.ReviewRequestPending = value.ReviewRequestPending
+	current.ChangesRequestedAt = value.ChangesRequestedAt
+	current.LastPushedAt = value.LastPushedAt
 	current.Author = value.Author
 	current.Assignees = value.Assignees
 	current.NodeID = "fixture:" + strconv.FormatInt(current.Number, 10)

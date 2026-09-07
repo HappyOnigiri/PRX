@@ -201,7 +201,7 @@ func TestNewDebugDataCountsStoredRecords(t *testing.T) {
 			{DisplayStatus: FeatureStatusActive},
 		},
 		Tasks: []Task{
-			{DisplayState: TaskDisplayStateOpen},
+			{DisplayState: TaskDisplayStateImplemented},
 			{DisplayState: TaskDisplayStateNotStarted},
 		},
 		Dependencies: []Dependency{{}},

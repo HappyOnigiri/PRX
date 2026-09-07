@@ -75,23 +75,26 @@ type Project struct {
 }
 
 type PullRequest struct {
-	TaskID          string         `json:"task_id"`
-	Host            string         `json:"host"`
-	Owner           string         `json:"owner"`
-	Repository      string         `json:"repository"`
-	Number          int64          `json:"number"`
-	Url             string         `json:"url"`
-	NodeID          string         `json:"node_id"`
-	Author          string         `json:"author"`
-	AssigneesJson   string         `json:"assignees_json"`
-	State           string         `json:"state"`
-	Draft           int64          `json:"draft"`
-	ReviewState     string         `json:"review_state"`
-	Mergeability    string         `json:"mergeability"`
-	GithubUpdatedAt sql.NullString `json:"github_updated_at"`
-	LastSyncedAt    sql.NullString `json:"last_synced_at"`
-	SyncError       string         `json:"sync_error"`
-	Stale           int64          `json:"stale"`
+	TaskID               string         `json:"task_id"`
+	Host                 string         `json:"host"`
+	Owner                string         `json:"owner"`
+	Repository           string         `json:"repository"`
+	Number               int64          `json:"number"`
+	Url                  string         `json:"url"`
+	NodeID               string         `json:"node_id"`
+	Author               string         `json:"author"`
+	AssigneesJson        string         `json:"assignees_json"`
+	State                string         `json:"state"`
+	Draft                int64          `json:"draft"`
+	ReviewState          string         `json:"review_state"`
+	Mergeability         string         `json:"mergeability"`
+	GithubUpdatedAt      sql.NullString `json:"github_updated_at"`
+	LastSyncedAt         sql.NullString `json:"last_synced_at"`
+	SyncError            string         `json:"sync_error"`
+	Stale                int64          `json:"stale"`
+	ReviewRequestPending int64          `json:"review_request_pending"`
+	ChangesRequestedAt   sql.NullString `json:"changes_requested_at"`
+	LastPushedAt         sql.NullString `json:"last_pushed_at"`
 }
 
 type Task struct {

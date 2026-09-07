@@ -45,6 +45,10 @@ func WriteDemoFixture(path string) error {
 				Mergeability: value.pr.Mergeability,
 				Author:       demoPullRequestAuthor(index),
 				Error:        value.pr.SyncError,
+
+				ReviewRequestPending: value.pr.ReviewRequestPending,
+				ChangesRequestedAt:   value.pr.ChangesRequestedAt,
+				LastPushedAt:         value.pr.LastPushedAt,
 			}
 		}
 	}
@@ -420,7 +424,7 @@ func showcasePullRequestTasks() []demoTask {
 			domain.PullRequestStateOpen, true, domain.ReviewStateNone, domain.MergeabilityMergeable, "Bob"),
 		demoPullRequestTask("Resolve graph conflict", "Conflicting pull request", "prx-graph", 103,
 			domain.PullRequestStateOpen, false, domain.ReviewStateNone, domain.MergeabilityConflicting, "Carol"),
-		demoPullRequestTask("Address review feedback", "Changes requested", "prx-cli", 104,
+		demoPullRequestTask("Address review feedback", "Changes requested, pushed since", "prx-cli", 104,
 			domain.PullRequestStateOpen, false, domain.ReviewStateChangesRequested, domain.MergeabilityMergeable, ""),
 		demoPullRequestTask("Approved configuration", "Approved pull request", "prx-config", 105,
 			domain.PullRequestStateOpen, false, domain.ReviewStateApproved, domain.MergeabilityMergeable, "Alice"),
@@ -433,6 +437,13 @@ func showcasePullRequestTasks() []demoTask {
 	}
 	values[7].pr.Stale = true
 	values[7].pr.SyncError = "demo fixture: repository temporarily unavailable"
+	// 104 はレビュー後に push した pull request、106 は未応答のレビュー依頼が残る
+	// pull request で、どちらもレビュー中になる。
+	reviewedAt := time.Date(2024, time.January, 2, 3, 4, 5, 0, time.UTC)
+	pushedAt := reviewedAt.Add(time.Hour)
+	values[3].pr.ChangesRequestedAt = &reviewedAt
+	values[3].pr.LastPushedAt = &pushedAt
+	values[5].pr.ReviewRequestPending = true
 	return values
 }
 

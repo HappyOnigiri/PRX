@@ -65,7 +65,7 @@ func TestMigrationConstraintsAndRollback(t *testing.T) {
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
 		Scan(&migrations); err != nil ||
-		migrations != 14 {
+		migrations != 15 {
 		t.Fatalf("migration count=%d err=%v", migrations, err)
 	}
 	var foreignKeys, journalMode int
@@ -643,7 +643,7 @@ func TestMigrationRepairsConflictingBranchVersions(t *testing.T) {
 	var migrationCount int
 	if err := database.DB().
 		QueryRowContext(ctx, `SELECT COUNT(*) FROM schema_migrations`).
-		Scan(&migrationCount); err != nil || migrationCount != 14 {
+		Scan(&migrationCount); err != nil || migrationCount != 15 {
 		t.Fatalf("migration count=%d err=%v", migrationCount, err)
 	}
 	var status string
@@ -807,7 +807,11 @@ func TestMigrationAddsGitHubHostAndHostScopedUniqueness(t *testing.T) {
 	); err != nil {
 		t.Fatal(err)
 	}
-	if _, err := database.DB().ExecContext(ctx, `DELETE FROM schema_migrations WHERE version=2`); err != nil {
+	// 15 も取り消す。002 が pull_requests を作り直すため、レビュー時刻の列を足す
+	// マイグレーションを再実行しないと、この表は現在のスキーマに追いつかない。
+	if _, err := database.DB().ExecContext(
+		ctx, `DELETE FROM schema_migrations WHERE version IN (2,15)`,
+	); err != nil {
 		t.Fatal(err)
 	}
 	if err := database.Close(); err != nil {
@@ -1279,12 +1283,9 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 		domain.TaskDisplayStateCompleted,
 		domain.TaskDisplayStateClosed,
 		domain.TaskDisplayStateMerged,
-		domain.TaskDisplayStateDraft,
-		domain.TaskDisplayStateConflict,
-		domain.TaskDisplayStateChangesRequested,
+		domain.TaskDisplayStateImplemented,
+		domain.TaskDisplayStateInReview,
 		domain.TaskDisplayStateApproved,
-		domain.TaskDisplayStateReviewWaiting,
-		domain.TaskDisplayStateOpen,
 		domain.TaskDisplayStateUnknown,
 	} {
 		if !displayStates[state] {

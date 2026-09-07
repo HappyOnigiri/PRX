@@ -468,11 +468,15 @@ func domainPullRequest(value db.PullRequest, taskIDs map[string]string) domain.P
 		LastSyncedAt:    nullableTime(value.LastSyncedAt),
 		SyncError:       value.SyncError,
 		Stale:           value.Stale != 0,
+
+		ReviewRequestPending: value.ReviewRequestPending != 0,
+		ChangesRequestedAt:   nullableTime(value.ChangesRequestedAt),
+		LastPushedAt:         nullableTime(value.LastPushedAt),
 	}
 	if err := json.Unmarshal([]byte(value.AssigneesJson), &result.Assignees); err != nil {
 		result.Assignees = []string{}
 	}
-	result.DisplayState = domain.PullRequestDisplayState(domain.PRDisplayState(&result))
+	result.DisplayState = domain.PRDisplayState(&result)
 	return result
 }
 

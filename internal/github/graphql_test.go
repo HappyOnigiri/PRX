@@ -280,6 +280,8 @@ func writeRESTPullRequestResponse(t *testing.T, writer http.ResponseWriter, requ
 		_, _ = writer.Write([]byte(`[]`))
 	case strings.HasSuffix(request.URL.Path, "/requested_reviewers"):
 		_, _ = writer.Write([]byte(`{"users":[],"teams":[]}`))
+	case strings.HasSuffix(request.URL.Path, "/commits"):
+		_, _ = writer.Write([]byte(`[{"commit":{"committer":{"date":"2026-01-01T00:00:00Z"}}}]`))
 	default:
 		_, _ = writer.Write([]byte(`{"node_id":"PR_node","state":"open","merged":false,` +
 			`"draft":false,"mergeable":true,"updated_at":"2026-01-01T00:00:00Z",` +
