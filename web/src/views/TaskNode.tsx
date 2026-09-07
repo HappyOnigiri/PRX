@@ -13,7 +13,7 @@ import {
   type TaskBlockLabel,
   type TaskDisplayState,
 } from "../gen/prx/v1/prx_pb";
-import { taskBlockLabelToken, taskDisplayStateToken } from "../i18n/domain";
+import { taskDisplayStateToken } from "../i18n/domain";
 import type { HiddenDependencies } from "./completedTasks";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon } from "./EntityIcon";
@@ -35,14 +35,6 @@ interface TaskNodePort {
 }
 
 const emptyPorts: TaskNodePort[] = [];
-
-// ノード外枠にもブロックの有無を出す。ラベルの文字を読まなくても、キャンバスを
-// 引いて眺めたときに止まっているタスクが分かる。
-function blockClasses(labels: TaskBlockLabel[]): string {
-  return labels
-    .map((label) => `has-block-${taskBlockLabelToken(label)}`)
-    .join(" ");
-}
 
 interface TaskNodeData extends Record<string, unknown> {
   title: string;
@@ -162,7 +154,7 @@ export function TaskNode({
 
   return (
     <div
-      className={`task-node state-${taskDisplayStateToken(data.state)} ${blockClasses(data.blockLabels)} ${data.stale ? "is-stale" : ""} ${selected ? "is-selected" : ""}`}
+      className={`task-node state-${taskDisplayStateToken(data.state)} ${data.stale ? "is-stale" : ""} ${selected ? "is-selected" : ""}`}
     >
       <Handle
         type="target"

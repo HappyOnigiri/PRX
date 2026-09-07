@@ -90,7 +90,6 @@ describe("TaskNode", () => {
     expect(screen.queryByText("READY")).not.toBeInTheDocument();
     expect(container.querySelector(".state-in-review")).toBeInTheDocument();
     // ステータスとブロックラベルは別の系統なので、ノードには両方が出る。
-    expect(container.querySelector(".has-block-conflict")).toBeInTheDocument();
     expect(container.querySelector(".block-conflict")).toBeInTheDocument();
     expect(container.querySelector(".is-stale")).toBeInTheDocument();
     const edgePorts = container.querySelectorAll(".task-edge-port");

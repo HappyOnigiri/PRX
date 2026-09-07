@@ -647,7 +647,7 @@ test("creates and edits a feature DAG while preserving state", async ({
   // ラベルなので、ステータスはレビュー中になる。
   const apiNode = page.locator(".task-node").filter({ hasText: "E2E API" });
   await expect(apiNode).toHaveClass(/state-in-review/);
-  await expect(apiNode).toHaveClass(/has-block-conflict/);
+  await expect(apiNode.locator(".block-conflict")).toBeVisible();
   await openTask(page, "E2E API");
   await expect(inspector.locator(".linked-pr")).toContainText("conflict");
   await page.getByRole("button", { name: "Close inspector" }).click();
