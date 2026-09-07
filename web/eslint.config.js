@@ -81,6 +81,18 @@ export default tseslint.config(
     },
   },
   {
+    files: ["src/views/RailResizer.tsx"],
+    rules: {
+      // ARIA 仕様では、フォーカス可能な separator は値を持つウィジェットである。
+      // jsx-a11y は separator を構造ロールとしてしか扱わない。
+      "jsx-a11y/no-noninteractive-element-interactions": "off",
+      "jsx-a11y/no-noninteractive-tabindex": [
+        "error",
+        { roles: ["tabpanel", "separator"] },
+      ],
+    },
+  },
+  {
     files: ["tests/**/*.{ts,tsx}"],
     rules: {
       "max-lines-per-function": "off",

@@ -1,15 +1,29 @@
 import { Link } from "@tanstack/react-router";
-import { Settings } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from "react";
 import { useTranslation } from "react-i18next";
 import { isDemoMode } from "./demo";
 import type { Feature, Project } from "./gen/prx/v1/prx_pb";
 import { useAutoSync, useSnapshot } from "./hooks";
+import {
+  readRailCollapsed,
+  readRailWidth,
+  writeRailCollapsed,
+} from "./i18n/settings";
 import { projectsByArchive } from "./project";
 import { AutoSyncStatusContext } from "./sync-status";
 import { IconButton } from "./views/IconButton";
 import { ProjectTree } from "./views/ProjectTree";
+import { RailResizer } from "./views/RailResizer";
 import { SettingsDialog } from "./views/SettingsDialog";
+
+const railId = "prx-rail";
 
 export function AppShell({ children }: { children: ReactNode }) {
   const autoSync = useAutoSync(true);
@@ -24,11 +38,29 @@ function AppShellLayout({ children }: { children: ReactNode }) {
   const { t } = useTranslation();
   const snapshot = useSnapshot();
   const [showSettings, setShowSettings] = useState(false);
+  const [railWidth, setRailWidth] = useState(readRailWidth);
+  const [railCollapsed, setRailCollapsed] = useState(readRailCollapsed);
+  const [railResizing, setRailResizing] = useState(false);
+  const { collapseRef, restoreRef, markUserToggle } =
+    useRailToggleFocus(railCollapsed);
   const features = snapshot.data?.features;
   const projects = snapshot.data?.projects;
   const demo = isDemoMode();
+
+  function toggleRail(collapsed: boolean) {
+    markUserToggle();
+    setRailCollapsed(collapsed);
+    writeRailCollapsed(collapsed);
+  }
+
   return (
-    <div className="app-shell" data-demo={demo || undefined}>
+    <div
+      className="app-shell"
+      data-demo={demo || undefined}
+      data-rail-collapsed={railCollapsed || undefined}
+      data-rail-resizing={railResizing || undefined}
+      style={{ "--rail-width": `${railWidth}px` } as CSSProperties}
+    >
       {demo && (
         <div className="demo-banner" role="status">
           <span className="demo-banner-full">
@@ -40,12 +72,27 @@ function AppShellLayout({ children }: { children: ReactNode }) {
           </span>
         </div>
       )}
-      <aside className="rail">
-        <Link to="/" className="brand" aria-label={t("nav.dashboard")}>
-          <span className="brand-mark">
-            P<span>R</span>X
-          </span>
-        </Link>
+      <aside className="rail" id={railId}>
+        <div className="rail-head">
+          <Link to="/" className="brand" aria-label={t("nav.dashboard")}>
+            <span className="brand-mark">
+              P<span>R</span>X
+            </span>
+          </Link>
+          <IconButton
+            aria-controls={railId}
+            aria-expanded
+            className="rail-collapse"
+            icon={PanelLeftClose}
+            iconOnly
+            label={t("nav.hideRail")}
+            ref={collapseRef}
+            variant="quiet"
+            onClick={() => {
+              toggleRail(true);
+            }}
+          />
+        </div>
         <RailNavigation features={features} projects={projects} />
         <RailSettings
           onOpenSettings={() => {
@@ -60,7 +107,28 @@ function AppShellLayout({ children }: { children: ReactNode }) {
             </span>
           </div>
         )}
+        <RailResizer
+          railId={railId}
+          width={railWidth}
+          onResizing={setRailResizing}
+          onWidth={setRailWidth}
+        />
       </aside>
+      {/* 復元ボタンは main の外に置く。main ランドマークの中身をページ内容だけ
+          に保て、DOM 順が先なので Tab で最初に当たる。 */}
+      <IconButton
+        aria-controls={railId}
+        aria-expanded={false}
+        className="rail-restore"
+        icon={PanelLeftOpen}
+        iconOnly
+        label={t("nav.showRail")}
+        ref={restoreRef}
+        variant="secondary"
+        onClick={() => {
+          toggleRail(false);
+        }}
+      />
       <main className="main-stage">{children}</main>
       {showSettings && (
         <SettingsDialog
@@ -129,4 +197,27 @@ function RailSettings({ onOpenSettings }: { onOpenSettings: () => void }) {
       onClick={onOpenSettings}
     />
   );
+}
+
+// 折りたたむと押したボタンが display: none になり、フォーカスが body へ落ちる。
+// 相手側のボタンへ移すが、保存済みの最小化状態で開いた初回描画では奪わない。
+function useRailToggleFocus(collapsed: boolean) {
+  const collapseRef = useRef<HTMLButtonElement>(null);
+  const restoreRef = useRef<HTMLButtonElement>(null);
+  const userToggled = useRef(false);
+
+  useEffect(() => {
+    if (!userToggled.current) return;
+    userToggled.current = false;
+    const target = collapsed ? restoreRef.current : collapseRef.current;
+    target?.focus();
+  }, [collapsed]);
+
+  return {
+    collapseRef,
+    restoreRef,
+    markUserToggle: () => {
+      userToggled.current = true;
+    },
+  };
 }
