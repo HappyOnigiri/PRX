@@ -20,6 +20,10 @@ A failing check should not prevent independent checks from reporting their resul
 Generated artifacts are verified against their source definitions.
 Change the source and regenerate instead of repairing generated output by hand.
 
+Comment length is checked mechanically because durable rationale belongs in `docs/design/`, where it is versioned as policy and read once rather than re-read beside every call site.
+A comment that outgrows the limit is usually a design document that was written in the wrong file.
+The limits and the waiver marker live in `AGENTS.md`; the Go checker and the WebUI lint rule own their implementation.
+
 ## Test and coverage policy
 
 Coverage baselines prevent unintentional regression.
