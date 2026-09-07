@@ -999,16 +999,30 @@
   font-variant-numeric: tabular-nums;
 }
 
+/* The option sits beside the compact select-all button, so it carries that
+   button's height, gap, and label so neither control dwarfs the other. */
 .dialog .batch-prompt-include-blocked {
   display: flex;
+  flex: 0 0 auto;
   flex-direction: row;
   align-items: center;
   gap: 6px;
+  min-height: 24px;
   margin: 0;
   color: var(--text-2);
-  font-size: var(--text-xs);
-  font-weight: 400;
+  font-size: var(--text-md);
+  font-weight: 500;
   cursor: pointer;
+}
+
+/* Dialog fields default to a full-width 36px control, which a checkbox is not:
+   the box matches the icon of the button it shares the row with instead. */
+.dialog .batch-prompt-include-blocked input {
+  flex: 0 0 auto;
+  width: 14px;
+  min-height: 14px;
+  height: 14px;
+  margin: 0;
 }
 
 .batch-prompt-list {
