@@ -184,14 +184,17 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	if err != nil {
 		return current, err
 	}
-	pushedAt, err := p.lastPushedAt(ctx, current)
-	if err != nil {
-		return current, err
-	}
+	// レビューの結果はコミット取得より先に反映する。項目単位の失敗が無関係な
+	// 成功を巻き添えにしないため。docs/design/github-sync.md を参照。
 	current.State = state
 	current.ReviewState = review.state
 	current.ReviewRequestPending = review.requestPending
 	current.ChangesRequestedAt = review.changesRequestedAt
+	pushedAt, err := p.lastPushedAt(ctx, current)
+	if err != nil {
+		// LastPushedAt は前回成功した値のまま残す。
+		return current, err
+	}
 	current.LastPushedAt = pushedAt
 	return markPullRequestSynced(current), nil
 }
@@ -298,27 +301,31 @@ func (p *LiveProvider) lastPushedAt(
 	ctx context.Context,
 	current domain.PullRequest,
 ) (*time.Time, error) {
-	options := &gh.ListOptions{PerPage: 100}
-	for {
-		page, response, err := p.client.PullRequests.ListCommits(
-			ctx, current.Owner, current.Repository, int(current.Number), options,
+	// 使うのは最後の 1 件だけなので、1 件ずつ引いて最終ページ番号を得てから
+	// そのページだけを取り直す。全ページを取得して捨てるとリクエスト量が増える。
+	page, response, err := p.client.PullRequests.ListCommits(
+		ctx, current.Owner, current.Repository, int(current.Number), &gh.ListOptions{PerPage: 1},
+	)
+	if err != nil {
+		return nil, wrapProviderError("fetch commits", err, response)
+	}
+	if response != nil && response.LastPage != 0 {
+		page, response, err = p.client.PullRequests.ListCommits(
+			ctx, current.Owner, current.Repository, int(current.Number),
+			&gh.ListOptions{PerPage: 1, Page: response.LastPage},
 		)
 		if err != nil {
 			return nil, wrapProviderError("fetch commits", err, response)
 		}
-		if response != nil && response.NextPage != 0 {
-			options.Page = response.NextPage
-			continue
-		}
-		if len(page) == 0 {
-			return nil, nil
-		}
-		pushed := page[len(page)-1].GetCommit().GetCommitter().GetDate().UTC()
-		if pushed.IsZero() {
-			return nil, nil
-		}
-		return &pushed, nil
 	}
+	if len(page) == 0 {
+		return nil, nil
+	}
+	pushed := page[len(page)-1].GetCommit().GetCommitter().GetDate().UTC()
+	if pushed.IsZero() {
+		return nil, nil
+	}
+	return &pushed, nil
 }
 
 func markPullRequestSynced(value domain.PullRequest) domain.PullRequest {

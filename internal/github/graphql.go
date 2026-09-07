@@ -280,11 +280,38 @@ func domainPullRequestCoreFromGraphQL(
 	current.State = state
 	current.Draft = value.IsDraft
 	current.ReviewRequestPending = len(value.ReviewRequests.Nodes) > 0
-	current.ChangesRequestedAt = latestChangesRequestedAt(value)
+	current.ChangesRequestedAt = changesRequestedAtFromGraphQL(current, value)
 	current.LastPushedAt = lastPushedAtFromGraphQL(value)
 	githubUpdatedAt := updatedAt.UTC()
 	current.GitHubUpdatedAt = &githubUpdatedAt
-	return markPullRequestSynced(current), nil
+	return markPullRequestSynced(clearReviewTimingWhenFinished(current)), nil
+}
+
+// clearReviewTimingWhenFinished は終了した pull request でレビュー中の判定に使う
+// 3 項目を落とす。REST 経路が同じことをするので、どちらの経路で同期しても公開する
+// 値がそろう。docs/design/github-sync.md を参照。
+func clearReviewTimingWhenFinished(value domain.PullRequest) domain.PullRequest {
+	if value.State != domain.PullRequestStateClosed &&
+		value.State != domain.PullRequestStateMerged {
+		return value
+	}
+	value.ReviewRequestPending = false
+	value.ChangesRequestedAt = nil
+	value.LastPushedAt = nil
+	return value
+}
+
+// changesRequestedAtFromGraphQL は latestReviews を全ページ取得できたときだけ値を
+// 更新する。未取得のページに新しい変更要求があると時刻が古い値へ巻き戻り、未対応の
+// タスクがレビュー中に見える。docs/design/github-sync.md を参照。
+func changesRequestedAtFromGraphQL(
+	current domain.PullRequest,
+	value graphQLPullRequest,
+) *time.Time {
+	if value.LatestReviews.PageInfo.HasNextPage {
+		return current.ChangesRequestedAt
+	}
+	return latestChangesRequestedAt(value)
 }
 
 // latestChangesRequestedAt は変更要求レビューだけを見る。COMMENTED や DISMISSED を
@@ -648,7 +675,7 @@ func domainPullRequestFromGraphQL(
 	}
 	now := time.Now().UTC()
 	current.ReviewRequestPending = len(value.ReviewRequests.Nodes) > 0
-	current.ChangesRequestedAt = latestChangesRequestedAt(value)
+	current.ChangesRequestedAt = changesRequestedAtFromGraphQL(current, value)
 	current.LastPushedAt = lastPushedAtFromGraphQL(value)
 	current.NodeID = value.ID
 	if value.Author != nil {
@@ -664,5 +691,5 @@ func domainPullRequestFromGraphQL(
 	current.LastSyncedAt = &now
 	current.SyncError = ""
 	current.Stale = false
-	return current, nil
+	return clearReviewTimingWhenFinished(current), nil
 }
