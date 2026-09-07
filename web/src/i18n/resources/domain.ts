@@ -69,6 +69,11 @@ export const domain = {
       failure: "failing",
       unknown: "unknown",
     },
+    pullRequestFlag: {
+      stale:
+        "Stale: this pull request may no longer match its state on GitHub.",
+      syncError: "GitHub sync error",
+    },
     blockedReason: {
       dependencyDataIncomplete: "Dependency data is incomplete",
       waitingForBlocker: "Waiting for {{title}}",
@@ -145,6 +150,11 @@ export const domain = {
       success: "成功",
       failure: "失敗",
       unknown: "不明",
+    },
+    pullRequestFlag: {
+      stale:
+        "情報が古い: この pull request は GitHub 上の状態と違うかもしれません。",
+      syncError: "GitHub 同期エラー",
     },
     blockedReason: {
       dependencyDataIncomplete: "依存関係のデータが不足しています",

@@ -14,7 +14,7 @@ CI_MAKEFLAGS := -j$(CI_JOBS) --keep-going $(if $(filter output-sync,$(.FEATURES)
 
 .PHONY: generate generated-check mod-tidy-check fmt lint go-lint go-deadcode markdown-lint web-lint check-web-quality \
     go-comment-lint test go-test web-test go-coverage-check go-coverage-zero-check test-race test-race-coverage test-cli \
-    web-install web-build dev e2e build version-check install ci ci-checks clean $(GOLANGCI_LINT)
+    web-install web-build dev demo e2e build version-check install ci ci-checks clean $(GOLANGCI_LINT)
 
 generate: web-install
 	$(GO) tool sqlc generate
@@ -114,6 +114,11 @@ web-build: web-install
 # 開発用ミドルウェアは web-build が出力したライセンスレポートを配信する。
 dev: web-build
 	$(PNPM) --dir web dev:full
+
+# demo データを見ながら開発する。demo の一時環境はサーバプロセスごとなので、Go の変更で再ビルドが
+# 走ると demo データは初期状態に戻る。WebUI の変更は再起動なしで反映される。
+demo: web-build
+	$(PNPM) --dir web dev:demo
 
 # Playwright への追加フラグ。例えば `make e2e E2E_FLAGS=--shard=1/3` で 1 シャードだけ走る。
 E2E_FLAGS ?=

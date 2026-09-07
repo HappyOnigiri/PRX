@@ -39,7 +39,7 @@ test("hides completed tasks and leaves their dependency visible", async ({
     .first()
     .click();
   const nodes = page.locator(".task-node");
-  await expect(nodes).toHaveCount(14, { timeout: 25_000 });
+  await expect(nodes).toHaveCount(16, { timeout: 25_000 });
   const finished = nodes.filter({ hasText: "Verify storage boundary" });
   await expect(finished).toHaveCount(1);
   await expect(page.locator(".node-hidden-dependency")).toHaveCount(0);
@@ -49,7 +49,7 @@ test("hides completed tasks and leaves their dependency visible", async ({
   await toggle.check();
 
   await expect(finished).toHaveCount(0);
-  await expect(nodes).toHaveCount(11, { timeout: 25_000 });
+  await expect(nodes).toHaveCount(13, { timeout: 25_000 });
   // draft の pull request を塞いでいた完了タスクが消えるので、draft 側には
   // 何を待っているかを示すスタブが付く。
   const stub = nodes
@@ -63,9 +63,9 @@ test("hides completed tasks and leaves their dependency visible", async ({
   // スイッチはブラウザローカルの状態なので、リロードしても絞り込みが残る。
   await page.reload();
   await expect(toggle).toBeChecked();
-  await expect(nodes).toHaveCount(11, { timeout: 25_000 });
+  await expect(nodes).toHaveCount(13, { timeout: 25_000 });
 
   await toggle.uncheck();
-  await expect(nodes).toHaveCount(14, { timeout: 25_000 });
+  await expect(nodes).toHaveCount(16, { timeout: 25_000 });
   await expect(page.locator(".node-hidden-dependency")).toHaveCount(0);
 });

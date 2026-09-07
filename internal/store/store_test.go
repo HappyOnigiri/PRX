@@ -1241,8 +1241,8 @@ func TestInitializeDemoCreatesCompleteShowcase(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if len(snapshot.Features) != 5 || len(snapshot.Tasks) != 123 {
-		t.Fatalf("features=%d tasks=%d, want 5 and 123", len(snapshot.Features), len(snapshot.Tasks))
+	if len(snapshot.Features) != 5 || len(snapshot.Tasks) != 125 {
+		t.Fatalf("features=%d tasks=%d, want 5 and 125", len(snapshot.Features), len(snapshot.Tasks))
 	}
 	statuses := map[domain.FeatureStatus]bool{}
 	displayStatuses := map[domain.FeatureStatus]bool{}

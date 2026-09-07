@@ -1177,17 +1177,26 @@
   border-style: dashed;
 }
 
-/* Block labels sit beside the status and never replace it, so they share one
-   colour: the task is held up, whatever its status says. The pull request
-   badge keeps its own conflict and changes requested states in that colour. */
-.status-badge.block-dependency-unresolved,
+/* Block labels sit beside the status and never replace it. Red marks the ones
+   the reader has to act on in this very task, so a conflict, a change request,
+   a failing CI run and an unrecognised blocker share the pull request colour. */
 .status-badge.block-conflict,
 .status-badge.block-changes-requested,
 .status-badge.block-ci-failed,
+.status-badge.block-unspecified,
 .status-badge.state-conflict,
 .status-badge.state-changes-requested {
   border-color: var(--status-blocked);
   color: var(--status-blocked);
+}
+
+/* An unresolved dependency is somebody else's task to finish, so it asks for
+   nothing here and stays out of the status colours: it is told by the fill
+   instead of a hue, which keeps one outlined status badge readable beside it. */
+.status-badge.block-dependency-unresolved {
+  border-color: var(--border);
+  background: var(--surface-2);
+  color: var(--text-2);
 }
 
 /* A feature carries its own status vocabulary, so its colours sit next to the
@@ -1205,4 +1214,55 @@
 .status-badge.status-completed {
   border-color: var(--status-done);
   color: var(--status-done);
+}
+
+/* pull request 自身の異常は行を伸ばさずアイコンで示す。印は理由を読ませるため
+   だけの focus 先なので、button の見た目と手応えは持たせず、面もカーソルも地の
+   ままにする。docs/design/webui.md を参照。 */
+.pr-flag,
+.pr-flag:hover {
+  min-height: 0;
+  display: inline-flex;
+  flex: 0 0 auto;
+  align-items: center;
+  border: 0;
+  border-radius: 2px;
+  background: transparent;
+  padding: 0;
+  cursor: default;
+}
+
+.pr-flag:active {
+  transform: none;
+}
+
+.pr-flag:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+.pr-flag.is-stale {
+  color: var(--status-waiting);
+}
+
+.pr-flag.is-sync-error {
+  color: var(--status-blocked);
+}
+
+/* tooltip は指した瞬間に出す。ブラウザの title は遅れて出るうえ、理由を読む
+   ために止まっていられる場所ではない。 */
+.pr-flag-tip {
+  position: fixed;
+  z-index: 60;
+  max-width: 260px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  box-shadow: 0 4px 14px rgb(0 0 0 / 24%);
+  padding: 5px 8px;
+  color: var(--text);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  pointer-events: none;
+  transform: translate(-50%, -100%);
 }

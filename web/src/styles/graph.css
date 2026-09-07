@@ -134,18 +134,49 @@
   flex: 0 0 auto;
 }
 
+/* What deserves a look right now is the question the canvas has to answer at a
+   glance, so the node itself answers it: a node stands as a raised surface until
+   nothing about it is worth reading, and then it lies flush with the canvas.
+   See docs/design/webui.md. */
 .task-node {
   width: 284px;
   height: 100%;
   min-height: 148px;
   display: flex;
   flex-direction: column;
-  border: 1px solid var(--border);
-  border-left: 3px solid var(--status-inactive);
+  border: 1px solid var(--border-strong);
   border-radius: 4px;
   background: var(--surface);
+  box-shadow: 0 3px 12px rgb(0 0 0 / 22%);
   padding: 10px 12px;
   transition: border-color 0.15s;
+}
+
+/* 沈んだノードは影を手放し、面も canvas の側へ寄せる。ただし地と同じ色には
+   しない。境界が依存線やドットと混ざり、1 つの task の範囲が読めなくなる。 */
+.task-node.is-dormant {
+  border-color: var(--border);
+  background: color-mix(in srgb, var(--surface) 40%, var(--bg));
+  box-shadow: none;
+}
+
+/* blocker を待っているだけのノードは、決着済みと違って作業が残っている。閉じて
+   いない枠として破線で示す。 */
+.task-node.is-dependency-blocked {
+  border-color: transparent;
+}
+
+/* dashed の刻みは border の太さで決まり、1px では点線に潰れて実線と区別が
+   つかない。枠を疑似要素に持たせ、斜めのストライプで抜いて刻みだけを大きく
+   する。太さは 1px のまま、寸法も変わらない。 */
+.task-node.is-dependency-blocked::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border: 1px solid var(--border);
+  border-radius: inherit;
+  mask: repeating-linear-gradient(45deg, #000 0 6px, transparent 6px 12px);
+  pointer-events: none;
 }
 
 .task-node.is-selected {
@@ -153,55 +184,29 @@
   outline-offset: -1px;
 }
 
-/* The edge takes the same colour as the status badge, so a node reads the same
-   whether it is scanned by its edge or read by its label. A block label never
-   recolours the edge; it appears in the label row instead. */
-.task-node.state-not-started,
-.task-node.state-designed,
-.task-node.state-implemented,
-.task-node.state-approved {
-  border-left-color: var(--status-actionable);
-}
-
-.task-node.state-designing,
-.task-node.state-in-progress {
-  border-left-color: var(--status-working);
-}
-
-.task-node.state-in-review {
-  border-left-color: var(--status-waiting);
-}
-
-.task-node.state-completed {
-  border-left-color: var(--status-done);
-}
-
+/* The status has its badge in the header, so the node body does not repeat it
+   in a colour; a merged node only fades, because nothing is left to do on it. */
 .task-node.state-merged {
-  border-left-color: var(--status-done);
   opacity: 0.83;
 }
 
-/* The label row sits under the header so that three labels wrap into a row of
-   their own, keeping the node as tall as the layout predicted. */
-.task-node-blocks {
+/* The status and the block labels read as one run, so they sit in one row under
+   the actions, where the whole node width is theirs and only a third label has
+   to wrap. useGraphLayout predicts the node height from that. */
+.task-node-badges {
+  min-height: 24px;
   display: flex;
   flex-wrap: wrap;
+  align-items: center;
   gap: 4px;
-  margin: 4px 0 0;
-}
-
-.task-node.is-stale {
-  border-top-color: var(--border-strong);
-  border-right-color: var(--border-strong);
-  border-bottom-color: var(--border-strong);
-  border-style: dashed;
+  margin: 0;
 }
 
 .task-node-head {
   min-height: 24px;
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
 }
 
@@ -247,6 +252,12 @@
   -webkit-line-clamp: 2;
 }
 
+/* 沈んだノードは題も一段落とす。面の差だけでは、拾い読みのときに題の強さが
+   残って前に出て見えてしまう。 */
+.task-node.is-dormant h3 {
+  color: var(--text-2);
+}
+
 .node-assignee {
   min-height: 18px;
   display: flex;
@@ -274,13 +285,6 @@
   margin-right: 6px;
   color: var(--text-3);
   vertical-align: -2px;
-}
-
-.node-sync-error {
-  margin: 0 0 4px;
-  color: var(--status-blocked);
-  font-size: var(--text-xs);
-  font-weight: 600;
 }
 
 .node-assets {
@@ -323,12 +327,44 @@
   font-weight: 600;
 }
 
+/* pull request の行は印をリンクの外へ並べるので、行の区切りはリンクではなく
+   この行が持つ。印がないときは列が畳まれ、幅はそのままリンクのものになる。 */
+.node-asset-pr-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  border-bottom: 1px solid var(--border);
+}
+
+.node-asset-pr-row:last-child {
+  border-bottom: 0;
+}
+
+.node-asset-pr-row .node-asset {
+  border-bottom: 0;
+}
+
+.node-asset-flags {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding-right: 5px;
+}
+
 .node-asset b {
   overflow: hidden;
   font-size: var(--text-sm);
   font-weight: 400;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* pull request の名前は Owner/Repo #Num のうち #Num が要なので、入り切らない
+   ときは末尾ではなく先頭を落とす。基準方向を rtl にすると省略記号が行頭側に
+   付き、番号で終わる文字列は並びを変えずに残る。 */
+.node-asset-pr b {
+  direction: rtl;
+  text-align: left;
 }
 
 /* The action is not one of the assets above it, so it drops their row layout

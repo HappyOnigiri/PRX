@@ -4,7 +4,12 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:full": "concurrently --kill-others --names api,web --prefix-colors blue,magenta \"cd .. && go tool air -c .air.toml\" \"node scripts/wait-for-api.js && vite\"",
+    "dev:api": "cd .. && go tool air -c .air.toml",
+    "dev:api:demo": "cd .. && go tool air -c .air.toml -- --demo",
+    "dev:web": "node scripts/wait-for-api.js && vite",
+    "dev:web:demo": "node scripts/wait-for-api.js && PRX_DEMO=true vite",
+    "dev:full": "concurrently --kill-others --names api,web --prefix-colors blue,magenta \"pnpm run dev:api\" \"pnpm run dev:web\"",
+    "dev:demo": "concurrently --kill-others --names api,web --prefix-colors blue,magenta \"pnpm run dev:api:demo\" \"pnpm run dev:web:demo\"",
     "build": "vite build",
     "typecheck": "tsc -b --pretty false",
     "test": "pnpm run test:coverage && pnpm run check:zero-function-coverage",
