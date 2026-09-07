@@ -75,6 +75,9 @@ Scope: {{task_scope}}
 
 PRX is a local CLI that tracks tasks and the dependencies between them.
 Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact surface.
+PRX runs on this machine only, so nobody reading the repository can see it.
+Keep it out of what the repository carries: no code comment, commit message, or pull request
+may mention PRX, its identifiers, or its commands.
 
 1. Mark the task as being designed before anything else.
    - ` + "`prx task update {{task_id}} --status designing`" + `
@@ -97,6 +100,9 @@ Scope: {{task_scope}}
 
 PRX is a local CLI that tracks tasks and the dependencies between them.
 Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact surface.
+PRX runs on this machine only, so nobody reading the repository can see it.
+Keep it out of what the repository carries: no code comment, commit message, or pull request
+may mention PRX, its identifiers, or its commands.
 
 1. Read the task, the work it depends on, and its registered plan.
    - ` + "`prx task {{task_id}}`" + `
@@ -120,6 +126,9 @@ const defaultBatchTemplate = `Implement the PRX tasks of feature {{feature_id}} 
 
 PRX is a local CLI that tracks tasks and the dependencies between them.
 Run ` + "`prx --help`" + ` and ` + "`prx <command> --help`" + ` for its exact surface.
+PRX runs on this machine only, so nobody reading the repository can see it.
+Keep it out of what the repository carries, in your work and in every SubAgent's: no code comment,
+commit message, or pull request may mention PRX, its identifiers, or its commands.
 
 Tasks:
 {{task_list}}
