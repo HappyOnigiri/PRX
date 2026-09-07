@@ -114,7 +114,7 @@
 
 .task-card-pr > em {
   overflow: hidden;
-  color: var(--status-conflict);
+  color: var(--status-blocked);
   font-style: normal;
   text-overflow: ellipsis;
   white-space: nowrap;

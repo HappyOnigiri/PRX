@@ -62,7 +62,7 @@
 .dashboard-sync-error {
   flex-basis: 100%;
   text-align: right;
-  color: var(--status-conflict);
+  color: var(--status-blocked);
   font-size: var(--text-xs);
   overflow-wrap: anywhere;
 }
@@ -243,19 +243,19 @@
 }
 
 .queue-meter.queue-ready > span {
-  color: var(--status-ready);
+  color: var(--status-actionable);
 }
 
 .queue-meter.queue-review-waiting > span {
-  color: var(--status-review);
+  color: var(--status-waiting);
 }
 
 .queue-meter.queue-conflict > span {
-  color: var(--status-conflict);
+  color: var(--status-blocked);
 }
 
 .queue-meter.queue-sync-error > span {
-  color: var(--status-conflict);
+  color: var(--status-blocked);
 }
 
 @media (width <= 900px) {

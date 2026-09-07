@@ -10,6 +10,7 @@ import {
   BlockedReasonCode,
   DocumentKind,
   PullRequestDisplayState,
+  TaskBlockLabel,
   TaskStatus,
 } from "../src/gen/prx/v1/prx_pb";
 import { TaskInspector } from "../src/views/TaskInspector";
@@ -89,6 +90,7 @@ describe("TaskInspector", () => {
         code: BlockedReasonCode.WAITING_FOR_BLOCKER,
         blockerTaskId: "task-2",
       },
+      blockLabels: [TaskBlockLabel.DEPENDENCY_UNRESOLVED],
     });
     const blocker = makeTask({ id: "task-2", title: "Blocker task" });
     const pullRequest = makePullRequest({
@@ -135,7 +137,11 @@ describe("TaskInspector", () => {
     expect(taskIdButton).toHaveTextContent(task.id);
     expect(taskIdButton.querySelector("svg")).not.toBeInTheDocument();
     expect(screen.queryByText("Task ID")).not.toBeInTheDocument();
-    expect(screen.getByText("Waiting for Blocker task")).toBeInTheDocument();
+    // ブロックラベルは短い語で出し、どの blocker を待つかは補足の title に置く。
+    expect(screen.getByText("dependency")).toHaveAttribute(
+      "title",
+      "Waiting for Blocker task",
+    );
     expect(screen.getByText("GitHub data is old")).toBeInTheDocument();
     expect(screen.getByText("merged")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "acme/prx #42" })).toHaveAttribute(

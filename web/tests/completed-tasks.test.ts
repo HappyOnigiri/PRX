@@ -35,7 +35,7 @@ describe("hideFinishedTasks", () => {
 
   it.each([
     TaskDisplayState.APPROVED,
-    TaskDisplayState.REVIEW_WAITING,
+    TaskDisplayState.IN_REVIEW,
     TaskDisplayState.IN_PROGRESS,
   ])("keeps a task presented as %s", (displayState) => {
     const visible = hideFinishedTasks(

@@ -8,6 +8,7 @@ import {
   ErrorDetailSchema,
   FeatureStatus,
   PullRequestDisplayState,
+  TaskBlockLabel,
   TaskDisplayState,
   TaskStatus,
   type BlockedReason,
@@ -62,17 +63,33 @@ export const displayStateKeys = {
   [TaskDisplayState.DESIGNING]: "displayState.designing",
   [TaskDisplayState.DESIGNED]: "displayState.designed",
   [TaskDisplayState.IN_PROGRESS]: "displayState.inProgress",
+  [TaskDisplayState.IMPLEMENTED]: "displayState.implemented",
+  [TaskDisplayState.IN_REVIEW]: "displayState.inReview",
+  [TaskDisplayState.APPROVED]: "displayState.approved",
+  [TaskDisplayState.MERGED]: "displayState.merged",
   [TaskDisplayState.COMPLETED]: "displayState.completed",
   [TaskDisplayState.CLOSED]: "displayState.closed",
-  [TaskDisplayState.MERGED]: "displayState.merged",
-  [TaskDisplayState.DRAFT]: "displayState.draft",
-  [TaskDisplayState.CONFLICT]: "displayState.conflict",
-  [TaskDisplayState.CHANGES_REQUESTED]: "displayState.changesRequested",
-  [TaskDisplayState.APPROVED]: "displayState.approved",
-  [TaskDisplayState.REVIEW_WAITING]: "displayState.reviewWaiting",
-  [TaskDisplayState.OPEN]: "displayState.open",
   [TaskDisplayState.UNKNOWN]: "displayState.unknown",
 } as const satisfies Record<TaskDisplayState, string>;
+
+// ブロックラベルはステータスとは別の軸なので、翻訳キーも別に持つ。
+export const blockLabelKeys = {
+  [TaskBlockLabel.UNSPECIFIED]: "blockLabel.unknown",
+  [TaskBlockLabel.DEPENDENCY_UNRESOLVED]: "blockLabel.dependencyUnresolved",
+  [TaskBlockLabel.CONFLICT]: "blockLabel.conflict",
+  [TaskBlockLabel.CHANGES_REQUESTED]: "blockLabel.changesRequested",
+} as const satisfies Record<TaskBlockLabel, string>;
+
+export function taskBlockLabelLabel(
+  value: TaskBlockLabel,
+  t: TFunction,
+): string {
+  return t(blockLabelKeys[value]);
+}
+
+export function taskBlockLabelToken(value: TaskBlockLabel): string {
+  return TaskBlockLabel[value].toLowerCase().replaceAll("_", "-");
+}
 
 export function taskDisplayStateLabel(
   value: TaskDisplayState,

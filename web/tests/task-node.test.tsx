@@ -1,7 +1,11 @@
 import { act, fireEvent, render, screen } from "@testing-library/react";
 import { ReactFlowProvider, type NodeProps } from "@xyflow/react";
 import { describe, expect, it, vi } from "vitest";
-import { DocumentKind, TaskDisplayState } from "../src/gen/prx/v1/prx_pb";
+import {
+  DocumentKind,
+  TaskBlockLabel,
+  TaskDisplayState,
+} from "../src/gen/prx/v1/prx_pb";
 import { TaskNode, type TaskFlowNode } from "../src/views/TaskNode";
 
 describe("TaskNode", () => {
@@ -26,7 +30,8 @@ describe("TaskNode", () => {
       data: {
         title: "Merge billing schema",
         assignee: "Carol",
-        state: TaskDisplayState.REVIEW_WAITING,
+        state: TaskDisplayState.IN_REVIEW,
+        blockLabels: [TaskBlockLabel.CONFLICT],
         hasImplementationPlan: true,
         stale: true,
         syncError: false,
@@ -83,9 +88,10 @@ describe("TaskNode", () => {
     expect(screen.getByText("Merge billing schema")).toBeInTheDocument();
     expect(screen.getByText("Carol")).toBeInTheDocument();
     expect(screen.queryByText("READY")).not.toBeInTheDocument();
-    expect(
-      container.querySelector(".state-review-waiting"),
-    ).toBeInTheDocument();
+    expect(container.querySelector(".state-in-review")).toBeInTheDocument();
+    // ステータスとブロックラベルは別の系統なので、ノードには両方が出る。
+    expect(container.querySelector(".has-block-conflict")).toBeInTheDocument();
+    expect(container.querySelector(".block-conflict")).toBeInTheDocument();
     expect(container.querySelector(".is-stale")).toBeInTheDocument();
     const edgePorts = container.querySelectorAll(".task-edge-port");
     expect(edgePorts).toHaveLength(2);
@@ -135,6 +141,7 @@ describe("TaskNode", () => {
         title: "Archived task",
         assignee: "",
         state: TaskDisplayState.NOT_STARTED,
+        blockLabels: [],
         hasImplementationPlan: false,
         stale: false,
         syncError: false,
@@ -178,6 +185,7 @@ describe("TaskNode", () => {
         title: "Ship API",
         assignee: "",
         state: TaskDisplayState.NOT_STARTED,
+        blockLabels: [],
         hasImplementationPlan: false,
         ready: false,
         stale: false,
@@ -233,6 +241,7 @@ describe("TaskNode", () => {
         title: "Ship API",
         assignee: "",
         state: TaskDisplayState.NOT_STARTED,
+        blockLabels: [],
         hasImplementationPlan: false,
         ready: false,
         stale: false,

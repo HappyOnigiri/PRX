@@ -42,6 +42,8 @@ export const domain = {
       designing: "designing",
       designed: "designed",
       inProgress: "in progress",
+      implemented: "implemented",
+      inReview: "in review",
       completed: "completed",
       closed: "closed",
       merged: "merged",
@@ -52,6 +54,12 @@ export const domain = {
       reviewWaiting: "review waiting",
       open: "open",
       unknown: "unknown",
+    },
+    blockLabel: {
+      dependencyUnresolved: "dependency",
+      conflict: "conflict",
+      changesRequested: "changes requested",
+      unknown: "blocked",
     },
     blockedReason: {
       dependencyDataIncomplete: "Dependency data is incomplete",
@@ -103,6 +111,8 @@ export const domain = {
       designing: "設計中",
       designed: "設計済み",
       inProgress: "実装中",
+      implemented: "実装済み",
+      inReview: "レビュー中",
       completed: "完了",
       closed: "クローズ済み",
       merged: "マージ済み",
@@ -113,6 +123,12 @@ export const domain = {
       reviewWaiting: "レビュー待ち",
       open: "オープン",
       unknown: "不明",
+    },
+    blockLabel: {
+      dependencyUnresolved: "依存未解決",
+      conflict: "コンフリクト",
+      changesRequested: "修正依頼あり",
+      unknown: "ブロックあり",
     },
     blockedReason: {
       dependencyDataIncomplete: "依存関係のデータが不足しています",

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   PullRequestDisplayState,
+  TaskBlockLabel,
   TaskDisplayState,
 } from "../src/gen/prx/v1/prx_pb";
 import { filterTaskSearchResults, parseTaskSearch } from "../src/task-search";
@@ -51,7 +52,7 @@ describe("task search", () => {
       id: "task-review",
       title: "Review checkout",
       ready: false,
-      displayState: TaskDisplayState.REVIEW_WAITING,
+      displayState: TaskDisplayState.IN_REVIEW,
     });
     const archived = makeTask({
       id: "task-archived",
@@ -96,6 +97,40 @@ describe("task search", () => {
       parseTaskSearch('"決済 API"'),
     );
     expect(JapaneseResults.map(({ task }) => task.id)).toEqual([ready.id]);
+  });
+
+  // ステータスとブロックラベルは別の軸なので、同じタスクが task-status: と
+  // block: の両方で引ける。
+  it("filters block labels independently of the status", () => {
+    const blocked = makeTask({
+      id: "task-blocked",
+      title: "Blocked work",
+      displayState: TaskDisplayState.APPROVED,
+      blockLabels: [TaskBlockLabel.CONFLICT],
+    });
+    const clean = makeTask({
+      id: "task-clean",
+      title: "Clean work",
+      displayState: TaskDisplayState.APPROVED,
+    });
+    const snapshot = makeSnapshot({ tasks: [blocked, clean] });
+    expect(
+      filterTaskSearchResults(
+        snapshot,
+        parseTaskSearch("task-status:approved block:conflict"),
+      ).map(({ task }) => task.id),
+    ).toEqual([blocked.id]);
+    expect(
+      filterTaskSearchResults(
+        snapshot,
+        parseTaskSearch("block:dependency"),
+      ).map(({ task }) => task.id),
+    ).toEqual([]);
+    expect(parseTaskSearch("block:merged").error).toEqual({
+      type: "invalid-qualifier",
+      key: "block",
+      value: "merged",
+    });
   });
 
   it("treats sync errors separately from stale terminal data", () => {

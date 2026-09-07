@@ -89,7 +89,7 @@
 
 .task-search-error {
   padding: 18px;
-  color: var(--status-conflict);
+  color: var(--status-blocked);
 }
 
 .task-search-error p {

@@ -8,14 +8,18 @@ import {
 import { ExternalLink, Eye, Pencil, Plus } from "lucide-react";
 import { useEffect } from "react";
 import { useTranslation } from "react-i18next";
-import { DocumentKind, type TaskDisplayState } from "../gen/prx/v1/prx_pb";
-import { taskDisplayStateLabel, taskDisplayStateToken } from "../i18n/domain";
+import {
+  DocumentKind,
+  type TaskBlockLabel,
+  type TaskDisplayState,
+} from "../gen/prx/v1/prx_pb";
+import { taskBlockLabelToken, taskDisplayStateToken } from "../i18n/domain";
 import type { HiddenDependencies } from "./completedTasks";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
-import { StatusBadge } from "./StatusBadge";
 import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
+import { TaskBlockLabels, TaskStatusBadge } from "./TaskStateBadges";
 
 export interface TaskNodeDocument {
   id: string;
@@ -32,10 +36,19 @@ interface TaskNodePort {
 
 const emptyPorts: TaskNodePort[] = [];
 
+// ノード外枠にもブロックの有無を出す。ラベルの文字を読まなくても、キャンバスを
+// 引いて眺めたときに止まっているタスクが分かる。
+function blockClasses(labels: TaskBlockLabel[]): string {
+  return labels
+    .map((label) => `has-block-${taskBlockLabelToken(label)}`)
+    .join(" ");
+}
+
 interface TaskNodeData extends Record<string, unknown> {
   title: string;
   assignee: string;
   state: TaskDisplayState;
+  blockLabels: TaskBlockLabel[];
   hasImplementationPlan: boolean;
   stale: boolean;
   syncError: boolean;
@@ -149,7 +162,7 @@ export function TaskNode({
 
   return (
     <div
-      className={`task-node state-${taskDisplayStateToken(data.state)} ${data.stale ? "is-stale" : ""} ${selected ? "is-selected" : ""}`}
+      className={`task-node state-${taskDisplayStateToken(data.state)} ${blockClasses(data.blockLabels)} ${data.stale ? "is-stale" : ""} ${selected ? "is-selected" : ""}`}
     >
       <Handle
         type="target"
@@ -174,10 +187,7 @@ export function TaskNode({
         titles={data.hiddenDependencies?.blocked ?? []}
       />
       <div className="task-node-head">
-        <StatusBadge
-          className={`state-${taskDisplayStateToken(data.state)}`}
-          label={taskDisplayStateLabel(data.state, t)}
-        />
+        <TaskStatusBadge state={data.state} />
         <div className="task-node-actions nodrag nowheel nopan">
           <CopyableIdentifier label={t("common.taskId")} value={id} valueOnly />
           {/* コピーはアーカイブ済みのタスクでも使える。エージェントに作業を
@@ -202,6 +212,13 @@ export function TaskNode({
           />
         </div>
       </div>
+      {/* ラベルはヘッダに並べると折り返して、先読みしたノードの高さとずれる。
+          独立した行にすれば useGraphLayout の計算式と一致する。 */}
+      {data.blockLabels.length > 0 && (
+        <p className="task-node-blocks">
+          <TaskBlockLabels labels={data.blockLabels} />
+        </p>
+      )}
       <h3>
         <EntityIcon kind="task" size={13} />
         {data.title}

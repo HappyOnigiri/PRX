@@ -52,12 +52,13 @@
   gap: 8px;
 }
 
-.inspector-blocked {
+.inspector-blocks {
   margin: 0;
   padding: 10px 16px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
   background: var(--surface-2);
-  color: var(--text-2);
-  font-size: var(--text-xs);
 }
 
 .inspector form,
@@ -178,27 +179,27 @@
 }
 
 .linked-pr.state-conflict span {
-  color: var(--status-conflict);
+  color: var(--status-blocked);
 }
 
 .linked-pr.state-approved span,
 .linked-pr.state-review-waiting span,
 .linked-pr.state-changes-requested span {
-  color: var(--status-review);
+  color: var(--status-waiting);
 }
 
 .linked-pr.state-merged span {
-  color: var(--status-merged);
+  color: var(--status-done);
 }
 
 .linked-pr p {
-  color: var(--status-conflict);
+  color: var(--status-blocked);
   font-size: var(--text-xs);
 }
 
 .linked-pr .pr-stale {
   display: block;
-  color: var(--status-review);
+  color: var(--status-waiting);
   font-size: var(--text-xs);
 }
 
@@ -258,9 +259,9 @@
 .danger-zone {
   width: calc(100% - 32px);
   margin: 16px;
-  border: 1px solid var(--status-conflict);
+  border: 1px solid var(--status-blocked);
   background: transparent;
-  color: var(--status-conflict);
+  color: var(--status-blocked);
   font-size: var(--text-sm);
 }
 
