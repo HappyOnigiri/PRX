@@ -14,6 +14,7 @@ import { FeatureCreateDialog } from "./FeatureCreateDialog";
 import { IconButton } from "./IconButton";
 import { MarkdownPreview } from "./MarkdownPreview";
 import { ProjectFeatureList } from "./ProjectFeatureList";
+import { StatusBadge } from "./StatusBadge";
 import { type TaskNodeDocument } from "./TaskNode";
 
 export function ProjectWorkspace() {
@@ -158,7 +159,10 @@ function ProjectContent(props: ProjectContentProps) {
       </header>
       {archived && (
         <div className="archived-notice" role="status">
-          <strong>{t("project.archivedLabel")}</strong>
+          <StatusBadge
+            className="status-archived"
+            label={t("project.archivedLabel")}
+          />
           <span>{t("project.archivedDetail")}</span>
         </div>
       )}

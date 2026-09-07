@@ -28,7 +28,6 @@ describe("TaskNode", () => {
         assignee: "Carol",
         state: TaskDisplayState.REVIEW_WAITING,
         hasImplementationPlan: true,
-        ready: true,
         stale: true,
         syncError: false,
         pullRequest: {
@@ -84,7 +83,9 @@ describe("TaskNode", () => {
     expect(screen.getByText("Merge billing schema")).toBeInTheDocument();
     expect(screen.getByText("Carol")).toBeInTheDocument();
     expect(screen.queryByText("READY")).not.toBeInTheDocument();
-    expect(container.querySelector(".is-ready")).toBeInTheDocument();
+    expect(
+      container.querySelector(".state-review-waiting"),
+    ).toBeInTheDocument();
     expect(container.querySelector(".is-stale")).toBeInTheDocument();
     const edgePorts = container.querySelectorAll(".task-edge-port");
     expect(edgePorts).toHaveLength(2);
@@ -135,7 +136,6 @@ describe("TaskNode", () => {
         assignee: "",
         state: TaskDisplayState.NOT_STARTED,
         hasImplementationPlan: false,
-        ready: false,
         stale: false,
         syncError: false,
         pullRequest: undefined,

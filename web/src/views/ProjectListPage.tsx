@@ -7,6 +7,7 @@ import { featuresInProject, projectsByArchive } from "../project";
 import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
 import { ProjectCreateDialog } from "./ProjectCreateDialog";
+import { StatusBadge } from "./StatusBadge";
 import { TabList, TabPanel } from "./TabList";
 import { useProjectSnapshot } from "./useProjectSnapshot";
 
@@ -130,17 +131,21 @@ function ProjectListRow({
       search={{ features: project.archived ? "archived" : "active" }}
       className="feature-list-row project-list-row"
     >
+      {/* A project has only the two states, and both are stated so the badge
+          opens every titled row at the same place. */}
       <div className="feature-list-row-title">
+        <StatusBadge
+          className={project.archived ? "status-archived" : "status-active"}
+          label={t(
+            project.archived ? "project.archivedBadge" : "project.activeBadge",
+          )}
+        />
         <b>
           <EntityIcon kind="project" size={15} />
           {project.title}
         </b>
       </div>
       <span>{t("project.featureCount", { count: featureCount })}</span>
-      {/* The slot a feature row fills with a status carries only the archived
-          badge here, because the active tab already says every row is active
-          and the identifier belongs to the workspace, where it can be copied. */}
-      {project.archived && <strong>{t("project.archivedBadge")}</strong>}
     </Link>
   );
 }

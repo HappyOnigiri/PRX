@@ -10,6 +10,7 @@ import {
 } from "../i18n/domain";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon, type EntityKind } from "./EntityIcon";
+import { StatusBadge } from "./StatusBadge";
 import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
 
 export interface TaskCardProps {
@@ -34,6 +35,12 @@ export function TaskCard({
     <li className="task-card">
       <div>
         <p className="task-card-title">
+          {/* The state leads the line, so a reader scans one column of states
+              instead of hunting for a badge at the end of each row. */}
+          <StatusBadge
+            className={`state-${taskDisplayStateToken(task.displayState)}`}
+            label={taskDisplayStateLabel(task.displayState, t)}
+          />
           <EntityIcon kind="task" size={15} />
           <Link
             to="/features/$featureId"
@@ -79,9 +86,6 @@ export function TaskCard({
           )}
         </dl>
       </div>
-      <i className={`state-${taskDisplayStateToken(task.displayState)}`}>
-        {taskDisplayStateLabel(task.displayState, t)}
-      </i>
       <TaskPromptCopyButton
         taskId={task.id}
         hasImplementationPlan={task.hasImplementationPlan}

@@ -7,7 +7,6 @@ import type { Feature, Project } from "./gen/prx/v1/prx_pb";
 import { useAutoSync, useSnapshot } from "./hooks";
 import { projectsByArchive } from "./project";
 import { AutoSyncStatusContext } from "./sync-status";
-import { appVersion } from "./version";
 import { IconButton } from "./views/IconButton";
 import { ProjectTree } from "./views/ProjectTree";
 import { SettingsDialog } from "./views/SettingsDialog";
@@ -43,11 +42,8 @@ function AppShellLayout({ children }: { children: ReactNode }) {
       )}
       <aside className="rail">
         <Link to="/" className="brand" aria-label={t("nav.dashboard")}>
-          <span className="brand-line">
-            <span className="brand-mark">
-              P<span>R</span>X
-            </span>
-            <span className="app-version">v{appVersion()}</span>
+          <span className="brand-mark">
+            P<span>R</span>X
           </span>
         </Link>
         <RailNavigation features={features} projects={projects} />

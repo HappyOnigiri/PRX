@@ -13,6 +13,7 @@
   --accent: light-dark(#245fb8, #7aaeff);
   --accent-hover: light-dark(#194f9e, #91bcff);
   --accent-text: light-dark(#fff, #0f1418);
+  --status-idle: light-dark(#0b6a8f, #52b6d8);
   --status-ready: light-dark(#0c715a, #4cc2a0);
   --status-review: light-dark(#7b5100, #d9a441);
   --status-conflict: light-dark(#a9322f, #ef6f66);

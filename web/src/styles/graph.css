@@ -153,12 +153,22 @@
   outline-offset: -1px;
 }
 
-.task-node.is-ready {
+/* The edge takes the same colour as the state badge, so a node reads the same
+   whether it is scanned by its edge or read by its label. */
+.task-node.state-not-started {
+  border-left-color: var(--status-idle);
+}
+
+.task-node.state-designed {
   border-left-color: var(--status-ready);
 }
 
 .task-node.state-conflict {
   border-left-color: var(--status-conflict);
+}
+
+.task-node.state-completed {
+  border-left-color: var(--status-merged);
 }
 
 .task-node.state-merged {
@@ -196,38 +206,9 @@
   margin-left: auto;
 }
 
-/* The glyph is the same one a task carries elsewhere, and it inherits the
-   label's color so the state is stated once for both. */
-.node-state {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--text-2);
-  font-size: var(--text-xs);
-  font-weight: 500;
-}
-
 .node-asset svg {
   color: var(--text-3);
   text-align: right;
-}
-
-.is-ready .node-state {
-  color: var(--status-ready);
-}
-
-.state-conflict .node-state {
-  color: var(--status-conflict);
-}
-
-.state-merged .node-state {
-  color: var(--status-merged);
-}
-
-.state-review-waiting .node-state,
-.state-approved .node-state,
-.state-changes-requested .node-state {
-  color: var(--status-review);
 }
 
 .node-edit {
@@ -277,6 +258,14 @@
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+/* The kind icon rides inside the clamped title, so a long title still ends in
+   an ellipsis. It follows the assignee's glyph rule, which is less specific. */
+.task-node h3 > svg {
+  margin-right: 6px;
+  color: var(--text-3);
+  vertical-align: -2px;
 }
 
 .node-sync-error {
