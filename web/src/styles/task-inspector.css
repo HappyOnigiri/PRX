@@ -209,6 +209,19 @@
   font-size: var(--text-xs);
 }
 
+/* CI の状態はステータスの色を持たない。妨害としての強調はタスク側のブロック
+   ラベルが担うため、ここでは事実だけを添える。 */
+.linked-pr .pr-check-state {
+  display: flex;
+  gap: 4px;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+
+.linked-pr .pr-check-state strong {
+  flex: 0 0 auto;
+}
+
 .linked-pr .sync-error {
   display: flex;
   gap: 4px;

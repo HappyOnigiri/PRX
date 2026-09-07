@@ -1178,10 +1178,11 @@
 }
 
 /* Block labels sit beside the status and never replace it. Red marks the ones
-   the reader has to act on in this very task, so a conflict, a change request
-   and an unrecognised blocker share the colour of the pull request badge. */
+   the reader has to act on in this very task, so a conflict, a change request,
+   a failing CI run and an unrecognised blocker share the pull request colour. */
 .status-badge.block-conflict,
 .status-badge.block-changes-requested,
+.status-badge.block-ci-failed,
 .status-badge.block-unspecified,
 .status-badge.state-conflict,
 .status-badge.state-changes-requested {

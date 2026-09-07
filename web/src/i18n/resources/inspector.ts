@@ -36,6 +36,7 @@ export const inspector = {
       implementationPromptCopied: "Implementation prompt copied.",
       promptFailed: "The prompt could not be copied.",
       githubSyncError: "GitHub sync error",
+      checkState: "CI",
     },
   },
   ja: {
@@ -75,6 +76,7 @@ export const inspector = {
       implementationPromptCopied: "実装プロンプトをコピーしました。",
       promptFailed: "プロンプトをコピーできませんでした。",
       githubSyncError: "GitHub 同期エラー",
+      checkState: "CI",
     },
   },
 } as const;

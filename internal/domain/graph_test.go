@@ -296,6 +296,44 @@ func TestTaskDisplayStateMatrix(t *testing.T) {
 			ready: false,
 		},
 		{
+			name: "a failing CI adds a label without touching the status",
+			task: Task{ID: "task", Status: TaskStatusInProgress},
+			pr: []PullRequest{{
+				TaskID: "task", State: PullRequestStateOpen,
+				ReviewState: ReviewStateApproved, CheckState: CheckStateFailure,
+			}},
+			want:   TaskDisplayStateApproved,
+			labels: []TaskBlockLabel{TaskBlockLabelCIFailed},
+			ready:  false,
+		},
+		{
+			name: "a running CI adds no label",
+			task: Task{ID: "task", Status: TaskStatusInProgress},
+			pr: []PullRequest{{
+				TaskID: "task", State: PullRequestStateOpen, CheckState: CheckStatePending,
+			}},
+			want:  TaskDisplayStateImplemented,
+			ready: false,
+		},
+		{
+			name: "a pull request without checks adds no label",
+			task: Task{ID: "task", Status: TaskStatusInProgress},
+			pr: []PullRequest{{
+				TaskID: "task", State: PullRequestStateOpen, CheckState: CheckStateNone,
+			}},
+			want:  TaskDisplayStateImplemented,
+			ready: false,
+		},
+		{
+			name: "a merged pull request drops the CI label too",
+			task: Task{ID: "task", Status: TaskStatusInProgress},
+			pr: []PullRequest{{
+				TaskID: "task", State: PullRequestStateMerged, CheckState: CheckStateFailure,
+			}},
+			want:  TaskDisplayStateMerged,
+			ready: false,
+		},
+		{
 			name:  "not started with an unknown pull request",
 			task:  Task{ID: "task", Status: TaskStatusNotStarted},
 			pr:    []PullRequest{{TaskID: "task", State: PullRequestStateUnknown}},
@@ -330,9 +368,14 @@ func TestBlockLabelsCoverUnfinishedTasks(t *testing.T) {
 	deps := []Dependency{{BlockerTaskID: "blocker", BlockedTaskID: "blocked"}}
 	prs := []PullRequest{{
 		TaskID: "blocked", State: PullRequestStateOpen, Mergeability: MergeabilityConflicting,
+		ReviewState: ReviewStateChangesRequested, CheckState: CheckStateFailure,
 	}}
 	got := Derive(tasks, deps, prs)[1]
-	want := []TaskBlockLabel{TaskBlockLabelDependencyUnresolved, TaskBlockLabelConflict}
+	// 並び順は blockLabelsFor の append 順に固定する。表示側はこの順をそのまま使う。
+	want := []TaskBlockLabel{
+		TaskBlockLabelDependencyUnresolved, TaskBlockLabelConflict,
+		TaskBlockLabelChangesRequested, TaskBlockLabelCIFailed,
+	}
 	if !slices.Equal(got.BlockLabels, want) {
 		t.Fatalf("block labels=%v want %v", got.BlockLabels, want)
 	}

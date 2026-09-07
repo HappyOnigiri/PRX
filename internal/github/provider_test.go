@@ -28,12 +28,22 @@ func TestParsePullRequestURL(t *testing.T) {
 	}
 }
 
-// handleRESTCommits は最新コミットの時刻を返す。REST 経路は push 時刻の代わりに
-// committer の日時を使う。
+// handleRESTCommits は最新コミットの時刻と SHA を返し、その SHA の CI も答える。
+// REST 経路は push 時刻の代わりに committer の日時を使い、CI は同じコミットを ref に引く。
 func handleRESTCommits(mux *http.ServeMux) {
 	mux.HandleFunc("/repos/acme/api/pulls/7/commits", func(w http.ResponseWriter, _ *http.Request) {
 		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(`[{"commit":{"committer":{"date":"2026-02-01T00:00:00Z"}}}]`))
+		_, _ = w.Write([]byte(
+			`[{"sha":"c0ffee","commit":{"committer":{"date":"2026-02-01T00:00:00Z"}}}]`,
+		))
+	})
+	mux.HandleFunc("/repos/acme/api/commits/c0ffee/status", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"state":"failure","total_count":1}`))
+	})
+	mux.HandleFunc("/repos/acme/api/commits/c0ffee/check-runs", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"total_count":0,"check_runs":[]}`))
 	})
 }
 
@@ -260,6 +270,8 @@ func TestFixtureRejectsValuesOutsideTheSchema(t *testing.T) {
 			`"review_state":"aproved","mergeability":"mergeable"}}`,
 		"typo in mergeability": `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved",` +
 			`"mergeability":"merged"}}`,
+		"typo in check_state": `{"https://github.com/acme/api/pull/42":{"state":"open","review_state":"approved",` +
+			`"mergeability":"mergeable","check_state":"failed"}}`,
 	}
 	for name, body := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -451,5 +463,171 @@ func TestLiveProviderKeepsReviewResultWhenCommitFetchFails(t *testing.T) {
 		got.ChangesRequestedAt == nil || got.ChangesRequestedAt.Format(time.RFC3339) != "2026-01-20T00:00:00Z" ||
 		got.LastPushedAt == nil || !got.LastPushedAt.Equal(known) {
 		t.Fatalf("partial result=%+v", got)
+	}
+}
+
+// REST 経路は combined status と check runs の両方を 1 値に畳む。片方しか見ないと、
+// もう片方でしか報告されない失敗を取りこぼす。
+func TestFoldRESTCheckState(t *testing.T) {
+	completed := func(conclusion string) *gh.CheckRun {
+		status := "completed"
+		return &gh.CheckRun{Status: &status, Conclusion: &conclusion}
+	}
+	running := func() *gh.CheckRun {
+		status := "in_progress"
+		return &gh.CheckRun{Status: &status}
+	}
+	combined := func(state string, total int) *gh.CombinedStatus {
+		return &gh.CombinedStatus{State: &state, TotalCount: &total}
+	}
+	tests := []struct {
+		name     string
+		combined *gh.CombinedStatus
+		runs     []*gh.CheckRun
+		want     domain.CheckState
+	}{
+		{name: "no checks at all", combined: combined("pending", 0), want: domain.CheckStateNone},
+		{
+			name: "combined success only", combined: combined("success", 1),
+			want: domain.CheckStateSuccess,
+		},
+		{
+			name: "combined error counts as failure", combined: combined("error", 1),
+			want: domain.CheckStateFailure,
+		},
+		{
+			name:     "a failing check run outranks a passing status",
+			combined: combined("success", 1), runs: []*gh.CheckRun{completed("failure")},
+			want: domain.CheckStateFailure,
+		},
+		{
+			name:     "a running check run outranks a passing status",
+			combined: combined("success", 1), runs: []*gh.CheckRun{running()},
+			want: domain.CheckStatePending,
+		},
+		{
+			name:     "failure outranks a running check run",
+			combined: combined("pending", 0),
+			runs:     []*gh.CheckRun{running(), completed("failure")},
+			want:     domain.CheckStateFailure,
+		},
+		{
+			name:     "skipped and neutral do not fail the roll-up",
+			combined: combined("pending", 0),
+			runs: []*gh.CheckRun{
+				completed("skipped"), completed("neutral"), completed("cancelled"),
+			},
+			want: domain.CheckStateSuccess,
+		},
+		{
+			name:     "an unrecognised conclusion is not claimed as a pass",
+			combined: combined("pending", 0), runs: []*gh.CheckRun{completed("mystery")},
+			want: domain.CheckStateUnknown,
+		},
+		{
+			name:     "an unrecognised combined state is not claimed as a pass",
+			combined: combined("mystery", 1), want: domain.CheckStateUnknown,
+		},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			total := len(test.runs)
+			runs := &gh.ListCheckRunsResults{Total: &total, CheckRuns: test.runs}
+			if got := foldRESTCheckState(test.combined, runs); got != test.want {
+				t.Fatalf("check state=%q want %q", got, test.want)
+			}
+		})
+	}
+}
+
+// CI 用のエンドポイントが失敗しても、そこまでに取れた項目は保持し、CI は前回値のまま
+// 残す。最新コミットの取得が失敗したときと同じ扱いである。
+func TestLiveProviderKeepsPreviousCheckStateWhenCIFetchFails(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(
+			`{"number":7,"state":"open","draft":false,"mergeable":true,"node_id":"PR_7",` +
+				`"user":{"login":"octocat"},"updated_at":"2026-01-01T00:00:00Z"}`,
+		))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/reviews", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`[]`))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/requested_reviewers", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(`{"users":[],"teams":[]}`))
+	})
+	mux.HandleFunc("/repos/acme/api/pulls/7/commits", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(
+			`[{"sha":"c0ffee","commit":{"committer":{"date":"2026-02-01T00:00:00Z"}}}]`,
+		))
+	})
+	mux.HandleFunc("/repos/acme/api/commits/c0ffee/status", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusServiceUnavailable)
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := gh.NewClient(nil)
+	base, _ := client.BaseURL.Parse(server.URL + "/")
+	client.BaseURL = base
+	provider := &LiveProvider{client: client}
+	got, err := provider.Fetch(context.Background(), domain.PullRequest{
+		Owner: "acme", Repository: "api", Number: 7, CheckState: domain.CheckStateSuccess,
+	})
+	if err == nil {
+		t.Fatal("CI fetch failure must be reported")
+	}
+	if got.CheckState != domain.CheckStateSuccess {
+		t.Fatalf("check state=%q, want the previous success to survive", got.CheckState)
+	}
+	if got.LastPushedAt == nil || got.LastPushedAt.Format(time.RFC3339) != "2026-02-01T00:00:00Z" {
+		t.Fatalf("commit result lost: %+v", got.LastPushedAt)
+	}
+}
+
+// コミットが判明していなければ CI の ref を決められない。チェックが 1 件もないと
+// 断定せず、前回値を維持する。
+func TestLiveProviderKeepsCheckStateWithoutACommit(t *testing.T) {
+	provider := &LiveProvider{client: gh.NewClient(nil)}
+	got, err := provider.checkState(
+		context.Background(),
+		domain.PullRequest{CheckState: domain.CheckStateFailure},
+		"",
+	)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got != domain.CheckStateFailure {
+		t.Fatalf("check state=%q, want the previous failure to survive", got)
+	}
+}
+
+// 終了した pull request では CI の状態を落とす。GraphQL 経路と値をそろえるため。
+func TestLiveProviderClearsCheckStateWhenFinished(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.HandleFunc("/repos/acme/api/pulls/7", func(w http.ResponseWriter, _ *http.Request) {
+		w.Header().Set("Content-Type", "application/json")
+		_, _ = w.Write([]byte(
+			`{"number":7,"state":"closed","merged":true,"node_id":"PR_7",` +
+				`"user":{"login":"octocat"},"updated_at":"2026-01-01T00:00:00Z"}`,
+		))
+	})
+	server := httptest.NewServer(mux)
+	defer server.Close()
+	client := gh.NewClient(nil)
+	base, _ := client.BaseURL.Parse(server.URL + "/")
+	client.BaseURL = base
+	provider := &LiveProvider{client: client}
+	got, err := provider.Fetch(context.Background(), domain.PullRequest{
+		Owner: "acme", Repository: "api", Number: 7, CheckState: domain.CheckStateFailure,
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.CheckState != domain.CheckStateUnknown {
+		t.Fatalf("check state=%q, want unknown on a merged pull request", got.CheckState)
 	}
 }

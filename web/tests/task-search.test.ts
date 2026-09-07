@@ -133,6 +133,22 @@ describe("task search", () => {
     });
   });
 
+  it("filters the CI failure label", () => {
+    const failing = makeTask({
+      id: "task-failing",
+      title: "Failing pipeline",
+      displayState: TaskDisplayState.APPROVED,
+      blockLabels: [TaskBlockLabel.CI_FAILED],
+    });
+    const passing = makeTask({ id: "task-passing", title: "Green pipeline" });
+    const snapshot = makeSnapshot({ tasks: [failing, passing] });
+    expect(
+      filterTaskSearchResults(snapshot, parseTaskSearch("block:ci-failed")).map(
+        ({ task }) => task.id,
+      ),
+    ).toEqual([failing.id]);
+  });
+
   it("treats sync errors separately from stale terminal data", () => {
     const stale = makeTask({ id: "stale", title: "Stale only" });
     const failed = makeTask({ id: "failed", title: "Failed sync" });

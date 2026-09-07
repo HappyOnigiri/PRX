@@ -8,6 +8,7 @@ import {
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import {
   BlockedReasonCode,
+  CheckState,
   DocumentKind,
   PullRequestDisplayState,
   TaskBlockLabel,
@@ -98,6 +99,7 @@ describe("TaskInspector", () => {
       stale: true,
       syncError: "GitHub data is old",
       displayState: PullRequestDisplayState.MERGED,
+      checkState: CheckState.FAILURE,
     });
     const markdown = makeDocument({
       id: "document-md",
@@ -150,6 +152,7 @@ describe("TaskInspector", () => {
     ).toBeInTheDocument();
     expect(screen.getByText("GitHub data is old")).toBeInTheDocument();
     expect(screen.getByText("merged")).toBeInTheDocument();
+    expect(screen.getByText("failing")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "acme/prx #42" })).toHaveAttribute(
       "target",
       "_blank",

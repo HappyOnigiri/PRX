@@ -475,6 +475,7 @@ func domainPullRequest(value db.PullRequest, taskIDs map[string]string) domain.P
 		ReviewRequestPending: value.ReviewRequestPending != 0,
 		ChangesRequestedAt:   nullableTime(value.ChangesRequestedAt),
 		LastPushedAt:         nullableTime(value.LastPushedAt),
+		CheckState:           domain.CheckState(value.CheckState),
 	}
 	if err := json.Unmarshal([]byte(value.AssigneesJson), &result.Assignees); err != nil {
 		result.Assignees = []string{}

@@ -27,7 +27,12 @@ const taskStatusValues = [
   "unknown",
 ] as const;
 
-const blockValues = ["dependency", "conflict", "changes-requested"] as const;
+const blockValues = [
+  "dependency",
+  "conflict",
+  "changes-requested",
+  "ci-failed",
+] as const;
 
 const githubStatusValues = [
   "merged",
@@ -221,6 +226,7 @@ function blockQualifier(label: TaskBlockLabel): BlockValue | "" {
   if (label === TaskBlockLabel.DEPENDENCY_UNRESOLVED) return "dependency";
   if (label === TaskBlockLabel.CONFLICT) return "conflict";
   if (label === TaskBlockLabel.CHANGES_REQUESTED) return "changes-requested";
+  if (label === TaskBlockLabel.CI_FAILED) return "ci-failed";
   return "";
 }
 

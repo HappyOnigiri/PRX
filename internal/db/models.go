@@ -95,6 +95,7 @@ type PullRequest struct {
 	ReviewRequestPending int64          `json:"review_request_pending"`
 	ChangesRequestedAt   sql.NullString `json:"changes_requested_at"`
 	LastPushedAt         sql.NullString `json:"last_pushed_at"`
+	CheckState           string         `json:"check_state"`
 }
 
 type Task struct {

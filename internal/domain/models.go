@@ -40,7 +40,7 @@ const (
 	TaskDisplayStateUnknown     TaskDisplayState = "unknown"
 )
 
-// TaskBlockLabel は task の進行を妨げている事情で、1 つの task に 0〜3 個付く。
+// TaskBlockLabel は task の進行を妨げている事情で、1 つの task に 0〜4 個付く。
 // 表示順はこの定数の並びに固定する。docs/design/domain.md を参照。
 type TaskBlockLabel string
 
@@ -48,6 +48,7 @@ const (
 	TaskBlockLabelDependencyUnresolved TaskBlockLabel = "dependency_unresolved"
 	TaskBlockLabelConflict             TaskBlockLabel = "conflict"
 	TaskBlockLabelChangesRequested     TaskBlockLabel = "changes_requested"
+	TaskBlockLabelCIFailed             TaskBlockLabel = "ci_failed"
 )
 
 type PullRequestState string
@@ -75,6 +76,18 @@ const (
 	MergeabilityMergeable   Mergeability = "mergeable"
 	MergeabilityConflicting Mergeability = "conflicting"
 	MergeabilityUnknown     Mergeability = "unknown"
+)
+
+// CheckState は最新コミットのステータスチェックを 1 値に畳んだもの。個々のチェック名や
+// 実行 URL は保持しない。docs/design/github-sync.md を参照。
+type CheckState string
+
+const (
+	CheckStateUnknown CheckState = "unknown"
+	CheckStateNone    CheckState = "none"
+	CheckStatePending CheckState = "pending"
+	CheckStateSuccess CheckState = "success"
+	CheckStateFailure CheckState = "failure"
 )
 
 type PullRequestDisplayState string
@@ -218,6 +231,8 @@ type PullRequest struct {
 	ChangesRequestedAt *time.Time `json:"changes_requested_at,omitempty"`
 	// LastPushedAt は最新コミットの push 時刻。
 	LastPushedAt *time.Time `json:"last_pushed_at,omitempty"`
+	// CheckState は最新コミットのステータスチェックのロールアップ 1 値。
+	CheckState CheckState `json:"check_state"`
 }
 
 type GitHubSyncState struct {

@@ -71,7 +71,10 @@ type graphQLPullRequest struct {
 	Commits struct {
 		Nodes []struct {
 			Commit struct {
-				CommittedDate string `json:"committedDate"`
+				CommittedDate     string `json:"committedDate"`
+				StatusCheckRollup *struct {
+					State string `json:"state"`
+				} `json:"statusCheckRollup"`
 			} `json:"commit"`
 		} `json:"nodes"`
 	} `json:"commits"`
@@ -281,15 +284,16 @@ func domainPullRequestCoreFromGraphQL(
 	current.ReviewRequestPending = len(value.ReviewRequests.Nodes) > 0
 	current.ChangesRequestedAt = changesRequestedAtFromGraphQL(current, value)
 	current.LastPushedAt = lastPushedAtFromGraphQL(value)
+	current.CheckState = checkStateFromGraphQL(value)
 	githubUpdatedAt := updatedAt.UTC()
 	current.GitHubUpdatedAt = &githubUpdatedAt
-	return markPullRequestSynced(clearReviewTimingWhenFinished(current)), nil
+	return markPullRequestSynced(clearFinishedPullRequestState(current)), nil
 }
 
-// clearReviewTimingWhenFinished は終了した pull request でレビュー中の判定に使う
-// 3 項目を落とす。REST 経路が同じことをするので、どちらの経路で同期しても公開する
-// 値がそろう。docs/design/github-sync.md を参照。
-func clearReviewTimingWhenFinished(value domain.PullRequest) domain.PullRequest {
+// clearFinishedPullRequestState は終了した pull request で、レビュー中の判定に使う
+// 3 項目と CI 状態を落とす。REST 経路が同じことをするので、どちらの経路で同期しても
+// 公開する値がそろう。docs/design/github-sync.md を参照。
+func clearFinishedPullRequestState(value domain.PullRequest) domain.PullRequest {
 	if value.State != domain.PullRequestStateClosed &&
 		value.State != domain.PullRequestStateMerged {
 		return value
@@ -297,7 +301,29 @@ func clearReviewTimingWhenFinished(value domain.PullRequest) domain.PullRequest 
 	value.ReviewRequestPending = false
 	value.ChangesRequestedAt = nil
 	value.LastPushedAt = nil
+	value.CheckState = domain.CheckStateUnknown
 	return value
+}
+
+// checkStateFromGraphQL は最新コミットの statusCheckRollup を 1 値に正規化する。
+// rollup が null ならチェックが 1 件もないので none、未知の値は unknown に落とす。
+func checkStateFromGraphQL(value graphQLPullRequest) domain.CheckState {
+	for _, node := range value.Commits.Nodes {
+		if node.Commit.StatusCheckRollup == nil {
+			return domain.CheckStateNone
+		}
+		switch strings.ToUpper(node.Commit.StatusCheckRollup.State) {
+		case "SUCCESS":
+			return domain.CheckStateSuccess
+		case "EXPECTED", "PENDING":
+			return domain.CheckStatePending
+		case "ERROR", "FAILURE":
+			return domain.CheckStateFailure
+		default:
+			return domain.CheckStateUnknown
+		}
+	}
+	return domain.CheckStateNone
 }
 
 // changesRequestedAtFromGraphQL は latestReviews を全ページ取得できたときだけ値を
@@ -530,7 +556,7 @@ func buildGraphQLQuery(current []domain.PullRequest) (string, map[string]any, []
 
 const graphQLFields = "id author{login} assignees(first:100){nodes{login} pageInfo{hasNextPage endCursor}} " +
 	"state merged isDraft mergeable updatedAt " +
-	"commits(last:1){nodes{commit{committedDate}}} " +
+	"commits(last:1){nodes{commit{committedDate statusCheckRollup{state}}}} " +
 	"latestReviews(first:100){nodes{author{login} state submittedAt} pageInfo{hasNextPage endCursor}} " +
 	"reviewRequests(first:100){nodes{requestedReviewer{... on User{login} ... on Team{slug}}} " +
 	"pageInfo{hasNextPage endCursor}}"
@@ -679,6 +705,7 @@ func domainPullRequestFromGraphQL(
 	current.ReviewRequestPending = len(value.ReviewRequests.Nodes) > 0
 	current.ChangesRequestedAt = changesRequestedAtFromGraphQL(current, value)
 	current.LastPushedAt = lastPushedAtFromGraphQL(value)
+	current.CheckState = checkStateFromGraphQL(value)
 	current.NodeID = value.ID
 	if value.Author != nil {
 		current.Author = value.Author.Login
@@ -693,5 +720,5 @@ func domainPullRequestFromGraphQL(
 	current.LastSyncedAt = &now
 	current.SyncError = ""
 	current.Stale = false
-	return clearReviewTimingWhenFinished(current), nil
+	return clearFinishedPullRequestState(current), nil
 }

@@ -95,15 +95,15 @@ DELETE FROM dependencies WHERE blocker_task_id=? OR blocked_task_id=?;
 DELETE FROM dependencies WHERE blocker_task_id IN (SELECT id FROM tasks WHERE feature_id=?);
 
 -- name: UpsertPullRequest :one
-INSERT INTO pull_requests (task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale, review_request_pending, changes_requested_at, last_pushed_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO pull_requests (task_id, host, owner, repository, number, url, node_id, author, assignees_json, state, draft, review_state, mergeability, github_updated_at, last_synced_at, sync_error, stale, review_request_pending, changes_requested_at, last_pushed_at, check_state)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 ON CONFLICT(task_id) DO UPDATE SET host=excluded.host, owner=excluded.owner, repository=excluded.repository, number=excluded.number,
 url=excluded.url, node_id=excluded.node_id, author=excluded.author, assignees_json=excluded.assignees_json,
 state=excluded.state, draft=excluded.draft, review_state=excluded.review_state, mergeability=excluded.mergeability,
 github_updated_at=excluded.github_updated_at, last_synced_at=excluded.last_synced_at,
 sync_error=excluded.sync_error, stale=excluded.stale,
 review_request_pending=excluded.review_request_pending, changes_requested_at=excluded.changes_requested_at,
-last_pushed_at=excluded.last_pushed_at RETURNING *;
+last_pushed_at=excluded.last_pushed_at, check_state=excluded.check_state RETURNING *;
 
 -- name: GetPullRequestByTask :one
 SELECT * FROM pull_requests WHERE task_id=?;

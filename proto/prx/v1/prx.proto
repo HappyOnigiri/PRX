@@ -80,7 +80,7 @@ enum TaskDisplayState {
   TASK_DISPLAY_STATE_UNKNOWN = 13;
 }
 
-// TaskBlockLabel は task の進行を妨げている事情で、1 つの task に 0〜3 個付く。
+// TaskBlockLabel は task の進行を妨げている事情で、1 つの task に 0〜4 個付く。
 // TaskDisplayState とは独立に評価し、終了した task では付かない。
 enum TaskBlockLabel {
   // TASK_BLOCK_LABEL_UNSPECIFIED は返らない。妨げる事情がなければラベル自体を送らない。
@@ -91,6 +91,8 @@ enum TaskBlockLabel {
   TASK_BLOCK_LABEL_CONFLICT = 2;
   // TASK_BLOCK_LABEL_CHANGES_REQUESTED はレビュアーが変更を要求したことを表す。
   TASK_BLOCK_LABEL_CHANGES_REQUESTED = 3;
+  // TASK_BLOCK_LABEL_CI_FAILED は紐づく pull request の CI が失敗していることを表す。
+  TASK_BLOCK_LABEL_CI_FAILED = 4;
 }
 
 // PullRequestState は GitHub の pull request について報告される生のライフサイクル状態。
@@ -133,6 +135,23 @@ enum Mergeability {
   MERGEABILITY_CONFLICTING = 2;
   // MERGEABILITY_UNKNOWN はマージ可否を判定できなかったことを表す。
   MERGEABILITY_UNKNOWN = 3;
+}
+
+// CheckState は pull request の最新コミットについて GitHub が報告するステータス
+// チェックのロールアップ 1 値。個々のチェック名や実行 URL は保持しない。
+enum CheckState {
+  // CHECK_STATE_UNSPECIFIED は有効な pull request では返らず、リクエストのフィールドでもない。
+  CHECK_STATE_UNSPECIFIED = 0;
+  // CHECK_STATE_UNKNOWN は CI の状態をまだ取得できていないことを表す。
+  CHECK_STATE_UNKNOWN = 1;
+  // CHECK_STATE_NONE は最新コミットにチェックが 1 件も紐づいていないことを表す。
+  CHECK_STATE_NONE = 2;
+  // CHECK_STATE_PENDING はチェックが実行中または待機中であることを表す。
+  CHECK_STATE_PENDING = 3;
+  // CHECK_STATE_SUCCESS はすべてのチェックが成功したことを表す。
+  CHECK_STATE_SUCCESS = 4;
+  // CHECK_STATE_FAILURE は失敗またはエラーのチェックが 1 件以上あることを表す。
+  CHECK_STATE_FAILURE = 5;
 }
 
 // PullRequestDisplayState は pull request の導出された表示状態。
@@ -474,6 +493,8 @@ message PullRequest {
   string changes_requested_at = 20;
   // last_pushed_at は最新コミットの push 時刻を RFC 3339 形式で表す。
   string last_pushed_at = 21;
+  // check_state は最新コミットのステータスチェックのロールアップ 1 値。
+  CheckState check_state = 22;
 }
 
 // Document は project、feature、task のいずれか 1 つだけに紐づく参照。

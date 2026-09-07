@@ -145,6 +145,15 @@ test("searches active tasks from a dashboard queue", async ({ page }) => {
   await expect(input).toHaveValue("task-status:ready");
 });
 
+// CI の失敗は検索とブロックラベルの両方から追える。デモの 109 番がその 1 件。
+test("finds a task blocked by failing CI", async ({ page }) => {
+  await page.goto("/tasks?q=block%3Aci-failed");
+  const results = page.locator(".task-results");
+  await expect(results).toContainText("Fix failing pipeline");
+  await expect(results).toContainText("CI failed");
+  await expect(results.locator(".status-badge.block-ci-failed")).toHaveCount(1);
+});
+
 test("switches the display language and restores it from Local Storage", async ({
   page,
 }) => {
@@ -789,7 +798,7 @@ test("archives and safely deletes a feature", async ({ page }) => {
 // 100 タスクのプログラムは全タスクが完了しているため、自動判定の状態により
 // 概要から外れて完了リストに移る。
 for (const { title, size, from } of [
-  { title: "Delivery control showcase", size: 15, from: "/" },
+  { title: "Delivery control showcase", size: 16, from: "/" },
   {
     title: "Completed 100-task program",
     size: 100,
@@ -829,7 +838,7 @@ for (const { title, size, from } of [
         expect(overlap, `nodes ${i} and ${j} overlap`).toBe(false);
       }
     await mkdir("../test-results/screenshots", { recursive: true });
-    if (size > 15)
+    if (size > 16)
       await page.screenshot({
         path: `../test-results/screenshots/graph-${size}-overview.png`,
         fullPage: true,
@@ -879,7 +888,7 @@ test("keeps the user's graph zoom across features and reloads", async ({
     .getByRole("link", { name: /Delivery control showcase/ })
     .first()
     .click();
-  await expect(page.locator(".task-node")).toHaveCount(15, {
+  await expect(page.locator(".task-node")).toHaveCount(16, {
     timeout: 25_000,
   });
   await page.locator(".react-flow__controls-zoomout").click();

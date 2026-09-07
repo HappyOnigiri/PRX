@@ -173,11 +173,12 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	current.Mergeability = mergeability
 	current.GitHubUpdatedAt = &updated
 	if state == domain.PullRequestStateClosed || state == domain.PullRequestStateMerged {
-		// 終了した pull request ではレビュー中の判定に使わないので、追加のリクエストを
-		// かけずに前回同期の値を落とす。
+		// 終了した pull request ではレビュー中の判定にも CI の判定にも使わないので、
+		// 追加のリクエストをかけずに前回同期の値を落とす。
 		current.ReviewRequestPending = false
 		current.ChangesRequestedAt = nil
 		current.LastPushedAt = nil
+		current.CheckState = domain.CheckStateUnknown
 		return markPullRequestSynced(current), nil
 	}
 	review, err := p.fetchReviewSummary(ctx, current)
@@ -190,12 +191,18 @@ func (p *LiveProvider) Fetch(ctx context.Context, current domain.PullRequest) (d
 	current.ReviewState = review.state
 	current.ReviewRequestPending = review.requestPending
 	current.ChangesRequestedAt = review.changesRequestedAt
-	pushedAt, err := p.lastPushedAt(ctx, current)
+	pushedAt, sha, err := p.lastCommit(ctx, current)
 	if err != nil {
 		// LastPushedAt は前回成功した値のまま残す。
 		return current, err
 	}
 	current.LastPushedAt = pushedAt
+	checkState, err := p.checkState(ctx, current, sha)
+	if err != nil {
+		// CheckState は前回成功した値のまま残す。
+		return current, err
+	}
+	current.CheckState = checkState
 	return markPullRequestSynced(current), nil
 }
 
@@ -295,19 +302,20 @@ func latestChangesRequestedAtFromREST(latest map[string]restReview) *time.Time {
 	return result
 }
 
-// lastPushedAt は最新コミットの時刻を返す。REST の commit には push 時刻がないので
-// committer の日時を使う。GraphQL 経路のコミット日時と同じ値になる。
-func (p *LiveProvider) lastPushedAt(
+// lastCommit は最新コミットの時刻と SHA を返す。REST の commit には push 時刻がないので
+// committer の日時を使う。GraphQL 経路のコミット日時と同じ値になる。SHA は CI の
+// ロールアップ取得の ref に使い回す。
+func (p *LiveProvider) lastCommit(
 	ctx context.Context,
 	current domain.PullRequest,
-) (*time.Time, error) {
+) (*time.Time, string, error) {
 	// 使うのは最後の 1 件だけなので、1 件ずつ引いて最終ページ番号を得てから
 	// そのページだけを取り直す。全ページを取得して捨てるとリクエスト量が増える。
 	page, response, err := p.client.PullRequests.ListCommits(
 		ctx, current.Owner, current.Repository, int(current.Number), &gh.ListOptions{PerPage: 1},
 	)
 	if err != nil {
-		return nil, wrapProviderError("fetch commits", err, response)
+		return nil, "", wrapProviderError("fetch commits", err, response)
 	}
 	if response != nil && response.LastPage != 0 {
 		page, response, err = p.client.PullRequests.ListCommits(
@@ -315,17 +323,104 @@ func (p *LiveProvider) lastPushedAt(
 			&gh.ListOptions{PerPage: 1, Page: response.LastPage},
 		)
 		if err != nil {
-			return nil, wrapProviderError("fetch commits", err, response)
+			return nil, "", wrapProviderError("fetch commits", err, response)
 		}
 	}
 	if len(page) == 0 {
-		return nil, nil
+		return nil, "", nil
 	}
-	pushed := page[len(page)-1].GetCommit().GetCommitter().GetDate().UTC()
+	last := page[len(page)-1]
+	pushed := last.GetCommit().GetCommitter().GetDate().UTC()
 	if pushed.IsZero() {
-		return nil, nil
+		return nil, last.GetSHA(), nil
 	}
-	return &pushed, nil
+	return &pushed, last.GetSHA(), nil
+}
+
+// checkState は combined status と check runs の両方を見て 1 値に畳む。片方だけを
+// 見ると、もう片方でしか報告されないチェックの失敗を取りこぼす。
+// 畳み方の優先順位は failure > pending > success で、どちらにも 1 件もなければ none。
+func (p *LiveProvider) checkState(
+	ctx context.Context,
+	current domain.PullRequest,
+	sha string,
+) (domain.CheckState, error) {
+	if sha == "" {
+		// コミットが判明していなければ ref を決められないので、前回値を維持する。
+		return current.CheckState, nil
+	}
+	combined, response, err := p.client.Repositories.GetCombinedStatus(
+		ctx, current.Owner, current.Repository, sha, &gh.ListOptions{PerPage: 1},
+	)
+	if err != nil {
+		return current.CheckState, wrapProviderError("fetch commit status", err, response)
+	}
+	runs, response, err := p.client.Checks.ListCheckRunsForRef(
+		ctx, current.Owner, current.Repository, sha, &gh.ListCheckRunsOptions{
+			ListOptions: gh.ListOptions{PerPage: 100},
+		},
+	)
+	if err != nil {
+		return current.CheckState, wrapProviderError("fetch check runs", err, response)
+	}
+	return foldRESTCheckState(combined, runs), nil
+}
+
+// foldRESTCheckState は combined status のロールアップと check run の結論を 1 値にする。
+// neutral・skipped・cancelled は妨害ではないので failure に数えない。
+func foldRESTCheckState(
+	combined *gh.CombinedStatus,
+	runs *gh.ListCheckRunsResults,
+) domain.CheckState {
+	states := make([]domain.CheckState, 0, 1+runs.GetTotal())
+	if combined.GetTotalCount() > 0 {
+		states = append(states, combinedStatusCheckState(combined.GetState()))
+	}
+	for _, run := range runs.CheckRuns {
+		states = append(states, checkRunCheckState(run))
+	}
+	if len(states) == 0 {
+		return domain.CheckStateNone
+	}
+	if slices.Contains(states, domain.CheckStateFailure) {
+		return domain.CheckStateFailure
+	}
+	if slices.Contains(states, domain.CheckStatePending) {
+		return domain.CheckStatePending
+	}
+	if slices.Contains(states, domain.CheckStateUnknown) {
+		return domain.CheckStateUnknown
+	}
+	return domain.CheckStateSuccess
+}
+
+func combinedStatusCheckState(state string) domain.CheckState {
+	switch strings.ToLower(state) {
+	case "success":
+		return domain.CheckStateSuccess
+	case "pending":
+		return domain.CheckStatePending
+	case "failure", "error":
+		return domain.CheckStateFailure
+	default:
+		return domain.CheckStateUnknown
+	}
+}
+
+// checkRunCheckState は完了していない check run を pending とみなす。conclusion は
+// 完了後にしか入らないため、status を先に見る。
+func checkRunCheckState(run *gh.CheckRun) domain.CheckState {
+	if !strings.EqualFold(run.GetStatus(), "completed") {
+		return domain.CheckStatePending
+	}
+	switch strings.ToLower(run.GetConclusion()) {
+	case "success", "neutral", "skipped", "cancelled", "canceled":
+		return domain.CheckStateSuccess
+	case "failure", "timed_out", "action_required", "startup_failure", "stale":
+		return domain.CheckStateFailure
+	default:
+		return domain.CheckStateUnknown
+	}
 }
 
 func markPullRequestSynced(value domain.PullRequest) domain.PullRequest {
@@ -377,6 +472,7 @@ type Fixture struct {
 	Draft        bool                    `json:"draft"`
 	ReviewState  domain.ReviewState      `json:"review_state"`
 	Mergeability domain.Mergeability     `json:"mergeability"`
+	CheckState   domain.CheckState       `json:"check_state"`
 	Author       string                  `json:"author"`
 	Assignees    []string                `json:"assignees"`
 	Error        string                  `json:"error"`
@@ -424,6 +520,26 @@ var fixtureFields = []struct {
 			string(domain.MergeabilityUnknown),
 		},
 	},
+	{
+		"check_state",
+		func(f Fixture) string { return string(checkStateOrUnknown(f.CheckState)) },
+		[]string{
+			string(domain.CheckStateUnknown),
+			string(domain.CheckStateNone),
+			string(domain.CheckStatePending),
+			string(domain.CheckStateSuccess),
+			string(domain.CheckStateFailure),
+		},
+	},
+}
+
+// checkStateOrUnknown は check_state を省いたフィクスチャを unknown として通す。
+// 既存のフィクスチャファイルにこのフィールドはないため、空を誤記として弾かない。
+func checkStateOrUnknown(value domain.CheckState) domain.CheckState {
+	if value == "" {
+		return domain.CheckStateUnknown
+	}
+	return value
 }
 
 func NewFixtureProvider(path string) (*FixtureProvider, error) {
@@ -471,18 +587,21 @@ func (p *FixtureProvider) Fetch(ctx context.Context, current domain.PullRequest)
 				State:        domain.PullRequestStateOpen,
 				ReviewState:  domain.ReviewStateNone,
 				Mergeability: domain.MergeabilityMergeable,
+				CheckState:   domain.CheckStateSuccess,
 				Author:       "octocat",
 			},
 			{
 				State:        domain.PullRequestStateOpen,
 				ReviewState:  domain.ReviewStateApproved,
 				Mergeability: domain.MergeabilityMergeable,
+				CheckState:   domain.CheckStatePending,
 				Author:       "hubot",
 			},
 			{
 				State:              domain.PullRequestStateOpen,
 				ReviewState:        domain.ReviewStateChangesRequested,
 				Mergeability:       domain.MergeabilityConflicting,
+				CheckState:         domain.CheckStateFailure,
 				Author:             "monalisa",
 				ChangesRequestedAt: &reviewedAt,
 				LastPushedAt:       &pushedAt,
@@ -491,6 +610,7 @@ func (p *FixtureProvider) Fetch(ctx context.Context, current domain.PullRequest)
 				State:        domain.PullRequestStateMerged,
 				ReviewState:  domain.ReviewStateApproved,
 				Mergeability: domain.MergeabilityMergeable,
+				CheckState:   domain.CheckStateSuccess,
 				Author:       "octocat",
 			},
 		}
@@ -504,6 +624,7 @@ func (p *FixtureProvider) Fetch(ctx context.Context, current domain.PullRequest)
 	current.Draft = value.Draft
 	current.ReviewState = value.ReviewState
 	current.Mergeability = value.Mergeability
+	current.CheckState = checkStateOrUnknown(value.CheckState)
 	current.ReviewRequestPending = value.ReviewRequestPending
 	current.ChangesRequestedAt = value.ChangesRequestedAt
 	current.LastPushedAt = value.LastPushedAt

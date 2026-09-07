@@ -2,6 +2,7 @@ import { ConnectError } from "@connectrpc/connect";
 import type { TFunction } from "i18next";
 import {
   BlockedReasonCode,
+  CheckState,
   DebugProblemCode,
   DocumentKind,
   DomainErrorCode,
@@ -78,6 +79,7 @@ export const blockLabelKeys = {
   [TaskBlockLabel.DEPENDENCY_UNRESOLVED]: "blockLabel.dependencyUnresolved",
   [TaskBlockLabel.CONFLICT]: "blockLabel.conflict",
   [TaskBlockLabel.CHANGES_REQUESTED]: "blockLabel.changesRequested",
+  [TaskBlockLabel.CI_FAILED]: "blockLabel.ciFailed",
 } as const satisfies Record<TaskBlockLabel, string>;
 
 export function taskBlockLabelLabel(
@@ -127,6 +129,19 @@ export const pullRequestDisplayStateKeys = {
   [PullRequestDisplayState.OPEN]: "displayState.open",
   [PullRequestDisplayState.UNKNOWN]: "displayState.unknown",
 } as const satisfies Record<PullRequestDisplayState, string>;
+
+export const checkStateKeys = {
+  [CheckState.UNSPECIFIED]: "checkState.unknown",
+  [CheckState.UNKNOWN]: "checkState.unknown",
+  [CheckState.NONE]: "checkState.none",
+  [CheckState.PENDING]: "checkState.pending",
+  [CheckState.SUCCESS]: "checkState.success",
+  [CheckState.FAILURE]: "checkState.failure",
+} as const satisfies Record<CheckState, string>;
+
+export function checkStateLabel(value: CheckState, t: TFunction): string {
+  return t(checkStateKeys[value]);
+}
 
 export const blockedReasonKeys = {
   [BlockedReasonCode.UNSPECIFIED]: "blockedReason.unknown",

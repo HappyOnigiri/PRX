@@ -79,6 +79,7 @@ func protoPullRequest(v domain.PullRequest) *prxv1.PullRequest {
 		Draft:        v.Draft,
 		ReviewState:  protoReviewState(v.ReviewState),
 		Mergeability: protoMergeability(v.Mergeability),
+		CheckState:   protoCheckState(v.CheckState),
 		SyncError:    v.SyncError,
 		Stale:        v.Stale,
 		DisplayState: protoPullRequestDisplayState(v.DisplayState),
@@ -301,6 +302,23 @@ func protoMergeability(value domain.Mergeability) prxv1.Mergeability {
 	}
 }
 
+func protoCheckState(value domain.CheckState) prxv1.CheckState {
+	switch value {
+	case domain.CheckStateUnknown:
+		return prxv1.CheckState_CHECK_STATE_UNKNOWN
+	case domain.CheckStateNone:
+		return prxv1.CheckState_CHECK_STATE_NONE
+	case domain.CheckStatePending:
+		return prxv1.CheckState_CHECK_STATE_PENDING
+	case domain.CheckStateSuccess:
+		return prxv1.CheckState_CHECK_STATE_SUCCESS
+	case domain.CheckStateFailure:
+		return prxv1.CheckState_CHECK_STATE_FAILURE
+	default:
+		return prxv1.CheckState_CHECK_STATE_UNSPECIFIED
+	}
+}
+
 func protoPullRequestDisplayState(value domain.PullRequestDisplayState) prxv1.PullRequestDisplayState {
 	const (
 		changesRequestedState = prxv1.PullRequestDisplayState_PULL_REQUEST_DISPLAY_STATE_CHANGES_REQUESTED
@@ -368,6 +386,7 @@ func protoTaskBlockLabels(values []domain.TaskBlockLabel) []prxv1.TaskBlockLabel
 		domain.TaskBlockLabelDependencyUnresolved: prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_DEPENDENCY_UNRESOLVED,
 		domain.TaskBlockLabelConflict:             prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_CONFLICT,
 		domain.TaskBlockLabelChangesRequested:     prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_CHANGES_REQUESTED,
+		domain.TaskBlockLabelCIFailed:             prxv1.TaskBlockLabel_TASK_BLOCK_LABEL_CI_FAILED,
 	}
 	result := make([]prxv1.TaskBlockLabel, 0, len(values))
 	for _, value := range values {
