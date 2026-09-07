@@ -8,12 +8,14 @@ import {
   ErrorDetailSchema,
   FeatureStatus,
   PullRequestDisplayState,
+  TaskBlockLabel,
   TaskDisplayState,
   TaskStatus,
 } from "../src/gen/prx/v1/prx_pb";
 import i18n from "../src/i18n";
 import {
   blockedReasonKeys,
+  blockLabelKeys,
   debugProblemKeys,
   displayStateKeys,
   documentKindKeys,
@@ -70,6 +72,11 @@ const translationTables = [
     name: "pull request display states",
     values: enumValues(PullRequestDisplayState),
     keys: pullRequestDisplayStateKeys as unknown as Record<number, string>,
+  },
+  {
+    name: "task block labels",
+    values: enumValues(TaskBlockLabel),
+    keys: blockLabelKeys as unknown as Record<number, string>,
   },
   {
     name: "blocked reason codes",

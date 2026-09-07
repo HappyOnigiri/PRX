@@ -40,9 +40,9 @@ enum TaskStatus {
   TASK_STATUS_CLOSED = 4;
 }
 
-// TaskDisplayState は task の表示用に導出された状態。
-// pull request 由来の状態の優先順位は merged, closed, draft, conflict,
-// changes requested, approved, review waiting, open, unknown の順。
+// TaskDisplayState は task の表示用に導出された状態で、1 つの task につき 1 値。
+// 進行を妨げる事情は TaskBlockLabel が別に表す。pull request 由来の状態の優先順位は
+// merged, closed, approved, in review, implemented, unknown の順。
 enum TaskDisplayState {
   // TASK_DISPLAY_STATE_UNSPECIFIED は有効な task では返らず、リクエストのフィールドでもない。
   TASK_DISPLAY_STATE_UNSPECIFIED = 0;
@@ -54,26 +54,43 @@ enum TaskDisplayState {
   TASK_DISPLAY_STATE_DESIGNED = 2;
   // TASK_DISPLAY_STATE_IN_PROGRESS は pull request がないまま作業中であることを表す。
   TASK_DISPLAY_STATE_IN_PROGRESS = 3;
+  // TASK_DISPLAY_STATE_IMPLEMENTED は open な pull request があり、レビュー中でも承認済みでもないことを表す。
+  TASK_DISPLAY_STATE_IMPLEMENTED = 15;
+  // TASK_DISPLAY_STATE_IN_REVIEW は未応答のレビュー依頼が残るか、最新レビュー後に push があり未承認であることを表す。
+  TASK_DISPLAY_STATE_IN_REVIEW = 16;
   // TASK_DISPLAY_STATE_COMPLETED は保存された完了ステータスを表す。
   TASK_DISPLAY_STATE_COMPLETED = 4;
   // TASK_DISPLAY_STATE_CLOSED は保存されたクローズか、クローズされた pull request を表す。
   TASK_DISPLAY_STATE_CLOSED = 5;
   // TASK_DISPLAY_STATE_MERGED は紐づく pull request がマージ済みであることを表す。
   TASK_DISPLAY_STATE_MERGED = 6;
-  // TASK_DISPLAY_STATE_DRAFT は紐づく pull request が draft であることを表す。
-  TASK_DISPLAY_STATE_DRAFT = 7;
-  // TASK_DISPLAY_STATE_CONFLICT は紐づく pull request にコンフリクトがあることを表す。
-  TASK_DISPLAY_STATE_CONFLICT = 8;
-  // TASK_DISPLAY_STATE_CHANGES_REQUESTED はレビュアーが変更を要求したことを表す。
-  TASK_DISPLAY_STATE_CHANGES_REQUESTED = 9;
+  reserved 7;
+  reserved "TASK_DISPLAY_STATE_DRAFT";
+  reserved 8;
+  reserved "TASK_DISPLAY_STATE_CONFLICT";
+  reserved 9;
+  reserved "TASK_DISPLAY_STATE_CHANGES_REQUESTED";
   // TASK_DISPLAY_STATE_APPROVED は紐づく pull request が承認済みであることを表す。
   TASK_DISPLAY_STATE_APPROVED = 10;
-  // TASK_DISPLAY_STATE_REVIEW_WAITING は open な pull request がレビュー待ちであることを表す。
-  TASK_DISPLAY_STATE_REVIEW_WAITING = 11;
-  // TASK_DISPLAY_STATE_OPEN は上位の状態がない open な pull request を表す。
-  TASK_DISPLAY_STATE_OPEN = 12;
+  reserved 11;
+  reserved "TASK_DISPLAY_STATE_REVIEW_WAITING";
+  reserved 12;
+  reserved "TASK_DISPLAY_STATE_OPEN";
   // TASK_DISPLAY_STATE_UNKNOWN は pull request の状態や必要な情報が不明であることを表す。
   TASK_DISPLAY_STATE_UNKNOWN = 13;
+}
+
+// TaskBlockLabel は task の進行を妨げている事情で、1 つの task に 0〜3 個付く。
+// TaskDisplayState とは独立に評価し、終了した task では付かない。
+enum TaskBlockLabel {
+  // TASK_BLOCK_LABEL_UNSPECIFIED は返らない。妨げる事情がなければラベル自体を送らない。
+  TASK_BLOCK_LABEL_UNSPECIFIED = 0;
+  // TASK_BLOCK_LABEL_DEPENDENCY_UNRESOLVED は未充足の blocker があることを表す。
+  TASK_BLOCK_LABEL_DEPENDENCY_UNRESOLVED = 1;
+  // TASK_BLOCK_LABEL_CONFLICT は紐づく pull request にコンフリクトがあることを表す。
+  TASK_BLOCK_LABEL_CONFLICT = 2;
+  // TASK_BLOCK_LABEL_CHANGES_REQUESTED はレビュアーが変更を要求したことを表す。
+  TASK_BLOCK_LABEL_CHANGES_REQUESTED = 3;
 }
 
 // PullRequestState は GitHub の pull request について報告される生のライフサイクル状態。
@@ -398,6 +415,9 @@ message Task {
   // 並べる。blocked_reason はその先頭 1 件しか示さないので、task を待ち相手ごと
   // 引き渡す必要がある呼び出し側はこちらを読む。
   repeated string pending_blocker_task_ids = 14;
+  // block_labels は task の進行を妨げている事情を、依存未解決・コンフリクト・修正依頼ありの
+  // 順で並べる。blocked_reason は依存未解決ラベルの詳細にあたる。
+  repeated TaskBlockLabel block_labels = 15;
 }
 
 // Dependency は 1 つの feature 内で blocker task から blocked task への有向辺を表す。
@@ -448,6 +468,12 @@ message PullRequest {
   PullRequestDisplayState display_state = 17;
   // host は大文字小文字を区別しない GitHub / GitHub Enterprise Server の host キー。
   string host = 18;
+  // review_request_pending は未応答のレビュー依頼が 1 件以上残っていることを表す。
+  bool review_request_pending = 19;
+  // changes_requested_at は有効な変更要求レビューの最新提出時刻を RFC 3339 形式で表す。
+  string changes_requested_at = 20;
+  // last_pushed_at は最新コミットの push 時刻を RFC 3339 形式で表す。
+  string last_pushed_at = 21;
 }
 
 // Document は project、feature、task のいずれか 1 つだけに紐づく参照。

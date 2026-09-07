@@ -402,6 +402,9 @@ func domainTask(value db.Task, featureID string) domain.Task {
 		Assignee:         value.Assignee,
 		CreatedAt:        parseTime(value.CreatedAt),
 		UpdatedAt:        parseTime(value.UpdatedAt),
+		// domain.Derive を通らない経路（task create / task update）でも JSON の
+		// block_labels を null にしないため、ここで空配列を入れる。
+		BlockLabels: []domain.TaskBlockLabel{},
 	}
 }
 
@@ -468,11 +471,15 @@ func domainPullRequest(value db.PullRequest, taskIDs map[string]string) domain.P
 		LastSyncedAt:    nullableTime(value.LastSyncedAt),
 		SyncError:       value.SyncError,
 		Stale:           value.Stale != 0,
+
+		ReviewRequestPending: value.ReviewRequestPending != 0,
+		ChangesRequestedAt:   nullableTime(value.ChangesRequestedAt),
+		LastPushedAt:         nullableTime(value.LastPushedAt),
 	}
 	if err := json.Unmarshal([]byte(value.AssigneesJson), &result.Assignees); err != nil {
 		result.Assignees = []string{}
 	}
-	result.DisplayState = domain.PullRequestDisplayState(domain.PRDisplayState(&result))
+	result.DisplayState = domain.PRDisplayState(&result)
 	return result
 }
 

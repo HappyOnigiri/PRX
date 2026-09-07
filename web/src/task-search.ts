@@ -1,26 +1,33 @@
-import type { Feature, PullRequest, Snapshot, Task } from "./gen/prx/v1/prx_pb";
+import {
+  TaskBlockLabel,
+  type Feature,
+  type PullRequest,
+  type Snapshot,
+  type Task,
+} from "./gen/prx/v1/prx_pb";
 import {
   pullRequestDisplayStateToken,
   taskDisplayStateToken,
 } from "./i18n/domain";
 
+// task-status はステータスだけを受け付ける。進行を妨げている事情は別の軸なので
+// block: で絞る。docs/design/webui.md を参照。
 const taskStatusValues = [
   "ready",
   "not-started",
   "designing",
   "designed",
   "in-progress",
+  "implemented",
+  "in-review",
+  "approved",
+  "merged",
   "completed",
   "closed",
-  "merged",
-  "draft",
-  "conflict",
-  "changes-requested",
-  "approved",
-  "review-waiting",
-  "open",
   "unknown",
 ] as const;
+
+const blockValues = ["dependency", "conflict", "changes-requested"] as const;
 
 const githubStatusValues = [
   "merged",
@@ -37,10 +44,12 @@ const githubStatusValues = [
 
 type TaskStatusValue = (typeof taskStatusValues)[number];
 type GithubStatusValue = (typeof githubStatusValues)[number];
+type BlockValue = (typeof blockValues)[number];
 
 type TaskSearchQualifier =
   | { type: "task-status"; value: TaskStatusValue }
-  | { type: "github-status"; value: GithubStatusValue };
+  | { type: "github-status"; value: GithubStatusValue }
+  | { type: "block"; value: BlockValue };
 
 export interface TaskSearchQuery {
   qualifiers: TaskSearchQualifier[];
@@ -50,7 +59,7 @@ export interface TaskSearchQuery {
 export type TaskSearchParseError =
   | {
       type: "invalid-qualifier";
-      key: "task-status" | "github-status";
+      key: "task-status" | "github-status" | "block";
       value: string;
     }
   | { type: "unterminated-quote" };
@@ -83,10 +92,15 @@ export function parseTaskSearch(input: string): TaskSearchParseResult {
       separator < 0 ? "" : token.value.slice(0, separator).toLowerCase();
     const value =
       separator < 0 ? "" : token.value.slice(separator + 1).toLowerCase();
-    if (!token.quoted && (key === "task-status" || key === "github-status")) {
+    if (
+      !token.quoted &&
+      (key === "task-status" || key === "github-status" || key === "block")
+    ) {
       if (key === "task-status" && isTaskStatusValue(value))
         qualifiers.push({ type: key, value });
       else if (key === "github-status" && isGithubStatusValue(value))
+        qualifiers.push({ type: key, value });
+      else if (key === "block" && isBlockValue(value))
         qualifiers.push({ type: key, value });
       else
         return {
@@ -149,6 +163,10 @@ function matchesQualifiers(
       if (qualifier.value === "ready") return task.ready;
       return taskDisplayStateToken(task.displayState) === qualifier.value;
     }
+    if (qualifier.type === "block")
+      return task.blockLabels.some(
+        (label) => blockQualifier(label) === qualifier.value,
+      );
     if (qualifier.value === "error") return Boolean(pullRequest?.syncError);
     return (
       pullRequest !== undefined &&
@@ -191,6 +209,19 @@ function isTaskStatusValue(value: string): value is TaskStatusValue {
 
 function isGithubStatusValue(value: string): value is GithubStatusValue {
   return (githubStatusValues as readonly string[]).includes(value);
+}
+
+function isBlockValue(value: string): value is BlockValue {
+  return (blockValues as readonly string[]).includes(value);
+}
+
+// 検索語は表示ラベルより短くする。依存未解決は 1 種類しかないので dependency で
+// 足りる。
+function blockQualifier(label: TaskBlockLabel): BlockValue | "" {
+  if (label === TaskBlockLabel.DEPENDENCY_UNRESOLVED) return "dependency";
+  if (label === TaskBlockLabel.CONFLICT) return "conflict";
+  if (label === TaskBlockLabel.CHANGES_REQUESTED) return "changes-requested";
+  return "";
 }
 
 function tokenize(input: string): {

@@ -52,8 +52,9 @@ type graphQLPullRequest struct {
 	} `json:"assignees"`
 	LatestReviews struct {
 		Nodes []struct {
-			State  string `json:"state"`
-			Author *struct {
+			State       string `json:"state"`
+			SubmittedAt string `json:"submittedAt"`
+			Author      *struct {
 				Login string `json:"login"`
 			} `json:"author"`
 		} `json:"nodes"`
@@ -65,6 +66,15 @@ type graphQLPullRequest struct {
 		} `json:"nodes"`
 		PageInfo graphQLPageInfo `json:"pageInfo"`
 	} `json:"reviewRequests"`
+	// Commits は常に最新の 1 件だけを取るのでページングしない。Commit に push 時刻の
+	// フィールドはないので、REST 経路と同じくコミット日時を使う。
+	Commits struct {
+		Nodes []struct {
+			Commit struct {
+				CommittedDate string `json:"committedDate"`
+			} `json:"commit"`
+		} `json:"nodes"`
+	} `json:"commits"`
 }
 
 type graphQLItem struct {
@@ -268,9 +278,73 @@ func domainPullRequestCoreFromGraphQL(
 	}
 	current.State = state
 	current.Draft = value.IsDraft
+	current.ReviewRequestPending = len(value.ReviewRequests.Nodes) > 0
+	current.ChangesRequestedAt = changesRequestedAtFromGraphQL(current, value)
+	current.LastPushedAt = lastPushedAtFromGraphQL(value)
 	githubUpdatedAt := updatedAt.UTC()
 	current.GitHubUpdatedAt = &githubUpdatedAt
-	return markPullRequestSynced(current), nil
+	return markPullRequestSynced(clearReviewTimingWhenFinished(current)), nil
+}
+
+// clearReviewTimingWhenFinished は終了した pull request でレビュー中の判定に使う
+// 3 項目を落とす。REST 経路が同じことをするので、どちらの経路で同期しても公開する
+// 値がそろう。docs/design/github-sync.md を参照。
+func clearReviewTimingWhenFinished(value domain.PullRequest) domain.PullRequest {
+	if value.State != domain.PullRequestStateClosed &&
+		value.State != domain.PullRequestStateMerged {
+		return value
+	}
+	value.ReviewRequestPending = false
+	value.ChangesRequestedAt = nil
+	value.LastPushedAt = nil
+	return value
+}
+
+// changesRequestedAtFromGraphQL は latestReviews を全ページ取得できたときだけ値を
+// 更新する。未取得のページに新しい変更要求があると時刻が古い値へ巻き戻り、未対応の
+// タスクがレビュー中に見える。docs/design/github-sync.md を参照。
+func changesRequestedAtFromGraphQL(
+	current domain.PullRequest,
+	value graphQLPullRequest,
+) *time.Time {
+	if value.LatestReviews.PageInfo.HasNextPage {
+		return current.ChangesRequestedAt
+	}
+	return latestChangesRequestedAt(value)
+}
+
+// latestChangesRequestedAt は変更要求レビューだけを見る。COMMENTED や DISMISSED を
+// 含めると、コメントだけ付いた pull request に赤ラベルが誤って出る。
+func latestChangesRequestedAt(value graphQLPullRequest) *time.Time {
+	var latest *time.Time
+	for _, review := range value.LatestReviews.Nodes {
+		if !strings.EqualFold(review.State, "CHANGES_REQUESTED") {
+			continue
+		}
+		submitted, err := time.Parse(time.RFC3339, review.SubmittedAt)
+		if err != nil {
+			continue
+		}
+		submitted = submitted.UTC()
+		if latest == nil || submitted.After(*latest) {
+			latest = &submitted
+		}
+	}
+	return latest
+}
+
+// lastPushedAtFromGraphQL は最新コミットのコミット日時を返す。GraphQL の Commit は
+// push 時刻を公開していないので、REST 経路と同じ値になる。
+func lastPushedAtFromGraphQL(value graphQLPullRequest) *time.Time {
+	for _, node := range value.Commits.Nodes {
+		pushed, err := time.Parse(time.RFC3339, node.Commit.CommittedDate)
+		if err != nil {
+			continue
+		}
+		pushed = pushed.UTC()
+		return &pushed
+	}
+	return nil
 }
 
 type graphQLConnection struct {
@@ -302,12 +376,13 @@ func graphQLConnections(value *graphQLPullRequest) []graphQLConnection {
 		},
 		{
 			name: "latestReviews", pageInfo: &value.LatestReviews.PageInfo,
-			fields: "nodes{author{login} state} pageInfo{hasNextPage endCursor}",
+			fields: "nodes{author{login} state submittedAt} pageInfo{hasNextPage endCursor}",
 			append: func(body json.RawMessage) error {
 				var page struct {
 					Nodes []struct {
-						State  string `json:"state"`
-						Author *struct {
+						State       string `json:"state"`
+						SubmittedAt string `json:"submittedAt"`
+						Author      *struct {
 							Login string `json:"login"`
 						} `json:"author"`
 					} `json:"nodes"`
@@ -455,7 +530,8 @@ func buildGraphQLQuery(current []domain.PullRequest) (string, map[string]any, []
 
 const graphQLFields = "id author{login} assignees(first:100){nodes{login} pageInfo{hasNextPage endCursor}} " +
 	"state merged isDraft mergeable updatedAt " +
-	"latestReviews(first:100){nodes{author{login} state} pageInfo{hasNextPage endCursor}} " +
+	"commits(last:1){nodes{commit{committedDate}}} " +
+	"latestReviews(first:100){nodes{author{login} state submittedAt} pageInfo{hasNextPage endCursor}} " +
 	"reviewRequests(first:100){nodes{requestedReviewer{... on User{login} ... on Team{slug}}} " +
 	"pageInfo{hasNextPage endCursor}}"
 
@@ -510,6 +586,11 @@ func mapGraphQLErrors(
 			return result, err
 		}
 		repositoryAlias, _ := graphErr.Path[0].(string)
+		// クエリ検証エラーの path は repository の別名から始まらない。個別の失敗として
+		// 割り当てると、どの pull request も「見つからない」に化けて原因が隠れる。
+		if _, ok := byRepository[repositoryAlias]; !ok {
+			return result, err
+		}
 		if len(graphErr.Path) > 1 {
 			pullAlias, _ := graphErr.Path[1].(string)
 			if item, ok := byPull[repositoryAlias+"/"+pullAlias]; ok {
@@ -595,6 +676,9 @@ func domainPullRequestFromGraphQL(
 		reviewState = domain.ReviewStateRequired
 	}
 	now := time.Now().UTC()
+	current.ReviewRequestPending = len(value.ReviewRequests.Nodes) > 0
+	current.ChangesRequestedAt = changesRequestedAtFromGraphQL(current, value)
+	current.LastPushedAt = lastPushedAtFromGraphQL(value)
 	current.NodeID = value.ID
 	if value.Author != nil {
 		current.Author = value.Author.Login
@@ -609,5 +693,5 @@ func domainPullRequestFromGraphQL(
 	current.LastSyncedAt = &now
 	current.SyncError = ""
 	current.Stale = false
-	return current, nil
+	return clearReviewTimingWhenFinished(current), nil
 }

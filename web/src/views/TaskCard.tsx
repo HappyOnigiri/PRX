@@ -3,15 +3,11 @@ import { ExternalLink } from "lucide-react";
 import type { ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import type { Feature, Project, PullRequest, Task } from "../gen/prx/v1/prx_pb";
-import {
-  pullRequestDisplayStateLabel,
-  taskDisplayStateLabel,
-  taskDisplayStateToken,
-} from "../i18n/domain";
+import { pullRequestDisplayStateLabel } from "../i18n/domain";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon, type EntityKind } from "./EntityIcon";
-import { StatusBadge } from "./StatusBadge";
 import { TaskPromptCopyButton } from "./TaskPromptCopyButton";
+import { TaskBlockLabels, TaskStatusBadge } from "./TaskStateBadges";
 
 export interface TaskCardProps {
   task: Task;
@@ -36,11 +32,9 @@ export function TaskCard({
       <div>
         <p className="task-card-title">
           {/* 状態を行頭に置くことで、各行末のバッジを探し回らずに状態の列を
-              1 本追うだけで済む。 */}
-          <StatusBadge
-            className={`state-${taskDisplayStateToken(task.displayState)}`}
-            label={taskDisplayStateLabel(task.displayState, t)}
-          />
+              1 本追うだけで済む。ブロックラベルはこの行に足すとタイトルを潰すので
+              meta の先頭に置く。 */}
+          <TaskStatusBadge state={task.displayState} />
           <EntityIcon kind="task" size={15} />
           <Link
             to="/features/$featureId"
@@ -59,6 +53,14 @@ export function TaskCard({
         {/* 同じ大きさの値が並ぶと 1 つの文に見えるので、どのフィールドの値かを
             アイコンで示す。グリフを読めない支援技術のために名前は残す。 */}
         <dl className="task-card-meta">
+          {task.blockLabels.length > 0 && (
+            <div>
+              <dt>{t("taskCard.blocks")}</dt>
+              <dd className="task-card-blocks">
+                <TaskBlockLabels labels={task.blockLabels} />
+              </dd>
+            </div>
+          )}
           <div>
             <dt>{t("taskCard.project")}</dt>
             <ProjectValue project={project} />

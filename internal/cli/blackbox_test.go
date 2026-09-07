@@ -162,6 +162,23 @@ func assertDirectObject(t *testing.T, value map[string]json.RawMessage, required
 	}
 }
 
+// assertBlockLabelsArray は task の JSON が block_labels を配列で返すことを確かめる。
+// 空のコレクションを null にしない規約は docs/design/cli-contract.md を参照。
+func assertBlockLabelsArray(t *testing.T, value map[string]json.RawMessage) {
+	t.Helper()
+	raw, ok := value["block_labels"]
+	if !ok {
+		t.Fatalf("response keys=%v, want key %q", mapKeys(value), "block_labels")
+	}
+	var labels []string
+	if err := json.Unmarshal(raw, &labels); err != nil {
+		t.Fatalf("block_labels=%s: %v", raw, err)
+	}
+	if labels == nil {
+		t.Fatalf("block_labels=%s, want a JSON array", raw)
+	}
+}
+
 func assertNoEnvelopeKeys(t *testing.T, value map[string]json.RawMessage) {
 	t.Helper()
 	for _, key := range []string{"schema_version", "ok", "data"} {
@@ -1600,6 +1617,7 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	taskB := runDB("task", "create", featureID, "B")
 	assertDirectObject(t, taskA, "id", "feature_id")
 	assertDirectObject(t, taskB, "id", "feature_id")
+	assertBlockLabelsArray(t, taskA)
 	var taskAID, taskBID string
 	if err := json.Unmarshal(taskA["id"], &taskAID); err != nil {
 		t.Fatal(err)
@@ -1609,7 +1627,9 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	}
 	assertDirectObjectKeys(t, runDB("task"), "tasks")
 	assertDirectObject(t, runDB("task", taskAID), "id", "feature_id")
-	assertDirectObject(t, runDB("task", "update", taskAID, "--title", "Updated A"), "id", "feature_id")
+	updatedTask := runDB("task", "update", taskAID, "--title", "Updated A")
+	assertDirectObject(t, updatedTask, "id", "feature_id")
+	assertBlockLabelsArray(t, updatedTask)
 
 	assertDirectObject(t, runDB("dependency", "add", taskAID, taskBID), "blocker_task_id", "blocked_task_id")
 	assertDirectObjectKeys(t, runDB("dependency"), "dependencies")

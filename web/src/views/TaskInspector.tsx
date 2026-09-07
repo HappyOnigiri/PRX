@@ -3,20 +3,16 @@ import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { type PullRequest, type Task } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
-import {
-  blockedReasonLabel,
-  taskDisplayStateLabel,
-  taskDisplayStateToken,
-} from "../i18n/domain";
+import { blockedReasonLabel } from "../i18n/domain";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
-import { StatusBadge } from "./StatusBadge";
 import { PullRequestSection } from "./TaskInspectorPullRequest";
 import { ReferencesSection } from "./TaskInspectorReferences";
 import { TaskInspectorTaskForm } from "./TaskInspectorTaskForm";
 import { type TaskNodeDocument } from "./TaskNode";
+import { TaskBlockLabels, TaskStatusBadge } from "./TaskStateBadges";
 
 export interface TaskInspectorProps {
   task: Task;
@@ -26,6 +22,21 @@ export interface TaskInspectorProps {
   onPreview: (document: TaskNodeDocument) => void;
   onClose: () => void;
   readOnly?: boolean;
+}
+
+function TaskInspectorBlocks({ task, tasks }: { task: Task; tasks: Task[] }) {
+  const { t } = useTranslation();
+  const detail = blockedReasonLabel(
+    task.blockedReason,
+    (id) => tasks.find((item) => item.id === id)?.title,
+    t,
+  );
+  return (
+    <p className="inspector-blocks">
+      <TaskBlockLabels labels={task.blockLabels} dependencyDetail={detail} />
+      {detail && <span className="inspector-blocks-detail">{detail}</span>}
+    </p>
+  );
 }
 
 function TaskInspectorHeader({
@@ -38,10 +49,7 @@ function TaskInspectorHeader({
       <div className="inspector-heading">
         {/* どのカードや行とも同じく、状態が見出しの先頭に来る。 */}
         <div className="inspector-heading-line">
-          <StatusBadge
-            className={`state-${taskDisplayStateToken(task.displayState)}`}
-            label={taskDisplayStateLabel(task.displayState, t)}
-          />
+          <TaskStatusBadge state={task.displayState} />
           <h2>
             <EntityIcon kind="task" size={16} />
             {task.title}
@@ -79,16 +87,11 @@ export function TaskInspector({
   return (
     <aside className="inspector" aria-label={t("inspector.label")}>
       <TaskInspectorHeader task={task} onClose={onClose} />
-      {/* 状態は見出しへ移したので、このストリップには状態が語れない唯一のこと、
-          つまりタスクが待たされている理由だけが残る。 */}
-      {task.blockedReason && (
-        <p className="inspector-blocked">
-          {blockedReasonLabel(
-            task.blockedReason,
-            (id) => tasks.find((item) => item.id === id)?.title,
-            t,
-          )}
-        </p>
+      {/* ステータスは見出しにあるので、このストリップには進行を妨げている事情
+          だけが並ぶ。待ち相手はラベルの語だけでは特定できないため、可視の
+          テキストとしても添える。 */}
+      {task.blockLabels.length > 0 && (
+        <TaskInspectorBlocks task={task} tasks={tasks} />
       )}
       {readOnly && (
         <p className="inspector-read-only">{t("inspector.readOnly")}</p>

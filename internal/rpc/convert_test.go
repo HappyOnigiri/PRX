@@ -94,20 +94,13 @@ func TestProtoTaskDisplayStateMapsEveryKnownValue(t *testing.T) {
 		{"completed", domain.TaskDisplayStateCompleted, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_COMPLETED},
 		{"closed", domain.TaskDisplayStateClosed, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CLOSED},
 		{"merged", domain.TaskDisplayStateMerged, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_MERGED},
-		{"draft", domain.TaskDisplayStateDraft, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_DRAFT},
-		{"conflict", domain.TaskDisplayStateConflict, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CONFLICT},
 		{
-			"changes requested",
-			domain.TaskDisplayStateChangesRequested,
-			prxv1.TaskDisplayState_TASK_DISPLAY_STATE_CHANGES_REQUESTED,
+			"implemented",
+			domain.TaskDisplayStateImplemented,
+			prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IMPLEMENTED,
 		},
+		{"in review", domain.TaskDisplayStateInReview, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_IN_REVIEW},
 		{"approved", domain.TaskDisplayStateApproved, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_APPROVED},
-		{
-			"review waiting",
-			domain.TaskDisplayStateReviewWaiting,
-			prxv1.TaskDisplayState_TASK_DISPLAY_STATE_REVIEW_WAITING,
-		},
-		{"open", domain.TaskDisplayStateOpen, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_OPEN},
 		{"unknown", domain.TaskDisplayStateUnknown, prxv1.TaskDisplayState_TASK_DISPLAY_STATE_UNKNOWN},
 	}
 	for _, test := range tests {

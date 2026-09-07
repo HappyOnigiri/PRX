@@ -1,8 +1,14 @@
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { FeatureStatus, type Snapshot } from "../src/gen/prx/v1/prx_pb";
+import {
+  FeatureStatus,
+  TaskBlockLabel,
+  TaskDisplayState,
+  type Snapshot,
+} from "../src/gen/prx/v1/prx_pb";
 import { AutoSyncStatusContext, type AutoSyncStatus } from "../src/sync-status";
+import { filterTaskSearchResults, parseTaskSearch } from "../src/task-search";
 import { Dashboard } from "../src/views/Dashboard";
 import {
   makeFeature,
@@ -245,6 +251,54 @@ describe("Dashboard states", () => {
       "GitHub is unavailable",
     );
     expect(screen.getByRole("button", { name: "Sync GitHub" })).toBeEnabled();
+  });
+
+  it("links every queue to a search that returns the tasks it counted", () => {
+    const reviewTask = makeTask({
+      id: "review-task",
+      featureId: "active",
+      title: "Review task",
+      ready: false,
+      displayState: TaskDisplayState.IN_REVIEW,
+    });
+    const conflictTask = makeTask({
+      id: "conflict-task",
+      featureId: "active",
+      title: "Conflict task",
+      ready: false,
+      displayState: TaskDisplayState.IN_REVIEW,
+      blockLabels: [TaskBlockLabel.CONFLICT],
+    });
+    dashboardMocks.state.isPending = false;
+    dashboardMocks.state.data = makeSnapshot({
+      features: [makeFeature({ id: "active", title: "Active graph" })],
+      tasks: [reviewTask, conflictTask],
+      pullRequests: [],
+      readyTasks: [],
+      reviewWaitingTasks: [reviewTask, conflictTask],
+      conflictTasks: [conflictTask],
+      staleTasks: [],
+    });
+    renderDashboard();
+
+    const reviewLink = screen.getByRole("link", { name: /In review/ });
+    const conflictLink = screen.getByRole("link", { name: /Conflicts/ });
+    expect(reviewLink).toHaveAttribute(
+      "href",
+      "/tasks?q=task-status%3Ain-review",
+    );
+    expect(conflictLink).toHaveAttribute("href", "/tasks?q=block%3Aconflict");
+    const snapshot = dashboardMocks.state.data;
+    const idsFor = (query: string) =>
+      filterTaskSearchResults(snapshot, parseTaskSearch(query)).map(
+        ({ task }) => task.id,
+      );
+    expect(idsFor("task-status:in-review")).toEqual(
+      snapshot.reviewWaitingTasks.map((task) => task.id),
+    );
+    expect(idsFor("block:conflict")).toEqual(
+      snapshot.conflictTasks.map((task) => task.id),
+    );
   });
 
   it("disables the sync button while an automatic status check is running", () => {
