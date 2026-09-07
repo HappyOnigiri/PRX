@@ -6,22 +6,9 @@ import (
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
-// Archiving is a write barrier, not a presentation flag. The guards below are
-// the only place that decides what an archived project or feature refuses, so
-// the CLI, the RPC handlers, and the WebUI all inherit the same rule.
-//
-// Each guard reads the container's state before the write and does not share a
-// transaction with it, so a write that passed the barrier can still land just
-// after another process archived the container. The barrier coordinates people
-// and their agents rather than locking the database, and the store carries no
-// constraint that would close that window.
-//
-// The barrier lifts for exactly three operations: changing nothing but the
-// archived flag, deleting a project or a feature, and a GitHub refresh that
-// names a feature or a task explicitly. Deletion stays available because it is
-// how archived work is finally discarded, and a project cascade deletes the
-// features it holds rather than reassigning them, so the guards never see it as
-// a membership change.
+// The guards below are the only place that decides what an archived project or
+// feature refuses, so the CLI, the RPC handlers, and the WebUI inherit one rule.
+// docs/design/archive.md records the barrier, its exceptions, and its limits.
 
 // archivedReadOnly is the single error every refused write returns, so a caller
 // branches on one code without needing to know which container is archived.
@@ -33,14 +20,8 @@ func archivedReadOnly() error {
 }
 
 // archivedFeatureFlagOnly and archivedProjectFlagOnly report whether a request
-// carries the archived flag and changes nothing else. Moving that flag is the
-// one update an archived record accepts, in either direction, so lifting the
-// archive and re-archiving a record both stay possible while a request that
-// also carries another change stays refused.
-//
-// Each clears the flag and compares what is left with the zero value, so the
-// question stays structural: a field added to the update type is covered by the
-// barrier without this rule being edited.
+// carries the archived flag and changes nothing else. Each clears the flag and
+// compares the rest with the zero value, so a new field is covered by default.
 func archivedFeatureFlagOnly(update domain.FeatureUpdate) bool {
 	if update.Archived == nil {
 		return false

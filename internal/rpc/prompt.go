@@ -54,9 +54,8 @@ func (h *Handler) UpdatePromptTemplates(
 }
 
 // GetTaskPrompt renders the prompt from the current server state rather than
-// from what the caller believes the task looks like. A WebUI snapshot may
-// predate a plan being registered or deleted, and the copied prompt has to
-// match the task as it is now.
+// from what the caller believes the task looks like: a WebUI snapshot may
+// predate a plan being registered or deleted.
 func (h *Handler) GetTaskPrompt(
 	ctx context.Context,
 	req *connect.Request[prxv1.GetTaskPromptRequest],

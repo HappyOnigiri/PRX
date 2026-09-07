@@ -162,9 +162,8 @@ type DebugConfigAuthMethod struct {
 }
 
 // DebugConfigPrompt describes one stored agent prompt template. The body is
-// user-authored and several kilobytes long, so the report says whether it still
-// matches the built-in text instead of reproducing it: that is what separates
-// "someone edited the wording" from "this is the template PRX ships".
+// user-authored and several kilobytes long, so the report only says whether it
+// still matches the built-in text instead of reproducing it.
 type DebugConfigPrompt struct {
 	Customized bool `json:"customized"`
 	Bytes      int  `json:"bytes"`

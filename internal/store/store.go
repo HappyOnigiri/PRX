@@ -139,18 +139,9 @@ func (s *Store) migrate(ctx context.Context) error {
 	return nil
 }
 
-// repairMigrationVersionCollisions handles databases created from the feature
-// branch before it was merged with the migration added on main. Those two
-// branches both used versions 2 and 3 for different schemas, so the version
-// alone cannot tell the migration runner what has actually been applied.
-//
-// The repair also restores a version that an older build removed by mistake.
-// Builds before the task status vocabulary lost its automatic member matched
-// that vocabulary exactly, so opening a current database with one of them
-// dropped version 3 and left the database unopenable: migration 3 rebuilds the
-// task table around a kind column that migration 11 has already removed. The
-// schema decides the record here, so the next open re-records the version
-// instead of replaying a migration whose result is already in place.
+// repairMigrationVersionCollisions reconciles versions 2 and 3, which two
+// branches once used for different schemas, and restores a version an older
+// build dropped. The schema decides the record, per docs/design/persistence.md.
 func (s *Store) repairMigrationVersionCollisions(ctx context.Context) error {
 	rows, err := s.db.QueryContext(
 		ctx,
@@ -302,10 +293,8 @@ func (s *Store) pullRequestsHaveHostColumn(ctx context.Context) (bool, error) {
 }
 
 // tasksUseTaskStatusVocabulary reports whether the tasks table already carries
-// the status vocabulary that migration 3 introduced. It looks for the member
-// that separates that vocabulary from the one migration 1 created rather than
-// matching the whole constraint, so later migrations that revise the members
-// keep answering the version-collision question correctly.
+// the status vocabulary that migration 3 introduced. It looks for the one member
+// that separates it from migration 1 rather than matching the whole constraint.
 func (s *Store) tasksUseTaskStatusVocabulary(ctx context.Context) (bool, error) {
 	var definition sql.NullString
 	if err := s.db.QueryRowContext(
@@ -338,8 +327,7 @@ func nullableTime(value sql.NullString) *time.Time {
 
 // domainFeature folds the two stored columns back into the single status the
 // rest of the application uses. The status column is only meaningful while
-// status_auto is 0; the automatic mode normalizes it to 'active' because the
-// column's CHECK constraint predates the automatic value.
+// status_auto is 0, because its CHECK constraint predates the automatic value.
 func domainFeature(value db.Feature, projectID string) domain.Feature {
 	status := domain.FeatureStatus(value.Status)
 	if value.StatusAuto != 0 {

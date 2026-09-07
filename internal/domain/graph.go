@@ -10,10 +10,8 @@ func CyclePath(tasks []Task, deps []Dependency, blocker, blocked string) []strin
 		return []string{blocker, blocker}
 	}
 	// The stored graph is already acyclic, so adding blocker→blocked closes a
-	// cycle exactly when blocker is reachable from blocked. Walking that single
-	// question with a visited set keeps the search linear in the graph size;
-	// re-running a path-based DFS from every task revisits shared subgraphs once
-	// per distinct route, which is exponential on diamond-shaped graphs.
+	// cycle exactly when blocker is reachable from blocked. A visited set keeps
+	// that search linear; a path-based DFS is exponential on diamond graphs.
 	adj := make(map[string][]string, len(tasks))
 	for _, dep := range deps {
 		adj[dep.BlockerTaskID] = append(adj[dep.BlockerTaskID], dep.BlockedTaskID)

@@ -266,9 +266,8 @@ export const configMutations = {
 };
 
 // PromptTemplateSettings carries the stored templates together with the
-// vocabulary the server accepts and the templates it ships, so the editor
-// presents what that server will actually validate against and restore rather
-// than copies of its own.
+// vocabulary the server accepts and the templates it ships, so the editor never
+// validates or restores against copies of its own.
 export interface PromptTemplateSettings extends PromptTemplates {
   supportedPlaceholders: string[];
   requiredPlaceholder: string;

@@ -1,13 +1,8 @@
 import { FeatureStatus, type Feature } from "./gen/prx/v1/prx_pb";
 
-// The overview, the sidebar, and the task queues all present work in flight.
-// That excludes read-only features and the ones the server presents as
-// completed, each of which has its own page.
-//
-// Every predicate reads the server's readOnly rather than the feature's own
-// archived flag, because a feature inside an archived project is read-only too
-// and belongs in the archive with the rest of it. The server derives that
-// value; the browser must not recombine the two flags itself.
+// The overview, the sidebar, and the task queues all present work in flight,
+// which excludes read-only and completed features. Every predicate reads the
+// server's readOnly, never the archived flag: see docs/design/webui.md.
 export function isActiveFeature(feature: Feature): boolean {
   return !feature.readOnly && feature.displayStatus !== FeatureStatus.COMPLETED;
 }

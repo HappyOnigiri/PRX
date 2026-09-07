@@ -241,9 +241,8 @@ function useDependencyEdges(options: {
 }
 
 // React Flow measures the endpoint ports one animation frame after the nodes
-// that carry them commit. Handing the routes to the edges only after that frame
-// keeps the edges from naming handles that do not exist yet, which would drop
-// them from the canvas until the measurement lands.
+// that carry them commit. Waiting for that frame keeps the edges from naming
+// handles that do not exist yet, which would drop them from the canvas.
 function useMeasuredEdgeRoutes(edgeRoutes: Map<string, DependencyEdgeRoute>) {
   const [measured, setMeasured] = useState<Map<string, DependencyEdgeRoute>>(
     () => new Map(),

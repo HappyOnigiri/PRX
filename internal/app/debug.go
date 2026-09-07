@@ -10,8 +10,7 @@ import (
 
 // DiagnosticsRepository is implemented by the SQLite repository when a real
 // database is open. It stays optional for the same reason the GitHub sync state
-// interface does: the small repository fakes used by application tests would all
-// have to grow these methods otherwise.
+// interface does: otherwise every small repository fake would grow these.
 type DiagnosticsRepository interface {
 	Path() string
 	AppliedSchemaVersion(ctx context.Context) (int, error)
@@ -42,22 +41,16 @@ type serveEndpoint struct {
 // the service is being wired, before any request can reach it.
 func (s *Service) SetProcessInfo(info ProcessInfo) { s.processInfo = info }
 
-// SetServeEndpoint records the bound listen address. Every other field of the
-// service is immutable after construction; this one is written once the listener
-// exists and is read afterwards by HTTP handlers, so it is stored atomically
-// rather than relying on the ordering of server startup. Its arguments stay
-// primitive because the CLI that calls it cannot import this package.
+// SetServeEndpoint records the bound listen address. Alone among the service's
+// fields it is written after construction, once the listener exists, so it is
+// stored atomically rather than relying on the ordering of server startup.
 func (s *Service) SetServeEndpoint(address string, startedAt time.Time) {
 	s.serveEndpoint.Store(&serveEndpoint{address: address, startedAt: startedAt.UTC()})
 }
 
-// Debug assembles the diagnostic report. Every section fails independently: a
-// report is most valuable when something is broken, so one unreadable section
-// must not remove the others.
-//
-// It deliberately performs no synchronization. SyncIfDue would clear the run
-// error the reader asked about, rewrite the staleness of every pull request, and
-// block on an unreachable host.
+// Debug assembles the diagnostic report. Every section fails independently,
+// because a report matters most when something is broken, and no section
+// synchronizes: a refresh would erase the run error the reader asked about.
 func (s *Service) Debug(ctx context.Context) (domain.DebugReport, error) {
 	now := s.currentTime()
 	report := domain.DebugReport{

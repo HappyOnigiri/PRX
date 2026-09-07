@@ -6,11 +6,9 @@ interface ProjectSelectFieldProps {
   currentProjectId: string;
 }
 
-// The options are the union of the active projects and the current membership.
-// The select is uncontrolled, and a defaultValue that is not among its options
-// silently falls back to the first one, which would move a feature out of an
-// archived project the next time the form is saved. Membership is required, so
-// the list offers no empty option.
+// The options are the active projects plus the current membership, because an
+// uncontrolled select whose defaultValue is missing falls back to the first
+// option and would move the feature. Membership is required, so none is empty.
 export function ProjectSelectField({
   projects,
   currentProjectId,

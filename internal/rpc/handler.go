@@ -435,9 +435,8 @@ func (h *Handler) SyncGitHubIfDue(
 }
 
 // GetDebugReport returns the diagnostic report together with the text the CLI
-// prints. The rendered text crosses the RPC boundary on purpose: the WebUI
-// copies it to the clipboard, and a report pasted from the browser has to be the
-// same one `prx debug` produces.
+// prints. The rendered text crosses the RPC boundary on purpose, so the report
+// the WebUI copies is the same one `prx debug` produces.
 func (h *Handler) GetDebugReport(
 	ctx context.Context,
 	_ *connect.Request[prxv1.GetDebugReportRequest],

@@ -1,7 +1,6 @@
 // Package prompt owns the agent prompt templates shared by the CLI, the RPC
-// server, and the WebUI. It holds the built-in templates, their validation, the
-// placeholder substitution, and the rule that selects a template for one task,
-// so no caller can drift from another by re-implementing any of them.
+// server, and the WebUI: the built-in templates, their validation, the
+// placeholder substitution, and the rule that selects a template for one task.
 package prompt
 
 import (
@@ -100,8 +99,7 @@ Report what you changed and anything the plan did not cover.
 
 // SupportedPlaceholders returns the substitution vocabulary, without the
 // surrounding braces. It exists so a client can present what the server accepts
-// instead of maintaining its own list, which would drift from this one without
-// anything failing.
+// instead of maintaining its own list, which would drift silently.
 func SupportedPlaceholders() []string {
 	return slices.Clone(supportedPlaceholders)
 }

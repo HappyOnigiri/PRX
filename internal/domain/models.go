@@ -111,9 +111,8 @@ type Project struct {
 }
 
 // ProjectUpdate carries every field a project update may change. A nil pointer
-// means the field was omitted; an empty string is a request to clear it.
-// Collecting them in one comparable value is what lets the archive barrier ask
-// whether a request changes anything but Archived without naming each field.
+// means the field was omitted; an empty string is a request to clear it. One
+// comparable value lets the archive barrier ask what changed without naming it.
 type ProjectUpdate struct {
 	Title       *string
 	Description *string
@@ -217,9 +216,8 @@ type GitHubSyncStatus struct {
 }
 
 // DocumentParent names the single owner of a document. Exactly one field may
-// carry a value; Count lets callers reject the other combinations without
-// spelling the condition out at each call site. Passing the three identifiers
-// as one value also keeps them from being swapped at a call site.
+// carry a value; Count lets callers reject the other combinations, and one value
+// keeps the three identifiers from being swapped at a call site.
 type DocumentParent struct {
 	ProjectID string
 	FeatureID string

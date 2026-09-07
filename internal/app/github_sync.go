@@ -169,8 +169,7 @@ func (s *Service) syncRepositoryGroups(
 
 // persistSyncResult stores every refreshed pull request and records the rest as
 // stale with the failure that kept them from refreshing. A known terminal pull
-// request is retained as stale without becoming an actionable failure. Both
-// synchronization paths share this fallback for items in neither map.
+// request stays stale without becoming an actionable failure.
 func (s *Service) persistSyncResult(
 	ctx context.Context,
 	values []domain.PullRequest,

@@ -4,6 +4,8 @@ The dependency canvas was selected because causal relationships are the product'
 Navigation and inspection should preserve that context instead of replacing it with a generic dashboard workflow.
 
 Business state and credentials stay on the server.
+The browser presents the values the server derived, such as a feature's read-only state, rather than recombining the flags behind them.
+A feature inside an archived project is therefore read-only without the browser ever consulting the project.
 Language, theme, zoom, and similar presentation-only preferences may remain browser-local.
 
 Persistent WebUI preferences use the Settings dialog as their single change entry point.

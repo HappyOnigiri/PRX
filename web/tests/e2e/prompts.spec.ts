@@ -29,10 +29,8 @@ test.afterEach(() => {
 });
 
 // The prompt templates live in the shared demo configuration, so this spec is
-// the only one that writes to it, and it puts the built-in templates back before
-// it finishes. Serial mode orders the tests inside this file only: every other
-// spec still runs against the same server in parallel, so a test that reads or
-// writes a template belongs in this file rather than in a new one.
+// the only one that writes to it and it restores the built-in templates. Serial
+// mode orders this file only, so template-sensitive tests belong here.
 test.describe.configure({ mode: "serial" });
 
 test("copies a task prompt built from the configured template", async ({

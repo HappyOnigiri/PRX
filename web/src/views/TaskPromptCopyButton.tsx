@@ -7,12 +7,9 @@ import { IconButton } from "./IconButton";
 type CopyStatus =
   { case: "idle" } | { case: "copied" } | { case: "failed"; message: string };
 
-// TaskPromptCopyButton hands the task to another agent. It sits next to the
-// task wherever the task is listed, so it is icon-only and reports its outcome
-// in a floating status that leaves the surrounding layout alone. The accessible
-// name follows the snapshot's plan flag so the reader knows what they are about
-// to copy, while the copied text always comes from the server, which decides
-// the template from the task as it is at that moment.
+// TaskPromptCopyButton hands the task to another agent. It is icon-only with a
+// floating status, its accessible name follows the snapshot's plan flag, and the
+// copied text always comes from the server, which picks the template.
 export function TaskPromptCopyButton({
   taskId,
   hasImplementationPlan,
@@ -49,9 +46,8 @@ export function TaskPromptCopyButton({
     setStatus({ case: "idle" });
     try {
       // The server's message names the task or the template at fault, so it is
-      // worth showing verbatim. A clipboard failure has no such detail, and
-      // navigator.clipboard is simply absent outside a secure context, so those
-      // are reported through the translated text instead of a raw TypeError.
+      // shown verbatim. A clipboard failure carries no such detail, so it is
+      // reported through the translated text instead of a raw TypeError.
       const response = await getTaskPrompt(taskId);
       try {
         await navigator.clipboard.writeText(response.prompt);

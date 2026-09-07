@@ -50,9 +50,8 @@ interface TaskNodeData extends Record<string, unknown> {
 export type TaskFlowNode = Node<TaskNodeData, "task">;
 
 // React Flow picks the connection target by distance without filtering on
-// connectability, so ports that refuse connections would steal the snap radius
-// from the visible handle and silently drop the connection. They accept
-// connection ends instead, which resolves to the same task pair.
+// connectability, so a port that refuses connections would steal the snap
+// radius. They accept connection ends instead, resolving to the same task pair.
 function TaskEdgePorts({
   incoming,
   isConnectable,

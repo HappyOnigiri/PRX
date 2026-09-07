@@ -42,9 +42,8 @@ export function ProjectTree({
 
   function toggle(key: string) {
     // Deriving the next list from the rows on screen is also what keeps a
-    // deleted project from lingering in storage: an ID that no longer has a
-    // row cannot be carried over. No separate sweep and no extra pass over the
-    // project list are needed.
+    // deleted project from lingering in storage: an ID that no longer has a row
+    // cannot be carried over, so no separate sweep is needed.
     const next = rows
       .map((row) => row.projectId)
       .filter((id) =>

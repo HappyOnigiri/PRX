@@ -1982,10 +1982,8 @@ func TestConfigUnknownFieldsWarnWithoutFailing(t *testing.T) {
 }
 
 // TestBlackBoxDebugRunsWithoutStorageAndWithoutRefreshing proves the diagnostic
-// command works exactly where it is needed. A database path that cannot be
-// opened still produces a report, and running it twice leaves the recorded
-// synchronization status untouched, so the failure a user was asked to send is
-// still there when they send it.
+// command works where it is needed: an unopenable database still produces a
+// report, and two runs leave the recorded synchronization status untouched.
 func TestBlackBoxDebugRunsWithoutStorageAndWithoutRefreshing(t *testing.T) {
 	binary := buildCLI(t)
 	root := t.TempDir()

@@ -120,10 +120,8 @@ func (s *Store) UpdateProject(ctx context.Context, project domain.Project) (doma
 }
 
 // DeleteProject removes the container. A cascade removes what it holds: the
-// project's own documents and every feature inside it, with the tasks,
-// dependencies, pull-request attachments, and documents those features own.
-// Releasing the features is no longer an option, because a feature cannot exist
-// outside a project.
+// project's own documents and every feature inside it, with everything those
+// features own. Releasing the features instead is not an option any more.
 func (s *Store) DeleteProject(ctx context.Context, id string, cascade bool) error {
 	tx, err := s.db.BeginTx(ctx, nil)
 	if err != nil {

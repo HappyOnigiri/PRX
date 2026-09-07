@@ -46,8 +46,7 @@ export function PromptSettingsPanel() {
 
   // The vocabulary comes from the server so the hint can never advertise a
   // placeholder the server would reject. Both are interpolation values so the
-  // braces survive: a translation containing them would itself be interpolated
-  // away.
+  // braces survive; a translation containing them would be interpolated away.
   const placeholderList = templates.data.supportedPlaceholders
     .map((name) => `{{${name}}}`)
     .join(", ");
@@ -109,8 +108,7 @@ export function PromptSettingsPanel() {
             onClick={() => {
               // The server would restore a blank template on its own, but the
               // editor shows what it is about to save, so the built-in text
-              // goes into the fields instead of leaving them empty until the
-              // write comes back.
+              // goes into the fields rather than waiting for the write.
               edit(builtIn);
             }}
           />

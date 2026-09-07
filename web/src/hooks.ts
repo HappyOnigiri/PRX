@@ -17,9 +17,8 @@ const syncStatusKey = ["github-sync-status"] as const;
 const debugReportKey = ["debug-report"] as const;
 
 // Returning the query object itself keeps React Query's property tracking
-// intact. Spreading it would read every getter and make each consumer re-render
-// on unrelated changes such as isFetching, which the automatic refresh below
-// touches on every poll.
+// intact. Spreading it would read every getter and re-render each consumer on
+// unrelated changes such as isFetching, which every poll touches.
 export function useSnapshot() {
   return useQuery({ queryKey: snapshotKey, queryFn: getSnapshot });
 }
