@@ -203,6 +203,7 @@ func (s *state) addCommands(root *cobra.Command) {
 		s.syncCommand(),
 		s.validateCommand(),
 		s.debugCommand(),
+		s.setupCommand(),
 		s.serveCommand(),
 		s.daemonCommand(),
 		s.openCommand(),
@@ -303,7 +304,7 @@ func (s *state) acquireRunLock() error {
 // 返す。これらは launchd と稼働記録だけを見るので、ストレージを触る理由がない。
 func offlineCommandName(command *cobra.Command) string {
 	for current := command; current != nil; current = current.Parent() {
-		if current.Name() == "daemon" || current.Name() == "open" {
+		if current.Name() == "daemon" || current.Name() == "open" || current.Name() == "setup" {
 			return current.Name()
 		}
 	}

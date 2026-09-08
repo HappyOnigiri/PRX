@@ -66,10 +66,14 @@ main() {
     daemon_status=$(PATH="$install_dir:$PATH" "$destination" daemon --json 2>/dev/null) || daemon_status=''
   fi
   if [[ "$daemon_status" == *'"installed":false'* ]]; then
-    echo 'To start PRX at login, run:'
-    echo '  prx daemon install'
-    echo 'To open the server in your browser, run:'
-    echo '  prx open'
+    # 初回だけ TUI を起動し、LaunchAgent の導入とブラウザを開くかを選べるようにする。
+    # curl | bash では prx 側が /dev/tty を使う。端末が無い環境では従来の案内へ戻す。
+    if ! PATH="$install_dir:$PATH" "$destination" setup; then
+      echo 'To start PRX at login, run:'
+      echo '  prx daemon install'
+      echo 'To open the server in your browser, run:'
+      echo '  prx open'
+    fi
   else
     echo 'Then run prx serve to start the server at http://127.0.0.1:7331.'
   fi

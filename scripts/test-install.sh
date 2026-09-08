@@ -17,6 +17,12 @@ case "${1-}:${2-}" in
     fi
     printf '%s\n' "$PRX_INSTALL_TEST_DAEMON_STATUS"
     ;;
+  setup:)
+    if [ "$PRX_INSTALL_TEST_SETUP_STATUS" = fail ]; then
+      exit 1
+    fi
+    echo 'TUI setup completed'
+    ;;
   *)
     exit 1
     ;;
@@ -89,7 +95,7 @@ assert_not_contains() {
 }
 
 run_case() {
-  local name=$1 existing_binary=$2 daemon_status=$3 expected_startup=$4
+  local name=$1 existing_binary=$2 daemon_status=$3 setup_status=$4 expected_startup=$5
   local home="$root/$name/home" output="$root/$name/output"
   mkdir -p "$home"
   if [ "$existing_binary" = true ]; then
@@ -98,21 +104,29 @@ run_case() {
   fi
 
   HOME="$home" PATH="$tool_directory:$PATH" PRX_INSTALL_TEST_ASSET="$asset" \
-    PRX_INSTALL_TEST_DAEMON_STATUS="$daemon_status" bash "$installer" > "$output"
+    PRX_INSTALL_TEST_DAEMON_STATUS="$daemon_status" PRX_INSTALL_TEST_SETUP_STATUS="$setup_status" \
+    bash "$installer" > "$output"
   assert_contains "$output" 'To use prx in this terminal, run:'
   if [ "$expected_startup" = daemon ]; then
+    assert_contains "$output" 'TUI setup completed'
+    assert_not_contains "$output" 'To start PRX at login, run:'
+    assert_not_contains "$output" '  prx daemon install'
+    assert_not_contains "$output" 'Then run prx serve to start the server at http://127.0.0.1:7331.'
+    return
+  fi
+  if [ "$expected_startup" = fallback ]; then
     assert_contains "$output" 'To start PRX at login, run:'
     assert_contains "$output" '  prx daemon install'
     assert_contains "$output" 'To open the server in your browser, run:'
     assert_contains "$output" '  prx open'
-    assert_not_contains "$output" 'Then run prx serve to start the server at http://127.0.0.1:7331.'
     return
   fi
   assert_contains "$output" 'Then run prx serve to start the server at http://127.0.0.1:7331.'
   assert_not_contains "$output" 'To start PRX at login, run:'
 }
 
-run_case initial-not-installed false '{"supported":true,"installed":false}' daemon
-run_case initial-installed false '{"supported":true,"installed":true}' serve
-run_case initial-status-failure false fail serve
-run_case update-not-installed true '{"supported":true,"installed":false}' serve
+run_case initial-not-installed false '{"supported":true,"installed":false}' ok daemon
+run_case initial-setup-failure false '{"supported":true,"installed":false}' fail fallback
+run_case initial-installed false '{"supported":true,"installed":true}' ok serve
+run_case initial-status-failure false fail ok serve
+run_case update-not-installed true '{"supported":true,"installed":false}' ok serve
