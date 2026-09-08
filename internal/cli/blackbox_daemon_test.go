@@ -352,3 +352,19 @@ func waitForRunStateFile(t *testing.T, path string) map[string]json.RawMessage {
 		time.Sleep(25 * time.Millisecond)
 	}
 }
+
+// TestBlackBoxDaemonCommandsDoNotWarnAboutConfiguration は daemon と open が設定ファイルを
+// 開かないことを確かめる。開くと flock を取り、設定の警告まで出してしまう。
+func TestBlackBoxDaemonCommandsDoNotWarnAboutConfiguration(t *testing.T) {
+	binary := buildCLI(t)
+	environment := newDaemonEnvironment(t)
+	if err := os.WriteFile(environment.configPath, []byte("version: 1\nmystery: 1\n"), 0o600); err != nil {
+		t.Fatal(err)
+	}
+	for _, args := range [][]string{{"daemon"}, {"daemon", "stop"}, {"open", "--print"}} {
+		result := executeCLIWithEnv(t, binary, "", environment.variables, environment.args(args...)...)
+		if strings.Contains(result.stderr, "Warning:") {
+			t.Fatalf("%v warned about the configuration: %q", args, result.stderr)
+		}
+	}
+}

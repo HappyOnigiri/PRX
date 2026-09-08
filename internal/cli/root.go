@@ -98,12 +98,17 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			if cmd.Name() == "help" || cmd.Name() == "schema-version" {
 				return nil
 			}
+			// daemon と open は launchd と稼働記録だけを見る。設定を開くと flock を取り
+			// 警告も出すので、docs/design/daemon.md の「設定も開かない」と食い違う。
+			if isOfflineCommand(cmd) {
+				return nil
+			}
 			// デモは通常の設定を読まないので、それを警告してもデモ実行が
 			// 使わないファイルについて報告することになる。
 			if !s.demo {
 				s.warnAboutConfiguration()
 			}
-			if isConfigCommand(cmd) || isOfflineCommand(cmd) {
+			if isConfigCommand(cmd) {
 				return nil
 			}
 			// ロックの取得だけは openService より前に済ませる。ロックを取れなかった
