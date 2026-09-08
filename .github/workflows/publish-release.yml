@@ -14,9 +14,34 @@ jobs:
       github.event.pull_request.merged == true &&
       startsWith(github.event.pull_request.head.ref, 'release/v')
     runs-on: ubuntu-latest
+    timeout-minutes: 15
+    concurrency:
+      group: publish-release
+      cancel-in-progress: false
     steps:
-      - uses: HappyOnigiri/ReleaseActions/actions/publish-release@main
+      # 成果物とタグを同じ merge コミットへ揃えるため、publish-release と同じ ref を checkout する。
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.pull_request.merge_commit_sha }}
+          persist-credentials: false
+      - name: Set up Go
+        uses: ./.github/actions/setup-go
+        with:
+          cache-name: release
+      - name: Set up web toolchain
+        uses: ./.github/actions/setup-web
+      - name: Build release assets
+        env:
+          RELEASE_BRANCH: ${{ github.event.pull_request.head.ref }}
+        run: make release RELEASE_VERSION="${RELEASE_BRANCH#release/}"
+      # 成果物付きの公開は draft を経由するため、再実行に備えて毎回すべての成果物を渡す。
+      - uses: HappyOnigiri/ReleaseActions/actions/publish-release@06c18eee2121665d90b655561374255eda6e1c75
         with:
           branch: ${{ github.event.pull_request.head.ref }}
           pr-body: ${{ github.event.pull_request.body }}
+          target-commit: ${{ github.event.pull_request.merge_commit_sha }}
+          assets: |
+            artifacts/release/install.sh
+            artifacts/release/prx-darwin-arm64
+            artifacts/release/checksums.txt
           github-token: ${{ secrets.GH_TOKEN }}

@@ -1,6 +1,7 @@
 GO ?= go
 PNPM ?= corepack pnpm
 INSTALL_DIR ?= $(HOME)/.local/bin
+RELEASE_DIR ?= artifacts/release
 VERSION := $(shell node -p "require('./package.json').version")
 GO_COVERAGE_MIN ?= 68.8
 GO_COVERAGE_PACKAGES := ./internal/domain ./internal/github ./internal/rpc ./internal/store
@@ -14,7 +15,8 @@ CI_MAKEFLAGS := -j$(CI_JOBS) --keep-going $(if $(filter output-sync,$(.FEATURES)
 
 .PHONY: generate generated-check mod-tidy-check fmt lint go-lint go-deadcode markdown-lint web-lint check-web-quality \
     go-comment-lint test go-test web-test go-coverage-check go-coverage-zero-check test-race test-race-coverage test-cli \
-    web-install web-build dev demo e2e build version-check install ci ci-checks clean $(GOLANGCI_LINT)
+    web-install web-build dev demo e2e build version-check install release release-check ci ci-checks clean \
+    $(GOLANGCI_LINT)
 
 generate: web-install
 	$(GO) tool sqlc generate
@@ -138,14 +140,35 @@ install: build
 	install -d "$(INSTALL_DIR)"
 	install -m 0755 bin/prx "$(INSTALL_DIR)/prx"
 
+# 配布物は明示したタグでだけ作り、開発用の build / install が付ける -dev をそのまま残す。
+# 配布バイナリだけで WebUI も使えるよう、Go のビルドより先に web-build を済ませる。
+release: web-build
+	GO="$(GO)" RELEASE_VERSION="$(RELEASE_VERSION)" RELEASE_DIR="$(RELEASE_DIR)" scripts/build-release.sh
+
+# 対象 OS/arch とチェックサム、インストーラーへの版番号の差し込みを検査する。
+# Go 1.27 の `go version -m` は -ldflags を表示しないので、macOS arm64 でだけ実行して版番号を確かめる。
+release-check: web-build
+	@directory="$$(mktemp -d)" || exit $$?; \
+	trap 'rm -rf "$$directory"' EXIT; \
+	GO="$(GO)" RELEASE_VERSION=v0.0.0 RELEASE_DIR="$$directory" scripts/build-release.sh || exit $$?; \
+	$(GO) version -m "$$directory/prx-darwin-arm64" > "$$directory/build-info" || exit $$?; \
+	grep -Fq 'CGO_ENABLED=0' "$$directory/build-info" || exit $$?; \
+	grep -Fq 'GOOS=darwin' "$$directory/build-info" || exit $$?; \
+	grep -Fq 'GOARCH=arm64' "$$directory/build-info" || exit $$?; \
+	grep -Fq "release_version='v0.0.0'" "$$directory/install.sh" || exit $$?; \
+	(cd "$$directory" && shasum -a 256 -c checksums.txt) || exit $$?; \
+	if [ "$$(uname -sm)" = 'Darwin arm64' ]; then \
+	  test "$$("$$directory/prx-darwin-arm64" --version)" = 'prx version 0.0.0'; \
+	fi
+
 ci:
 	$(MAKE) $(CI_MAKEFLAGS) ci-checks
 
 # どのチェックも読み取り専用か、自分の出力先 (coverage/、test-results/、bin/prx、
 # internal/webui/dist) にしか書かないので、並行実行しても安全。書き込み側は依存関係で直列化する。
 # 最長の連鎖 (web-build -> build -> e2e) を先頭に置き、make が他より先に着手するようにしている。
-ci-checks: e2e version-check build lint test-race-coverage go-coverage-zero-check web-test check-web-quality \
-    generated-check mod-tidy-check
+ci-checks: e2e version-check build release-check lint test-race-coverage go-coverage-zero-check web-test \
+    check-web-quality generated-check mod-tidy-check
 
 clean:
 	$(GO) clean -testcache

@@ -1,4 +1,5 @@
 tmp/
+/artifacts/
 /bin/
 /coverage/
 /playwright-report/

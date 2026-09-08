@@ -49,6 +49,9 @@ jobs:
           - target: check-web-quality
             go: true
             web: true
+          - target: release-check
+            go: true
+            web: true
           - target: web-lint
             web: true
           - target: web-test
