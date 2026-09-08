@@ -21,11 +21,15 @@ The browser workspace and the scriptable command line offer the same operations.
 ## Getting started
 
 ```sh
-make install # build and install PRX
-prx serve    # start the server: http://127.0.0.1:7331
+curl -fsSL https://github.com/HappyOnigiri/PRX/releases/latest/download/install.sh | bash
+prx serve # start the server: http://127.0.0.1:7331
 ```
 
-The binary is installed to `~/.local/bin/prx`.
+The installer downloads the latest release, verifies its checksum, and installs the binary to `~/.local/bin/prx`.
+Run the same command again to update; the installed binary is kept when the download or the verification fails.
+Releases are built for macOS on Apple Silicon, and the binary carries the browser workspace with it.
+
+To build from a checkout instead, run `make install`, which installs to `~/.local/bin/prx` as well.
 Set `INSTALL_DIR` to install it elsewhere.
 
 `prx serve --demo` starts a demo loaded with sample data.

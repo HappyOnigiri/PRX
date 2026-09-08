@@ -21,11 +21,15 @@ PRX はタスクどうしの依存関係を登録しておくだけで、着手�
 ## 使い始める
 
 ```sh
-make install # PRX をビルドしてインストールする
-prx serve    # サーバーを起動する: http://127.0.0.1:7331
+curl -fsSL https://github.com/HappyOnigiri/PRX/releases/latest/download/install.sh | bash
+prx serve # サーバーを起動する: http://127.0.0.1:7331
 ```
 
-インストール先は `~/.local/bin/prx` です。
+インストーラーは最新リリースをダウンロードし、チェックサムを検証して `~/.local/bin/prx` に配置します。
+更新も同じコマンドで行えます。ダウンロードや検証に失敗した場合は、すでに入っているバイナリをそのまま残します。
+リリースは macOS の Apple Silicon 向けにビルドしてあり、バイナリ 1 つでブラウザのワークスペースも使えます。
+
+チェックアウトからビルドする場合は `make install` を使います。インストール先は同じく `~/.local/bin/prx` です。
 別の場所に入れる場合は `INSTALL_DIR` を指定してください。
 
 `prx serve --demo` は、サンプルデータの入ったデモを起動します。
