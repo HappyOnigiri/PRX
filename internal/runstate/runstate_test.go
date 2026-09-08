@@ -3,6 +3,7 @@ package runstate
 import (
 	"os"
 	"path/filepath"
+	"syscall"
 	"testing"
 	"time"
 )
@@ -87,6 +88,36 @@ func TestReadReportsRunningWhenTheContentIsCorrupt(t *testing.T) {
 	}
 	if status, state, readErr := Read(); status != StatusRunningAddressUnknown || state.PID != 0 || readErr != nil {
 		t.Fatalf("corrupt status=%v state=%+v err=%v", status, state, readErr)
+	}
+}
+
+// TestAcquireWaitsOutAReadersSharedLock は読み手の一瞬の共有ロックを稼働中のサーバーと
+// 誤判定しないことを確かめる。誤判定した serve は終了コード 0 で退き、`KeepAlive` の下でも
+// 再起動されないので、サーバーが 1 つも残らない。
+func TestAcquireWaitsOutAReadersSharedLock(t *testing.T) {
+	directory := t.TempDir()
+	t.Setenv(DirEnvironmentVariable, directory)
+	file, err := os.OpenFile(filepath.Join(directory, "serve.json"), os.O_CREATE|os.O_RDWR, 0o600)
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = file.Close() }()
+	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_SH|syscall.LOCK_NB); err != nil {
+		t.Fatal(err)
+	}
+	released := make(chan struct{})
+	go func() {
+		time.Sleep(acquireRetryInterval)
+		_ = syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+		close(released)
+	}()
+	lock, held, err := Acquire()
+	<-released
+	if err != nil || !held {
+		t.Fatalf("acquire held=%v err=%v", held, err)
+	}
+	if err := lock.Release(); err != nil {
+		t.Fatal(err)
 	}
 }
 

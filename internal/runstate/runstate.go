@@ -73,6 +73,14 @@ type Lock struct {
 // Path は保持しているロックファイルの位置を返す。
 func (l *Lock) Path() string { return l.path }
 
+// acquireAttempts と acquireRetryInterval は排他ロックの再試行を決める。読み手が Read の
+// 中で一瞬だけ取る共有ロックと衝突しただけで、別のサーバーが稼働中だと誤判定すると、
+// serve は終了コード 0 で退いてしまい launchd も再起動しない。
+const (
+	acquireAttempts      = 5
+	acquireRetryInterval = 20 * time.Millisecond
+)
+
 // Acquire は排他ロックを試みる。別のサーバーが保持していれば held=false を返し、
 // 呼び出し側は 2 つ目を起動しない。
 func Acquire() (lock *Lock, held bool, err error) {
@@ -84,14 +92,21 @@ func Acquire() (lock *Lock, held bool, err error) {
 	if err != nil {
 		return nil, false, err
 	}
-	if err := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB); err != nil {
-		_ = file.Close()
-		if errors.Is(err, syscall.EWOULDBLOCK) {
+	for attempt := 1; ; attempt++ {
+		lockErr := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
+		if lockErr == nil {
+			return &Lock{file: file, path: path}, true, nil
+		}
+		if !errors.Is(lockErr, syscall.EWOULDBLOCK) {
+			_ = file.Close()
+			return nil, false, fmt.Errorf("lock run state: %w", lockErr)
+		}
+		if attempt == acquireAttempts {
+			_ = file.Close()
 			return nil, false, nil
 		}
-		return nil, false, fmt.Errorf("lock run state: %w", err)
+		time.Sleep(acquireRetryInterval)
 	}
-	return &Lock{file: file, path: path}, true, nil
 }
 
 // Write は稼働情報を in-place で置き換える。rename は inode を差し替えて保持中の flock を
