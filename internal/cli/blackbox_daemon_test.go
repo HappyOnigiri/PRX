@@ -95,14 +95,14 @@ func TestBlackBoxDaemonCommandsStayInsideTheInjectedEnvironment(t *testing.T) {
 	status := run("daemon")
 	assertDirectObjectKeys(t, status, "supported", "installed", "plist_path", "plist_status", "running",
 		"pid", "address", "url", "started_at", "uptime_seconds", "version", "binary_matches", "log_path")
-	if !daemonSupported(t, status) {
-		// 非対応 OS には plist も launchctl もないので、状態の語彙ではなく変更系が
-		// daemon_unsupported で退くことだけを確かめる。
-		assertDaemonUnsupported(t, binary, environment, "daemon", "stop")
-		return
-	}
+	// plist_status は plist を持たない OS でも 3 値の unknown に寄せる。
 	if !strings.Contains(string(status["plist_status"]), "unknown") {
 		t.Fatalf("plist status before install=%s", status["plist_status"])
+	}
+	if !daemonSupported(t, status) {
+		// 非対応 OS では変更系が daemon_unsupported で退く。
+		assertDaemonUnsupported(t, binary, environment, "daemon", "stop")
+		return
 	}
 	assertDirectObjectKeys(t, run("daemon", "stop"), "stopped", "already_stopped")
 	// install は launchd が起こしたサーバーの記録を待つ。launchctl はスタブなので、

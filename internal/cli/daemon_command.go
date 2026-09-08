@@ -71,11 +71,17 @@ func (s *state) inspectDaemon() daemon.Status {
 }
 
 func daemonStatus(status daemon.Status) daemonStatusResponse {
+	// plist_status は current・stale・unknown の 3 値である。plist を持たない OS でも空を
+	// 返さず unknown に寄せて、`prx debug` の daemon セクションと語彙を揃える。
+	plistStatus := status.PlistStatus
+	if plistStatus == "" {
+		plistStatus = launchd.PlistUnknown
+	}
 	result := daemonStatusResponse{
 		Supported:     status.Supported,
 		Installed:     status.Installed,
 		PlistPath:     status.PlistPath,
-		PlistStatus:   string(status.PlistStatus),
+		PlistStatus:   string(plistStatus),
 		Running:       status.Running,
 		BinaryMatches: status.BinaryMatches,
 		LogPath:       status.LogPath,
