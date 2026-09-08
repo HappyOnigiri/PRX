@@ -22,6 +22,30 @@ func TestInspectReportsAnUnsupportedOperatingSystemWithoutTouchingTheDisk(t *tes
 	}
 }
 
+// TestInspectReportsARunningServerOnAnUnsupportedOperatingSystem は常駐が使えない OS でも
+// 稼働記録を報告することを確かめる。記録は flock だけに依存するので OS を問わない。
+func TestInspectReportsARunningServerOnAnUnsupportedOperatingSystem(t *testing.T) {
+	t.Setenv(runstate.DirEnvironmentVariable, filepath.Join(t.TempDir(), "run"))
+	lock, held, err := runstate.Acquire()
+	if err != nil || !held {
+		t.Fatalf("acquire held=%v err=%v", held, err)
+	}
+	defer func() { _ = lock.Release() }()
+	if err := lock.Write(runstate.State{
+		PID: os.Getpid(), Address: "127.0.0.1:7331", URL: "http://127.0.0.1:7331",
+		StartedAt: time.Now().UTC(), Version: "1.2.3",
+	}); err != nil {
+		t.Fatal(err)
+	}
+	status := Inspect(&launchd.Manager{}, "1.2.3")
+	if status.Supported || status.Installed || status.PlistPath != "" {
+		t.Fatalf("status=%+v", status)
+	}
+	if !status.Running || status.State.URL != "http://127.0.0.1:7331" || status.Error != "" {
+		t.Fatalf("status=%+v", status)
+	}
+}
+
 // TestBinaryMatchesTreatsALaterExecutableAsAReplacement は稼働中サーバーの版ずれを
 // 検出する。新しい CLI がデータベースを移行した後も古いサーバーが応答し続けるのを
 // 読み手に知らせるための判定である。

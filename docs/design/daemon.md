@@ -1,7 +1,8 @@
 # 常駐サーバの方針
 
 `prx serve` を常駐させる目的は、ログイン後に何も打たずに WebUI へ到達できることである。
-対象は macOS だけで、常駐の仕組みは LaunchAgent が所有する。他の OS では `prx daemon` と `prx open` が `daemon_unsupported` を返し、`prx serve` を直接使う。
+対象は macOS だけで、常駐の仕組みは LaunchAgent が所有する。他の OS では常駐を操作する `prx daemon` のサブコマンドと `prx open` が `daemon_unsupported` を返し、`prx serve` を直接使う。
+状態を表示する `prx daemon` は他の OS でも成功する。稼働記録は flock だけに依存するので、`prx serve` の稼働は OS を問わず報告できる事実である。plist に由来するフィールドだけが空になる。
 
 ## 起動の所有者は launchd である
 

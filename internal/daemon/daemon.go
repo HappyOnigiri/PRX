@@ -34,9 +34,32 @@ type Status struct {
 // Inspect は launchd と稼働記録を 1 度だけ読む。
 func Inspect(manager *launchd.Manager, version string) Status {
 	result := Status{Supported: manager.Supported(), BinaryMatches: true}
-	if !result.Supported {
+	if result.Supported {
+		inspectLaunchAgent(manager, &result)
+	}
+	// 稼働記録は flock だけに依存するので OS を問わず読む。常駐が使えない OS でも
+	// `prx serve` は稼働記録を書き、その稼働は報告できる事実である。
+	running, state, err := runstate.Read()
+	if err != nil {
+		result.Error = err.Error()
 		return result
 	}
+	switch running {
+	case runstate.StatusRunning:
+		result.Running = true
+		result.State = state
+		result.BinaryMatches = binaryMatches(state, version)
+	case runstate.StatusRunningAddressUnknown:
+		result.Running = true
+		result.AddressUnknown = true
+	case runstate.StatusNotRunning:
+	}
+	return result
+}
+
+// inspectLaunchAgent は launchd 由来のフィールドだけを埋める。plist を持つのは常駐が
+// 使える OS だけである。
+func inspectLaunchAgent(manager *launchd.Manager, result *Status) {
 	if path, err := manager.PlistPath(); err == nil {
 		result.PlistPath = path
 	} else {
@@ -55,22 +78,6 @@ func Inspect(manager *launchd.Manager, version string) Status {
 	default:
 		result.Error = err.Error()
 	}
-	running, state, err := runstate.Read()
-	if err != nil {
-		result.Error = err.Error()
-		return result
-	}
-	switch running {
-	case runstate.StatusRunning:
-		result.Running = true
-		result.State = state
-		result.BinaryMatches = binaryMatches(state, version)
-	case runstate.StatusRunningAddressUnknown:
-		result.Running = true
-		result.AddressUnknown = true
-	case runstate.StatusNotRunning:
-	}
-	return result
 }
 
 // binaryMatches は稼働中サーバーが今のバイナリで動いているかを返す。記録された実行
