@@ -44,6 +44,20 @@ The port defaults to 7331 and falls back to another one when that is taken, so r
 `prx serve --demo` starts a demo loaded with sample data.
 It leaves your own data untouched, so use it to try PRX first.
 
+### Uninstall
+
+To stop PRX and remove the standard installation, run:
+
+```sh
+curl -fsSL https://github.com/HappyOnigiri/PRX/releases/latest/download/uninstall.sh | bash
+```
+
+The script asks for confirmation, stops the standard daemon, removes its LaunchAgent, and deletes only `~/.local/bin/prx`.
+Use `bash -s -- --yes` for a non-interactive run.
+Configuration, SQLite data, run state, logs, shell configuration, and binaries installed elsewhere are kept.
+Processes started with `prx serve --addr`, `prx serve --demo`, or a custom `PRX_RUN_DIR` must be stopped manually.
+The script prints commands for removing retained data when it is no longer needed.
+
 To synchronize with GitHub, supply a credential through `prx config`, `GITHUB_TOKEN`, `GH_TOKEN`, or an authenticated `gh` CLI.
 Tasks and dependencies work the same way without it.
 

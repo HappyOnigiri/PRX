@@ -43,6 +43,20 @@ prx open           # 稼働中のサーバーをブラウザで開く
 `prx serve --demo` は、サンプルデータの入ったデモを起動します。
 自分のデータには影響しないので、まず触ってみたいときに使えます。
 
+### アンインストール
+
+PRX を停止して標準のインストールを削除するときは、次を実行します。
+
+```sh
+curl -fsSL https://github.com/HappyOnigiri/PRX/releases/latest/download/uninstall.sh | bash
+```
+
+スクリプトは確認を求め、標準の daemon を停止して LaunchAgent を解除した後、`~/.local/bin/prx` だけを削除します。
+非対話で実行する場合は `bash -s -- --yes` を使います。
+設定、SQLite のデータ、稼働記録、ログ、シェル設定、別の場所に置いたバイナリは残します。
+`prx serve --addr`、`prx serve --demo`、独自の `PRX_RUN_DIR` を使うプロセスは手動で停止してください。
+残したデータが不要になったときに削除するコマンドもスクリプトが表示します。
+
 GitHub と同期するには、`prx config`、`GITHUB_TOKEN`、`GH_TOKEN`、認証済みの `gh` CLI のいずれかで認証情報を用意してください。
 同期しない場合でも、タスクと依存関係の管理はそのまま使えます。
 
