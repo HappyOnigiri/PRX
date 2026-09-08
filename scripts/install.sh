@@ -23,8 +23,11 @@ main() {
   local install_dir="$HOME/.local/bin" destination="$HOME/.local/bin/prx"
   local asset=prx-darwin-arm64
   local base_url="https://github.com/HappyOnigiri/PRX/releases/download/$release_version"
-  local checksum checksum_name actual
+  local checksum checksum_name actual daemon_status='' initial_install=false
   [ ! -d "$destination" ] || fail "$destination is a directory"
+  if [ ! -e "$destination" ]; then
+    initial_install=true
+  fi
 
   scratch=$(mktemp -d "${TMPDIR:-/tmp}/prx-install.XXXXXX")
   staged=''
@@ -54,12 +57,31 @@ main() {
   staged=''
   echo "Installed prx $release_version to $destination"
 
-  echo 'To use prx in this terminal, run:'
-  # 利用者が実行するコマンドを展開せず表示する。
-  # shellcheck disable=SC2016
-  echo '  export PATH="$HOME/.local/bin:$PATH"'
-  echo 'Add that line to your shell configuration (for example, ~/.zshrc) for new terminals.'
-  echo 'Then run prx serve to start the server at http://127.0.0.1:7331.'
+  case ":${PATH:-}:" in
+    *":$install_dir:"*) ;;
+    *)
+      echo 'To use prx in this terminal, run:'
+      # 利用者が実行するコマンドを展開せず表示する。
+      # shellcheck disable=SC2016
+      echo '  export PATH="$HOME/.local/bin:$PATH"'
+      echo 'Add that line to your shell configuration (for example, ~/.zshrc) for new terminals.'
+      ;;
+  esac
+  if [ "$initial_install" = true ]; then
+    daemon_status=$(PATH="$install_dir:$PATH" "$destination" daemon --json 2>/dev/null) || daemon_status=''
+  fi
+  if [[ "$daemon_status" == *'"installed":false'* ]]; then
+    # 初回だけ TUI を起動し、LaunchAgent の導入とブラウザを開くかを選べるようにする。
+    # curl | bash では prx 側が /dev/tty を使う。端末が無い環境では従来の案内へ戻す。
+    if ! PATH="$install_dir:$PATH" "$destination" setup; then
+      echo 'To start PRX at login, run:'
+      echo '  prx daemon install'
+      echo 'To open the server in your browser, run:'
+      echo '  prx open'
+    fi
+  else
+    echo 'Then run prx serve to start the server at http://127.0.0.1:7331.'
+  fi
 }
 
 main "$@"
