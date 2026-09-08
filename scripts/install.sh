@@ -23,8 +23,11 @@ main() {
   local install_dir="$HOME/.local/bin" destination="$HOME/.local/bin/prx"
   local asset=prx-darwin-arm64
   local base_url="https://github.com/HappyOnigiri/PRX/releases/download/$release_version"
-  local checksum checksum_name actual
+  local checksum checksum_name actual daemon_status='' initial_install=false
   [ ! -d "$destination" ] || fail "$destination is a directory"
+  if [ ! -e "$destination" ]; then
+    initial_install=true
+  fi
 
   scratch=$(mktemp -d "${TMPDIR:-/tmp}/prx-install.XXXXXX")
   staged=''
@@ -59,7 +62,16 @@ main() {
   # shellcheck disable=SC2016
   echo '  export PATH="$HOME/.local/bin:$PATH"'
   echo 'Add that line to your shell configuration (for example, ~/.zshrc) for new terminals.'
-  echo 'Then run prx serve to start the server at http://127.0.0.1:7331.'
+  if [ "$initial_install" = true ]; then
+    daemon_status=$(PATH="$install_dir:$PATH" "$destination" daemon --json 2>/dev/null) || daemon_status=''
+  fi
+  if [[ "$daemon_status" == *'"installed":false'* ]]; then
+    echo 'To start PRX at login, run:'
+    echo '  prx daemon install'
+    echo 'Then run prx open to open the server in your browser.'
+  else
+    echo 'Then run prx serve to start the server at http://127.0.0.1:7331.'
+  fi
 }
 
 main "$@"
