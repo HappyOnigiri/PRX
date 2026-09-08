@@ -47,6 +47,35 @@ describe("EditProjectDialog", () => {
     }
   });
 
+  it("warns before dropping unsaved project fields", () => {
+    const onClose = vi.fn();
+    render(
+      <EditProjectDialog
+        project={makeProject({ id: "P-1", title: "Delivery" })}
+        referenceCount={0}
+        onClose={onClose}
+        onDeleted={vi.fn()}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "Save project" })).toBeDisabled();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(onClose).toHaveBeenCalledOnce();
+
+    onClose.mockClear();
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "Delivery platform" },
+    });
+    expect(screen.getByRole("button", { name: "Save project" })).toBeEnabled();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("dialog", { name: "Discard unsaved changes?" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
   it("submits the editable fields of an active project", async () => {
     const onClose = vi.fn();
     render(

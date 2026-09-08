@@ -47,10 +47,14 @@ test("keeps the bilingual demo reset warning visible", async ({ page }) => {
 
   await openDisplaySettings(page);
   await page.getByLabel("Display theme").selectOption("dark");
-  await expect(banner).toBeVisible();
   await page.getByLabel("Display language").selectOption("ja");
+  // 表示の設定はフッタの保存 1 つで適用する。
+  await page
+    .getByRole("dialog", { name: "Settings" })
+    .getByRole("button", { name: "Save" })
+    .click();
   await expect(banner).toBeVisible();
-  await page.getByRole("button", { name: "完了" }).click();
+  await page.getByRole("button", { name: "閉じる" }).first().click();
 
   await page.setViewportSize({ width: 320, height: 720 });
   await page.evaluate(() => {

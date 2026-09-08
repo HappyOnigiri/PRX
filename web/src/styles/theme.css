@@ -24,6 +24,12 @@
   --status-done: light-dark(#8250df, #ab7df8);
   --status-inactive: var(--border-strong);
   --scrim: light-dark(rgb(16 20 26 / 50%), rgb(0 0 0 / 60%));
+
+  /* 保存コントロールの緑は押せることを示す色で、task のステータスではない。
+     ステータスの語彙と混ざらないよう、別のトークンとして持つ。 */
+  --affirm: light-dark(#0c7150, #2f9c73);
+  --affirm-hover: light-dark(#095940, #3cb283);
+  --affirm-text: #fff;
 }
 
 :root[data-theme="light"] {

@@ -1,9 +1,8 @@
-import { Save, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { unfinishedTaskCount } from "../feature-status";
-import { formValue } from "../form";
 import {
   FeatureStatus,
   type Feature,
@@ -16,6 +15,8 @@ import { IconButton } from "./IconButton";
 import { LifecycleActions, type LifecycleLabels } from "./LifecycleActions";
 import { MutationError } from "./MutationError";
 import { ProjectSelectField } from "./ProjectSelectField";
+import { TitleDescriptionFields } from "./TitleDescriptionFields";
+import { DiscardChangesDialog, SaveButton } from "./UnsavedChanges";
 
 interface EditFeatureDialogProps {
   feature: Feature;
@@ -24,7 +25,14 @@ interface EditFeatureDialogProps {
   onDeleted: () => void;
 }
 
-type Confirmation = "archive" | "complete" | "delete";
+type Confirmation = "archive" | "complete" | "delete" | "discard";
+
+interface FeatureDraft {
+  title: string;
+  description: string;
+  status: FeatureStatus;
+  projectId: string;
+}
 
 // 確認が送信の代わりになるため、送信時点のフォームの値は確認かキャンセルまで
 // 保持する。
@@ -38,9 +46,20 @@ export function EditFeatureDialog({
 }: EditFeatureDialogProps) {
   const [confirmation, setConfirmation] = useState<Confirmation>();
   const [pendingUpdate, setPendingUpdate] = useState<FeatureUpdate>();
+  const [draft, setDraft] = useState<FeatureDraft>(() => ({
+    title: feature.title,
+    description: feature.description,
+    status: feature.status,
+    projectId: feature.projectId,
+  }));
   const updateFeature = useDomainMutation(mutations.updateFeature);
   const deleteFeature = useDomainMutation(mutations.deleteFeature);
   const unfinished = unfinishedTaskCount(feature);
+  const dirty =
+    draft.title !== feature.title ||
+    draft.description !== feature.description ||
+    draft.status !== feature.status ||
+    draft.projectId !== feature.projectId;
 
   async function applyUpdate(update: FeatureUpdate) {
     try {
@@ -53,16 +72,8 @@ export function EditFeatureDialog({
 
   async function submitFeature(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const status: FeatureStatus = Number(form.get("status"));
-    const update: FeatureUpdate = {
-      id: feature.id,
-      title: formValue(form, "title"),
-      description: formValue(form, "description"),
-      status,
-      projectId: formValue(form, "projectId"),
-    };
-    if (status === FeatureStatus.COMPLETED && unfinished > 0) {
+    const update: FeatureUpdate = { id: feature.id, ...draft };
+    if (draft.status === FeatureStatus.COMPLETED && unfinished > 0) {
       setPendingUpdate(update);
       setConfirmation("complete");
       return;
@@ -80,11 +91,17 @@ export function EditFeatureDialog({
         <FeatureDialogContent
           feature={feature}
           projects={projects}
+          draft={draft}
+          dirty={dirty}
+          onDraftChange={setDraft}
           updatePending={updateFeature.isPending}
           deletePending={deleteFeature.isPending}
           updateError={updateFeature.error}
           onSubmit={submitFeature}
-          onClose={onClose}
+          onClose={() => {
+            if (dirty) setConfirmation("discard");
+            else onClose();
+          }}
           onArchive={() => {
             setConfirmation("archive");
           }}
@@ -124,6 +141,7 @@ export function EditFeatureDialog({
             onDeleted();
           })();
         }}
+        onDiscard={onClose}
       />
     </>
   );
@@ -132,6 +150,9 @@ export function EditFeatureDialog({
 interface FeatureDialogContentProps {
   feature: Feature;
   projects: Project[];
+  draft: FeatureDraft;
+  dirty: boolean;
+  onDraftChange: (next: FeatureDraft) => void;
   updatePending: boolean;
   deletePending: boolean;
   updateError: Error | null;
@@ -236,6 +257,9 @@ function ReadOnlyFeatureDialog({
 function ActiveFeatureDialog({
   feature,
   projects,
+  draft,
+  dirty,
+  onDraftChange,
   updatePending,
   deletePending,
   updateError,
@@ -255,17 +279,16 @@ function ActiveFeatureDialog({
       <header>
         <h2>{t("featureEdit.title")}</h2>
       </header>
-      <label>
-        {t("common.title")}
-        <input name="title" required defaultValue={feature.title} />
-      </label>
-      <label>
-        {t("common.description")}
-        <textarea name="description" defaultValue={feature.description} />
-      </label>
+      <TitleDescriptionFields draft={draft} onChange={onDraftChange} />
       <label>
         {t("common.status")}
-        <select name="status" defaultValue={feature.status}>
+        <select
+          name="status"
+          value={draft.status}
+          onChange={(event) => {
+            onDraftChange({ ...draft, status: Number(event.target.value) });
+          }}
+        >
           {[
             FeatureStatus.AUTO,
             FeatureStatus.ACTIVE,
@@ -282,6 +305,10 @@ function ActiveFeatureDialog({
       <ProjectSelectField
         projects={projects}
         currentProjectId={feature.projectId}
+        value={draft.projectId}
+        onChange={(projectId) => {
+          onDraftChange({ ...draft, projectId });
+        }}
       />
       <MutationError error={updateError} />
       <LifecycleActions
@@ -298,12 +325,11 @@ function ActiveFeatureDialog({
           variant="secondary"
           onClick={onClose}
         />
-        <IconButton
-          icon={Save}
+        <SaveButton
+          dirty={dirty}
           label={t("featureEdit.submit")}
-          variant="primary"
+          pending={updatePending}
           type="submit"
-          disabled={updatePending}
         />
       </footer>
     </form>
@@ -322,6 +348,7 @@ function LifecycleConfirmation({
   onArchive,
   onComplete,
   onDelete,
+  onDiscard,
 }: {
   confirmation: Confirmation | undefined;
   feature: Feature;
@@ -334,9 +361,12 @@ function LifecycleConfirmation({
   onArchive: () => void;
   onComplete: () => void;
   onDelete: () => void;
+  onDiscard: () => void;
 }) {
   const { t } = useTranslation();
   if (!confirmation) return null;
+  if (confirmation === "discard")
+    return <DiscardChangesDialog onCancel={onCancel} onConfirm={onDiscard} />;
   if (confirmation === "archive")
     return (
       <ConfirmationDialog

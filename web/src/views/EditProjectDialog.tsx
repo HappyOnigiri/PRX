@@ -1,14 +1,15 @@
-import { Save, X } from "lucide-react";
+import { X } from "lucide-react";
 import { useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
-import { formValue } from "../form";
 import type { Project } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { IconButton } from "./IconButton";
 import { LifecycleActions, type LifecycleLabels } from "./LifecycleActions";
 import { MutationError } from "./MutationError";
+import { TitleDescriptionFields } from "./TitleDescriptionFields";
+import { DiscardChangesDialog, SaveButton } from "./UnsavedChanges";
 
 interface EditProjectDialogProps {
   project: Project;
@@ -19,7 +20,12 @@ interface EditProjectDialogProps {
   onDeleted: () => void;
 }
 
-type Confirmation = "archive" | "delete";
+type Confirmation = "archive" | "delete" | "discard";
+
+interface ProjectDraft {
+  title: string;
+  description: string;
+}
 
 type ProjectUpdate = Parameters<typeof mutations.updateProject>[0];
 
@@ -30,8 +36,14 @@ export function EditProjectDialog({
   onDeleted,
 }: EditProjectDialogProps) {
   const [confirmation, setConfirmation] = useState<Confirmation>();
+  const [draft, setDraft] = useState<ProjectDraft>(() => ({
+    title: project.title,
+    description: project.description,
+  }));
   const updateProject = useDomainMutation(mutations.updateProject);
   const deleteProject = useDomainMutation(mutations.deleteProject);
+  const dirty =
+    draft.title !== project.title || draft.description !== project.description;
 
   async function applyUpdate(update: ProjectUpdate) {
     try {
@@ -44,12 +56,7 @@ export function EditProjectDialog({
 
   async function submitProject(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    await applyUpdate({
-      id: project.id,
-      title: formValue(form, "title"),
-      description: formValue(form, "description"),
-    });
+    await applyUpdate({ id: project.id, ...draft });
   }
 
   return (
@@ -61,11 +68,17 @@ export function EditProjectDialog({
       >
         <ProjectDialogContent
           project={project}
+          draft={draft}
+          dirty={dirty}
+          onDraftChange={setDraft}
           updatePending={updateProject.isPending}
           deletePending={deleteProject.isPending}
           updateError={updateProject.error}
           onSubmit={submitProject}
-          onClose={onClose}
+          onClose={() => {
+            if (dirty) setConfirmation("discard");
+            else onClose();
+          }}
           onArchive={() => {
             setConfirmation("archive");
           }}
@@ -88,6 +101,7 @@ export function EditProjectDialog({
         onCancel={() => {
           setConfirmation(undefined);
         }}
+        onDiscard={onClose}
         onArchive={() => {
           void applyUpdate({ id: project.id, archived: true });
         }}
@@ -115,6 +129,7 @@ function ProjectLifecycleConfirmation({
   updateError,
   deleteError,
   onCancel,
+  onDiscard,
   onArchive,
   onDelete,
 }: {
@@ -126,11 +141,14 @@ function ProjectLifecycleConfirmation({
   updateError: Error | null;
   deleteError: Error | null;
   onCancel: () => void;
+  onDiscard: () => void;
   onArchive: () => void;
   onDelete: () => void;
 }) {
   const { t } = useTranslation();
   if (!confirmation) return null;
+  if (confirmation === "discard")
+    return <DiscardChangesDialog onCancel={onCancel} onConfirm={onDiscard} />;
   if (confirmation === "archive")
     return (
       <ConfirmationDialog
@@ -161,6 +179,9 @@ function ProjectLifecycleConfirmation({
 
 interface ProjectDialogContentProps {
   project: Project;
+  draft: ProjectDraft;
+  dirty: boolean;
+  onDraftChange: (next: ProjectDraft) => void;
   updatePending: boolean;
   deletePending: boolean;
   updateError: Error | null;
@@ -245,7 +266,9 @@ function ArchivedProjectDialog({
 }
 
 function ActiveProjectDialog({
-  project,
+  draft,
+  dirty,
+  onDraftChange,
   updatePending,
   deletePending,
   updateError,
@@ -265,14 +288,7 @@ function ActiveProjectDialog({
       <header>
         <h2>{t("projectEdit.title")}</h2>
       </header>
-      <label>
-        {t("common.title")}
-        <input name="title" required defaultValue={project.title} />
-      </label>
-      <label>
-        {t("common.description")}
-        <textarea name="description" defaultValue={project.description} />
-      </label>
+      <TitleDescriptionFields draft={draft} onChange={onDraftChange} />
       <MutationError error={updateError} />
       <LifecycleActions
         labels={labels}
@@ -288,12 +304,11 @@ function ActiveProjectDialog({
           variant="secondary"
           onClick={onClose}
         />
-        <IconButton
-          icon={Save}
+        <SaveButton
+          dirty={dirty}
           label={t("projectEdit.submit")}
-          variant="primary"
+          pending={updatePending}
           type="submit"
-          disabled={updatePending}
         />
       </footer>
     </form>

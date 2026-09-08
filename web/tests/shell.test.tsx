@@ -151,6 +151,9 @@ describe("AppShell", () => {
         target: { value: "ja" },
       },
     );
+    // 表示の設定も他のタブと同じく、フッタの保存を押すまで適用されない。
+    expect(document.documentElement.lang).not.toBe("ja");
+    fireEvent.click(screen.getByRole("button", { name: "Save" }));
     await waitFor(() => {
       expect(document.documentElement.lang).toBe("ja");
     });
@@ -162,7 +165,11 @@ describe("AppShell", () => {
     fireEvent.change(screen.getByRole("combobox", { name: "表示テーマ" }), {
       target: { value: "dark" },
     });
-    expect(document.documentElement.dataset["theme"]).toBe("dark");
+    expect(document.documentElement.dataset["theme"]).toBeUndefined();
+    fireEvent.click(screen.getByRole("button", { name: "保存" }));
+    await waitFor(() => {
+      expect(document.documentElement.dataset["theme"]).toBe("dark");
+    });
     expect(
       JSON.parse(localStorage.getItem("prx.webui.settings") ?? "{}"),
     ).toEqual({ language: "ja", theme: "dark" });
@@ -243,7 +250,7 @@ describe("AppShell", () => {
     expect(
       screen.getByRole("dialog", { name: "Settings" }),
     ).toBeInTheDocument();
-    fireEvent.click(screen.getByRole("button", { name: "Done" }));
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(
       screen.queryByRole("dialog", { name: "Settings" }),
     ).not.toBeInTheDocument();

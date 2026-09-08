@@ -312,6 +312,7 @@ function WorkspaceContent(props: WorkspaceContentProps) {
         />
         {props.selectedTask && (
           <TaskInspector
+            key={props.selectedTask.id}
             task={props.selectedTask}
             tasks={props.tasks}
             pullRequest={props.pullRequests.get(props.selectedTask.id)}

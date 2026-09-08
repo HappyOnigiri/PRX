@@ -69,9 +69,21 @@
 
 .inspector form,
 .inspector section,
+.inspector-task-fields,
 .inspector-values {
   padding: 16px;
   border-bottom: 1px solid var(--border);
+}
+
+/* 保存はインスペクタで 1 つなので、下端に固定して常に届く位置に置く。 */
+.inspector-footer {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  justify-content: flex-end;
+  padding: 12px 16px;
+  border-top: 1px solid var(--border);
+  background: var(--surface);
 }
 
 .inspector-read-only {

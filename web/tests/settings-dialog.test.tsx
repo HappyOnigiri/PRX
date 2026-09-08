@@ -1,9 +1,9 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
-  waitFor,
   within,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -191,215 +191,252 @@ describe("SettingsDialog", () => {
     }
   });
 
-  it("submits host changes, reorders credentials, and keeps an omitted inline token", async () => {
+  function hostFieldset(name: string) {
+    const legend = screen.getByText(`Settings for ${name}`);
+    const fieldset = legend.closest("fieldset");
+    if (!(fieldset instanceof HTMLFieldSetElement))
+      throw new Error(`fieldset missing for ${name}`);
+    return fieldset;
+  }
+
+  function authFieldset(name: string) {
+    const legend = screen.getByText(`Settings for ${name}`);
+    const fieldset = legend.closest("fieldset");
+    if (!(fieldset instanceof HTMLFieldSetElement))
+      throw new Error(`fieldset missing for ${name}`);
+    return fieldset;
+  }
+
+  function saveSettings() {
+    return act(() => {
+      fireEvent.click(screen.getByRole("button", { name: "Save" }));
+      return Promise.resolve();
+    });
+  }
+
+  it("writes every settings draft in one save", async () => {
     const onClose = vi.fn();
     render(<SettingsDialog onClose={onClose} />);
 
     expect(
       screen.getByRole("dialog", { name: "Settings" }),
     ).toBeInTheDocument();
+    // 保存済みの token はサーバーが返さないので、行は空欄と手がかりだけを出す。
     expect(screen.getByText(/gith…cret/)).toBeInTheDocument();
     expect(
       screen.queryByDisplayValue("github_pat_rpc_secret"),
     ).not.toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
 
-    const syncForm = screen
-      .getByLabelText("Interval in seconds")
-      .closest("form");
-    if (!(syncForm instanceof HTMLFormElement))
-      throw new Error("sync form missing");
-    fireEvent.change(within(syncForm).getByLabelText("Interval in seconds"), {
+    fireEvent.change(screen.getByLabelText("Interval in seconds"), {
       target: { value: "600" },
     });
-    fireEvent.submit(syncForm);
-    await waitFor(() => {
-      expect(settingsMocks.mutations.updateSync.mutate).toHaveBeenCalledWith(
-        600n,
-      );
-    });
 
-    const hostForm = screen
-      .getByRole("heading", { name: "Register a host" })
-      .closest("form");
-    if (!(hostForm instanceof HTMLFormElement))
-      throw new Error("host form missing");
-    fireEvent.change(within(hostForm).getByLabelText("Host"), {
-      target: { value: "ghe-two.example.com" },
-    });
-    fireEvent.submit(hostForm);
-    await waitFor(() => {
-      expect(settingsMocks.mutations.addHost.mutateAsync).toHaveBeenCalledWith({
-        host: "ghe-two.example.com",
-        webUrl: "",
-        apiUrl: "",
-        uploadUrl: "",
-        graphqlUrl: "",
-      });
-    });
-
-    const hostRow = screen
-      .getByText("ghe.example.com", { selector: "strong" })
-      .closest(".settings-row");
-    if (!(hostRow instanceof HTMLElement)) throw new Error("host row missing");
-    fireEvent.click(
-      within(hostRow).getByRole("button", { name: "Edit ghe.example.com" }),
-    );
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    fireEvent.click(
-      within(hostRow).getByRole("button", { name: "Edit ghe.example.com" }),
-    );
-    const editHostForm = screen
-      .getByRole("heading", { name: "Edit host" })
-      .closest("form");
-    if (!(editHostForm instanceof HTMLFormElement)) {
-      throw new Error("host edit form missing");
-    }
-    fireEvent.change(within(editHostForm).getByLabelText("Host"), {
+    const ghe = hostFieldset("ghe.example.com");
+    fireEvent.change(within(ghe).getByLabelText("Host"), {
       target: { value: "ghe-renamed.example.com" },
     });
-    fireEvent.change(within(editHostForm).getByLabelText("Web URL"), {
+    fireEvent.change(within(ghe).getByLabelText("Web URL"), {
       target: { value: "https://ghe-renamed.example.com" },
     });
-    fireEvent.change(within(editHostForm).getByLabelText("API URL"), {
+    fireEvent.change(within(ghe).getByLabelText("API URL"), {
       target: { value: "https://ghe-renamed.example.com/api/v3/" },
     });
-    fireEvent.change(within(editHostForm).getByLabelText("Upload URL"), {
+    fireEvent.change(within(ghe).getByLabelText("Upload URL"), {
       target: { value: "https://ghe-renamed.example.com/api/uploads/" },
     });
-    fireEvent.change(within(editHostForm).getByLabelText("GraphQL URL"), {
+    fireEvent.change(within(ghe).getByLabelText("GraphQL URL"), {
       target: { value: "https://ghe-renamed.example.com/api/graphql" },
     });
-    fireEvent.submit(editHostForm);
-    await waitFor(() => {
-      expect(
-        settingsMocks.mutations.updateHost.mutateAsync,
-      ).toHaveBeenCalledWith({
+
+    fireEvent.click(screen.getByRole("button", { name: "Register a host" }));
+    const added = hostFieldset("New host");
+    fireEvent.change(within(added).getByLabelText("Host"), {
+      target: { value: "ghe-two.example.com" },
+    });
+
+    fireEvent.change(
+      within(authFieldset("ghe")).getByLabelText("Environment variable"),
+      { target: { value: "GHE_TOKEN" } },
+    );
+
+    // 認証の並びは上から試す順序なので、移動もフッタの保存でまとめて書く。
+    fireEvent.click(screen.getByRole("button", { name: "Move work down" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move work up" }));
+    fireEvent.click(screen.getByRole("button", { name: "Move ghe up" }));
+
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+    await saveSettings();
+
+    expect(settingsMocks.mutations.updateSync.mutateAsync).toHaveBeenCalledWith(
+      600n,
+    );
+    expect(settingsMocks.mutations.addHost.mutateAsync).toHaveBeenCalledWith({
+      host: "ghe-two.example.com",
+      webUrl: "",
+      apiUrl: "",
+      uploadUrl: "",
+      graphqlUrl: "",
+    });
+    expect(settingsMocks.mutations.updateHost.mutateAsync).toHaveBeenCalledWith(
+      {
         host: "ghe.example.com",
         newHost: "ghe-renamed.example.com",
         webUrl: "https://ghe-renamed.example.com",
         apiUrl: "https://ghe-renamed.example.com/api/v3/",
         uploadUrl: "https://ghe-renamed.example.com/api/uploads/",
         graphqlUrl: "https://ghe-renamed.example.com/api/graphql",
-      });
-    });
-    fireEvent.click(
-      within(hostRow).getByRole("button", {
-        name: "Remove ghe.example.com",
-      }),
+      },
     );
-    await waitFor(() => {
-      expect(
-        settingsMocks.mutations.deleteHost.mutateAsync,
-      ).toHaveBeenCalledWith("ghe.example.com");
-    });
-
-    const editButtons = screen.getAllByRole("button", { name: /^Edit / });
-    const workEditButton = editButtons[2];
-    if (!workEditButton) throw new Error("work edit button missing");
-    fireEvent.click(workEditButton);
-    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
-    const refreshedEditButtons = screen.getAllByRole("button", {
-      name: /^Edit /,
-    });
-    const refreshedWorkEditButton = refreshedEditButtons[2];
-    if (!refreshedWorkEditButton) throw new Error("work edit button missing");
-    fireEvent.click(refreshedWorkEditButton);
-    const authForm = screen
-      .getByRole("heading", { name: "Edit credential" })
-      .closest("form");
-    if (!(authForm instanceof HTMLFormElement))
-      throw new Error("auth form missing");
-    const token = within(authForm).getByLabelText("Inline token");
-    expect(token).toHaveAttribute("type", "password");
-    expect(token).toHaveValue("");
-    fireEvent.submit(authForm);
-    await waitFor(() => {
-      expect(
-        settingsMocks.mutations.updateAuth.mutateAsync,
-      ).toHaveBeenCalledWith({
-        id: "work",
-        host: "github.com",
-        type: GithubAuthMethodType.INLINE,
+    expect(
+      settingsMocks.mutations.reorderAuth.mutateAsync,
+    ).toHaveBeenCalledWith(["ghe", "work"]);
+    // ホスト名を変えたので、そのホストを指していた認証も付け替えて送る。
+    expect(settingsMocks.mutations.updateAuth.mutateAsync).toHaveBeenCalledWith(
+      {
+        id: "ghe",
+        newId: "ghe",
+        host: "ghe-renamed.example.com",
+        type: GithubAuthMethodType.ENVIRONMENT,
         account: "",
         service: "",
-        variable: "",
+        variable: "GHE_TOKEN",
         user: "",
-      });
-    });
-
-    const firstMoveDown = screen.getByRole("button", {
-      name: "Move work down",
-    });
-    fireEvent.click(firstMoveDown);
-    await waitFor(() => {
-      expect(
-        settingsMocks.mutations.reorderAuth.mutateAsync,
-      ).toHaveBeenCalledWith(["ghe", "work"]);
-    });
-    const secondMoveUp = screen.getByRole("button", {
-      name: "Move ghe up",
-    });
-    fireEvent.click(secondMoveUp);
-    await waitFor(() => {
-      expect(
-        settingsMocks.mutations.reorderAuth.mutateAsync,
-      ).toHaveBeenLastCalledWith(["ghe", "work"]);
-    });
-    const removeButtons = screen.getAllByRole("button", { name: /^Remove / });
-    const lastRemove = removeButtons.at(-1);
-    if (!lastRemove) throw new Error("remove button missing");
-    fireEvent.click(lastRemove);
-    fireEvent.click(screen.getByRole("button", { name: "Done" }));
-    expect(onClose).toHaveBeenCalledOnce();
+      },
+    );
+    // token を触っていない inline の認証は変更がないので送らない。空の token を
+    // 送ると保存済みの値を消してしまう。
+    expect(
+      settingsMocks.mutations.updateAuth.mutateAsync,
+    ).toHaveBeenCalledTimes(1);
+    expect(screen.getByText("Saved")).toBeInTheDocument();
   });
 
-  it("switches the credential form by source and sends a new inline token", async () => {
+  it("removes a host and its credential in the same save", async () => {
     render(<SettingsDialog onClose={vi.fn()} />);
-    const authForm = screen
-      .getByRole("heading", { name: "Register a credential" })
-      .closest("form");
-    if (!(authForm instanceof HTMLFormElement))
-      throw new Error("auth form missing");
-    const type = within(authForm).getByLabelText("Credential source");
-    fireEvent.change(within(authForm).getByLabelText("Host"), {
-      target: { value: "ghe.example.com" },
+
+    const ghe = hostFieldset("ghe.example.com");
+    fireEvent.click(
+      within(ghe).getByRole("button", { name: "Remove ghe.example.com" }),
+    );
+    fireEvent.click(screen.getByRole("button", { name: "Remove ghe" }));
+    await saveSettings();
+
+    // 認証を先に消してから host を消す。逆に送ると、まだ参照されている host の
+    // 削除をサーバーが拒む。
+    expect(settingsMocks.mutations.deleteAuth.mutateAsync).toHaveBeenCalledWith(
+      "ghe",
+    );
+    expect(settingsMocks.mutations.deleteHost.mutateAsync).toHaveBeenCalledWith(
+      "ghe.example.com",
+    );
+    const deleteAuthOrder =
+      settingsMocks.mutations.deleteAuth.mutateAsync.mock
+        .invocationCallOrder[0];
+    const deleteHostOrder =
+      settingsMocks.mutations.deleteHost.mutateAsync.mock
+        .invocationCallOrder[0];
+    expect(deleteAuthOrder).toBeLessThan(deleteHostOrder ?? 0);
+  });
+
+  // github.com はサーバーが常に持つので、行ごと消せてはならない。
+  it("keeps the github.com row undeletable", () => {
+    render(<SettingsDialog onClose={vi.fn()} />);
+    const primary = hostFieldset("github.com");
+    expect(
+      within(primary).getByRole("button", { name: "Remove github.com" }),
+    ).toBeDisabled();
+  });
+
+  it("blocks the save while a draft is incomplete", () => {
+    render(<SettingsDialog onClose={vi.fn()} />);
+    fireEvent.click(screen.getByRole("button", { name: "Register a host" }));
+    expect(screen.getByRole("button", { name: "Save" })).toBeDisabled();
+    expect(
+      screen.getByText(
+        "Every host needs a name, and the names must not repeat.",
+      ),
+    ).toBeInTheDocument();
+
+    fireEvent.change(within(hostFieldset("New host")).getByLabelText("Host"), {
+      target: { value: "ghe-two.example.com" },
     });
-    fireEvent.change(within(authForm).getByLabelText("gh CLI user"), {
-      target: { value: "work-account" },
-    });
-    fireEvent.change(type, {
-      target: { value: String(GithubAuthMethodType.KEYCHAIN) },
-    });
-    fireEvent.change(within(authForm).getByLabelText("Keychain account"), {
-      target: { value: "prx" },
-    });
-    fireEvent.change(within(authForm).getByLabelText("Keychain service"), {
-      target: { value: "github" },
-    });
-    fireEvent.change(type, {
-      target: { value: String(GithubAuthMethodType.ENVIRONMENT) },
-    });
-    fireEvent.change(within(authForm).getByLabelText("Environment variable"), {
-      target: { value: "GITHUB_TOKEN" },
-    });
-    fireEvent.change(type, {
-      target: { value: String(GithubAuthMethodType.INLINE) },
-    });
-    const token = within(authForm).getByLabelText("Inline token");
-    fireEvent.change(within(authForm).getByLabelText("Method ID"), {
+    expect(screen.getByRole("button", { name: "Save" })).toBeEnabled();
+  });
+
+  it("adds a credential with a new inline token", async () => {
+    render(<SettingsDialog onClose={vi.fn()} />);
+    fireEvent.click(
+      screen.getByRole("button", { name: "Register a credential" }),
+    );
+    const added = screen
+      .getByText("Settings for New credential")
+      .closest("fieldset");
+    if (!(added instanceof HTMLFieldSetElement))
+      throw new Error("credential fieldset missing");
+
+    fireEvent.change(within(added).getByLabelText("Method ID"), {
       target: { value: "new-inline" },
     });
-    fireEvent.change(token, { target: { value: "github_pat_new" } });
-    fireEvent.submit(authForm);
-    await waitFor(() => {
-      expect(settingsMocks.mutations.addAuth.mutateAsync).toHaveBeenCalledWith(
-        expect.objectContaining({
-          id: "new-inline",
-          type: GithubAuthMethodType.INLINE,
-          token: "github_pat_new",
-        }),
-      );
+    fireEvent.change(within(added).getByLabelText("Host"), {
+      target: { value: "ghe.example.com" },
     });
+    fireEvent.change(within(added).getByLabelText("gh CLI user"), {
+      target: { value: "work-account" },
+    });
+    fireEvent.change(within(added).getByLabelText("Credential source"), {
+      target: { value: String(GithubAuthMethodType.KEYCHAIN) },
+    });
+    fireEvent.change(within(added).getByLabelText("Keychain account"), {
+      target: { value: "prx" },
+    });
+    fireEvent.change(within(added).getByLabelText("Keychain service"), {
+      target: { value: "github" },
+    });
+    fireEvent.change(within(added).getByLabelText("Credential source"), {
+      target: { value: String(GithubAuthMethodType.INLINE) },
+    });
+    const token = within(added).getByLabelText("Inline token");
+    expect(token).toHaveAttribute("type", "password");
+    fireEvent.change(token, { target: { value: "github_pat_new" } });
+    await saveSettings();
+
+    expect(settingsMocks.mutations.addAuth.mutateAsync).toHaveBeenCalledWith(
+      expect.objectContaining({
+        id: "new-inline",
+        host: "ghe.example.com",
+        type: GithubAuthMethodType.INLINE,
+        token: "github_pat_new",
+      }),
+    );
+  });
+
+  it("warns before closing with unsaved settings", () => {
+    const onClose = vi.fn();
+    render(<SettingsDialog onClose={onClose} />);
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(onClose).toHaveBeenCalledOnce();
+
+    onClose.mockClear();
+    fireEvent.change(screen.getByLabelText("Interval in seconds"), {
+      target: { value: "1200" },
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("dialog", { name: "Discard unsaved changes?" }),
+    ).toBeInTheDocument();
+    // 確認をやめたら編集はそのまま残り、ダイアログも開いたままになる。
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(
+      screen.queryByRole("dialog", { name: "Discard unsaved changes?" }),
+    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText("Interval in seconds")).toHaveValue(1200);
+
+    fireEvent.click(screen.getByRole("button", { name: "Close" }));
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+    expect(onClose).toHaveBeenCalledOnce();
   });
 
   it("keeps server drafts mounted while navigating tabs by keyboard", () => {
@@ -408,14 +445,12 @@ describe("SettingsDialog", () => {
     const promptsTab = screen.getByRole("tab", { name: "Prompts" });
     const displayTab = screen.getByRole("tab", { name: "Display" });
     const licensesTab = screen.getByRole("tab", { name: "Licenses" });
-    const hostForm = screen
-      .getByRole("heading", { name: "Register a host" })
-      .closest("form");
-    if (!(hostForm instanceof HTMLFormElement))
-      throw new Error("host form missing");
-    fireEvent.change(within(hostForm).getByLabelText("Host"), {
-      target: { value: "draft.example.com" },
-    });
+    fireEvent.change(
+      within(hostFieldset("github.com")).getByLabelText("Host"),
+      {
+        target: { value: "draft.example.com" },
+      },
+    );
 
     fireEvent.keyDown(serverTab, { key: "ArrowRight" });
     expect(promptsTab).toHaveFocus();
@@ -428,9 +463,9 @@ describe("SettingsDialog", () => {
 
     fireEvent.keyDown(displayTab, { key: "Home" });
     expect(serverTab).toHaveFocus();
-    expect(within(hostForm).getByLabelText("Host")).toHaveValue(
-      "draft.example.com",
-    );
+    expect(
+      within(hostFieldset("draft.example.com")).getByLabelText("Host"),
+    ).toHaveValue("draft.example.com");
 
     fireEvent.keyDown(serverTab, { key: "End" });
     expect(licensesTab).toHaveFocus();
