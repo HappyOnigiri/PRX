@@ -1,5 +1,4 @@
 import { Link } from "@tanstack/react-router";
-import { ChevronRight } from "lucide-react";
 import { useState, type ReactNode } from "react";
 import { useTranslation } from "react-i18next";
 import { isActiveFeature } from "../feature-status";
@@ -82,6 +81,8 @@ function ProjectTreeRow({
   return (
     <li>
       <div className="nav-tree-row">
+        {/* 折りたたみはプロジェクトのグリフ自体が担う。専用の三角を置かない分、
+            行の左端はどのプロジェクトかを示すフォルダから始まる。 */}
         {row.features.length ? (
           <button
             aria-controls={childrenId}
@@ -92,13 +93,14 @@ function ProjectTreeRow({
             title={label}
             type="button"
           >
-            <ChevronRight aria-hidden="true" focusable="false" size={14} />
+            <EntityIcon kind="project" size={14} />
           </button>
         ) : (
-          <span className="nav-tree-toggle-spacer" />
+          <span className="nav-tree-toggle-spacer">
+            <EntityIcon kind="project" size={14} />
+          </span>
         )}
         <ProjectRowLink row={row}>
-          <EntityIcon kind="project" size={14} />
           <span>{row.title}</span>
           <b>{row.features.length}</b>
         </ProjectRowLink>
