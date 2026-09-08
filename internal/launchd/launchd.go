@@ -19,8 +19,8 @@ import (
 // Label は LaunchAgent の識別子で、plist 名と launchctl の対象名の両方に使う。
 const Label = "com.user.prx"
 
-// plistTemplate は plist の全体。ProgramArguments が `serve` の 1 要素だけなので、--addr も
-// --demo も launchd 経由では渡らない。ThrottleInterval と各キーの理由は
+// plistTemplate は plist の全体。ProgramArguments は実行ファイルと `serve` の 2 要素だけ
+// なので、--addr も --demo も launchd 経由では渡らない。ThrottleInterval と各キーの理由は
 // docs/design/daemon.md を参照。
 const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
