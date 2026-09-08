@@ -38,6 +38,7 @@ PRX は、タスクと GitHub プルリクエストの依存グラフを扱う�
 | `docs/design/README.md` | プロダクトの方向性、およびこのディレクトリに記録がない詳細をどのソースが持つか |
 | `docs/design/architecture.md` | レイヤ構成、アダプタの責務、RPC 境界を越えるもの |
 | `docs/design/cli-contract.md` | CLI コマンドの形、出力モード、JSON スキーマ、識別子、変更操作のルール |
+| `docs/design/daemon.md` | LaunchAgent での常駐、多重起動防止と稼働発見、`prx daemon` と `prx open` |
 | `docs/design/diagnostics.md` | `prx debug` とその RPC |
 | `docs/design/agent-prompts.md` | エージェントのプロンプトテンプレート、その語彙、テンプレートの選択 |
 | `docs/design/domain.md` | 表示状態の導出、ステータスの意味、依存関係、プロジェクトの所属 |
