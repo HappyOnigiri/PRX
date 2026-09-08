@@ -93,14 +93,16 @@ func TestBlackBoxDaemonCommandsStayInsideTheInjectedEnvironment(t *testing.T) {
 	status := run("daemon")
 	assertDirectObjectKeys(t, status, "supported", "installed", "plist_path", "plist_status", "running",
 		"pid", "address", "url", "started_at", "uptime_seconds", "version", "binary_matches", "log_path")
+	if !daemonSupported(t, status) {
+		// 非対応 OS には plist も launchctl もないので、状態の語彙ではなく変更系が
+		// daemon_unsupported で退くことだけを確かめる。
+		assertDaemonUnsupported(t, binary, environment, "daemon", "stop")
+		return
+	}
 	if !strings.Contains(string(status["plist_status"]), "unknown") {
 		t.Fatalf("plist status before install=%s", status["plist_status"])
 	}
 	assertDirectObjectKeys(t, run("daemon", "stop"), "stopped", "already_stopped")
-
-	if !daemonSupported(t, status) {
-		return
-	}
 	assertDirectObjectKeys(t, run("daemon", "install"), "installed", "label", "plist_path")
 	plist := filepath.Join(environment.home, "Library", "LaunchAgents", "com.user.prx.plist")
 	info, err := os.Stat(plist)
@@ -128,6 +130,19 @@ func TestBlackBoxDaemonCommandsStayInsideTheInjectedEnvironment(t *testing.T) {
 	log, err := os.ReadFile(environment.launchctlLog)
 	if err != nil || !strings.Contains(string(log), "bootstrap") || !strings.Contains(string(log), "bootout") {
 		t.Fatalf("launchctl log=%q err=%v", log, err)
+	}
+}
+
+// assertDaemonUnsupported は非対応 OS で変更系のコマンドが daemon_unsupported で失敗する
+// ことを確かめる。
+func assertDaemonUnsupported(t *testing.T, binary string, environment daemonEnvironment, args ...string) {
+	t.Helper()
+	result := executeCLIWithEnv(t, binary, "", environment.variables, environment.args(args...)...)
+	if result.exit == 0 {
+		t.Fatalf("%v succeeded on an unsupported OS: %q", args, result.stdout)
+	}
+	if code := decodeFailure(t, []byte(result.stderr), result.stderr).ErrorCode; code != "daemon_unsupported" {
+		t.Fatalf("%v error=%q", args, result.stderr)
 	}
 }
 
