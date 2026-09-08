@@ -10,6 +10,7 @@ import (
 	"strings"
 	"testing"
 
+	"github.com/HappyOnigiri/PRX/internal/runstate"
 	"github.com/HappyOnigiri/PRX/internal/tui"
 )
 
@@ -64,5 +65,25 @@ func TestSelectSetupActionUsesTUISelection(t *testing.T) {
 	}, selection)
 	if err != nil || got != setupSkip {
 		t.Fatalf("got=%q err=%v", got, err)
+	}
+}
+
+func TestSetupOffersBrowserOnlyAfterInstallingDaemon(t *testing.T) {
+	tests := []struct {
+		name         string
+		installedNow bool
+		url          string
+		want         bool
+	}{
+		{name: "new daemon", installedNow: true, url: "http://127.0.0.1:7331", want: true},
+		{name: "started daemon", installedNow: false, url: "http://127.0.0.1:7331", want: false},
+		{name: "no address", installedNow: true, want: false},
+	}
+	for _, test := range tests {
+		t.Run(test.name, func(t *testing.T) {
+			if got := shouldOfferSetupOpen(test.installedNow, runstate.State{URL: test.url}); got != test.want {
+				t.Fatalf("offer=%t, want %t", got, test.want)
+			}
+		})
 	}
 }

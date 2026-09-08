@@ -26,7 +26,8 @@ prx daemon install # start PRX at login (macOS)
 prx open           # open the running server in a browser
 ```
 
-On a first install, the installer opens a terminal menu where you can choose the background service and browser steps. Run `prx setup` to walk through those choices again.
+On a first install, the installer opens a terminal menu where you can choose the background service and then open the browser.
+Run `prx setup` to walk through the daemon choices again; the browser prompt appears only immediately after a new daemon installation.
 
 The installer downloads the latest release, verifies its checksum, and installs the binary to `~/.local/bin/prx`.
 Run the same command again to update; the installed binary is kept when the download or the verification fails.

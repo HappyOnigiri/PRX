@@ -68,14 +68,19 @@ func (s *state) runSetup(ctx context.Context) error {
 	}
 	defer closeSession()
 
-	state, err := s.applySetupDaemon(ctx, session, status)
+	state, installedNow, err := s.applySetupDaemon(ctx, session, status)
 	if err != nil {
 		return err
 	}
-	if state.URL == "" {
+	if !shouldOfferSetupOpen(installedNow, state) {
 		return nil
 	}
 	return s.offerSetupOpen(ctx, session, state.URL)
+}
+
+// shouldOfferSetupOpen は daemon を新規導入した直後に URL が得られた場合だけブラウザを案内する。
+func shouldOfferSetupOpen(installedNow bool, state runstate.State) bool {
+	return installedNow && state.URL != ""
 }
 
 func interactiveSetupSession(out, errOut io.Writer) (setupSession, func(), error) {
@@ -100,7 +105,7 @@ func (s *state) applySetupDaemon(
 	ctx context.Context,
 	session setupSession,
 	status daemon.Status,
-) (runstate.State, error) {
+) (runstate.State, bool, error) {
 	if !status.Installed || status.PlistStatus == launchd.PlistUnknown {
 		action, err := selectSetupAction(ctx, session, tui.Selection{
 			Title:       "Install PRX as a background service?",
@@ -120,13 +125,14 @@ func (s *state) applySetupDaemon(
 			},
 		})
 		if err != nil {
-			return runstate.State{}, err
+			return runstate.State{}, false, err
 		}
 		if action == setupSkip {
 			_, _ = fmt.Fprintln(session.out, "Skipped daemon installation. Run prx serve to start PRX manually.")
-			return runstate.State{}, nil
+			return runstate.State{}, false, nil
 		}
-		return s.installSetupDaemon(ctx, session)
+		state, err := s.installSetupDaemon(ctx, session)
+		return state, true, err
 	}
 	if status.PlistStatus == launchd.PlistStale {
 		action, err := selectSetupAction(ctx, session, tui.Selection{
@@ -147,15 +153,16 @@ func (s *state) applySetupDaemon(
 			},
 		})
 		if err != nil {
-			return runstate.State{}, err
+			return runstate.State{}, false, err
 		}
 		if action == setupSkip {
-			return status.State, nil
+			return status.State, false, nil
 		}
-		return s.installSetupDaemon(ctx, session)
+		state, err := s.installSetupDaemon(ctx, session)
+		return state, false, err
 	}
 	if status.Running {
-		return status.State, nil
+		return status.State, false, nil
 	}
 	action, err := selectSetupAction(ctx, session, tui.Selection{
 		Title:       "Start the PRX background service?",
@@ -167,12 +174,13 @@ func (s *state) applySetupDaemon(
 		},
 	})
 	if err != nil {
-		return runstate.State{}, err
+		return runstate.State{}, false, err
 	}
 	if action == setupSkip {
-		return runstate.State{}, nil
+		return runstate.State{}, false, nil
 	}
-	return s.startSetupDaemon(ctx, session)
+	state, err := s.startSetupDaemon(ctx, session)
+	return state, false, err
 }
 
 func (s *state) installSetupDaemon(ctx context.Context, session setupSession) (runstate.State, error) {

@@ -4,7 +4,11 @@
 対象は macOS だけで、常駐の仕組みは LaunchAgent が所有する。他の OS では常駐を操作する `prx daemon` のサブコマンドと `prx open` が `daemon_unsupported` を返し、`prx serve` を直接使う。
 状態を表示する `prx daemon` は他の OS でも成功する。稼働記録は flock だけに依存するので、`prx serve` の稼働は OS を問わず報告できる事実である。plist に由来するフィールドだけが空になる。
 
-初回インストールの `install.sh` は、端末が使えるとき `prx setup` を起動する。TUI で LaunchAgent の導入、daemon の起動、WebUI を開く操作を順に選べる。端末が無い、または選択をキャンセルした場合は、インストール自体を成功させたまま `prx daemon install` と `prx open` の手動手順を表示する。
+初回インストールの `install.sh` は、端末が使えるとき `prx setup` を起動する。
+TUI で LaunchAgent の導入を選び、導入直後だけ WebUI を開く操作を選べる。
+既存 daemon の更新・起動ではブラウザ選択を表示しない。
+端末が無い、または選択をキャンセルした場合は、インストール自体を成功させたまま
+`prx daemon install` と `prx open` の手動手順を表示する。
 
 ## 起動の所有者は launchd である
 
