@@ -8,6 +8,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"syscall"
 	"testing"
 	"time"
@@ -210,4 +211,55 @@ func statExecutable(t *testing.T, path string) os.FileInfo {
 		t.Fatal(err)
 	}
 	return info
+}
+
+// stubRestarter は launchd 管理下のサーバーとして振る舞い、最初の依頼だけ失敗させる。
+type stubRestarter struct {
+	mu       sync.Mutex
+	attempts int
+	failFor  int
+}
+
+func (r *stubRestarter) Managed() bool { return true }
+
+func (r *stubRestarter) Kickstart(context.Context) error {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	r.attempts++
+	if r.attempts <= r.failFor {
+		return errors.New("launchctl restart failed: timed out")
+	}
+	return nil
+}
+
+func (r *stubRestarter) attemptCount() int {
+	r.mu.Lock()
+	defer r.mu.Unlock()
+	return r.attempts
+}
+
+// TestWatchExecutablePathRetriesAfterAFailedRestart は依頼の失敗で監視が終わらないことを
+// 確かめる。終わってしまうと、以降の置換も検査されないまま古いサーバーが残り続ける。
+func TestWatchExecutablePathRetriesAfterAFailedRestart(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "prx")
+	if err := os.WriteFile(path, []byte("binary"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	errOut := &strings.Builder{}
+	s := &state{out: io.Discard, errOut: errOut}
+	restarter := &stubRestarter{failFor: 1}
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		_ = os.WriteFile(path, []byte("replaced"), 0o700)
+	}()
+	// ctx は監視が戻らない場合の保険。依頼が通れば監視は自分で戻る。
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	s.watchExecutablePath(ctx, restarter, path, 5*time.Millisecond)
+	if attempts := restarter.attemptCount(); attempts != 2 {
+		t.Fatalf("kickstart attempts=%d, want 2", attempts)
+	}
+	if !strings.Contains(errOut.String(), "could not restart itself") {
+		t.Fatalf("stderr=%q", errOut.String())
+	}
 }

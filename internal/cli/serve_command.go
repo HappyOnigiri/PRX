@@ -211,6 +211,13 @@ func (s *state) recordRunState(address string, startedAt time.Time) error {
 	return nil
 }
 
+// executableRestarter は置換を検出した後に必要な launchd の操作だけを表す。テストが実
+// launchctl に触れずに監視の分岐を回せるようにする。
+type executableRestarter interface {
+	Managed() bool
+	Kickstart(ctx context.Context) error
+}
+
 // watchExecutable は自分のバイナリが置き換えられたら launchd に自身の再起動を依頼する。
 // これがないと、新しい CLI がデータベースを移行した後も古いサーバーが古い埋め込み
 // スキーマで応答し続けるサイレントな版ずれが残る。
@@ -226,7 +233,7 @@ func (s *state) watchExecutable(ctx context.Context, manager *launchd.Manager) {
 // watchExecutablePath は監視対象と検査間隔を受け取る。間隔を引数にするのはテストが実時間を
 // 待たずに 1 周期を回せるようにするためである。
 func (s *state) watchExecutablePath(
-	ctx context.Context, manager *launchd.Manager, path string, interval time.Duration,
+	ctx context.Context, manager executableRestarter, path string, interval time.Duration,
 ) {
 	// os.Executable は起動時のパスを返し続けるので、stat の失敗を「未変更の根拠」に
 	// してはいけない。基準が取れないときは監視自体を無効にする。
@@ -262,20 +269,23 @@ func (s *state) watchExecutablePath(
 			)
 			return
 		}
-		s.restartAfterReplacement(manager, path)
+		if err := s.restartAfterReplacement(manager, path); err != nil {
+			// 依頼の失敗で監視を終えると、以降の置換も検査されないまま古いサーバーが
+			// 残る。基準はそのままなので、次の周期で同じ置換を再依頼できる。
+			_, _ = fmt.Fprintf(s.errOut, "PRX could not restart itself after the replacement: %v\n", err)
+			continue
+		}
 		return
 	}
 }
 
 // restartAfterReplacement は launchd へ置換の反映を依頼する。kickstart -k はこのプロセスへ
 // SIGTERM を送るので、サーバーの ctx から派生させると依頼の完了前に取り消される。
-func (s *state) restartAfterReplacement(manager *launchd.Manager, path string) {
+func (s *state) restartAfterReplacement(manager executableRestarter, path string) error {
 	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	_, _ = fmt.Fprintf(s.errOut, "PRX executable %s was replaced; asking launchd to restart the server\n", path)
-	if err := manager.Kickstart(ctx); err != nil {
-		_, _ = fmt.Fprintf(s.errOut, "PRX could not restart itself after the replacement: %v\n", err)
-	}
+	return manager.Kickstart(ctx)
 }
 
 func (s *state) warnExecutableWatchDisabled(err error) {
