@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 
+	"gopkg.in/yaml.v3"
+
 	"github.com/HappyOnigiri/PRX/internal/prompt"
 )
 
@@ -502,5 +504,100 @@ func TestDebugInputReportsWhetherPromptsWereEdited(t *testing.T) {
 	}
 	if edited.Prompts.Design.Bytes != len(custom.Design) {
 		t.Fatalf("design bytes=%d, want %d", edited.Prompts.Design.Bytes, len(custom.Design))
+	}
+}
+
+func TestServerPortRoundTripsAutoAndFixedValues(t *testing.T) {
+	for _, test := range []struct {
+		yaml string
+		want ServerPort
+	}{
+		{yaml: "auto", want: ServerPortAuto},
+		{yaml: `"auto"`, want: ServerPortAuto},
+		{yaml: "7331", want: ServerPort(7331)},
+		{yaml: `"7331"`, want: ServerPort(7331)},
+		{yaml: "null", want: ServerPortAuto},
+		{yaml: `""`, want: ServerPortAuto},
+	} {
+		t.Run(test.yaml, func(t *testing.T) {
+			var parsed struct {
+				Port ServerPort `yaml:"port"`
+			}
+			if err := yaml.Unmarshal([]byte("port: "+test.yaml+"\n"), &parsed); err != nil {
+				t.Fatal(err)
+			}
+			if parsed.Port != test.want {
+				t.Fatalf("port=%v, want %v", parsed.Port, test.want)
+			}
+		})
+	}
+	for _, invalid := range []string{"0", "65536", "-1", "http", "[7331]"} {
+		var parsed struct {
+			Port ServerPort `yaml:"port"`
+		}
+		if err := yaml.Unmarshal([]byte("port: "+invalid+"\n"), &parsed); err == nil {
+			t.Fatalf("port %q was accepted as %v", invalid, parsed.Port)
+		}
+	}
+}
+
+// TestServerPortIsAlwaysWrittenAndUsesTheSameVocabulary は auto を数値に落として
+// 書き戻さないことを確かめる。0 を書くと次の読み込みで範囲外になる。
+func TestServerPortIsAlwaysWrittenAndUsesTheSameVocabulary(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "config.yaml")
+	store, err := NewStore(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := store.Save(Default()); err != nil {
+		t.Fatal(err)
+	}
+	body, err := os.ReadFile(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(body), "port: auto") {
+		t.Fatalf("server port was not written as auto: %s", body)
+	}
+	updated, err := store.Update(func(settings *Config) error { return settings.SetServerPort("7400") })
+	if err != nil || updated.Server.Port != ServerPort(7400) {
+		t.Fatalf("update=%+v err=%v", updated.Server, err)
+	}
+	loaded, err := store.Load()
+	if err != nil || loaded.Server.Port != ServerPort(7400) || loaded.Server.Port.String() != "7400" {
+		t.Fatalf("loaded=%+v err=%v", loaded.Server, err)
+	}
+	public, err := store.Public()
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded, err := json.Marshal(public)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(encoded), `"server":{"port":7400}`) {
+		t.Fatalf("public config=%s", encoded)
+	}
+	if _, err := store.Update(func(settings *Config) error { return settings.SetServerPort("70000") }); err == nil {
+		t.Fatal("out of range port was accepted")
+	}
+	if err := store.Save(Config{Version: CurrentVersion, Server: ServerConfig{Port: ServerPort(-1)}}); err == nil {
+		t.Fatal("Normalize accepted a negative port")
+	}
+	if _, err := store.Update(func(settings *Config) error {
+		return settings.SetServerPort(ServerPortAutoValue)
+	}); err != nil {
+		t.Fatal(err)
+	}
+	autoPublic, err := store.Public()
+	if err != nil {
+		t.Fatal(err)
+	}
+	encoded, err = json.Marshal(autoPublic)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !strings.Contains(string(encoded), `"server":{"port":"auto"}`) {
+		t.Fatalf("public config=%s", encoded)
 	}
 }

@@ -35,6 +35,7 @@ const debugOverdueFactor = 3
 var DebugEnvironmentNames = []string{
 	"PRX_DB",
 	"PRX_CONFIG",
+	"PRX_RUN_DIR",
 	"GITHUB_TOKEN",
 	"GH_TOKEN",
 	"GH_HOST",
@@ -58,6 +59,9 @@ const (
 	DebugProblemCodeGitHubSyncOverdue          DebugProblemCode = "github_sync_overdue"
 	DebugProblemCodeGitHubSyncNeverCompleted   DebugProblemCode = "github_sync_never_completed"
 	DebugProblemCodePullRequestsStale          DebugProblemCode = "pull_requests_stale"
+	DebugProblemCodeDaemonPlistStale           DebugProblemCode = "daemon_plist_stale"
+	DebugProblemCodeDaemonNotRunning           DebugProblemCode = "daemon_not_running"
+	DebugProblemCodeDaemonBinaryOutdated       DebugProblemCode = "daemon_binary_outdated"
 )
 
 // debugProblemSummaries は出力されるレポート内で各問題を説明する。レポート本文は CLI と
@@ -75,6 +79,9 @@ var debugProblemSummaries = map[DebugProblemCode]string{
 	DebugProblemCodeGitHubSyncOverdue:          "the automatic interval expired well before this report",
 	DebugProblemCodeGitHubSyncNeverCompleted:   "pull requests exist but no synchronization run has ever completed",
 	DebugProblemCodePullRequestsStale:          "at least one pull request is holding stale state",
+	DebugProblemCodeDaemonPlistStale:           "the installed LaunchAgent does not match this PRX binary",
+	DebugProblemCodeDaemonNotRunning:           "the LaunchAgent is installed but no server is running",
+	DebugProblemCodeDaemonBinaryOutdated:       "the running server started from a different PRX binary",
 }
 
 // DebugProblem は検出した 1 件の問題と、その根拠、および詳細を出力するコマンドを表す。
@@ -298,11 +305,80 @@ type DebugGitHubSync struct {
 	Error                     string                `json:"error,omitempty"`
 }
 
+// DebugDaemonInput は配線層だけが知る常駐の状態を運ぶ。domain は launchd も稼働記録も
+// import できないため。
+type DebugDaemonInput struct {
+	Supported     bool
+	Installed     bool
+	PlistStatus   string
+	PlistPath     string
+	LogPath       string
+	Running       bool
+	Address       string
+	PID           int
+	Version       string
+	BinaryMatches bool
+	Demo          bool
+	Error         string
+}
+
+// DebugDaemon は LaunchAgent と稼働中サーバーを報告する。これは別プロセスの記述なので、
+// このレポートを生成したプロセスを表す DebugRuntime とは分けている。混ぜると
+// runtime の mode の意味が壊れる。
+type DebugDaemon struct {
+	Supported     bool   `json:"supported"`
+	Installed     bool   `json:"installed"`
+	PlistStatus   string `json:"plist_status"`
+	PlistPath     string `json:"plist_path"`
+	LogPath       string `json:"log_path"`
+	Running       bool   `json:"running"`
+	Address       string `json:"address"`
+	PID           int    `json:"pid"`
+	Version       string `json:"version"`
+	BinaryMatches bool   `json:"binary_matches"`
+	Error         string `json:"error,omitempty"`
+}
+
+// NewDebugDaemon は常駐セクションを導出する。パスはホームを ~ に短縮し、demo では
+// 使わないファイルを指さないよう demo と報告する。
+func NewDebugDaemon(input DebugDaemonInput) DebugDaemon {
+	shortener := NewDebugPathShortener()
+	result := DebugDaemon{
+		Supported:     input.Supported,
+		Installed:     input.Installed,
+		PlistStatus:   input.PlistStatus,
+		PlistPath:     shortener.Path(input.PlistPath),
+		LogPath:       shortener.Path(input.LogPath),
+		Running:       input.Running,
+		Address:       input.Address,
+		PID:           input.PID,
+		Version:       input.Version,
+		BinaryMatches: input.BinaryMatches,
+		Error:         input.Error,
+	}
+	if input.Demo {
+		result.PlistPath = "demo"
+		result.LogPath = "demo"
+	}
+	if result.PlistStatus == "" {
+		result.PlistStatus = string(DebugPlistStatusUnknown)
+	}
+	return result
+}
+
+// DebugPlistStatusUnknown は plist を読めなかったことを表す。値は launchd アダプタと
+// 共有する公開契約で、`current` と `stale` も同じ語彙を使う。
+const DebugPlistStatusUnknown = "unknown"
+
+// DebugPlistStatusStale は plist が現在の PRX と一致しないことを表す。
+const DebugPlistStatusStale = "stale"
+
 // DebugReport は診断レポート全体で、検出した問題を先頭に置く。
 type DebugReport struct {
 	Problems   []DebugProblem  `json:"problems"`
 	Build      DebugBuild      `json:"build"`
 	Runtime    DebugRuntime    `json:"runtime"`
+	Daemon     DebugDaemon     `json:"daemon"`
 	Paths      DebugPaths      `json:"paths"`
 	Config     DebugConfig     `json:"config"`
 	Storage    DebugStorage    `json:"storage"`
@@ -512,6 +588,43 @@ func DetectDebugProblems(report DebugReport, now time.Time) []DebugProblem {
 	problems = append(problems, detectDebugStorageProblems(report)...)
 	problems = append(problems, detectDebugConfigProblems(report)...)
 	problems = append(problems, detectDebugSyncProblems(report, now)...)
+	problems = append(problems, detectDebugDaemonProblems(report)...)
+	return problems
+}
+
+// detectDebugDaemonProblems は導入済みの LaunchAgent についてだけ報告する。未導入は
+// 問題ではない。`prx serve` を手で使う運用も正当である。
+func detectDebugDaemonProblems(report DebugReport) []DebugProblem {
+	problems := make([]DebugProblem, 0, 3)
+	daemon := report.Daemon
+	if !daemon.Supported || !daemon.Installed {
+		return problems
+	}
+	if daemon.PlistStatus == DebugPlistStatusStale {
+		problems = append(problems, DebugProblem{
+			Code:        DebugProblemCodeDaemonPlistStale,
+			Target:      daemon.PlistPath,
+			Evidence:    "the LaunchAgent was written by a different PRX binary or path",
+			NextCommand: "prx daemon install",
+		})
+	}
+	if !daemon.Running {
+		problems = append(problems, DebugProblem{
+			Code:        DebugProblemCodeDaemonNotRunning,
+			Target:      daemon.PlistPath,
+			Evidence:    "no process holds the run state lock",
+			NextCommand: "prx daemon start",
+		})
+		return problems
+	}
+	if !daemon.BinaryMatches {
+		problems = append(problems, DebugProblem{
+			Code:        DebugProblemCodeDaemonBinaryOutdated,
+			Target:      daemon.Address,
+			Evidence:    fmt.Sprintf("the server reports version %s", daemon.Version),
+			NextCommand: "prx daemon restart",
+		})
+	}
 	return problems
 }
 

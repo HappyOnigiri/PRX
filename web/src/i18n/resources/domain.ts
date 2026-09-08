@@ -14,6 +14,9 @@ export const domain = {
       githubSyncOverdue: "Automatic synchronization is overdue",
       githubSyncNeverCompleted: "No synchronization run has ever completed",
       pullRequestsStale: "Some pull requests hold stale state",
+      daemonPlistStale: "The LaunchAgent does not match this PRX binary",
+      daemonNotRunning: "The LaunchAgent is installed but no server is running",
+      daemonBinaryOutdated: "The running server started from another binary",
     },
     documentKind: {
       url: "URL",
@@ -96,6 +99,9 @@ export const domain = {
       githubSyncOverdue: "自動同期が予定より遅れています",
       githubSyncNeverCompleted: "同期が一度も完了していません",
       pullRequestsStale: "一部のPRが古い状態のままです",
+      daemonPlistStale: "LaunchAgentが現在のPRXと一致しません",
+      daemonNotRunning: "LaunchAgentはあるがサーバーが稼働していません",
+      daemonBinaryOutdated: "稼働中のサーバーは別のバイナリで起動しています",
     },
     documentKind: {
       url: "URL",

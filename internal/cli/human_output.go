@@ -456,9 +456,10 @@ func renderConfig(value config.PublicConfig) humanRenderer {
 	return func(out io.Writer) error {
 		if _, err := fmt.Fprintf(
 			out,
-			"Config version: %d\nAutomatic sync interval: %d seconds\n\nHosts\n",
+			"Config version: %d\nAutomatic sync interval: %d seconds\nServer port: %s\n\nHosts\n",
 			value.Version,
 			value.GitHub.AutoSyncIntervalSeconds,
+			value.Server.Port,
 		); err != nil {
 			return err
 		}

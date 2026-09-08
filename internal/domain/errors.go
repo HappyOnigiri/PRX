@@ -31,6 +31,11 @@ const (
 	DomainErrorCodeImplementationPlanTooLarge  DomainErrorCode = "implementation_plan_too_large"
 	DomainErrorCodeInvalidConfig               DomainErrorCode = "invalid_config"
 	DomainErrorCodeArchivedReadOnly            DomainErrorCode = "archived_read_only"
+	DomainErrorCodeAddressInUse                DomainErrorCode = "address_in_use"
+	DomainErrorCodeDaemonUnsupported           DomainErrorCode = "daemon_unsupported"
+	DomainErrorCodeDaemonNotInstalled          DomainErrorCode = "daemon_not_installed"
+	DomainErrorCodeDaemonNotRunning            DomainErrorCode = "daemon_not_running"
+	DomainErrorCodeDaemonFailed                DomainErrorCode = "daemon_failed"
 	DomainErrorCodeInternal                    DomainErrorCode = "internal"
 )
 

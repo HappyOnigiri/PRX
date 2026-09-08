@@ -17,6 +17,7 @@ import (
 	prx "github.com/HappyOnigiri/PRX"
 	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
+	"github.com/HappyOnigiri/PRX/internal/runstate"
 )
 
 // automaticSyncTimeout は通常のコマンド実行前に走る日和見的な更新の上限。
@@ -43,6 +44,11 @@ type state struct {
 	closeOnce      sync.Once
 	closeErr       error
 	standardHelp   func(*cobra.Command, []string)
+	// runLock は稼働中サーバーの記録を保持するロック。多重起動の防止と稼働発見を
+	// 1 つのファイルに統合しているので、`serve` の実行中だけ保持する。
+	runLock *runstate.Lock
+	// serveLockRefused は別のサーバーがロックを持っていたことを表す。
+	serveLockRefused bool
 }
 
 // closeService はサービスのオープンで確保した資源を解放する。デモは一時ディレクトリを
@@ -52,6 +58,10 @@ func (s *state) closeService() error {
 	s.closeOnce.Do(func() {
 		if s.closer != nil {
 			s.closeErr = s.closer.Close()
+		}
+		if s.runLock != nil {
+			s.closeErr = errors.Join(s.closeErr, s.runLock.Release())
+			s.runLock = nil
 		}
 	})
 	return s.closeErr
@@ -93,8 +103,18 @@ func newRootWithState(out, errOut io.Writer, openService OpenService) (*cobra.Co
 			if !s.demo {
 				s.warnAboutConfiguration()
 			}
-			if isConfigCommand(cmd) {
+			if isConfigCommand(cmd) || isOfflineCommand(cmd) {
 				return nil
+			}
+			// ロックの取得だけは openService より前に済ませる。ロックを取れなかった
+			// serve はデータベースを開かずに終わる。
+			if isManagedServe(cmd, s.demo) {
+				if err := s.acquireRunLock(); err != nil {
+					return err
+				}
+				if s.serveLockRefused {
+					return nil
+				}
 			}
 			baseContext := cmd.Context()
 			if baseContext == nil {
@@ -179,6 +199,8 @@ func (s *state) addCommands(root *cobra.Command) {
 		s.validateCommand(),
 		s.debugCommand(),
 		s.serveCommand(),
+		s.daemonCommand(),
+		s.openCommand(),
 	)
 }
 
@@ -252,6 +274,38 @@ func markCommandExecution(command *cobra.Command, s *state) {
 		markCommandExecution(child, s)
 	}
 }
+
+// isManagedServe は flock と run state を伴う通常の serve を判定する。--addr 指定と demo は
+// アドホックなインスタンスで、稼働中サーバーを名乗らないのでどちらも記録しない。
+func isManagedServe(command *cobra.Command, demo bool) bool {
+	return command.Name() == "serve" && !demo && !command.Flags().Changed("addr")
+}
+
+func (s *state) acquireRunLock() error {
+	lock, held, err := runstate.Acquire()
+	if err != nil {
+		return domain.NewError(domain.DomainErrorCodeInternal, "%s", err)
+	}
+	if !held {
+		s.serveLockRefused = true
+		return nil
+	}
+	s.runLock = lock
+	return nil
+}
+
+// offlineCommandName はデータベースを開かないコマンド群のうち cmd が属するものの名前を
+// 返す。これらは launchd と稼働記録だけを見るので、ストレージを触る理由がない。
+func offlineCommandName(command *cobra.Command) string {
+	for current := command; current != nil; current = current.Parent() {
+		if current.Name() == "daemon" || current.Name() == "open" {
+			return current.Name()
+		}
+	}
+	return ""
+}
+
+func isOfflineCommand(command *cobra.Command) bool { return offlineCommandName(command) != "" }
 
 func isConfigCommand(command *cobra.Command) bool {
 	for current := command; current != nil; current = current.Parent() {

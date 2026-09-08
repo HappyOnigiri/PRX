@@ -184,6 +184,10 @@ export const debugProblemKeys = {
   [DebugProblemCode.GITHUB_SYNC_NEVER_COMPLETED]:
     "debugProblem.githubSyncNeverCompleted",
   [DebugProblemCode.PULL_REQUESTS_STALE]: "debugProblem.pullRequestsStale",
+  [DebugProblemCode.DAEMON_PLIST_STALE]: "debugProblem.daemonPlistStale",
+  [DebugProblemCode.DAEMON_NOT_RUNNING]: "debugProblem.daemonNotRunning",
+  [DebugProblemCode.DAEMON_BINARY_OUTDATED]:
+    "debugProblem.daemonBinaryOutdated",
 } as const satisfies Record<DebugProblemCode, string>;
 
 // 新しいサーバーのレポートにはこの bundle が知らない code が含まれうるので、

@@ -557,6 +557,18 @@ func TestFormatDebugReportRendersEverySection(t *testing.T) {
 			StartedAt:     timePointer(reportTime().Add(-time.Minute)),
 			UptimeSeconds: 60,
 		},
+		Daemon: DebugDaemon{
+			Supported:     true,
+			Installed:     true,
+			PlistStatus:   "current",
+			PlistPath:     "~/Library/LaunchAgents/com.user.prx.plist",
+			LogPath:       "~/Library/Logs/prx/serve.log",
+			Running:       true,
+			Address:       "127.0.0.1:7331",
+			PID:           4242,
+			Version:       "1.2.3-dev",
+			BinaryMatches: true,
+		},
 		Paths: DebugPaths{
 			DatabasePath:       "~/prx/prx.db",
 			DatabasePathSource: "default",
@@ -658,6 +670,18 @@ runtime:
   listen_address: 127.0.0.1:7331
   started_at: 2026-09-03T04:04:06Z
   uptime_seconds: 60
+
+daemon:
+  supported: yes
+  installed: yes
+  plist_status: current
+  plist_path: ~/Library/LaunchAgents/com.user.prx.plist
+  log_path: ~/Library/Logs/prx/serve.log
+  running: yes
+  address: 127.0.0.1:7331
+  pid: 4242
+  version: 1.2.3-dev
+  binary_matches: yes
 
 paths:
   database_path: ~/prx/prx.db

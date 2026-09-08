@@ -11,6 +11,7 @@ func protoDebugReport(v domain.DebugReport) *prxv1.DebugReport {
 	result := &prxv1.DebugReport{
 		Build:      protoDebugBuild(v.Build),
 		Runtime:    protoDebugRuntime(v.Runtime),
+		Daemon:     protoDebugDaemon(v.Daemon),
 		Paths:      protoDebugPaths(v.Paths),
 		Config:     protoDebugConfig(v.Config),
 		Storage:    protoDebugStorage(v.Storage),
@@ -48,6 +49,22 @@ func protoDebugRuntime(v domain.DebugRuntime) *prxv1.DebugRuntime {
 		ListenAddress: v.ListenAddress,
 		StartedAt:     protoDebugTime(v.StartedAt),
 		UptimeSeconds: v.UptimeSeconds,
+	}
+}
+
+func protoDebugDaemon(v domain.DebugDaemon) *prxv1.DebugDaemon {
+	return &prxv1.DebugDaemon{
+		Supported:     v.Supported,
+		Installed:     v.Installed,
+		PlistStatus:   v.PlistStatus,
+		PlistPath:     v.PlistPath,
+		LogPath:       v.LogPath,
+		Running:       v.Running,
+		Address:       v.Address,
+		Pid:           int32(v.PID),
+		Version:       v.Version,
+		BinaryMatches: v.BinaryMatches,
+		Error:         v.Error,
 	}
 }
 
@@ -218,6 +235,12 @@ func protoDebugProblemCode(value domain.DebugProblemCode) prxv1.DebugProblemCode
 		return prxv1.DebugProblemCode_DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED
 	case domain.DebugProblemCodePullRequestsStale:
 		return prxv1.DebugProblemCode_DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE
+	case domain.DebugProblemCodeDaemonPlistStale:
+		return prxv1.DebugProblemCode_DEBUG_PROBLEM_CODE_DAEMON_PLIST_STALE
+	case domain.DebugProblemCodeDaemonNotRunning:
+		return prxv1.DebugProblemCode_DEBUG_PROBLEM_CODE_DAEMON_NOT_RUNNING
+	case domain.DebugProblemCodeDaemonBinaryOutdated:
+		return prxv1.DebugProblemCode_DEBUG_PROBLEM_CODE_DAEMON_BINARY_OUTDATED
 	default:
 		return prxv1.DebugProblemCode_DEBUG_PROBLEM_CODE_UNSPECIFIED
 	}

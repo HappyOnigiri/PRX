@@ -37,6 +37,13 @@ type serveEndpoint struct {
 	startedAt time.Time
 }
 
+// SetDaemonInspector は常駐の状態を集める実装を注入する。app は launchd も稼働記録も
+// import しないので、配線層だけが知る事実として SetServeEndpoint と同じ形で受け取る。
+// 未注入なら supported:false のゼロ値になる。
+func (s *Service) SetDaemonInspector(inspect func(context.Context) domain.DebugDaemonInput) {
+	s.daemonInspector = inspect
+}
+
 // SetProcessInfo はこのプロセスの起動方法を記録する。service の配線中に一度だけ、
 // リクエストが到達しうる前に呼ばれる。
 func (s *Service) SetProcessInfo(info ProcessInfo) { s.processInfo = info }
@@ -47,6 +54,11 @@ func (s *Service) SetServeEndpoint(address string, startedAt time.Time) {
 	s.serveEndpoint.Store(&serveEndpoint{address: address, startedAt: startedAt.UTC()})
 }
 
+// DatabasePath は開いたデータベースの位置を返す。稼働記録の読み手が、どのデータベースを
+// 見ているサーバーかを判断できるようにする。CLI は app を import できないので、パスは
+// プリミティブ型のまま境界を越える。
+func (s *Service) DatabasePath() string { return s.debugPathsInput().DatabasePath }
+
 // Debug は診断レポートを組み立てる。壊れているときこそ価値があるので各セクションは
 // 独立に失敗し、同期は行わない。同期すると読み手が知りたい実行エラーが消えてしまう。
 func (s *Service) Debug(ctx context.Context) (domain.DebugReport, error) {
@@ -54,6 +66,7 @@ func (s *Service) Debug(ctx context.Context) (domain.DebugReport, error) {
 	report := domain.DebugReport{
 		Build:   domain.NewDebugBuild(prx.Version()),
 		Runtime: domain.NewDebugRuntime(s.debugRuntimeInput(), now),
+		Daemon:  s.debugDaemon(ctx),
 		Paths:   domain.NewDebugPaths(s.debugPathsInput()),
 		Config:  s.debugConfig(),
 		Storage: s.debugStorage(ctx),
@@ -86,6 +99,15 @@ func (s *Service) debugRuntimeInput() domain.DebugRuntimeInput {
 		input.StartedAt = &started
 	}
 	return input
+}
+
+// debugDaemon は常駐セクションを集める。収集の失敗で他のセクションを消さないよう、
+// 注入がないときはゼロ値を返す。
+func (s *Service) debugDaemon(ctx context.Context) domain.DebugDaemon {
+	if s.daemonInspector == nil {
+		return domain.NewDebugDaemon(domain.DebugDaemonInput{Demo: s.processInfo.Demo})
+	}
+	return domain.NewDebugDaemon(s.daemonInspector(ctx))
 }
 
 func (s *Service) debugPathsInput() domain.DebugPathsInput {

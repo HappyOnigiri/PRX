@@ -35,6 +35,7 @@ func (s *state) configCommand() *cobra.Command {
 		s.configPathCommand(),
 		s.configValidateCommand(),
 		s.configSyncCommand(),
+		s.configServerCommand(),
 		s.configHostCommand(),
 		s.configAuthCommand(),
 	)
@@ -105,6 +106,83 @@ func (s *state) configSyncUpdateCommand() *cobra.Command {
 		},
 	}
 	return command
+}
+
+func (s *state) configServerCommand() *cobra.Command {
+	command := &cobra.Command{
+		Use:     "server",
+		Short:   "Show or manage the local server listen port",
+		Example: "prx config server",
+		Args:    cobra.NoArgs,
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			store, err := s.configStore()
+			if err != nil {
+				return configCommandError(err)
+			}
+			settings, err := store.Load()
+			if err != nil {
+				return configCommandError(err)
+			}
+			return s.writeServerPort(settings.Server.Port, "Server port: %s.")
+		},
+	}
+	command.AddCommand(s.configServerUpdateCommand())
+	return command
+}
+
+func (s *state) configServerUpdateCommand() *cobra.Command {
+	command := &cobra.Command{
+		Use:   "update PORT",
+		Short: "Update the local server listen port",
+		Long: fmt.Sprintf(
+			"Update the local server listen port.\n\n"+
+				"PORT is %q or a port number between 1 and 65535. With %[1]q, PRX prefers %d and "+
+				"falls back to an ephemeral port when it is already in use.\n"+
+				"The host is always loopback; use prx serve --addr to listen elsewhere.",
+			config.ServerPortAutoValue,
+			defaultServePort,
+		),
+		Example: "prx config server update 7400",
+		Args:    cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if _, err := config.ParseServerPort(args[0]); err != nil {
+				return serverPortUsageError(args[0], err)
+			}
+			store, err := s.configStore()
+			if err != nil {
+				return configCommandError(err)
+			}
+			settings, err := store.Update(func(settings *config.Config) error {
+				return settings.SetServerPort(args[0])
+			})
+			if err != nil {
+				return configCommandError(err)
+			}
+			return s.writeServerPort(settings.Server.Port, "Updated server port to %s.")
+		},
+	}
+	return command
+}
+
+func (s *state) writeServerPort(port config.ServerPort, format string) error {
+	return s.write(serverPortResponse{Port: port}, renderMessage(format, port))
+}
+
+// serverPortResponse は auto と数値の両方を同じキーで返す。config.ServerPort が
+// JSON の語彙を決めるので、CLI 側で分岐しない。
+type serverPortResponse struct {
+	Port config.ServerPort `json:"port"`
+}
+
+// serverPortUsageError は書式の誤りを usage error にし、範囲外の値を invalid_config に
+// 残す。どちらも config.ParseServerPort が同じエラーで報告するので、数値かどうかで分ける。
+func serverPortUsageError(value string, err error) error {
+	if _, parseErr := strconv.Atoi(strings.TrimSpace(value)); parseErr != nil {
+		return &usageError{
+			err: fmt.Errorf("PORT must be %q or an integer: %q", config.ServerPortAutoValue, value),
+		}
+	}
+	return configCommandError(err)
 }
 
 func (s *state) configPathCommand() *cobra.Command {

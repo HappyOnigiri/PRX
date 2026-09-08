@@ -102,6 +102,8 @@ type Service struct {
 	now         func() time.Time
 	// processInfo は service の配線中に一度だけ書かれ、診断レポートだけが読む。
 	processInfo ProcessInfo
+	// daemonInspector は service の配線中に一度だけ書かれ、診断レポートだけが読む。
+	daemonInspector func(context.Context) domain.DebugDaemonInput
 	// serveEndpoint は唯一の可変フィールド。listen アドレスは listener の bind 後に
 	// 判明し、その後 HTTP ハンドラが読む。
 	serveEndpoint atomic.Pointer[serveEndpoint]

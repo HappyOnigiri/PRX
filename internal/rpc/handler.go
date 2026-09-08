@@ -84,7 +84,14 @@ func rpcError(err error) error {
 		code = connect.CodeFailedPrecondition
 	case domain.DomainErrorCodeGitHubAuth:
 		code = connect.CodeUnauthenticated
-	case domain.DomainErrorCodeInternal:
+	// daemon 系と address_in_use は CLI だけが返す。RPC 越しに届くことはないので、
+	// 届いたときは内部エラーとして扱う。
+	case domain.DomainErrorCodeInternal,
+		domain.DomainErrorCodeAddressInUse,
+		domain.DomainErrorCodeDaemonUnsupported,
+		domain.DomainErrorCodeDaemonNotInstalled,
+		domain.DomainErrorCodeDaemonNotRunning,
+		domain.DomainErrorCodeDaemonFailed:
 		code = connect.CodeInternal
 	}
 	connectErr := connect.NewError(code, err)

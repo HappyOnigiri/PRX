@@ -319,6 +319,12 @@ enum DebugProblemCode {
   DEBUG_PROBLEM_CODE_GITHUB_SYNC_NEVER_COMPLETED = 11;
   // DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE は古い状態の pull request が 1 件以上あることを表す。
   DEBUG_PROBLEM_CODE_PULL_REQUESTS_STALE = 12;
+  // DEBUG_PROBLEM_CODE_DAEMON_PLIST_STALE は導入済みの LaunchAgent が現在の PRX と一致しないことを表す。
+  DEBUG_PROBLEM_CODE_DAEMON_PLIST_STALE = 13;
+  // DEBUG_PROBLEM_CODE_DAEMON_NOT_RUNNING は LaunchAgent はあるがサーバーが稼働していないことを表す。
+  DEBUG_PROBLEM_CODE_DAEMON_NOT_RUNNING = 14;
+  // DEBUG_PROBLEM_CODE_DAEMON_BINARY_OUTDATED は稼働中サーバーが別のバイナリで起動したことを表す。
+  DEBUG_PROBLEM_CODE_DAEMON_BINARY_OUTDATED = 15;
 }
 
 // BlockedReason は task が ready でない理由を構造化したもの。
@@ -1271,6 +1277,33 @@ message DebugRuntime {
   int64 uptime_seconds = 8;
 }
 
+// DebugDaemon は LaunchAgent と稼働中サーバーを報告する。これは別プロセスの記述なので、
+// レポートを生成したプロセスを表す DebugRuntime とは分けている。
+message DebugDaemon {
+  // supported は LaunchAgent を扱える OS のとき true。macOS 以外では常に false。
+  bool supported = 1;
+  // installed は LaunchAgent の plist がディスク上にあるとき true。
+  bool installed = 2;
+  // plist_status は current、stale、unknown のいずれか。
+  string plist_status = 3;
+  // plist_path は LaunchAgent のパスで、ホーム配下は ~ に短縮、demo のこともある。
+  string plist_path = 4;
+  // log_path は launchd がサーバーの出力を書き込む先。
+  string log_path = 5;
+  // running は稼働記録のロックを保持しているプロセスがあるとき true。
+  bool running = 6;
+  // address は稼働中サーバーが受け付けているアドレスで、未稼働では空。
+  string address = 7;
+  // pid は稼働中サーバーのプロセス ID で、未稼働では 0。
+  int32 pid = 8;
+  // version は稼働中サーバーの PRX バージョンで、未稼働では空。
+  string version = 9;
+  // binary_matches は稼働中サーバーが現在のバイナリで動いているとき true。
+  bool binary_matches = 10;
+  // error は常駐の診断が得られない理由。
+  string error = 11;
+}
+
 // DebugEnvironmentVariable は PRX に関わる変数 1 件の設定有無だけを報告し、値は含めない。
 message DebugEnvironmentVariable {
   // name は環境変数名。
@@ -1491,6 +1524,8 @@ message DebugReport {
   DebugRuntime runtime = 3;
   // paths は解決されたファイルの場所と、その環境を報告する。
   DebugPaths paths = 4;
+  // daemon は LaunchAgent と稼働中サーバーを報告する。
+  DebugDaemon daemon = 9;
   // config は読み込んだ設定を、秘密情報を除いて報告する。
   DebugConfig config = 5;
   // storage はスキーマの状態とデータベースの整合性を報告する。

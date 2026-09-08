@@ -2,6 +2,13 @@
 
 Start the local WebUI and ConnectRPC server
 
+### Synopsis
+
+Start the local WebUI and ConnectRPC server.
+
+Without --addr the port comes from server.port in the configuration, which defaults to 7331 and falls back to an ephemeral port when that is in use.
+--addr is the only way to listen outside loopback, and such a server is not recorded as the running one.
+
 ```
 prx serve [flags]
 ```
@@ -15,7 +22,7 @@ prx serve --demo
 ### Options
 
 ```
-      --addr string   listen address (default "127.0.0.1:7331")
+      --addr string   listen address, overriding server.port and loopback (host:port)
       --demo          start with isolated temporary demo data
   -h, --help          help for serve
 ```
