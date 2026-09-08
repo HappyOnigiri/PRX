@@ -95,7 +95,15 @@ func Acquire() (lock *Lock, held bool, err error) {
 	for attempt := 1; ; attempt++ {
 		lockErr := syscall.Flock(int(file.Fd()), syscall.LOCK_EX|syscall.LOCK_NB)
 		if lockErr == nil {
-			return &Lock{file: file, path: path}, true, nil
+			lock := &Lock{file: file, path: path}
+			// 異常終了が残した内容を捨てる。ロックが移った後も残っていると、Write まで
+			// の間だけ読み手が死んだサーバーのアドレスと pid を有効なものとして読む。
+			if err := lock.truncate(); err != nil {
+				_ = syscall.Flock(int(file.Fd()), syscall.LOCK_UN)
+				_ = file.Close()
+				return nil, false, err
+			}
+			return lock, true, nil
 		}
 		if !errors.Is(lockErr, syscall.EWOULDBLOCK) {
 			_ = file.Close()

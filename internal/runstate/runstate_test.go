@@ -1,6 +1,7 @@
 package runstate
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"syscall"
@@ -88,6 +89,31 @@ func TestReadReportsRunningWhenTheContentIsCorrupt(t *testing.T) {
 	}
 	if status, state, readErr := Read(); status != StatusRunningAddressUnknown || state.PID != 0 || readErr != nil {
 		t.Fatalf("corrupt status=%v state=%+v err=%v", status, state, readErr)
+	}
+}
+
+// TestAcquireDiscardsTheContentLeftByAnAbnormalExit は異常終了が残した内容を新しい保持者が
+// 引き継がないことを確かめる。引き継ぐと Write までの間、読み手は死んだサーバーの
+// アドレスと pid を有効なものとして読む。
+func TestAcquireDiscardsTheContentLeftByAnAbnormalExit(t *testing.T) {
+	directory := t.TempDir()
+	t.Setenv(DirEnvironmentVariable, directory)
+	stale := State{PID: 1, Address: "127.0.0.1:7331", URL: "http://127.0.0.1:7331", SchemaVersion: SchemaVersion}
+	data, err := json.Marshal(stale)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(filepath.Join(directory, "serve.json"), data, 0o600); err != nil {
+		t.Fatal(err)
+	}
+	lock, held, err := Acquire()
+	if err != nil || !held {
+		t.Fatalf("acquire held=%v err=%v", held, err)
+	}
+	defer func() { _ = lock.Release() }()
+	status, state, err := Read()
+	if err != nil || status != StatusRunningAddressUnknown || state.PID != 0 {
+		t.Fatalf("status=%v state=%+v err=%v", status, state, err)
 	}
 }
 
