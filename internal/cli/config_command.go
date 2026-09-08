@@ -138,7 +138,9 @@ func (s *state) configServerUpdateCommand() *cobra.Command {
 			"Update the local server listen port.\n\n"+
 				"PORT is %q or a port number between 1 and 65535. With %[1]q, PRX prefers %d and "+
 				"falls back to an ephemeral port when it is already in use.\n"+
-				"The host is always loopback; use prx serve --addr to listen elsewhere.",
+				"The host is always loopback; use prx serve --addr to listen elsewhere.\n"+
+				"A server that is already running keeps its current port until it is restarted; "+
+				"run prx daemon restart to move the background server.",
 			config.ServerPortAutoValue,
 			defaultServePort,
 		),

@@ -35,7 +35,8 @@ Set `INSTALL_DIR` to install it elsewhere.
 
 `prx daemon install` registers a LaunchAgent that runs the server for you from the next login onward, and `prx open` opens whichever address it is actually listening on.
 The port defaults to 7331 and falls back to another one when that is taken, so read the address from `prx open` rather than typing it.
-`prx config server update PORT` pins a port, and `prx serve` still runs the server in the foreground on any operating system.
+`prx config server update PORT` pins a port; run `prx daemon restart` afterwards to move a server that is already running.
+`prx serve` still runs the server in the foreground on any operating system.
 
 `prx serve --demo` starts a demo loaded with sample data.
 It leaves your own data untouched, so use it to try PRX first.

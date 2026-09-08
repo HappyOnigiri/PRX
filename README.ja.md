@@ -35,7 +35,8 @@ prx open           # 稼働中のサーバーをブラウザで開く
 
 `prx daemon install` は LaunchAgent を登録し、次回ログイン以降はサーバーを自動で起動します。`prx open` は実際に待ち受けているアドレスを開きます。
 ポートの既定は 7331 で、使用中なら別のポートに移るので、アドレスは打ち込まずに `prx open` に任せてください。
-`prx config server update PORT` でポートを固定できます。`prx serve` は従来どおり、どの OS でも前景でサーバーを起動します。
+`prx config server update PORT` でポートを固定できます。稼働中のサーバーを新しいポートへ移すには、続けて `prx daemon restart` を実行します。
+`prx serve` は従来どおり、どの OS でも前景でサーバーを起動します。
 
 `prx serve --demo` は、サンプルデータの入ったデモを起動します。
 自分のデータには影響しないので、まず触ってみたいときに使えます。

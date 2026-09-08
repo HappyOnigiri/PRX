@@ -8,6 +8,7 @@ Update the local server listen port.
 
 PORT is "auto" or a port number between 1 and 65535. With "auto", PRX prefers 7331 and falls back to an ephemeral port when it is already in use.
 The host is always loopback; use prx serve --addr to listen elsewhere.
+A server that is already running keeps its current port until it is restarted; run prx daemon restart to move the background server.
 
 ```
 prx config server update PORT [flags]
