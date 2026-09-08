@@ -7,10 +7,12 @@ import (
 	"errors"
 	"io"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 
 	"github.com/HappyOnigiri/PRX/internal/domain"
+	"github.com/HappyOnigiri/PRX/internal/runstate"
 )
 
 // レポートはデータベースを開けない実行のためにあるので、オープンの失敗が
@@ -128,4 +130,34 @@ func (s *recordingDebugService) SyncIfDue(context.Context) (bool, domain.GitHubS
 
 func (*recordingDebugService) Debug(context.Context) (domain.DebugReport, error) {
 	return domain.DebugReport{Build: domain.NewDebugBuild("0.0.0-test")}, nil
+}
+
+// TestDebugKeepsTheDaemonSectionWhenTheServiceCannotBeOpened は常駐の観測がストレージに
+// 依存しないことを確かめる。データベースを開けなくても、登録と稼働の状態は報告できる。
+func TestDebugKeepsTheDaemonSectionWhenTheServiceCannotBeOpened(t *testing.T) {
+	t.Setenv("HOME", t.TempDir())
+	t.Setenv(runstate.DirEnvironmentVariable, filepath.Join(t.TempDir(), "run"))
+	var out, errOut bytes.Buffer
+	err := Execute(
+		context.Background(),
+		[]string{"--json", "--db", "unreadable.db", "debug"},
+		&out,
+		&errOut,
+		func(context.Context, ServiceOptions) (Service, io.Closer, error) {
+			return nil, nil, errors.New("open sqlite: unable to open database file")
+		},
+	)
+	if err != nil {
+		t.Fatalf("debug failed: %v", err)
+	}
+	var report domain.DebugReport
+	if err := json.Unmarshal(out.Bytes(), &report); err != nil {
+		t.Fatal(err)
+	}
+	if report.Daemon.Supported != (runtime.GOOS == "darwin") {
+		t.Fatalf("daemon section=%+v on %s", report.Daemon, runtime.GOOS)
+	}
+	if report.Daemon.Supported && report.Daemon.PlistStatus == "" {
+		t.Fatalf("daemon section=%+v", report.Daemon)
+	}
 }
