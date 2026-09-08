@@ -2,7 +2,9 @@ package webui
 
 import (
 	"bytes"
+	"crypto/rand"
 	"embed"
+	"encoding/hex"
 	"fmt"
 	"html"
 	"io/fs"
@@ -16,9 +18,19 @@ import (
 var assets embed.FS
 
 const (
-	versionPlaceholder = "__PRX_VERSION__"
-	demoPlaceholder    = "__PRX_DEMO__"
+	versionPlaceholder     = "__PRX_VERSION__"
+	demoPlaceholder        = "__PRX_DEMO__"
+	demoSessionPlaceholder = "__PRX_DEMO_SESSION__"
 )
+
+// newDemoSession はこのプロセスを表す ID を作る。WebUI は閉じた demo の警告をこの
+// ID に結び付けるので、サーバを起動し直すと警告が戻る。
+func newDemoSession() string {
+	buffer := make([]byte, 16)
+	// Go 1.24 以降の crypto/rand.Read は失敗しない。
+	_, _ = rand.Read(buffer)
+	return hex.EncodeToString(buffer)
+}
 
 func Handler(version string, demo bool) http.Handler {
 	root, _ := fs.Sub(assets, "dist")
@@ -30,6 +42,7 @@ func newHandler(root fs.FS, version string, demo bool) http.Handler {
 	index, indexErr := fs.ReadFile(root, "index.html")
 	index = bytes.ReplaceAll(index, []byte(versionPlaceholder), []byte(html.EscapeString(version)))
 	index = bytes.ReplaceAll(index, []byte(demoPlaceholder), []byte(fmt.Sprintf("%t", demo)))
+	index = bytes.ReplaceAll(index, []byte(demoSessionPlaceholder), []byte(newDemoSession()))
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("X-Content-Type-Options", "nosniff")
 		w.Header().Set("Referrer-Policy", "no-referrer")

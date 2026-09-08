@@ -55,7 +55,7 @@ export const shell = {
       resizeRail: "Sidebar width",
     },
     demo: {
-      dismiss: "Hide the demo notice until the page is reloaded",
+      dismiss: "Hide the demo notice until the demo server restarts",
     },
     serverSettings: {
       loading: "Loading server settings…",
@@ -158,7 +158,7 @@ export const shell = {
       resizeRail: "サイドバーの幅",
     },
     demo: {
-      dismiss: "デモの警告を再読み込みまで隠す",
+      dismiss: "デモの警告をデモサーバーの再起動まで隠す",
     },
     serverSettings: {
       loading: "サーバー設定を読み込んでいます…",

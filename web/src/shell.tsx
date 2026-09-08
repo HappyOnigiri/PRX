@@ -8,7 +8,11 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { isDemoMode } from "./demo";
+import {
+  isDemoMode,
+  readDemoNoticeDismissed,
+  writeDemoNoticeDismissed,
+} from "./demo";
 import type { Feature, Project } from "./gen/prx/v1/prx_pb";
 import { useAutoSync, useSnapshot } from "./hooks";
 import {
@@ -45,8 +49,9 @@ function AppShellLayout({ children }: { children: ReactNode }) {
     useRailToggleFocus(railCollapsed);
   const features = snapshot.data?.features;
   const projects = snapshot.data?.projects;
-  // 警告を消せるのはこの描画の間だけである。読み込み直すと必ず戻る。
-  const [demoDismissed, setDemoDismissed] = useState(false);
+  // 消した警告は demo のサーバプロセス単位で覚える。読み込み直しでは戻らず、
+  // demo を起動し直すと戻る。
+  const [demoDismissed, setDemoDismissed] = useState(readDemoNoticeDismissed);
   const demo = isDemoMode() && !demoDismissed;
 
   function toggleRail(collapsed: boolean) {
@@ -81,6 +86,7 @@ function AppShellLayout({ children }: { children: ReactNode }) {
             variant="quiet"
             onClick={() => {
               setDemoDismissed(true);
+              writeDemoNoticeDismissed();
             }}
           />
         </div>

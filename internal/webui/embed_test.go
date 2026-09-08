@@ -14,7 +14,8 @@ func TestHandlerInjectsVersionIntoIndexAndRouteFallback(t *testing.T) {
 	root := fstest.MapFS{
 		"index.html": &fstest.MapFile{
 			Data: []byte(
-				`<meta name="prx-version" content="__PRX_VERSION__"><meta name="prx-demo" content="__PRX_DEMO__">`,
+				`<meta name="prx-version" content="__PRX_VERSION__"><meta name="prx-demo" content="__PRX_DEMO__">` +
+					`<meta name="prx-demo-session" content="__PRX_DEMO_SESSION__">`,
 			),
 		},
 		"app.js": &fstest.MapFile{Data: []byte("application")},
@@ -34,16 +35,53 @@ func TestHandlerInjectsVersionIntoIndexAndRouteFallback(t *testing.T) {
 		if got := response.Body.String(); !strings.Contains(got, `name="prx-demo" content="true"`) {
 			t.Fatalf("GET %s body = %q", requestPath, got)
 		}
+		if got := response.Body.String(); strings.Contains(got, demoSessionPlaceholder) {
+			t.Fatalf("GET %s body = %q", requestPath, got)
+		}
 		if got := response.Header().Get("Content-Security-Policy"); got == "" {
 			t.Fatalf("GET %s has no content security policy", requestPath)
 		}
 	}
 }
 
+// WebUI は閉じた demo の警告をこの ID に結び付けるので、起動ごとに変わることを確かめる。
+func TestHandlerInjectsFreshDemoSessionPerStart(t *testing.T) {
+	root := fstest.MapFS{
+		"index.html": &fstest.MapFile{
+			Data: []byte(`<meta name="prx-demo-session" content="__PRX_DEMO_SESSION__">`),
+		},
+	}
+
+	bodies := make([]string, 0, 2)
+	for range 2 {
+		handler := newHandler(root, "1.2.3", true)
+		reloads := make([]string, 0, 2)
+		for range 2 {
+			response := httptest.NewRecorder()
+			request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/", nil)
+			handler.ServeHTTP(response, request)
+			reloads = append(reloads, response.Body.String())
+		}
+		if reloads[0] != reloads[1] {
+			t.Fatalf("reload changed the demo session: %q and %q", reloads[0], reloads[1])
+		}
+		bodies = append(bodies, reloads[0])
+	}
+
+	if bodies[0] == bodies[1] {
+		t.Fatalf("both starts served the same demo session: %q", bodies[0])
+	}
+	if strings.Contains(bodies[0], demoSessionPlaceholder) {
+		t.Fatalf("body = %q", bodies[0])
+	}
+}
+
 func TestHandlerServesStaticAsset(t *testing.T) {
 	root := fstest.MapFS{
-		"index.html": &fstest.MapFile{Data: []byte(versionPlaceholder + demoPlaceholder)},
-		"app.js":     &fstest.MapFile{Data: []byte("application")},
+		"index.html": &fstest.MapFile{
+			Data: []byte(versionPlaceholder + demoPlaceholder + demoSessionPlaceholder),
+		},
+		"app.js": &fstest.MapFile{Data: []byte("application")},
 	}
 	response := httptest.NewRecorder()
 	request := httptest.NewRequestWithContext(context.Background(), http.MethodGet, "/app.js", nil)

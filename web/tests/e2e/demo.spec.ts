@@ -72,16 +72,30 @@ test("keeps the bilingual demo reset warning visible", async ({ page }) => {
   ).toBe(0);
 });
 
-test("restores the dismissed demo warning after a reload", async ({ page }) => {
+test("keeps the dismissed demo warning hidden until the server restarts", async ({
+  page,
+}) => {
   await page.goto("/");
   await page
     .getByRole("button", {
-      name: "Hide the demo notice until the page is reloaded",
+      name: "Hide the demo notice until the demo server restarts",
     })
     .click();
   await expect(page.getByRole("status")).toBeHidden();
   await expect(page.locator(".app-shell")).not.toHaveAttribute("data-demo");
 
+  await page.reload();
+  await expect(page.locator(".app-shell")).toBeVisible();
+  await expect(page.getByRole("status")).toBeHidden();
+
+  // サーバを起動し直すと HTML の ID が変わる。保存済みの ID を別の値に書き換えて
+  // 同じ状況を作る。
+  await page.evaluate(() => {
+    localStorage.setItem(
+      "prx.webui.demoNoticeDismissedSession",
+      "restarted-server",
+    );
+  });
   await page.reload();
   await expect(page.getByRole("status")).toBeVisible();
 });
