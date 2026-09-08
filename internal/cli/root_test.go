@@ -9,6 +9,8 @@ import (
 	"testing"
 
 	"github.com/spf13/cobra"
+
+	"github.com/HappyOnigiri/PRX/internal/runstate"
 )
 
 type failingWriter struct{}
@@ -136,6 +138,7 @@ func (c *recordingCloser) Close() error {
 }
 
 func TestRootOpensAndClosesCommandResources(t *testing.T) {
+	t.Setenv(runstate.DirEnvironmentVariable, t.TempDir())
 	closer := &recordingCloser{}
 	var got ServiceOptions
 	root, state := newRootWithState(
