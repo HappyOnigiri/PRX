@@ -1,4 +1,5 @@
 import react from "@vitejs/plugin-react";
+import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { createViteLicensePlugin } from "rollup-license-plugin";
@@ -28,7 +29,11 @@ const devOrigins = new Set([
   "http://[::1]:7331",
 ]);
 const demoPlaceholder = /__PRX_DEMO__/g;
+const demoSessionPlaceholder = /__PRX_DEMO_SESSION__/g;
 const demoMode = process.env["PRX_DEMO"] === "true";
+// 開発サーバのプロセスを表す ID である。閉じた警告は読み込み直しても戻らないが、
+// 開発サーバを起動し直すと ID が変わって戻る。
+const demoSession = randomUUID();
 
 function serveLicenseReport(): Plugin {
   return {
@@ -57,7 +62,9 @@ function injectDemoMode(): Plugin {
     name: "inject-demo-mode",
     apply: "serve",
     transformIndexHtml(html) {
-      return html.replace(demoPlaceholder, String(demoMode));
+      return html
+        .replace(demoPlaceholder, String(demoMode))
+        .replace(demoSessionPlaceholder, demoSession);
     },
   };
 }

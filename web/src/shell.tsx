@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { PanelLeftClose, PanelLeftOpen, Settings } from "lucide-react";
+import { PanelLeftClose, PanelLeftOpen, Settings, X } from "lucide-react";
 import {
   useEffect,
   useRef,
@@ -8,7 +8,11 @@ import {
   type ReactNode,
 } from "react";
 import { useTranslation } from "react-i18next";
-import { isDemoMode } from "./demo";
+import {
+  isDemoMode,
+  readDemoNoticeDismissed,
+  writeDemoNoticeDismissed,
+} from "./demo";
 import type { Feature, Project } from "./gen/prx/v1/prx_pb";
 import { useAutoSync, useSnapshot } from "./hooks";
 import {
@@ -45,7 +49,10 @@ function AppShellLayout({ children }: { children: ReactNode }) {
     useRailToggleFocus(railCollapsed);
   const features = snapshot.data?.features;
   const projects = snapshot.data?.projects;
-  const demo = isDemoMode();
+  // 消した警告は demo のサーバプロセス単位で覚える。読み込み直しでは戻らず、
+  // demo を起動し直すと戻る。
+  const [demoDismissed, setDemoDismissed] = useState(readDemoNoticeDismissed);
+  const demo = isDemoMode() && !demoDismissed;
 
   function toggleRail(collapsed: boolean) {
     markUserToggle();
@@ -70,6 +77,18 @@ function AppShellLayout({ children }: { children: ReactNode }) {
             <span>DEMO · Reset on restart</span>
             <span>再起動でリセット</span>
           </span>
+          <IconButton
+            className="demo-banner-dismiss"
+            icon={X}
+            iconOnly
+            label={t("demo.dismiss")}
+            size="compact"
+            variant="quiet"
+            onClick={() => {
+              setDemoDismissed(true);
+              writeDemoNoticeDismissed();
+            }}
+          />
         </div>
       )}
       <aside className="rail" id={railId}>

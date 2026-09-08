@@ -97,6 +97,7 @@ describe("AppShell", () => {
   // 以降のケースがすべてデモモードで動いてしまう。
   afterEach(() => {
     document.querySelector('meta[name="prx-demo"]')?.remove();
+    document.querySelector('meta[name="prx-demo-session"]')?.remove();
   });
   beforeEach(async () => {
     localStorage.clear();
@@ -186,6 +187,50 @@ describe("AppShell", () => {
       screen.queryByText("Temporary demo database"),
     ).not.toBeInTheDocument();
     expect(document.querySelector(".rail-foot")).not.toBeInTheDocument();
+  });
+
+  it("keeps the dismissed demo warning hidden until another session is served", () => {
+    const demoMeta = document.createElement("meta");
+    demoMeta.name = "prx-demo";
+    demoMeta.content = "true";
+    document.head.append(demoMeta);
+    const sessionMeta = document.createElement("meta");
+    sessionMeta.name = "prx-demo-session";
+    sessionMeta.content = "session-1";
+    document.head.append(sessionMeta);
+
+    render(
+      <AppShell>
+        <p>Workspace</p>
+      </AppShell>,
+    );
+
+    fireEvent.click(
+      screen.getByRole("button", {
+        name: "Hide the demo notice until the demo server restarts",
+      }),
+    );
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+    expect(document.querySelector("[data-demo]")).toBeNull();
+
+    // 読み込み直しやホットリロードに相当する再マウントでは戻らない。
+    cleanup();
+    render(
+      <AppShell>
+        <p>Workspace</p>
+      </AppShell>,
+    );
+    expect(screen.queryByRole("status")).not.toBeInTheDocument();
+
+    // demo のサーバを起動し直すと ID が変わり、警告が戻る。
+    sessionMeta.content = "session-2";
+    cleanup();
+    render(
+      <AppShell>
+        <p>Workspace</p>
+      </AppShell>,
+    );
+    expect(screen.getByRole("status")).toBeInTheDocument();
   });
 
   it("opens and closes Settings from the rail", () => {
