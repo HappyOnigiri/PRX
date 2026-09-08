@@ -13,7 +13,6 @@ PRX は、タスクと GitHub プルリクエストの依存グラフを扱う�
 - Protocol Buffer・マイグレーション・SQL のソースを編集したら `make generate` を実行する。
 - `gen/`、`internal/db/`、`web/src/gen/` 配下の生成ファイルは手で編集しない。
 - `internal/webui/dist/` はビルド成果物である。`.gitkeep` だけを追跡し、資産は `make build` または `make web-build` で生成する。
-- 実装の変更を引き渡す前に `make ci` を実行する。
 
 ## 記載言語
 
