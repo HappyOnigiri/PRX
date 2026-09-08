@@ -103,7 +103,8 @@ run_case() {
   if [ "$expected_startup" = daemon ]; then
     assert_contains "$output" 'To start PRX at login, run:'
     assert_contains "$output" '  prx daemon install'
-    assert_contains "$output" 'Then run prx open to open the server in your browser.'
+    assert_contains "$output" 'To open the server in your browser, run:'
+    assert_contains "$output" '  prx open'
     assert_not_contains "$output" 'Then run prx serve to start the server at http://127.0.0.1:7331.'
     return
   fi

@@ -68,7 +68,8 @@ main() {
   if [[ "$daemon_status" == *'"installed":false'* ]]; then
     echo 'To start PRX at login, run:'
     echo '  prx daemon install'
-    echo 'Then run prx open to open the server in your browser.'
+    echo 'To open the server in your browser, run:'
+    echo '  prx open'
   else
     echo 'Then run prx serve to start the server at http://127.0.0.1:7331.'
   fi
