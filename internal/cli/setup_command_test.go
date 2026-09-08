@@ -6,6 +6,7 @@ import (
 	"errors"
 	"io"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 
@@ -30,7 +31,11 @@ func TestSetupWithoutTerminalDoesNotOpenService(t *testing.T) {
 			return nil, nil, nil
 		},
 	)
-	if err == nil || !strings.Contains(err.Error(), "needs a terminal") {
+	if runtime.GOOS == "darwin" {
+		if err == nil || !strings.Contains(err.Error(), "needs a terminal") {
+			t.Fatalf("error=%v", err)
+		}
+	} else if err != nil {
 		t.Fatalf("error=%v", err)
 	}
 	if opened {
