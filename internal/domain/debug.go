@@ -354,7 +354,9 @@ func NewDebugDaemon(input DebugDaemonInput) DebugDaemon {
 		PID:           input.PID,
 		Version:       input.Version,
 		BinaryMatches: input.BinaryMatches,
-		Error:         input.Error,
+		// 読み取りの失敗は os.PathError なので、そのまま載せるとホーム配下の絶対パスが
+		// 共有される診断に残る。
+		Error: shortener.Text(truncateDebugMessage(input.Error)),
 	}
 	if input.Demo {
 		result.PlistPath = "demo"

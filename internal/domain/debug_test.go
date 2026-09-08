@@ -802,3 +802,20 @@ func TestFormatDebugReportReportsAbsentSections(t *testing.T) {
 		}
 	}
 }
+
+// TestNewDebugDaemonShortensTheHomeDirectoryInTheError は読み取りの失敗に含まれるパスも
+// 短縮することを確かめる。os.PathError は本文にホーム配下の絶対パスを持つ。
+func TestNewDebugDaemonShortensTheHomeDirectoryInTheError(t *testing.T) {
+	t.Setenv("HOME", "/home/user")
+	daemon := NewDebugDaemon(DebugDaemonInput{
+		Supported: true,
+		PlistPath: "/home/user/Library/LaunchAgents/com.user.prx.plist",
+		Error:     "open /home/user/Library/LaunchAgents/com.user.prx.plist: permission denied",
+	})
+	if strings.Contains(daemon.Error, "/home/user") {
+		t.Fatalf("daemon error=%q", daemon.Error)
+	}
+	if !strings.Contains(daemon.Error, "~/Library/LaunchAgents") {
+		t.Fatalf("daemon error=%q", daemon.Error)
+	}
+}
