@@ -81,7 +81,7 @@ describe("EditFeatureDialog", () => {
       title: "Payments v2",
       description: "Updated scope",
       status: FeatureStatus.PAUSED,
-      projectId: "",
+      projectId: "project-1",
     });
 
     onClose.mockClear();
@@ -100,8 +100,40 @@ describe("EditFeatureDialog", () => {
       expect(mutationAt(0).mutateAsync).toHaveBeenCalled();
     });
     expect(onClose).not.toHaveBeenCalled();
+    // 保存に失敗した編集はまだ未保存なので、閉じる前に破棄を確認する。
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(onClose).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("dialog", { name: "Discard unsaved changes?" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Discard" }));
+    expect(onClose).toHaveBeenCalledOnce();
+  });
+
+  it("keeps the save button inert until a field changes", () => {
+    const onClose = vi.fn();
+    render(
+      <EditFeatureDialog
+        projects={[
+          makeProject({ id: "project-1", title: "Delivery" }),
+          makeProject({ id: "project-2", title: "Platform" }),
+        ]}
+        feature={makeFeature({ title: "Payments" })}
+        onClose={onClose}
+        onDeleted={vi.fn()}
+      />,
+    );
+    const save = screen.getByRole("button", { name: "Save feature" });
+    expect(save).toBeDisabled();
+    // 変更がないので確認を挟まずそのまま閉じる。
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(onClose).toHaveBeenCalledOnce();
+
+    fireEvent.change(screen.getByLabelText("Project"), {
+      target: { value: "project-2" },
+    });
+    expect(screen.getByLabelText("Project")).toHaveValue("project-2");
+    expect(screen.getByRole("button", { name: "Save feature" })).toBeEnabled();
   });
 
   it("confirms completing a feature whose tasks are unfinished", async () => {
@@ -151,7 +183,7 @@ describe("EditFeatureDialog", () => {
       title: "Payments",
       description: "",
       status: FeatureStatus.COMPLETED,
-      projectId: "",
+      projectId: "project-1",
     });
   });
 
@@ -177,7 +209,7 @@ describe("EditFeatureDialog", () => {
       title: "Payments rollout",
       description: "",
       status: FeatureStatus.COMPLETED,
-      projectId: "",
+      projectId: "project-1",
     });
   });
 

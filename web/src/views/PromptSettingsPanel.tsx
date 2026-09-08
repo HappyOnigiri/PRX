@@ -1,9 +1,10 @@
-import { RotateCcw, Save } from "lucide-react";
-import { useRef, useState, type SyntheticEvent } from "react";
+import { RotateCcw } from "lucide-react";
+import { useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { promptMutations, type PromptTemplateSettings } from "../api";
 import { usePromptTemplates, usePromptTemplatesMutation } from "../hooks";
 import { IconButton } from "./IconButton";
+import { useRegisterSettingsSection } from "./settingsSections";
 
 interface TemplateDraft {
   design: string;
@@ -16,16 +17,36 @@ export function PromptSettingsPanel() {
   const templates = usePromptTemplates();
   const update = usePromptTemplatesMutation(promptMutations.updateTemplates);
   const [draft, setDraft] = useState<TemplateDraft>();
-  const [saved, setSaved] = useState(false);
   // キー入力を数え、実行中の保存が、送ったテキストと画面上のテキストが同じか
   // 判定できるようにする。
   const edits = useRef(0);
 
+  const saved = templates.data ? templatesOf(templates.data) : undefined;
+  const current = draft ?? saved;
+
   function edit(next: TemplateDraft) {
     edits.current += 1;
-    setSaved(false);
     setDraft(next);
   }
+
+  // テンプレートはすべて 1 リクエストで送り、設定の書き込みで片方だけ更新され
+  // 片方が古いまま残ることがないようにする。
+  async function save() {
+    if (!current) return;
+    const submitted = edits.current;
+    const result = await update.mutateAsync(current);
+    // リクエスト中に打たれたテキストはレスポンスより新しい。サーバーのコピーを
+    // 採用するとその入力を黙って巻き戻したうえ、ユーザーにもう見えないテキスト
+    // について成功を報告してしまう。
+    if (edits.current !== submitted) return;
+    if (result.templates) setDraft(result.templates);
+  }
+
+  useRegisterSettingsSection("prompts", {
+    dirty: Boolean(current && saved && !sameTemplates(current, saved)),
+    invalid: false,
+    save,
+  });
 
   if (templates.isPending) {
     return (
@@ -35,44 +56,14 @@ export function PromptSettingsPanel() {
   if (!templates.data) {
     return <p className="form-error">{templates.error.message}</p>;
   }
-
-  const current = draft ?? {
-    design: templates.data.design,
-    implementation: templates.data.implementation,
-    batch: templates.data.batch,
-  };
-  const builtIn = {
-    design: templates.data.builtIn.design,
-    implementation: templates.data.builtIn.implementation,
-    batch: templates.data.builtIn.batch,
-  };
-
-  // テンプレートはすべて 1 リクエストで送り、設定の書き込みで片方だけ更新され
-  // 片方が古いまま残ることがないようにする。
-  async function submit(event: SyntheticEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setSaved(false);
-    const submitted = edits.current;
-    const result = await update.mutateAsync(current);
-    // リクエスト中に打たれたテキストはレスポンスより新しい。サーバーのコピーを
-    // 採用するとその入力を黙って巻き戻したうえ、ユーザーにもう見えないテキスト
-    // について成功を報告してしまう。
-    if (edits.current !== submitted) return;
-    if (result.templates) setDraft(result.templates);
-    setSaved(true);
-  }
+  const editable = draft ?? templatesOf(templates.data);
 
   return (
     <>
       <p className="dialog-lead">{t("promptSettings.description")}</p>
-      <form
-        className="settings-form"
-        onSubmit={(event) => {
-          void submit(event).catch(() => undefined);
-        }}
-      >
+      <div className="settings-form">
         <TemplateFields
-          current={current}
+          current={editable}
           settings={templates.data}
           onEdit={edit}
         />
@@ -81,29 +72,38 @@ export function PromptSettingsPanel() {
             icon={RotateCcw}
             label={t("promptSettings.restoreDefaults")}
             variant="secondary"
-            type="button"
             disabled={update.isPending}
             onClick={() => {
               // 空のテンプレートならサーバーが自前で既定値に戻すが、エディタは
               // これから保存する内容を見せるものなので、書き込みを待たず組み
               // 込みのテキストをフィールドに入れる。
-              edit(builtIn);
+              edit({
+                design: templates.data.builtIn.design,
+                implementation: templates.data.builtIn.implementation,
+                batch: templates.data.builtIn.batch,
+              });
             }}
           />
-          <IconButton
-            icon={Save}
-            label={t("common.save")}
-            variant="primary"
-            type="submit"
-            disabled={update.isPending}
-          />
         </div>
-      </form>
+      </div>
       {update.error && <p className="form-error">{update.error.message}</p>}
-      <p className="settings-form-status" aria-live="polite">
-        {saved && !update.error && t("promptSettings.saved")}
-      </p>
     </>
+  );
+}
+
+function templatesOf(templates: PromptTemplateSettings): TemplateDraft {
+  return {
+    design: templates.design,
+    implementation: templates.implementation,
+    batch: templates.batch,
+  };
+}
+
+function sameTemplates(left: TemplateDraft, right: TemplateDraft): boolean {
+  return (
+    left.design === right.design &&
+    left.implementation === right.implementation &&
+    left.batch === right.batch
   );
 }
 

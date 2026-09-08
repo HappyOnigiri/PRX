@@ -1,13 +1,14 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
   screen,
-  waitFor,
 } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { setDisplayLanguage } from "../src/i18n";
 import { PromptSettingsPanel } from "../src/views/PromptSettingsPanel";
+import { SettingsSectionsHarness } from "./settingsHarness";
 
 interface PromptDraft {
   design: string;
@@ -48,11 +49,25 @@ vi.mock("../src/hooks", () => ({
   usePromptTemplatesMutation: () => panelMocks.mutation,
 }));
 
-function submitTemplateForm() {
-  const form = screen.getByRole("button", { name: "Save" }).closest("form");
-  if (!(form instanceof HTMLFormElement))
-    throw new Error("template form missing");
-  fireEvent.submit(form);
+function renderPanel() {
+  render(
+    <SettingsSectionsHarness>
+      <PromptSettingsPanel />
+    </SettingsSectionsHarness>,
+  );
+}
+
+function saveButton() {
+  return screen.getByRole("button", { name: "Save all" });
+}
+
+// 保存は 1 つのボタンから走るので、押した後の書き込みと再描画をまとめて
+// 待ってから結果を確かめる。
+async function submitTemplateForm() {
+  await act(() => {
+    fireEvent.click(saveButton());
+    return Promise.resolve();
+  });
 }
 
 describe("PromptSettingsPanel", () => {
@@ -86,14 +101,14 @@ describe("PromptSettingsPanel", () => {
 
   it("reports that the templates are still loading", () => {
     panelMocks.templates.isPending = true;
-    render(<PromptSettingsPanel />);
+    renderPanel();
     expect(screen.getByText("Loading prompt templates…")).toBeInTheDocument();
   });
 
   it("reports why the templates could not be read", () => {
     panelMocks.templates.data = undefined;
     panelMocks.templates.error = new Error("config file is unreadable");
-    render(<PromptSettingsPanel />);
+    renderPanel();
     expect(screen.getByText("config file is unreadable")).toBeInTheDocument();
   });
 
@@ -114,7 +129,7 @@ describe("PromptSettingsPanel", () => {
         batch: "Built-in batch {{task_group}}",
       },
     };
-    render(<PromptSettingsPanel />);
+    renderPanel();
     expect(
       screen.getByText(/\{\{task_ref\}\}, \{\{milestone_id\}\}/),
     ).toBeInTheDocument();
@@ -129,7 +144,17 @@ describe("PromptSettingsPanel", () => {
   });
 
   it("saves every template in one write and confirms the result", async () => {
-    render(<PromptSettingsPanel />);
+    // 保存が通るとサーバーの写しも入れ替わる。下書きはそれと一致するので、
+    // 保存はもう押せなくなる。
+    panelMocks.mutation.mutateAsync.mockImplementation(
+      (templates: PromptDraft) => {
+        const data = panelMocks.templates.data;
+        if (data) panelMocks.templates.data = { ...data, ...templates };
+        // サーバーは自分の写しを返すので、応答は送った下書きとは別の物である。
+        return Promise.resolve({ templates: { ...templates } });
+      },
+    );
+    renderPanel();
     fireEvent.change(screen.getByLabelText(/Design prompt/), {
       target: { value: "Plan {{task_id}}" },
     });
@@ -139,24 +164,21 @@ describe("PromptSettingsPanel", () => {
     fireEvent.change(screen.getByLabelText(/Batch implementation prompt/), {
       target: { value: "Group {{task_list}}" },
     });
-    submitTemplateForm();
+    await submitTemplateForm();
 
-    await waitFor(() => {
-      expect(panelMocks.mutation.mutateAsync).toHaveBeenCalledWith({
-        design: "Plan {{task_id}}",
-        implementation: "Ship {{task_id}}",
-        batch: "Group {{task_list}}",
-      });
+    expect(panelMocks.mutation.mutateAsync).toHaveBeenCalledWith({
+      design: "Plan {{task_id}}",
+      implementation: "Ship {{task_id}}",
+      batch: "Group {{task_list}}",
     });
-    expect(
-      await screen.findByText("Prompt templates saved."),
-    ).toBeInTheDocument();
+    // 保存が済むと下書きはサーバーの写しと一致するので、保存はもう押せない。
+    expect(saveButton()).toBeDisabled();
   });
 
   // 組み込みの文面はサーバー由来なので、復元時は書き込みの応答を待って欄を
   // 空にするのではなく、保存される内容をそのまま表示する。
   it("puts the built-in templates in the fields before saving them", async () => {
-    render(<PromptSettingsPanel />);
+    renderPanel();
     fireEvent.click(
       screen.getByRole("button", { name: "Restore built-in templates" }),
     );
@@ -170,14 +192,12 @@ describe("PromptSettingsPanel", () => {
     expect(screen.getByLabelText(/Batch implementation prompt/)).toHaveValue(
       "Built-in batch {{task_list}}",
     );
-    submitTemplateForm();
+    await submitTemplateForm();
 
-    await waitFor(() => {
-      expect(panelMocks.mutation.mutateAsync).toHaveBeenCalledWith({
-        design: "Built-in design {{task_id}}",
-        implementation: "Built-in build {{task_id}}",
-        batch: "Built-in batch {{task_list}}",
-      });
+    expect(panelMocks.mutation.mutateAsync).toHaveBeenCalledWith({
+      design: "Built-in design {{task_id}}",
+      implementation: "Built-in build {{task_id}}",
+      batch: "Built-in batch {{task_list}}",
     });
   });
 
@@ -191,34 +211,31 @@ describe("PromptSettingsPanel", () => {
           settle = resolve;
         }),
     );
-    render(<PromptSettingsPanel />);
+    renderPanel();
     fireEvent.change(screen.getByLabelText(/Design prompt/), {
       target: { value: "Plan {{task_id}}" },
     });
-    submitTemplateForm();
-    await waitFor(() => {
-      expect(panelMocks.mutation.mutateAsync).toHaveBeenCalled();
-    });
+    await submitTemplateForm();
+    expect(panelMocks.mutation.mutateAsync).toHaveBeenCalled();
 
     fireEvent.change(screen.getByLabelText(/Design prompt/), {
       target: { value: "Plan {{task_id}} carefully" },
     });
-    settle({
-      templates: {
-        design: "Plan {{task_id}}",
-        implementation: "Build {{task_id}}",
-        batch: "Batch {{task_list}}",
-      },
+    await act(() => {
+      settle({
+        templates: {
+          design: "Plan {{task_id}}",
+          implementation: "Build {{task_id}}",
+          batch: "Batch {{task_list}}",
+        },
+      });
+      return Promise.resolve();
     });
 
-    await waitFor(() => {
-      expect(screen.getByLabelText(/Design prompt/)).toHaveValue(
-        "Plan {{task_id}} carefully",
-      );
-    });
-    expect(
-      screen.queryByText("Prompt templates saved."),
-    ).not.toBeInTheDocument();
+    expect(screen.getByLabelText(/Design prompt/)).toHaveValue(
+      "Plan {{task_id}} carefully",
+    );
+    expect(saveButton()).toBeEnabled();
   });
 
   it("shows a rejected template and keeps the edited text", async () => {
@@ -228,22 +245,18 @@ describe("PromptSettingsPanel", () => {
     panelMocks.mutation.error = new Error(
       "prompts.design: template must use {{task_id}}",
     );
-    render(<PromptSettingsPanel />);
+    renderPanel();
     fireEvent.change(screen.getByLabelText(/Design prompt/), {
       target: { value: "no placeholder" },
     });
-    submitTemplateForm();
+    await submitTemplateForm();
 
-    await waitFor(() => {
-      expect(
-        screen.getByText("prompts.design: template must use {{task_id}}"),
-      ).toBeInTheDocument();
-    });
+    expect(
+      screen.getByText("prompts.design: template must use {{task_id}}"),
+    ).toBeInTheDocument();
     expect(screen.getByLabelText(/Design prompt/)).toHaveValue(
       "no placeholder",
     );
-    expect(
-      screen.queryByText("Prompt templates saved."),
-    ).not.toBeInTheDocument();
+    expect(saveButton()).toBeEnabled();
   });
 });

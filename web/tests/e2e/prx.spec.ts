@@ -39,6 +39,19 @@ async function openDisplaySettings(page: Page, language: "en" | "ja" = "en") {
   await page.getByRole("tab", { name: labels.tab }).click();
 }
 
+// 設定はタブをまたいでフッタの保存 1 つで書き込む。表示の設定も押すまで
+// 適用されない。
+async function saveSettings(page: Page, language: "en" | "ja" = "en") {
+  const labels =
+    language === "en"
+      ? { dialog: "Settings", save: "Save" }
+      : { dialog: "設定", save: "保存" };
+  await page
+    .getByRole("dialog", { name: labels.dialog })
+    .getByRole("button", { name: labels.save })
+    .click();
+}
+
 // デモバナーはビューポートから高さを取るので、ワークスペースがビューポート全体の
 // サイズのままだと、自身の下端であるグラフキャンバスとズーム操作が画面外に出る。
 test("keeps the demo workspace inside the viewport", async ({ page }) => {
@@ -128,6 +141,8 @@ test("switches the display language and restores it from Local Storage", async (
   await page.goto("/");
   await openDisplaySettings(page);
   await page.getByLabel("Display language").selectOption("ja");
+  await expect(page.locator("html")).toHaveAttribute("lang", "en");
+  await saveSettings(page);
   await expect(
     page.getByRole("heading", { name: /いま動かせるタスク/ }),
   ).toBeVisible();
@@ -152,19 +167,18 @@ test("keeps the Settings dialog size while switching tabs", async ({
   const panelBounds = await page
     .getByRole("tabpanel", { name: "Server" })
     .boundingBox();
-  const syncFormBounds = await page
-    .getByRole("heading", { name: "Automatic GitHub updates" })
-    .locator("..")
-    .locator("..")
-    .locator("form")
+  const hostFieldsBounds = await page
+    .getByRole("tabpanel", { name: "Server" })
+    .locator("fieldset")
+    .first()
     .boundingBox();
   expect(panelBounds).not.toBeNull();
-  expect(syncFormBounds).not.toBeNull();
-  if (panelBounds && syncFormBounds) {
+  expect(hostFieldsBounds).not.toBeNull();
+  if (panelBounds && hostFieldsBounds) {
     const rightInset =
       panelBounds.x +
       panelBounds.width -
-      (syncFormBounds.x + syncFormBounds.width);
+      (hostFieldsBounds.x + hostFieldsBounds.width);
     expect(rightInset).toBeGreaterThanOrEqual(12);
   }
   const serverBounds = await dialog.boundingBox();
@@ -228,6 +242,7 @@ test("follows the system theme unless the user selects an override", async ({
   await expect.poll(background).toBe("rgb(25, 27, 31)");
 
   await page.getByLabel("Display theme").selectOption("light");
+  await saveSettings(page);
   await expect(root).toHaveAttribute("data-theme", "light");
   await expect.poll(background).toBe("rgb(245, 246, 248)");
   await page.reload();
@@ -236,6 +251,7 @@ test("follows the system theme unless the user selects an override", async ({
   await expect.poll(background).toBe("rgb(245, 246, 248)");
 
   await page.getByLabel("Display theme").selectOption("system");
+  await saveSettings(page);
   await expect(root).not.toHaveAttribute("data-theme");
   await expect.poll(background).toBe("rgb(25, 27, 31)");
   await page.emulateMedia({ colorScheme: "light" });
@@ -906,6 +922,7 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
   await openDisplaySettings(page);
   await page.getByLabel("Display language").selectOption("ja");
+  await saveSettings(page);
   const settingsDialog = page.getByRole("dialog", { name: "設定" });
   await expect(settingsDialog).toBeVisible();
   await expect(page.getByRole("tab", { name: "表示" })).toHaveAttribute(
@@ -922,9 +939,10 @@ test("keeps controls usable at a narrow viewport", async ({ page }) => {
   }
   await expect(page.locator("body")).toHaveJSProperty("scrollWidth", 320);
   await page.getByLabel("表示言語").selectOption("en");
+  await saveSettings(page, "ja");
   await page
     .getByRole("dialog", { name: "Settings" })
-    .getByRole("button", { name: "Done" })
+    .getByRole("button", { name: "Close" })
     .click();
   // この幅ではツリーが隠れるので、feature へはサイドバーではなく Projects
   // ページから辿る。

@@ -16,7 +16,6 @@ export const prompt = {
       batchPlaceholders:
         "Available placeholders: {{list}}. {{required}} is required.",
       restoreDefaults: "Restore built-in templates",
-      saved: "Prompt templates saved.",
     },
     batchPrompt: {
       open: "Copy batch prompt",
@@ -51,7 +50,6 @@ export const prompt = {
       batchPlaceholders:
         "使用できるプレースホルダー: {{list}}（{{required}} は必須）",
       restoreDefaults: "既定のテンプレートに戻す",
-      saved: "プロンプトテンプレートを保存しました。",
     },
     batchPrompt: {
       open: "一括プロンプトをコピー",

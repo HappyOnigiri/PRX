@@ -1,4 +1,5 @@
 import { Trash2, X } from "lucide-react";
+import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { type PullRequest, type Task } from "../gen/prx/v1/prx_pb";
@@ -8,11 +9,13 @@ import { CopyableIdentifier } from "./CopyableIdentifier";
 import { EntityIcon } from "./EntityIcon";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
+import { useTaskDraft } from "./taskDraft";
 import { PullRequestSection } from "./TaskInspectorPullRequest";
 import { ReferencesSection } from "./TaskInspectorReferences";
 import { TaskInspectorTaskForm } from "./TaskInspectorTaskForm";
 import { type TaskNodeDocument } from "./TaskNode";
 import { TaskBlockLabels, TaskStatusBadge } from "./TaskStateBadges";
+import { DiscardChangesDialog, SaveButton } from "./UnsavedChanges";
 
 export interface TaskInspectorProps {
   task: Task;
@@ -42,7 +45,7 @@ function TaskInspectorBlocks({ task, tasks }: { task: Task; tasks: Task[] }) {
 function TaskInspectorHeader({
   task,
   onClose,
-}: Pick<TaskInspectorProps, "task" | "onClose">) {
+}: Pick<TaskInspectorProps, "task"> & { onClose: () => void }) {
   const { t } = useTranslation();
   return (
     <header>
@@ -83,10 +86,19 @@ export function TaskInspector({
 }: TaskInspectorProps) {
   const { t } = useTranslation();
   const deleteTask = useDomainMutation(mutations.deleteTask);
+  const controller = useTaskDraft(task);
+  const [discarding, setDiscarding] = useState(false);
+  const dirty = !readOnly && controller.dirty;
 
   return (
     <aside className="inspector" aria-label={t("inspector.label")}>
-      <TaskInspectorHeader task={task} onClose={onClose} />
+      <TaskInspectorHeader
+        task={task}
+        onClose={() => {
+          if (dirty) setDiscarding(true);
+          else onClose();
+        }}
+      />
       {/* ステータスは見出しにあるので、このストリップには進行を妨げている事情
           だけが並ぶ。待ち相手はラベルの語だけでは特定できないため、可視の
           テキストとしても添える。 */}
@@ -96,7 +108,11 @@ export function TaskInspector({
       {readOnly && (
         <p className="inspector-read-only">{t("inspector.readOnly")}</p>
       )}
-      <TaskInspectorTaskForm task={task} readOnly={readOnly} />
+      <TaskInspectorTaskForm
+        task={task}
+        controller={controller}
+        readOnly={readOnly}
+      />
       <PullRequestSection
         taskId={task.id}
         pullRequest={pullRequest}
@@ -109,6 +125,7 @@ export function TaskInspector({
       />
       {!readOnly && (
         <>
+          {/* 削除は task 自体を消す操作なので、下書きの保存とは別に置く。 */}
           <IconButton
             icon={Trash2}
             label={t("inspector.deleteTask")}
@@ -127,7 +144,23 @@ export function TaskInspector({
             }}
           />
           <MutationError error={deleteTask.error} />
+          <footer className="inspector-footer">
+            <SaveButton
+              dirty={dirty}
+              label={t("inspector.saveTask")}
+              pending={controller.pending}
+              onClick={controller.save}
+            />
+          </footer>
         </>
+      )}
+      {discarding && (
+        <DiscardChangesDialog
+          onCancel={() => {
+            setDiscarding(false);
+          }}
+          onConfirm={onClose}
+        />
       )}
     </aside>
   );

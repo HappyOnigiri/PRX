@@ -1,7 +1,8 @@
 import type { LucideIcon, LucideProps } from "lucide-react";
 import type { ButtonHTMLAttributes, Ref } from "react";
 
-type IconButtonVariant = "primary" | "secondary" | "quiet" | "danger";
+type IconButtonVariant =
+  "primary" | "secondary" | "quiet" | "danger" | "affirm";
 type IconButtonSize = "standard" | "compact";
 
 type IconProps = Omit<

@@ -66,9 +66,9 @@ test("copies a task prompt built from the configured template", async ({
   await promptPanel
     .getByLabel("Design prompt")
     .fill(`${token} designs {{task_id}}: {{task_title}}`);
-  await promptPanel.getByRole("button", { name: "Save" }).click();
-  await expect(promptPanel.getByText("Prompt templates saved.")).toBeVisible();
-  await settings.getByRole("button", { name: "Done" }).click();
+  await settings.getByRole("button", { name: "Save" }).click();
+  await expect(settings.getByText("Saved")).toBeVisible();
+  await settings.getByRole("button", { name: "Close" }).click();
 
   // プロンプトは feature 画面に並ぶタスクからコピーできるので、エージェントに
   // 渡すためにタスクを開く必要はない。
@@ -94,12 +94,12 @@ test("copies a task prompt built from the configured template", async ({
   await expect(promptPanel.getByLabel("Design prompt")).toContainText(
     "Design PRX task {{task_id}}",
   );
-  await promptPanel.getByRole("button", { name: "Save" }).click();
-  await expect(promptPanel.getByText("Prompt templates saved.")).toBeVisible();
+  await settings.getByRole("button", { name: "Save" }).click();
+  await expect(settings.getByText("Saved")).toBeVisible();
   await expect(promptPanel.getByLabel("Design prompt")).toContainText(
     "Design PRX task {{task_id}}",
   );
-  await settings.getByRole("button", { name: "Done" }).click();
+  await settings.getByRole("button", { name: "Close" }).click();
 });
 
 // バッチプロンプトは複数タスクをまとめて扱うので、この spec は 2 件を設計して

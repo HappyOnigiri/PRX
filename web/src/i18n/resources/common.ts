@@ -17,9 +17,16 @@ export const common = {
       remove: "Remove",
       save: "Save",
       close: "Close",
-      done: "Done",
       retry: "Try again",
       unassigned: "Unassigned",
+      saving: "Saving…",
+      saved: "Saved",
+      discard: {
+        title: "Discard unsaved changes?",
+        description:
+          "The edits here have not been saved yet. Closing now discards them.",
+        confirm: "Discard",
+      },
     },
   },
   ja: {
@@ -40,9 +47,16 @@ export const common = {
       remove: "削除",
       save: "保存",
       close: "閉じる",
-      done: "完了",
       retry: "再試行",
       unassigned: "未割り当て",
+      saving: "保存しています…",
+      saved: "保存しました",
+      discard: {
+        title: "未保存の変更を破棄しますか？",
+        description:
+          "ここでの編集はまだ保存されていません。いま閉じると破棄されます。",
+        confirm: "破棄",
+      },
     },
   },
 } as const;
