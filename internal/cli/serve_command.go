@@ -220,6 +220,14 @@ func (s *state) watchExecutable(ctx context.Context, manager *launchd.Manager) {
 		s.warnExecutableWatchDisabled(err)
 		return
 	}
+	s.watchExecutablePath(ctx, manager, path, executableCheckInterval)
+}
+
+// watchExecutablePath は監視対象と検査間隔を受け取る。間隔を引数にするのはテストが実時間を
+// 待たずに 1 周期を回せるようにするためである。
+func (s *state) watchExecutablePath(
+	ctx context.Context, manager *launchd.Manager, path string, interval time.Duration,
+) {
 	// os.Executable は起動時のパスを返し続けるので、stat の失敗を「未変更の根拠」に
 	// してはいけない。基準が取れないときは監視自体を無効にする。
 	baseline, err := os.Stat(path)
@@ -227,7 +235,7 @@ func (s *state) watchExecutable(ctx context.Context, manager *launchd.Manager) {
 		s.warnExecutableWatchDisabled(err)
 		return
 	}
-	ticker := time.NewTicker(executableCheckInterval)
+	ticker := time.NewTicker(interval)
 	defer ticker.Stop()
 	for {
 		select {

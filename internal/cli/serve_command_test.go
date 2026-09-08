@@ -3,12 +3,18 @@ package cli
 import (
 	"context"
 	"errors"
+	"io"
 	"net"
+	"os"
+	"path/filepath"
+	"strings"
 	"syscall"
 	"testing"
+	"time"
 
 	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
+	"github.com/HappyOnigiri/PRX/internal/launchd"
 )
 
 // stubListener は bind の成否だけを扱うテスト用の listener。実ポートを掴むテストは
@@ -118,4 +124,90 @@ func TestListenServeFallsBackOnlyForAddressInUse(t *testing.T) {
 			}
 		})
 	}
+}
+
+// TestExecutableMatchesComparesInodeSizeAndModificationTime は 3 つの比較のどれが欠けても
+// 置換を見逃すことを確かめる。見逃すと古いサーバーが古い埋め込みスキーマで応答し続ける。
+func TestExecutableMatchesComparesInodeSizeAndModificationTime(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "prx")
+	if err := os.WriteFile(path, []byte("binary"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	baseline := statExecutable(t, path)
+	if !executableMatches(baseline, statExecutable(t, path)) {
+		t.Fatal("an untouched executable was reported as replaced")
+	}
+	if err := os.WriteFile(path, []byte("binary+"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if executableMatches(baseline, statExecutable(t, path)) {
+		t.Fatal("a resized executable was reported as matching")
+	}
+	if err := os.WriteFile(path, []byte("binary"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	touched := baseline.ModTime().Add(time.Minute)
+	if err := os.Chtimes(path, touched, touched); err != nil {
+		t.Fatal(err)
+	}
+	if executableMatches(baseline, statExecutable(t, path)) {
+		t.Fatal("an executable with a new modification time was reported as matching")
+	}
+	replaced := filepath.Join(t.TempDir(), "prx")
+	if err := os.WriteFile(replaced, []byte("binary"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.Chtimes(replaced, baseline.ModTime(), baseline.ModTime()); err != nil {
+		t.Fatal(err)
+	}
+	if executableMatches(baseline, statExecutable(t, replaced)) {
+		t.Fatal("a different inode with the same size and time was reported as matching")
+	}
+}
+
+// TestWatchExecutablePathWarnsWhenTheServerIsNotManaged は管理外のサーバーが自己 kickstart
+// しないことを確かめる。置換側が flock を取れずに死ぬと、手動起動の 1 つだけが残る。
+func TestWatchExecutablePathWarnsWhenTheServerIsNotManaged(t *testing.T) {
+	path := filepath.Join(t.TempDir(), "prx")
+	if err := os.WriteFile(path, []byte("binary"), 0o700); err != nil {
+		t.Fatal(err)
+	}
+	errOut := &strings.Builder{}
+	s := &state{out: io.Discard, errOut: errOut}
+	manager := launchd.New()
+	if manager.Managed() {
+		t.Skip("the test process is managed by launchd")
+	}
+	// 置換は監視が基準を取った後に起こす必要があるので、周期より長く待ってから書き換える。
+	go func() {
+		time.Sleep(20 * time.Millisecond)
+		_ = os.WriteFile(path, []byte("replaced"), 0o700)
+	}()
+	// ctx は監視が終わらない場合の保険。管理外だと気づいた監視は自分で戻る。
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	s.watchExecutablePath(ctx, manager, path, 5*time.Millisecond)
+	if !strings.Contains(errOut.String(), "not managed by launchd") {
+		t.Fatalf("stderr=%q", errOut.String())
+	}
+}
+
+// TestWatchExecutablePathDisablesItselfWithoutABaseline は基準が取れないときに監視を
+// 無効にすることを確かめる。stat の失敗を未変更の根拠にすると置換を見逃す。
+func TestWatchExecutablePathDisablesItselfWithoutABaseline(t *testing.T) {
+	errOut := &strings.Builder{}
+	s := &state{out: io.Discard, errOut: errOut}
+	s.watchExecutablePath(context.Background(), launchd.New(), filepath.Join(t.TempDir(), "missing"), time.Hour)
+	if !strings.Contains(errOut.String(), "automatic restart after a replacement is disabled") {
+		t.Fatalf("stderr=%q", errOut.String())
+	}
+}
+
+func statExecutable(t *testing.T, path string) os.FileInfo {
+	t.Helper()
+	info, err := os.Stat(path)
+	if err != nil {
+		t.Fatal(err)
+	}
+	return info
 }
