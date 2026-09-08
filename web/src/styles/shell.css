@@ -189,14 +189,14 @@
 
 .nav-tree-row {
   display: grid;
-  grid-template-columns: 18px minmax(0, 1fr);
+  grid-template-columns: 22px minmax(0, 1fr);
   align-items: center;
 }
 
 .nav-tree-toggle {
-  width: 18px;
-  min-width: 18px;
-  height: 18px;
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -216,16 +216,19 @@
   transform: none;
 }
 
-.nav-tree-toggle svg {
-  transition: transform 120ms ease;
-}
-
-.nav-tree-toggle[aria-expanded="true"] svg {
-  transform: rotate(90deg);
-}
-
 .nav-tree-toggle-spacer {
-  width: 18px;
+  width: 22px;
+  height: 22px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--text-3);
+}
+
+/* グリフはトグルが持つので、リンク側はタイトルと件数だけを並べる。 */
+.project-link {
+  grid-template-columns: minmax(0, 1fr) auto;
+  padding-left: 4px;
 }
 
 .feature-link[data-state="ready"] > svg {
@@ -236,10 +239,10 @@
   color: var(--status-blocked);
 }
 
-/* The children indent under the project title rather than under its toggle,
-   which is what makes the nesting readable at a glance. */
+/* 子行はプロジェクトのフォルダより右、タイトルの手前から始める。この段差が
+   一目で入れ子と読める。 */
 .nav-tree-children {
-  padding-left: 18px;
+  padding-left: 12px;
 }
 
 .rail-action {
