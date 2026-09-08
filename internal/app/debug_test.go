@@ -218,3 +218,43 @@ func (*debugRepository) Snapshot(context.Context) (domain.Snapshot, error) {
 }
 
 func (*debugRepository) Validate(context.Context) []string { return nil }
+
+// TestDebugReportsTheInjectedDaemonState は配線層が注入した常駐の観測を、レポートを
+// 生成したプロセスの記述とは別のセクションとして報告することを確かめる。
+func TestDebugReportsTheInjectedDaemonState(t *testing.T) {
+	ctx := context.Background()
+	service, databasePath, _ := newDebugService(t)
+	if service.DatabasePath() != databasePath {
+		t.Fatalf("database path=%q, want %q", service.DatabasePath(), databasePath)
+	}
+	report, err := service.Debug(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if report.Daemon.Supported || report.Daemon.PlistStatus != domain.DebugPlistStatusUnknown {
+		t.Fatalf("uninjected daemon section=%+v", report.Daemon)
+	}
+	service.SetDaemonInspector(func(context.Context) domain.DebugDaemonInput {
+		return domain.DebugDaemonInput{
+			Supported: true, Installed: true, PlistStatus: domain.DebugPlistStatusStale,
+			PlistPath: "/tmp/com.user.prx.plist", Running: false,
+		}
+	})
+	report, err = service.Debug(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if !report.Daemon.Supported || report.Daemon.PlistStatus != domain.DebugPlistStatusStale {
+		t.Fatalf("daemon section=%+v", report.Daemon)
+	}
+	if report.Runtime.Mode != "cli" {
+		t.Fatalf("runtime mode=%q, want the reporting process to stay cli", report.Runtime.Mode)
+	}
+	codes := make(map[domain.DebugProblemCode]bool, len(report.Problems))
+	for _, problem := range report.Problems {
+		codes[problem.Code] = true
+	}
+	if !codes[domain.DebugProblemCodeDaemonPlistStale] || !codes[domain.DebugProblemCodeDaemonNotRunning] {
+		t.Fatalf("problems=%+v", report.Problems)
+	}
+}

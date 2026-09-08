@@ -10,7 +10,9 @@ import (
 
 	prx "github.com/HappyOnigiri/PRX"
 	"github.com/HappyOnigiri/PRX/internal/config"
+	"github.com/HappyOnigiri/PRX/internal/daemon"
 	"github.com/HappyOnigiri/PRX/internal/domain"
+	"github.com/HappyOnigiri/PRX/internal/launchd"
 )
 
 func (s *state) debugCommand() *cobra.Command {
@@ -56,8 +58,10 @@ func (s *state) unavailableDebugReport(cause error) domain.DebugReport {
 			Demo:          s.demo,
 			GitHubFixture: s.fixture != "",
 		}, now),
-		Paths:   domain.NewDebugPaths(s.debugPathsInput(cause)),
-		Config:  s.debugConfig(),
+		Paths:  domain.NewDebugPaths(s.debugPathsInput(cause)),
+		Config: s.debugConfig(),
+		// 常駐の観測はストレージに依存しないので、サービスを開けなくても残す。
+		Daemon:  domain.NewDebugDaemon(daemon.Inspect(launchd.New(), prx.Version()).DebugInput(s.demo)),
 		Storage: domain.NewDebugStorage(domain.DebugStorageInput{Error: message}),
 		Records: domain.DebugData{Error: message},
 		GitHubSync: domain.NewDebugGitHubSync(

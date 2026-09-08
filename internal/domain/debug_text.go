@@ -16,6 +16,7 @@ func FormatDebugReport(report DebugReport) string {
 	writeDebugProblems(out, report.Problems)
 	writeDebugBuild(out, report.Build)
 	writeDebugRuntime(out, report.Runtime)
+	writeDebugDaemon(out, report.Daemon)
 	writeDebugPaths(out, report.Paths)
 	writeDebugConfig(out, report.Config)
 	writeDebugStorage(out, report.Storage)
@@ -59,6 +60,30 @@ func writeDebugRuntime(out *debugText, value DebugRuntime) {
 	if value.StartedAt != nil {
 		out.field("started_at", debugTime(value.StartedAt))
 		out.field("uptime_seconds", strconv.FormatInt(value.UptimeSeconds, 10))
+	}
+}
+
+// writeDebugDaemon は別プロセスである常駐サーバーを報告する。対応しない OS では
+// 1 行だけにして、意味のない未導入・未稼働を並べない。
+func writeDebugDaemon(out *debugText, value DebugDaemon) {
+	out.section("daemon")
+	out.field("supported", debugYesNo(value.Supported))
+	if !value.Supported {
+		return
+	}
+	out.field("installed", debugYesNo(value.Installed))
+	out.field("plist_status", value.PlistStatus)
+	out.field("plist_path", value.PlistPath)
+	out.field("log_path", value.LogPath)
+	out.field("running", debugYesNo(value.Running))
+	if value.Running {
+		out.field("address", value.Address)
+		out.field("pid", strconv.Itoa(value.PID))
+		out.field("version", value.Version)
+		out.field("binary_matches", debugYesNo(value.BinaryMatches))
+	}
+	if value.Error != "" {
+		out.field("error", value.Error)
 	}
 }
 

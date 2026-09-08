@@ -4,12 +4,15 @@
 package config
 
 import (
+	"encoding/json"
 	"errors"
 	"fmt"
 	"net/url"
 	"regexp"
 	"strconv"
 	"strings"
+
+	"gopkg.in/yaml.v3"
 
 	"github.com/HappyOnigiri/PRX/internal/prompt"
 )
@@ -19,6 +22,78 @@ const (
 	DefaultAutoSyncIntervalSeconds = int64(3600)
 	MinimumAutoSyncIntervalSeconds = int64(600)
 )
+
+// ServerPortAutoValue は auto を表す語彙。CLI の引数と YAML の値で同じ語を使う。
+const ServerPortAutoValue = "auto"
+
+// ServerPort は通常起動の待ち受けポート。0 は auto で、7331 を試してから OS の
+// エファメラルポートへ逃げることを意味する。host は loopback 固定なので設定に持たない。
+// loopback 外へ出す唯一の手段は `prx serve --addr` である。
+type ServerPort int
+
+// ServerPortAuto は既定の解決方法。
+const ServerPortAuto = ServerPort(0)
+
+// ParseServerPort は auto と 1-65535 のポート番号だけを受け付ける。
+func ParseServerPort(value string) (ServerPort, error) {
+	trimmed := strings.ToLower(strings.TrimSpace(value))
+	if trimmed == "" || trimmed == ServerPortAutoValue || trimmed == "null" || trimmed == "~" {
+		return ServerPortAuto, nil
+	}
+	parsed, err := strconv.Atoi(trimmed)
+	if err != nil || parsed < 1 || parsed > 65535 {
+		return ServerPortAuto, newError(
+			ErrorCodeInvalid, "server.port must be %q or a port number between 1 and 65535", ServerPortAutoValue,
+		)
+	}
+	return ServerPort(parsed), nil
+}
+
+// Auto は OS へポート選択を委ねるかを返す。
+func (p ServerPort) Auto() bool { return p == ServerPortAuto }
+
+// String は設定ファイルと CLI が使う表記を返す。
+func (p ServerPort) String() string {
+	if p.Auto() {
+		return ServerPortAutoValue
+	}
+	return strconv.Itoa(int(p))
+}
+
+// UnmarshalYAML は auto と数値のどちらも受ける。yaml.v3 は数値スカラーを string へ
+// デコードしないので、スカラーの生の値から解釈する。
+func (p *ServerPort) UnmarshalYAML(node *yaml.Node) error {
+	if node.Kind != yaml.ScalarNode {
+		return newError(ErrorCodeInvalid, "server.port must be %q or a port number", ServerPortAutoValue)
+	}
+	parsed, err := ParseServerPort(node.Value)
+	if err != nil {
+		return err
+	}
+	*p = parsed
+	return nil
+}
+
+// MarshalYAML は auto を数値に落とさない。0 を書き戻すと、次の読み込みで範囲外になる。
+func (p ServerPort) MarshalYAML() (any, error) {
+	if p.Auto() {
+		return ServerPortAutoValue, nil
+	}
+	return int(p), nil
+}
+
+// MarshalJSON は YAML と同じ語彙を保つ。読み手は文字列 auto と数値のどちらかを扱う。
+func (p ServerPort) MarshalJSON() ([]byte, error) {
+	if p.Auto() {
+		return json.Marshal(ServerPortAutoValue)
+	}
+	return json.Marshal(int(p))
+}
+
+// ServerConfig はローカルサーバーの待ち受け設定。
+type ServerConfig struct {
+	Port ServerPort `yaml:"port" json:"port"`
+}
 
 type AuthMethodType string
 
@@ -79,6 +154,7 @@ func (c GitHubConfig) MarshalYAML() (any, error) {
 type Config struct {
 	Version int              `yaml:"version" json:"version"`
 	GitHub  GitHubConfig     `yaml:"github"  json:"github"`
+	Server  ServerConfig     `yaml:"server"  json:"server"`
 	Prompts prompt.Templates `yaml:"prompts" json:"prompts"`
 }
 
@@ -87,6 +163,7 @@ type Config struct {
 type yamlConfig struct {
 	Version int          `yaml:"version"`
 	GitHub  GitHubConfig `yaml:"github"`
+	Server  ServerConfig `yaml:"server"`
 	Prompts *yamlPrompts `yaml:"prompts,omitempty"`
 }
 
@@ -111,7 +188,7 @@ func (c Config) MarshalYAML() (any, error) {
 	if c.Prompts.Batch != defaults.Batch {
 		prompts.Batch = c.Prompts.Batch
 	}
-	result := yamlConfig{Version: c.Version, GitHub: c.GitHub}
+	result := yamlConfig{Version: c.Version, GitHub: c.GitHub, Server: c.Server}
 	if prompts != (yamlPrompts{}) {
 		result.Prompts = &prompts
 	}
@@ -139,6 +216,7 @@ type PublicGitHubConfig struct {
 type PublicConfig struct {
 	Version int                `json:"version"`
 	GitHub  PublicGitHubConfig `json:"github"`
+	Server  ServerConfig       `json:"server"`
 }
 
 type ErrorCode string
@@ -236,6 +314,10 @@ func (c Config) Normalize() (Config, error) {
 	}
 	if result.GitHub.AutoSyncIntervalSeconds == 0 {
 		result.GitHub.AutoSyncIntervalSeconds = DefaultAutoSyncIntervalSeconds
+	}
+	// キーの欠落は auto。UnmarshalYAML を通らない値も同じ範囲で拒否する。
+	if _, err := ParseServerPort(result.Server.Port.String()); err != nil {
+		return Config{}, err
 	}
 	if result.GitHub.AutoSyncIntervalSeconds < MinimumAutoSyncIntervalSeconds {
 		return Config{}, newError(
@@ -590,6 +672,17 @@ func (c *Config) SetAutoSyncInterval(seconds int64) error {
 	return c.normalizeInPlace()
 }
 
+// SetServerPort は待ち受けポートを設定する。CLI と YAML が auto という同じ語彙を
+// 使うので、int ではなく文字列を受ける。
+func (c *Config) SetServerPort(value string) error {
+	parsed, err := ParseServerPort(value)
+	if err != nil {
+		return err
+	}
+	c.Server.Port = parsed
+	return c.normalizeInPlace()
+}
+
 func (c *Config) normalizeInPlace() error {
 	normalized, err := c.Normalize()
 	if err != nil {
@@ -602,6 +695,7 @@ func (c *Config) normalizeInPlace() error {
 func (c Config) Public() PublicConfig {
 	result := PublicConfig{
 		Version: c.Version,
+		Server:  c.Server,
 		GitHub: PublicGitHubConfig{
 			Hosts:                   append([]Host(nil), c.GitHub.Hosts...),
 			AuthMethods:             make([]PublicAuthMethod, 0, len(c.GitHub.AuthMethods)),

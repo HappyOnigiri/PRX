@@ -43,6 +43,11 @@ CLI・RPC・ドメインの境界で同じ保証を表現できるなら、方�
 設定や credential の解決を対象とするテストは、隔離された一時設定を使わなければならない。
 実際の Keychain、環境のトークン変数、認証済みの `gh` アカウント、GitHub の可用性に依存してはならない。
 
+常駐を対象とするテストは、実際の `launchctl` と実際の `~/Library/LaunchAgents` に触れてはならない。
+stub の `launchctl` を `PATH` に置き、`HOME` と `PRX_RUN_DIR` を差し替えて隔離する。
+ホームの解決には `os/user` ではなく `os.UserHomeDir` と `os.UserConfigDir` だけを使う。どちらも `$HOME` を読むので、テストは環境変数の差し替えだけで隔離できる。
+launchd に実際にサーバを起こさせる経路（`prx daemon start` と `prx daemon restart`）は自動テストで代替できないので、実機で確認する。
+
 認証のテストは、制御下の HTTPS サーバと、明示的な偽の credential ソースを使う。
 本番サービスに接続せずに、ホストの分離、安全な fallback、秘密情報を含まない出力を検証する。
 

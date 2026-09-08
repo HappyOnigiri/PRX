@@ -1497,6 +1497,9 @@ func TestBlackBoxConfigSyncReadsAndUpdatesOneInterval(t *testing.T) {
 	}
 }
 
+// TestBlackBoxJSONResponsesCoverEveryResponseCommand は応答を返す全コマンドの JSON 契約を
+// 押さえる。daemon と open は実 launchctl と実 LaunchAgents に触れない隔離が必要なので、
+// blackbox_daemon_test.go の方で同じ網に掛けている。
 func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 	binary := buildCLI(t)
 	root := t.TempDir()
@@ -1576,6 +1579,9 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 		runConfig("config", "sync", "update", "600"),
 		"interval_seconds",
 	)
+	assertDirectObjectKeys(t, runConfig("config", "server"), "port")
+	assertDirectObjectKeys(t, runConfig("config", "server", "update", "7400"), "port")
+	assertDirectObjectKeys(t, runConfig("config", "server", "update", "auto"), "port")
 	assertDirectObject(t, runConfig("config", "auth", "update", "work-gh", "--user", "octocat"), "id")
 	assertDirectObjectKeys(t, runConfig("config", "auth", "reorder", "work-gh"), "auth_methods")
 	assertDirectObjectKeys(t, runConfig("config", "auth", "remove", "work-gh"), "removed")
@@ -1692,6 +1698,7 @@ func TestBlackBoxJSONResponsesCoverEveryResponseCommand(t *testing.T) {
 		"problems",
 		"build",
 		"runtime",
+		"daemon",
 		"paths",
 		"config",
 		"storage",
@@ -2020,7 +2027,7 @@ func TestBlackBoxDebugRunsWithoutStorageAndWithoutRefreshing(t *testing.T) {
 	}
 	assertCompactJSON(t, broken.stdout)
 	brokenReport := decodeObject(t, []byte(broken.stdout), broken.stdout)
-	assertDirectObjectKeys(t, brokenReport, "problems", "build", "runtime", "paths", "config", "storage",
+	assertDirectObjectKeys(t, brokenReport, "problems", "build", "runtime", "daemon", "paths", "config", "storage",
 		"records", "github_sync")
 	if !strings.Contains(string(brokenReport["storage"]), "\"error\"") {
 		t.Fatalf("storage section did not report the failure: %s", brokenReport["storage"])

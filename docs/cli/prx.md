@@ -17,11 +17,13 @@ Manage pull-request dependency roadmaps
 
 * [prx config](prx_config.md)	 - Show or manage GitHub hosts and authentication
 * [prx conflicts](prx_conflicts.md)	 - List tasks with conflicting pull requests
+* [prx daemon](prx_daemon.md)	 - Show or manage the background PRX server
 * [prx debug](prx_debug.md)	 - Show a diagnostic report of this PRX installation
 * [prx dependency](prx_dependency.md)	 - List or manage directed blocker edges
 * [prx document](prx_document.md)	 - List or manage documents
 * [prx feature](prx_feature.md)	 - List features or show one by ID
 * [prx graph](prx_graph.md)	 - Show a feature graph with tasks and dependencies
+* [prx open](prx_open.md)	 - Open the running PRX WebUI in a browser
 * [prx plan](prx_plan.md)	 - Show or manage a task's implementation plan document
 * [prx pr](prx_pr.md)	 - List or attach GitHub pull requests
 * [prx project](prx_project.md)	 - List projects or show one by ID

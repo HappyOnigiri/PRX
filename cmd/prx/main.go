@@ -9,10 +9,14 @@ import (
 	"path/filepath"
 	"syscall"
 
+	prx "github.com/HappyOnigiri/PRX"
 	"github.com/HappyOnigiri/PRX/internal/app"
 	"github.com/HappyOnigiri/PRX/internal/cli"
 	"github.com/HappyOnigiri/PRX/internal/config"
+	"github.com/HappyOnigiri/PRX/internal/daemon"
+	"github.com/HappyOnigiri/PRX/internal/domain"
 	githubprovider "github.com/HappyOnigiri/PRX/internal/github"
+	"github.com/HappyOnigiri/PRX/internal/launchd"
 	"github.com/HappyOnigiri/PRX/internal/store"
 )
 
@@ -76,6 +80,11 @@ func newOpenService(_ io.Writer) cli.OpenService {
 			}
 		}
 		service := app.NewWithConfig(database, provider, configStore)
+		// 常駐の観測は launchd と稼働記録を束ねた実装で注入する。app はどちらも
+		// import しないので、配線層だけが知る事実としてここで渡す。
+		service.SetDaemonInspector(func(context.Context) domain.DebugDaemonInput {
+			return daemon.Inspect(launchd.New(), prx.Version()).DebugInput(options.Demo)
+		})
 		service.SetProcessInfo(app.ProcessInfo{
 			Mode:               "cli",
 			Demo:               options.Demo,

@@ -459,7 +459,14 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND
 	case domain.DomainErrorCodeReferencesExist:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_REFERENCES_EXIST
-	case domain.DomainErrorCodeInternal:
+	// daemon 系と address_in_use は CLI だけが返す。RPC には常駐の操作がないので、
+	// proto の enum には持たせず内部エラー相当として扱う。
+	case domain.DomainErrorCodeInternal,
+		domain.DomainErrorCodeAddressInUse,
+		domain.DomainErrorCodeDaemonUnsupported,
+		domain.DomainErrorCodeDaemonNotInstalled,
+		domain.DomainErrorCodeDaemonNotRunning,
+		domain.DomainErrorCodeDaemonFailed:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED
 	default:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_UNSPECIFIED

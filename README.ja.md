@@ -22,7 +22,8 @@ PRX はタスクどうしの依存関係を登録しておくだけで、着手�
 
 ```sh
 curl -fsSL https://github.com/HappyOnigiri/PRX/releases/latest/download/install.sh | bash
-prx serve # サーバーを起動する: http://127.0.0.1:7331
+prx daemon install # ログイン時に PRX を起動する (macOS)
+prx open           # 稼働中のサーバーをブラウザで開く
 ```
 
 インストーラーは最新リリースをダウンロードし、チェックサムを検証して `~/.local/bin/prx` に配置します。
@@ -31,6 +32,11 @@ prx serve # サーバーを起動する: http://127.0.0.1:7331
 
 チェックアウトからビルドする場合は `make install` を使います。インストール先は同じく `~/.local/bin/prx` です。
 別の場所に入れる場合は `INSTALL_DIR` を指定してください。
+
+`prx daemon install` は LaunchAgent を登録し、次回ログイン以降はサーバーを自動で起動します。`prx open` は実際に待ち受けているアドレスを開きます。
+ポートの既定は 7331 で、使用中なら別のポートに移るので、アドレスは打ち込まずに `prx open` に任せてください。
+`prx config server update PORT` でポートを固定できます。稼働中のサーバーを新しいポートへ移すには、続けて `prx daemon restart` を実行します。
+`prx serve` は従来どおり、どの OS でも前景でサーバーを起動します。
 
 `prx serve --demo` は、サンプルデータの入ったデモを起動します。
 自分のデータには影響しないので、まず触ってみたいときに使えます。
