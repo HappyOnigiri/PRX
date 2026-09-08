@@ -96,17 +96,27 @@ assert_not_contains() {
 
 run_case() {
   local name=$1 existing_binary=$2 daemon_status=$3 setup_status=$4 expected_startup=$5
+  local path_configured=${6:-false}
   local home="$root/$name/home" output="$root/$name/output"
+  local test_path="$tool_directory:$PATH"
   mkdir -p "$home"
   if [ "$existing_binary" = true ]; then
     mkdir -p "$home/.local/bin"
     cp "$asset" "$home/.local/bin/prx"
   fi
+  if [ "$path_configured" = true ]; then
+    test_path="$home/.local/bin:$test_path"
+  fi
 
-  HOME="$home" PATH="$tool_directory:$PATH" PRX_INSTALL_TEST_ASSET="$asset" \
+  HOME="$home" PATH="$test_path" PRX_INSTALL_TEST_ASSET="$asset" \
     PRX_INSTALL_TEST_DAEMON_STATUS="$daemon_status" PRX_INSTALL_TEST_SETUP_STATUS="$setup_status" \
     bash "$installer" > "$output"
-  assert_contains "$output" 'To use prx in this terminal, run:'
+  if [ "$path_configured" = true ]; then
+    assert_not_contains "$output" 'To use prx in this terminal, run:'
+    assert_not_contains "$output" 'export PATH="$HOME/.local/bin:$PATH"'
+  else
+    assert_contains "$output" 'To use prx in this terminal, run:'
+  fi
   if [ "$expected_startup" = daemon ]; then
     assert_contains "$output" 'TUI setup completed'
     assert_not_contains "$output" 'To start PRX at login, run:'
@@ -126,6 +136,7 @@ run_case() {
 }
 
 run_case initial-not-installed false '{"supported":true,"installed":false}' ok daemon
+run_case initial-path-configured false '{"supported":true,"installed":false}' ok daemon true
 run_case initial-setup-failure false '{"supported":true,"installed":false}' fail fallback
 run_case initial-installed false '{"supported":true,"installed":true}' ok serve
 run_case initial-status-failure false fail ok serve

@@ -57,11 +57,16 @@ main() {
   staged=''
   echo "Installed prx $release_version to $destination"
 
-  echo 'To use prx in this terminal, run:'
-  # 利用者が実行するコマンドを展開せず表示する。
-  # shellcheck disable=SC2016
-  echo '  export PATH="$HOME/.local/bin:$PATH"'
-  echo 'Add that line to your shell configuration (for example, ~/.zshrc) for new terminals.'
+  case ":${PATH:-}:" in
+    *":$install_dir:"*) ;;
+    *)
+      echo 'To use prx in this terminal, run:'
+      # 利用者が実行するコマンドを展開せず表示する。
+      # shellcheck disable=SC2016
+      echo '  export PATH="$HOME/.local/bin:$PATH"'
+      echo 'Add that line to your shell configuration (for example, ~/.zshrc) for new terminals.'
+      ;;
+  esac
   if [ "$initial_install" = true ]; then
     daemon_status=$(PATH="$install_dir:$PATH" "$destination" daemon --json 2>/dev/null) || daemon_status=''
   fi
