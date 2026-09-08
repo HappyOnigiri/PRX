@@ -277,12 +277,15 @@ function NodeAssetList({ data }: { data: TaskNodeData }) {
            入れない。中に置くと tooltip がリンクに吸われ、理由が読めない。 */
         <div className="node-asset-pr-row">
           <a
+            aria-label={`${t("taskCard.pullRequest")} ${data.pullRequest.label}`}
             className="node-asset node-asset-pr"
             href={data.pullRequest.url}
             target="_blank"
             rel="noreferrer"
           >
-            <span>PR</span>
+            {/* 種別は "PR" の文字ではなく他画面と同じグリフで示す。読み上げ用の
+                名前はグリフでは作れないので、リンクの aria-label で補う。 */}
+            <EntityIcon kind="pullRequest" size={14} />
             <b>{data.pullRequest.label}</b>
             <ExternalLink aria-hidden="true" focusable="false" size={14} />
           </a>
