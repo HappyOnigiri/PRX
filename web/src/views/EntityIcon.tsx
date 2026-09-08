@@ -1,17 +1,13 @@
-import {
-  CircleDot,
-  Folder,
-  GitBranch,
-  GitPullRequest,
-  User,
-} from "lucide-react";
+import { CircleDot, Folder, GitPullRequest, Layers, User } from "lucide-react";
 
 // レコードの種類ごとに 1 つの図形を、全画面で共有する。サイドバーで覚えた
 // フォルダはキューの行でも同じものとして読めるので、アイコンは飾りではなく
 // 項目名の代わりになる。
 const entityIcons = {
   project: Folder,
-  feature: GitBranch,
+  // feature はブランチそのものではなく task と PR の束なので、git 系ではなく
+  // 重なりのグリフを充てる。PR の丸と線に紛れないという利点もある。
+  feature: Layers,
   task: CircleDot,
   pullRequest: GitPullRequest,
   assignee: User,
