@@ -8,6 +8,7 @@
 
 PRX 自身が daemon プロセスを spawn することはない。起動する権限は常に launchd に渡す。
 `prx daemon start` と `prx daemon restart` は launchd へ依頼するだけで、依頼の成功は稼働の証明にならない。どちらも稼働記録が書かれるまで待って結果を報告する。
+`prx daemon install` も同じである。plist は `RunAtLoad` なので登録は起動を伴い、待たずに成功を返すと直後の `prx open` が未稼働として失敗する。
 
 plist の `ProgramArguments` は実行ファイルと `serve` の 2 要素だけである。
 `--addr` も `--demo` も含めないことが、loopback 外への公開と demo を常駐から締め出す構造的な保証になる。前景で動く入口を二重化しない。`prx serve` はすでに SIGTERM で graceful shutdown する前景サーバである。

@@ -140,8 +140,11 @@ func writeDaemonAdvice(out io.Writer, status daemon.Status) error {
 
 func (s *state) daemonInstallCommand() *cobra.Command {
 	return &cobra.Command{
-		Use:     "install",
-		Short:   "Register the LaunchAgent that starts PRX at login",
+		Use:   "install",
+		Short: "Register the LaunchAgent that starts PRX at login",
+		Long: "Register the LaunchAgent that starts PRX at login.\n\n" +
+			"launchd starts the server right away, so the command waits until that server is listening " +
+			"and reports its address.",
 		Example: "prx daemon install",
 		Args:    cobra.NoArgs,
 		RunE: func(cmd *cobra.Command, _ []string) error {
@@ -161,9 +164,18 @@ func (s *state) daemonInstallCommand() *cobra.Command {
 				)
 			}
 			path, _ := manager.PlistPath()
+			// plist は RunAtLoad なので bootstrap は起動も伴う。依頼の成功は稼働の証明に
+			// ならないので、続く `prx open` が空振りしないよう記録が書かれるまで待つ。
+			state, err := waitForRunState(cmd.Context(), func(runstate.State) bool { return true })
+			if err != nil {
+				return err
+			}
 			return s.write(
-				map[string]any{"installed": true, "label": launchd.Label, "plist_path": path},
-				renderMessage("Installed %s at %s.", launchd.Label, path),
+				map[string]any{
+					"installed": true, "label": launchd.Label, "plist_path": path,
+					"address": state.Address, "url": state.URL,
+				},
+				renderMessage("Installed %s at %s. PRX is listening on %s.", launchd.Label, path, state.URL),
 			)
 		},
 	}

@@ -2,6 +2,12 @@
 
 Register the LaunchAgent that starts PRX at login
 
+### Synopsis
+
+Register the LaunchAgent that starts PRX at login.
+
+launchd starts the server right away, so the command waits until that server is listening and reports its address.
+
 ```
 prx daemon install [flags]
 ```

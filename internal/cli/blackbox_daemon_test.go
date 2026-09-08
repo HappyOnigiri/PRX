@@ -11,6 +11,8 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	"github.com/HappyOnigiri/PRX/internal/runstate"
 )
 
 // serverLog は子プロセスの stderr を安全に読める形で集める。exec は非 *os.File の
@@ -103,7 +105,11 @@ func TestBlackBoxDaemonCommandsStayInsideTheInjectedEnvironment(t *testing.T) {
 		t.Fatalf("plist status before install=%s", status["plist_status"])
 	}
 	assertDirectObjectKeys(t, run("daemon", "stop"), "stopped", "already_stopped")
-	assertDirectObjectKeys(t, run("daemon", "install"), "installed", "label", "plist_path")
+	// install は launchd が起こしたサーバーの記録を待つ。launchctl はスタブなので、
+	// 記録は launchd の代わりにこのプロセスが用意する。
+	lock := holdManagedRunState(t, environment)
+	defer func() { _ = lock.Release() }()
+	assertDirectObjectKeys(t, run("daemon", "install"), "installed", "label", "plist_path", "address", "url")
 	plist := filepath.Join(environment.home, "Library", "LaunchAgents", "com.user.prx.plist")
 	info, err := os.Stat(plist)
 	if err != nil || info.Mode().Perm() != 0o600 {
@@ -131,6 +137,26 @@ func TestBlackBoxDaemonCommandsStayInsideTheInjectedEnvironment(t *testing.T) {
 	if err != nil || !strings.Contains(string(log), "bootstrap") || !strings.Contains(string(log), "bootout") {
 		t.Fatalf("launchctl log=%q err=%v", log, err)
 	}
+}
+
+// holdManagedRunState は launchd 管理下のサーバーが稼働している状態を作る。ロックを保持
+// している間だけ記録の内容が有効になるので、Release まで稼働中として観測される。
+func holdManagedRunState(t *testing.T, environment daemonEnvironment) *runstate.Lock {
+	t.Helper()
+	t.Setenv(runstate.DirEnvironmentVariable, environment.runDirectory)
+	lock, held, err := runstate.Acquire()
+	if err != nil || !held {
+		t.Fatalf("acquire held=%v err=%v", held, err)
+	}
+	state := runstate.State{
+		PID: os.Getpid(), Address: "127.0.0.1:7331", URL: "http://127.0.0.1:7331",
+		StartedAt: time.Now().UTC(), LaunchdManaged: true,
+	}
+	if err := lock.Write(state); err != nil {
+		_ = lock.Release()
+		t.Fatal(err)
+	}
+	return lock
 }
 
 // assertDaemonUnsupported は非対応 OS で変更系のコマンドが daemon_unsupported で失敗する
