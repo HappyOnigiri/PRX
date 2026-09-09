@@ -74,6 +74,10 @@ GitHub Release の `uninstall.sh` は、標準の稼働記録を使う daemon �
 これを入れないと、新しい CLI がデータベースを移行した後も古いサーバが古い埋め込みスキーマで応答し続けるサイレントな版ずれが残る。
 再起動を依頼する launchctl の context はサーバの context から派生させない。`launchctl kickstart -k` は自身へ SIGTERM を送るので、依頼の完了前に取り消されてしまう。
 
+開発ビルドを配置する `make install` は、LaunchAgent が導入済みのときだけ `prx daemon install` を実行して常駐を作り直す。
+自己再起動は plist を書き直さないので、`INSTALL_DIR` を変えた配置や plist の書式が変わった版では、これがないと古いパスや古い plist が残る。plist が指す `prx` を配置先へ固定するため、配置したバイナリを `PATH` の先頭に置いて実行する。
+LaunchAgent が未導入の環境には登録しない。常駐を望まない選択を、バイナリの更新で覆さないためである。
+
 ## CLI は常駐を経由しない
 
 CLI コマンドは常駐サーバを経由せず、従来どおり直接 SQLite を開く。常駐は長寿命の `prx serve` にすぎない。
