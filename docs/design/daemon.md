@@ -20,7 +20,11 @@ plist の `ProgramArguments` は実行ファイルと `serve` の 2 要素だけ
 `--addr` も `--demo` も含めないことが、loopback 外への公開と demo を常駐から締め出す構造的な保証になる。前景で動く入口を二重化しない。`prx serve` はすでに SIGTERM で graceful shutdown する前景サーバである。
 
 `KeepAlive` は `SuccessfulExit: false` で、正常終了を再起動の対象にしない。
-`ThrottleInterval` は 10 にする。`server.port` を固定してそのポートが使用中だと serve は起動に失敗し、間隔が短いと launchd が秒単位で再起動してログが際限なく育つ。
+`ThrottleInterval` は 1 にする。launchd は前回の起動からこの間隔が経つまで次の起動を始めず、`launchctl kickstart -k` はその経過まで戻らない。つまりこの値が `prx daemon restart` の待ち時間をそのまま決める。
+
+失敗の再試行を間引く役割は plist ではなく serve プロセスが持つ。launchd が起動した serve は、失敗して終わる前に 10 秒待つ。
+`server.port` を固定してそのポートが使用中のような持続的な失敗で launchd が毎秒 serve を起こし直すと、ローテーションのないログが際限なく育つ。
+待機は SIGTERM で打ち切るので `prx daemon stop` と `prx daemon restart` を遅らせない。前景で起動した `prx serve` は待たず、エラーを表示してすぐ終わる。
 
 `EnvironmentVariables` の `HOME` と `PATH` は必須である。
 PRX のパス解決は `HOME` に依存し、`gh` と Keychain のヘルパーは `PATH` に依存する。launchd が渡す環境は極小なので、これを書かないと GitHub 認証が常駐サーバでだけ失敗するサイレントな差分になる。
