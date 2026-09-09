@@ -52,6 +52,7 @@ jobs:
           - target: release-check
             go: true
             web: true
+          - target: uninstall-test
           - target: web-lint
             web: true
           - target: web-test

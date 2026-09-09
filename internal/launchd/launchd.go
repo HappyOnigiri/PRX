@@ -336,6 +336,9 @@ func (m *Manager) Uninstall(ctx context.Context) error {
 	}
 	directory, err := os.Open(filepath.Dir(path))
 	if err != nil {
+		if errors.Is(err, os.ErrNotExist) {
+			return nil
+		}
 		return &Error{Kind: KindFailed, Op: "open LaunchAgents directory", Err: err}
 	}
 	defer func() { _ = directory.Close() }()

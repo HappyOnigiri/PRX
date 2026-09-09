@@ -249,6 +249,10 @@ func TestOperationsReportAnUninstalledServiceAndOtherFailures(t *testing.T) {
 	if _, err := os.Stat(path); !errors.Is(err, os.ErrNotExist) {
 		t.Fatalf("plist remains after uninstalling a missing service: %v", err)
 	}
+	missingDirectory, _ := newTestManager(t, t.TempDir(), nil)
+	if err := missingDirectory.Uninstall(context.Background()); err != nil {
+		t.Fatalf("uninstall without a LaunchAgents directory: %v", err)
+	}
 
 	failing, _ := newTestManager(t, t.TempDir(), func([]string) ([]byte, error) {
 		return []byte("failed"), errors.New("exit status 9")

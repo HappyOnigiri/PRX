@@ -15,7 +15,7 @@ CI_JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 CI_MAKEFLAGS := -j$(CI_JOBS) --keep-going $(if $(filter output-sync,$(.FEATURES)),--output-sync=target)
 
 .PHONY: generate generated-check mod-tidy-check fmt lint go-lint go-deadcode markdown-lint web-lint check-web-quality \
-    go-comment-lint test go-test web-test go-coverage-check go-coverage-zero-check test-race test-race-coverage test-cli install-test \
+    go-comment-lint test go-test web-test go-coverage-check go-coverage-zero-check test-race test-race-coverage test-cli install-test uninstall-test \
     web-install web-build dev demo e2e build version-check install release release-check ci ci-checks clean \
     $(GOLANGCI_LINT)
 
@@ -112,6 +112,11 @@ install-test:
 	bash -n scripts/test-install.sh
 	bash scripts/test-install.sh
 
+uninstall-test:
+	bash -n scripts/uninstall.sh
+	bash -n scripts/test-uninstall.sh
+	bash scripts/test-uninstall.sh
+
 web-install:
 	$(PNPM) install --frozen-lockfile
 
@@ -162,6 +167,9 @@ release-check: web-build
 	grep -Fq 'GOOS=darwin' "$$directory/build-info" || exit $$?; \
 	grep -Fq 'GOARCH=arm64' "$$directory/build-info" || exit $$?; \
 	grep -Fq "release_version='v0.0.0'" "$$directory/install.sh" || exit $$?; \
+	test -x "$$directory/uninstall.sh" || exit $$?; \
+	bash -n "$$directory/uninstall.sh" || exit $$?; \
+	cmp scripts/uninstall.sh "$$directory/uninstall.sh" || exit $$?; \
 	(cd "$$directory" && shasum -a 256 -c checksums.txt) || exit $$?; \
 	if [ "$$(uname -sm)" = 'Darwin arm64' ]; then \
 	  test "$$("$$directory/prx-darwin-arm64" --version)" = 'prx version 0.0.0'; \
@@ -173,7 +181,7 @@ ci:
 # どのチェックも読み取り専用か、自分の出力先 (coverage/、test-results/、bin/prx、
 # internal/webui/dist) にしか書かないので、並行実行しても安全。書き込み側は依存関係で直列化する。
 # 最長の連鎖 (web-build -> build -> e2e) を先頭に置き、make が他より先に着手するようにしている。
-ci-checks: e2e version-check build release-check install-test lint test-race-coverage go-coverage-zero-check web-test \
+ci-checks: e2e version-check build release-check install-test uninstall-test lint test-race-coverage go-coverage-zero-check web-test \
     check-web-quality generated-check mod-tidy-check
 
 clean:

@@ -21,6 +21,7 @@ CGO_ENABLED=0 GOOS=darwin GOARCH=arm64 "$go_command" build -trimpath \
   -ldflags "-s -w -X github.com/HappyOnigiri/PRX.releaseVersion=${release_version#v}" \
   -o "$scratch/prx-darwin-arm64" ./cmd/prx
 sed "s/@PRX_RELEASE_VERSION@/$release_version/g" "$script_directory/install.sh" > "$scratch/install.sh"
+cp "$script_directory/uninstall.sh" "$scratch/uninstall.sh"
 (cd "$scratch" && shasum -a 256 prx-darwin-arm64 > checksums.txt)
 mkdir -p "$release_dir"
-cp "$scratch/prx-darwin-arm64" "$scratch/install.sh" "$scratch/checksums.txt" "$release_dir/"
+cp "$scratch/prx-darwin-arm64" "$scratch/install.sh" "$scratch/uninstall.sh" "$scratch/checksums.txt" "$release_dir/"
