@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# 正本は scripts/hooks/pre-commit で、`make setup-hooks` が共通 Git ディレクトリの hooks/ へ複製する。
+# 直接編集するのは正本だけにする。
+
+# `make ci` は成功した作業ツリーのハッシュを共通 Git ディレクトリに記録し、
+# 内容が変わっていないコミットでは再実行を省く。FORCE_CI=1 で必ず実行する。
+run_cached_make_ci() {
+  ci_repo_root=$1
+  ci_git_common_dir=$(
+    cd "$ci_repo_root" &&
+      ci_common_dir=$(git rev-parse --git-common-dir) &&
+      cd "$ci_common_dir" &&
+      pwd -P
+  ) || return 1
+  ci_cache_file="$ci_git_common_dir/hooks/.make-ci-success"
+  ci_temp_dir=$(mktemp -d "${TMPDIR:-/tmp}/make-ci-cache.XXXXXX") || return 1
+
+  ci_tree_hash=$(
+    cd "$ci_repo_root" &&
+      GIT_INDEX_FILE="$ci_temp_dir/index" git read-tree HEAD &&
+      GIT_INDEX_FILE="$ci_temp_dir/index" git add -A -- . &&
+      GIT_INDEX_FILE="$ci_temp_dir/index" git write-tree
+  )
+  ci_hash_status=$?
+  rm -rf "$ci_temp_dir"
+
+  ci_cache_key="v1:$ci_tree_hash"
+  if [ "$ci_hash_status" -eq 0 ] && [ "${FORCE_CI:-0}" != "1" ] &&
+    [ -f "$ci_cache_file" ] && [ "$(cat "$ci_cache_file")" = "$ci_cache_key" ]; then
+    echo "Skipping make ci: working tree is unchanged since the last successful run."
+    return 0
+  fi
+
+  if [ "$ci_hash_status" -ne 0 ]; then
+    echo "Warning: make ci cache key could not be generated; running the check." >&2
+  fi
+
+  echo "Running make ci..."
+  if ! make -C "$ci_repo_root" ci; then
+    echo "Error: make ci が失敗しました。コミットを中断します。" >&2
+    return 1
+  fi
+
+  if [ "$ci_hash_status" -eq 0 ] && ! printf '%s\n' "$ci_cache_key" >"$ci_cache_file"; then
+    echo "Warning: make ci の成功結果をキャッシュできませんでした。" >&2
+  fi
+}
+
+branch=$(git symbolic-ref --short HEAD 2>/dev/null)
+if [ "$branch" = "main" ]; then
+  echo "ERROR: main ブランチへの直接コミットは禁止されています。" >&2
+  echo "作業ブランチを作成してください: git checkout -b <branch-name>" >&2
+  exit 1
+fi
+
+repo_root=$(git rev-parse --show-toplevel) || exit 1
+run_cached_make_ci "$repo_root" || exit 1

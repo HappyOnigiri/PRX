@@ -8,6 +8,7 @@ PRX は、タスクと GitHub プルリクエストの依存グラフを扱う�
 - RPC のスキーマと振る舞いは後方互換性なしに変更してよい。変更は Protocol Buffer の定義・サーバー・リポジトリ内のクライアント・テストにまとめて反映する。
 - Protocol Buffer・マイグレーション・SQL のソースを編集したら `make generate` を実行する。`gen/`、`internal/db/`、`web/src/gen/` 配下の生成物は手で編集しない。
 - `internal/webui/dist/` は `make build` または `make web-build` の成果物で、`.gitkeep` だけを追跡する。
+- Git hook の正本は `scripts/hooks/` で、`make setup-hooks` が共通 Git ディレクトリの `hooks/` へ複製する。`core.hooksPath` は user レベルの dispatcher を覆い隠すため設定しない。
 - コミットとプッシュにユーザーの承認は不要である。
 
 ## 記載言語

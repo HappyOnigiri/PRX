@@ -14,10 +14,15 @@ CI_JOBS ?= $(shell nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 4)
 # GNU make 4 は並列ジョブの出力をまとめて表示するが、GNU make 3.81 (macOS) は混ざる。
 CI_MAKEFLAGS := -j$(CI_JOBS) --keep-going $(if $(filter output-sync,$(.FEATURES)),--output-sync=target)
 
-.PHONY: generate generated-check mod-tidy-check fmt lint go-lint go-deadcode markdown-lint web-lint check-web-quality \
+.PHONY: setup-hooks generate generated-check mod-tidy-check fmt lint go-lint go-deadcode markdown-lint web-lint check-web-quality \
     go-comment-lint test go-test web-test go-coverage-check go-coverage-zero-check test-race test-race-coverage test-cli install-test uninstall-test \
-    web-install web-build dev demo e2e build version-check install release release-check ci ci-checks clean \
+    hooks-test web-install web-build dev demo e2e build version-check install release release-check ci ci-checks clean \
     $(GOLANGCI_LINT)
+
+# hook は他の準備と独立に入れ直せるよう、単独の target にする。
+# 正本は scripts/hooks/ で、宛先は共通 Git ディレクトリの hooks/ である。
+setup-hooks:
+	scripts/setup-hooks.sh
 
 generate: web-install
 	$(GO) tool sqlc generate
@@ -117,6 +122,11 @@ uninstall-test:
 	bash -n scripts/test-uninstall.sh
 	bash scripts/test-uninstall.sh
 
+hooks-test:
+	bash -n scripts/setup-hooks.sh
+	bash -n scripts/hooks/pre-commit
+	bash scripts/test-setup-hooks.sh
+
 web-install:
 	$(PNPM) install --frozen-lockfile
 
@@ -181,7 +191,7 @@ ci:
 # どのチェックも読み取り専用か、自分の出力先 (coverage/、test-results/、bin/prx、
 # internal/webui/dist) にしか書かないので、並行実行しても安全。書き込み側は依存関係で直列化する。
 # 最長の連鎖 (web-build -> build -> e2e) を先頭に置き、make が他より先に着手するようにしている。
-ci-checks: e2e version-check build release-check install-test uninstall-test lint test-race-coverage go-coverage-zero-check web-test \
+ci-checks: e2e version-check build release-check install-test uninstall-test hooks-test lint test-race-coverage go-coverage-zero-check web-test \
     check-web-quality generated-check mod-tidy-check
 
 clean:
