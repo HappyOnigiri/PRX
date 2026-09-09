@@ -1,5 +1,5 @@
 import { render, screen } from "@testing-library/react";
-import { Plus, Trash2 } from "lucide-react";
+import { Plus, RefreshCw, Trash2 } from "lucide-react";
 import { describe, expect, it, vi } from "vitest";
 import { IconButton } from "../src/views/IconButton";
 
@@ -62,5 +62,19 @@ describe("IconButton", () => {
     expect(icon).toHaveAttribute("focusable", "false");
     expect(icon).toHaveAttribute("width", "14");
     expect(icon).toHaveAttribute("height", "14");
+  });
+
+  it("marks a busy button so the icon animates and assistive tech hears it", () => {
+    const { rerender } = render(
+      <IconButton icon={RefreshCw} label="Sync GitHub" busy />,
+    );
+
+    const button = screen.getByRole("button", { name: "Sync GitHub" });
+    expect(button).toHaveClass("icon-button-busy");
+    expect(button).toHaveAttribute("aria-busy", "true");
+
+    rerender(<IconButton icon={RefreshCw} label="Sync GitHub" />);
+    expect(button).not.toHaveClass("icon-button-busy");
+    expect(button).not.toHaveAttribute("aria-busy");
   });
 });

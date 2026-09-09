@@ -236,9 +236,10 @@ describe("Dashboard states", () => {
     dashboardMocks.sync.isPending = true;
     const { rerender } = renderDashboard();
 
-    expect(
-      screen.getByRole("button", { name: "Syncing GitHub…" }),
-    ).toBeDisabled();
+    const syncing = screen.getByRole("button", { name: "Syncing GitHub…" });
+    expect(syncing).toBeDisabled();
+    expect(syncing).toHaveClass("icon-button-busy");
+    expect(syncing).toHaveAttribute("aria-busy", "true");
 
     dashboardMocks.sync.isPending = false;
     dashboardMocks.sync.error = new Error("GitHub is unavailable");
@@ -250,7 +251,9 @@ describe("Dashboard states", () => {
     expect(screen.getByRole("alert")).toHaveTextContent(
       "GitHub is unavailable",
     );
-    expect(screen.getByRole("button", { name: "Sync GitHub" })).toBeEnabled();
+    const idle = screen.getByRole("button", { name: "Sync GitHub" });
+    expect(idle).toBeEnabled();
+    expect(idle).not.toHaveClass("icon-button-busy");
   });
 
   it("links every queue to a search that returns the tasks it counted", () => {
@@ -306,8 +309,8 @@ describe("Dashboard states", () => {
     dashboardMocks.state.data = makeSnapshot();
     renderDashboard({ ...autoSyncStatus, checking: true });
 
-    expect(
-      screen.getByRole("button", { name: "Syncing GitHub…" }),
-    ).toBeDisabled();
+    const syncing = screen.getByRole("button", { name: "Syncing GitHub…" });
+    expect(syncing).toBeDisabled();
+    expect(syncing).toHaveAttribute("aria-busy", "true");
   });
 });

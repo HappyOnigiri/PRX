@@ -170,6 +170,7 @@ function SyncStatus() {
         icon={RefreshCw}
         label={pending ? t("dashboard.syncingNow") : t("dashboard.syncNow")}
         variant="secondary"
+        busy={pending}
         disabled={pending}
         onClick={() => {
           sync.mutate(undefined);
