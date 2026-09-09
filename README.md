@@ -1,67 +1,71 @@
 # PRX
 
-[日本語](./README.ja.md)
+English | [日本語](README.ja.md) | [简体中文](README.zh-CN.md)
 
 **PRX** keeps an initiative that is spread across many GitHub pull requests visible from your own machine.
+Register how the tasks depend on each other, and PRX separates the work you can start now from the work that is waiting on something.
 
-Once an initiative splits into ten or twenty pull requests, it stops being obvious which one is waiting on someone else and which one you can pick up now.
-Register how the tasks depend on each other, and PRX separates the ready work from the blocked work for you.
+## Features
 
-## What it does
+- **Shows what you can start** — Pull out only the tasks whose dependencies are all satisfied, instead of working out the order again every time.
+- **Shows where things are stuck** — Look over the whole initiative as a graph and follow which task is waiting on what, including pull requests awaiting review and tasks that have gone stale.
+- **Reflects pull-request state** — Review status, conflicts, and merges are read from GitHub and folded into how the tasks progress.
+- **Builds prompts for agents** — Assemble a prompt from a template with the task and its dependencies filled in, ready to copy.
+- **Stays on your machine** — Data is stored locally, and the server accepts only local connections by default.
 
-- **Shows what you can start**: pull out only the tasks whose dependencies are all satisfied, instead of working out the order again every time.
-- **Shows where things are stuck**: look over the whole initiative as a graph and follow which task is waiting on what.
-- **Reflects pull-request state**: review status, conflicts, and merges are read from GitHub and folded into how the tasks progress.
-- **Suggests the next move**: list the pull requests waiting for review and the tasks that have gone stale.
-- **Builds prompts for agents**: assemble a prompt from a template with the task and its dependencies filled in, ready to copy.
-- **Stays on your machine**: data is stored locally, and the server accepts only local connections by default.
+## Installation
 
-The browser workspace and the scriptable command line offer the same operations.
+### macOS
 
-## Getting started
+A prebuilt binary is published for Apple Silicon.
 
 ```sh
 curl -fsSL https://github.com/HappyOnigiri/PRX/releases/latest/download/install.sh | bash
-prx daemon install # start PRX at login (macOS)
-prx open           # open the running server in a browser
 ```
 
-On a first install, the installer opens a terminal menu where you can choose the background service and then open the browser.
-Run `prx setup` to walk through the daemon choices again; the browser prompt appears only immediately after a new daemon installation.
+Run the same command again to update.
 
-The installer downloads the latest release, verifies its checksum, and installs the binary to `~/.local/bin/prx`.
-Run the same command again to update; the installed binary is kept when the download or the verification fails.
-Releases are built for macOS on Apple Silicon, and the binary carries the browser workspace with it.
+### Linux / WSL2
 
-To build from a checkout instead, run `make install`, which installs to `~/.local/bin/prx` as well.
-Set `INSTALL_DIR` to install it elsewhere.
+Build from source; the same steps work on macOS. Windows is not supported natively.
 
-`prx daemon install` registers a LaunchAgent that runs the server for you from the next login onward, and `prx open` opens whichever address it is actually listening on.
-The port defaults to 7331 and falls back to another one when that is taken, so read the address from `prx open` rather than typing it.
-`prx config server update PORT` pins a port; run `prx daemon restart` afterwards to move a server that is already running.
-`prx serve` still runs the server in the foreground on any operating system.
+```sh
+git clone https://github.com/HappyOnigiri/PRX.git
+cd PRX
+make install
+```
 
-`prx serve --demo` starts a demo loaded with sample data.
-It leaves your own data untouched, so use it to try PRX first.
+`make install` builds the WebUI along with the binary and installs it to `~/.local/bin/prx`. Set `INSTALL_DIR` to install it elsewhere.
+`prx daemon` and `prx open` manage the background service on macOS only, so start the server with `prx serve` instead.
 
-### Uninstall
+## Usage
 
-To stop PRX and remove the standard installation, run:
+Open http://localhost:7331/ in a browser. When that port is taken and the server moved to another one, `prx open` opens whichever address it is actually listening on.
+
+The `prx` command reads and writes the same data, so an AI agent can look at the current state and register tasks and dependencies.
+
+```sh
+prx ready      # pull out the tasks you can start
+prx graph F-1  # see a whole initiative with its tasks and dependencies
+prx prompt T-1 # assemble the prompt to hand to a task
+```
+
+See `prx -h` and `prx <command> -h` for commands and options.
+
+## More options
+
+- **Synchronize with GitHub:** supply a credential through `prx config`, `GITHUB_TOKEN`, `GH_TOKEN`, or an authenticated `gh` CLI. Tasks and dependencies work the same way without it.
+- **Pin a port:** `prx config server update PORT`. Run `prx daemon restart` afterwards to move a server that is already running.
+- **Run in the foreground:** `prx serve` runs the server in the foreground on any operating system.
+- **Demo:** `prx serve --demo` starts a demo loaded with sample data. It leaves your own data untouched, so use it to try PRX first.
+
+## Uninstallation
 
 ```sh
 curl -fsSL https://github.com/HappyOnigiri/PRX/releases/latest/download/uninstall.sh | bash
 ```
 
-The script asks for confirmation, stops the standard daemon, removes its LaunchAgent, and deletes only `~/.local/bin/prx`.
-Use `bash -s -- --yes` for a non-interactive run.
-Configuration, SQLite data, run state, logs, shell configuration, and binaries installed elsewhere are kept.
-Processes started with `prx serve --addr`, `prx serve --demo`, or a custom `PRX_RUN_DIR` must be stopped manually.
-The script prints commands for removing retained data when it is no longer needed.
-
-To synchronize with GitHub, supply a credential through `prx config`, `GITHUB_TOKEN`, `GH_TOKEN`, or an authenticated `gh` CLI.
-Tasks and dependencies work the same way without it.
-
-## Develop
+## Development
 
 ```sh
 make dev  # start the development server: http://127.0.0.1:7331
@@ -71,13 +75,14 @@ make ci   # run every check before handing off a change
 
 `make demo` restarts the API on Go changes, which recreates the demo data from scratch.
 
-Building requires Go 1.27 or newer, plus the Node.js and pnpm versions pinned in `.tool-versions` and `package.json`.
-Browser checks during development use Chromium.
-Every other tool is pinned in the repository, so none of them need a separate installation.
-
 ## Documentation
 
-- **Command usage**: `prx -h`, and `-h` on any subcommand.
-- [docs/cli/prx.md](docs/cli/prx.md): the same reference in Markdown.
-- [docs/design/](docs/design/README.md): design decisions and the reasoning behind them.
-- [docs/development.md](docs/development.md): verification and release rules.
+- [docs/cli/prx.md](docs/cli/prx.md): the CLI reference in Markdown.
+- [docs/design/](docs/design/README.md): design decisions and the reasoning behind them (Japanese).
+- [docs/development.md](docs/development.md): verification and release rules (Japanese).
+
+## Contributing
+
+Contributions are welcome!
+Share bug reports and ideas through [Issues](https://github.com/HappyOnigiri/PRX/issues), or send a [pull request](https://github.com/HappyOnigiri/PRX/pulls).
+Documentation improvements and translations are welcome too.
