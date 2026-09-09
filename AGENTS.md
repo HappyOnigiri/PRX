@@ -16,7 +16,7 @@ PRX は、タスクと GitHub プルリクエストの依存グラフを扱う�
 - 識別子、型名、CLI のコマンド名やフラグ、JSON キー、設定キーは原語のまま残す。
 - CLI のヘルプ文言・標準出力・エラーメッセージは英語のままにする。`docs/cli/` の生成物と一致させるため、翻訳しない。
 - WebUI の表示文字列は `web/src/i18n/` の en と ja の両方を維持する。
-- `README.md` は英語、`README.ja.md` は日本語で、内容を同期する。
+- `README.md` は英語、`README.ja.md` は日本語、`README.zh-CN.md` は簡体字中国語で、内容を同期する。
 
 ## Comments
 
