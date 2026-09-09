@@ -157,9 +157,17 @@ build: web-build
 version-check: build
 	@test "$$($(CURDIR)/bin/prx --version)" = "prx version $(VERSION)-dev"
 
+# 配置したバイナリで常駐も作り直す。導入済みのときだけ実行するのは、常駐を望んでいない
+# 環境に LaunchAgent を登録しないためである。macOS 以外や未導入では案内だけ出して成功する。
 install: build
 	install -d "$(INSTALL_DIR)"
 	install -m 0755 bin/prx "$(INSTALL_DIR)/prx"
+	@status="$$("$(INSTALL_DIR)/prx" daemon --json 2>/dev/null)" || status=''; \
+	case "$$status" in \
+	  *'"installed":true'*) \
+	    PATH="$(INSTALL_DIR):$$PATH" "$(INSTALL_DIR)/prx" daemon install;; \
+	  *) echo 'The PRX LaunchAgent is not installed; the background server was left untouched.';; \
+	esac
 
 # 配布物は明示したタグでだけ作り、開発用の build / install が付ける -dev をそのまま残す。
 # 配布バイナリだけで WebUI も使えるよう、Go のビルドより先に web-build を済ませる。
