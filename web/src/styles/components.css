@@ -40,6 +40,18 @@
   flex: 0 0 auto;
 }
 
+/* 処理中はアイコン自身を回して、押せない見た目だけに頼らず進行中を示す。
+   reduced-motion では止め、状態はラベルと aria-busy が伝える。 */
+.icon-button-busy svg {
+  animation: spin 1s linear infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .icon-button-busy svg {
+    animation: none !important;
+  }
+}
+
 .icon-button-label {
   min-width: 0;
 }

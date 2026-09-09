@@ -385,6 +385,7 @@ function FeatureWorkspaceHead({
                 : t("workspace.syncGithub")
             }
             variant="secondary"
+            busy={props.syncPending}
             onClick={props.onSync}
             disabled={props.syncPending}
           />

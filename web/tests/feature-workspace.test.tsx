@@ -495,7 +495,10 @@ describe("FeatureWorkspace", () => {
     workspaceMocks.snapshot.data = populatedSnapshot();
     mutationAt(0).isPending = true;
     rerender(<FeatureWorkspace />);
-    expect(screen.getByRole("button", { name: "Syncing…" })).toBeDisabled();
+    const syncing = screen.getByRole("button", { name: "Syncing…" });
+    expect(syncing).toBeDisabled();
+    expect(syncing).toHaveClass("icon-button-busy");
+    expect(syncing).toHaveAttribute("aria-busy", "true");
   });
 
   // 削除後はその feature に辿り着けた一覧へ戻る。読み取り専用ならプロジェクト

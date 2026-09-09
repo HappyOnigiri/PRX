@@ -14,6 +14,7 @@ type IconProps = Omit<
 export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   icon: LucideIcon;
   label: string;
+  busy?: boolean;
   iconOnly?: boolean;
   ref?: Ref<HTMLButtonElement>;
   size?: IconButtonSize;
@@ -22,6 +23,7 @@ export interface IconButtonProps extends ButtonHTMLAttributes<HTMLButtonElement>
 }
 
 export function IconButton({
+  busy = false,
   className,
   icon: Icon,
   iconOnly = false,
@@ -39,6 +41,7 @@ export function IconButton({
     `icon-button-${size}`,
     `icon-button-${variant}`,
     iconOnly ? "icon-button-only" : "icon-button-with-label",
+    busy ? "icon-button-busy" : undefined,
     className,
   ]
     .filter(Boolean)
@@ -49,6 +52,7 @@ export function IconButton({
   return (
     <button
       {...buttonProps}
+      aria-busy={buttonProps["aria-busy"] ?? (busy || undefined)}
       aria-label={ariaLabel}
       className={classes}
       ref={ref}
