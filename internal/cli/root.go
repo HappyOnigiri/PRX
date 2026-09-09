@@ -17,6 +17,7 @@ import (
 	prx "github.com/HappyOnigiri/PRX"
 	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
+	"github.com/HappyOnigiri/PRX/internal/launchd"
 	"github.com/HappyOnigiri/PRX/internal/runstate"
 )
 
@@ -370,6 +371,9 @@ func Execute(
 	if printErr := s.writeError(err, hint); printErr != nil {
 		_, _ = fmt.Fprintln(errOut, "Error:", err)
 	}
+	// エラーを表示してから待つ。ログには失敗の理由が先に並び、待機は launchd への
+	// 再起動間隔としてだけ効く。
+	s.delayFailedServeExit(ctx, failedCommand, launchd.New(), serveFailureExitDelay)
 	return err
 }
 

@@ -62,8 +62,10 @@ func TestRenderCarriesTheServeArgumentAndTheThrottleInterval(t *testing.T) {
 			t.Fatalf("rendered plist passes %s: %s", forbidden, data)
 		}
 	}
-	if !strings.Contains(string(data), "<key>ThrottleInterval</key><integer>10</integer>") {
-		t.Fatalf("rendered plist does not set ThrottleInterval=10: %s", data)
+	// ThrottleInterval は launchd が置き換えを遅らせる時間で、`prx daemon restart` の待ち
+	// 時間をそのまま決める。失敗の再試行を間引く役割は serve の終了遅延が持つ。
+	if !strings.Contains(string(data), "<key>ThrottleInterval</key><integer>1</integer>") {
+		t.Fatalf("rendered plist does not set ThrottleInterval=1: %s", data)
 	}
 	for _, key := range []string{"<key>HOME</key>", "<key>PATH</key>", "<key>StandardErrorPath</key>"} {
 		if !strings.Contains(string(data), key) {

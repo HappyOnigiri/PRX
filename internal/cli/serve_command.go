@@ -36,6 +36,34 @@ const (
 // 検出が数十秒遅れても実害はない。
 const executableCheckInterval = 30 * time.Second
 
+// serveFailureExitDelay は launchd 管理の serve が失敗して終わるまでの待ち時間。
+// plist の ThrottleInterval は restart を速くするため 1 秒なので、失敗を繰り返す
+// serve の再起動間隔はこの待機が担う。docs/design/daemon.md を参照。
+const serveFailureExitDelay = 10 * time.Second
+
+// launchdDetector は launchd がこのプロセスを起こしたかの判定だけを表す。テストが実
+// launchctl と実環境に触れずに待機の分岐を回せるようにする。
+type launchdDetector interface{ Managed() bool }
+
+// delayFailedServeExit は launchd 管理の serve が失敗したとき、終了を遅らせて launchd の
+// 再起動を間引く。そうしないと、固定した server.port が使用中のような持続的な失敗で
+// launchd が毎秒 serve を起こし直し、ローテーションのないログが際限なく育つ。
+func (s *state) delayFailedServeExit(
+	ctx context.Context, failed *cobra.Command, detector launchdDetector, delay time.Duration,
+) {
+	// 前景で使う `prx serve` は待たせない。待たせる理由は launchd の再起動だけで、
+	// 手で起動した利用者にとってはエラー表示後の無言の待機になる。
+	if failed == nil || failed.Name() != "serve" || delay <= 0 || !detector.Managed() {
+		return
+	}
+	_, _ = fmt.Fprintf(s.errOut, "PRX waits %s before exiting so launchd does not restart it immediately\n", delay)
+	if ctx == nil {
+		ctx = context.Background()
+	}
+	// SIGTERM で待機を打ち切る。停止を頼んだ利用者を待たせる理由はない。
+	_ = sleepUntil(ctx, delay)
+}
+
 // serveEndpointRecorder はアプリケーションサービス側で実装する。CLI はそのパッケージを
 // import できないので、アドレスはプリミティブ型のまま境界を越える。
 type serveEndpointRecorder interface {

@@ -13,6 +13,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/spf13/cobra"
+
 	"github.com/HappyOnigiri/PRX/internal/config"
 	"github.com/HappyOnigiri/PRX/internal/domain"
 	"github.com/HappyOnigiri/PRX/internal/launchd"
@@ -261,5 +263,58 @@ func TestWatchExecutablePathRetriesAfterAFailedRestart(t *testing.T) {
 	}
 	if !strings.Contains(errOut.String(), "could not restart itself") {
 		t.Fatalf("stderr=%q", errOut.String())
+	}
+}
+
+// stubLaunchdDetector は launchd 管理かどうかだけを固定する。
+type stubLaunchdDetector struct{ managed bool }
+
+func (d stubLaunchdDetector) Managed() bool { return d.managed }
+
+// TestDelayFailedServeExitOnlyWaitsForALaunchdServe は待機の条件を確かめる。前景の serve や
+// 他のコマンドで待つと、エラー表示の後に理由のない無言の待機が入る。
+func TestDelayFailedServeExitOnlyWaitsForALaunchdServe(t *testing.T) {
+	for _, test := range []struct {
+		name     string
+		command  *cobra.Command
+		managed  bool
+		wantWait bool
+	}{
+		{name: "a launchd serve waits", command: &cobra.Command{Use: "serve"}, managed: true, wantWait: true},
+		{name: "a foreground serve exits at once", command: &cobra.Command{Use: "serve"}},
+		{name: "another command exits at once", command: &cobra.Command{Use: "sync"}, managed: true},
+		{name: "no failing command exits at once", managed: true},
+	} {
+		t.Run(test.name, func(t *testing.T) {
+			errOut := &strings.Builder{}
+			s := &state{out: io.Discard, errOut: errOut}
+			// 待つかどうかだけを見たいので、待機は ctx の取り消しで打ち切る。実時間を
+			// 待つと待機の長さを検証するテストになり、遅くなるだけである。
+			ctx, cancel := context.WithCancel(context.Background())
+			cancel()
+			started := time.Now()
+			s.delayFailedServeExit(ctx, test.command, stubLaunchdDetector{managed: test.managed}, time.Hour)
+			if elapsed := time.Since(started); elapsed >= time.Hour {
+				t.Fatalf("the wait ignored the canceled context after %s", elapsed)
+			}
+			if waited := strings.Contains(errOut.String(), "before exiting"); waited != test.wantWait {
+				t.Fatalf("waited=%v want %v; stderr=%q", waited, test.wantWait, errOut.String())
+			}
+		})
+	}
+}
+
+// TestDelayFailedServeExitWaitsForTheGivenDelay は待機が実際に時間を使うことを確かめる。
+// 待たなければ launchd が ThrottleInterval の 1 秒ごとに失敗する serve を起こし直す。
+func TestDelayFailedServeExitWaitsForTheGivenDelay(t *testing.T) {
+	errOut := &strings.Builder{}
+	s := &state{out: io.Discard, errOut: errOut}
+	delay := 30 * time.Millisecond
+	started := time.Now()
+	s.delayFailedServeExit(
+		context.Background(), &cobra.Command{Use: "serve"}, stubLaunchdDetector{managed: true}, delay,
+	)
+	if elapsed := time.Since(started); elapsed < delay {
+		t.Fatalf("the wait returned after %s, want at least %s", elapsed, delay)
 	}
 }

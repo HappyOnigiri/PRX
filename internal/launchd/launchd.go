@@ -30,7 +30,7 @@ const plistTemplate = `<?xml version="1.0" encoding="UTF-8"?>
 <array><string>{{.Binary | x}}</string><string>serve</string></array>
 <key>RunAtLoad</key><true/>
 <key>KeepAlive</key><dict><key>SuccessfulExit</key><false/></dict>
-<key>ThrottleInterval</key><integer>10</integer>
+<key>ThrottleInterval</key><integer>1</integer>
 <key>EnvironmentVariables</key>
 <dict>
 <key>HOME</key><string>{{.Home | x}}</string>
