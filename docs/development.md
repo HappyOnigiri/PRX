@@ -11,7 +11,9 @@
 このターゲットは、pull request で必須のチェックをローカルで完全に再現するものであり続けなければならない。
 
 この実行をコミット時のゲートにするため、`pre-commit` hook から `make ci` を呼ぶ。
-hook の正本はリポジトリで追跡し、`make setup-hooks` で共通 Git ディレクトリの `hooks/` へ複製する。宛先を共通 Git ディレクトリにするのは、どの worktree から実行しても 1 か所に入るからであり、`core.hooksPath` を設定しないのは user レベルの dispatcher を覆い隠さないためである。
+hook の正本はリポジトリで追跡し、`make setup-hooks` で共通 Git ディレクトリの `hooks/` へ複製する。
+既存の hook と差分があるときは、勝手に上書きせず差分を表示して許可を求め、答えが得られなければその hook を残して失敗する。手元で書き換えた hook を黙って失わせないためである。
+リポジトリや worktree に `core.hooksPath` が設定されていると複製先は読まれないので、その場合は何も置かずに失敗する。宛先を共通 Git ディレクトリにするのは、どの worktree から実行しても 1 か所に入るからであり、`core.hooksPath` を設定しないのは user レベルの dispatcher を覆い隠さないためである。
 hook は成功した作業ツリーの内容をキャッシュキーにして再実行を省く。ツリーが変わらないコミットでは待たされず、`FORCE_CI=1` で明示的に再実行できる。
 `make hooks-test` は hook スクリプトの構文と、複製先・実行権限・worktree からの実行を一時リポジトリで検証する。`make ci` と pull request の CI からも呼び出す。
 
