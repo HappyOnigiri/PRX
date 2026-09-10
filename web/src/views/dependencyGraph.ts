@@ -1,4 +1,9 @@
 import type { Edge } from "@xyflow/react";
+import { createContext } from "react";
+
+// エッジの当たり判定は React Flow がラッパー側に持つので、hover はキャンバスの
+// onEdgeMouseEnter から配る。data に混ぜるとエッジ配列が作り直される。
+export const HoveredEdgeContext = createContext<string | undefined>(undefined);
 
 export interface GraphPoint {
   x: number;
@@ -15,7 +20,6 @@ export interface DependencyEdgeRoute {
 
 interface DependencyEdgeData extends Record<string, unknown> {
   disabled: boolean;
-  label: string;
   onRemove: () => void;
   readOnly: boolean;
   removeLabel: string;

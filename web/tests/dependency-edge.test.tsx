@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen } from "@testing-library/react";
 import type { ReactNode, PointerEvent as ReactPointerEvent } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { DependencyEdge } from "../src/views/DependencyEdge";
+import { HoveredEdgeContext } from "../src/views/dependencyGraph";
 
 vi.mock("@xyflow/react", () => ({
   BaseEdge: ({ path }: { path: string }) => (
@@ -10,12 +11,16 @@ vi.mock("@xyflow/react", () => ({
   EdgeToolbar: ({
     children,
     isVisible,
+    onMouseEnter,
+    onMouseLeave,
     onPointerDown,
     x,
     y,
   }: {
     children: ReactNode;
     isVisible: boolean;
+    onMouseEnter?: () => void;
+    onMouseLeave?: () => void;
     onPointerDown?: (event: ReactPointerEvent) => void;
     x: number;
     y: number;
@@ -25,6 +30,8 @@ vi.mock("@xyflow/react", () => ({
         data-testid="edge-toolbar"
         data-x={x}
         data-y={y}
+        onMouseEnter={onMouseEnter}
+        onMouseLeave={onMouseLeave}
         onPointerDown={onPointerDown}
       >
         {children}
@@ -46,7 +53,6 @@ function edgeProps(
     selected: true,
     data: {
       disabled: false,
-      label: "A → B",
       onRemove: vi.fn(),
       readOnly: false,
       removeLabel: "Remove dependency A → B",
@@ -88,6 +94,8 @@ describe("DependencyEdge", () => {
     );
     expect(screen.getByTestId("edge-toolbar")).toHaveAttribute("data-x", "340");
     expect(screen.getByTestId("edge-toolbar")).toHaveAttribute("data-y", "118");
+    // 中点に出るのは丸い×だけで、依存の相手はボタンのアクセシブルな名前が持つ。
+    expect(screen.getByTestId("edge-toolbar")).toHaveTextContent("");
     const pointerEvent = new Event("pointerdown", { bubbles: true });
     const stopPropagation = vi.spyOn(pointerEvent, "stopPropagation");
     fireEvent(screen.getByTestId("edge-toolbar"), pointerEvent);
@@ -115,7 +123,36 @@ describe("DependencyEdge", () => {
       "data-path",
       "M284 72 L406 154",
     );
-    expect(screen.getByText("A → B")).toBeInTheDocument();
+    expect(screen.queryByTestId("edge-toolbar")).not.toBeInTheDocument();
     expect(screen.queryByRole("button")).not.toBeInTheDocument();
+  });
+
+  it("shows the action while the pointer is on the line or on the toolbar", () => {
+    const { rerender } = render(
+      <HoveredEdgeContext.Provider value={undefined}>
+        <DependencyEdge {...edgeProps({ selected: false })} />
+      </HoveredEdgeContext.Provider>,
+    );
+
+    expect(screen.queryByTestId("edge-toolbar")).not.toBeInTheDocument();
+
+    rerender(
+      <HoveredEdgeContext.Provider value="A-B">
+        <DependencyEdge {...edgeProps({ selected: false })} />
+      </HoveredEdgeContext.Provider>,
+    );
+    expect(screen.getByTestId("edge-toolbar")).toBeInTheDocument();
+
+    // 線からボタンへ移る途中でツールバーが消えると、押しに行けなくなる。
+    fireEvent.mouseEnter(screen.getByTestId("edge-toolbar"));
+    rerender(
+      <HoveredEdgeContext.Provider value={undefined}>
+        <DependencyEdge {...edgeProps({ selected: false })} />
+      </HoveredEdgeContext.Provider>,
+    );
+    expect(screen.getByTestId("edge-toolbar")).toBeInTheDocument();
+
+    fireEvent.mouseLeave(screen.getByTestId("edge-toolbar"));
+    expect(screen.queryByTestId("edge-toolbar")).not.toBeInTheDocument();
   });
 });

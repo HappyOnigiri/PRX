@@ -1,6 +1,11 @@
 import { BaseEdge, EdgeToolbar, type EdgeProps } from "@xyflow/react";
-import { Unlink } from "lucide-react";
-import type { DependencyFlowEdge, GraphPoint } from "./dependencyGraph";
+import { X } from "lucide-react";
+import { useContext, useState } from "react";
+import {
+  HoveredEdgeContext,
+  type DependencyFlowEdge,
+  type GraphPoint,
+} from "./dependencyGraph";
 import { IconButton } from "./IconButton";
 
 function pathForPoints(points: GraphPoint[]) {
@@ -56,6 +61,10 @@ export function DependencyEdge({
   targetX,
   targetY,
 }: EdgeProps<DependencyFlowEdge>) {
+  const hoveredEdgeId = useContext(HoveredEdgeContext);
+  // ツールバーはエッジの外へ描かれるので、線からボタンへポインタを移すと線の
+  // hover は外れる。ツールバー自身の hover を足して途中で消えないようにする。
+  const [toolbarHovered, setToolbarHovered] = useState(false);
   const points = data?.route?.points.length
     ? data.route.points
     : [
@@ -75,37 +84,44 @@ export function DependencyEdge({
         path={path}
         style={style ?? {}}
       />
-      {data && (
+      {data && !data.readOnly && (
         <EdgeToolbar
-          // React Flow はツールバーを画面上で一定の大きさに保つ。ここでエッジの
-          // 上に揃えればどの倍率でも位置が保たれるが、CSS のオフセットだと
-          // ビューポートに合わせて拡大縮小してしまう。
-          alignY="bottom"
+          // React Flow はツールバーを画面上で一定の大きさに保つので、線の中点を
+          // 渡せばどの倍率でもそこに乗る。CSS のオフセットだとビューポートに
+          // 合わせて拡大縮小してしまう。
           className="dependency-edge-toolbar nodrag nopan"
           edgeId={id}
-          isVisible={selected === true}
+          isVisible={
+            selected === true || hoveredEdgeId === id || toolbarHovered
+          }
+          onMouseEnter={() => {
+            setToolbarHovered(true);
+          }}
+          onMouseLeave={() => {
+            setToolbarHovered(false);
+          }}
           onPointerDown={(event) => {
             event.stopPropagation();
           }}
+          // React Flow は選択中のエッジを z-index 1000 へ持ち上げる。線の中点
+          // に重ねるボタンは、その当たり判定より上に置かないと押せなくなる。
+          style={{ zIndex: 1001 }}
           x={toolbarPosition.x}
           y={toolbarPosition.y}
         >
-          <span title={data.label}>{data.label}</span>
-          {!data.readOnly && (
-            <IconButton
-              className="dependency-edge-remove"
-              disabled={data.disabled}
-              icon={Unlink}
-              iconOnly
-              label={data.removeLabel}
-              onClick={(event) => {
-                event.stopPropagation();
-                data.onRemove();
-              }}
-              size="compact"
-              variant="danger"
-            />
-          )}
+          <IconButton
+            className="dependency-edge-remove"
+            disabled={data.disabled}
+            icon={X}
+            iconOnly
+            label={data.removeLabel}
+            onClick={(event) => {
+              event.stopPropagation();
+              data.onRemove();
+            }}
+            size="compact"
+            variant="danger"
+          />
         </EdgeToolbar>
       )}
     </>
