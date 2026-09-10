@@ -372,8 +372,10 @@ describe("FeatureGraph", () => {
         />,
       );
 
+      const onConnectEnd = graphMocks.onConnectEnd;
+      if (!onConnectEnd) throw new Error("connection handlers missing");
       act(() => {
-        graphMocks.onConnectEnd?.({}, connectionState);
+        onConnectEnd({}, connectionState);
       });
 
       expect(onCreateTask).not.toHaveBeenCalled();
@@ -874,6 +876,11 @@ describe("FeatureGraph", () => {
       expect.objectContaining({ readOnly: true }),
     );
 
+    const onConnectStart = graphMocks.onConnectStart;
+    const onConnectEnd = graphMocks.onConnectEnd;
+    if (!onConnectStart || !onConnectEnd) {
+      throw new Error("connection handlers missing");
+    }
     act(() => {
       graphMocks.onConnect?.({ source: "task-1", target: "task-2" });
       graphMocks.onReconnectStart?.(
@@ -887,8 +894,8 @@ describe("FeatureGraph", () => {
         "source",
         { isValid: null },
       );
-      graphMocks.onConnectStart?.();
-      graphMocks.onConnectEnd?.(
+      onConnectStart();
+      onConnectEnd(
         {},
         {
           isValid: null,
