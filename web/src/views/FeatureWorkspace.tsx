@@ -83,8 +83,12 @@ export function FeatureWorkspace() {
     featureDocuments,
   } = useFeatureWorkspaceData(data, featureId);
   const visible = useVisibleGraph(tasks, dependencies, hideCompleted);
+  // 開いている作成ダイアログは開き直しても置き換えない。背景のツールバーへ
+  // フォーカスが届くので、指定済みの依存と入力を消さずに残す。
   const openTaskDialog = useCallback((dependency?: PendingDependency) => {
-    setTaskDraft({ ...(dependency ? { dependency } : {}) });
+    setTaskDraft(
+      (current) => current ?? { ...(dependency ? { dependency } : {}) },
+    );
   }, []);
   const openDocumentDialog = useCallback(
     (taskId: string, trigger: HTMLButtonElement) => {

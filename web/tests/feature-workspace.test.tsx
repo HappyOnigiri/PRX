@@ -490,6 +490,11 @@ describe("FeatureWorkspace", () => {
     expect(screen.getByTestId("mock-task-dependency")).toHaveTextContent(
       "blockedBy:Build API",
     );
+    // 背景のツールバーを押しても、開いているダイアログの依存は外れない。
+    fireEvent.click(screen.getByRole("button", { name: "Add task" }));
+    expect(screen.getByTestId("mock-task-dependency")).toHaveTextContent(
+      "blockedBy:Build API",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Mock close task" }));
     expect(
       screen.queryByRole("dialog", { name: "Mock create task" }),
