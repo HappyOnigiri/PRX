@@ -33,8 +33,16 @@ export function CreateTaskDialog({
   // 依存の追加だけが失敗したときの再送で、タスクを二重に作らないための控え。
   const createdTaskId = useRef<string>(undefined);
   const createTask = useDomainMutation(async (input: CreateTaskInput) => {
-    const taskId =
-      createdTaskId.current ?? (await mutations.createTask(input)).task?.id;
+    const created = createdTaskId.current;
+    // 再送では作成をやり直さないので、その間に直したフォームの値は更新で送る。
+    if (created)
+      await mutations.updateTask({
+        id: created,
+        title: input.title,
+        scope: input.scope,
+        assignee: input.assignee,
+      });
+    const taskId = created ?? (await mutations.createTask(input)).task?.id;
     createdTaskId.current = taskId;
     if (dependency && taskId) {
       const { blocker, blocked } = dependencyPair(dependency, taskId);

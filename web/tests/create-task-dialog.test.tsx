@@ -15,6 +15,7 @@ const dialogMocks = vi.hoisted(() => ({
     error: null as Error | null,
   },
   createTask: vi.fn(),
+  updateTask: vi.fn(),
   addDependency: vi.fn(),
   // ダイアログが useDomainMutation に渡した本体。mutateAsync 経由で実行して、
   // 作成と依存追加の並びを観察する。
@@ -24,6 +25,7 @@ const dialogMocks = vi.hoisted(() => ({
 vi.mock("../src/api", () => ({
   mutations: {
     createTask: dialogMocks.createTask,
+    updateTask: dialogMocks.updateTask,
     addDependency: dialogMocks.addDependency,
   },
 }));
@@ -43,6 +45,8 @@ describe("CreateTaskDialog", () => {
     dialogMocks.mutation.error = null;
     dialogMocks.createTask.mockReset();
     dialogMocks.createTask.mockResolvedValue({ task: { id: "task-new" } });
+    dialogMocks.updateTask.mockReset();
+    dialogMocks.updateTask.mockResolvedValue({});
     dialogMocks.addDependency.mockReset();
     dialogMocks.addDependency.mockResolvedValue({});
     dialogMocks.mutationFn = undefined;
@@ -148,6 +152,29 @@ describe("CreateTaskDialog", () => {
 
     expect(dialogMocks.createTask).toHaveBeenCalledOnce();
     expect(dialogMocks.addDependency).toHaveBeenCalledTimes(2);
+  });
+
+  it("sends edited values as an update when retrying the dependency", async () => {
+    dialogMocks.addDependency.mockRejectedValueOnce(new Error("offline"));
+    render(
+      <CreateTaskDialog
+        featureId="feature-1"
+        onClose={vi.fn()}
+        dependency={{ taskId: "task-1", direction: "blockedBy" }}
+      />,
+    );
+
+    await expect(runMutation(taskInput)).rejects.toThrow("offline");
+    expect(dialogMocks.updateTask).not.toHaveBeenCalled();
+    await runMutation({ ...taskInput, title: "Implement refunds" });
+
+    expect(dialogMocks.updateTask).toHaveBeenCalledWith({
+      id: "task-new",
+      title: "Implement refunds",
+      scope: "",
+      assignee: "",
+    });
+    expect(dialogMocks.createTask).toHaveBeenCalledOnce();
   });
 
   it("keeps the dialog open when creation fails and supports cancellation", async () => {
