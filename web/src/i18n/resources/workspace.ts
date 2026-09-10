@@ -50,6 +50,8 @@ export const workspace = {
         detachInstruction:
           "Drop in empty space to remove {{blocker}} → {{blocked}}.",
         dependencyRemoving: "Removing dependency…",
+        connectInstruction:
+          "Drop in empty space to create a new task with this dependency.",
         hiddenBlockers: "Hidden completed blockers: {{titles}}",
         hiddenBlocked: "Hidden completed dependents: {{titles}}",
         blockerHandle: "Blocker output (drag from here)",
@@ -68,6 +70,8 @@ export const workspace = {
       scopePlaceholder: "Repository and acceptance boundary",
       assigneePlaceholder: "Bob",
       submit: "Add task",
+      dependencyBlocks: "The new task will block {{title}}.",
+      dependencyBlockedBy: "The new task will be blocked by {{title}}.",
     },
     featureEdit: {
       formLabel: "Edit feature",
@@ -153,6 +157,8 @@ export const workspace = {
         detachInstruction:
           "空白にドロップすると {{blocker}} → {{blocked}} の依存を解除します。",
         dependencyRemoving: "依存関係を解除しています…",
+        connectInstruction:
+          "空白にドロップすると、この依存を持つ新しいタスクを作成します。",
         hiddenBlockers: "非表示の完了済みブロッカー: {{titles}}",
         hiddenBlocked: "非表示の完了済みブロック対象: {{titles}}",
         blockerHandle: "ブロッカーの送り口（ここからドラッグ）",
@@ -171,6 +177,8 @@ export const workspace = {
       scopePlaceholder: "対象リポジトリと受け入れ条件",
       assigneePlaceholder: "Bob",
       submit: "タスクを追加",
+      dependencyBlocks: "新しいタスクは {{title}} をブロックします。",
+      dependencyBlockedBy: "新しいタスクは {{title}} にブロックされます。",
     },
     featureEdit: {
       formLabel: "フィーチャーを編集",

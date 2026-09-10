@@ -1,24 +1,46 @@
 import { Plus, X } from "lucide-react";
-import type { SyntheticEvent } from "react";
+import { useRef, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";
 import { useDomainMutation } from "../hooks";
 import { formatError } from "../i18n/domain";
+import { dependencyPair, type PendingDependency } from "./dependencyGraph";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
+
+interface CreateTaskInput {
+  featureId: string;
+  title: string;
+  scope: string;
+  assignee: string;
+}
 
 interface CreateTaskDialogProps {
   featureId: string;
   onClose: () => void;
+  dependency?: PendingDependency;
+  dependencyTitle?: string;
 }
 
 export function CreateTaskDialog({
   featureId,
   onClose,
+  dependency,
+  dependencyTitle,
 }: CreateTaskDialogProps) {
   const { t } = useTranslation();
-  const createTask = useDomainMutation(mutations.createTask);
+  // 依存の追加だけが失敗したときの再送で、タスクを二重に作らないための控え。
+  const createdTaskId = useRef<string>(undefined);
+  const createTask = useDomainMutation(async (input: CreateTaskInput) => {
+    const taskId =
+      createdTaskId.current ?? (await mutations.createTask(input)).task?.id;
+    createdTaskId.current = taskId;
+    if (dependency && taskId) {
+      const { blocker, blocked } = dependencyPair(dependency, taskId);
+      await mutations.addDependency(blocker, blocked);
+    }
+  });
 
   async function submitTask(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -46,6 +68,16 @@ export function CreateTaskDialog({
         <header>
           <h2>{t("taskCreate.title")}</h2>
         </header>
+        {dependency && (
+          <p className="dialog-lead">
+            {t(
+              dependency.direction === "blocks"
+                ? "taskCreate.dependencyBlocks"
+                : "taskCreate.dependencyBlockedBy",
+              { title: dependencyTitle ?? dependency.taskId },
+            )}
+          </p>
+        )}
         <label>
           {t("common.title")}
           <input

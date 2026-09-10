@@ -13,6 +13,13 @@ import { DomainErrorCode, ErrorDetailSchema } from "../src/gen/prx/v1/prx_pb";
 import { FeatureGraph } from "../src/views/FeatureGraph";
 import { makeDependency, makeTask } from "./factories";
 
+interface ConnectionStateStub {
+  isValid: boolean | null;
+  fromNode?: { id: string } | null;
+  fromHandle?: { type: string } | null;
+  toNode?: { id: string } | null;
+}
+
 const graphMocks = vi.hoisted(() => ({
   addDependencyApi: vi.fn().mockResolvedValue({}),
   removeDependencyApi: vi.fn().mockResolvedValue({}),
@@ -31,6 +38,10 @@ const graphMocks = vi.hoisted(() => ({
   useGraphLayout: vi.fn(),
   writeGraphZoom: vi.fn(),
   onConnect: undefined as ((connection: unknown) => void) | undefined,
+  onConnectStart: undefined as (() => void) | undefined,
+  onConnectEnd: undefined as
+    | ((event: unknown, connectionState: ConnectionStateStub) => void)
+    | undefined,
   onEdgesChange: undefined as ((changes: unknown[]) => void) | undefined,
   onEdgesDelete: undefined as ((edges: unknown[]) => void) | undefined,
   onEdgeClick: undefined as
@@ -66,6 +77,8 @@ vi.mock("@xyflow/react", () => ({
     edges,
     onMoveEnd,
     onConnect,
+    onConnectStart,
+    onConnectEnd,
     onEdgesChange,
     onEdgesDelete,
     onEdgeClick,
@@ -80,6 +93,11 @@ vi.mock("@xyflow/react", () => ({
     edges?: unknown[];
     onMoveEnd?: (...args: unknown[]) => void;
     onConnect?: (connection: unknown) => void;
+    onConnectStart?: () => void;
+    onConnectEnd?: (
+      event: unknown,
+      connectionState: ConnectionStateStub,
+    ) => void;
     onEdgesChange?: (changes: unknown[]) => void;
     onEdgesDelete?: (edges: unknown[]) => void;
     onEdgeClick?: (event: unknown, edge: { id: string }) => void;
@@ -101,6 +119,8 @@ vi.mock("@xyflow/react", () => ({
   }) => {
     graphMocks.edges = (edges ?? []) as Record<string, unknown>[];
     graphMocks.onConnect = onConnect;
+    graphMocks.onConnectStart = onConnectStart;
+    graphMocks.onConnectEnd = onConnectEnd;
     graphMocks.onEdgesChange = onEdgesChange;
     graphMocks.onEdgesDelete = onEdgesDelete;
     graphMocks.onEdgeClick = onEdgeClick;
@@ -153,6 +173,8 @@ describe("FeatureGraph", () => {
     graphMocks.removeDependency.error = null;
     graphMocks.domainMutationCall = 0;
     graphMocks.onConnect = undefined;
+    graphMocks.onConnectStart = undefined;
+    graphMocks.onConnectEnd = undefined;
     graphMocks.onEdgesChange = undefined;
     graphMocks.onEdgesDelete = undefined;
     graphMocks.onEdgeClick = undefined;
@@ -226,6 +248,165 @@ describe("FeatureGraph", () => {
       "data-edge-count",
       "0",
     );
+  });
+
+  it.each([
+    ["source", "blockedBy"],
+    ["target", "blocks"],
+  ] as const)(
+    "opens task creation from a %s handle dropped on empty space",
+    (handleType, direction) => {
+      const onCreateTask = vi.fn();
+      render(
+        <FeatureGraph
+          tasks={[makeTask({ id: "task-1", title: "Blocker task" })]}
+          dependencies={[]}
+          pullRequests={new Map()}
+          documentsByTask={new Map()}
+          onEditTask={vi.fn()}
+          onPreviewDocument={vi.fn()}
+          onCreateTask={onCreateTask}
+        />,
+      );
+
+      if (!graphMocks.onConnectStart || !graphMocks.onConnectEnd) {
+        throw new Error("connection handlers missing");
+      }
+      act(() => {
+        graphMocks.onConnectStart?.();
+      });
+      expect(
+        screen.getByText(
+          "Drop in empty space to create a new task with this dependency.",
+        ),
+      ).toBeInTheDocument();
+
+      act(() => {
+        graphMocks.onConnectEnd?.(
+          {},
+          {
+            isValid: null,
+            fromNode: { id: "task-1" },
+            fromHandle: { type: handleType },
+            toNode: null,
+          },
+        );
+      });
+
+      expect(onCreateTask).toHaveBeenCalledWith({
+        taskId: "task-1",
+        direction,
+      });
+      expect(graphMocks.addDependency.mutate).not.toHaveBeenCalled();
+    },
+  );
+
+  const rejectedDrops: [string, ConnectionStateStub][] = [
+    [
+      "a completed connection",
+      {
+        isValid: true,
+        fromNode: { id: "task-1" },
+        fromHandle: { type: "source" },
+        toNode: { id: "task-2" },
+      },
+    ],
+    [
+      "a drop on an existing node",
+      {
+        isValid: null,
+        fromNode: { id: "task-1" },
+        fromHandle: { type: "source" },
+        toNode: { id: "task-2" },
+      },
+    ],
+    [
+      "a drag without an origin handle",
+      {
+        isValid: null,
+        fromNode: { id: "task-1" },
+        fromHandle: null,
+        toNode: null,
+      },
+    ],
+    [
+      "a drag without an origin node",
+      {
+        isValid: null,
+        fromNode: null,
+        fromHandle: { type: "source" },
+        toNode: null,
+      },
+    ],
+  ];
+
+  it.each(rejectedDrops)(
+    "keeps task creation closed after %s",
+    (_name, connectionState) => {
+      const onCreateTask = vi.fn();
+      render(
+        <FeatureGraph
+          tasks={[makeTask({ id: "task-1" })]}
+          dependencies={[]}
+          pullRequests={new Map()}
+          documentsByTask={new Map()}
+          onEditTask={vi.fn()}
+          onPreviewDocument={vi.fn()}
+          onCreateTask={onCreateTask}
+        />,
+      );
+
+      act(() => {
+        graphMocks.onConnectEnd?.({}, connectionState);
+      });
+
+      expect(onCreateTask).not.toHaveBeenCalled();
+    },
+  );
+
+  it("detaches an existing edge without opening task creation", () => {
+    const dependency = makeDependency({
+      blockerTaskId: "blocker",
+      blockedTaskId: "blocked",
+    });
+    const edge = {
+      id: "blocker-blocked",
+      source: "blocker",
+      target: "blocked",
+    };
+    const onCreateTask = vi.fn();
+    render(
+      <FeatureGraph
+        tasks={[makeTask({ id: "blocker" }), makeTask({ id: "blocked" })]}
+        dependencies={[dependency]}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={onCreateTask}
+      />,
+    );
+
+    // 掴み直しでは onConnectEnd が onReconnectEnd より先に呼ばれる。
+    act(() => {
+      graphMocks.onReconnectStart?.({}, edge, "source");
+      graphMocks.onConnectEnd?.(
+        {},
+        {
+          isValid: null,
+          fromNode: { id: "blocker" },
+          fromHandle: { type: "source" },
+          toNode: null,
+        },
+      );
+      graphMocks.onReconnectEnd?.({}, edge, "source", { isValid: null });
+    });
+
+    expect(onCreateTask).not.toHaveBeenCalled();
+    expect(graphMocks.removeDependency.mutate).toHaveBeenCalledWith({
+      blocker: "blocker",
+      blocked: "blocked",
+    });
   });
 
   it("does not call the mutation for incomplete or pending connections", () => {
@@ -603,6 +784,7 @@ describe("FeatureGraph", () => {
   });
 
   it("keeps an archived empty graph read-only", () => {
+    const onCreateTask = vi.fn();
     render(
       <FeatureGraph
         tasks={[]}
@@ -611,7 +793,7 @@ describe("FeatureGraph", () => {
         documentsByTask={new Map()}
         onEditTask={vi.fn()}
         onPreviewDocument={vi.fn()}
-        onCreateTask={vi.fn()}
+        onCreateTask={onCreateTask}
         readOnly
       />,
     );
@@ -646,9 +828,23 @@ describe("FeatureGraph", () => {
         "source",
         { isValid: null },
       );
+      graphMocks.onConnectStart?.();
+      graphMocks.onConnectEnd?.(
+        {},
+        {
+          isValid: null,
+          fromNode: { id: "task-1" },
+          fromHandle: { type: "source" },
+          toNode: null,
+        },
+      );
     });
     expect(graphMocks.addDependency.mutate).not.toHaveBeenCalled();
     expect(graphMocks.removeDependency.mutate).not.toHaveBeenCalled();
+    expect(onCreateTask).not.toHaveBeenCalled();
+    expect(
+      document.querySelector(".graph-status-notice"),
+    ).not.toBeInTheDocument();
   });
 
   it("builds dependency edges, persists zoom, and retries a failed layout", () => {

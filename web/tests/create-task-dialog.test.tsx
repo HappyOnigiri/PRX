@@ -14,11 +14,24 @@ const dialogMocks = vi.hoisted(() => ({
     isPending: false,
     error: null as Error | null,
   },
+  createTask: vi.fn(),
+  addDependency: vi.fn(),
+  // ダイアログが useDomainMutation に渡した本体。mutateAsync 経由で実行して、
+  // 作成と依存追加の並びを観察する。
+  mutationFn: undefined as ((input: unknown) => Promise<unknown>) | undefined,
 }));
 
-vi.mock("../src/api", () => ({ mutations: { createTask: vi.fn() } }));
+vi.mock("../src/api", () => ({
+  mutations: {
+    createTask: dialogMocks.createTask,
+    addDependency: dialogMocks.addDependency,
+  },
+}));
 vi.mock("../src/hooks", () => ({
-  useDomainMutation: () => dialogMocks.mutation,
+  useDomainMutation: (mutationFn: (input: unknown) => Promise<unknown>) => {
+    dialogMocks.mutationFn = mutationFn;
+    return dialogMocks.mutation;
+  },
 }));
 
 describe("CreateTaskDialog", () => {
@@ -28,7 +41,29 @@ describe("CreateTaskDialog", () => {
     dialogMocks.mutation.mutateAsync.mockResolvedValue({});
     dialogMocks.mutation.isPending = false;
     dialogMocks.mutation.error = null;
+    dialogMocks.createTask.mockReset();
+    dialogMocks.createTask.mockResolvedValue({ task: { id: "task-new" } });
+    dialogMocks.addDependency.mockReset();
+    dialogMocks.addDependency.mockResolvedValue({});
+    dialogMocks.mutationFn = undefined;
   });
+
+  function runMutation(input: {
+    featureId: string;
+    title: string;
+    scope: string;
+    assignee: string;
+  }) {
+    if (!dialogMocks.mutationFn) throw new Error("mutation body missing");
+    return dialogMocks.mutationFn(input);
+  }
+
+  const taskInput = {
+    featureId: "feature-1",
+    title: "Implement checkout",
+    scope: "",
+    assignee: "",
+  };
 
   it("converts form values into a task mutation and closes on success", async () => {
     const onClose = vi.fn();
@@ -53,6 +88,66 @@ describe("CreateTaskDialog", () => {
       scope: "API and acceptance tests",
       assignee: "Carol",
     });
+  });
+
+  it("adds the dependency after creating the task", async () => {
+    render(
+      <CreateTaskDialog
+        featureId="feature-1"
+        onClose={vi.fn()}
+        dependency={{ taskId: "task-1", direction: "blockedBy" }}
+        dependencyTitle="Blocker task"
+      />,
+    );
+    expect(
+      screen.getByText("The new task will be blocked by Blocker task."),
+    ).toBeInTheDocument();
+
+    await runMutation(taskInput);
+
+    expect(dialogMocks.createTask).toHaveBeenCalledWith(taskInput);
+    expect(dialogMocks.addDependency).toHaveBeenCalledWith(
+      "task-1",
+      "task-new",
+    );
+  });
+
+  it("reverses the dependency when the new task is the blocker", async () => {
+    render(
+      <CreateTaskDialog
+        featureId="feature-1"
+        onClose={vi.fn()}
+        dependency={{ taskId: "task-1", direction: "blocks" }}
+        dependencyTitle="Blocked task"
+      />,
+    );
+    expect(
+      screen.getByText("The new task will block Blocked task."),
+    ).toBeInTheDocument();
+
+    await runMutation(taskInput);
+
+    expect(dialogMocks.addDependency).toHaveBeenCalledWith(
+      "task-new",
+      "task-1",
+    );
+  });
+
+  it("retries only the dependency when the task already exists", async () => {
+    dialogMocks.addDependency.mockRejectedValueOnce(new Error("offline"));
+    render(
+      <CreateTaskDialog
+        featureId="feature-1"
+        onClose={vi.fn()}
+        dependency={{ taskId: "task-1", direction: "blockedBy" }}
+      />,
+    );
+
+    await expect(runMutation(taskInput)).rejects.toThrow("offline");
+    await runMutation(taskInput);
+
+    expect(dialogMocks.createTask).toHaveBeenCalledOnce();
+    expect(dialogMocks.addDependency).toHaveBeenCalledTimes(2);
   });
 
   it("keeps the dialog open when creation fails and supports cancellation", async () => {
