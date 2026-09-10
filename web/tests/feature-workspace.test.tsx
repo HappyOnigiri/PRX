@@ -214,15 +214,18 @@ vi.mock("../src/views/CreateTaskDialog", () => ({
   CreateTaskDialog: ({
     onClose,
     dependency,
-    dependencyTitle,
   }: {
     onClose: () => void;
-    dependency?: { taskId: string; direction: string };
-    dependencyTitle?: string;
+    dependency?: {
+      value: { taskId: string; direction: string };
+      title: string;
+    };
   }) => (
     <div role="dialog" aria-label="Mock create task">
       <span data-testid="mock-task-dependency">
-        {dependency ? `${dependency.direction}:${dependencyTitle}` : "none"}
+        {dependency
+          ? `${dependency.value.direction}:${dependency.title}`
+          : "none"}
       </span>
       <button onClick={onClose}>Mock close task</button>
     </div>

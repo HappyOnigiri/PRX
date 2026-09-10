@@ -99,8 +99,10 @@ describe("CreateTaskDialog", () => {
       <CreateTaskDialog
         featureId="feature-1"
         onClose={onClose}
-        dependency={{ taskId: "task-1", direction: "blockedBy" }}
-        dependencyTitle="Blocker task"
+        dependency={{
+          value: { taskId: "task-1", direction: "blockedBy" },
+          title: "Blocker task",
+        }}
       />,
     );
     expect(
@@ -126,8 +128,10 @@ describe("CreateTaskDialog", () => {
       <CreateTaskDialog
         featureId="feature-1"
         onClose={vi.fn()}
-        dependency={{ taskId: "task-1", direction: "blocks" }}
-        dependencyTitle="Blocked task"
+        dependency={{
+          value: { taskId: "task-1", direction: "blocks" },
+          title: "Blocked task",
+        }}
       />,
     );
     expect(
@@ -151,7 +155,10 @@ describe("CreateTaskDialog", () => {
       <CreateTaskDialog
         featureId="feature-1"
         onClose={onClose}
-        dependency={{ taskId: "task-1", direction: "blockedBy" }}
+        dependency={{
+          value: { taskId: "task-1", direction: "blockedBy" },
+          title: "Blocker task",
+        }}
       />,
     );
 
@@ -175,7 +182,10 @@ describe("CreateTaskDialog", () => {
       <CreateTaskDialog
         featureId="feature-1"
         onClose={vi.fn()}
-        dependency={{ taskId: "task-1", direction: "blockedBy" }}
+        dependency={{
+          value: { taskId: "task-1", direction: "blockedBy" },
+          title: "Blocker task",
+        }}
       />,
     );
 
@@ -203,7 +213,10 @@ describe("CreateTaskDialog", () => {
       <CreateTaskDialog
         featureId="feature-1"
         onClose={vi.fn()}
-        dependency={{ taskId: "task-1", direction: "blockedBy" }}
+        dependency={{
+          value: { taskId: "task-1", direction: "blockedBy" },
+          title: "Blocker task",
+        }}
       />,
     );
 
@@ -226,7 +239,10 @@ describe("CreateTaskDialog", () => {
       <CreateTaskDialog
         featureId="feature-1"
         onClose={onClose}
-        dependency={{ taskId: "task-1", direction: "blockedBy" }}
+        dependency={{
+          value: { taskId: "task-1", direction: "blockedBy" },
+          title: "Blocker task",
+        }}
       />,
     );
 

@@ -16,18 +16,18 @@ interface CreateTaskInput {
   assignee: string;
 }
 
+// 依存の相手のタイトルは呼び出し側で解決する。ダイアログ側にも控えを置くと、
+// どちらのフォールバックが効いているのか追えなくなる。
 interface CreateTaskDialogProps {
   featureId: string;
   onClose: () => void;
-  dependency?: PendingDependency;
-  dependencyTitle?: string;
+  dependency?: { value: PendingDependency; title: string };
 }
 
 export function CreateTaskDialog({
   featureId,
   onClose,
   dependency,
-  dependencyTitle,
 }: CreateTaskDialogProps) {
   const { t } = useTranslation();
   const refreshSnapshot = useSnapshotRefresh();
@@ -49,7 +49,7 @@ export function CreateTaskDialog({
     if (!taskId) throw new Error("createTask did not return a task id");
     createdTaskId.current = taskId;
     if (dependency) {
-      const { blocker, blocked } = dependencyPair(dependency, taskId);
+      const { blocker, blocked } = dependencyPair(dependency.value, taskId);
       try {
         await mutations.addDependency(blocker, blocked);
       } catch (error) {
@@ -90,10 +90,10 @@ export function CreateTaskDialog({
         {dependency && (
           <p className="dialog-lead">
             {t(
-              dependency.direction === "blocks"
+              dependency.value.direction === "blocks"
                 ? "taskCreate.dependencyBlocks"
                 : "taskCreate.dependencyBlockedBy",
-              { title: dependencyTitle ?? dependency.taskId },
+              { title: dependency.title },
             )}
           </p>
         )}

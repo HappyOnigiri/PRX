@@ -522,8 +522,7 @@ function TaskCreateOverlay({
     <CreateTaskDialog
       featureId={featureId}
       onClose={onClose}
-      dependency={dependency}
-      dependencyTitle={title ?? dependency.taskId}
+      dependency={{ value: dependency, title: title ?? dependency.taskId }}
     />
   );
 }
