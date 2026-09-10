@@ -3,6 +3,7 @@ import { useEffect, useId, useRef } from "react";
 import { useTranslation } from "react-i18next";
 import { formatError } from "../i18n/domain";
 import { IconButton } from "./IconButton";
+import { useCloseOnEscape } from "./useCloseOnEscape";
 
 interface ConfirmationDialogProps {
   title: string;
@@ -31,6 +32,8 @@ export function ConfirmationDialog({
   const cancelRef = useRef<HTMLButtonElement>(null);
   const dialogRef = useRef<HTMLElement>(null);
 
+  useCloseOnEscape(onCancel, !pending);
+
   useEffect(() => {
     const origin = document.activeElement;
     cancelRef.current?.focus();
@@ -46,7 +49,6 @@ export function ConfirmationDialog({
       className="scrim confirmation-scrim"
       role="presentation"
       onKeyDown={(event) => {
-        if (event.key === "Escape" && !pending) onCancel();
         if (event.key !== "Tab") return;
         const focusable = Array.from(
           dialogRef.current?.querySelectorAll<HTMLButtonElement>(

@@ -305,4 +305,12 @@ describe("BatchPromptDialog", () => {
     fireEvent.click(screen.getByRole("button", { name: "Close" }));
     expect(onClose).toHaveBeenCalled();
   });
+
+  it("closes on Escape", () => {
+    const onClose = vi.fn();
+    renderDialog(onClose);
+
+    fireEvent.keyDown(screen.getByRole("dialog"), { key: "Escape" });
+    expect(onClose).toHaveBeenCalledOnce();
+  });
 });

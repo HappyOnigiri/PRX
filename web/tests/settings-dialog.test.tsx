@@ -439,6 +439,29 @@ describe("SettingsDialog", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  // Escape は閉じるボタンと同じ経路を通る。未保存の編集があれば確認を出し、
+  // その確認が開いている間は Escape が確認だけを閉じる。
+  it("routes Escape through the same close path", () => {
+    const onClose = vi.fn();
+    render(<SettingsDialog onClose={onClose} />);
+
+    fireEvent.change(screen.getByLabelText("Interval in seconds"), {
+      target: { value: "1200" },
+    });
+    fireEvent.keyDown(window, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+    const discard = screen.getByRole("dialog", {
+      name: "Discard unsaved changes?",
+    });
+
+    fireEvent.keyDown(discard, { key: "Escape" });
+    expect(
+      screen.queryByRole("dialog", { name: "Discard unsaved changes?" }),
+    ).not.toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(screen.getByLabelText("Interval in seconds")).toHaveValue(1200);
+  });
+
   it("keeps server drafts mounted while navigating tabs by keyboard", () => {
     render(<SettingsDialog onClose={vi.fn()} />);
     const serverTab = screen.getByRole("tab", { name: "Server" });

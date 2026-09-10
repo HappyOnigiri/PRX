@@ -21,6 +21,7 @@ import {
 } from "./settingsSections";
 import { TabList, TabPanel } from "./TabList";
 import { DiscardChangesDialog, SaveButton, SaveStatus } from "./UnsavedChanges";
+import { useCloseOnEscape } from "./useCloseOnEscape";
 
 const settingsTabs = [
   "server",
@@ -67,6 +68,8 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     if (sections.dirty) setDiscarding(true);
     else onClose();
   }
+
+  useCloseOnEscape(requestClose);
 
   return (
     <>

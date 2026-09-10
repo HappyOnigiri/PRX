@@ -96,4 +96,15 @@ describe("FeatureCreateDialog", () => {
     expect(onClose).toHaveBeenCalledOnce();
     expect(dialogMocks.mutation.mutateAsync).not.toHaveBeenCalled();
   });
+
+  it("closes on Escape", () => {
+    const onClose = vi.fn();
+    render(<FeatureCreateDialog projectId="P-1" onClose={onClose} />);
+
+    fireEvent.keyDown(screen.getByRole("form", { name: "Create feature" }), {
+      key: "Escape",
+    });
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(dialogMocks.mutation.mutateAsync).not.toHaveBeenCalled();
+  });
 });

@@ -10,6 +10,7 @@ import {
   type BatchCandidate,
 } from "./batchPromptTasks";
 import { IconButton } from "./IconButton";
+import { useCloseOnEscape } from "./useCloseOnEscape";
 
 type CopyStatus =
   | { case: "idle" }
@@ -41,6 +42,8 @@ export function BatchPromptDialog({
   const [pending, setPending] = useState(false);
   const allSelected =
     candidates.length > 0 && selected.size === candidates.length;
+
+  useCloseOnEscape(onClose);
 
   function toggle(taskId: string) {
     setSelected((current) => {

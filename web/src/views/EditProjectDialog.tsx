@@ -10,6 +10,7 @@ import { LifecycleActions, type LifecycleLabels } from "./LifecycleActions";
 import { MutationError } from "./MutationError";
 import { TitleDescriptionFields } from "./TitleDescriptionFields";
 import { DiscardChangesDialog, SaveButton } from "./UnsavedChanges";
+import { useCloseOnEscape } from "./useCloseOnEscape";
 
 interface EditProjectDialogProps {
   project: Project;
@@ -45,6 +46,13 @@ export function EditProjectDialog({
   const dirty =
     draft.title !== project.title || draft.description !== project.description;
 
+  function requestClose() {
+    if (dirty) setConfirmation("discard");
+    else onClose();
+  }
+
+  useCloseOnEscape(requestClose);
+
   async function applyUpdate(update: ProjectUpdate) {
     try {
       await updateProject.mutateAsync(update);
@@ -75,10 +83,7 @@ export function EditProjectDialog({
           deletePending={deleteProject.isPending}
           updateError={updateProject.error}
           onSubmit={submitProject}
-          onClose={() => {
-            if (dirty) setConfirmation("discard");
-            else onClose();
-          }}
+          onClose={requestClose}
           onArchive={() => {
             setConfirmation("archive");
           }}

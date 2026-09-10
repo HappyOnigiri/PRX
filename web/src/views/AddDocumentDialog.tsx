@@ -17,6 +17,7 @@ import { useDomainMutation } from "../hooks";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
 import { TabPanel as SharedTabPanel, TabList } from "./TabList";
+import { useCloseOnEscape } from "./useCloseOnEscape";
 
 const documentTabs = [
   { kind: DocumentKind.URL, key: "url", icon: Link },
@@ -112,6 +113,8 @@ export function AddDocumentDialog(props: AddDocumentDialogProps) {
   const state = useDialogState(props);
   const dialogRef = useRef<HTMLFormElement>(null);
 
+  useCloseOnEscape(props.onClose, !state.busy);
+
   useEffect(() => {
     return () => {
       window.setTimeout(() => props.trigger?.focus());
@@ -119,10 +122,6 @@ export function AddDocumentDialog(props: AddDocumentDialogProps) {
   }, [props.trigger]);
 
   function trapFocus(event: KeyboardEvent<HTMLDivElement>) {
-    if (event.key === "Escape" && !state.busy) {
-      props.onClose();
-      return;
-    }
     if (event.key !== "Tab") return;
     const focusable = Array.from(
       dialogRef.current?.querySelectorAll<HTMLElement>(

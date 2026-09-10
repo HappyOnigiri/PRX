@@ -76,6 +76,33 @@ describe("EditProjectDialog", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  // Escape はキャンセルと同じ経路を通るので、未保存の編集があれば確認を挟む。
+  it("routes Escape through the same cancel path", () => {
+    const onClose = vi.fn();
+    render(
+      <EditProjectDialog
+        project={makeProject({ id: "P-1", title: "Delivery" })}
+        referenceCount={0}
+        onClose={onClose}
+        onDeleted={vi.fn()}
+      />,
+    );
+
+    const form = screen.getByRole("form", { name: "Edit project" });
+    fireEvent.keyDown(form, { key: "Escape" });
+    expect(onClose).toHaveBeenCalledOnce();
+
+    onClose.mockClear();
+    fireEvent.change(screen.getByLabelText("Title"), {
+      target: { value: "Delivery platform" },
+    });
+    fireEvent.keyDown(form, { key: "Escape" });
+    expect(onClose).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("dialog", { name: "Discard unsaved changes?" }),
+    ).toBeInTheDocument();
+  });
+
   it("submits the editable fields of an active project", async () => {
     const onClose = vi.fn();
     render(

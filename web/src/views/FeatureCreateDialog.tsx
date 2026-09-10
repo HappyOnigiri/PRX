@@ -7,6 +7,7 @@ import { formValue } from "../form";
 import { useDomainMutation } from "../hooks";
 import { formatError } from "../i18n/domain";
 import { IconButton } from "./IconButton";
+import { useCloseOnEscape } from "./useCloseOnEscape";
 
 // feature は必ずプロジェクトに属する。作成はそのプロジェクトのページから行うので、
 // 所属を入力する欄は要らない。呼び出し元のページが所属を示している。
@@ -20,6 +21,8 @@ export function FeatureCreateDialog({
   const { t } = useTranslation();
   const navigate = useNavigate();
   const createFeature = useDomainMutation(mutations.createFeature);
+
+  useCloseOnEscape(onClose);
 
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
