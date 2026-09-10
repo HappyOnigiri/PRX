@@ -204,6 +204,22 @@ describe("CreateTaskDialog", () => {
     ).toBeInTheDocument();
   });
 
+  it("fails the mutation when creation returns no task id", async () => {
+    dialogMocks.createTask.mockResolvedValue({});
+    render(
+      <CreateTaskDialog
+        featureId="feature-1"
+        onClose={vi.fn()}
+        dependency={{ taskId: "task-1", direction: "blockedBy" }}
+      />,
+    );
+
+    await expect(runMutation(taskInput)).rejects.toThrow(
+      "createTask did not return a task id",
+    );
+    expect(dialogMocks.addDependency).not.toHaveBeenCalled();
+  });
+
   it("keeps the dialog open when creation fails and supports cancellation", async () => {
     dialogMocks.mutation.mutateAsync.mockRejectedValueOnce(
       new Error("validation failed"),

@@ -45,8 +45,10 @@ export function CreateTaskDialog({
         assignee: input.assignee,
       });
     const taskId = created ?? (await mutations.createTask(input)).task?.id;
+    // ID が取れないと依存を張れないので、成功として閉じずにエラーを見せる。
+    if (!taskId) throw new Error("createTask did not return a task id");
     createdTaskId.current = taskId;
-    if (dependency && taskId) {
+    if (dependency) {
       const { blocker, blocked } = dependencyPair(dependency, taskId);
       try {
         await mutations.addDependency(blocker, blocked);
