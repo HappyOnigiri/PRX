@@ -7,7 +7,7 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainErrorCode, ErrorDetailSchema } from "../src/gen/prx/v1/prx_pb";
 import { FeatureGraph } from "../src/views/FeatureGraph";
@@ -59,6 +59,14 @@ const graphMocks = vi.hoisted(() => ({
       ) => void)
     | undefined,
   hideAttribution: undefined as boolean | undefined,
+  // onInit で受け取る React Flow のインスタンス。空白判定は座標をこの stub で
+  // flow 座標へ変換し、getNodes が返す矩形と突き合わせる。
+  flow: {
+    screenToFlowPosition: vi.fn((point: { x: number; y: number }) => point),
+    getNodes: vi.fn((): unknown[] => []),
+    getNodesBounds: vi.fn(() => ({ x: 0, y: 0, width: 0, height: 0 })),
+    setCenter: vi.fn(),
+  },
 }));
 
 vi.mock("../src/api", () => ({
@@ -86,6 +94,7 @@ vi.mock("@xyflow/react", () => ({
     onReconnect,
     onReconnectStart,
     onReconnectEnd,
+    onInit,
     nodesConnectable,
     proOptions,
   }: {
@@ -114,6 +123,7 @@ vi.mock("@xyflow/react", () => ({
       handleType: string,
       connectionState: { isValid: boolean | null },
     ) => void;
+    onInit?: (instance: unknown) => void;
     nodesConnectable?: boolean;
     proOptions?: { hideAttribution?: boolean };
   }) => {
@@ -129,6 +139,9 @@ vi.mock("@xyflow/react", () => ({
     graphMocks.onReconnectStart = onReconnectStart;
     graphMocks.onReconnectEnd = onReconnectEnd;
     graphMocks.hideAttribution = proOptions?.hideAttribution;
+    useEffect(() => {
+      onInit?.(graphMocks.flow);
+    }, [onInit]);
     return (
       <button
         type="button"
@@ -167,6 +180,8 @@ describe("FeatureGraph", () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    // onInit 後の setCenter が参照する。jsdom は matchMedia を持たない。
+    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }));
     graphMocks.addDependency.isPending = false;
     graphMocks.addDependency.error = null;
     graphMocks.removeDependency.isPending = false;
@@ -183,6 +198,7 @@ describe("FeatureGraph", () => {
     graphMocks.onReconnectStart = undefined;
     graphMocks.onReconnectEnd = undefined;
     graphMocks.hideAttribution = undefined;
+    graphMocks.flow.getNodes.mockReturnValue([]);
     graphMocks.useGraphLayout.mockReturnValue({
       edgeRoutes: new Map(),
       nodes: [],
@@ -363,6 +379,49 @@ describe("FeatureGraph", () => {
       expect(onCreateTask).not.toHaveBeenCalled();
     },
   );
+
+  it("keeps task creation closed when the drop lands on a node body", () => {
+    const onCreateTask = vi.fn();
+    graphMocks.flow.getNodes.mockReturnValue([
+      {
+        id: "task-2",
+        position: { x: 0, y: 0 },
+        measured: { width: 284, height: 120 },
+      },
+    ]);
+    render(
+      <FeatureGraph
+        tasks={[makeTask({ id: "task-1" }), makeTask({ id: "task-2" })]}
+        dependencies={[]}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={onCreateTask}
+      />,
+    );
+
+    if (!graphMocks.onConnectEnd) {
+      throw new Error("connection handlers missing");
+    }
+    act(() => {
+      graphMocks.onConnectEnd?.(
+        { clientX: 140, clientY: 60 },
+        {
+          isValid: null,
+          fromNode: { id: "task-1" },
+          fromHandle: { type: "source" },
+          toNode: null,
+        },
+      );
+    });
+
+    expect(graphMocks.flow.screenToFlowPosition).toHaveBeenCalledWith({
+      x: 140,
+      y: 60,
+    });
+    expect(onCreateTask).not.toHaveBeenCalled();
+  });
 
   it("detaches an existing edge without opening task creation", () => {
     const dependency = makeDependency({

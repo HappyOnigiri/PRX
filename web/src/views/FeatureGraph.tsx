@@ -49,9 +49,35 @@ import { useGraphLayout } from "./useGraphLayout";
 const nodeTypes = { task: TaskNode };
 const edgeTypes = { dependency: DependencyEdge };
 
+// ノードとして扱われるのはハンドルの近傍だけなので、カード本体へのドロップが
+// 空白へのドロップと混ざらないよう、ドロップ位置が矩形に入るかを自分で見る。
+function droppedOnNode(
+  event: MouseEvent | TouchEvent,
+  flow: ReactFlowInstance<TaskFlowNode, DependencyFlowEdge> | undefined,
+): boolean {
+  if (!flow) return false;
+  const point = "changedTouches" in event ? event.changedTouches[0] : event;
+  if (!point) return false;
+  const { x, y } = flow.screenToFlowPosition({
+    x: point.clientX,
+    y: point.clientY,
+  });
+  return flow.getNodes().some((node) => {
+    const width = node.measured?.width ?? node.width ?? 0;
+    const height = node.measured?.height ?? node.height ?? 0;
+    return (
+      x >= node.position.x &&
+      x <= node.position.x + width &&
+      y >= node.position.y &&
+      y <= node.position.y + height
+    );
+  });
+}
+
 function useDependencyConnections(
   readOnly: boolean,
   onCreateTask: (dependency?: PendingDependency) => void,
+  flow: ReactFlowInstance<TaskFlowNode, DependencyFlowEdge> | undefined,
 ) {
   const addDependency = useDomainMutation(
     ({ blocker, blocked }: { blocker: string; blocked: string }) =>
@@ -82,14 +108,11 @@ function useDependencyConnections(
   // 空白へのドロップは、その依存の相手がまだ居ないという意思表示として扱い、
   // 依存付きのタスク作成へつなぐ。
   const onConnectEnd = useCallback(
-    (
-      _event: MouseEvent | TouchEvent,
-      connectionState: FinalConnectionState,
-    ) => {
-      void _event;
+    (event: MouseEvent | TouchEvent, connectionState: FinalConnectionState) => {
       setConnecting(false);
       if (readOnly || pending || reconnecting.current) return;
       if (connectionState.isValid === true || connectionState.toNode) return;
+      if (droppedOnNode(event, flow)) return;
       const fromNode = connectionState.fromNode;
       const handleType = connectionState.fromHandle?.type;
       if (!fromNode || (handleType !== "source" && handleType !== "target"))
@@ -99,7 +122,7 @@ function useDependencyConnections(
         direction: handleType === "source" ? "blockedBy" : "blocks",
       });
     },
-    [onCreateTask, pending, readOnly],
+    [flow, onCreateTask, pending, readOnly],
   );
   const remove = useCallback(
     (edge: Pick<Edge, "source" | "target">) => {
@@ -373,7 +396,7 @@ export function FeatureGraph({
     useState<ReactFlowInstance<TaskFlowNode, DependencyFlowEdge>>();
   const [initialGraphZoom] = useState(readGraphZoom);
   const graphZoom = useRef(initialGraphZoom);
-  const connections = useDependencyConnections(readOnly, onCreateTask);
+  const connections = useDependencyConnections(readOnly, onCreateTask, flow);
   const selection = useDependencySelection(dependencies);
   const taskTitle = useTaskTitle(tasks);
   const { edgeRoutes, nodes, layoutError, layoutPending, retryLayout } =
