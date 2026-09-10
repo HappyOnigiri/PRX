@@ -1,5 +1,4 @@
 import {
-  act,
   cleanup,
   fireEvent,
   render,
@@ -19,9 +18,6 @@ const dialogMocks = vi.hoisted(() => ({
   updateTask: vi.fn(),
   refreshSnapshot: vi.fn(),
   addDependency: vi.fn(),
-  // ダイアログが useDomainMutation に渡した本体。mutateAsync 経由で実行して、
-  // 作成と依存追加の並びを観察する。
-  mutationFn: undefined as ((input: unknown) => Promise<unknown>) | undefined,
 }));
 
 vi.mock("../src/api", () => ({
@@ -31,9 +27,13 @@ vi.mock("../src/api", () => ({
     addDependency: dialogMocks.addDependency,
   },
 }));
+// mutateAsync からダイアログが渡した本体を実行して、フォーム送信から作成と依存
+// 追加までが 1 つの経路としてつながっていることを見る。
 vi.mock("../src/hooks", () => ({
   useDomainMutation: (mutationFn: (input: unknown) => Promise<unknown>) => {
-    dialogMocks.mutationFn = mutationFn;
+    dialogMocks.mutation.mutateAsync.mockImplementation((input: unknown) =>
+      mutationFn(input),
+    );
     return dialogMocks.mutation;
   },
   useSnapshotRefresh: () => dialogMocks.refreshSnapshot,
@@ -43,7 +43,6 @@ describe("CreateTaskDialog", () => {
   afterEach(cleanup);
   beforeEach(() => {
     dialogMocks.mutation.mutateAsync.mockReset();
-    dialogMocks.mutation.mutateAsync.mockResolvedValue({});
     dialogMocks.mutation.isPending = false;
     dialogMocks.mutation.error = null;
     dialogMocks.createTask.mockReset();
@@ -54,56 +53,52 @@ describe("CreateTaskDialog", () => {
     dialogMocks.addDependency.mockResolvedValue({});
     dialogMocks.refreshSnapshot.mockReset();
     dialogMocks.refreshSnapshot.mockResolvedValue(undefined);
-    dialogMocks.mutationFn = undefined;
   });
 
-  function runMutation(input: {
-    featureId: string;
-    title: string;
-    scope: string;
-    assignee: string;
+  function submitForm(values: {
+    title?: string;
+    scope?: string;
+    assignee?: string;
   }) {
-    if (!dialogMocks.mutationFn) throw new Error("mutation body missing");
-    return dialogMocks.mutationFn(input);
+    for (const [label, value] of [
+      ["Title", values.title],
+      ["Scope", values.scope],
+      ["Assignee", values.assignee],
+    ] as const) {
+      if (value !== undefined)
+        fireEvent.change(screen.getByLabelText(label), { target: { value } });
+    }
+    fireEvent.submit(screen.getByRole("form", { name: "Create task" }));
   }
 
-  const taskInput = {
-    featureId: "feature-1",
-    title: "Implement checkout",
-    scope: "",
-    assignee: "",
-  };
-
-  it("converts form values into a task mutation and closes on success", async () => {
+  it("converts form values into a task and closes on success", async () => {
     const onClose = vi.fn();
     render(<CreateTaskDialog featureId="feature-1" onClose={onClose} />);
-    fireEvent.change(screen.getByLabelText("Title"), {
-      target: { value: "Implement checkout" },
-    });
-    fireEvent.change(screen.getByLabelText("Scope"), {
-      target: { value: "API and acceptance tests" },
-    });
-    fireEvent.change(screen.getByLabelText("Assignee"), {
-      target: { value: "Carol" },
+
+    submitForm({
+      title: "Implement checkout",
+      scope: "API and acceptance tests",
+      assignee: "Carol",
     });
 
-    fireEvent.submit(screen.getByRole("form", { name: "Create task" }));
     await waitFor(() => {
       expect(onClose).toHaveBeenCalledOnce();
     });
-    expect(dialogMocks.mutation.mutateAsync).toHaveBeenCalledWith({
+    expect(dialogMocks.createTask).toHaveBeenCalledWith({
       featureId: "feature-1",
       title: "Implement checkout",
       scope: "API and acceptance tests",
       assignee: "Carol",
     });
+    expect(dialogMocks.addDependency).not.toHaveBeenCalled();
   });
 
   it("adds the dependency after creating the task", async () => {
+    const onClose = vi.fn();
     render(
       <CreateTaskDialog
         featureId="feature-1"
-        onClose={vi.fn()}
+        onClose={onClose}
         dependency={{ taskId: "task-1", direction: "blockedBy" }}
         dependencyTitle="Blocker task"
       />,
@@ -112,9 +107,14 @@ describe("CreateTaskDialog", () => {
       screen.getByText("The new task will be blocked by Blocker task."),
     ).toBeInTheDocument();
 
-    await runMutation(taskInput);
+    submitForm({ title: "Implement checkout" });
 
-    expect(dialogMocks.createTask).toHaveBeenCalledWith(taskInput);
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalledOnce();
+    });
+    expect(dialogMocks.createTask.mock.invocationCallOrder[0]).toBeLessThan(
+      dialogMocks.addDependency.mock.invocationCallOrder[0] ?? 0,
+    );
     expect(dialogMocks.addDependency).toHaveBeenCalledWith(
       "task-1",
       "task-new",
@@ -134,27 +134,37 @@ describe("CreateTaskDialog", () => {
       screen.getByText("The new task will block Blocked task."),
     ).toBeInTheDocument();
 
-    await runMutation(taskInput);
+    submitForm({ title: "Implement checkout" });
 
-    expect(dialogMocks.addDependency).toHaveBeenCalledWith(
-      "task-new",
-      "task-1",
-    );
+    await waitFor(() => {
+      expect(dialogMocks.addDependency).toHaveBeenCalledWith(
+        "task-new",
+        "task-1",
+      );
+    });
   });
 
   it("retries only the dependency when the task already exists", async () => {
     dialogMocks.addDependency.mockRejectedValueOnce(new Error("offline"));
+    const onClose = vi.fn();
     render(
       <CreateTaskDialog
         featureId="feature-1"
-        onClose={vi.fn()}
+        onClose={onClose}
         dependency={{ taskId: "task-1", direction: "blockedBy" }}
       />,
     );
 
-    await expect(runMutation(taskInput)).rejects.toThrow("offline");
-    await runMutation(taskInput);
+    submitForm({ title: "Implement checkout" });
+    await waitFor(() => {
+      expect(dialogMocks.addDependency).toHaveBeenCalledOnce();
+    });
+    expect(onClose).not.toHaveBeenCalled();
 
+    submitForm({});
+    await waitFor(() => {
+      expect(onClose).toHaveBeenCalledOnce();
+    });
     expect(dialogMocks.createTask).toHaveBeenCalledOnce();
     expect(dialogMocks.addDependency).toHaveBeenCalledTimes(2);
   });
@@ -169,15 +179,20 @@ describe("CreateTaskDialog", () => {
       />,
     );
 
-    await expect(runMutation(taskInput)).rejects.toThrow("offline");
+    submitForm({ title: "Implement checkout" });
+    await waitFor(() => {
+      expect(dialogMocks.addDependency).toHaveBeenCalledOnce();
+    });
     expect(dialogMocks.updateTask).not.toHaveBeenCalled();
-    await runMutation({ ...taskInput, title: "Implement refunds" });
 
-    expect(dialogMocks.updateTask).toHaveBeenCalledWith({
-      id: "task-new",
-      title: "Implement refunds",
-      scope: "",
-      assignee: "",
+    submitForm({ title: "Implement refunds" });
+    await waitFor(() => {
+      expect(dialogMocks.updateTask).toHaveBeenCalledWith({
+        id: "task-new",
+        title: "Implement refunds",
+        scope: "",
+        assignee: "",
+      });
     });
     expect(dialogMocks.createTask).toHaveBeenCalledOnce();
   });
@@ -192,46 +207,51 @@ describe("CreateTaskDialog", () => {
       />,
     );
 
-    await act(async () => {
-      await expect(runMutation(taskInput)).rejects.toThrow("offline");
-    });
+    submitForm({ title: "Implement checkout" });
 
+    await waitFor(() => {
+      expect(
+        screen.getByText(
+          "The task was created, but adding the dependency failed. Submit again to retry only the dependency.",
+        ),
+      ).toBeInTheDocument();
+    });
     expect(dialogMocks.refreshSnapshot).toHaveBeenCalledOnce();
-    expect(
-      screen.getByText(
-        "The task was created, but adding the dependency failed. Submit again to retry only the dependency.",
-      ),
-    ).toBeInTheDocument();
   });
 
-  it("fails the mutation when creation returns no task id", async () => {
+  it("fails the submission when creation returns no task id", async () => {
     dialogMocks.createTask.mockResolvedValue({});
+    const onClose = vi.fn();
     render(
       <CreateTaskDialog
         featureId="feature-1"
-        onClose={vi.fn()}
+        onClose={onClose}
         dependency={{ taskId: "task-1", direction: "blockedBy" }}
       />,
     );
 
-    await expect(runMutation(taskInput)).rejects.toThrow(
-      "createTask did not return a task id",
-    );
+    submitForm({ title: "Implement checkout" });
+
+    await waitFor(() => {
+      expect(dialogMocks.createTask).toHaveBeenCalledOnce();
+    });
     expect(dialogMocks.addDependency).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
   });
 
   it("keeps the dialog open when creation fails and supports cancellation", async () => {
-    dialogMocks.mutation.mutateAsync.mockRejectedValueOnce(
+    dialogMocks.createTask.mockRejectedValueOnce(
       new Error("validation failed"),
     );
     const onClose = vi.fn();
     render(<CreateTaskDialog featureId="feature-1" onClose={onClose} />);
 
-    fireEvent.submit(screen.getByRole("form", { name: "Create task" }));
+    submitForm({ title: "Implement checkout" });
     await waitFor(() => {
-      expect(dialogMocks.mutation.mutateAsync).toHaveBeenCalled();
+      expect(dialogMocks.createTask).toHaveBeenCalledOnce();
     });
     expect(onClose).not.toHaveBeenCalled();
+
     fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
     expect(onClose).toHaveBeenCalledOnce();
   });
