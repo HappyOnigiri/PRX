@@ -1,32 +1,17 @@
 import { expect, test, type Page } from "@playwright/test";
+import {
+  addTask,
+  createFeature,
+  e2eBaseURL,
+  guardBrowserErrors,
+  settleGraph,
+  submitCreateTask,
+  taskNodeId,
+} from "./helpers";
 
-const browserErrors: string[] = [];
-const e2ePort = process.env["PRX_E2E_PORT"];
-if (!e2ePort) throw new Error("Playwright did not capture the E2E server port");
+test.use({ baseURL: e2eBaseURL });
 
-test.use({
-  baseURL: `http://127.0.0.1:${e2ePort}`,
-});
-
-test.beforeEach(({ page }) => {
-  browserErrors.length = 0;
-  page.on("console", (message) => {
-    if (message.type() === "error" || message.type() === "warning")
-      browserErrors.push(`console ${message.type()}: ${message.text()}`);
-  });
-  page.on("pageerror", (error) =>
-    browserErrors.push(`pageerror: ${error.message}`),
-  );
-  page.on("requestfailed", (request) =>
-    browserErrors.push(
-      `requestfailed: ${request.method()} ${request.url()} ${request.failure()?.errorText}`,
-    ),
-  );
-});
-
-test.afterEach(() => {
-  expect(browserErrors, browserErrors.join("\n")).toEqual([]);
-});
+guardBrowserErrors();
 
 test("creates a dependent task by dropping a handle on empty space", async ({
   page,
@@ -42,32 +27,6 @@ test("creates a dependent task by dropping a handle on empty space", async ({
   await submitCreateTask(page, "Drop blocker", "will block");
   await expectDependencyEdge(page, "Drop blocker", "Drop origin", 2);
 });
-
-// feature は必ず project に属するので、デモの最初の project の中に作る。
-async function createFeature(page: Page, title: string) {
-  await page.goto("/projects/P-1?features=active");
-  await page.getByRole("button", { name: "Create feature" }).click();
-  const dialog = page.getByRole("form", { name: "Create feature" });
-  await dialog.getByLabel("Title").fill(title);
-  await dialog.getByRole("button", { name: "Create feature" }).click();
-  await expect(page.getByRole("heading", { name: title })).toBeVisible();
-}
-
-async function addTask(page: Page, title: string) {
-  await page.getByRole("button", { name: "Add task" }).first().click();
-  await submitCreateTask(page, title);
-}
-
-async function submitCreateTask(page: Page, title: string, relation?: string) {
-  const dialog = page.getByRole("form", { name: "Create task" });
-  if (relation !== undefined) await expect(dialog).toContainText(relation);
-  await dialog.getByLabel("Title").fill(title);
-  await dialog.getByRole("button", { name: "Add task" }).click();
-  await expect(dialog).toBeHidden();
-  await expect(
-    page.locator(".task-node").filter({ hasText: title }),
-  ).toBeVisible();
-}
 
 async function dropHandleOnEmptySpace(
   page: Page,
@@ -111,41 +70,4 @@ async function expectDependencyEdge(
   await expect(
     page.locator(`.react-flow__edge[data-id="${blockerId}-${blockedId}"]`),
   ).toBeAttached();
-}
-
-async function taskNodeId(page: Page, title: string) {
-  const id = await page
-    .locator(".task-node")
-    .filter({ hasText: title })
-    .evaluate((element) =>
-      element.closest(".react-flow__node")?.getAttribute("data-id"),
-    );
-  if (!id) throw new Error("task node id missing");
-  return id;
-}
-
-async function settleGraph(page: Page) {
-  const viewport = page.locator(".react-flow__viewport");
-  const nodes = page.locator(".react-flow__node");
-  await expect(page.locator(".graph-stage")).toHaveAttribute(
-    "aria-busy",
-    "false",
-  );
-  let previousState: string | null = null;
-  let stableSamples = 0;
-  await expect
-    .poll(
-      async () => {
-        const viewportStyle = await viewport.getAttribute("style");
-        const nodeStyles = await nodes.evaluateAll((elements) =>
-          elements.map((element) => element.getAttribute("style")),
-        );
-        const currentState = JSON.stringify({ nodeStyles, viewportStyle });
-        stableSamples = currentState === previousState ? stableSamples + 1 : 0;
-        previousState = currentState;
-        return stableSamples;
-      },
-      { intervals: [100], timeout: 3000 },
-    )
-    .toBeGreaterThanOrEqual(3);
 }
