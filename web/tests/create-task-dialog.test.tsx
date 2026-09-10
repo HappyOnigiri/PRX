@@ -272,6 +272,17 @@ describe("CreateTaskDialog", () => {
     expect(onClose).toHaveBeenCalledOnce();
   });
 
+  it("closes on Escape", () => {
+    const onClose = vi.fn();
+    render(<CreateTaskDialog featureId="feature-1" onClose={onClose} />);
+
+    fireEvent.keyDown(screen.getByRole("form", { name: "Create task" }), {
+      key: "Escape",
+    });
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(dialogMocks.createTask).not.toHaveBeenCalled();
+  });
+
   it("disables submission while the mutation is pending and shows its error", () => {
     dialogMocks.mutation.isPending = true;
     dialogMocks.mutation.error = new Error("server rejected task");

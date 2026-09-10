@@ -17,6 +17,7 @@ import { MutationError } from "./MutationError";
 import { ProjectSelectField } from "./ProjectSelectField";
 import { TitleDescriptionFields } from "./TitleDescriptionFields";
 import { DiscardChangesDialog, SaveButton } from "./UnsavedChanges";
+import { useCloseOnEscape } from "./useCloseOnEscape";
 
 interface EditFeatureDialogProps {
   feature: Feature;
@@ -61,6 +62,13 @@ export function EditFeatureDialog({
     draft.status !== feature.status ||
     draft.projectId !== feature.projectId;
 
+  function requestClose() {
+    if (dirty) setConfirmation("discard");
+    else onClose();
+  }
+
+  useCloseOnEscape(requestClose);
+
   async function applyUpdate(update: FeatureUpdate) {
     try {
       await updateFeature.mutateAsync(update);
@@ -98,10 +106,7 @@ export function EditFeatureDialog({
           deletePending={deleteFeature.isPending}
           updateError={updateFeature.error}
           onSubmit={submitFeature}
-          onClose={() => {
-            if (dirty) setConfirmation("discard");
-            else onClose();
-          }}
+          onClose={requestClose}
           onArchive={() => {
             setConfirmation("archive");
           }}

@@ -7,11 +7,14 @@ import { formValue } from "../form";
 import { useDomainMutation } from "../hooks";
 import { formatError } from "../i18n/domain";
 import { IconButton } from "./IconButton";
+import { useCloseOnEscape } from "./useCloseOnEscape";
 
 export function ProjectCreateDialog({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const createProject = useDomainMutation(mutations.createProject);
+
+  useCloseOnEscape(onClose);
 
   async function submit(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();

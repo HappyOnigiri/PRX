@@ -5,6 +5,7 @@ import ReactMarkdown from "react-markdown";
 import { readDocumentContent } from "../api";
 import { formatError } from "../i18n/domain";
 import { IconButton } from "./IconButton";
+import { useCloseOnEscape } from "./useCloseOnEscape";
 
 interface MarkdownDocument {
   id: string;
@@ -46,15 +47,7 @@ export function MarkdownPreview({
 
   useEffect(() => closeButton.current?.focus(), []);
 
-  useEffect(() => {
-    function closeOnEscape(event: KeyboardEvent) {
-      if (event.key === "Escape") onClose();
-    }
-    window.addEventListener("keydown", closeOnEscape);
-    return () => {
-      window.removeEventListener("keydown", closeOnEscape);
-    };
-  }, [onClose]);
+  useCloseOnEscape(onClose);
 
   async function copy(value: string, kind: "content" | "path") {
     try {

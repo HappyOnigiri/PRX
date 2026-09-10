@@ -241,10 +241,15 @@ describe("EditFeatureDialog", () => {
     expect(confirm).toHaveFocus();
     fireEvent.keyDown(archiveDialog, { key: "Tab" });
     expect(cancel).toHaveFocus();
+    // 確認が開いている間の Escape は、確認だけを閉じて下の編集面は残す。
     fireEvent.keyDown(archiveDialog, { key: "Escape" });
     expect(
       screen.queryByRole("dialog", { name: "Archive Payments?" }),
     ).not.toBeInTheDocument();
+    expect(onClose).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("form", { name: "Edit feature" }),
+    ).toBeInTheDocument();
 
     fireEvent.click(screen.getByRole("button", { name: "Archive feature" }));
     fireEvent.click(screen.getByRole("button", { name: "Archive feature" }));

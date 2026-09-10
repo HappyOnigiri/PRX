@@ -8,6 +8,7 @@ import { formatError } from "../i18n/domain";
 import { dependencyPair, type PendingDependency } from "./dependencyGraph";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
+import { useCloseOnEscape } from "./useCloseOnEscape";
 
 interface CreateTaskInput {
   featureId: string;
@@ -60,6 +61,8 @@ export function CreateTaskDialog({
       }
     }
   });
+
+  useCloseOnEscape(onClose);
 
   async function submitTask(event: SyntheticEvent<HTMLFormElement>) {
     event.preventDefault();
