@@ -1,9 +1,9 @@
 import { Plus, X } from "lucide-react";
-import { useRef, type SyntheticEvent } from "react";
+import { useRef, useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
 import { formValue } from "../form";
-import { useDomainMutation } from "../hooks";
+import { useDomainMutation, useSnapshotRefresh } from "../hooks";
 import { formatError } from "../i18n/domain";
 import { dependencyPair, type PendingDependency } from "./dependencyGraph";
 import { IconButton } from "./IconButton";
@@ -30,6 +30,8 @@ export function CreateTaskDialog({
   dependencyTitle,
 }: CreateTaskDialogProps) {
   const { t } = useTranslation();
+  const refreshSnapshot = useSnapshotRefresh();
+  const [dependencyFailed, setDependencyFailed] = useState(false);
   // 依存の追加だけが失敗したときの再送で、タスクを二重に作らないための控え。
   const createdTaskId = useRef<string>(undefined);
   const createTask = useDomainMutation(async (input: CreateTaskInput) => {
@@ -46,7 +48,14 @@ export function CreateTaskDialog({
     createdTaskId.current = taskId;
     if (dependency && taskId) {
       const { blocker, blocked } = dependencyPair(dependency, taskId);
-      await mutations.addDependency(blocker, blocked);
+      try {
+        await mutations.addDependency(blocker, blocked);
+      } catch (error) {
+        // タスクだけが書き込まれた状態なので、依存が欠けたノードをグラフに出す。
+        setDependencyFailed(true);
+        await refreshSnapshot();
+        throw error;
+      }
     }
   });
 
@@ -108,6 +117,9 @@ export function CreateTaskDialog({
             placeholder={t("taskCreate.assigneePlaceholder")}
           />
         </label>
+        {dependencyFailed && (
+          <p className="form-error">{t("taskCreate.dependencyFailed")}</p>
+        )}
         {createTask.error && (
           <p className="form-error">{formatError(createTask.error, t)}</p>
         )}

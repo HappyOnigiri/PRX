@@ -1,4 +1,5 @@
 import {
+  act,
   cleanup,
   fireEvent,
   render,
@@ -16,6 +17,7 @@ const dialogMocks = vi.hoisted(() => ({
   },
   createTask: vi.fn(),
   updateTask: vi.fn(),
+  refreshSnapshot: vi.fn(),
   addDependency: vi.fn(),
   // ダイアログが useDomainMutation に渡した本体。mutateAsync 経由で実行して、
   // 作成と依存追加の並びを観察する。
@@ -34,6 +36,7 @@ vi.mock("../src/hooks", () => ({
     dialogMocks.mutationFn = mutationFn;
     return dialogMocks.mutation;
   },
+  useSnapshotRefresh: () => dialogMocks.refreshSnapshot,
 }));
 
 describe("CreateTaskDialog", () => {
@@ -49,6 +52,8 @@ describe("CreateTaskDialog", () => {
     dialogMocks.updateTask.mockResolvedValue({});
     dialogMocks.addDependency.mockReset();
     dialogMocks.addDependency.mockResolvedValue({});
+    dialogMocks.refreshSnapshot.mockReset();
+    dialogMocks.refreshSnapshot.mockResolvedValue(undefined);
     dialogMocks.mutationFn = undefined;
   });
 
@@ -175,6 +180,28 @@ describe("CreateTaskDialog", () => {
       assignee: "",
     });
     expect(dialogMocks.createTask).toHaveBeenCalledOnce();
+  });
+
+  it("reports the created task and refreshes the graph when only the dependency fails", async () => {
+    dialogMocks.addDependency.mockRejectedValueOnce(new Error("offline"));
+    render(
+      <CreateTaskDialog
+        featureId="feature-1"
+        onClose={vi.fn()}
+        dependency={{ taskId: "task-1", direction: "blockedBy" }}
+      />,
+    );
+
+    await act(async () => {
+      await expect(runMutation(taskInput)).rejects.toThrow("offline");
+    });
+
+    expect(dialogMocks.refreshSnapshot).toHaveBeenCalledOnce();
+    expect(
+      screen.getByText(
+        "The task was created, but adding the dependency failed. Submit again to retry only the dependency.",
+      ),
+    ).toBeInTheDocument();
   });
 
   it("keeps the dialog open when creation fails and supports cancellation", async () => {

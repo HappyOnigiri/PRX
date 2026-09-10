@@ -72,6 +72,8 @@ export const workspace = {
       submit: "Add task",
       dependencyBlocks: "The new task will block {{title}}.",
       dependencyBlockedBy: "The new task will be blocked by {{title}}.",
+      dependencyFailed:
+        "The task was created, but adding the dependency failed. Submit again to retry only the dependency.",
     },
     featureEdit: {
       formLabel: "Edit feature",
@@ -179,6 +181,8 @@ export const workspace = {
       submit: "タスクを追加",
       dependencyBlocks: "新しいタスクは {{title}} をブロックします。",
       dependencyBlockedBy: "新しいタスクは {{title}} にブロックされます。",
+      dependencyFailed:
+        "タスクは作成されましたが、依存の追加に失敗しました。もう一度送信すると依存の追加だけをやり直します。",
     },
     featureEdit: {
       formLabel: "フィーチャーを編集",

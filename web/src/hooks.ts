@@ -1,5 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   getConfig,
   getDebugReport,
@@ -131,6 +131,16 @@ export function useDomainMutation<TVariables, TData>(
       ]);
     },
   });
+}
+
+// 部分的に書き込んだところで失敗した mutation は onSuccess を通らないので、
+// 書き込めた分をグラフへ出すために呼び出し側からスナップショットを捨てる。
+export function useSnapshotRefresh() {
+  const queryClient = useQueryClient();
+  return useCallback(
+    () => queryClient.invalidateQueries({ queryKey: snapshotKey }),
+    [queryClient],
+  );
 }
 
 export function useConfigMutation<TVariables, TData>(
