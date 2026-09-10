@@ -98,40 +98,34 @@
   stroke-dasharray: 6 4;
 }
 
-.react-flow__edge.selected.dependency-edge {
+.react-flow__edge.selected.dependency-edge,
+.react-flow__edge.dependency-edge:hover {
   stroke: var(--accent);
   stroke-width: 2;
 }
 
 .react-flow:has(.react-flow__edge.selected)
-  .react-flow__edge.dependency-edge:not(.selected) {
+  .react-flow__edge.dependency-edge:not(.selected, :hover) {
   opacity: 0.28;
 }
 
 .dependency-edge-toolbar {
-  max-width: 320px;
   display: flex;
   align-items: center;
-  gap: 6px;
-  border: 1px solid var(--border-strong);
-  border-radius: 4px;
-  background: var(--surface);
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--bg) 72%, transparent);
-  padding: 4px 4px 4px 8px;
-  color: var(--text);
 }
 
-.dependency-edge-toolbar > span {
-  min-width: 0;
-  overflow: hidden;
-  font-family: var(--font-mono);
-  font-size: var(--text-xs);
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
+/* 線の中点に乗る丸だけで、そのラインを断てることを示す。線をまたいで置くので、
+   下を通る線が透けないよう面を塗る。 */
 .dependency-edge-remove {
+  width: 22px;
+  min-width: 22px;
+  height: 22px;
+  min-height: 22px;
   flex: 0 0 auto;
+  border-radius: 50%;
+  background: var(--surface);
+  box-shadow: 0 2px 8px color-mix(in srgb, var(--bg) 72%, transparent);
+  padding: 0;
 }
 
 /* What deserves a look right now is the question the canvas has to answer at a

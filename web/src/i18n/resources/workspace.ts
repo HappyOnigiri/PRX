@@ -44,8 +44,11 @@ export const workspace = {
         keyboardDisabled: "Use the Edit button to open task details.",
         edgeDescription: "An edge connects a blocker to a blocked task.",
         dependencyEdge: "{{blocker}} blocks {{blocked}}",
-        dependencyLabel: "{{blocker}} → {{blocked}}",
         removeDependency: "Remove dependency {{blocker}} → {{blocked}}",
+        removeDependencyTitle: "Remove this dependency?",
+        removeDependencyDetail:
+          "{{blocker}} will stop blocking {{blocked}}. The tasks themselves stay as they are.",
+        confirmRemoveDependency: "Remove dependency",
         connectionSaving: "Saving dependency…",
         detachInstruction:
           "Drop in empty space to remove {{blocker}} → {{blocked}}.",
@@ -153,8 +156,11 @@ export const workspace = {
         edgeDescription:
           "エッジはブロッカーからブロック対象のタスクへ接続します。",
         dependencyEdge: "{{blocker}} が {{blocked}} をブロック",
-        dependencyLabel: "{{blocker}} → {{blocked}}",
         removeDependency: "{{blocker}} → {{blocked}} の依存を解除",
+        removeDependencyTitle: "この依存を解除しますか？",
+        removeDependencyDetail:
+          "{{blocker}} は {{blocked}} をブロックしなくなります。タスク自体はそのまま残ります。",
+        confirmRemoveDependency: "依存を解除",
         connectionSaving: "依存関係を保存しています…",
         detachInstruction:
           "空白にドロップすると {{blocker}} → {{blocked}} の依存を解除します。",

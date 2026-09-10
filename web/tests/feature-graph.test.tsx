@@ -7,205 +7,36 @@ import {
   screen,
   waitFor,
 } from "@testing-library/react";
-import { useEffect, type ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { DomainErrorCode, ErrorDetailSchema } from "../src/gen/prx/v1/prx_pb";
 import { FeatureGraph } from "../src/views/FeatureGraph";
 import { makeDependency, makeTask } from "./factories";
+import {
+  graphMocks,
+  resetGraphMocks,
+  type ConnectionStateStub,
+} from "./featureGraphHarness";
 
-interface ConnectionStateStub {
-  isValid: boolean | null;
-  fromNode?: { id: string } | null;
-  fromHandle?: { type: string } | null;
-  toNode?: { id: string } | null;
-}
-
-const graphMocks = vi.hoisted(() => ({
-  addDependencyApi: vi.fn().mockResolvedValue({}),
-  removeDependencyApi: vi.fn().mockResolvedValue({}),
-  addDependency: {
-    mutate: vi.fn(),
-    isPending: false,
-    error: null as Error | null,
-  },
-  removeDependency: {
-    mutate: vi.fn(),
-    isPending: false,
-    error: null as Error | null,
-  },
-  domainMutationCall: 0,
-  edges: [] as Record<string, unknown>[],
-  useGraphLayout: vi.fn(),
-  writeGraphZoom: vi.fn(),
-  onConnect: undefined as ((connection: unknown) => void) | undefined,
-  onConnectStart: undefined as (() => void) | undefined,
-  onConnectEnd: undefined as
-    | ((event: unknown, connectionState: ConnectionStateStub) => void)
-    | undefined,
-  onEdgesChange: undefined as ((changes: unknown[]) => void) | undefined,
-  onEdgesDelete: undefined as ((edges: unknown[]) => void) | undefined,
-  onEdgeClick: undefined as
-    ((event: unknown, edge: { id: string }) => void) | undefined,
-  onPaneClick: undefined as (() => void) | undefined,
-  onReconnect: undefined as (() => void) | undefined,
-  onReconnectStart: undefined as
-    ((event: unknown, edge: unknown, handleType: string) => void) | undefined,
-  onReconnectEnd: undefined as
-    | ((
-        event: unknown,
-        edge: unknown,
-        handleType: string,
-        connectionState: { isValid: boolean | null },
-      ) => void)
-    | undefined,
-  hideAttribution: undefined as boolean | undefined,
-  // onInit で受け取る React Flow のインスタンス。空白判定は座標をこの stub で
-  // flow 座標へ変換し、getNodes が返す矩形と突き合わせる。
-  flow: {
-    screenToFlowPosition: vi.fn((point: { x: number; y: number }) => point),
-    getNodes: vi.fn((): unknown[] => []),
-    getNodesBounds: vi.fn(() => ({ x: 0, y: 0, width: 0, height: 0 })),
-    setCenter: vi.fn(),
-  },
-}));
-
-vi.mock("../src/api", () => ({
-  mutations: {
-    addDependency: graphMocks.addDependencyApi,
-    removeDependency: graphMocks.removeDependencyApi,
-  },
-}));
-vi.mock("@xyflow/react", () => ({
-  Background: () => null,
-  BackgroundVariant: { Dots: "dots" },
-  Controls: () => null,
-  MarkerType: { ArrowClosed: "arrowclosed" },
-  ReactFlow: ({
-    children,
-    edges,
-    onMoveEnd,
-    onConnect,
-    onConnectStart,
-    onConnectEnd,
-    onEdgesChange,
-    onEdgesDelete,
-    onEdgeClick,
-    onPaneClick,
-    onReconnect,
-    onReconnectStart,
-    onReconnectEnd,
-    onInit,
-    nodesConnectable,
-    proOptions,
-  }: {
-    children?: ReactNode;
-    edges?: unknown[];
-    onMoveEnd?: (...args: unknown[]) => void;
-    onConnect?: (connection: unknown) => void;
-    onConnectStart?: () => void;
-    onConnectEnd?: (
-      event: unknown,
-      connectionState: ConnectionStateStub,
-    ) => void;
-    onEdgesChange?: (changes: unknown[]) => void;
-    onEdgesDelete?: (edges: unknown[]) => void;
-    onEdgeClick?: (event: unknown, edge: { id: string }) => void;
-    onPaneClick?: () => void;
-    onReconnect?: () => void;
-    onReconnectStart?: (
-      event: unknown,
-      edge: unknown,
-      handleType: string,
-    ) => void;
-    onReconnectEnd?: (
-      event: unknown,
-      edge: unknown,
-      handleType: string,
-      connectionState: { isValid: boolean | null },
-    ) => void;
-    onInit?: (instance: unknown) => void;
-    nodesConnectable?: boolean;
-    proOptions?: { hideAttribution?: boolean };
-  }) => {
-    graphMocks.edges = (edges ?? []) as Record<string, unknown>[];
-    graphMocks.onConnect = onConnect;
-    graphMocks.onConnectStart = onConnectStart;
-    graphMocks.onConnectEnd = onConnectEnd;
-    graphMocks.onEdgesChange = onEdgesChange;
-    graphMocks.onEdgesDelete = onEdgesDelete;
-    graphMocks.onEdgeClick = onEdgeClick;
-    graphMocks.onPaneClick = onPaneClick;
-    graphMocks.onReconnect = onReconnect;
-    graphMocks.onReconnectStart = onReconnectStart;
-    graphMocks.onReconnectEnd = onReconnectEnd;
-    graphMocks.hideAttribution = proOptions?.hideAttribution;
-    useEffect(() => {
-      onInit?.(graphMocks.flow);
-    }, [onInit]);
-    return (
-      <button
-        type="button"
-        data-testid="mock-react-flow"
-        data-edge-count={edges?.length ?? 0}
-        data-nodes-connectable={String(nodesConnectable)}
-        onClick={() => onMoveEnd?.({}, { zoom: 1.25 })}
-      >
-        {children}
-      </button>
-    );
-  },
-}));
-vi.mock("../src/i18n/settings", () => ({
-  maxGraphZoom: 1.7,
-  minGraphZoom: 0.08,
-  readGraphZoom: vi.fn(() => 1),
-  writeGraphZoom: graphMocks.writeGraphZoom,
-}));
-vi.mock("../src/views/useGraphLayout", () => ({
-  useGraphLayout: graphMocks.useGraphLayout,
-}));
-vi.mock("../src/hooks", () => ({
-  useDomainMutation: (mutationFn: (input: unknown) => unknown) => {
-    const mutation =
-      graphMocks.domainMutationCall++ % 2 === 0
-        ? graphMocks.addDependency
-        : graphMocks.removeDependency;
-    mutation.mutate.mockImplementation((input: unknown) => mutationFn(input));
-    return mutation;
-  },
-}));
+vi.mock("../src/api", async () =>
+  (await import("./featureGraphHarness")).apiMock(),
+);
+vi.mock("@xyflow/react", async () =>
+  (await import("./featureGraphHarness")).xyflowMock(),
+);
+vi.mock("../src/i18n/settings", async () =>
+  (await import("./featureGraphHarness")).settingsMock(),
+);
+vi.mock("../src/views/useGraphLayout", async () =>
+  (await import("./featureGraphHarness")).graphLayoutMock(),
+);
+vi.mock("../src/hooks", async () =>
+  (await import("./featureGraphHarness")).hooksMock(),
+);
 
 describe("FeatureGraph", () => {
   afterEach(cleanup);
 
-  beforeEach(() => {
-    vi.clearAllMocks();
-    // onInit 後の setCenter が参照する。jsdom は matchMedia を持たない。
-    vi.stubGlobal("matchMedia", vi.fn().mockReturnValue({ matches: true }));
-    graphMocks.addDependency.isPending = false;
-    graphMocks.addDependency.error = null;
-    graphMocks.removeDependency.isPending = false;
-    graphMocks.removeDependency.error = null;
-    graphMocks.domainMutationCall = 0;
-    graphMocks.onConnect = undefined;
-    graphMocks.onConnectStart = undefined;
-    graphMocks.onConnectEnd = undefined;
-    graphMocks.onEdgesChange = undefined;
-    graphMocks.onEdgesDelete = undefined;
-    graphMocks.onEdgeClick = undefined;
-    graphMocks.onPaneClick = undefined;
-    graphMocks.onReconnect = undefined;
-    graphMocks.onReconnectStart = undefined;
-    graphMocks.onReconnectEnd = undefined;
-    graphMocks.hideAttribution = undefined;
-    graphMocks.flow.getNodes.mockReturnValue([]);
-    graphMocks.useGraphLayout.mockReturnValue({
-      edgeRoutes: new Map(),
-      nodes: [],
-      layoutError: undefined,
-      retryLayout: vi.fn(),
-    });
-  });
+  beforeEach(resetGraphMocks);
 
   it("hides the React Flow attribution", () => {
     render(
@@ -657,7 +488,6 @@ describe("FeatureGraph", () => {
       reconnectable: true,
       deletable: true,
       data: {
-        label: "Blocker task → Blocked task",
         removeLabel: "Remove dependency Blocker task → Blocked task",
       },
       selected: false,
@@ -675,11 +505,31 @@ describe("FeatureGraph", () => {
         { onRemove: () => void } | undefined;
       data?.onRemove();
     });
-    expect(graphMocks.removeDependency.mutate).toHaveBeenCalledWith({
+    // ライン上のボタンは確認を挟むので、押しただけでは何も書き込まない。
+    expect(graphMocks.removeDependency.mutateAsync).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole("heading", { name: "Remove this dependency?" }),
+    ).toBeInTheDocument();
+    fireEvent.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(
+      screen.queryByRole("heading", { name: "Remove this dependency?" }),
+    ).not.toBeInTheDocument();
+    act(() => {
+      const data = graphMocks.edges[0]?.["data"] as
+        { onRemove: () => void } | undefined;
+      data?.onRemove();
+    });
+    fireEvent.click(screen.getByRole("button", { name: "Remove dependency" }));
+    expect(graphMocks.removeDependency.mutateAsync).toHaveBeenCalledWith({
       blocker: "blocker",
       blocked: "blocked",
     });
-    graphMocks.removeDependency.mutate.mockClear();
+    await waitFor(() => {
+      expect(
+        screen.queryByRole("heading", { name: "Remove this dependency?" }),
+      ).not.toBeInTheDocument();
+    });
+    expect(graphMocks.removeDependency.mutate).not.toHaveBeenCalled();
     act(() => {
       graphMocks.onEdgesDelete?.([{ source: "blocker", target: "blocked" }]);
     });
@@ -687,6 +537,44 @@ describe("FeatureGraph", () => {
       blocker: "blocker",
       blocked: "blocked",
     });
+  });
+
+  it("hands the hovered edge to the edges so the line can offer its action", () => {
+    render(
+      <FeatureGraph
+        tasks={[
+          makeTask({ id: "blocker", title: "Blocker task" }),
+          makeTask({ id: "blocked", title: "Blocked task" }),
+        ]}
+        dependencies={[
+          makeDependency({
+            blockerTaskId: "blocker",
+            blockedTaskId: "blocked",
+          }),
+        ]}
+        pullRequests={new Map()}
+        documentsByTask={new Map()}
+        onEditTask={vi.fn()}
+        onPreviewDocument={vi.fn()}
+        onCreateTask={vi.fn()}
+      />,
+    );
+    const canvas = screen.getByTestId("mock-react-flow");
+
+    expect(canvas).toHaveAttribute("data-hovered-edge", "");
+    act(() => {
+      graphMocks.onEdgeMouseEnter?.({}, { id: "blocker-blocked" });
+    });
+    expect(canvas).toHaveAttribute("data-hovered-edge", "blocker-blocked");
+    // 別のエッジから外れただけでは、今指しているエッジの操作を引っ込めない。
+    act(() => {
+      graphMocks.onEdgeMouseLeave?.({}, { id: "other-edge" });
+    });
+    expect(canvas).toHaveAttribute("data-hovered-edge", "blocker-blocked");
+    act(() => {
+      graphMocks.onEdgeMouseLeave?.({}, { id: "blocker-blocked" });
+    });
+    expect(canvas).toHaveAttribute("data-hovered-edge", "");
   });
 
   it("selects an edge from a React Flow selection change and deletes it", () => {

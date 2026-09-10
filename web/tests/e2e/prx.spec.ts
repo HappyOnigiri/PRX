@@ -571,6 +571,18 @@ test("creates and edits a feature DAG while preserving state", async ({
   ).toBeVisible();
   await selectDependencyEdge(page, "E2E worker", "E2E UI");
   await page.locator(".dependency-edge-remove").click();
+  // ライン上のボタンだけは確認を挟む。取り消せば依存は残ったままになる。
+  const removeConfirmation = page.getByRole("dialog", {
+    name: "Remove this dependency?",
+  });
+  await removeConfirmation.getByRole("button", { name: "Cancel" }).click();
+  await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
+    2,
+  );
+  await page.locator(".dependency-edge-remove").click();
+  await removeConfirmation
+    .getByRole("button", { name: "Remove dependency", exact: true })
+    .click();
   await expect(page.locator(".react-flow__edge.dependency-edge")).toHaveCount(
     1,
   );

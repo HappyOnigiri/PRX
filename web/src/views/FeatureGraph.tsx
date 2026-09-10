@@ -34,9 +34,11 @@ import {
   emptyHiddenDependencies,
   type HiddenDependencies,
 } from "./completedTasks";
+import { ConfirmationDialog } from "./ConfirmationDialog";
 import { DependencyEdge } from "./DependencyEdge";
 import {
   dependencyEdgeId,
+  HoveredEdgeContext,
   type DependencyEdgeRoute,
   type DependencyFlowEdge,
   type PendingDependency,
@@ -74,6 +76,53 @@ function droppedOnNode(
   });
 }
 
+function useDependencyRemoval(readOnly: boolean) {
+  const removeDependency = useDomainMutation(
+    ({ blocker, blocked }: { blocker: string; blocked: string }) =>
+      mutations.removeDependency(blocker, blocked),
+  );
+  const remove = useCallback(
+    (edge: Pick<Edge, "source" | "target">) => {
+      if (readOnly || removeDependency.isPending) return;
+      removeDependency.mutate({ blocker: edge.source, blocked: edge.target });
+    },
+    [readOnly, removeDependency],
+  );
+  // ドラッグでの切り離しは離した先が結果を語るが、ライン上のボタンは押した瞬間
+  // に依存が消える。押し間違いを取り消せるよう、こちらだけ確認を挟む。
+  const [confirming, setConfirming] = useState<
+    { blocker: string; blocked: string } | undefined
+  >();
+  const requestRemove = useCallback(
+    (edge: Pick<Edge, "source" | "target">) => {
+      if (readOnly || removeDependency.isPending) return;
+      setConfirming({ blocker: edge.source, blocked: edge.target });
+    },
+    [readOnly, removeDependency],
+  );
+  const cancelRemove = useCallback(() => {
+    setConfirming(undefined);
+  }, []);
+  const confirmRemove = useCallback(async () => {
+    if (!confirming) return;
+    try {
+      await removeDependency.mutateAsync(confirming);
+    } catch {
+      return;
+    }
+    setConfirming(undefined);
+  }, [confirming, removeDependency]);
+  return {
+    cancelRemove,
+    confirming,
+    confirmRemove,
+    error: removeDependency.error,
+    pending: removeDependency.isPending,
+    remove,
+    requestRemove,
+  };
+}
+
 function useDependencyConnections(
   readOnly: boolean,
   onCreateTask: (dependency?: PendingDependency) => void,
@@ -83,10 +132,8 @@ function useDependencyConnections(
     ({ blocker, blocked }: { blocker: string; blocked: string }) =>
       mutations.addDependency(blocker, blocked),
   );
-  const removeDependency = useDomainMutation(
-    ({ blocker, blocked }: { blocker: string; blocked: string }) =>
-      mutations.removeDependency(blocker, blocked),
-  );
+  const removal = useDependencyRemoval(readOnly);
+  const remove = removal.remove;
   const [detaching, setDetaching] = useState<
     { blocker: string; blocked: string } | undefined
   >();
@@ -94,7 +141,7 @@ function useDependencyConnections(
   // 既存エッジの掴み直しでも onConnectEnd が先に呼ばれるので、空白ドロップが
   // 依存の解除なのか新規作成なのかをここで見分ける。
   const reconnecting = useRef(false);
-  const pending = addDependency.isPending || removeDependency.isPending;
+  const pending = addDependency.isPending || removal.pending;
   const onConnect = useCallback(
     ({ source, target }: Connection) => {
       if (readOnly || pending || !source || !target) return;
@@ -123,13 +170,6 @@ function useDependencyConnections(
       });
     },
     [flow, onCreateTask, pending, readOnly],
-  );
-  const remove = useCallback(
-    (edge: Pick<Edge, "source" | "target">) => {
-      if (readOnly || removeDependency.isPending) return;
-      removeDependency.mutate({ blocker: edge.source, blocked: edge.target });
-    },
-    [readOnly, removeDependency],
   );
   const onEdgesDelete = useCallback<OnEdgesDelete<DependencyFlowEdge>>(
     (edges) => {
@@ -168,9 +208,12 @@ function useDependencyConnections(
 
   return {
     adding: addDependency.isPending,
+    cancelRemove: removal.cancelRemove,
+    confirming: removal.confirming,
+    confirmRemove: removal.confirmRemove,
     connecting,
     detaching,
-    error: removeDependency.error ?? addDependency.error,
+    error: removal.error ?? addDependency.error,
     onConnect,
     onConnectEnd,
     onConnectStart,
@@ -180,7 +223,8 @@ function useDependencyConnections(
     onReconnectStart,
     pending,
     remove,
-    removing: removeDependency.isPending,
+    removing: removal.pending,
+    requestRemove: removal.requestRemove,
   };
 }
 
@@ -222,7 +266,6 @@ function buildDependencyEdges({
       type: "dependency",
       data: {
         disabled: pending,
-        label: t("workspace.flow.dependencyLabel", { blocker, blocked }),
         onRemove: () => {
           remove({
             source: dependency.blockerTaskId,
@@ -323,6 +366,27 @@ function useMeasuredEdgeRoutes(edgeRoutes: Map<string, DependencyEdgeRoute>) {
   return measured;
 }
 
+// ライン上の操作は、まず読み手がそのラインを指していることに気付けて初めて
+// 見つかる。React Flow の hover はエッジの当たり判定ごと拾う。
+function useHoveredEdge() {
+  const [hoveredEdgeId, setHoveredEdgeId] = useState<string>();
+  const onEdgeMouseEnter = useCallback<EdgeMouseHandler<DependencyFlowEdge>>(
+    (_event, edge) => {
+      setHoveredEdgeId(edge.id);
+    },
+    [],
+  );
+  const onEdgeMouseLeave = useCallback<EdgeMouseHandler<DependencyFlowEdge>>(
+    (_event, edge) => {
+      setHoveredEdgeId((current) =>
+        current === edge.id ? undefined : current,
+      );
+    },
+    [],
+  );
+  return { hoveredEdgeId, onEdgeMouseEnter, onEdgeMouseLeave };
+}
+
 function useDependencySelection(dependencies: Dependency[]) {
   const [requestedId, setSelectedId] = useState<string>();
   const stillPresent = dependencies.some(
@@ -362,6 +426,45 @@ function useDependencySelection(dependencies: Dependency[]) {
     [],
   );
   return { applyChanges, clear, select, selectedId };
+}
+
+function useGraphAriaLabels(t: TFunction): Partial<AriaLabelConfig> {
+  return useMemo(
+    () => ({
+      "node.a11yDescription.default": t("workspace.flow.nodeDescription"),
+      "node.a11yDescription.keyboardDisabled": t(
+        "workspace.flow.keyboardDisabled",
+      ),
+      "edge.a11yDescription.default": t("workspace.flow.edgeDescription"),
+      "controls.ariaLabel": t("workspace.flow.controls"),
+      "controls.zoomIn.ariaLabel": t("workspace.flow.zoomIn"),
+      "controls.zoomOut.ariaLabel": t("workspace.flow.zoomOut"),
+      "controls.fitView.ariaLabel": t("workspace.flow.fitView"),
+      "handle.ariaLabel": t("workspace.flow.handle"),
+    }),
+    [t],
+  );
+}
+
+function useCenterOnNodes(
+  nodes: TaskFlowNode[],
+  flow: ReactFlowInstance<TaskFlowNode, DependencyFlowEdge> | undefined,
+  graphZoom: React.RefObject<number>,
+) {
+  useEffect(() => {
+    if (!nodes.length || !flow) return;
+    const bounds = flow.getNodesBounds(nodes);
+    void flow.setCenter(
+      bounds.x + bounds.width / 2,
+      bounds.y + bounds.height / 2,
+      {
+        zoom: graphZoom.current,
+        duration: window.matchMedia("(prefers-reduced-motion: reduce)").matches
+          ? 0
+          : 260,
+      },
+    );
+  }, [nodes, flow, graphZoom]);
 }
 
 interface FeatureGraphProps {
@@ -417,43 +520,14 @@ export function FeatureGraph({
     edgeRoutes: measuredRoutes,
     pending: connections.pending,
     readOnly,
-    remove: connections.remove,
+    remove: connections.requestRemove,
     selectedId: selection.selectedId,
     taskTitle,
     t,
   });
-  const ariaLabelConfig = useMemo(
-    () => ({
-      "node.a11yDescription.default": t("workspace.flow.nodeDescription"),
-      "node.a11yDescription.keyboardDisabled": t(
-        "workspace.flow.keyboardDisabled",
-      ),
-      "edge.a11yDescription.default": t("workspace.flow.edgeDescription"),
-      "controls.ariaLabel": t("workspace.flow.controls"),
-      "controls.zoomIn.ariaLabel": t("workspace.flow.zoomIn"),
-      "controls.zoomOut.ariaLabel": t("workspace.flow.zoomOut"),
-      "controls.fitView.ariaLabel": t("workspace.flow.fitView"),
-      "handle.ariaLabel": t("workspace.flow.handle"),
-    }),
-    [t],
-  );
-
-  useEffect(() => {
-    if (nodes.length && flow) {
-      const bounds = flow.getNodesBounds(nodes);
-      void flow.setCenter(
-        bounds.x + bounds.width / 2,
-        bounds.y + bounds.height / 2,
-        {
-          zoom: graphZoom.current,
-          duration: window.matchMedia("(prefers-reduced-motion: reduce)")
-            .matches
-            ? 0
-            : 260,
-        },
-      );
-    }
-  }, [nodes, flow]);
+  const hover = useHoveredEdge();
+  const ariaLabelConfig = useGraphAriaLabels(t);
+  useCenterOnNodes(nodes, flow, graphZoom);
 
   return (
     <>
@@ -478,6 +552,9 @@ export function FeatureGraph({
         onEdgesChange={selection.applyChanges}
         onEdgesDelete={connections.onEdgesDelete}
         onEdgeClick={selection.select}
+        onEdgeMouseEnter={hover.onEdgeMouseEnter}
+        onEdgeMouseLeave={hover.onEdgeMouseLeave}
+        hoveredEdgeId={hover.hoveredEdgeId}
         onNodeClick={selection.clear}
         onPaneClick={selection.clear}
         onReconnect={connections.onReconnect}
@@ -489,7 +566,7 @@ export function FeatureGraph({
         }}
         connectionPending={connections.pending}
         layoutPending={layoutPending}
-        connectionError={connections.error}
+        connectionError={connections.confirming ? null : connections.error}
         taskTitle={taskTitle}
         layoutError={layoutError}
         retryLayout={retryLayout}
@@ -497,7 +574,51 @@ export function FeatureGraph({
         ariaLabelConfig={ariaLabelConfig}
         readOnly={readOnly}
       />
+      <RemoveDependencyConfirmation
+        dependency={connections.confirming}
+        error={connections.error}
+        pending={connections.removing}
+        taskTitle={taskTitle}
+        onCancel={connections.cancelRemove}
+        onConfirm={connections.confirmRemove}
+      />
     </>
+  );
+}
+
+function RemoveDependencyConfirmation({
+  dependency,
+  error,
+  pending,
+  taskTitle,
+  onCancel,
+  onConfirm,
+}: {
+  dependency: { blocker: string; blocked: string } | undefined;
+  error: Error | null;
+  pending: boolean;
+  taskTitle: (taskId: string) => string | undefined;
+  onCancel: () => void;
+  onConfirm: () => Promise<void>;
+}) {
+  const { t } = useTranslation();
+  if (!dependency) return null;
+  return (
+    <ConfirmationDialog
+      title={t("workspace.flow.removeDependencyTitle")}
+      description={t("workspace.flow.removeDependencyDetail", {
+        blocker: taskTitle(dependency.blocker) ?? dependency.blocker,
+        blocked: taskTitle(dependency.blocked) ?? dependency.blocked,
+      })}
+      confirmLabel={t("workspace.flow.confirmRemoveDependency")}
+      danger
+      pending={pending}
+      error={error}
+      onCancel={onCancel}
+      onConfirm={() => {
+        void onConfirm();
+      }}
+    />
   );
 }
 
@@ -519,6 +640,9 @@ interface GraphCanvasProps {
   onEdgesChange: OnEdgesChange<DependencyFlowEdge>;
   onEdgesDelete: OnEdgesDelete<DependencyFlowEdge>;
   onEdgeClick: EdgeMouseHandler<DependencyFlowEdge>;
+  onEdgeMouseEnter: EdgeMouseHandler<DependencyFlowEdge>;
+  onEdgeMouseLeave: EdgeMouseHandler<DependencyFlowEdge>;
+  hoveredEdgeId: string | undefined;
   onNodeClick: () => void;
   onPaneClick: () => void;
   onReconnect: OnReconnect<DependencyFlowEdge>;
@@ -558,6 +682,9 @@ function GraphCanvas({
   onEdgesChange,
   onEdgesDelete,
   onEdgeClick,
+  onEdgeMouseEnter,
+  onEdgeMouseLeave,
+  hoveredEdgeId,
   onNodeClick,
   onPaneClick,
   onReconnect,
@@ -581,45 +708,49 @@ function GraphCanvas({
       data-testid="feature-graph"
       aria-busy={graphBusy}
     >
-      <ReactFlow<TaskFlowNode, DependencyFlowEdge>
-        ariaLabelConfig={ariaLabelConfig}
-        autoPanOnConnect={false}
-        defaultEdgeOptions={{ animated: false }}
-        defaultViewport={{ x: 0, y: 0, zoom: initialGraphZoom }}
-        deleteKeyCode={["Backspace", "Delete"]}
-        edges={edges}
-        edgeTypes={edgeTypes}
-        elevateEdgesOnSelect
-        maxZoom={maxGraphZoom}
-        minZoom={minGraphZoom}
-        nodes={nodes}
-        nodesConnectable={!readOnly && !graphBusy}
-        nodesDraggable={false}
-        nodeTypes={nodeTypes}
-        onConnect={onConnect}
-        onConnectStart={onConnectStart}
-        onConnectEnd={onConnectEnd}
-        onEdgesChange={onEdgesChange}
-        onEdgesDelete={onEdgesDelete}
-        onEdgeClick={onEdgeClick}
-        onInit={onInit}
-        onMoveEnd={onMoveEnd}
-        onNodeClick={onNodeClick}
-        onPaneClick={onPaneClick}
-        onReconnect={onReconnect}
-        onReconnectEnd={onReconnectEnd}
-        onReconnectStart={onReconnectStart}
-        proOptions={{ hideAttribution: true }}
-        reconnectRadius={12}
-      >
-        <Background
-          variant={BackgroundVariant.Dots}
-          gap={24}
-          size={1}
-          color="var(--border)"
-        />
-        <Controls showInteractive={false} />
-      </ReactFlow>
+      <HoveredEdgeContext.Provider value={hoveredEdgeId}>
+        <ReactFlow<TaskFlowNode, DependencyFlowEdge>
+          ariaLabelConfig={ariaLabelConfig}
+          autoPanOnConnect={false}
+          defaultEdgeOptions={{ animated: false }}
+          defaultViewport={{ x: 0, y: 0, zoom: initialGraphZoom }}
+          deleteKeyCode={["Backspace", "Delete"]}
+          edges={edges}
+          edgeTypes={edgeTypes}
+          elevateEdgesOnSelect
+          maxZoom={maxGraphZoom}
+          minZoom={minGraphZoom}
+          nodes={nodes}
+          nodesConnectable={!readOnly && !graphBusy}
+          nodesDraggable={false}
+          nodeTypes={nodeTypes}
+          onConnect={onConnect}
+          onConnectStart={onConnectStart}
+          onConnectEnd={onConnectEnd}
+          onEdgesChange={onEdgesChange}
+          onEdgesDelete={onEdgesDelete}
+          onEdgeClick={onEdgeClick}
+          onEdgeMouseEnter={onEdgeMouseEnter}
+          onEdgeMouseLeave={onEdgeMouseLeave}
+          onInit={onInit}
+          onMoveEnd={onMoveEnd}
+          onNodeClick={onNodeClick}
+          onPaneClick={onPaneClick}
+          onReconnect={onReconnect}
+          onReconnectEnd={onReconnectEnd}
+          onReconnectStart={onReconnectStart}
+          proOptions={{ hideAttribution: true }}
+          reconnectRadius={12}
+        >
+          <Background
+            variant={BackgroundVariant.Dots}
+            gap={24}
+            size={1}
+            color="var(--border)"
+          />
+          <Controls showInteractive={false} />
+        </ReactFlow>
+      </HoveredEdgeContext.Provider>
       {connectionError && (
         <div className="graph-connection-error">
           <MutationError error={connectionError} taskTitle={taskTitle} />
