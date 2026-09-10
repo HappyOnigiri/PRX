@@ -1,33 +1,17 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
 import { mkdir } from "node:fs/promises";
+import {
+  addTask,
+  createFeature,
+  e2eBaseURL,
+  guardBrowserErrors,
+  settleGraph,
+  taskNodeId,
+} from "./helpers";
 
-const browserErrors: string[] = [];
-const e2ePort = process.env["PRX_E2E_PORT"];
-if (!e2ePort) throw new Error("Playwright did not capture the E2E server port");
+test.use({ baseURL: e2eBaseURL });
 
-test.use({
-  baseURL: `http://127.0.0.1:${e2ePort}`,
-});
-
-test.beforeEach(({ page }) => {
-  browserErrors.length = 0;
-  page.on("console", (message) => {
-    if (message.type() === "error" || message.type() === "warning")
-      browserErrors.push(`console ${message.type()}: ${message.text()}`);
-  });
-  page.on("pageerror", (error) =>
-    browserErrors.push(`pageerror: ${error.message}`),
-  );
-  page.on("requestfailed", (request) =>
-    browserErrors.push(
-      `requestfailed: ${request.method()} ${request.url()} ${request.failure()?.errorText}`,
-    ),
-  );
-});
-
-test.afterEach(() => {
-  expect(browserErrors, browserErrors.join("\n")).toEqual([]);
-});
+const browserErrors = guardBrowserErrors();
 
 async function openDisplaySettings(page: Page, language: "en" | "ja" = "en") {
   const labels =
@@ -258,35 +242,6 @@ test("follows the system theme unless the user selects an override", async ({
   await expect.poll(background).toBe("rgb(245, 246, 248)");
 });
 
-// feature は必ず project に属するので、rail からではなく project のページから
-// 作る。これらのテストはデモの最初の project の中に作る。
-const demoProjectPath = "/projects/P-1?features=active";
-
-async function createFeature(page: Page, title: string, description?: string) {
-  await page.goto(demoProjectPath);
-  await page.getByRole("button", { name: "Create feature" }).click();
-  const dialog = page.getByRole("form", { name: "Create feature" });
-  await dialog.getByLabel("Title").fill(title);
-  if (description !== undefined)
-    await dialog.getByLabel("Description").fill(description);
-  await dialog.getByRole("button", { name: "Create feature" }).click();
-  await expect(page.getByRole("heading", { name: title })).toBeVisible();
-}
-
-async function addTask(page: Page, title: string, trigger?: Locator) {
-  await (
-    trigger ?? page.getByRole("button", { name: "Add task" }).first()
-  ).click();
-  const dialog = page.getByRole("form", { name: "Create task" });
-  await dialog.getByLabel("Title").fill(title);
-  await dialog.getByLabel("Scope").fill(`Acceptance boundary for ${title}`);
-  await dialog.getByLabel("Assignee").fill("Bob");
-  await dialog.getByRole("button", { name: "Add task" }).click();
-  await expect(
-    page.locator(".task-node").filter({ hasText: title }),
-  ).toBeVisible();
-}
-
 async function openTask(page: Page, title: string) {
   await page
     .locator(".task-node")
@@ -335,17 +290,6 @@ async function connectTasks(
   await page.mouse.up();
 }
 
-async function taskNodeId(page: Page, title: string) {
-  const id = await page
-    .locator(".task-node")
-    .filter({ hasText: title })
-    .evaluate((element) =>
-      element.closest(".react-flow__node")?.getAttribute("data-id"),
-    );
-  if (!id) throw new Error("task node id missing");
-  return id;
-}
-
 async function selectDependencyEdge(
   page: Page,
   blockerTitle: string,
@@ -382,30 +326,6 @@ async function disconnectTasks(
   await page.mouse.down();
   await page.mouse.move(stageBox.x + 28, stageBox.y + 28, { steps: 6 });
   await page.mouse.up();
-}
-
-async function settleGraph(page: Page) {
-  const stage = page.locator(".graph-stage");
-  const viewport = page.locator(".react-flow__viewport");
-  const nodes = page.locator(".react-flow__node");
-  await expect(stage).toHaveAttribute("aria-busy", "false");
-  let previousState: string | null = null;
-  let stableSamples = 0;
-  await expect
-    .poll(
-      async () => {
-        const viewportStyle = await viewport.getAttribute("style");
-        const nodeStyles = await nodes.evaluateAll((elements) =>
-          elements.map((element) => element.getAttribute("style")),
-        );
-        const currentState = JSON.stringify({ nodeStyles, viewportStyle });
-        stableSamples = currentState === previousState ? stableSamples + 1 : 0;
-        previousState = currentState;
-        return stableSamples;
-      },
-      { intervals: [100], timeout: 3000 },
-    )
-    .toBeGreaterThanOrEqual(3);
 }
 
 async function graphZoom(page: Page) {

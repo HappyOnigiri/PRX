@@ -33,6 +33,7 @@ import {
 } from "./completedTasks";
 import { CopyableIdentifier } from "./CopyableIdentifier";
 import { CreateTaskDialog } from "./CreateTaskDialog";
+import type { PendingDependency } from "./dependencyGraph";
 import { DocumentReferences } from "./DocumentReferences";
 import { EditFeatureDialog } from "./EditFeatureDialog";
 import { EntityIcon } from "./EntityIcon";
@@ -48,13 +49,18 @@ interface DocumentTarget {
   trigger: HTMLButtonElement;
 }
 
+// 作成ダイアログは、グラフの空白ドロップで開くときだけ依存の相手を伴う。
+interface TaskDraft {
+  dependency?: PendingDependency;
+}
+
 export function FeatureWorkspace() {
   const { t } = useTranslation();
   const { featureId } = useParams({ from: "/features/$featureId" });
   const navigate = useNavigate();
   const snapshot = useSnapshot();
   const [selected, setSelected] = useState<string>();
-  const [showTask, setShowTask] = useState(false);
+  const [taskDraft, setTaskDraft] = useState<TaskDraft>();
   const [showFeatureEdit, setShowFeatureEdit] = useState(false);
   const [showBatchPrompt, setShowBatchPrompt] = useState(false);
   const [previewDocument, setPreviewDocument] = useState<TaskNodeDocument>();
@@ -77,8 +83,12 @@ export function FeatureWorkspace() {
     featureDocuments,
   } = useFeatureWorkspaceData(data, featureId);
   const visible = useVisibleGraph(tasks, dependencies, hideCompleted);
-  const openTaskDialog = useCallback(() => {
-    setShowTask(true);
+  // 開いている作成ダイアログは開き直しても置き換えない。背景のツールバーへ
+  // フォーカスが届くので、指定済みの依存と入力を消さずに残す。
+  const openTaskDialog = useCallback((dependency?: PendingDependency) => {
+    setTaskDraft(
+      (current) => current ?? { ...(dependency ? { dependency } : {}) },
+    );
   }, []);
   const openDocumentDialog = useCallback(
     (taskId: string, trigger: HTMLButtonElement) => {
@@ -130,7 +140,7 @@ export function FeatureWorkspace() {
       selectedTask={selectedTask}
       previewDocument={previewDocument}
       documentTarget={documentTarget}
-      showTask={showTask}
+      taskDraft={taskDraft}
       showFeatureEdit={showFeatureEdit}
       showBatchPrompt={showBatchPrompt}
       syncPending={sync.isPending}
@@ -160,7 +170,7 @@ export function FeatureWorkspace() {
         setDocumentTarget(undefined);
       }}
       onCloseTask={() => {
-        setShowTask(false);
+        setTaskDraft(undefined);
       }}
       onCloseFeatureEdit={() => {
         setShowFeatureEdit(false);
@@ -268,12 +278,12 @@ interface WorkspaceContentProps {
   selectedTask: Task | undefined;
   previewDocument: TaskNodeDocument | undefined;
   documentTarget: DocumentTarget | undefined;
-  showTask: boolean;
+  taskDraft: TaskDraft | undefined;
   showFeatureEdit: boolean;
   showBatchPrompt: boolean;
   syncPending: boolean;
   onSync: () => void;
-  onCreateTask: () => void;
+  onCreateTask: (dependency?: PendingDependency) => void;
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onAddDocument: (taskId: string, trigger: HTMLButtonElement) => void;
@@ -403,7 +413,9 @@ function FeatureWorkspaceHead({
             icon={Plus}
             label={t("workspace.addTask")}
             variant="primary"
-            onClick={props.onCreateTask}
+            onClick={() => {
+              props.onCreateTask();
+            }}
           />
         )}
         <IconButton
@@ -491,6 +503,30 @@ function ArchivedNotice({ project }: { project: Project | undefined }) {
   );
 }
 
+function TaskCreateOverlay({
+  draft,
+  featureId,
+  tasks,
+  onClose,
+}: {
+  draft: TaskDraft;
+  featureId: string;
+  tasks: Task[];
+  onClose: () => void;
+}) {
+  const dependency = draft.dependency;
+  if (!dependency)
+    return <CreateTaskDialog featureId={featureId} onClose={onClose} />;
+  const title = tasks.find((task) => task.id === dependency.taskId)?.title;
+  return (
+    <CreateTaskDialog
+      featureId={featureId}
+      onClose={onClose}
+      dependency={{ value: dependency, title: title ?? dependency.taskId }}
+    />
+  );
+}
+
 function WorkspaceOverlays({ props }: { props: WorkspaceContentProps }) {
   return (
     <>
@@ -515,9 +551,11 @@ function WorkspaceOverlays({ props }: { props: WorkspaceContentProps }) {
           onClose={props.onCloseBatchPrompt}
         />
       )}
-      {props.showTask && (
-        <CreateTaskDialog
+      {props.taskDraft && (
+        <TaskCreateOverlay
+          draft={props.taskDraft}
           featureId={props.featureId}
+          tasks={props.tasks}
           onClose={props.onCloseTask}
         />
       )}

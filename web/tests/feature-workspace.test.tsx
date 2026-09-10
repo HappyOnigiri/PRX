@@ -102,7 +102,10 @@ vi.mock("../src/views/FeatureGraph", () => ({
     tasks: { id: string }[];
     hiddenDependencies: Map<string, { blockers: string[] }>;
     hiddenTaskCount: number;
-    onCreateTask: () => void;
+    onCreateTask: (dependency?: {
+      taskId: string;
+      direction: "blocks" | "blockedBy";
+    }) => void;
     onEditTask: (taskId: string) => void;
     onPreviewDocument: (document: unknown) => void;
     onAddDocument: (taskId: string, trigger: HTMLButtonElement) => void;
@@ -119,7 +122,24 @@ vi.mock("../src/views/FeatureGraph", () => ({
           .map(([id, hidden]) => `${id}:${hidden.blockers.join("|")}`)
           .join(",")}
       </span>
-      {!readOnly && <button onClick={onCreateTask}>Mock create task</button>}
+      {!readOnly && (
+        <button
+          onClick={() => {
+            onCreateTask();
+          }}
+        >
+          Mock create task
+        </button>
+      )}
+      {!readOnly && (
+        <button
+          onClick={() => {
+            onCreateTask({ taskId: "task-1", direction: "blockedBy" });
+          }}
+        >
+          Mock drop on empty space
+        </button>
+      )}
       {!readOnly && (
         <button
           onClick={(event) => {
@@ -191,8 +211,22 @@ vi.mock("../src/views/MarkdownPreview", () => ({
   ),
 }));
 vi.mock("../src/views/CreateTaskDialog", () => ({
-  CreateTaskDialog: ({ onClose }: { onClose: () => void }) => (
+  CreateTaskDialog: ({
+    onClose,
+    dependency,
+  }: {
+    onClose: () => void;
+    dependency?: {
+      value: { taskId: string; direction: string };
+      title: string;
+    };
+  }) => (
     <div role="dialog" aria-label="Mock create task">
+      <span data-testid="mock-task-dependency">
+        {dependency
+          ? `${dependency.value.direction}:${dependency.title}`
+          : "none"}
+      </span>
       <button onClick={onClose}>Mock close task</button>
     </div>
   ),
@@ -440,11 +474,34 @@ describe("FeatureWorkspace", () => {
       screen.queryByRole("dialog", { name: "Mock edit feature" }),
     ).not.toBeInTheDocument();
 
-    fireEvent.click(screen.getByRole("button", { name: "Mock create task" }));
-    expect(
-      screen.getByRole("dialog", { name: "Mock create task" }),
-    ).toBeInTheDocument();
+    // ツールバーとグラフの空状態はどちらも依存なしで同じダイアログを開く。
+    for (const name of ["Add task", "Mock create task"]) {
+      fireEvent.click(screen.getByRole("button", { name }));
+      expect(
+        screen.getByRole("dialog", { name: "Mock create task" }),
+      ).toBeInTheDocument();
+      expect(screen.getByTestId("mock-task-dependency")).toHaveTextContent(
+        "none",
+      );
+      fireEvent.click(screen.getByRole("button", { name: "Mock close task" }));
+    }
+
+    // グラフの空白ドロップは、相手のタイトル付きで同じダイアログを開く。
+    fireEvent.click(
+      screen.getByRole("button", { name: "Mock drop on empty space" }),
+    );
+    expect(screen.getByTestId("mock-task-dependency")).toHaveTextContent(
+      "blockedBy:Build API",
+    );
+    // 背景のツールバーを押しても、開いているダイアログの依存は外れない。
+    fireEvent.click(screen.getByRole("button", { name: "Add task" }));
+    expect(screen.getByTestId("mock-task-dependency")).toHaveTextContent(
+      "blockedBy:Build API",
+    );
     fireEvent.click(screen.getByRole("button", { name: "Mock close task" }));
+    expect(
+      screen.queryByRole("dialog", { name: "Mock create task" }),
+    ).not.toBeInTheDocument();
     fireEvent.click(
       screen.getByRole("button", { name: "Mock add task reference" }),
     );

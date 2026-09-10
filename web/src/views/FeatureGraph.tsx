@@ -39,6 +39,7 @@ import {
   dependencyEdgeId,
   type DependencyEdgeRoute,
   type DependencyFlowEdge,
+  type PendingDependency,
 } from "./dependencyGraph";
 import { IconButton } from "./IconButton";
 import { MutationError } from "./MutationError";
@@ -48,7 +49,36 @@ import { useGraphLayout } from "./useGraphLayout";
 const nodeTypes = { task: TaskNode };
 const edgeTypes = { dependency: DependencyEdge };
 
-function useDependencyConnections(readOnly: boolean) {
+// ノードとして扱われるのはハンドルの近傍だけなので、カード本体へのドロップが
+// 空白へのドロップと混ざらないよう、ドロップ位置が矩形に入るかを自分で見る。
+function droppedOnNode(
+  event: MouseEvent | TouchEvent,
+  flow: ReactFlowInstance<TaskFlowNode, DependencyFlowEdge> | undefined,
+): boolean {
+  if (!flow) return false;
+  const point = "changedTouches" in event ? event.changedTouches[0] : event;
+  if (!point) return false;
+  const { x, y } = flow.screenToFlowPosition({
+    x: point.clientX,
+    y: point.clientY,
+  });
+  return flow.getNodes().some((node) => {
+    const width = node.measured?.width ?? node.width ?? 0;
+    const height = node.measured?.height ?? node.height ?? 0;
+    return (
+      x >= node.position.x &&
+      x <= node.position.x + width &&
+      y >= node.position.y &&
+      y <= node.position.y + height
+    );
+  });
+}
+
+function useDependencyConnections(
+  readOnly: boolean,
+  onCreateTask: (dependency?: PendingDependency) => void,
+  flow: ReactFlowInstance<TaskFlowNode, DependencyFlowEdge> | undefined,
+) {
   const addDependency = useDomainMutation(
     ({ blocker, blocked }: { blocker: string; blocked: string }) =>
       mutations.addDependency(blocker, blocked),
@@ -60,6 +90,10 @@ function useDependencyConnections(readOnly: boolean) {
   const [detaching, setDetaching] = useState<
     { blocker: string; blocked: string } | undefined
   >();
+  const [connecting, setConnecting] = useState(false);
+  // 既存エッジの掴み直しでも onConnectEnd が先に呼ばれるので、空白ドロップが
+  // 依存の解除なのか新規作成なのかをここで見分ける。
+  const reconnecting = useRef(false);
   const pending = addDependency.isPending || removeDependency.isPending;
   const onConnect = useCallback(
     ({ source, target }: Connection) => {
@@ -67,6 +101,28 @@ function useDependencyConnections(readOnly: boolean) {
       addDependency.mutate({ blocker: source, blocked: target });
     },
     [addDependency, pending, readOnly],
+  );
+  const onConnectStart = useCallback(() => {
+    if (!readOnly) setConnecting(true);
+  }, [readOnly]);
+  // 空白へのドロップは、その依存の相手がまだ居ないという意思表示として扱い、
+  // 依存付きのタスク作成へつなぐ。
+  const onConnectEnd = useCallback(
+    (event: MouseEvent | TouchEvent, connectionState: FinalConnectionState) => {
+      setConnecting(false);
+      if (readOnly || pending || reconnecting.current) return;
+      if (connectionState.isValid === true || connectionState.toNode) return;
+      if (droppedOnNode(event, flow)) return;
+      const fromNode = connectionState.fromNode;
+      const handleType = connectionState.fromHandle?.type;
+      if (!fromNode || (handleType !== "source" && handleType !== "target"))
+        return;
+      onCreateTask({
+        taskId: fromNode.id,
+        direction: handleType === "source" ? "blockedBy" : "blocks",
+      });
+    },
+    [flow, onCreateTask, pending, readOnly],
   );
   const remove = useCallback(
     (edge: Pick<Edge, "source" | "target">) => {
@@ -87,6 +143,7 @@ function useDependencyConnections(readOnly: boolean) {
   const onReconnectStart = useCallback(
     (_event: React.MouseEvent, edge: DependencyFlowEdge) => {
       void _event;
+      reconnecting.current = true;
       if (!readOnly)
         setDetaching({ blocker: edge.source, blocked: edge.target });
     },
@@ -101,6 +158,7 @@ function useDependencyConnections(readOnly: boolean) {
     ) => {
       void _event;
       void _handleType;
+      reconnecting.current = false;
       setDetaching(undefined);
       if (connectionState.isValid === true) return;
       remove(edge);
@@ -110,9 +168,12 @@ function useDependencyConnections(readOnly: boolean) {
 
   return {
     adding: addDependency.isPending,
+    connecting,
     detaching,
     error: removeDependency.error ?? addDependency.error,
     onConnect,
+    onConnectEnd,
+    onConnectStart,
     onEdgesDelete,
     onReconnect,
     onReconnectEnd,
@@ -313,7 +374,7 @@ interface FeatureGraphProps {
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onAddDocument?: (taskId: string, trigger: HTMLButtonElement) => void;
-  onCreateTask: () => void;
+  onCreateTask: (dependency?: PendingDependency) => void;
   readOnly?: boolean;
 }
 
@@ -335,7 +396,7 @@ export function FeatureGraph({
     useState<ReactFlowInstance<TaskFlowNode, DependencyFlowEdge>>();
   const [initialGraphZoom] = useState(readGraphZoom);
   const graphZoom = useRef(initialGraphZoom);
-  const connections = useDependencyConnections(readOnly);
+  const connections = useDependencyConnections(readOnly, onCreateTask, flow);
   const selection = useDependencySelection(dependencies);
   const taskTitle = useTaskTitle(tasks);
   const { edgeRoutes, nodes, layoutError, layoutPending, retryLayout } =
@@ -398,6 +459,7 @@ export function FeatureGraph({
     <>
       <GraphStatusNotice
         addingDependency={connections.adding}
+        connecting={connections.connecting}
         detachingDependency={connections.detaching}
         removingDependency={connections.removing}
         readOnly={readOnly}
@@ -411,6 +473,8 @@ export function FeatureGraph({
         initialGraphZoom={initialGraphZoom}
         onInit={setFlow}
         onConnect={connections.onConnect}
+        onConnectStart={connections.onConnectStart}
+        onConnectEnd={connections.onConnectEnd}
         onEdgesChange={selection.applyChanges}
         onEdgesDelete={connections.onEdgesDelete}
         onEdgeClick={selection.select}
@@ -447,6 +511,11 @@ interface GraphCanvasProps {
     instance: ReactFlowInstance<TaskFlowNode, DependencyFlowEdge>,
   ) => void;
   onConnect: (connection: Connection) => void;
+  onConnectStart: () => void;
+  onConnectEnd: (
+    event: MouseEvent | TouchEvent,
+    connectionState: FinalConnectionState,
+  ) => void;
   onEdgesChange: OnEdgesChange<DependencyFlowEdge>;
   onEdgesDelete: OnEdgesDelete<DependencyFlowEdge>;
   onEdgeClick: EdgeMouseHandler<DependencyFlowEdge>;
@@ -484,6 +553,8 @@ function GraphCanvas({
   initialGraphZoom,
   onInit,
   onConnect,
+  onConnectStart,
+  onConnectEnd,
   onEdgesChange,
   onEdgesDelete,
   onEdgeClick,
@@ -526,6 +597,8 @@ function GraphCanvas({
         nodesDraggable={false}
         nodeTypes={nodeTypes}
         onConnect={onConnect}
+        onConnectStart={onConnectStart}
+        onConnectEnd={onConnectEnd}
         onEdgesChange={onEdgesChange}
         onEdgesDelete={onEdgesDelete}
         onEdgeClick={onEdgeClick}
@@ -606,7 +679,9 @@ function GraphState({
             icon={Plus}
             label={t("workspace.addTaskPlain")}
             variant="primary"
-            onClick={onCreateTask}
+            onClick={() => {
+              onCreateTask();
+            }}
           />
         )}
       </div>
@@ -632,12 +707,14 @@ function GraphState({
 
 function GraphStatusNotice({
   addingDependency,
+  connecting,
   detachingDependency,
   removingDependency,
   readOnly,
   taskTitle,
 }: {
   addingDependency: boolean;
+  connecting: boolean;
   detachingDependency: { blocker: string; blocked: string } | undefined;
   removingDependency: boolean;
   readOnly: boolean;
@@ -657,7 +734,9 @@ function GraphStatusNotice({
               taskTitle(detachingDependency.blocked) ??
               detachingDependency.blocked,
           })
-        : undefined;
+        : connecting
+          ? t("workspace.flow.connectInstruction")
+          : undefined;
   if (readOnly || !instruction) return null;
   return (
     <div className="graph-status-notice">

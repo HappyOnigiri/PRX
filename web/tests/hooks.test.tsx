@@ -11,6 +11,7 @@ import {
   usePromptTemplatesMutation,
   useQueryDiagnostics,
   useSnapshot,
+  useSnapshotRefresh,
 } from "../src/hooks";
 import { makeSnapshot } from "./factories";
 
@@ -105,6 +106,17 @@ describe("domain query hooks", () => {
     expect(invalidateQueries).toHaveBeenCalledWith({
       queryKey: ["snapshot"],
     });
+  });
+
+  it("drops the cached snapshot on demand", async () => {
+    const queryClient = new QueryClient();
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(() => useSnapshotRefresh(), {
+      wrapper: createWrapper(queryClient),
+    });
+
+    await result.current();
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["snapshot"] });
   });
 
   it("loads and invalidates the server configuration", async () => {

@@ -27,3 +27,19 @@ export type DependencyFlowEdge = Edge<DependencyEdgeData, "dependency">;
 export function dependencyEdgeId(blockerTaskId: string, blockedTaskId: string) {
   return `${blockerTaskId}-${blockedTaskId}`;
 }
+
+// これから作るタスクから見た依存。direction は新しいタスクを主語に取るので、
+// blocks なら新タスクが taskId をブロックし、blockedBy なら逆になる。
+export interface PendingDependency {
+  taskId: string;
+  direction: "blocks" | "blockedBy";
+}
+
+export function dependencyPair(
+  dependency: PendingDependency,
+  newTaskId: string,
+) {
+  return dependency.direction === "blocks"
+    ? { blocker: newTaskId, blocked: dependency.taskId }
+    : { blocker: dependency.taskId, blocked: newTaskId };
+}
