@@ -84,8 +84,15 @@ may mention PRX, its identifiers, or its commands.
 2. Read the task and the work it depends on.
    - ` + "`prx task {{task_id}}`" + `
    - ` + "`prx graph {{feature_id}}`" + `
-3. Investigate the repository and decide how the scope above should be built.
-4. Register the resulting plan on the task.
+3. Read the reference material attached in PRX before you decide anything.
+   Documents hang off the task, off its feature, and off the project that feature belongs to,
+   and any of them may carry the requirements this scope has to meet.
+   - ` + "`prx document --task {{task_id}}`" + ` and ` + "`prx document --feature {{feature_id}}`" + `
+   - ` + "`prx feature {{feature_id}}`" + ` names the project, then ` + "`prx document --project PROJECT_ID`" + `
+   - ` + "`prx document get DOCUMENT_ID`" + ` prints a stored document; one that points at a URL or a
+     local file prints that locator instead, so open it yourself.
+4. Investigate the repository and decide how the scope above should be built.
+5. Register the resulting plan on the task.
    - ` + "`prx plan set {{task_id}} --file PLAN.md`" + `
    - ` + "`prx plan set {{task_id}} --stdin`" + `
    Registering the plan is what presents the task as designed, so leave the status alone afterwards.
@@ -108,12 +115,19 @@ may mention PRX, its identifiers, or its commands.
    - ` + "`prx task {{task_id}}`" + `
    - ` + "`prx graph {{feature_id}}`" + `
    - ` + "`prx plan {{task_id}}`" + `
-2. Mark the task as being worked on before you change anything.
+2. Read the reference material attached in PRX before you write any code.
+   Documents hang off the task, off its feature, and off the project that feature belongs to,
+   and any of them may carry the requirements this scope has to meet.
+   - ` + "`prx document --task {{task_id}}`" + ` and ` + "`prx document --feature {{feature_id}}`" + `
+   - ` + "`prx feature {{feature_id}}`" + ` names the project, then ` + "`prx document --project PROJECT_ID`" + `
+   - ` + "`prx document get DOCUMENT_ID`" + ` prints a stored document; one that points at a URL or a
+     local file prints that locator instead, so open it yourself.
+3. Mark the task as being worked on before you change anything.
    - ` + "`prx task update {{task_id}} --status in_progress`" + `
-3. Implement the plan, staying inside the scope above.
+4. Implement the plan, staying inside the scope above.
    Branch from the base the work actually belongs on rather than from main or master by default.
    A task whose blocker is still open belongs on that blocker's branch, so the two pull requests stack.
-4. Record the result in PRX.
+5. Record the result in PRX.
    - Work that lands as a pull request: open it against the base you branched from,
      then run ` + "`prx pr attach {{task_id}} PULL_REQUEST_URL`" + `.
      Its state then follows the pull request, so do not set the status by hand.

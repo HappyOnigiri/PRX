@@ -17,6 +17,10 @@ task のテンプレートを選ぶのは implementation plan の有無だけで
 作業前にステータスを設定することで進行中の作業が可視化され、plan を登録すれば designing の task は designed として提示される。
 組み込みの implementation テンプレートと batch テンプレートは、作業のベースから分岐するようエージェントに指示する。stacked pull request のために、未解決の blocker のブランチも対象に含む。
 
+組み込みの design テンプレートと implementation テンプレートは、設計や実装を始める前に task・feature・project の document を読むようエージェントに案内する。
+プロンプトは document の本文を含めず、`prx document` と `prx document get DOCUMENT_ID` へ誘導する。plan と同じく本文が大きくなり得るためである。
+project の識別子は置換語彙にないので、`prx feature` で所属 project を辿るよう案内する。
+
 ## Batch prompt
 
 WebUI は、feature と選択した task に対して batch テンプレートを明示的に要求する。

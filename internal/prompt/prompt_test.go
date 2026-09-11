@@ -113,6 +113,27 @@ func TestDefaultTemplatesGuideTheAgentThroughPRX(t *testing.T) {
 	}
 }
 
+// 資料は task だけでなく feature や project にも付く。既定テンプレートは、設計と実装の
+// どちらでもその 3 か所を読むよう案内しなければならない。
+func TestDefaultTemplatesPointTheAgentAtAttachedDocuments(t *testing.T) {
+	defaults := prompt.DefaultTemplates()
+	for name, template := range map[string]string{
+		"design":         defaults.Design,
+		"implementation": defaults.Implementation,
+	} {
+		for _, command := range []string{
+			"prx document --task {{task_id}}",
+			"prx document --feature {{feature_id}}",
+			"prx document --project PROJECT_ID",
+			"prx document get DOCUMENT_ID",
+		} {
+			if !strings.Contains(template, command) {
+				t.Fatalf("default %s template does not mention %q", name, command)
+			}
+		}
+	}
+}
+
 // PRX はローカルのツールなので、リポジトリの読み手には解決できない参照になる。
 // 既定テンプレートは、成果物に PRX を持ち込まないようエージェントに指示する。
 func TestDefaultTemplatesKeepPRXOutOfTheRepository(t *testing.T) {
