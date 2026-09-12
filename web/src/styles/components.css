@@ -1122,13 +1122,13 @@
   font-size: var(--text-xs);
 }
 
-/* The badge states a task's or a feature's status, so it looks the same in a
-   list, on a card, and in a page header. The colour comes from the class the
-   caller adds, and the kind icon stays outside, next to the title. */
+/* タスクや feature の状態を、一覧・カード・ページ見出しで同じ形にする。
+   色は呼び出し元のクラスから受け取り、レコード種別のアイコンは見出し側に残す。 */
 .status-badge {
   flex: 0 0 auto;
   display: inline-flex;
   align-items: center;
+  gap: 4px;
   border: 1px solid var(--status-inactive);
   border-radius: 3px;
   color: var(--text-2);
@@ -1136,12 +1136,46 @@
   font-size: var(--text-xs);
   font-style: normal;
   font-weight: 500;
+  line-height: 1.2;
   white-space: nowrap;
 }
 
-/* A task status names who holds the ball: green is yours to pick up, blue is
-   yours in flight, amber waits on somebody else, purple is finished, and a
-   closed task keeps the muted default border. */
+/* アイコンは工程を示し、既存の色は誰のボールかを示す。工程と色を混ぜない。 */
+.status-badge-icon {
+  flex: 0 0 auto;
+  stroke-width: 1.75;
+}
+
+.status-badge-accessible {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.status-badge-visual {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.status-badge-main {
+  font-weight: 700;
+}
+
+.status-badge-divider {
+  color: color-mix(in srgb, currentcolor 58%, transparent);
+  font-weight: 300;
+}
+
+.status-badge-detail {
+  font-weight: 400;
+}
+
+/* 緑は自身が着手できる状態、青は自身が作業中、黄は他者待ち、紫は完了、
+   クローズ済みは既定の控えめな枠で表す。 */
 .status-badge.state-not-started,
 .status-badge.state-designed,
 .status-badge.state-implemented,
@@ -1162,23 +1196,22 @@
   color: var(--status-waiting);
 }
 
-/* A finished task and a merged pull request are both terminal, so they read as
-   one colour; a closed task stays muted because nothing was finished. */
+/* 完了タスクとマージ済み pull request は終端なので同じ色にし、クローズ済みは
+   完了を表さないため控えめなままにする。 */
 .status-badge.state-completed,
 .status-badge.state-merged {
   border-color: var(--status-done);
   color: var(--status-done);
 }
 
-/* An unknown status is not a state of the work but a gap in what PRX knows, so
-   it is drawn as an incomplete border rather than a colour of its own. */
+/* 不明は作業の状態ではなく PRX の知識が欠けている状態なので、専用色ではなく
+   途切れた枠で表す。 */
 .status-badge.state-unknown {
   border-style: dashed;
 }
 
-/* Block labels sit beside the status and never replace it. Red marks the ones
-   the reader has to act on in this very task, so a conflict, a change request,
-   a failing CI run and an unrecognised blocker share the pull request colour. */
+/* ブロックラベルはステータスの隣に置き、置き換えない。赤はこの task で対応が
+   必要なものを示し、コンフリクト・修正依頼・CI 失敗・未知のブロックで共有する。 */
 .status-badge.block-conflict,
 .status-badge.block-changes-requested,
 .status-badge.block-ci-failed,
@@ -1189,17 +1222,15 @@
   color: var(--status-blocked);
 }
 
-/* An unresolved dependency is somebody else's task to finish, so it asks for
-   nothing here and stays out of the status colours: it is told by the fill
-   instead of a hue, which keeps one outlined status badge readable beside it. */
+/* 依存未解決は他者の完了待ちで自身の対応を求めないため、ステータスの色から
+   外し、塗りつぶしで示して隣の枠付きステータスを読めるようにする。 */
 .status-badge.block-dependency-unresolved {
   border-color: var(--border);
   background: var(--surface-2);
   color: var(--text-2);
 }
 
-/* A feature carries its own status vocabulary, so its colours sit next to the
-   badge rather than in the stylesheet of any one page that shows it. */
+/* feature は独自の状態語彙を持つため、色は表示ページではなくバッジの隣で定義する。 */
 .status-badge.status-active {
   border-color: var(--status-actionable);
   color: var(--status-actionable);

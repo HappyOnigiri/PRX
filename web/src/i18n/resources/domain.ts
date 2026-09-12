@@ -58,6 +58,15 @@ export const domain = {
       open: "open",
       unknown: "unknown",
     },
+    taskBadge: {
+      design: "Design",
+      implementation: "Implementation",
+      review: "Review",
+      working: "working",
+      done: "done",
+      waiting: "waiting",
+      approved: "approved",
+    },
     blockLabel: {
       dependencyUnresolved: "dependency",
       conflict: "conflict",
@@ -142,6 +151,15 @@ export const domain = {
       reviewWaiting: "レビュー待ち",
       open: "オープン",
       unknown: "不明",
+    },
+    taskBadge: {
+      design: "設計",
+      implementation: "実装",
+      review: "レビュー",
+      working: "作業中",
+      done: "完了",
+      waiting: "待ち",
+      approved: "承認",
     },
     blockLabel: {
       dependencyUnresolved: "依存未解決",
