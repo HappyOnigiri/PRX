@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { TaskBlockLabel } from "../src/gen/prx/v1/prx_pb";
 import { useGraphLayout } from "../src/views/useGraphLayout";
 import {
   makeDependency,
@@ -306,6 +307,48 @@ describe("useGraphLayout", () => {
         { sources: ["task-3"], targets: ["task-4"] },
       ],
     });
+  });
+
+  it("reserves a second badge row for two through four block labels", async () => {
+    layoutMocks.layout.mockResolvedValue({ children: [] });
+    const labels = [
+      [],
+      [TaskBlockLabel.CONFLICT],
+      [TaskBlockLabel.CONFLICT, TaskBlockLabel.CI_FAILED],
+      [
+        TaskBlockLabel.CONFLICT,
+        TaskBlockLabel.CI_FAILED,
+        TaskBlockLabel.CHANGES_REQUESTED,
+      ],
+      [
+        TaskBlockLabel.CONFLICT,
+        TaskBlockLabel.CI_FAILED,
+        TaskBlockLabel.CHANGES_REQUESTED,
+        TaskBlockLabel.DEPENDENCY_UNRESOLVED,
+      ],
+    ];
+    const options = {
+      tasks: labels.map((blockLabels, index) =>
+        makeTask({ id: `task-${String(index + 1)}`, blockLabels }),
+      ),
+      dependencies: [],
+      pullRequests: new Map(),
+      documentsByTask: new Map(),
+      onEditTask: vi.fn(),
+      onPreviewDocument: vi.fn(),
+      readOnly: true,
+    };
+    renderHook(() => useGraphLayout(options));
+
+    await waitFor(() => {
+      expect(layoutMocks.layout).toHaveBeenCalledOnce();
+    });
+    const layoutInput = layoutMocks.layout.mock.calls[0]?.[0] as {
+      children: { height: number }[];
+    };
+    expect(layoutInput.children.map((child) => child.height)).toEqual([
+      170, 170, 196, 196, 196,
+    ]);
   });
 
   it("reports layout errors and retries the layout", async () => {

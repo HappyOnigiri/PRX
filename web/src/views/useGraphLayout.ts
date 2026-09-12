@@ -64,12 +64,11 @@ function buildRawNodes({
     return {
       id: task.id,
       width: 284,
-      // バッジの行は常に 1 行あり、ノード幅は固定なのでステータスとラベル 2 個
-      // までは収まる。3 個目からもう 1 行に折り返す。
+      // 工程表示が長くなったため、ラベル 0〜1 個は 1 行、2〜4 個は 2 行を確保する。
       height:
         170 +
         Math.min(assetCount, 4) * 34 +
-        (task.blockLabels.length > 2 ? 26 : 0),
+        (task.blockLabels.length >= 2 ? 26 : 0),
       data: {
         title: task.title,
         assignee: task.assignee,

@@ -100,6 +100,33 @@ export function taskDisplayStateLabel(
   return t(displayStateKeys[value]);
 }
 
+export const taskBadgeStageKeys = {
+  design: "taskBadge.design",
+  implementation: "taskBadge.implementation",
+  review: "taskBadge.review",
+} as const;
+
+export const taskBadgeStateKeys = {
+  working: "taskBadge.working",
+  done: "taskBadge.done",
+  waiting: "taskBadge.waiting",
+  approved: "taskBadge.approved",
+} as const;
+
+export function taskBadgeStageLabel(
+  value: keyof typeof taskBadgeStageKeys,
+  t: TFunction,
+): string {
+  return t(taskBadgeStageKeys[value]);
+}
+
+export function taskBadgeStateLabel(
+  value: keyof typeof taskBadgeStateKeys,
+  t: TFunction,
+): string {
+  return t(taskBadgeStateKeys[value]);
+}
+
 export function taskDisplayStateToken(value: TaskDisplayState): string {
   return TaskDisplayState[value].toLowerCase().replaceAll("_", "-");
 }

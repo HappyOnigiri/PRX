@@ -211,7 +211,7 @@ export function TaskNode({
         </div>
       </div>
       {/* ステータスとブロックラベルは 1 つの並びとして読むので同じ行に置く。
-          操作の下に敷けば幅を丸ごと使えて、折り返しは 3 個目からになる。 */}
+          操作の下に敷けば幅を丸ごと使えて、2 個目のラベルから折り返す。 */}
       <p className="task-node-badges">
         <TaskStatusBadge state={data.state} />
         <TaskBlockLabels labels={data.blockLabels} />

@@ -184,9 +184,8 @@
   opacity: 0.83;
 }
 
-/* The status and the block labels read as one run, so they sit in one row under
-   the actions, where the whole node width is theirs and only a third label has
-   to wrap. useGraphLayout predicts the node height from that. */
+/* ステータスとブロックラベルは 1 つの並びとして操作の下に置く。ノード幅を
+   丸ごと使い、2 個目のラベルから折り返す高さを useGraphLayout で予測する。 */
 .task-node-badges {
   min-height: 24px;
   display: flex;

@@ -26,6 +26,8 @@ import {
   formatError,
   pullRequestDisplayStateKeys,
   pullRequestDisplayStateToken,
+  taskBadgeStageKeys,
+  taskBadgeStateKeys,
   taskStatusKeys,
 } from "../src/i18n/domain";
 import { resources } from "../src/i18n/resources";
@@ -118,6 +120,19 @@ describe("domain translation mappings", () => {
       }
     },
   );
+
+  it.each([
+    ["task badge stages", taskBadgeStageKeys],
+    ["task badge in-stage states", taskBadgeStateKeys],
+  ] as const)("$0 has a label in every supported language", (_name, keys) => {
+    for (const key of Object.values(keys)) {
+      for (const language of supportedLanguages) {
+        const label = translationValue(language, key);
+        expect(label, `${language} ${key}`).toEqual(expect.any(String));
+        expect(label, `${language} ${key}`).not.toBe(key);
+      }
+    }
+  });
 });
 
 describe("localized RPC errors", () => {
