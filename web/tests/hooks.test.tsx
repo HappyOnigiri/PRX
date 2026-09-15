@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { renderHook, waitFor } from "@testing-library/react";
+import { act, renderHook, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   useAutoSync,
@@ -14,6 +14,8 @@ import {
   useQueryDiagnostics,
   useSnapshot,
   useSnapshotRefresh,
+  useTaskLabelConfig,
+  useTaskLabelConfigMutation,
   useUpdateStatus,
   useUpdateStatusInvalidation,
 } from "../src/hooks";
@@ -28,6 +30,7 @@ const hookMocks = vi.hoisted(() => ({
   getSyncStatus: vi.fn(),
   syncIfDue: vi.fn(),
   getPromptTemplates: vi.fn(),
+  getTaskLabelConfig: vi.fn(),
   getUpdateStatus: vi.fn(),
 }));
 
@@ -38,6 +41,7 @@ vi.mock("../src/api", () => ({
   getSyncStatus: hookMocks.getSyncStatus,
   syncIfDue: hookMocks.syncIfDue,
   getPromptTemplates: hookMocks.getPromptTemplates,
+  getTaskLabelConfig: hookMocks.getTaskLabelConfig,
   getUpdateStatus: hookMocks.getUpdateStatus,
 }));
 
@@ -68,6 +72,40 @@ describe("domain query hooks", () => {
       expect(result.current.data).toBe(snapshot);
     });
     expect(hookMocks.getSnapshot).toHaveBeenCalledOnce();
+  });
+
+  it("loads task label metadata and invalidates dependent queries after saving", async () => {
+    const config = {
+      keys: ["status.in_progress"],
+      maxTextCodepoints: 32,
+    };
+    hookMocks.getTaskLabelConfig.mockResolvedValue(config);
+    const mutation = vi.fn().mockResolvedValue({});
+    const queryClient = new QueryClient({
+      defaultOptions: {
+        queries: { retry: false },
+        mutations: { retry: false },
+      },
+    });
+    const invalidateQueries = vi.spyOn(queryClient, "invalidateQueries");
+    const { result } = renderHook(
+      () => ({
+        labels: useTaskLabelConfig(),
+        save: useTaskLabelConfigMutation(mutation),
+      }),
+      { wrapper: createWrapper(queryClient) },
+    );
+    await waitFor(() => {
+      expect(result.current.labels.data).toBe(config);
+    });
+    await act(async () => {
+      await result.current.save.mutateAsync({ values: {} });
+    });
+    expect(mutation.mock.calls[0]?.[0]).toEqual({ values: {} });
+    expect(invalidateQueries).toHaveBeenCalledWith({
+      queryKey: ["task-label-config"],
+    });
+    expect(invalidateQueries).toHaveBeenCalledWith({ queryKey: ["snapshot"] });
   });
 
   it("checks automatic sync and invalidates the snapshot only after a run", async () => {

@@ -1,42 +1,92 @@
 package rpc
 
 import (
+	"sort"
+
 	prxv1 "github.com/HappyOnigiri/PRX/gen/prx/v1"
 	"github.com/HappyOnigiri/PRX/internal/domain"
 )
 
 func protoProject(v domain.Project) *prxv1.Project {
 	return &prxv1.Project{
-		Id:              v.ID,
-		Title:           v.Title,
-		Description:     v.Description,
-		Archived:        v.Archived,
-		CreatedAt:       v.CreatedAt.Format(timeFormat),
-		UpdatedAt:       v.UpdatedAt.Format(timeFormat),
-		PromptOverrides: protoPromptTemplateOverrides(v.PromptOverrides),
+		Id:                 v.ID,
+		Title:              v.Title,
+		Description:        v.Description,
+		Archived:           v.Archived,
+		CreatedAt:          v.CreatedAt.Format(timeFormat),
+		UpdatedAt:          v.UpdatedAt.Format(timeFormat),
+		PromptOverrides:    protoPromptTemplateOverrides(v.PromptOverrides),
+		TaskLabelOverrides: protoTaskLabelOverrides(v.TaskLabelOverrides),
 	}
 }
 
 func protoFeature(v domain.Feature) *prxv1.Feature {
 	return &prxv1.Feature{
-		Id:                 v.ID,
-		ProjectId:          v.ProjectID,
-		ReadOnly:           v.ReadOnly,
-		Title:              v.Title,
-		Description:        v.Description,
-		Status:             protoFeatureStatus(v.Status),
-		Archived:           v.Archived,
-		CreatedAt:          v.CreatedAt.Format(timeFormat),
-		UpdatedAt:          v.UpdatedAt.Format(timeFormat),
-		TaskCount:          int32(v.TaskCount),
-		ReadyCount:         int32(v.ReadyCount),
-		ReviewWaitingCount: int32(v.ReviewWaitingCount),
-		ConflictCount:      int32(v.ConflictCount),
-		MergedCount:        int32(v.MergedCount),
-		DisplayStatus:      protoFeatureStatus(v.DisplayStatus),
-		FinishedCount:      int32(v.FinishedCount),
-		PromptOverrides:    protoPromptTemplateOverrides(v.PromptOverrides),
+		Id:                   v.ID,
+		ProjectId:            v.ProjectID,
+		ReadOnly:             v.ReadOnly,
+		Title:                v.Title,
+		Description:          v.Description,
+		Status:               protoFeatureStatus(v.Status),
+		Archived:             v.Archived,
+		CreatedAt:            v.CreatedAt.Format(timeFormat),
+		UpdatedAt:            v.UpdatedAt.Format(timeFormat),
+		TaskCount:            int32(v.TaskCount),
+		ReadyCount:           int32(v.ReadyCount),
+		ReviewWaitingCount:   int32(v.ReviewWaitingCount),
+		ConflictCount:        int32(v.ConflictCount),
+		MergedCount:          int32(v.MergedCount),
+		DisplayStatus:        protoFeatureStatus(v.DisplayStatus),
+		FinishedCount:        int32(v.FinishedCount),
+		PromptOverrides:      protoPromptTemplateOverrides(v.PromptOverrides),
+		TaskLabelOverrides:   protoTaskLabelOverrides(v.TaskLabelOverrides),
+		TaskLabelAppearances: protoTaskLabelAppearances(v.TaskLabelAppearances),
 	}
+}
+
+func protoTaskLabelOverrides(values domain.TaskLabelOverrides) *prxv1.TaskLabelOverrides {
+	result := &prxv1.TaskLabelOverrides{Values: map[string]*prxv1.TaskLabelOverride{}}
+	for key, value := range values {
+		result.Values[string(key)] = &prxv1.TaskLabelOverride{Text: value.Text, Color: value.Color}
+	}
+	return result
+}
+
+func domainTaskLabelOverridesUpdate(value *prxv1.TaskLabelOverridesUpdate) *domain.TaskLabelOverridesUpdate {
+	if value == nil {
+		return nil
+	}
+	result := domain.TaskLabelOverridesUpdate{}
+	for key, item := range value.GetValues() {
+		if item == nil {
+			result[domain.TaskLabelKey(key)] = domain.TaskLabelOverrideUpdate{}
+			continue
+		}
+		result[domain.TaskLabelKey(key)] = domain.TaskLabelOverrideUpdate{
+			Text: item.Text, Color: item.Color,
+		}
+	}
+	return &result
+}
+
+func protoTaskLabelAppearances(values domain.TaskLabelAppearances) *prxv1.TaskLabelAppearances {
+	if len(values) == 0 {
+		return nil
+	}
+	keys := make([]domain.TaskLabelKey, 0, len(values))
+	for key := range values {
+		keys = append(keys, key)
+	}
+	sort.Slice(keys, func(i, j int) bool { return keys[i] < keys[j] })
+	result := &prxv1.TaskLabelAppearances{Values: make([]*prxv1.TaskLabelAppearance, 0, len(keys))}
+	for _, key := range keys {
+		value := values[key]
+		result.Values = append(result.Values, &prxv1.TaskLabelAppearance{
+			Key: string(key), Text: value.Text, Color: value.Color,
+			TextOverridden: value.TextOverridden, ColorOverridden: value.ColorOverridden,
+		})
+	}
+	return result
 }
 
 func protoPromptTemplateOverrides(v domain.PromptTemplateOverrides) *prxv1.PromptTemplateOverrides {
@@ -487,6 +537,8 @@ func protoDomainErrorCode(value domain.DomainErrorCode) prxv1.DomainErrorCode {
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TITLE
 	case domain.DomainErrorCodeInvalidPromptTemplate:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_PROMPT_TEMPLATE
+	case domain.DomainErrorCodeInvalidTaskLabel:
+		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TASK_LABEL
 	case domain.DomainErrorCodeNotFound:
 		return prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_NOT_FOUND
 	case domain.DomainErrorCodeReferencesExist:

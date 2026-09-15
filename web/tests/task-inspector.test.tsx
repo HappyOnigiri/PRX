@@ -1,3 +1,4 @@
+import { create } from "@bufbuild/protobuf";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import {
   cleanup,
@@ -14,6 +15,8 @@ import {
   DocumentKind,
   PullRequestDisplayState,
   TaskBlockLabel,
+  TaskLabelAppearanceSchema,
+  TaskLabelAppearancesSchema,
   TaskStatus,
 } from "../src/gen/prx/v1/prx_pb";
 import { TaskInspector } from "../src/views/TaskInspector";
@@ -173,12 +176,22 @@ describe("TaskInspector", () => {
     });
     const onClose = vi.fn();
     const onPreview = vi.fn();
+    const appearances = create(TaskLabelAppearancesSchema, {
+      values: [
+        create(TaskLabelAppearanceSchema, {
+          key: "status.in_progress",
+          text: "Coding",
+          textOverridden: true,
+        }),
+      ],
+    });
     render(
       <TaskInspector
         task={task}
         tasks={[task, blocker]}
         pullRequest={pullRequest}
         documents={[markdown, url, inline]}
+        appearances={appearances}
         onPreview={onPreview}
         onClose={onClose}
       />,

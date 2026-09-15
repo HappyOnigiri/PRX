@@ -28,6 +28,16 @@ vi.mock("../src/hooks", () => ({
     if (!mutation) throw new Error("mutation mock missing");
     return mutation;
   },
+  useTaskLabelConfig: () => ({
+    isPending: false,
+    data: {
+      keys: ["status.in_progress"],
+      maxTextCodepoints: 32,
+      builtIn: { values: [] },
+      overrides: { values: {} },
+    },
+    error: null,
+  }),
 }));
 
 function mutationAt(index: number) {
@@ -134,6 +144,19 @@ describe("EditFeatureDialog", () => {
     });
     expect(screen.getByLabelText("Project")).toHaveValue("project-2");
     expect(screen.getByRole("button", { name: "Save feature" })).toBeEnabled();
+  });
+
+  it("mounts the labels tab and reports its initial state", async () => {
+    render(
+      <EditFeatureDialog
+        projects={[]}
+        feature={makeFeature({ title: "Payments" })}
+        onClose={vi.fn()}
+        onDeleted={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "Labels" }));
+    expect(await screen.findByText("Statuses")).toBeInTheDocument();
   });
 
   it("confirms completing a feature whose tasks are unfinished", async () => {

@@ -1,3 +1,4 @@
+import { create } from "@bufbuild/protobuf";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import {
   applyUpdate,
@@ -8,6 +9,7 @@ import {
   getPromptTemplates,
   getSnapshot,
   getSyncStatus,
+  getTaskLabelConfig,
   getTaskPrompt,
   getUpdateStatus,
   mutations,
@@ -18,12 +20,14 @@ import {
   syncIfDue,
   watchRevision,
 } from "../src/api";
+import { TaskLabelOverridesUpdateSchema } from "../src/gen/prx/v1/prx_pb";
 import { makeSnapshot } from "./factories";
 
 const apiMocks = vi.hoisted(() => {
   const client = {
     getSnapshot: vi.fn(),
     getConfig: vi.fn(),
+    getTaskLabelConfig: vi.fn(),
     getGitHubSyncStatus: vi.fn(),
     getDebugReport: vi.fn(),
     syncGitHubIfDue: vi.fn(),
@@ -57,6 +61,7 @@ const apiMocks = vi.hoisted(() => {
     validateConfig: vi.fn(),
     updateGitHubSyncConfig: vi.fn(),
     updateLanguageConfig: vi.fn(),
+    updateTaskLabelConfig: vi.fn(),
     getPromptTemplates: vi.fn(),
     updatePromptTemplates: vi.fn(),
     getTaskPrompt: vi.fn(),
@@ -140,6 +145,22 @@ describe("RPC API wrappers", () => {
     expect(apiMocks.client.updateLanguageConfig).toHaveBeenCalledWith(
       expect.objectContaining({ language: "ja" }),
     );
+  });
+
+  it("loads and updates task label configuration", async () => {
+    const config = { keys: ["status.in_progress"], maxTextCodepoints: 32 };
+    apiMocks.client.getTaskLabelConfig.mockResolvedValueOnce({ config });
+    await expect(getTaskLabelConfig()).resolves.toBe(config);
+    apiMocks.client.getTaskLabelConfig.mockResolvedValueOnce({
+      config: undefined,
+    });
+    await expect(getTaskLabelConfig()).rejects.toThrow(
+      "The server returned an empty task label configuration.",
+    );
+    await configMutations.updateTaskLabels(
+      create(TaskLabelOverridesUpdateSchema),
+    );
+    expect(apiMocks.client.updateTaskLabelConfig).toHaveBeenCalled();
   });
 
   it("returns the debug report with its rendered text", async () => {

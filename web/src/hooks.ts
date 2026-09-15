@@ -11,6 +11,7 @@ import {
   getPromptTemplates,
   getSnapshot,
   getSyncStatus,
+  getTaskLabelConfig,
   getUpdateStatus,
   syncIfDue,
 } from "./api";
@@ -29,6 +30,7 @@ import {
 const snapshotKey = ["snapshot"] as const;
 const configKey = ["github-config"] as const;
 const promptTemplatesKey = ["prompt-templates"] as const;
+const taskLabelConfigKey = ["task-label-config"] as const;
 const syncStatusKey = ["github-sync-status"] as const;
 const debugReportKey = ["debug-report"] as const;
 const updateStatusKey = ["update-status"] as const;
@@ -42,6 +44,30 @@ export function useSnapshot() {
 
 export function useConfig() {
   return useQuery({ queryKey: configKey, queryFn: getConfig });
+}
+
+export function useTaskLabelConfig(enabled = true) {
+  return useQuery({
+    queryKey: taskLabelConfigKey,
+    queryFn: getTaskLabelConfig,
+    enabled,
+  });
+}
+
+export function useTaskLabelConfigMutation<TVariables, TData>(
+  mutationFn: (input: TVariables) => Promise<TData>,
+) {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn,
+    onSuccess: async () => {
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: taskLabelConfigKey }),
+        queryClient.invalidateQueries({ queryKey: configKey }),
+        queryClient.invalidateQueries({ queryKey: snapshotKey }),
+      ]);
+    },
+  });
 }
 
 // 表示言語はサーバーが解決した実効言語に従う。設定が auto でも、画面の言語と

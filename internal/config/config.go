@@ -165,6 +165,8 @@ type Config struct {
 	Server   ServerConfig     `yaml:"server"             json:"server"`
 	Update   UpdateConfig     `yaml:"update,omitempty"   json:"update"`
 	Prompts  prompt.Templates `yaml:"prompts"            json:"prompts"`
+	// TaskLabels は global scope の task ラベル上書き。
+	TaskLabels domain.TaskLabelOverrides `yaml:"task_labels,omitempty" json:"task_labels,omitempty"`
 }
 
 // LanguageAutoValue は環境のロケールから実効言語を決めることを表す語彙。設定
@@ -180,12 +182,13 @@ func (c Config) EffectiveLanguage() prompt.Language {
 // yamlConfig は YAML 出力用の Config の写し。組み込みテンプレートのままの設定で
 // キーごと省略できるよう、Prompts はポインタにしてある。
 type yamlConfig struct {
-	Version  int           `yaml:"version"`
-	Language string        `yaml:"language,omitempty"`
-	GitHub   GitHubConfig  `yaml:"github"`
-	Server   ServerConfig  `yaml:"server"`
-	Update   *UpdateConfig `yaml:"update,omitempty"`
-	Prompts  *yamlPrompts  `yaml:"prompts,omitempty"`
+	Version    int                       `yaml:"version"`
+	Language   string                    `yaml:"language,omitempty"`
+	GitHub     GitHubConfig              `yaml:"github"`
+	Server     ServerConfig              `yaml:"server"`
+	Update     *UpdateConfig             `yaml:"update,omitempty"`
+	Prompts    *yamlPrompts              `yaml:"prompts,omitempty"`
+	TaskLabels domain.TaskLabelOverrides `yaml:"task_labels,omitempty"`
 }
 
 type yamlPrompts struct {
@@ -210,6 +213,12 @@ func (c Config) MarshalYAML() (any, error) {
 		prompts.Batch = c.Prompts.Batch
 	}
 	result := yamlConfig{Version: c.Version, GitHub: c.GitHub, Server: c.Server}
+	if len(c.TaskLabels) > 0 {
+		result.TaskLabels = make(domain.TaskLabelOverrides, len(c.TaskLabels))
+		for key, value := range c.TaskLabels {
+			result.TaskLabels[key] = value
+		}
+	}
 	// auto はキーを持たない状態と同じ意味なので書き出さない。
 	if c.Language != "" && c.Language != LanguageAutoValue {
 		result.Language = c.Language
@@ -246,11 +255,12 @@ type PublicGitHubConfig struct {
 // PublicConfig は設定の生の language と、サーバーが解決した effective_language を
 // 並べて返す。auto のままでも WebUI がサーバーと同じ言語を表示できるようにする。
 type PublicConfig struct {
-	Version           int                `json:"version"`
-	Language          string             `json:"language"`
-	EffectiveLanguage string             `json:"effective_language"`
-	GitHub            PublicGitHubConfig `json:"github"`
-	Server            ServerConfig       `json:"server"`
+	Version           int                       `json:"version"`
+	Language          string                    `json:"language"`
+	EffectiveLanguage string                    `json:"effective_language"`
+	GitHub            PublicGitHubConfig        `json:"github"`
+	Server            ServerConfig              `json:"server"`
+	TaskLabels        domain.TaskLabelOverrides `json:"task_labels,omitempty"`
 }
 
 type ErrorCode string
@@ -346,6 +356,10 @@ func (c Config) Normalize() (Config, error) {
 		return Config{}, promptError(err)
 	}
 	result.Prompts = prompts
+	result.TaskLabels, err = normalizeTaskLabelOverrides(c.TaskLabels)
+	if err != nil {
+		return Config{}, err
+	}
 	result.GitHub.Hosts = append([]Host(nil), c.GitHub.Hosts...)
 	if c.GitHub.AuthMethods != nil {
 		result.GitHub.AuthMethods = append([]AuthMethod{}, c.GitHub.AuthMethods...)
@@ -443,6 +457,45 @@ func normalizeLanguage(value string) (string, error) {
 func (c Config) Validate() error {
 	_, err := c.Normalize()
 	return err
+}
+
+func containsTaskLabelKey(key domain.TaskLabelKey) bool {
+	for _, candidate := range domain.TaskLabelKeys() {
+		if candidate == key {
+			return true
+		}
+	}
+	return false
+}
+
+func normalizeTaskLabelOverrides(values domain.TaskLabelOverrides) (domain.TaskLabelOverrides, error) {
+	if values == nil {
+		return nil, nil
+	}
+	result := make(domain.TaskLabelOverrides, len(values))
+	for key, value := range values {
+		normalizedKey := domain.TaskLabelKey(strings.ToLower(strings.TrimSpace(string(key))))
+		normalized, err := domain.NormalizeTaskLabelOverride(value)
+		if err != nil {
+			return nil, domain.NewError(
+				domain.DomainErrorCodeInvalidTaskLabel,
+				"task_labels.%s: %v",
+				normalizedKey,
+				err,
+			)
+		}
+		if !containsTaskLabelKey(normalizedKey) {
+			return nil, domain.NewError(
+				domain.DomainErrorCodeInvalidTaskLabel,
+				"unknown task label key %q",
+				key,
+			)
+		}
+		if normalized != (domain.TaskLabelOverride{}) {
+			result[normalizedKey] = normalized
+		}
+	}
+	return result, nil
 }
 
 func normalizeHostConfig(value Host) (Host, error) {
@@ -826,6 +879,7 @@ func (c Config) Public() PublicConfig {
 			AuthMethods:             make([]PublicAuthMethod, 0, len(c.GitHub.AuthMethods)),
 			AutoSyncIntervalSeconds: c.GitHub.AutoSyncIntervalSeconds,
 		},
+		TaskLabels: cloneTaskLabelOverrides(c.TaskLabels),
 	}
 	for _, method := range c.GitHub.AuthMethods {
 		public := PublicAuthMethod{
@@ -847,6 +901,69 @@ func (c Config) Public() PublicConfig {
 		result.GitHub.AuthMethods = append(result.GitHub.AuthMethods, public)
 	}
 	return result
+}
+
+func cloneTaskLabelOverrides(value domain.TaskLabelOverrides) domain.TaskLabelOverrides {
+	if value == nil {
+		return nil
+	}
+	result := make(domain.TaskLabelOverrides, len(value))
+	for key, item := range value {
+		result[key] = item
+	}
+	return result
+}
+
+// SetTaskLabelOverrides は global の task ラベルを項目単位で更新する。
+func (c *Config) SetTaskLabelOverrides(update domain.TaskLabelOverridesUpdate) error {
+	previous := cloneTaskLabelOverrides(c.TaskLabels)
+	if c.TaskLabels == nil {
+		c.TaskLabels = domain.TaskLabelOverrides{}
+	}
+	for key, item := range update {
+		normalizedKey := domain.TaskLabelKey(strings.ToLower(strings.TrimSpace(string(key))))
+		if !containsTaskLabelKey(normalizedKey) {
+			c.TaskLabels = previous
+			return domain.NewError(domain.DomainErrorCodeInvalidTaskLabel, "unknown task label key %q", key)
+		}
+		current := c.TaskLabels[normalizedKey]
+		if item.Text != nil {
+			text, err := domain.NormalizeTaskLabelText(*item.Text)
+			if err != nil {
+				c.TaskLabels = previous
+				return domain.NewError(
+					domain.DomainErrorCodeInvalidTaskLabel,
+					"task_labels.%s: %v",
+					normalizedKey,
+					err,
+				)
+			}
+			current.Text = text
+		}
+		if item.Color != nil {
+			color, err := domain.NormalizeTaskLabelColor(*item.Color)
+			if err != nil {
+				c.TaskLabels = previous
+				return domain.NewError(
+					domain.DomainErrorCodeInvalidTaskLabel,
+					"task_labels.%s: %v",
+					normalizedKey,
+					err,
+				)
+			}
+			current.Color = color
+		}
+		if current == (domain.TaskLabelOverride{}) {
+			delete(c.TaskLabels, normalizedKey)
+		} else {
+			c.TaskLabels[normalizedKey] = current
+		}
+	}
+	if err := c.normalizeInPlace(); err != nil {
+		c.TaskLabels = previous
+		return err
+	}
+	return nil
 }
 
 func maskSecret(value string) string {

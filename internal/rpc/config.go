@@ -75,6 +75,46 @@ func (h *Handler) UpdateLanguageConfig(
 	}), nil
 }
 
+func (h *Handler) GetTaskLabelConfig(
+	ctx context.Context,
+	_ *connect.Request[prxv1.GetTaskLabelConfigRequest],
+) (*connect.Response[prxv1.GetTaskLabelConfigResponse], error) {
+	store, err := h.requireConfig()
+	if err != nil {
+		return nil, err
+	}
+	settings, err := store.Load()
+	if err != nil {
+		return nil, configRPCError(err)
+	}
+	return connect.NewResponse(&prxv1.GetTaskLabelConfigResponse{
+		Config: protoTaskLabelConfig(settings.TaskLabels),
+	}), nil
+}
+
+func (h *Handler) UpdateTaskLabelConfig(
+	ctx context.Context,
+	req *connect.Request[prxv1.UpdateTaskLabelConfigRequest],
+) (*connect.Response[prxv1.UpdateTaskLabelConfigResponse], error) {
+	store, err := h.requireConfig()
+	if err != nil {
+		return nil, err
+	}
+	update := domainTaskLabelOverridesUpdate(req.Msg.GetOverrides())
+	settings, err := store.Update(func(settings *config.Config) error {
+		if update == nil {
+			return nil
+		}
+		return settings.SetTaskLabelOverrides(*update)
+	})
+	if err != nil {
+		return nil, configRPCError(err)
+	}
+	return connect.NewResponse(&prxv1.UpdateTaskLabelConfigResponse{
+		Config: protoTaskLabelConfig(settings.TaskLabels),
+	}), nil
+}
+
 func (h *Handler) AddGitHubHost(
 	ctx context.Context,
 	req *connect.Request[prxv1.AddGitHubHostRequest],
@@ -337,12 +377,34 @@ func protoGitHubConfig(value config.PublicConfig) *prxv1.GitHubConfig {
 	result := &prxv1.GitHubConfig{
 		Version: int32(value.Version), AutoSyncIntervalSeconds: value.GitHub.AutoSyncIntervalSeconds,
 		Language: value.Language, EffectiveLanguage: value.EffectiveLanguage,
+		TaskLabelOverrides:          protoTaskLabelOverrides(value.TaskLabels),
+		BuiltInTaskLabelAppearances: protoTaskLabelAppearances(domain.BuiltInTaskLabelAppearances()),
+		TaskLabelKeys:               taskLabelKeyStrings(),
+		TaskLabelMaxTextCodepoints:  32,
 	}
 	for _, host := range value.GitHub.Hosts {
 		result.Hosts = append(result.Hosts, protoGitHubHost(host))
 	}
 	for _, method := range value.GitHub.AuthMethods {
 		result.AuthMethods = append(result.AuthMethods, protoPublicAuth(method))
+	}
+	return result
+}
+
+func protoTaskLabelConfig(overrides domain.TaskLabelOverrides) *prxv1.TaskLabelConfig {
+	return &prxv1.TaskLabelConfig{
+		Overrides:         protoTaskLabelOverrides(overrides),
+		BuiltIn:           protoTaskLabelAppearances(domain.BuiltInTaskLabelAppearances()),
+		Keys:              taskLabelKeyStrings(),
+		MaxTextCodepoints: 32,
+	}
+}
+
+func taskLabelKeyStrings() []string {
+	keys := domain.TaskLabelKeys()
+	result := make([]string, len(keys))
+	for i, key := range keys {
+		result[i] = string(key)
 	}
 	return result
 }
@@ -410,6 +472,10 @@ func protoAuthMethodType(value config.AuthMethodType) prxv1.GithubAuthMethodType
 }
 
 func configRPCError(err error) error {
+	var domainErr *domain.Error
+	if errors.As(err, &domainErr) {
+		return rpcError(err)
+	}
 	var configErr *config.Error
 	if errors.As(err, &configErr) {
 		code := domain.DomainErrorCodeInvalidConfig

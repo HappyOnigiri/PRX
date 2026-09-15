@@ -12,6 +12,7 @@ import {
   DocumentKind,
   type TaskBlockLabel,
   type TaskDisplayState,
+  type TaskLabelAppearances,
 } from "../gen/prx/v1/prx_pb";
 import { taskDisplayStateToken } from "../i18n/domain";
 import { CopyableIdentifier } from "./CopyableIdentifier";
@@ -47,6 +48,7 @@ interface TaskNodeData extends Record<string, unknown> {
   // blocked は沈んでいる理由が blocker 待ちかで、決着済みと区別して枠を残す。
   blocked: boolean;
   blockLabels: TaskBlockLabel[];
+  taskLabelAppearances?: TaskLabelAppearances | undefined;
   hasImplementationPlan: boolean;
   stale: boolean;
   // syncError は本文をそのまま tooltip に載せるので、真偽ではなく文言で持つ。
@@ -213,8 +215,14 @@ export function TaskNode({
       {/* ステータスとブロックラベルは 1 つの並びとして読むので同じ行に置く。
           操作の下に敷けば幅を丸ごと使えて、2 個目のラベルから折り返す。 */}
       <p className="task-node-badges">
-        <TaskStatusBadge state={data.state} />
-        <TaskBlockLabels labels={data.blockLabels} />
+        <TaskStatusBadge
+          state={data.state}
+          appearances={data.taskLabelAppearances}
+        />
+        <TaskBlockLabels
+          labels={data.blockLabels}
+          appearances={data.taskLabelAppearances}
+        />
       </p>
       <h3>
         <EntityIcon kind="task" size={13} />

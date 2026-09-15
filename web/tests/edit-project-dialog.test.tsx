@@ -27,6 +27,16 @@ vi.mock("../src/hooks", () => ({
     if (!mutation) throw new Error("mutation mock missing");
     return mutation;
   },
+  useTaskLabelConfig: () => ({
+    isPending: false,
+    data: {
+      keys: ["status.in_progress"],
+      maxTextCodepoints: 32,
+      builtIn: { values: [] },
+      overrides: { values: {} },
+    },
+    error: null,
+  }),
 }));
 
 function mutationAt(index: number) {
@@ -101,6 +111,19 @@ describe("EditProjectDialog", () => {
     expect(
       screen.getByRole("dialog", { name: "Discard unsaved changes?" }),
     ).toBeInTheDocument();
+  });
+
+  it("mounts the labels tab and reports its initial state", async () => {
+    render(
+      <EditProjectDialog
+        project={makeProject({ id: "P-1", title: "Delivery" })}
+        referenceCount={0}
+        onClose={vi.fn()}
+        onDeleted={vi.fn()}
+      />,
+    );
+    fireEvent.click(screen.getByRole("tab", { name: "Labels" }));
+    expect(await screen.findByText("Statuses")).toBeInTheDocument();
   });
 
   it("submits the editable fields of an active project", async () => {

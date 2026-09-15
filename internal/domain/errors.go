@@ -31,6 +31,7 @@ const (
 	DomainErrorCodeImplementationPlanTooLarge  DomainErrorCode = "implementation_plan_too_large"
 	DomainErrorCodeInvalidConfig               DomainErrorCode = "invalid_config"
 	DomainErrorCodeInvalidPromptTemplate       DomainErrorCode = "invalid_prompt_template"
+	DomainErrorCodeInvalidTaskLabel            DomainErrorCode = "invalid_task_label"
 	DomainErrorCodeArchivedReadOnly            DomainErrorCode = "archived_read_only"
 	DomainErrorCodeAddressInUse                DomainErrorCode = "address_in_use"
 	DomainErrorCodeDaemonUnsupported           DomainErrorCode = "daemon_unsupported"

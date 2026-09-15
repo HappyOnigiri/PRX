@@ -23,6 +23,7 @@ import {
   useSettingsSections,
 } from "./settingsSections";
 import { TabList, TabPanel } from "./TabList";
+import { TaskLabelSettingsPanel } from "./TaskLabelOverridesPanel";
 import { DiscardChangesDialog, SaveButton, SaveStatus } from "./UnsavedChanges";
 import { useCloseOnEscape } from "./useCloseOnEscape";
 
@@ -30,6 +31,7 @@ const settingsTabs = [
   "server",
   "prompts",
   "display",
+  "labels",
   "debug",
   "licenses",
 ] as const;
@@ -39,6 +41,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState<SettingsTab>("server");
   const [promptsMounted, setPromptsMounted] = useState(false);
+  const [labelsMounted, setLabelsMounted] = useState(false);
   const [discarding, setDiscarding] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saved, setSaved] = useState(false);
@@ -50,6 +53,7 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
     // 開いたらダイアログを閉じるまでマウントしたままにする。タブを離れて戻った
     // だけで入力内容を警告なく捨ててはならないため。
     if (tab === "prompts") setPromptsMounted(true);
+    if (tab === "labels") setLabelsMounted(true);
   }
 
   // 保存はタブをまたいで 1 つなので、押した時点の下書きをすべて書き込む。
@@ -120,6 +124,9 @@ export function SettingsDialog({ onClose }: { onClose: () => void }) {
                     マウントする。ただし未保存の編集が他タブへの移動で消えないよう、
                     以後はマウントしたままにする。 */}
                 {promptsMounted && <PromptSettingsPanel />}
+              </SettingsPanel>
+              <SettingsPanel active={activeTab === "labels"} tab="labels">
+                {labelsMounted && <TaskLabelSettingsPanel />}
               </SettingsPanel>
               <SettingsPanel active={activeTab === "display"} tab="display">
                 <DisplaySettingsPanel />

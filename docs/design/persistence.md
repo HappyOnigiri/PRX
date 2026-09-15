@@ -35,6 +35,8 @@ CLI とサーバが別のデータベースを開いている場合は、変更�
 
 テンプレートと同期の設定に関する方針は、[agent-prompts.md](agent-prompts.md) と [github-sync.md](github-sync.md) にある。
 
+task ラベルの global 設定と scope ごとの保存形式は [task-labels.md](task-labels.md) に記録する。
+
 `prx serve --demo` は、サーバプロセスごとに新しい一時データベース・設定・Markdown document 一式を作る。
 通常のデータベースと設定のパスは、環境変数で指定されたものも含めて読み書きしない。
 一時環境は正常終了後に削除し、異常終了した場合も再利用しない。

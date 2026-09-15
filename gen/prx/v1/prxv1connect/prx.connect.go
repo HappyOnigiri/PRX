@@ -113,6 +113,12 @@ const (
 	PRXServiceGetDebugReportProcedure = "/prx.v1.PRXService/GetDebugReport"
 	// PRXServiceGetConfigProcedure is the fully-qualified name of the PRXService's GetConfig RPC.
 	PRXServiceGetConfigProcedure = "/prx.v1.PRXService/GetConfig"
+	// PRXServiceGetTaskLabelConfigProcedure is the fully-qualified name of the PRXService's
+	// GetTaskLabelConfig RPC.
+	PRXServiceGetTaskLabelConfigProcedure = "/prx.v1.PRXService/GetTaskLabelConfig"
+	// PRXServiceUpdateTaskLabelConfigProcedure is the fully-qualified name of the PRXService's
+	// UpdateTaskLabelConfig RPC.
+	PRXServiceUpdateTaskLabelConfigProcedure = "/prx.v1.PRXService/UpdateTaskLabelConfig"
 	// PRXServiceUpdateGitHubSyncConfigProcedure is the fully-qualified name of the PRXService's
 	// UpdateGitHubSyncConfig RPC.
 	PRXServiceUpdateGitHubSyncConfigProcedure = "/prx.v1.PRXService/UpdateGitHubSyncConfig"
@@ -220,6 +226,10 @@ type PRXServiceClient interface {
 	GetDebugReport(context.Context, *connect.Request[v1.GetDebugReportRequest]) (*connect.Response[v1.GetDebugReportResponse], error)
 	// GetConfig は公開の GitHub 設定を返す。
 	GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error)
+	// GetTaskLabelConfig は global task ラベル設定を返す。
+	GetTaskLabelConfig(context.Context, *connect.Request[v1.GetTaskLabelConfigRequest]) (*connect.Response[v1.GetTaskLabelConfigResponse], error)
+	// UpdateTaskLabelConfig は global task ラベルを項目単位で更新する。
+	UpdateTaskLabelConfig(context.Context, *connect.Request[v1.UpdateTaskLabelConfigRequest]) (*connect.Response[v1.UpdateTaskLabelConfigResponse], error)
 	// UpdateGitHubSyncConfig は共有の自動更新間隔を変更する。
 	UpdateGitHubSyncConfig(context.Context, *connect.Request[v1.UpdateGitHubSyncConfigRequest]) (*connect.Response[v1.UpdateGitHubSyncConfigResponse], error)
 	// UpdateLanguageConfig は表示とプロンプトが共有する言語を変更する。
@@ -441,6 +451,18 @@ func NewPRXServiceClient(httpClient connect.HTTPClient, baseURL string, opts ...
 			connect.WithSchema(pRXServiceMethods.ByName("GetConfig")),
 			connect.WithClientOptions(opts...),
 		),
+		getTaskLabelConfig: connect.NewClient[v1.GetTaskLabelConfigRequest, v1.GetTaskLabelConfigResponse](
+			httpClient,
+			baseURL+PRXServiceGetTaskLabelConfigProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("GetTaskLabelConfig")),
+			connect.WithClientOptions(opts...),
+		),
+		updateTaskLabelConfig: connect.NewClient[v1.UpdateTaskLabelConfigRequest, v1.UpdateTaskLabelConfigResponse](
+			httpClient,
+			baseURL+PRXServiceUpdateTaskLabelConfigProcedure,
+			connect.WithSchema(pRXServiceMethods.ByName("UpdateTaskLabelConfig")),
+			connect.WithClientOptions(opts...),
+		),
 		updateGitHubSyncConfig: connect.NewClient[v1.UpdateGitHubSyncConfigRequest, v1.UpdateGitHubSyncConfigResponse](
 			httpClient,
 			baseURL+PRXServiceUpdateGitHubSyncConfigProcedure,
@@ -560,6 +582,8 @@ type pRXServiceClient struct {
 	validate                 *connect.Client[v1.ValidateRequest, v1.ValidateResponse]
 	getDebugReport           *connect.Client[v1.GetDebugReportRequest, v1.GetDebugReportResponse]
 	getConfig                *connect.Client[v1.GetConfigRequest, v1.GetConfigResponse]
+	getTaskLabelConfig       *connect.Client[v1.GetTaskLabelConfigRequest, v1.GetTaskLabelConfigResponse]
+	updateTaskLabelConfig    *connect.Client[v1.UpdateTaskLabelConfigRequest, v1.UpdateTaskLabelConfigResponse]
 	updateGitHubSyncConfig   *connect.Client[v1.UpdateGitHubSyncConfigRequest, v1.UpdateGitHubSyncConfigResponse]
 	updateLanguageConfig     *connect.Client[v1.UpdateLanguageConfigRequest, v1.UpdateLanguageConfigResponse]
 	addGitHubHost            *connect.Client[v1.AddGitHubHostRequest, v1.AddGitHubHostResponse]
@@ -726,6 +750,16 @@ func (c *pRXServiceClient) GetConfig(ctx context.Context, req *connect.Request[v
 	return c.getConfig.CallUnary(ctx, req)
 }
 
+// GetTaskLabelConfig calls prx.v1.PRXService.GetTaskLabelConfig.
+func (c *pRXServiceClient) GetTaskLabelConfig(ctx context.Context, req *connect.Request[v1.GetTaskLabelConfigRequest]) (*connect.Response[v1.GetTaskLabelConfigResponse], error) {
+	return c.getTaskLabelConfig.CallUnary(ctx, req)
+}
+
+// UpdateTaskLabelConfig calls prx.v1.PRXService.UpdateTaskLabelConfig.
+func (c *pRXServiceClient) UpdateTaskLabelConfig(ctx context.Context, req *connect.Request[v1.UpdateTaskLabelConfigRequest]) (*connect.Response[v1.UpdateTaskLabelConfigResponse], error) {
+	return c.updateTaskLabelConfig.CallUnary(ctx, req)
+}
+
 // UpdateGitHubSyncConfig calls prx.v1.PRXService.UpdateGitHubSyncConfig.
 func (c *pRXServiceClient) UpdateGitHubSyncConfig(ctx context.Context, req *connect.Request[v1.UpdateGitHubSyncConfigRequest]) (*connect.Response[v1.UpdateGitHubSyncConfigResponse], error) {
 	return c.updateGitHubSyncConfig.CallUnary(ctx, req)
@@ -859,6 +893,10 @@ type PRXServiceHandler interface {
 	GetDebugReport(context.Context, *connect.Request[v1.GetDebugReportRequest]) (*connect.Response[v1.GetDebugReportResponse], error)
 	// GetConfig は公開の GitHub 設定を返す。
 	GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error)
+	// GetTaskLabelConfig は global task ラベル設定を返す。
+	GetTaskLabelConfig(context.Context, *connect.Request[v1.GetTaskLabelConfigRequest]) (*connect.Response[v1.GetTaskLabelConfigResponse], error)
+	// UpdateTaskLabelConfig は global task ラベルを項目単位で更新する。
+	UpdateTaskLabelConfig(context.Context, *connect.Request[v1.UpdateTaskLabelConfigRequest]) (*connect.Response[v1.UpdateTaskLabelConfigResponse], error)
 	// UpdateGitHubSyncConfig は共有の自動更新間隔を変更する。
 	UpdateGitHubSyncConfig(context.Context, *connect.Request[v1.UpdateGitHubSyncConfigRequest]) (*connect.Response[v1.UpdateGitHubSyncConfigResponse], error)
 	// UpdateLanguageConfig は表示とプロンプトが共有する言語を変更する。
@@ -1076,6 +1114,18 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 		connect.WithSchema(pRXServiceMethods.ByName("GetConfig")),
 		connect.WithHandlerOptions(opts...),
 	)
+	pRXServiceGetTaskLabelConfigHandler := connect.NewUnaryHandler(
+		PRXServiceGetTaskLabelConfigProcedure,
+		svc.GetTaskLabelConfig,
+		connect.WithSchema(pRXServiceMethods.ByName("GetTaskLabelConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
+	pRXServiceUpdateTaskLabelConfigHandler := connect.NewUnaryHandler(
+		PRXServiceUpdateTaskLabelConfigProcedure,
+		svc.UpdateTaskLabelConfig,
+		connect.WithSchema(pRXServiceMethods.ByName("UpdateTaskLabelConfig")),
+		connect.WithHandlerOptions(opts...),
+	)
 	pRXServiceUpdateGitHubSyncConfigHandler := connect.NewUnaryHandler(
 		PRXServiceUpdateGitHubSyncConfigProcedure,
 		svc.UpdateGitHubSyncConfig,
@@ -1222,6 +1272,10 @@ func NewPRXServiceHandler(svc PRXServiceHandler, opts ...connect.HandlerOption) 
 			pRXServiceGetDebugReportHandler.ServeHTTP(w, r)
 		case PRXServiceGetConfigProcedure:
 			pRXServiceGetConfigHandler.ServeHTTP(w, r)
+		case PRXServiceGetTaskLabelConfigProcedure:
+			pRXServiceGetTaskLabelConfigHandler.ServeHTTP(w, r)
+		case PRXServiceUpdateTaskLabelConfigProcedure:
+			pRXServiceUpdateTaskLabelConfigHandler.ServeHTTP(w, r)
 		case PRXServiceUpdateGitHubSyncConfigProcedure:
 			pRXServiceUpdateGitHubSyncConfigHandler.ServeHTTP(w, r)
 		case PRXServiceUpdateLanguageConfigProcedure:
@@ -1377,6 +1431,14 @@ func (UnimplementedPRXServiceHandler) GetDebugReport(context.Context, *connect.R
 
 func (UnimplementedPRXServiceHandler) GetConfig(context.Context, *connect.Request[v1.GetConfigRequest]) (*connect.Response[v1.GetConfigResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetConfig is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) GetTaskLabelConfig(context.Context, *connect.Request[v1.GetTaskLabelConfigRequest]) (*connect.Response[v1.GetTaskLabelConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.GetTaskLabelConfig is not implemented"))
+}
+
+func (UnimplementedPRXServiceHandler) UpdateTaskLabelConfig(context.Context, *connect.Request[v1.UpdateTaskLabelConfigRequest]) (*connect.Response[v1.UpdateTaskLabelConfigResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("prx.v1.PRXService.UpdateTaskLabelConfig is not implemented"))
 }
 
 func (UnimplementedPRXServiceHandler) UpdateGitHubSyncConfig(context.Context, *connect.Request[v1.UpdateGitHubSyncConfigRequest]) (*connect.Response[v1.UpdateGitHubSyncConfigResponse], error) {

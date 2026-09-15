@@ -41,6 +41,7 @@ prx proj P-1
 * [prx project archive](prx_project_archive.md)	 - Archive a project and make its features read-only
 * [prx project create](prx_project_create.md)	 - Create a project
 * [prx project delete](prx_project_delete.md)	 - Delete a project; --cascade removes its documents and the features it holds
+* [prx project label](prx_project_label.md)	 - Manage project task label overrides
 * [prx project prompt](prx_project_prompt.md)	 - Manage prompt template overrides
 * [prx project unarchive](prx_project_unarchive.md)	 - Unarchive a project and let its features accept writes again
 * [prx project update](prx_project_update.md)	 - Update a project by ID

@@ -1,6 +1,12 @@
+import { create } from "@bufbuild/protobuf";
 import { cleanup, render } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { TaskBlockLabel, TaskDisplayState } from "../src/gen/prx/v1/prx_pb";
+import {
+  TaskBlockLabel,
+  TaskDisplayState,
+  TaskLabelAppearanceSchema,
+  TaskLabelAppearancesSchema,
+} from "../src/gen/prx/v1/prx_pb";
 import { setDisplayLanguage } from "../src/i18n";
 import { taskDisplayStateToken } from "../src/i18n/domain";
 import { StatusBadge } from "../src/views/StatusBadge";
@@ -148,5 +154,68 @@ describe("TaskStatusBadge", () => {
     expect(container.querySelector(".block-conflict")).toHaveTextContent(
       "conflict",
     );
+  });
+
+  it("uses custom appearances when supplied", () => {
+    const appearances = create(TaskLabelAppearancesSchema, {
+      values: [
+        create(TaskLabelAppearanceSchema, {
+          key: "status.in_progress",
+          text: "Coding",
+          textOverridden: true,
+          color: "#336699",
+          colorOverridden: true,
+        }),
+        create(TaskLabelAppearanceSchema, {
+          key: "status.unknown",
+          text: "Unclassified",
+          textOverridden: true,
+        }),
+        create(TaskLabelAppearanceSchema, {
+          key: "block.conflict",
+          text: "Needs merge",
+          textOverridden: true,
+          color: "#663399",
+          colorOverridden: true,
+        }),
+      ],
+    });
+    const { container } = render(
+      <>
+        <TaskStatusBadge
+          state={TaskDisplayState.IN_PROGRESS}
+          appearances={appearances}
+        />
+        <TaskBlockLabels
+          labels={[TaskBlockLabel.CONFLICT]}
+          appearances={appearances}
+        />
+      </>,
+    );
+    expect(container).toHaveTextContent("Coding");
+    expect(container).toHaveTextContent("Needs merge");
+    expect(container.querySelectorAll(".has-custom-color")).toHaveLength(2);
+    expect(container.querySelector(".block-conflict")).toHaveAccessibleName(
+      "Needs merge",
+    );
+  });
+
+  it("maps the protobuf zero state to the unknown label key", () => {
+    const appearances = create(TaskLabelAppearancesSchema, {
+      values: [
+        create(TaskLabelAppearanceSchema, {
+          key: "status.unknown",
+          text: "Unclassified",
+          textOverridden: true,
+        }),
+      ],
+    });
+    const { container } = render(
+      <TaskStatusBadge
+        state={TaskDisplayState.UNSPECIFIED}
+        appearances={appearances}
+      />,
+    );
+    expect(container).toHaveTextContent("Unclassified");
   });
 });

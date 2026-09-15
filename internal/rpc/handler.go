@@ -115,7 +115,8 @@ func rpcError(err error) error {
 		domain.DomainErrorCodeInvalidImplementationPlan,
 		domain.DomainErrorCodeImplementationPlanTooLarge,
 		domain.DomainErrorCodeInvalidConfig,
-		domain.DomainErrorCodeInvalidPromptTemplate:
+		domain.DomainErrorCodeInvalidPromptTemplate,
+		domain.DomainErrorCodeInvalidTaskLabel:
 		code = connect.CodeInvalidArgument
 	case domain.DomainErrorCodeNotFound:
 		code = connect.CodeNotFound
@@ -181,10 +182,11 @@ func (h *Handler) UpdateProject(
 	req *connect.Request[prxv1.UpdateProjectRequest],
 ) (*connect.Response[prxv1.UpdateProjectResponse], error) {
 	value, err := h.service.UpdateProject(ctx, req.Msg.GetId(), domain.ProjectUpdate{
-		Title:           optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
-		Description:     optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
-		Archived:        optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
-		PromptOverrides: domainPromptTemplateOverridesUpdate(req.Msg.GetPromptOverrides()),
+		Title:              optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
+		Description:        optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
+		Archived:           optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
+		PromptOverrides:    domainPromptTemplateOverridesUpdate(req.Msg.GetPromptOverrides()),
+		TaskLabelOverrides: domainTaskLabelOverridesUpdate(req.Msg.GetTaskLabelOverrides()),
 	})
 	if err != nil {
 		return nil, rpcError(err)
@@ -227,12 +229,13 @@ func (h *Handler) UpdateFeature(
 		return nil, rpcError(err)
 	}
 	value, err := h.service.UpdateFeature(ctx, req.Msg.GetId(), domain.FeatureUpdate{
-		Title:           optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
-		Description:     optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
-		Status:          status,
-		Archived:        optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
-		ProjectID:       optionalValue(req.Msg.ProjectId != nil, req.Msg.GetProjectId()),
-		PromptOverrides: domainPromptTemplateOverridesUpdate(req.Msg.GetPromptOverrides()),
+		Title:              optionalValue(req.Msg.Title != nil, req.Msg.GetTitle()),
+		Description:        optionalValue(req.Msg.Description != nil, req.Msg.GetDescription()),
+		Status:             status,
+		Archived:           optionalValue(req.Msg.Archived != nil, req.Msg.GetArchived()),
+		ProjectID:          optionalValue(req.Msg.ProjectId != nil, req.Msg.GetProjectId()),
+		PromptOverrides:    domainPromptTemplateOverridesUpdate(req.Msg.GetPromptOverrides()),
+		TaskLabelOverrides: domainTaskLabelOverridesUpdate(req.Msg.GetTaskLabelOverrides()),
 	})
 	if err != nil {
 		return nil, rpcError(err)

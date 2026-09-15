@@ -77,16 +77,17 @@ func (s *Store) CreateProject(ctx context.Context, title, description string) (d
 	}
 	now := timestamp(s.now())
 	value, err := q.CreateProject(ctx, db.CreateProjectParams{
-		ID:                   uuid.NewString(),
-		PublicID:             publicID,
-		Title:                title,
-		Description:          description,
-		Archived:             0,
-		CreatedAt:            now,
-		UpdatedAt:            now,
-		PromptDesign:         nullString(""),
-		PromptImplementation: nullString(""),
-		PromptBatch:          nullString(""),
+		ID:                     uuid.NewString(),
+		PublicID:               publicID,
+		Title:                  title,
+		Description:            description,
+		Archived:               0,
+		CreatedAt:              now,
+		UpdatedAt:              now,
+		PromptDesign:           nullString(""),
+		PromptImplementation:   nullString(""),
+		PromptBatch:            nullString(""),
+		TaskLabelOverridesJson: nullTaskLabelOverrides(nil),
 	})
 	if err != nil {
 		return domain.Project{}, fmt.Errorf("create project: %w", err)
@@ -112,14 +113,15 @@ func (s *Store) UpdateProject(ctx context.Context, project domain.Project) (doma
 		storageID = value.ID
 	}
 	value, err := db.New(s.db).UpdateProject(ctx, db.UpdateProjectParams{
-		Title:                project.Title,
-		Description:          project.Description,
-		Archived:             boolInt(project.Archived),
-		UpdatedAt:            timestamp(s.now()),
-		PromptDesign:         nullString(project.PromptOverrides.Design),
-		PromptImplementation: nullString(project.PromptOverrides.Implementation),
-		PromptBatch:          nullString(project.PromptOverrides.Batch),
-		ID:                   storageID,
+		Title:                  project.Title,
+		Description:            project.Description,
+		Archived:               boolInt(project.Archived),
+		UpdatedAt:              timestamp(s.now()),
+		PromptDesign:           nullString(project.PromptOverrides.Design),
+		PromptImplementation:   nullString(project.PromptOverrides.Implementation),
+		PromptBatch:            nullString(project.PromptOverrides.Batch),
+		TaskLabelOverridesJson: nullTaskLabelOverrides(project.TaskLabelOverrides),
+		ID:                     storageID,
 	})
 	return domainProject(value), mapNotFound(err, "project", project.ID)
 }
@@ -193,18 +195,19 @@ func (s *Store) CreateFeature(
 	now := timestamp(s.now())
 	status, statusAuto := storedFeatureStatus(domain.FeatureStatusAuto)
 	params := db.CreateFeatureParams{
-		ID:                   uuid.NewString(),
-		PublicID:             publicID,
-		Title:                title,
-		Description:          description,
-		Status:               status,
-		StatusAuto:           statusAuto,
-		ProjectID:            project,
-		CreatedAt:            now,
-		UpdatedAt:            now,
-		PromptDesign:         nullString(""),
-		PromptImplementation: nullString(""),
-		PromptBatch:          nullString(""),
+		ID:                     uuid.NewString(),
+		PublicID:               publicID,
+		Title:                  title,
+		Description:            description,
+		Status:                 status,
+		StatusAuto:             statusAuto,
+		ProjectID:              project,
+		CreatedAt:              now,
+		UpdatedAt:              now,
+		PromptDesign:           nullString(""),
+		PromptImplementation:   nullString(""),
+		PromptBatch:            nullString(""),
+		TaskLabelOverridesJson: nullTaskLabelOverrides(nil),
 	}
 	value, err := q.CreateFeature(ctx, params)
 	if err != nil {
@@ -245,17 +248,18 @@ func (s *Store) UpdateFeature(ctx context.Context, feature domain.Feature) (doma
 	}
 	status, statusAuto := storedFeatureStatus(feature.Status)
 	params := db.UpdateFeatureParams{
-		Title:                feature.Title,
-		Description:          feature.Description,
-		Status:               status,
-		StatusAuto:           statusAuto,
-		Archived:             boolInt(feature.Archived),
-		ProjectID:            project,
-		UpdatedAt:            timestamp(s.now()),
-		PromptDesign:         nullString(feature.PromptOverrides.Design),
-		PromptImplementation: nullString(feature.PromptOverrides.Implementation),
-		PromptBatch:          nullString(feature.PromptOverrides.Batch),
-		ID:                   storageID,
+		Title:                  feature.Title,
+		Description:            feature.Description,
+		Status:                 status,
+		StatusAuto:             statusAuto,
+		Archived:               boolInt(feature.Archived),
+		ProjectID:              project,
+		UpdatedAt:              timestamp(s.now()),
+		PromptDesign:           nullString(feature.PromptOverrides.Design),
+		PromptImplementation:   nullString(feature.PromptOverrides.Implementation),
+		PromptBatch:            nullString(feature.PromptOverrides.Batch),
+		TaskLabelOverridesJson: nullTaskLabelOverrides(feature.TaskLabelOverrides),
+		ID:                     storageID,
 	}
 	value, err := q.UpdateFeature(ctx, params)
 	return domainFeature(value, feature.ProjectID), mapNotFound(err, "feature", feature.ID)
@@ -1104,6 +1108,17 @@ func checkStateOrUnknown(value domain.CheckState) domain.CheckState {
 
 func nullString(value string) sql.NullString {
 	return sql.NullString{String: value, Valid: value != ""}
+}
+
+func nullTaskLabelOverrides(value domain.TaskLabelOverrides) sql.NullString {
+	if len(value) == 0 {
+		return sql.NullString{}
+	}
+	encoded, err := json.Marshal(value)
+	if err != nil {
+		return sql.NullString{}
+	}
+	return sql.NullString{String: string(encoded), Valid: true}
 }
 
 func nullTime(value *time.Time) sql.NullString {

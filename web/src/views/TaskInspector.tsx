@@ -2,7 +2,11 @@ import { Trash2, X } from "lucide-react";
 import { useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
-import { type PullRequest, type Task } from "../gen/prx/v1/prx_pb";
+import {
+  type PullRequest,
+  type Task,
+  type TaskLabelAppearances,
+} from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { blockedReasonLabel } from "../i18n/domain";
 import { CopyableIdentifier } from "./CopyableIdentifier";
@@ -22,12 +26,21 @@ export interface TaskInspectorProps {
   tasks: Task[];
   pullRequest: PullRequest | undefined;
   documents: TaskNodeDocument[];
+  appearances?: TaskLabelAppearances | undefined;
   onPreview: (document: TaskNodeDocument) => void;
   onClose: () => void;
   readOnly?: boolean;
 }
 
-function TaskInspectorBlocks({ task, tasks }: { task: Task; tasks: Task[] }) {
+function TaskInspectorBlocks({
+  task,
+  tasks,
+  appearances,
+}: {
+  task: Task;
+  tasks: Task[];
+  appearances?: TaskLabelAppearances | undefined;
+}) {
   const { t } = useTranslation();
   const detail = blockedReasonLabel(
     task.blockedReason,
@@ -36,7 +49,11 @@ function TaskInspectorBlocks({ task, tasks }: { task: Task; tasks: Task[] }) {
   );
   return (
     <p className="inspector-blocks">
-      <TaskBlockLabels labels={task.blockLabels} dependencyDetail={detail} />
+      <TaskBlockLabels
+        labels={task.blockLabels}
+        dependencyDetail={detail}
+        appearances={appearances}
+      />
       {detail && <span className="inspector-blocks-detail">{detail}</span>}
     </p>
   );
@@ -44,15 +61,21 @@ function TaskInspectorBlocks({ task, tasks }: { task: Task; tasks: Task[] }) {
 
 function TaskInspectorHeader({
   task,
+  appearances,
   onClose,
-}: Pick<TaskInspectorProps, "task"> & { onClose: () => void }) {
+}: Pick<TaskInspectorProps, "task" | "appearances"> & {
+  onClose: () => void;
+}) {
   const { t } = useTranslation();
   return (
     <header>
       <div className="inspector-heading">
         {/* どのカードや行とも同じく、状態が見出しの先頭に来る。 */}
         <div className="inspector-heading-line">
-          <TaskStatusBadge state={task.displayState} />
+          <TaskStatusBadge
+            state={task.displayState}
+            appearances={appearances}
+          />
           <h2>
             <EntityIcon kind="task" size={16} />
             {task.title}
@@ -80,6 +103,7 @@ export function TaskInspector({
   tasks,
   pullRequest,
   documents,
+  appearances,
   onPreview,
   onClose,
   readOnly = false,
@@ -94,6 +118,7 @@ export function TaskInspector({
     <aside className="inspector" aria-label={t("inspector.label")}>
       <TaskInspectorHeader
         task={task}
+        appearances={appearances}
         onClose={() => {
           if (dirty) setDiscarding(true);
           else onClose();
@@ -103,7 +128,11 @@ export function TaskInspector({
           だけが並ぶ。待ち相手はラベルの語だけでは特定できないため、可視の
           テキストとしても添える。 */}
       {task.blockLabels.length > 0 && (
-        <TaskInspectorBlocks task={task} tasks={tasks} />
+        <TaskInspectorBlocks
+          task={task}
+          tasks={tasks}
+          appearances={appearances}
+        />
       )}
       {readOnly && (
         <p className="inspector-read-only">{t("inspector.readOnly")}</p>
@@ -111,6 +140,7 @@ export function TaskInspector({
       <TaskInspectorTaskForm
         task={task}
         controller={controller}
+        appearances={appearances}
         readOnly={readOnly}
       />
       <PullRequestSection

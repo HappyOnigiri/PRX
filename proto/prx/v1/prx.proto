@@ -271,6 +271,8 @@ enum DomainErrorCode {
   DOMAIN_ERROR_CODE_UPDATE_CHECK_FAILED = 32;
   // DOMAIN_ERROR_CODE_UPDATE_FAILED は更新の実行が失敗したことを表す。
   DOMAIN_ERROR_CODE_UPDATE_FAILED = 33;
+  // DOMAIN_ERROR_CODE_INVALID_TASK_LABEL は task ラベルのキーまたは表示値が不正であることを表す。
+  DOMAIN_ERROR_CODE_INVALID_TASK_LABEL = 34;
 }
 
 // GitHubAuthMethodType は GitHub のトークンの取得方法を表す。
@@ -371,6 +373,8 @@ message Project {
   string updated_at = 7;
   // prompt_overrides は project が種類ごとに保存している上書き。空文字列は継承を表す。
   PromptTemplateOverrides prompt_overrides = 8;
+  // task_label_overrides は project が種類ごとに保存している task ラベル上書き。
+  TaskLabelOverrides task_label_overrides = 9;
 }
 
 // Feature は task と依存グラフを持つロードマップの単位。
@@ -417,6 +421,10 @@ message Feature {
   bool read_only = 17;
   // prompt_overrides は feature が種類ごとに保存している上書き。空文字列は継承を表す。
   PromptTemplateOverrides prompt_overrides = 18;
+  // task_label_overrides は feature が種類ごとに保存している task ラベル上書き。
+  TaskLabelOverrides task_label_overrides = 19;
+  // task_label_appearances は snapshot で解決した task ラベル表示値。
+  TaskLabelAppearances task_label_appearances = 20;
 }
 
 // PromptTemplateOverrides は project または feature が保存した種類別の上書き。
@@ -439,6 +447,54 @@ message PromptTemplateOverridesUpdate {
   optional string implementation = 2;
   // batch は一括テンプレートの変更。未設定は変更なし。
   optional string batch = 3;
+}
+
+// TaskLabelOverride は scope が明示した task ラベルの文字と色を表す。
+message TaskLabelOverride {
+  // text は表示文字列。空文字列は未設定。
+  string text = 1;
+  // color は #RRGGBB の色。空文字列は未設定。
+  string color = 2;
+}
+
+// TaskLabelOverrides は scope ごとの task ラベル上書き。key は status.* または block.*。
+message TaskLabelOverrides {
+  // values はラベルキーから上書き値への対応。
+  map<string, TaskLabelOverride> values = 1;
+}
+
+// TaskLabelOverrideUpdate は文字・色を独立して部分更新する。
+message TaskLabelOverrideUpdate {
+  // text は表示文字列の変更。未設定は変更なし。
+  optional string text = 1;
+  // color は色の変更。未設定は変更なし。
+  optional string color = 2;
+}
+
+// TaskLabelOverridesUpdate は scope ごとの task ラベル部分更新。
+message TaskLabelOverridesUpdate {
+  // values はラベルキーから部分更新値への対応。
+  map<string, TaskLabelOverrideUpdate> values = 1;
+}
+
+// TaskLabelAppearance は解決済み task ラベル 1 件の表示値。
+message TaskLabelAppearance {
+  // key は status.* または block.* のラベルキー。
+  string key = 1;
+  // text は実効表示文字列。
+  string text = 2;
+  // color は実効 #RRGGBB 色。
+  string color = 3;
+  // text_overridden は上位または同一 scope で文字が上書きされたことを示す。
+  bool text_overridden = 4;
+  // color_overridden は上位または同一 scope で色が上書きされたことを示す。
+  bool color_overridden = 5;
+}
+
+// TaskLabelAppearances は feature に適用される全 task ラベルを保持する。
+message TaskLabelAppearances {
+  // values はキー順の解決済み表示値。
+  repeated TaskLabelAppearance values = 1;
 }
 
 // Task は feature に属する作業の単位。
@@ -636,6 +692,8 @@ message UpdateProjectRequest {
   optional bool archived = 5;
   // prompt_overrides は種類ごとの上書きを部分更新する。
   optional PromptTemplateOverridesUpdate prompt_overrides = 8;
+  // task_label_overrides は task ラベル上書きを部分更新する。
+  optional TaskLabelOverridesUpdate task_label_overrides = 9;
 }
 
 // UpdateProjectResponse は更新後の project を返す。
@@ -697,6 +755,8 @@ message UpdateFeatureRequest {
   optional string project_id = 7;
   // prompt_overrides は種類ごとの上書きを部分更新する。
   optional PromptTemplateOverridesUpdate prompt_overrides = 8;
+  // task_label_overrides は task ラベル上書きを部分更新する。
+  optional TaskLabelOverridesUpdate task_label_overrides = 9;
 }
 
 // UpdateFeatureResponse は更新後の feature を返す。
@@ -968,6 +1028,14 @@ message GitHubConfig {
   // effective_language は auto を環境のロケールで解決した結果の en または ja。
   // 組み込みプロンプトの言語であり、WebUI の表示言語でもある。
   string effective_language = 6;
+  // task_label_overrides は global task ラベル上書き。
+  TaskLabelOverrides task_label_overrides = 7;
+  // built_in_task_label_appearances は未設定時の組み込み表示値。
+  TaskLabelAppearances built_in_task_label_appearances = 8;
+  // task_label_keys は設定可能なキーの一覧。
+  repeated string task_label_keys = 9;
+  // task_label_max_text_codepoints は文字列上限。
+  int32 task_label_max_text_codepoints = 10;
 }
 
 // GetConfigRequest は公開の GitHub 設定を要求する。
@@ -977,6 +1045,39 @@ message GetConfigRequest {}
 message GetConfigResponse {
   // config は host と、秘密情報を含まない認証メタデータを持つ。
   GitHubConfig config = 1;
+}
+
+// GetTaskLabelConfigRequest は global task ラベル設定を要求する。
+message GetTaskLabelConfigRequest {}
+
+// TaskLabelConfig は global 上書き、組み込み表示、検証規則をまとめる。
+message TaskLabelConfig {
+  // overrides は保存済み global 上書き。
+  TaskLabelOverrides overrides = 1;
+  // built_in は未設定時の組み込み表示値。
+  TaskLabelAppearances built_in = 2;
+  // keys は設定可能なキー一覧。
+  repeated string keys = 3;
+  // max_text_codepoints は text の最大 Unicode コードポイント数。
+  int32 max_text_codepoints = 4;
+}
+
+// GetTaskLabelConfigResponse は global task ラベル設定を返す。
+message GetTaskLabelConfigResponse {
+  // config は取得した global task ラベル設定。
+  TaskLabelConfig config = 1;
+}
+
+// UpdateTaskLabelConfigRequest は global task ラベルを項目単位で更新する。
+message UpdateTaskLabelConfigRequest {
+  // overrides は項目単位の部分更新。
+  TaskLabelOverridesUpdate overrides = 1;
+}
+
+// UpdateTaskLabelConfigResponse は更新後の global task ラベル設定を返す。
+message UpdateTaskLabelConfigResponse {
+  // config は更新後の global task ラベル設定。
+  TaskLabelConfig config = 1;
 }
 
 // UpdateGitHubSyncConfigRequest は共有の自動同期間隔を変更する。
@@ -1760,6 +1861,10 @@ service PRXService {
   rpc GetDebugReport(GetDebugReportRequest) returns (GetDebugReportResponse);
   // GetConfig は公開の GitHub 設定を返す。
   rpc GetConfig(GetConfigRequest) returns (GetConfigResponse);
+  // GetTaskLabelConfig は global task ラベル設定を返す。
+  rpc GetTaskLabelConfig(GetTaskLabelConfigRequest) returns (GetTaskLabelConfigResponse);
+  // UpdateTaskLabelConfig は global task ラベルを項目単位で更新する。
+  rpc UpdateTaskLabelConfig(UpdateTaskLabelConfigRequest) returns (UpdateTaskLabelConfigResponse);
   // UpdateGitHubSyncConfig は共有の自動更新間隔を変更する。
   rpc UpdateGitHubSyncConfig(UpdateGitHubSyncConfigRequest) returns (UpdateGitHubSyncConfigResponse);
   // UpdateLanguageConfig は表示とプロンプトが共有する言語を変更する。

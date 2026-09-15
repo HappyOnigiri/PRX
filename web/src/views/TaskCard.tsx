@@ -47,7 +47,10 @@ export function TaskCard({
           {/* 状態を行頭に置くことで、各行末のバッジを探し回らずに状態の列を
               1 本追うだけで済む。ブロックラベルはこの行に足すとタイトルを潰すので
               meta の先頭に置く。 */}
-          <TaskStatusBadge state={task.displayState} />
+          <TaskStatusBadge
+            state={task.displayState}
+            appearances={feature?.taskLabelAppearances}
+          />
           <EntityIcon kind="task" size={15} />
           <Link
             to="/features/$featureId"
@@ -70,7 +73,10 @@ export function TaskCard({
             <div>
               <dt>{t("taskCard.blocks")}</dt>
               <dd className="task-card-blocks">
-                <TaskBlockLabels labels={task.blockLabels} />
+                <TaskBlockLabels
+                  labels={task.blockLabels}
+                  appearances={feature?.taskLabelAppearances}
+                />
               </dd>
             </div>
           )}

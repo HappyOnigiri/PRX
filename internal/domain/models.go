@@ -144,29 +144,33 @@ type Project struct {
 	Description     string                  `json:"description"`
 	Archived        bool                    `json:"archived"`
 	PromptOverrides PromptTemplateOverrides `json:"prompt_overrides"`
-	CreatedAt       time.Time               `json:"created_at"`
-	UpdatedAt       time.Time               `json:"updated_at"`
+	// TaskLabelOverrides は project 固有の task ラベル上書き。
+	TaskLabelOverrides TaskLabelOverrides `json:"task_label_overrides,omitempty"`
+	CreatedAt          time.Time          `json:"created_at"`
+	UpdatedAt          time.Time          `json:"updated_at"`
 }
 
 // ProjectUpdate は project 更新で変更しうる全フィールドを運ぶ。nil ポインタは省略、空文字は
 // クリア要求を表す。1 つの比較可能な値にまとめることで、archive の防壁は個々のフィールドを
 // 挙げずに変更の有無を判定できる。
 type ProjectUpdate struct {
-	Title           *string
-	Description     *string
-	Archived        *bool
-	PromptOverrides *PromptTemplateOverridesUpdate
+	Title              *string
+	Description        *string
+	Archived           *bool
+	PromptOverrides    *PromptTemplateOverridesUpdate
+	TaskLabelOverrides *TaskLabelOverridesUpdate
 }
 
 // FeatureUpdate は feature 更新で変更しうる全フィールドを運ぶ。ポインタの規約と、
 // 1 つの値にまとめる理由は ProjectUpdate と同じ。
 type FeatureUpdate struct {
-	Title           *string
-	Description     *string
-	Status          *FeatureStatus
-	Archived        *bool
-	ProjectID       *string
-	PromptOverrides *PromptTemplateOverridesUpdate
+	Title              *string
+	Description        *string
+	Status             *FeatureStatus
+	Archived           *bool
+	ProjectID          *string
+	PromptOverrides    *PromptTemplateOverridesUpdate
+	TaskLabelOverrides *TaskLabelOverridesUpdate
 }
 
 type Feature struct {
@@ -176,7 +180,11 @@ type Feature struct {
 	Title           string                  `json:"title"`
 	Description     string                  `json:"description"`
 	PromptOverrides PromptTemplateOverrides `json:"prompt_overrides"`
-	Status          FeatureStatus           `json:"status"`
+	// TaskLabelOverrides は feature 固有の task ラベル上書き。
+	TaskLabelOverrides TaskLabelOverrides `json:"task_label_overrides,omitempty"`
+	// TaskLabelAppearances は snapshot で解決された task ラベル表示値。
+	TaskLabelAppearances TaskLabelAppearances `json:"task_label_appearances,omitempty"`
+	Status               FeatureStatus        `json:"status"`
 	// ReadOnly は導出値で、feature 自身か所属 project が archived であることを表す。
 	// クライアントは feature と project のフラグを組み合わせず、この値から読み取り専用
 	// 状態を表示する。

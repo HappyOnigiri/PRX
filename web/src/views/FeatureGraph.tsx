@@ -22,7 +22,12 @@ import { EyeOff, Plus, RotateCcw, SearchX, TriangleAlert } from "lucide-react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
-import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
+import type {
+  Dependency,
+  PullRequest,
+  Task,
+  TaskLabelAppearances,
+} from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import {
   maxGraphZoom,
@@ -499,6 +504,7 @@ interface FeatureGraphProps {
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onAddDocument?: (taskId: string, trigger: HTMLButtonElement) => void;
   onCreateTask: (dependency?: PendingDependency) => void;
+  taskLabelAppearances?: TaskLabelAppearances | undefined;
   readOnly?: boolean;
 }
 
@@ -514,6 +520,7 @@ export function FeatureGraph({
   onPreviewDocument,
   onAddDocument,
   onCreateTask,
+  taskLabelAppearances,
   readOnly = false,
 }: FeatureGraphProps) {
   const { t } = useTranslation();
@@ -534,6 +541,7 @@ export function FeatureGraph({
       onEditTask,
       onPreviewDocument,
       ...(onAddDocument ? { onAddDocument } : {}),
+      ...(taskLabelAppearances ? { taskLabelAppearances } : {}),
       readOnly,
     });
   const measuredRoutes = useMeasuredEdgeRoutes(edgeRoutes);

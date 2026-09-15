@@ -37,6 +37,7 @@ func (s *state) featureCommand() *cobra.Command {
 		s.featureCreateCommand(),
 		s.featureUpdateCommand(),
 		s.featurePromptCommand(),
+		s.featureLabelCommand(),
 		s.featureArchiveCommand(true),
 		s.featureArchiveCommand(false),
 		s.featureDeleteCommand(),

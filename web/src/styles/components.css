@@ -661,6 +661,16 @@
   color: var(--text);
 }
 
+.task-label-fields input {
+  min-width: 0;
+  min-height: 32px;
+  border: 1px solid var(--border-strong);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  padding: 5px 8px;
+}
+
 .dialog .document-plan-toggle input {
   min-height: 16px;
   width: 16px;
@@ -1334,6 +1344,13 @@
   color: var(--text-2);
 }
 
+/* task ラベルの色上書きはテーマの既定色より優先する。依存未解決の塗りつぶし
+   など背景と形は従来どおり残し、文字・アイコン・枠線だけを置き換える。 */
+.status-badge.has-custom-color {
+  border-color: var(--task-label-color);
+  color: var(--task-label-color);
+}
+
 /* feature は独自の状態語彙を持つため、色は表示ページではなくバッジの隣で定義する。 */
 .status-badge.status-active {
   border-color: var(--status-actionable);
@@ -1348,6 +1365,131 @@
 .status-badge.status-completed {
   border-color: var(--status-done);
   color: var(--status-done);
+}
+
+.task-label-editor {
+  display: grid;
+  gap: 18px;
+}
+
+.task-label-group {
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+.task-label-group h3 {
+  margin: 0 0 8px;
+  color: var(--text-2);
+  font-size: var(--text-sm);
+}
+
+.task-label-list {
+  display: grid;
+  gap: 8px;
+}
+
+.task-label-row {
+  min-width: 0;
+  margin: 0;
+  padding: 10px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+}
+
+.task-label-row legend {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  max-width: 100%;
+  padding: 0 4px;
+  color: var(--text);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+
+.task-label-row legend code {
+  color: var(--text-3);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  overflow-wrap: anywhere;
+}
+
+.task-label-fields {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 0.65fr);
+  gap: 8px;
+}
+
+.task-label-fields label {
+  display: grid;
+  gap: 4px;
+  color: var(--text-2);
+  font-size: var(--text-xs);
+}
+
+.task-label-inheritance {
+  grid-column: 1 / -1;
+  display: grid;
+  gap: 2px;
+  color: var(--text);
+  font-size: var(--text-xs);
+}
+
+.task-label-inheritance small {
+  color: var(--text-3);
+}
+
+.task-label-row-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.task-label-row-actions .button {
+  min-height: 28px;
+  border: 1px solid var(--border-strong);
+  border-radius: 3px;
+  background: transparent;
+  color: var(--text-2);
+  padding: 0 8px;
+  font-size: var(--text-xs);
+}
+
+.task-label-preview {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+  color: var(--text-3);
+  font-size: var(--text-xs);
+}
+
+.task-label-preview-light,
+.task-label-preview-dark {
+  display: inline-flex;
+  padding: 3px 5px;
+  border-radius: 3px;
+}
+
+.task-label-preview-light {
+  background: #f5f6f8;
+}
+
+.task-label-preview-dark {
+  background: #191b1f;
+}
+
+.form-warning {
+  color: var(--status-waiting);
+}
+
+@media (width <= 620px) {
+  .task-label-fields {
+    grid-template-columns: 1fr;
+  }
 }
 
 /* pull request 自身の異常は行を伸ばさずアイコンで示す。印は理由を読ませるため

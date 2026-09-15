@@ -1,3 +1,4 @@
+import { create } from "@bufbuild/protobuf";
 import type { TFunction } from "i18next";
 import { X } from "lucide-react";
 import { useState, type SyntheticEvent } from "react";
@@ -6,8 +7,10 @@ import { mutations } from "../api";
 import { unfinishedTaskCount } from "../feature-status";
 import {
   FeatureStatus,
+  TaskLabelOverridesUpdateSchema,
   type Feature,
   type Project,
+  type TaskLabelOverridesUpdate,
 } from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { featureStatusLabel } from "../i18n/domain";
@@ -24,6 +27,7 @@ import {
 import type { PromptValues } from "./PromptOverridesPanel";
 import { PromptOverridesTabPanel } from "./PromptOverridesTabPanel";
 import { TabList, TabPanel } from "./TabList";
+import { TaskLabelOverridesTabPanel } from "./TaskLabelOverridesPanel";
 import { TitleDescriptionFields } from "./TitleDescriptionFields";
 import { DiscardChangesDialog, SaveButton } from "./UnsavedChanges";
 import { useCloseOnEscape } from "./useCloseOnEscape";
@@ -44,7 +48,18 @@ interface FeatureDraft {
   projectId: string;
 }
 
-type FeatureTab = "details" | "prompts";
+type FeatureTab = "details" | "prompts" | "labels";
+
+type PromptStateChange = (
+  values: PromptValues,
+  ready: boolean,
+  invalid: boolean,
+) => void;
+type TaskLabelStateChange = (
+  update: TaskLabelOverridesUpdate,
+  ready: boolean,
+  invalid: boolean,
+) => void;
 
 // 確認が送信の代わりになるため、送信時点のフォームの値は確認かキャンセルまで
 // 保持する。
@@ -67,11 +82,18 @@ export function EditFeatureDialog({
   }));
   const [activeTab, setActiveTab] = useState<FeatureTab>("details");
   const [promptsMounted, setPromptsMounted] = useState(false);
+  const [labelsMounted, setLabelsMounted] = useState(false);
   const [promptValues, setPromptValues] = useState<PromptValues>(() =>
     promptValuesOf(feature.promptOverrides),
   );
   const [promptReady, setPromptReady] = useState(false);
   const [promptInvalid, setPromptInvalid] = useState(false);
+  const [taskLabelUpdate, setTaskLabelUpdate] =
+    useState<TaskLabelOverridesUpdate>(() =>
+      create(TaskLabelOverridesUpdateSchema),
+    );
+  const [taskLabelReady, setTaskLabelReady] = useState(false);
+  const [taskLabelInvalid, setTaskLabelInvalid] = useState(false);
   const updateFeature = useDomainMutation(mutations.updateFeature);
   const deleteFeature = useDomainMutation(mutations.deleteFeature);
   const unfinished = unfinishedTaskCount(feature);
@@ -85,14 +107,17 @@ export function EditFeatureDialog({
         promptValues,
         promptValuesOf(feature.promptOverrides),
       ));
+  const taskLabelsDirty =
+    taskLabelReady && Object.keys(taskLabelUpdate.values).length > 0;
 
   function openTab(tab: FeatureTab) {
     setActiveTab(tab);
     if (tab === "prompts") setPromptsMounted(true);
+    if (tab === "labels") setLabelsMounted(true);
   }
 
   function requestClose() {
-    if (dirty) setConfirmation("discard");
+    if (dirty || taskLabelsDirty) setConfirmation("discard");
     else onClose();
   }
 
@@ -115,10 +140,12 @@ export function EditFeatureDialog({
           promptValuesOf(feature.promptOverrides),
         )
       : undefined;
+    const taskLabelOverrides = taskLabelsDirty ? taskLabelUpdate : undefined;
     const update: FeatureUpdate = {
       id: feature.id,
       ...draft,
       ...(promptOverrides ? { promptOverrides } : {}),
+      ...(taskLabelOverrides ? { taskLabelOverrides } : {}),
     };
     if (draft.status === FeatureStatus.COMPLETED && unfinished > 0) {
       setPendingUpdate(update);
@@ -140,19 +167,27 @@ export function EditFeatureDialog({
           projects={projects}
           draft={draft}
           dirty={dirty}
+          taskLabelDirty={taskLabelsDirty}
           onDraftChange={setDraft}
           updatePending={updateFeature.isPending}
           deletePending={deleteFeature.isPending}
           updateError={updateFeature.error}
           activeTab={activeTab}
           promptsMounted={promptsMounted}
+          labelsMounted={labelsMounted}
           promptProjectId={draft.projectId}
           promptInvalid={promptInvalid}
+          taskLabelInvalid={taskLabelInvalid}
           onTab={openTab}
           onPromptStateChange={(values, ready, invalid) => {
             setPromptValues(values);
             setPromptReady(ready);
             setPromptInvalid(invalid);
+          }}
+          onTaskLabelStateChange={(update, ready, invalid) => {
+            setTaskLabelUpdate(update);
+            setTaskLabelReady(ready);
+            setTaskLabelInvalid(invalid);
           }}
           onSubmit={submitFeature}
           onClose={requestClose}
@@ -206,20 +241,20 @@ interface FeatureDialogContentProps {
   projects: Project[];
   draft: FeatureDraft;
   dirty: boolean;
+  taskLabelDirty: boolean;
   onDraftChange: (next: FeatureDraft) => void;
   updatePending: boolean;
   deletePending: boolean;
   updateError: Error | null;
   activeTab: FeatureTab;
   promptsMounted: boolean;
+  labelsMounted: boolean;
   promptProjectId: string;
   promptInvalid: boolean;
+  taskLabelInvalid: boolean;
   onTab: (tab: FeatureTab) => void;
-  onPromptStateChange: (
-    values: PromptValues,
-    ready: boolean,
-    invalid: boolean,
-  ) => void;
+  onPromptStateChange: PromptStateChange;
+  onTaskLabelStateChange: TaskLabelStateChange;
   onSubmit: (event: SyntheticEvent<HTMLFormElement>) => void;
   onClose: () => void;
   onArchive: () => void;
@@ -261,9 +296,11 @@ function ReadOnlyFeatureDialog({
   onDelete,
   activeTab,
   promptsMounted,
+  labelsMounted,
   promptProjectId,
   onTab,
   onPromptStateChange,
+  onTaskLabelStateChange,
 }: FeatureDialogContentProps) {
   const { t } = useTranslation();
   const labels = useFeatureLifecycleLabels(true);
@@ -337,6 +374,19 @@ function ReadOnlyFeatureDialog({
         editable={false}
         onStateChange={onPromptStateChange}
       />
+      <TaskLabelOverridesTabPanel
+        active={activeTab === "labels"}
+        idPrefix="feature-edit"
+        labelsMounted={labelsMounted}
+        scope="feature"
+        overrides={feature.taskLabelOverrides}
+        parentOverrides={
+          projects.find((item) => item.id === promptProjectId)
+            ?.taskLabelOverrides
+        }
+        editable={false}
+        onStateChange={onTaskLabelStateChange}
+      />
       <MutationError error={updateError} />
       <footer>
         <IconButton
@@ -350,11 +400,13 @@ function ReadOnlyFeatureDialog({
   );
 }
 
+// eslint-disable-next-line max-lines-per-function -- 詳細・プロンプト・ラベルを同じフォームで保存するため。
 function ActiveFeatureDialog({
   feature,
   projects,
   draft,
   dirty,
+  taskLabelDirty,
   onDraftChange,
   updatePending,
   deletePending,
@@ -365,10 +417,13 @@ function ActiveFeatureDialog({
   onDelete,
   activeTab,
   promptsMounted,
+  labelsMounted,
   promptProjectId,
   promptInvalid,
+  taskLabelInvalid,
   onTab,
   onPromptStateChange,
+  onTaskLabelStateChange,
 }: FeatureDialogContentProps) {
   const { t } = useTranslation();
   const labels = useFeatureLifecycleLabels(false);
@@ -446,6 +501,19 @@ function ActiveFeatureDialog({
         editable
         onStateChange={onPromptStateChange}
       />
+      <TaskLabelOverridesTabPanel
+        active={activeTab === "labels"}
+        idPrefix="feature-edit"
+        labelsMounted={labelsMounted}
+        scope="feature"
+        overrides={feature.taskLabelOverrides}
+        parentOverrides={
+          projects.find((item) => item.id === promptProjectId)
+            ?.taskLabelOverrides
+        }
+        editable
+        onStateChange={onTaskLabelStateChange}
+      />
       <MutationError error={updateError} />
       <footer>
         <IconButton
@@ -455,7 +523,9 @@ function ActiveFeatureDialog({
           onClick={onClose}
         />
         <SaveButton
-          dirty={dirty && !promptInvalid}
+          dirty={
+            (dirty || taskLabelDirty) && !promptInvalid && !taskLabelInvalid
+          }
           label={t("featureEdit.submit")}
           pending={updatePending}
           type="submit"
@@ -542,5 +612,6 @@ function featureTabs(t: TFunction) {
   return [
     { id: "details" as const, label: t("featureEdit.tabs.details") },
     { id: "prompts" as const, label: t("featureEdit.tabs.prompts") },
+    { id: "labels" as const, label: t("featureEdit.tabs.labels") },
   ];
 }

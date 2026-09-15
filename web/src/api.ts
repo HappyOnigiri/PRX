@@ -26,6 +26,7 @@ import {
   GetGitHubSyncStatusRequestSchema,
   GetPromptTemplatesRequestSchema,
   GetSnapshotRequestSchema,
+  GetTaskLabelConfigRequestSchema,
   GetTaskPromptRequestSchema,
   GetUpdateStatusRequestSchema,
   PRXService,
@@ -44,6 +45,7 @@ import {
   UpdateLanguageConfigRequestSchema,
   UpdateProjectRequestSchema,
   UpdatePromptTemplatesRequestSchema,
+  UpdateTaskLabelConfigRequestSchema,
   UpdateTaskRequestSchema,
   ValidateConfigRequestSchema,
   WatchRevisionRequestSchema,
@@ -56,6 +58,8 @@ import {
   type GitHubSyncStatus,
   type PromptTemplates,
   type Snapshot,
+  type TaskLabelConfig,
+  type TaskLabelOverridesUpdate,
   type TaskStatus,
   type UpdateStatus,
   type WatchRevisionResponse,
@@ -75,6 +79,15 @@ export async function getConfig(): Promise<GitHubConfig> {
   const response = await client.getConfig(create(GetConfigRequestSchema));
   if (!response.config)
     throw new Error("The server returned an empty GitHub configuration.");
+  return response.config;
+}
+
+export async function getTaskLabelConfig(): Promise<TaskLabelConfig> {
+  const response = await client.getTaskLabelConfig(
+    create(GetTaskLabelConfigRequestSchema),
+  );
+  if (!response.config)
+    throw new Error("The server returned an empty task label configuration.");
   return response.config;
 }
 
@@ -143,6 +156,7 @@ export const mutations = {
       implementation?: string;
       batch?: string;
     };
+    taskLabelOverrides?: TaskLabelOverridesUpdate;
   }) => client.updateProject(create(UpdateProjectRequestSchema, input)),
   // cascade は project の feature を削除せず切り離すので、WebUI に必要な形は
   // これだけ。
@@ -167,6 +181,7 @@ export const mutations = {
       implementation?: string;
       batch?: string;
     };
+    taskLabelOverrides?: TaskLabelOverridesUpdate;
   }) => client.updateFeature(create(UpdateFeatureRequestSchema, input)),
   deleteFeature: (id: string) =>
     client.deleteFeature(
@@ -311,6 +326,10 @@ export const configMutations = {
   updateSync: (intervalSeconds: bigint) =>
     client.updateGitHubSyncConfig(
       create(UpdateGitHubSyncConfigRequestSchema, { intervalSeconds }),
+    ),
+  updateTaskLabels: (overrides: TaskLabelOverridesUpdate) =>
+    client.updateTaskLabelConfig(
+      create(UpdateTaskLabelConfigRequestSchema, { overrides }),
     ),
   validate: () => client.validateConfig(create(ValidateConfigRequestSchema)),
 };

@@ -40,6 +40,7 @@ func (s *state) configCommand() *cobra.Command {
 		s.configServerCommand(),
 		s.configHostCommand(),
 		s.configAuthCommand(),
+		s.configLabelCommand(),
 	)
 	return command
 }
@@ -660,6 +661,10 @@ func findPublicAuth(settings config.Config, id string) config.PublicAuthMethod {
 }
 
 func configCommandError(err error) error {
+	var domainErr *domain.Error
+	if errors.As(err, &domainErr) {
+		return err
+	}
 	var configErr *config.Error
 	if errors.As(err, &configErr) {
 		code := domain.DomainErrorCodeInvalidConfig

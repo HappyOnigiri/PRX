@@ -10,6 +10,10 @@ import (
 )
 
 func configDomainError(err error) error {
+	var domainErr *domain.Error
+	if errors.As(err, &domainErr) {
+		return err
+	}
 	var configErr *config.Error
 	if errors.As(err, &configErr) {
 		code := domain.DomainErrorCodeInvalidConfig

@@ -1,9 +1,14 @@
+import { create } from "@bufbuild/protobuf";
 import type { TFunction } from "i18next";
 import { X } from "lucide-react";
 import { useState, type SyntheticEvent } from "react";
 import { useTranslation } from "react-i18next";
 import { mutations } from "../api";
-import type { Project } from "../gen/prx/v1/prx_pb";
+import {
+  TaskLabelOverridesUpdateSchema,
+  type Project,
+  type TaskLabelOverridesUpdate,
+} from "../gen/prx/v1/prx_pb";
 import { useDomainMutation } from "../hooks";
 import { ConfirmationDialog } from "./ConfirmationDialog";
 import { IconButton } from "./IconButton";
@@ -17,6 +22,7 @@ import {
 import type { PromptValues } from "./PromptOverridesPanel";
 import { PromptOverridesTabPanel } from "./PromptOverridesTabPanel";
 import { TabList, TabPanel } from "./TabList";
+import { TaskLabelOverridesTabPanel } from "./TaskLabelOverridesPanel";
 import { TitleDescriptionFields } from "./TitleDescriptionFields";
 import { DiscardChangesDialog, SaveButton } from "./UnsavedChanges";
 import { useCloseOnEscape } from "./useCloseOnEscape";
@@ -37,7 +43,18 @@ interface ProjectDraft {
   description: string;
 }
 
-type ProjectTab = "details" | "prompts";
+type ProjectTab = "details" | "prompts" | "labels";
+
+type PromptStateChange = (
+  values: PromptValues,
+  ready: boolean,
+  invalid: boolean,
+) => void;
+type TaskLabelStateChange = (
+  update: TaskLabelOverridesUpdate,
+  ready: boolean,
+  invalid: boolean,
+) => void;
 
 type ProjectUpdate = Parameters<typeof mutations.updateProject>[0];
 
@@ -55,11 +72,18 @@ export function EditProjectDialog({
   }));
   const [activeTab, setActiveTab] = useState<ProjectTab>("details");
   const [promptsMounted, setPromptsMounted] = useState(false);
+  const [labelsMounted, setLabelsMounted] = useState(false);
   const [promptValues, setPromptValues] = useState<PromptValues>(() =>
     promptValuesOf(project.promptOverrides),
   );
   const [promptReady, setPromptReady] = useState(false);
   const [promptInvalid, setPromptInvalid] = useState(false);
+  const [taskLabelUpdate, setTaskLabelUpdate] =
+    useState<TaskLabelOverridesUpdate>(() =>
+      create(TaskLabelOverridesUpdateSchema),
+    );
+  const [taskLabelReady, setTaskLabelReady] = useState(false);
+  const [taskLabelInvalid, setTaskLabelInvalid] = useState(false);
   const updateProject = useDomainMutation(mutations.updateProject);
   const deleteProject = useDomainMutation(mutations.deleteProject);
   const dirty =
@@ -70,14 +94,17 @@ export function EditProjectDialog({
         promptValues,
         promptValuesOf(project.promptOverrides),
       ));
+  const taskLabelsDirty =
+    taskLabelReady && Object.keys(taskLabelUpdate.values).length > 0;
 
   function openTab(tab: ProjectTab) {
     setActiveTab(tab);
     if (tab === "prompts") setPromptsMounted(true);
+    if (tab === "labels") setLabelsMounted(true);
   }
 
   function requestClose() {
-    if (dirty) setConfirmation("discard");
+    if (dirty || taskLabelsDirty) setConfirmation("discard");
     else onClose();
   }
 
@@ -100,10 +127,12 @@ export function EditProjectDialog({
           promptValuesOf(project.promptOverrides),
         )
       : undefined;
+    const taskLabelOverrides = taskLabelsDirty ? taskLabelUpdate : undefined;
     await applyUpdate({
       id: project.id,
       ...draft,
       ...(promptOverrides ? { promptOverrides } : {}),
+      ...(taskLabelOverrides ? { taskLabelOverrides } : {}),
     });
   }
 
@@ -118,18 +147,26 @@ export function EditProjectDialog({
           project={project}
           draft={draft}
           dirty={dirty}
+          taskLabelDirty={taskLabelsDirty}
           onDraftChange={setDraft}
           updatePending={updateProject.isPending}
           deletePending={deleteProject.isPending}
           updateError={updateProject.error}
           activeTab={activeTab}
           promptsMounted={promptsMounted}
+          labelsMounted={labelsMounted}
           promptInvalid={promptInvalid}
+          taskLabelInvalid={taskLabelInvalid}
           onTab={openTab}
           onPromptStateChange={(values, ready, invalid) => {
             setPromptValues(values);
             setPromptReady(ready);
             setPromptInvalid(invalid);
+          }}
+          onTaskLabelStateChange={(update, ready, invalid) => {
+            setTaskLabelUpdate(update);
+            setTaskLabelReady(ready);
+            setTaskLabelInvalid(invalid);
           }}
           onSubmit={submitProject}
           onClose={requestClose}
@@ -235,19 +272,19 @@ interface ProjectDialogContentProps {
   project: Project;
   draft: ProjectDraft;
   dirty: boolean;
+  taskLabelDirty: boolean;
   onDraftChange: (next: ProjectDraft) => void;
   updatePending: boolean;
   deletePending: boolean;
   updateError: Error | null;
   activeTab: ProjectTab;
   promptsMounted: boolean;
+  labelsMounted: boolean;
   promptInvalid: boolean;
+  taskLabelInvalid: boolean;
   onTab: (tab: ProjectTab) => void;
-  onPromptStateChange: (
-    values: PromptValues,
-    ready: boolean,
-    invalid: boolean,
-  ) => void;
+  onPromptStateChange: PromptStateChange;
+  onTaskLabelStateChange: TaskLabelStateChange;
   onSubmit: (event: SyntheticEvent<HTMLFormElement>) => void;
   onClose: () => void;
   onArchive: () => void;
@@ -286,8 +323,10 @@ function ArchivedProjectDialog({
   onDelete,
   activeTab,
   promptsMounted,
+  labelsMounted,
   onTab,
   onPromptStateChange,
+  onTaskLabelStateChange,
 }: ProjectDialogContentProps) {
   const { t } = useTranslation();
   const labels = useProjectLifecycleLabels(true);
@@ -343,6 +382,15 @@ function ArchivedProjectDialog({
         editable={false}
         onStateChange={onPromptStateChange}
       />
+      <TaskLabelOverridesTabPanel
+        active={activeTab === "labels"}
+        idPrefix="project-edit"
+        labelsMounted={labelsMounted}
+        scope="project"
+        overrides={project.taskLabelOverrides}
+        editable={false}
+        onStateChange={onTaskLabelStateChange}
+      />
       <MutationError error={updateError} />
       <footer>
         <IconButton
@@ -360,6 +408,7 @@ function ActiveProjectDialog({
   project,
   draft,
   dirty,
+  taskLabelDirty,
   onDraftChange,
   updatePending,
   deletePending,
@@ -370,9 +419,12 @@ function ActiveProjectDialog({
   onDelete,
   activeTab,
   promptsMounted,
+  labelsMounted,
   promptInvalid,
   onTab,
   onPromptStateChange,
+  taskLabelInvalid,
+  onTaskLabelStateChange,
 }: ProjectDialogContentProps) {
   const { t } = useTranslation();
   const labels = useProjectLifecycleLabels(false);
@@ -417,6 +469,15 @@ function ActiveProjectDialog({
         editable
         onStateChange={onPromptStateChange}
       />
+      <TaskLabelOverridesTabPanel
+        active={activeTab === "labels"}
+        idPrefix="project-edit"
+        labelsMounted={labelsMounted}
+        scope="project"
+        overrides={project.taskLabelOverrides}
+        editable
+        onStateChange={onTaskLabelStateChange}
+      />
       <MutationError error={updateError} />
       <footer>
         <IconButton
@@ -426,7 +487,9 @@ function ActiveProjectDialog({
           onClick={onClose}
         />
         <SaveButton
-          dirty={dirty && !promptInvalid}
+          dirty={
+            (dirty || taskLabelDirty) && !promptInvalid && !taskLabelInvalid
+          }
           label={t("projectEdit.submit")}
           pending={updatePending}
           type="submit"
@@ -440,5 +503,6 @@ function projectTabs(t: TFunction) {
   return [
     { id: "details" as const, label: t("projectEdit.tabs.details") },
     { id: "prompts" as const, label: t("projectEdit.tabs.prompts") },
+    { id: "labels" as const, label: t("projectEdit.tabs.labels") },
   ];
 }

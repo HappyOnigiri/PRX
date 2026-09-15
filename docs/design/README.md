@@ -13,6 +13,7 @@
 | [diagnostics.md](diagnostics.md) | `prx debug` とその RPC |
 | [agent-prompts.md](agent-prompts.md) | エージェントのプロンプトテンプレート、その語彙、テンプレートの選択 |
 | [domain.md](domain.md) | 表示状態の導出、ステータスの意味、依存関係、プロジェクトの所属 |
+| [task-labels.md](task-labels.md) | task ラベルの階層設定、表示文字列・色の解決、CLI/RPC 契約 |
 | [archive.md](archive.md) | アーカイブ済みのプロジェクトやフィーチャー、およびそれらが禁止する書き込み |
 | [persistence.md](persistence.md) | ストレージ、設定ファイルと設定の置き場所、デモモード、ドキュメント、実装計画 |
 | [updates.md](updates.md) | 新しいリリースの確認、`prx update`、WebUI の案内、更新の実行 |

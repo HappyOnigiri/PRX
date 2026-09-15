@@ -170,6 +170,79 @@ func TestRPCConfigMethodsAreUnavailableWithoutConfigStore(t *testing.T) {
 	}
 }
 
+func TestRPCTaskLabelConfigAndSnapshotResolution(t *testing.T) {
+	ctx := context.Background()
+	database, err := store.Open(ctx, filepath.Join(t.TempDir(), "rpc-labels.db"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer func() { _ = database.Close() }()
+	configStore, err := config.NewStore(filepath.Join(t.TempDir(), "config.yaml"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	client := newConfigClient(t, app.NewWithConfig(database, nil, configStore))
+
+	initial, err := client.GetTaskLabelConfig(ctx, connect.NewRequest(&prxv1.GetTaskLabelConfigRequest{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(initial.Msg.GetConfig().GetKeys()) != 16 ||
+		initial.Msg.GetConfig().GetMaxTextCodepoints() != 32 ||
+		initial.Msg.GetConfig().GetBuiltIn().GetValues()[0].GetKey() == "" {
+		t.Fatalf("initial task label config=%+v", initial.Msg.GetConfig())
+	}
+	text := "Working"
+	color := "#A1B2C3"
+	updated, err := client.UpdateTaskLabelConfig(ctx, connect.NewRequest(&prxv1.UpdateTaskLabelConfigRequest{
+		Overrides: &prxv1.TaskLabelOverridesUpdate{Values: map[string]*prxv1.TaskLabelOverrideUpdate{
+			string(domain.TaskLabelStatusInProgress): {Text: &text, Color: &color},
+		}},
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	override := updated.Msg.GetConfig().GetOverrides().GetValues()[string(domain.TaskLabelStatusInProgress)]
+	if override.GetText() != text || override.GetColor() != "#a1b2c3" {
+		t.Fatalf("updated override=%+v", override)
+	}
+	project, err := client.CreateProject(ctx, connect.NewRequest(&prxv1.CreateProjectRequest{Title: "Label project"}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	feature, err := client.CreateFeature(ctx, connect.NewRequest(&prxv1.CreateFeatureRequest{
+		Title: "Label feature", ProjectId: project.Msg.GetProject().GetId(),
+	}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	snapshot, err := client.GetSnapshot(ctx, connect.NewRequest(&prxv1.GetSnapshotRequest{}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	var appearance *prxv1.TaskLabelAppearance
+	for _, item := range snapshot.Msg.GetSnapshot().GetFeatures() {
+		if item.GetId() == feature.Msg.GetFeature().GetId() {
+			for _, candidate := range item.GetTaskLabelAppearances().GetValues() {
+				if candidate.GetKey() == string(domain.TaskLabelStatusInProgress) {
+					appearance = candidate
+				}
+			}
+		}
+	}
+	if appearance == nil || appearance.GetText() != text || !appearance.GetTextOverridden() {
+		t.Fatalf("snapshot appearance=%+v", appearance)
+	}
+	_, err = client.UpdateTaskLabelConfig(ctx, connect.NewRequest(&prxv1.UpdateTaskLabelConfigRequest{
+		Overrides: &prxv1.TaskLabelOverridesUpdate{Values: map[string]*prxv1.TaskLabelOverrideUpdate{
+			"status.missing": {Text: &text},
+		}},
+	}))
+	if errorDetailCode(t, err) != prxv1.DomainErrorCode_DOMAIN_ERROR_CODE_INVALID_TASK_LABEL {
+		t.Fatalf("invalid key error=%v", err)
+	}
+}
+
 func newConfigClient(t *testing.T, service *app.Service) prxv1connect.PRXServiceClient {
 	t.Helper()
 	path, handler := rpc.New(service)

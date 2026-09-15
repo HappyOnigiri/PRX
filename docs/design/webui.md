@@ -6,6 +6,8 @@
 サーバの権威と credential の扱いは、[architecture.md](architecture.md) と [github-credentials.md](github-credentials.md) に従う。
 
 WebUI の永続的な設定は、作業中に頻繁に切り替えるものを除き、Settings ダイアログを唯一の入口とする。
+
+task ラベルの Settings・project・feature 編集面と、実効値の表示契約は [task-labels.md](task-labels.md) に従う。カード、グラフ、インスペクタは同じ snapshot の appearance を共有し、ラベル設定を表示箇所ごとに複製しない。
 グラフのズームやサイドバーの project 展開のように頻繁に調整するものは、使う場所に置いたままでよい。
 
 値を編集する面は、保存を 1 つに集める。Settings ダイアログ、task インスペクタ、project と feature の編集ダイアログは、面の中の項目ごとに保存を持たない。

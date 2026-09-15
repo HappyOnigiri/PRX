@@ -44,6 +44,15 @@ func (s *Service) UpdateProject(
 			return domain.Project{}, err
 		}
 	}
+	if update.TaskLabelOverrides != nil {
+		if err := applyTaskLabelOverrides(
+			&project.TaskLabelOverrides,
+			*update.TaskLabelOverrides,
+			"project",
+		); err != nil {
+			return domain.Project{}, err
+		}
+	}
 	if update.Archived != nil {
 		project.Archived = *update.Archived
 	}

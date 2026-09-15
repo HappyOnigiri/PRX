@@ -254,6 +254,7 @@ export const errorKeys = {
   [DomainErrorCode.INVALID_PULL_REQUEST_URL]: "error.invalidPullRequestUrl",
   [DomainErrorCode.INVALID_PROMPT_TEMPLATE]: "error.invalidPromptTemplate",
   [DomainErrorCode.INVALID_STATUS]: "error.invalidStatus",
+  [DomainErrorCode.INVALID_TASK_LABEL]: "error.invalidTaskLabel",
   [DomainErrorCode.INVALID_TITLE]: "error.invalidTitle",
   [DomainErrorCode.NOT_FOUND]: "error.notFound",
   [DomainErrorCode.REFERENCES_EXIST]: "error.referencesExist",

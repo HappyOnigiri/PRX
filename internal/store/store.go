@@ -365,10 +365,11 @@ func domainFeature(value db.Feature, projectID string) domain.Feature {
 			Implementation: value.PromptImplementation.String,
 			Batch:          value.PromptBatch.String,
 		},
-		Status:    status,
-		Archived:  value.Archived != 0,
-		CreatedAt: parseTime(value.CreatedAt),
-		UpdatedAt: parseTime(value.UpdatedAt),
+		TaskLabelOverrides: decodeTaskLabelOverrides(value.TaskLabelOverridesJson),
+		Status:             status,
+		Archived:           value.Archived != 0,
+		CreatedAt:          parseTime(value.CreatedAt),
+		UpdatedAt:          parseTime(value.UpdatedAt),
 	}
 }
 
@@ -391,10 +392,25 @@ func domainProject(value db.Project) domain.Project {
 			Implementation: value.PromptImplementation.String,
 			Batch:          value.PromptBatch.String,
 		},
-		Archived:  value.Archived != 0,
-		CreatedAt: parseTime(value.CreatedAt),
-		UpdatedAt: parseTime(value.UpdatedAt),
+		TaskLabelOverrides: decodeTaskLabelOverrides(value.TaskLabelOverridesJson),
+		Archived:           value.Archived != 0,
+		CreatedAt:          parseTime(value.CreatedAt),
+		UpdatedAt:          parseTime(value.UpdatedAt),
 	}
+}
+
+func decodeTaskLabelOverrides(value sql.NullString) domain.TaskLabelOverrides {
+	if !value.Valid || strings.TrimSpace(value.String) == "" {
+		return nil
+	}
+	var result domain.TaskLabelOverrides
+	if err := json.Unmarshal([]byte(value.String), &result); err != nil {
+		return nil
+	}
+	if len(result) == 0 {
+		return nil
+	}
+	return result
 }
 
 func publicFeatureIDs(values []db.Feature) map[string]string {

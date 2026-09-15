@@ -1,4 +1,5 @@
 import type { LucideIcon } from "lucide-react";
+import type { CSSProperties } from "react";
 
 // バッジの形と補助的な視覚表現はここに集約する。既存の呼び出しは label だけを
 // 渡せば従来どおり表示され、新しい状態バッジだけがアイコンと分割ラベルを使う。
@@ -10,6 +11,7 @@ export function StatusBadge({
   mainLabel,
   secondaryLabel,
   accessibleLabel,
+  color,
 }: {
   className?: string;
   label: string;
@@ -18,14 +20,18 @@ export function StatusBadge({
   mainLabel?: string;
   secondaryLabel?: string;
   accessibleLabel?: string;
+  color?: string | undefined;
 }) {
   const hasSplitLabel = mainLabel !== undefined || secondaryLabel !== undefined;
   const visibleMainLabel = mainLabel ?? label;
   return (
     <span
       aria-label={accessibleLabel}
-      className={className ? `status-badge ${className}` : "status-badge"}
+      className={`status-badge${className ? ` ${className}` : ""}${color ? " has-custom-color" : ""}`}
       role={accessibleLabel ? "img" : undefined}
+      style={
+        color ? ({ "--task-label-color": color } as CSSProperties) : undefined
+      }
       title={title}
     >
       {Icon && (

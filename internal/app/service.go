@@ -206,6 +206,15 @@ func (s *Service) UpdateFeature(
 			return domain.Feature{}, err
 		}
 	}
+	if update.TaskLabelOverrides != nil {
+		if err := applyTaskLabelOverrides(
+			&feature.TaskLabelOverrides,
+			*update.TaskLabelOverrides,
+			"feature",
+		); err != nil {
+			return domain.Feature{}, err
+		}
+	}
 	if update.Status != nil && *update.Status != "" {
 		feature.Status = *update.Status
 	}
@@ -724,7 +733,29 @@ func (s *Service) Snapshot(ctx context.Context) (domain.Snapshot, error) {
 	if err != nil {
 		return domain.Snapshot{}, err
 	}
-	return deriveSnapshot(snapshot), nil
+	snapshot = deriveSnapshot(snapshot)
+	global := domain.TaskLabelOverrides{}
+	if s.configStore != nil {
+		settings, loadErr := s.configStore.Load()
+		if loadErr != nil {
+			return domain.Snapshot{}, configDomainError(loadErr)
+		}
+		global = settings.TaskLabels
+	}
+	for i := range snapshot.Features {
+		feature := &snapshot.Features[i]
+		projectOverrides := domain.TaskLabelOverrides{}
+		for _, project := range snapshot.Projects {
+			if project.ID == feature.ProjectID {
+				projectOverrides = project.TaskLabelOverrides
+				break
+			}
+		}
+		feature.TaskLabelAppearances = domain.ResolveTaskLabelAppearances(
+			global, projectOverrides, feature.TaskLabelOverrides,
+		)
+	}
+	return snapshot, nil
 }
 
 // deriveSnapshot は保存済み snapshot を、全呼び出し側が必要とする導出済みの形に変える。
@@ -791,6 +822,18 @@ func deriveSnapshot(snapshot domain.Snapshot) domain.Snapshot {
 		// project のアーカイブは配下の feature にも及ぶ。2 つのフラグを合成するのは
 		// ここだけで、クライアントは ReadOnly を読むだけでよい。
 		feature.ReadOnly = feature.Archived || archivedProjects[feature.ProjectID]
+		projectOverrides := domain.TaskLabelOverrides{}
+		for _, project := range snapshot.Projects {
+			if project.ID == feature.ProjectID {
+				projectOverrides = project.TaskLabelOverrides
+				break
+			}
+		}
+		// global 設定は Snapshot を作る呼び出し側で後から重ねるため、ここでは
+		// project と feature の値を解決できる土台だけを保持する。
+		feature.TaskLabelAppearances = domain.ResolveTaskLabelAppearances(
+			domain.TaskLabelOverrides{}, projectOverrides, feature.TaskLabelOverrides,
+		)
 	}
 	return snapshot
 }

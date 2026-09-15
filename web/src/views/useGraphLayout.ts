@@ -2,7 +2,12 @@ import type { ELK as ElkInstance, ElkNode } from "elkjs/lib/elk-api.js";
 import ELK from "elkjs/lib/elk-api.js";
 import elkWorkerUrl from "elkjs/lib/elk-worker.min.js?url";
 import { useEffect, useMemo, useState } from "react";
-import type { Dependency, PullRequest, Task } from "../gen/prx/v1/prx_pb";
+import type {
+  Dependency,
+  PullRequest,
+  Task,
+  TaskLabelAppearances,
+} from "../gen/prx/v1/prx_pb";
 import { isDependencyBlockedTask, isDormantTask } from "../task-attention";
 import { dependencyEdgeId, type DependencyEdgeRoute } from "./dependencyGraph";
 import { type TaskFlowNode, type TaskNodeDocument } from "./TaskNode";
@@ -20,6 +25,7 @@ interface GraphLayoutOptions {
   onEditTask: (taskId: string) => void;
   onPreviewDocument: (document: TaskNodeDocument) => void;
   onAddDocument?: (taskId: string, trigger: HTMLButtonElement) => void;
+  taskLabelAppearances?: TaskLabelAppearances | undefined;
   readOnly?: boolean;
 }
 
@@ -81,6 +87,7 @@ function isSameLayoutRequest(
     completed.onEditTask === requested.onEditTask &&
     completed.onPreviewDocument === requested.onPreviewDocument &&
     completed.onAddDocument === requested.onAddDocument &&
+    completed.taskLabelAppearances === requested.taskLabelAppearances &&
     completed.readOnly === requested.readOnly &&
     completed.attempt === requested.attempt
   );
@@ -94,6 +101,7 @@ function buildRawNodes({
   onEditTask,
   onPreviewDocument,
   onAddDocument,
+  taskLabelAppearances,
   readOnly = false,
 }: GraphLayoutOptions) {
   const omitOwner = hasSingleOwner(pullRequests);
@@ -118,6 +126,7 @@ function buildRawNodes({
           title: task.title,
           assignee: task.assignee,
           state: task.displayState,
+          ...(taskLabelAppearances ? { taskLabelAppearances } : {}),
           dormant: isDormantTask(task),
           blocked: isDependencyBlockedTask(task),
           blockLabels: task.blockLabels,
@@ -276,6 +285,7 @@ export function useGraphLayout({
   onEditTask,
   onPreviewDocument,
   onAddDocument,
+  taskLabelAppearances,
   readOnly = false,
 }: GraphLayoutOptions) {
   const [nodes, setNodes] = useState<TaskFlowNode[]>([]);
@@ -299,6 +309,7 @@ export function useGraphLayout({
       onEditTask,
       onPreviewDocument,
       ...(onAddDocument ? { onAddDocument } : {}),
+      ...(taskLabelAppearances ? { taskLabelAppearances } : {}),
       readOnly,
       attempt: layoutAttempt,
     }),
@@ -311,6 +322,7 @@ export function useGraphLayout({
       onEditTask,
       onPreviewDocument,
       onAddDocument,
+      taskLabelAppearances,
       readOnly,
       layoutAttempt,
     ],

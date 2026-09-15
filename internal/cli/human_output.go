@@ -44,6 +44,7 @@ func renderProjectFields(project domain.Project) humanRenderer {
 			{"Description", displayValue(project.Description)},
 			{"Archived", yesNo(project.Archived)},
 			{"Prompt overrides", promptOverrideSummary(project.PromptOverrides)},
+			{"Task label overrides", taskLabelOverrideSummary(project.TaskLabelOverrides)},
 			{"Created", formatTime(project.CreatedAt)},
 			{"Updated", formatTime(project.UpdatedAt)},
 		})
@@ -109,6 +110,7 @@ func renderFeatureDetail(feature domain.Feature) humanRenderer {
 			{"Title", feature.Title},
 			{"Description", displayValue(feature.Description)},
 			{"Prompt overrides", promptOverrideSummary(feature.PromptOverrides)},
+			{"Task label overrides", taskLabelOverrideSummary(feature.TaskLabelOverrides)},
 			{"Status", string(feature.Status)},
 			{"Display status", string(feature.DisplayStatus)},
 			{"Archived", yesNo(feature.Archived)},
@@ -142,11 +144,38 @@ func promptOverrideSummary(overrides domain.PromptTemplateOverrides) string {
 	return strings.Join(values, ", ")
 }
 
-func renderTaskList(tasks []domain.Task) humanRenderer {
-	return func(out io.Writer) error { return writeTaskTable(out, tasks) }
+func taskLabelOverrideSummary(overrides domain.TaskLabelOverrides) string {
+	if len(overrides) == 0 {
+		return "none"
+	}
+	keys := domain.SortedTaskLabelKeys(overrides)
+	values := make([]string, 0, len(keys))
+	for _, key := range keys {
+		value := overrides[key]
+		parts := make([]string, 0, 2)
+		if value.Text != "" {
+			parts = append(parts, "text")
+		}
+		if value.Color != "" {
+			parts = append(parts, "color")
+		}
+		values = append(values, fmt.Sprintf("%s(%s)", key, strings.Join(parts, ",")))
+	}
+	return strings.Join(values, ", ")
 }
 
-func writeTaskTable(out io.Writer, tasks []domain.Task) error {
+func renderTaskListWithAppearances(
+	tasks []domain.Task,
+	appearances map[string]domain.TaskLabelAppearances,
+) humanRenderer {
+	return func(out io.Writer) error { return writeTaskTableWithAppearances(out, tasks, appearances) }
+}
+
+func writeTaskTableWithAppearances(
+	out io.Writer,
+	tasks []domain.Task,
+	appearances map[string]domain.TaskLabelAppearances,
+) error {
 	if len(tasks) == 0 {
 		_, err := fmt.Fprintln(out, "No tasks found.")
 		return err
@@ -159,7 +188,7 @@ func writeTaskTable(out io.Writer, tasks []domain.Task) error {
 				writeRow(
 					table,
 					task.ID,
-					task.DisplayState,
+					taskDisplayLabel(task, appearances),
 					yesNo(task.Ready),
 					displayValue(task.Assignee),
 					task.Title,
@@ -170,6 +199,13 @@ func writeTaskTable(out io.Writer, tasks []domain.Task) error {
 }
 
 func renderTaskDetail(task domain.Task) humanRenderer {
+	return renderTaskDetailWithAppearances(task, nil)
+}
+
+func renderTaskDetailWithAppearances(
+	task domain.Task,
+	appearances map[string]domain.TaskLabelAppearances,
+) humanRenderer {
 	return func(out io.Writer) error {
 		return writeFields(out, [][2]string{
 			{"ID", task.ID},
@@ -177,11 +213,11 @@ func renderTaskDetail(task domain.Task) humanRenderer {
 			{"Title", task.Title},
 			{"Scope", displayValue(task.Scope)},
 			{"Status", string(task.Status)},
-			{"Display state", string(task.DisplayState)},
+			{"Display state", taskDisplayLabel(task, appearances)},
 			{"Ready", yesNo(task.Ready)},
 			{"Assignee", displayValue(task.Assignee)},
 			{"Implementation plan", yesNo(task.HasImplementationPlan)},
-			{"Blocks", displayValue(blockLabelsText(task.BlockLabels))},
+			{"Blocks", displayValue(blockLabelsTextWithAppearances(task, appearances))},
 			{"Blocked reason", displayValue(task.BlockedReason)},
 			{"Created", formatTime(task.CreatedAt)},
 			{"Updated", formatTime(task.UpdatedAt)},
@@ -189,11 +225,25 @@ func renderTaskDetail(task domain.Task) humanRenderer {
 	}
 }
 
-// blockLabelsText はブロックラベルをドメインの並び順のままカンマ区切りにする。
-func blockLabelsText(labels []domain.TaskBlockLabel) string {
-	values := make([]string, 0, len(labels))
-	for _, label := range labels {
-		values = append(values, string(label))
+func taskDisplayLabel(task domain.Task, appearances map[string]domain.TaskLabelAppearances) string {
+	if values := appearances[task.FeatureID]; values != nil {
+		if value, ok := values[domain.TaskLabelKeyForDisplayState(task.DisplayState)]; ok && value.Text != "" {
+			return value.Text
+		}
+	}
+	return string(task.DisplayState)
+}
+
+func blockLabelsTextWithAppearances(task domain.Task, appearances map[string]domain.TaskLabelAppearances) string {
+	values := make([]string, 0, len(task.BlockLabels))
+	for _, label := range task.BlockLabels {
+		text := string(label)
+		if valuesForFeature := appearances[task.FeatureID]; valuesForFeature != nil {
+			if value, ok := valuesForFeature[domain.TaskLabelKeyForBlockLabel(label)]; ok && value.Text != "" {
+				text = value.Text
+			}
+		}
+		values = append(values, text)
 	}
 	return strings.Join(values, ", ")
 }
@@ -334,17 +384,12 @@ func renderImplementationPlan(plan domain.Document) humanRenderer {
 	}
 }
 
-func renderQueue(name string, tasks []domain.Task) humanRenderer {
-	return func(out io.Writer) error {
-		if len(tasks) == 0 {
-			_, err := fmt.Fprintf(out, "No %s tasks found.\n", name)
-			return err
-		}
-		return writeTaskTable(out, tasks)
-	}
-}
-
-func renderGraph(feature domain.Feature, tasks []domain.Task, dependencies []domain.Dependency) humanRenderer {
+func renderGraphWithAppearances(
+	feature domain.Feature,
+	tasks []domain.Task,
+	dependencies []domain.Dependency,
+	appearances map[string]domain.TaskLabelAppearances,
+) humanRenderer {
 	return func(out io.Writer) error {
 		if _, err := fmt.Fprintf(
 			out,
@@ -355,7 +400,7 @@ func renderGraph(feature domain.Feature, tasks []domain.Task, dependencies []dom
 		); err != nil {
 			return err
 		}
-		if err := writeTaskTable(out, tasks); err != nil {
+		if err := writeTaskTableWithAppearances(out, tasks, appearances); err != nil {
 			return err
 		}
 		if _, err := fmt.Fprintln(out, "\nDependencies"); err != nil {
@@ -399,7 +444,7 @@ func renderSnapshot(prefix string, snapshot domain.Snapshot) humanRenderer {
 		if _, err := fmt.Fprintln(out, "\nTasks"); err != nil {
 			return err
 		}
-		if err := writeTaskTable(out, snapshot.Tasks); err != nil {
+		if err := writeTaskTableWithAppearances(out, snapshot.Tasks, featureAppearances(snapshot)); err != nil {
 			return err
 		}
 		if _, err := fmt.Fprintln(out, "\nDependencies"); err != nil {

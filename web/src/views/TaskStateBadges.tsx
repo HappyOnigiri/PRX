@@ -9,7 +9,12 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import { useTranslation } from "react-i18next";
-import { TaskBlockLabel, TaskDisplayState } from "../gen/prx/v1/prx_pb";
+import {
+  TaskBlockLabel,
+  TaskDisplayState,
+  type TaskLabelAppearance,
+  type TaskLabelAppearances,
+} from "../gen/prx/v1/prx_pb";
 import type { taskBadgeStageKeys, taskBadgeStateKeys } from "../i18n/domain";
 import {
   taskBadgeStageLabel,
@@ -71,22 +76,38 @@ const taskStatusPresentations = {
 
 // タスクの状態は 2 系統ある。ステータスは 1 つで進み具合を、ブロックラベルは
 // 0〜4 個で進行を妨げている事情を示す。docs/design/webui.md を参照。
-export function TaskStatusBadge({ state }: { state: TaskDisplayState }) {
+export function TaskStatusBadge({
+  state,
+  appearances,
+}: {
+  state: TaskDisplayState;
+  appearances?: TaskLabelAppearances | undefined;
+}) {
   const { t } = useTranslation();
   const presentation: TaskStatusPresentation = taskStatusPresentations[state];
-  const label = taskDisplayStateLabel(state, t);
+  const appearance = findAppearance(
+    appearances,
+    taskDisplayStateLabelKey(state),
+  );
+  const customText = appearance?.textOverridden ? appearance.text : "";
+  const label = customText || taskDisplayStateLabel(state, t);
   return (
     <StatusBadge
       className={`state-${taskDisplayStateToken(state)}`}
+      color={appearance?.colorOverridden ? appearance.color : undefined}
       icon={presentation.icon}
       label={label}
       accessibleLabel={label}
-      {...(presentation.stage
-        ? { mainLabel: taskBadgeStageLabel(presentation.stage, t) }
-        : {})}
-      {...(presentation.state
-        ? { secondaryLabel: taskBadgeStateLabel(presentation.state, t) }
-        : {})}
+      {...(customText
+        ? {}
+        : presentation.stage
+          ? { mainLabel: taskBadgeStageLabel(presentation.stage, t) }
+          : {})}
+      {...(customText
+        ? {}
+        : presentation.state
+          ? { secondaryLabel: taskBadgeStateLabel(presentation.state, t) }
+          : {})}
     />
   );
 }
@@ -96,10 +117,12 @@ export function TaskStatusBadge({ state }: { state: TaskDisplayState }) {
 export function TaskBlockLabels({
   labels,
   dependencyDetail,
+  appearances,
 }: {
   labels: TaskBlockLabel[];
   // dependencyDetail は依存未解決ラベルの補足で、どの blocker を待つかを示す。
-  dependencyDetail?: string;
+  dependencyDetail?: string | undefined;
+  appearances?: TaskLabelAppearances | undefined;
 }) {
   const { t } = useTranslation();
   return (
@@ -109,15 +132,77 @@ export function TaskBlockLabels({
           label === TaskBlockLabel.DEPENDENCY_UNRESOLVED
             ? dependencyDetail
             : "";
+        const appearance = findAppearance(
+          appearances,
+          taskBlockLabelKey(label),
+        );
+        const customText = appearance?.textOverridden ? appearance.text : "";
         return (
           <StatusBadge
             key={label}
             className={`block-${taskBlockLabelToken(label)}`}
-            label={taskBlockLabelLabel(label, t)}
+            color={appearance?.colorOverridden ? appearance.color : undefined}
+            label={customText || taskBlockLabelLabel(label, t)}
+            {...(customText ? { accessibleLabel: customText } : {})}
             {...(detail ? { title: detail } : {})}
           />
         );
       })}
     </>
   );
+}
+
+function findAppearance(
+  appearances: TaskLabelAppearances | undefined,
+  key: string,
+): TaskLabelAppearance | undefined {
+  return appearances?.values.find((appearance) => appearance.key === key);
+}
+
+function taskDisplayStateLabelKey(state: TaskDisplayState): string {
+  return `status.${taskDisplayStateKeyToken(state)}`;
+}
+
+function taskDisplayStateKeyToken(state: TaskDisplayState): string {
+  switch (state) {
+    case TaskDisplayState.UNSPECIFIED:
+      return "unknown";
+    case TaskDisplayState.NOT_STARTED:
+      return "not_started";
+    case TaskDisplayState.DESIGNING:
+      return "designing";
+    case TaskDisplayState.DESIGNED:
+      return "designed";
+    case TaskDisplayState.IN_PROGRESS:
+      return "in_progress";
+    case TaskDisplayState.IMPLEMENTED:
+      return "implemented";
+    case TaskDisplayState.IN_REVIEW:
+      return "in_review";
+    case TaskDisplayState.APPROVED:
+      return "approved";
+    case TaskDisplayState.COMPLETED:
+      return "completed";
+    case TaskDisplayState.MERGED:
+      return "merged";
+    case TaskDisplayState.CLOSED:
+      return "closed";
+    case TaskDisplayState.UNKNOWN:
+      return "unknown";
+  }
+}
+
+function taskBlockLabelKey(label: TaskBlockLabel): string {
+  switch (label) {
+    case TaskBlockLabel.UNSPECIFIED:
+      return "block.unknown";
+    case TaskBlockLabel.DEPENDENCY_UNRESOLVED:
+      return "block.dependency_unresolved";
+    case TaskBlockLabel.CONFLICT:
+      return "block.conflict";
+    case TaskBlockLabel.CHANGES_REQUESTED:
+      return "block.changes_requested";
+    case TaskBlockLabel.CI_FAILED:
+      return "block.ci_failed";
+  }
 }

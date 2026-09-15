@@ -1,16 +1,23 @@
 import { useTranslation } from "react-i18next";
-import { TaskStatus, type Task } from "../gen/prx/v1/prx_pb";
+import {
+  TaskStatus,
+  type Task,
+  type TaskLabelAppearances,
+} from "../gen/prx/v1/prx_pb";
 import { taskStatusLabel } from "../i18n/domain";
 import { MutationError } from "./MutationError";
 import { type TaskDraftController } from "./taskDraft";
+import { taskStatusLabelKey } from "./taskStatusLabelKey";
 
 export function TaskInspectorTaskForm({
   task,
   controller,
+  appearances,
   readOnly = false,
 }: {
   task: Task;
   controller: TaskDraftController;
+  appearances?: TaskLabelAppearances | undefined;
   readOnly?: boolean;
 }) {
   const { t } = useTranslation();
@@ -74,7 +81,7 @@ export function TaskInspectorTaskForm({
               TaskStatus.CLOSED,
             ].map((status) => (
               <option value={status} key={status}>
-                {taskStatusLabel(status, t)}
+                {taskStatusLabelFor(status, appearances, t)}
               </option>
             ))}
           </select>
@@ -93,4 +100,16 @@ export function TaskInspectorTaskForm({
       <MutationError error={controller.error} />
     </div>
   );
+}
+
+function taskStatusLabelFor(
+  status: TaskStatus,
+  appearances: TaskLabelAppearances | undefined,
+  t: Parameters<typeof taskStatusLabel>[1],
+): string {
+  const appearance = appearances?.values.find(
+    (item) => item.key === taskStatusLabelKey(status),
+  );
+  if (appearance?.textOverridden && appearance.text) return appearance.text;
+  return taskStatusLabel(status, t);
 }

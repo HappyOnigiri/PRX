@@ -41,3 +41,5 @@ archive が禁じる書き込みは [archive.md](archive.md) に記録する。
 blocked な task は batch での引き渡しのために未解決の blocker をすべて保持するが、blocked の理由としては、読み手が対処すべき最初の 1 件だけを示す。
 
 現在の状態値、表示の優先順位、readiness の条件は、ドメインの実装とそのテストが所有する。
+
+task の表示ラベルは [task-labels.md](task-labels.md) の階層設定から解決する。ラベルの変更は表示だけに影響し、依存の充足、ready、完了判定は安定したドメイン値を使う。

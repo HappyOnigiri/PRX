@@ -437,6 +437,7 @@ function WorkspaceContent(props: WorkspaceContentProps) {
           onPreviewDocument={props.onPreviewDocument}
           onAddDocument={props.onAddDocument}
           onCreateTask={props.onCreateTask}
+          taskLabelAppearances={props.feature.taskLabelAppearances}
           readOnly={readOnly}
         />
         {props.selectedTask && (
@@ -446,6 +447,7 @@ function WorkspaceContent(props: WorkspaceContentProps) {
             tasks={props.tasks}
             pullRequest={props.pullRequests.get(props.selectedTask.id)}
             documents={props.documentsByTask.get(props.selectedTask.id) ?? []}
+            appearances={props.feature.taskLabelAppearances}
             readOnly={readOnly}
             onPreview={props.onPreviewDocument}
             onClose={props.onCloseInspector}

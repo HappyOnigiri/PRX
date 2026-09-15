@@ -1,6 +1,8 @@
 package cli
 
 import (
+	"fmt"
+	"io"
 	"strings"
 
 	"github.com/spf13/cobra"
@@ -60,7 +62,7 @@ func (s *state) graphCommand() *cobra.Command {
 				}
 			}
 			return s.write(map[string]any{"feature": feature, "tasks": tasks, "dependencies": deps},
-				renderGraph(feature, tasks, deps))
+				renderGraphWithAppearances(feature, tasks, deps, featureAppearances(snapshot)))
 		},
 	}
 }
@@ -100,9 +102,34 @@ func (s *state) queueCommand(name string) *cobra.Command {
 				key = "stale_tasks"
 			}
 			tasks = nonNilSlice(tasks)
-			return s.write(map[string]any{key: tasks}, renderQueue(queueLabel(name), tasks))
+			return s.write(
+				map[string]any{key: tasks},
+				renderQueueWithAppearances(queueLabel(name), tasks, featureAppearances(snapshot)),
+			)
 		},
 	}
+}
+
+func renderQueueWithAppearances(
+	name string,
+	tasks []domain.Task,
+	appearances map[string]domain.TaskLabelAppearances,
+) humanRenderer {
+	return func(out io.Writer) error {
+		if len(tasks) == 0 {
+			_, err := fmt.Fprintf(out, "No %s tasks found.\n", name)
+			return err
+		}
+		return writeTaskTableWithAppearances(out, tasks, appearances)
+	}
+}
+
+func featureAppearances(snapshot domain.Snapshot) map[string]domain.TaskLabelAppearances {
+	result := make(map[string]domain.TaskLabelAppearances, len(snapshot.Features))
+	for _, feature := range snapshot.Features {
+		result[feature.ID] = feature.TaskLabelAppearances
+	}
+	return result
 }
 
 func (s *state) syncCommand() *cobra.Command {

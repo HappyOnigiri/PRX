@@ -34,7 +34,7 @@ func (s *state) taskCommand() *cobra.Command {
 			if len(args) == 1 {
 				for _, task := range snapshot.Tasks {
 					if task.ID == args[0] {
-						return s.write(task, renderTaskDetail(task))
+						return s.write(task, renderTaskDetailWithAppearances(task, featureAppearances(snapshot)))
 					}
 				}
 				return domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", args[0])
@@ -48,7 +48,10 @@ func (s *state) taskCommand() *cobra.Command {
 				tasks = filterTasks(tasks, func(task domain.Task) bool { return task.FeatureID == feature.ID })
 			}
 			tasks = nonNilSlice(tasks)
-			return s.write(map[string]any{"tasks": tasks}, renderTaskList(tasks))
+			return s.write(
+				map[string]any{"tasks": tasks},
+				renderTaskListWithAppearances(tasks, featureAppearances(snapshot)),
+			)
 		},
 	}
 	command.Flags().StringVar(&filterFeature, "feature", "", "filter by feature ID")
@@ -85,9 +88,20 @@ func (s *state) taskUpdateCommand() *cobra.Command {
 		Example: "prx task update TASK_ID --status completed",
 		Args:    cobra.ExactArgs(1),
 		RunE: func(cmd *cobra.Command, args []string) error {
+			var statusValue *domain.TaskStatus
+			if cmd.Flags().Changed("status") {
+				snapshot, err := s.service.Snapshot(cmd.Context())
+				if err != nil {
+					return err
+				}
+				statusValue, err = resolveTaskStatusInput(status, args[0], snapshot)
+				if err != nil {
+					return err
+				}
+			}
 			value, err := s.service.UpdateTask(cmd.Context(), args[0],
 				changedFlag(cmd, "title", &title), changedFlag(cmd, "scope", &scope),
-				changedStringType[domain.TaskStatus](cmd, "status", &status), changedFlag(cmd, "assignee", &assignee))
+				statusValue, changedFlag(cmd, "assignee", &assignee))
 			if err != nil {
 				return err
 			}
@@ -99,6 +113,64 @@ func (s *state) taskUpdateCommand() *cobra.Command {
 	command.Flags().StringVar(&status, "status", "", "not_started, designing, in_progress, completed, or closed")
 	command.Flags().StringVar(&assignee, "assignee", "", "new assignee")
 	return command
+}
+
+func resolveTaskStatusInput(raw, taskID string, snapshot domain.Snapshot) (*domain.TaskStatus, error) {
+	value := strings.ToLower(strings.TrimSpace(raw))
+	stable := map[string]domain.TaskStatus{
+		string(domain.TaskStatusNotStarted): domain.TaskStatusNotStarted,
+		string(domain.TaskStatusDesigning):  domain.TaskStatusDesigning,
+		string(domain.TaskStatusInProgress): domain.TaskStatusInProgress,
+		string(domain.TaskStatusCompleted):  domain.TaskStatusCompleted,
+		string(domain.TaskStatusClosed):     domain.TaskStatusClosed,
+	}
+	if status, ok := stable[value]; ok {
+		return &status, nil
+	}
+	featureID := ""
+	for _, task := range snapshot.Tasks {
+		if task.ID == taskID {
+			featureID = task.FeatureID
+			break
+		}
+	}
+	if featureID == "" {
+		return nil, domain.NewError(domain.DomainErrorCodeNotFound, "task %q was not found", taskID)
+	}
+	var matches []domain.TaskStatus
+	for _, candidate := range []struct {
+		key    domain.TaskLabelKey
+		status domain.TaskStatus
+	}{
+		{domain.TaskLabelStatusNotStarted, domain.TaskStatusNotStarted},
+		{domain.TaskLabelStatusDesigning, domain.TaskStatusDesigning},
+		{domain.TaskLabelStatusInProgress, domain.TaskStatusInProgress},
+		{domain.TaskLabelStatusCompleted, domain.TaskStatusCompleted},
+		{domain.TaskLabelStatusClosed, domain.TaskStatusClosed},
+	} {
+		for _, feature := range snapshot.Features {
+			if feature.ID != featureID {
+				continue
+			}
+			if appearance, ok := feature.TaskLabelAppearances[candidate.key]; ok &&
+				strings.EqualFold(strings.TrimSpace(appearance.Text), strings.TrimSpace(raw)) {
+				matches = append(matches, candidate.status)
+			}
+		}
+	}
+	if len(matches) == 1 {
+		return &matches[0], nil
+	}
+	if len(matches) > 1 {
+		values := make([]string, len(matches))
+		for i, match := range matches {
+			values[i] = string(match)
+		}
+		return nil, domain.NewError(domain.DomainErrorCodeInvalidStatus,
+			"status label %q is ambiguous; use one of: %s", raw, strings.Join(values, ", "))
+	}
+	return nil, domain.NewError(domain.DomainErrorCodeInvalidStatus,
+		"invalid task status %q; use not_started, designing, in_progress, completed, or closed", raw)
 }
 
 func (s *state) taskDeleteCommand() *cobra.Command {

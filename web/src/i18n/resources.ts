@@ -9,6 +9,7 @@ import { project } from "./resources/project";
 import { prompt } from "./resources/prompt";
 import { shell } from "./resources/shell";
 import { taskCard } from "./resources/task-card";
+import { taskLabels } from "./resources/task-labels";
 import { tasks } from "./resources/tasks";
 import { update } from "./resources/update";
 import { workspace } from "./resources/workspace";
@@ -27,6 +28,7 @@ export const resources = {
       ...errors.en,
       ...tasks.en,
       ...taskCard.en,
+      ...taskLabels.en,
       ...project.en,
       ...prompt.en,
       ...update.en,
@@ -45,6 +47,7 @@ export const resources = {
       ...errors.ja,
       ...tasks.ja,
       ...taskCard.ja,
+      ...taskLabels.ja,
       ...project.ja,
       ...prompt.ja,
       ...update.ja,

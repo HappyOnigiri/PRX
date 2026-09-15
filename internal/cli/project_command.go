@@ -32,6 +32,7 @@ func (s *state) projectCommand() *cobra.Command {
 		s.projectCreateCommand(),
 		s.projectUpdateCommand(),
 		s.projectPromptCommand(),
+		s.projectLabelCommand(),
 		s.projectArchiveCommand(true),
 		s.projectArchiveCommand(false),
 		s.projectDeleteCommand(),
